@@ -502,6 +502,123 @@ void StationViewShipView::ShowAll()
 	Gui::Fixed::ShowAll();
 }
 
+////////////////////////////////////////////////////////////////////
+
+class StationShipPaintView: public GenericChatForm {
+public:
+	StationShipPaintView(): GenericChatForm() {
+		m_lmrModel = Pi::player->GetLmrModel();
+		/* XXX duplicated code in InfoView.cpp */
+		LmrObjParams params = {
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ /*"HELLO"*/ },
+			{ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f },
+
+			{	// pColor[3]
+			{ { 1.0f, 0.0f, 1.0f, 1.0f }, { 0, 0, 0 }, { 0, 0, 0 }, 0 },
+			{ { 0.8f, 0.6f, 0.5f, 1.0f }, { 0, 0, 0 }, { 0, 0, 0 }, 0 },
+			{ { 0.5f, 0.5f, 0.5f, 1.0f }, { 0, 0, 0 }, { 0, 0, 0 }, 0 } },
+		};
+		m_lmrParams = params;
+		Pi::player->GetFlavour()->ApplyTo(&m_lmrParams);
+		m_ondraw3dcon = Pi::spaceStationView->onDraw3D.connect(
+				sigc::mem_fun(this, &StationShipPaintView::Draw3D));
+	}
+	virtual ~StationShipPaintView() {
+		m_ondraw3dcon.disconnect();
+	}
+	virtual void ShowAll();
+	void Draw3D();
+private:
+	LmrModel *m_lmrModel;
+	LmrObjParams m_lmrParams;
+	sigc::connection m_ondraw3dcon;
+};
+
+void StationShipPaintView::Draw3D()
+{
+	float guiscale[2];
+	Gui::Screen::GetCoords2Pixels(guiscale);
+	static float rot1 = -0.6f;
+	static float rot2 = 2.5f;
+	if (Pi::MouseButtonState(3)) {
+		int m[2];
+		Pi::GetMouseMotion(m);
+		rot1 += -0.002*m[1];
+		rot2 += -0.002*m[0];
+	}
+	glClearColor(0.25,.37,.63,0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	
+	const float bx = 5;
+	const float by = 40;
+	Gui::Screen::EnterOrtho();
+	glColor3f(0,0,0);
+	glBegin(GL_QUADS); {
+		glVertex2f(bx,by);
+		glVertex2f(bx,by+400);
+		glVertex2f(bx+400,by+400);
+		glVertex2f(bx+400,by);
+	} glEnd();
+	Gui::Screen::LeaveOrtho();
+	
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glFrustum(-.5, .5, -.5, .5, 1.0f, 10000.0f);
+	glDepthRange (0.0, 1.0);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	
+	Render::State::SetZnearZfar(1.0f, 10000.0f);
+
+	float lightCol[] = { .5,.5,.5,0 };
+	float lightDir[] = { 1,1,0,0 };
+
+	glPushAttrib(GL_ALL_ATTRIB_BITS);
+	glLightfv(GL_LIGHT0, GL_POSITION, lightDir);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, lightCol);
+	glLightfv(GL_LIGHT0, GL_AMBIENT, lightCol);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, lightCol);
+	glEnable(GL_LIGHT0);
+//	sbreSetDirLight (lightCol, lightDir);
+	glViewport(
+		GLint(bx/guiscale[0]),
+		GLint((Gui::Screen::GetHeight() - by - 400)/guiscale[1]),
+		GLsizei(400/guiscale[0]),
+		GLsizei(400/guiscale[1]));
+	
+	matrix4x4f rot = matrix4x4f::RotateXMatrix(rot1);
+	rot.RotateY(rot2);
+	rot[14] = -1.5f * m_lmrModel->GetDrawClipRadius();
+
+	m_lmrModel->Render(rot, &m_lmrParams);
+	Render::State::UseProgram(0);
+	Render::UnbindAllBuffers();
+	glPopAttrib();
+}
+
+void StationShipPaintView::ShowAll()
+{
+	ReInit();
+
+	SetTransparency(true);
+	SpaceStation *station = Pi::player->GetDockedWith();
+	SetTitle(stringf(256, "%s Shipyard", station->GetLabel().c_str()).c_str());
+	
+	Gui::Button *b = new Gui::SolidButton();
+	b->onClick.connect(sigc::mem_fun(this, &StationShipPaintView::Close));
+	Add(b,680,470);
+	Add(new Gui::Label("Go back"), 700, 470);
+	
+	//b = new Gui::SolidButton();
+	//b->onClick.connect(sigc::mem_fun(this, &StationShipPaintView::BuyShip));
+	//Add(b,480,470);
+	//Add(new Gui::Label("Buy this ship"), 500, 470);
+
+	Gui::Fixed::ShowAll();
+}
 
 ////////////////////////////////////////////////////////////////////
 
@@ -689,6 +806,9 @@ private:
 	void GotoShipRepairsView() {
 		OpenChildChatForm(new StationShipRepairsView());
 	}
+	void GotoShipPainterView() {
+		OpenChildChatForm(new StationShipPaintView());
+	}
 };
 
 StationShipyardView::StationShipyardView(): GenericChatForm()
@@ -730,7 +850,14 @@ void StationShipyardView::ShowAll()
 	Add(b, 340, 360);
 	l = new Gui::Label("New and reconditioned ships");
 	Add(l, 365, 360);
-	
+
+	b = new Gui::SolidButton();
+	b->SetShortcut(SDLK_3, KMOD_NONE);
+	b->onClick.connect(sigc::mem_fun(this, &StationShipyardView::GotoShipPainterView));
+	Add(b, 340, 420);
+	l = new Gui::Label("Paint-ship Pro!");	// part of me is sorry for this name... a small and totally ignored part :D
+	Add(l, 365, 420);
+
 	AddBaseDisplay();
 	AddVideoWidget();
 
@@ -974,6 +1101,11 @@ SpaceStationView::SpaceStationView(): View(), m_jumpToForm(0)
 	Gui::Label *l = new Gui::Label("Comms Link");
 	l->Color(1,.7,0);
 	m_rightRegion2->Add(l, 10, 0);
+}
+
+//virtual 
+SpaceStationView::~SpaceStationView()
+{
 }
 
 void SpaceStationView::JumpToForm(GenericChatForm *form)
