@@ -89,6 +89,7 @@ public:
 	static SDL_mutex *s_geoPatchLock[4];
 	static SDL_sem* s_geoPatchSem[4];
 	static SDL_sem* s_geoSphereSem[4];
+	static SDL_Thread* s_geoThread[4];
 
 	/* Thread(s) that generate the mesh data for a geopatch */
 	static int UpdateGeoPatchThread(void *data)
@@ -328,22 +329,23 @@ public:
 			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 #ifdef GEOPATCH_USE_THREADING
-				static const int indexes[4] = {0,1,2,3};
-				for( int i = 0; i<4; ++i ) {
-					assert(NULL==s_geoPatches[i]);
-					s_geoPatches[i] = NULL;
+			static const int indexes[4] = {0,1,2,3};
+			for( int i = 0; i<4; ++i ) {
+				assert(NULL==s_geoPatches[i]);
+				s_geoPatches[i] = NULL;
 
-					assert(NULL==s_geoPatchLock[i]);
+				if(NULL==s_geoPatchLock[i])
 					s_geoPatchLock[i] = SDL_CreateMutex();
 
-					assert(!s_geoPatchSem[i]);
+				if(!s_geoPatchSem[i])
 					s_geoPatchSem[i] = SDL_CreateSemaphore(0);
 
-					assert(!s_geoSphereSem[i]);
+				if(!s_geoSphereSem[i])
 					s_geoSphereSem[i] = SDL_CreateSemaphore(0);
 
-					SDL_CreateThread(&GeoPatch::UpdateGeoPatchThread, (void*)&indexes[i]);
-				}
+				if(!s_geoThread[i])
+					s_geoThread[i] = SDL_CreateThread(&GeoPatch::UpdateGeoPatchThread, (void*)&indexes[i]);
+			}
 #endif /* GEOPATCH_USE_THREADING */
 		}
 	}
@@ -1066,6 +1068,7 @@ GeoPatch**	GeoPatch::s_geoPatches[4]	= {0};
 SDL_mutex*	GeoPatch::s_geoPatchLock[4] = {0};
 SDL_sem*	GeoPatch::s_geoPatchSem[4]	= {0};
 SDL_sem*	GeoPatch::s_geoSphereSem[4]	= {0};
+SDL_Thread*	GeoPatch::s_geoThread[4]	= {0};
 
 #ifdef ANDYC_HORRIFIC_TIMING
 float		GeoPatch::s_generateMeshTime = 0.0f;
