@@ -532,6 +532,13 @@ static std::map<std::string, GLuint> s_textures;
 GLuint util_load_tex_rgba(const char *filename)
 {
 	GLuint tex = -1;
+#if 1
+	const GLint components32bit = GL_COMPRESSED_RGBA;
+	const GLint components24bit = GL_COMPRESSED_RGB;
+#else
+	const GLint components32bit = GL_RGBA;
+	const GLint components24bit = GL_RGB;
+#endif
 	std::map<std::string, GLuint>::iterator t = s_textures.find(filename);
 
 	if (t != s_textures.end()) return (*t).second;
@@ -553,10 +560,10 @@ GLuint util_load_tex_rgba(const char *filename)
 			switch ( s->format->BitsPerPixel )
 			{
 			case 32:
-				gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, s->w, s->h, GL_RGBA, GL_UNSIGNED_BYTE, s->pixels);
+				gluBuild2DMipmaps(GL_TEXTURE_2D, components32bit, s->w, s->h, GL_RGBA, GL_UNSIGNED_BYTE, s->pixels);
 				break;
 			case 24:
-				gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, s->w, s->h, GL_RGB, GL_UNSIGNED_BYTE, s->pixels);
+				gluBuild2DMipmaps(GL_TEXTURE_2D, components24bit, s->w, s->h, GL_RGB, GL_UNSIGNED_BYTE, s->pixels);
 				break;
 			default:
 				printf("Texture '%s' needs to be 24 or 32 bit.\n", filename);
