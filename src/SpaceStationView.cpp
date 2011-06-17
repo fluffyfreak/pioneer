@@ -523,6 +523,7 @@ public:
 		Pi::player->GetFlavour()->ApplyTo(&m_lmrParams);
 		m_ondraw3dcon = Pi::spaceStationView->onDraw3D.connect(
 				sigc::mem_fun(this, &StationShipPaintView::Draw3D));
+		m_colourIdx = 0;	// 1st colour
 	}
 	virtual ~StationShipPaintView() {
 		m_ondraw3dcon.disconnect();
@@ -530,9 +531,24 @@ public:
 	virtual void ShowAll();
 	void Draw3D();
 private:
+	void ChooseColour(int colourIdx) {
+		m_colourIdx = colourIdx;
+		if( m_colourIdx>=0 && m_colourIdx <3 ) {
+			m_lmrParams.pMat[m_colourIdx].diffuse[0] = m_rAdjust.GetValue();
+			m_lmrParams.pMat[m_colourIdx].diffuse[1] = m_gAdjust.GetValue();
+			m_lmrParams.pMat[m_colourIdx].diffuse[2] = m_bAdjust.GetValue();
+			m_lmrParams.pMat[m_colourIdx].diffuse[3] = 1.0f;
+		}
+	}
 	LmrModel *m_lmrModel;
 	LmrObjParams m_lmrParams;
 	sigc::connection m_ondraw3dcon;
+	uint8_t m_colourIdx;
+
+	// Colour scrolling value things
+	Gui::Adjustment m_rAdjust;
+	Gui::Adjustment m_gAdjust;
+	Gui::Adjustment m_bAdjust;
 };
 
 void StationShipPaintView::Draw3D()
@@ -591,7 +607,7 @@ void StationShipPaintView::Draw3D()
 	
 	matrix4x4f rot = matrix4x4f::RotateXMatrix(rot1);
 	rot.RotateY(rot2);
-	rot[14] = -1.5f * m_lmrModel->GetDrawClipRadius();
+	rot[14] = -2.0f * m_lmrModel->GetDrawClipRadius();
 
 	m_lmrModel->Render(rot, &m_lmrParams);
 	Render::State::UseProgram(0);
@@ -612,10 +628,34 @@ void StationShipPaintView::ShowAll()
 	Add(b,680,470);
 	Add(new Gui::Label("Go back"), 700, 470);
 	
-	//b = new Gui::SolidButton();
-	//b->onClick.connect(sigc::mem_fun(this, &StationShipPaintView::BuyShip));
-	//Add(b,480,470);
-	//Add(new Gui::Label("Buy this ship"), 500, 470);
+	// ----------------------------
+	Gui::Button *i = new Gui::SolidButton();
+	i->onClick.connect(sigc::bind(sigc::mem_fun(this, &StationShipPaintView::ChooseColour), 0));
+	Add(i,480,70);
+	Add(new Gui::Label("1st"), 500, 70);
+
+	i = new Gui::SolidButton();
+	i->onClick.connect(sigc::bind(sigc::mem_fun(this, &StationShipPaintView::ChooseColour), 1));
+	Add(i,540,70);
+	Add(new Gui::Label("2nd"), 560, 70);
+
+	i = new Gui::SolidButton();
+	i->onClick.connect(sigc::bind(sigc::mem_fun(this, &StationShipPaintView::ChooseColour), 2));
+	Add(i,600,70);
+	Add(new Gui::Label("3rd"), 620, 70);
+
+	// ----------------------------
+	Gui::HScrollBar *scroll = new Gui::HScrollBar();
+	scroll->SetAdjustment(&m_rAdjust);
+	Add(scroll, 455, 160);
+
+	scroll = new Gui::HScrollBar();
+	scroll->SetAdjustment(&m_gAdjust);
+	Add(scroll, 455, 200);
+
+	scroll = new Gui::HScrollBar();
+	scroll->SetAdjustment(&m_bAdjust);
+	Add(scroll, 455, 240);
 
 	Gui::Fixed::ShowAll();
 }
@@ -1101,11 +1141,6 @@ SpaceStationView::SpaceStationView(): View(), m_jumpToForm(0)
 	Gui::Label *l = new Gui::Label("Comms Link");
 	l->Color(1,.7,0);
 	m_rightRegion2->Add(l, 10, 0);
-}
-
-//virtual 
-SpaceStationView::~SpaceStationView()
-{
 }
 
 void SpaceStationView::JumpToForm(GenericChatForm *form)
