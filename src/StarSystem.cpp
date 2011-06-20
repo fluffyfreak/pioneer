@@ -1980,10 +1980,8 @@ void StarSystem::ShrinkCache()
 		StarSystem *s = (*iter).second;
 		if ((NULL!=s) && s->GetRefCount() == 0)
 		{
-			std::map<SysLoc,StarSystem*>::iterator iterTemp = iter;
-			++iter;
 			delete s;
-			s_cachedSystems.erase( iterTemp ); 
+			iter = s_cachedSystems.erase( iter ); 
 		}
 		else
 		{
