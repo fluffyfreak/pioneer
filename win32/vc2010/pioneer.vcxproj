@@ -145,6 +145,7 @@
     <ClCompile Include="..\..\src\InfoView.cpp" />
     <ClCompile Include="..\..\src\IniConfig.cpp" />
     <ClCompile Include="..\..\src\KeyBindings.cpp" />
+    <ClCompile Include="..\..\src\Lengyel.cpp" />
     <ClCompile Include="..\..\src\LmrModel.cpp" />
     <ClCompile Include="..\..\src\LuaBody.cpp" />
     <ClCompile Include="..\..\src\LuaCargoBody.cpp" />
@@ -291,6 +292,7 @@
     <ClInclude Include="..\..\src\InfoView.h" />
     <ClInclude Include="..\..\src\IniConfig.h" />
     <ClInclude Include="..\..\src\KeyBindings.h" />
+    <ClInclude Include="..\..\src\Lengyel.h" />
     <ClInclude Include="..\..\src\libs.h" />
     <ClInclude Include="..\..\src\LmrModel.h" />
     <ClInclude Include="..\..\src\LuaBody.h" />
@@ -329,6 +331,7 @@
     <ClInclude Include="..\..\src\NameGenerator.h" />
     <ClInclude Include="..\..\src\Object.h" />
     <ClInclude Include="..\..\src\ObjectViewerView.h" />
+    <ClInclude Include="..\..\src\PaintJob.h" />
     <ClInclude Include="..\..\src\perlin.h" />
     <ClInclude Include="..\..\src\PersistSystemData.h" />
     <ClInclude Include="..\..\src\Pi.h" />
@@ -367,7 +370,9 @@
     <ClInclude Include="..\..\src\TextureFont.h" />
     <ClInclude Include="..\..\src\Timer.h" />
     <ClInclude Include="..\..\src\utils.h" />
+    <ClInclude Include="..\..\src\vector2.h" />
     <ClInclude Include="..\..\src\vector3.h" />
+    <ClInclude Include="..\..\src\vector4.h" />
     <ClInclude Include="..\..\src\VectorFont.h" />
     <ClInclude Include="..\..\src\VideoLink.h" />
     <ClInclude Include="..\..\src\View.h" />

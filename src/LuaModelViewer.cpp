@@ -174,6 +174,8 @@ public:
 		m_cmesh = new LmrCollMesh(m_model, &params);
 		m_geom = new Geom(m_cmesh->geomTree);
 		m_space->AddGeom(m_geom);
+		m_space->FlagRebuildObjectTrees();
+		m_space->RebuildObjectTrees();
 	}
 
 	void OnToggleGearState() {
@@ -184,7 +186,12 @@ public:
 	void OnClickChangeView() {
 		g_renderType++;
 		// XXX raytraced view disabled
-		if (g_renderType > 1) g_renderType = 0;
+		if (g_renderType == 2) {
+			m_space->FlagRebuildObjectTrees();
+			m_space->RebuildObjectTrees();
+		}
+		if (g_renderType > 2) 
+			g_renderType = 0;
 	}
 
 	void MainLoop() __attribute((noreturn));
@@ -204,6 +211,8 @@ void Viewer::SetModel(LmrModel *model)
 	m_cmesh = new LmrCollMesh(m_model, &params);
 	m_geom = new Geom(m_cmesh->geomTree);
 	m_space->AddGeom(m_geom);
+	m_space->FlagRebuildObjectTrees();
+	m_space->RebuildObjectTrees();
 }
 
 void Viewer::TryModel(const SDL_keysym *sym, Gui::TextEntry *entry, Gui::Label *errormsg)

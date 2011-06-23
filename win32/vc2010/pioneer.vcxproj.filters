@@ -405,6 +405,9 @@
     <ClCompile Include="..\..\src\profiler\Profiler.cpp">
       <Filter>src\profiler</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\Lengyel.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\collider\BVHTree.h">
@@ -858,6 +861,18 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\PicoDDS.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Lengyel.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\vector4.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\vector2.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\PaintJob.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

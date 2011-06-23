@@ -11,6 +11,7 @@
 #include "PoliceChatForm.h"
 #include "LmrModel.h"
 #include "utils.h"
+#include "PaintJob.h"
 
 ////////////////////////////////////////////////////////////////////
 
@@ -507,7 +508,7 @@ void StationViewShipView::ShowAll()
 
 class StationShipPaintView: public GenericChatForm {
 public:
-	StationShipPaintView(): GenericChatForm() {
+	StationShipPaintView(): GenericChatForm(), m_space(0), m_geom(0), m_cmesh(0), m_lmrModel(0) {
 		m_lmrModel = Pi::player->GetLmrModel();
 		/* XXX duplicated code in InfoView.cpp */
 		LmrObjParams params = {
@@ -521,16 +522,27 @@ public:
 			{ { 0.5f, 0.5f, 0.5f, 1.0f }, { 0, 0, 0 }, { 0, 0, 0 }, 0 } },
 		};
 		m_lmrParams = params;
+		m_space = new CollisionSpace();
 		Pi::player->GetFlavour()->ApplyTo(&m_lmrParams);
-		m_ondraw3dcon = Pi::spaceStationView->onDraw3D.connect(
-				sigc::mem_fun(this, &StationShipPaintView::Draw3D));
+		m_ondraw3dcon = Pi::spaceStationView->onDraw3D.connect(sigc::mem_fun(this, &StationShipPaintView::Draw3D));
 		m_colourIdx = 0;	// 1st colour
+
+		RebuildCollMesh();
 	}
 	virtual ~StationShipPaintView() {
 		m_ondraw3dcon.disconnect();
+
+		// free our pointers
+		delete m_cmesh;
+		delete m_geom;
+		delete m_space;
+		
+		// NOT owned by this, pointer is just a reference
+		m_lmrModel=  NULL;
 	}
 	virtual void ShowAll();
 	void Draw3D();
+	virtual bool OnMouseDown(Gui::MouseButtonEvent *e);
 private:
 	void ChooseColour(int colourIdx) {
 		m_colourIdx = colourIdx;
@@ -541,7 +553,11 @@ private:
 			m_lmrParams.pMat[m_colourIdx].diffuse[3] = 1.0f;
 		}
 	}
-	LmrModel *m_lmrModel;
+	void RebuildCollMesh();
+	CollisionSpace* m_space;
+	Geom* m_geom;
+	LmrCollMesh* m_cmesh;
+	LmrModel* m_lmrModel;
 	LmrObjParams m_lmrParams;
 	sigc::connection m_ondraw3dcon;
 	uint8_t m_colourIdx;
@@ -550,7 +566,142 @@ private:
 	Gui::Adjustment m_rAdjust;
 	Gui::Adjustment m_gAdjust;
 	Gui::Adjustment m_bAdjust;
+
+	// local copy of players PaintJob, all changes are made to this then copied
+	// over the players _IF_ they like what they've done.
+	CPaintJob m_paintJob;
 };
+
+vector3f GetOGLPos(const int x, const int y)
+{
+	GLint viewport[4];
+	GLdouble modelview[16];
+	GLdouble projection[16];
+	GLfloat winX, winY, winZ;
+	GLdouble posX, posY, posZ;
+
+	glGetDoublev( GL_MODELVIEW_MATRIX, modelview );
+	glGetDoublev( GL_PROJECTION_MATRIX, projection );
+	glGetIntegerv( GL_VIEWPORT, viewport );
+
+	winX = (float)x;
+	//winY = (float)viewport[3] - (float)y;
+	winY = (float)y;
+	glReadPixels( x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ );
+
+	gluUnProject( winX, winY, winZ, modelview, projection, viewport, &posX, &posY, &posZ);
+
+	return vector3f(posX, posY, posZ);
+}
+
+void StationShipPaintView::RebuildCollMesh() 
+{
+	if( !m_space ) return;
+	if( m_geom ) {
+		m_space->RemoveGeom(m_geom);
+		delete m_geom;
+		delete m_cmesh;
+	}
+
+	m_cmesh = new LmrCollMesh(m_lmrModel, &m_lmrParams);
+	m_geom = new Geom(m_cmesh->geomTree);
+	m_space->AddGeom(m_geom);
+	m_space->FlagRebuildObjectTrees();
+	m_space->RebuildObjectTrees();
+}
+
+static void render_coll_mesh(const LmrCollMesh *m)
+{
+	glDisable(GL_LIGHTING);
+	glColor3f(1,0,1);
+	glDepthRange(0.0+(2.0/(1<<16)),1.0);
+	glBegin(GL_TRIANGLES);
+	for (int i=0; i<m->ni; i+=3) {
+		glVertex3fv(&m->pVertex[3*m->pIndex[i]]);
+		glVertex3fv(&m->pVertex[3*m->pIndex[i+1]]);
+		glVertex3fv(&m->pVertex[3*m->pIndex[i+2]]);
+	}
+	glEnd();
+	glColor3f(1,1,1);
+	glDepthRange(0,1.0f-(2.0/(1<<16)));
+	for (int i=0; i<m->ni; i+=3) {
+		glBegin(GL_LINE_LOOP);
+		glVertex3fv(&m->pVertex[3*m->pIndex[i]]);
+		glVertex3fv(&m->pVertex[3*m->pIndex[i+1]]);
+		glVertex3fv(&m->pVertex[3*m->pIndex[i+2]]);
+		glEnd();
+	}
+	glDepthRange(0,1);
+	glEnable(GL_LIGHTING);
+}
+
+//virtual 
+// override the OnMouseDown virutal method so I can capture the mouse position
+bool StationShipPaintView::OnMouseDown(Gui::MouseButtonEvent *e)
+{
+	const float bx = 5.0f;
+	const float by = 40.0f;
+	// work out the screen dimensions
+	const float left = bx;
+	const float top = by;
+	const float bottom = by+400.0f;
+	const float right = bx+400.0f;
+
+	const float sx = e->screenX;
+	const float sy = e->screenY;
+
+	if(sx >= left && sx <= right) {
+		if(sy >= top && sy <= bottom) {
+
+			vector3f mouseworld;
+			glPushAttrib(GL_ALL_ATTRIB_BITS); {
+				glPushMatrix(); {
+					float guiscale[2];
+					Gui::Screen::GetCoords2Pixels(guiscale);
+					const float bx = 5;
+					const float by = 40;
+	
+					glMatrixMode(GL_PROJECTION);
+					glLoadIdentity();
+					glFrustum(-.5, .5, -.5, .5, 1.0f, 10000.0f);
+					glDepthRange (0.0, 1.0);
+
+					glPushMatrix(); {
+						glMatrixMode(GL_MODELVIEW);
+						glLoadIdentity();
+	
+						glViewport(
+							GLint(bx/guiscale[0]),
+							GLint((Gui::Screen::GetHeight() - by - 400)/guiscale[1]),
+							GLsizei(400/guiscale[0]),
+							GLsizei(400/guiscale[1]));
+
+						mouseworld = GetOGLPos(e->screenX, e->screenY);
+					} glPopMatrix();
+				} glPopMatrix();
+			} glPopAttrib();
+
+			// Origin of the ray is just the camera position
+			vector3f camPos( 0.0, 0.0, 2.0f * m_lmrModel->GetDrawClipRadius() );
+
+			// Direction of the ray is the vector from the camera position to the mouse position
+			vector3f rayDirection = vector3f( 0.0001, 0.0001, -0.9998f).Normalized();
+			//vector3f rayDirection = (mouseworld - camPos).Normalized();
+			//vector3f rayDirection = (Pi::player->GetFrame()->GetBodyFor()->GetPosition() - camPos).Normalized();
+
+			// trace laser beam through frame to see who it hits
+			CollisionContact c;
+			m_geom->Enable();
+			m_space->TraceRay(camPos, rayDirection, 10000.0, &c);
+			m_geom->Disable();
+			if (c.triIdx != -1) {
+				m_paintJob.AddDecal(c.pos,c.normal,c.normal, 1.0f, 1.0f, 1.0f);
+			}
+		}
+	}
+
+	return Gui::Container::OnMouseDown(e);
+}
 
 void StationShipPaintView::Draw3D()
 {
@@ -610,7 +761,11 @@ void StationShipPaintView::Draw3D()
 	rot.RotateY(rot2);
 	rot[14] = -2.0f * m_lmrModel->GetDrawClipRadius();
 
-	m_lmrModel->Render(rot, &m_lmrParams);
+	//m_lmrModel->Render(rot, &m_lmrParams);
+	glPushMatrix();
+		glMultMatrixf(&rot[0]);
+		render_coll_mesh(m_cmesh);
+	glPopMatrix();
 	Render::State::UseProgram(0);
 	Render::UnbindAllBuffers();
 	glPopAttrib();

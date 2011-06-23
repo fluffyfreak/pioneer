@@ -169,6 +169,7 @@ void SectorView::PutClickableLabel(std::string &text, int sx, int sy, int sys_id
 	Gui::Screen::LeaveOrtho();
 }
 
+static double s_pulseScale = 0.25;
 void SectorView::DrawSector(int sx, int sy)
 {
 	int playerLocSecX, playerLocSecY, playerLocSysIdx;
@@ -193,15 +194,6 @@ void SectorView::DrawSector(int sx, int sy)
 			glVertex3f(0, 0, (*i).p.z);
 		glEnd();
 		glTranslatef(0, 0, (*i).p.z);
-		
-		glPushMatrix();
-		glRotatef(-m_rot_z, 0, 0, 1);
-		glRotatef(-m_rot_x, 1, 0, 0);
-		glScalef((StarSystem::starScale[(*i).starType[0]]),
-			(StarSystem::starScale[(*i).starType[0]]),
-			(StarSystem::starScale[(*i).starType[0]]));
-		glCallList(m_gluDiskDlist);
-		glScalef(2,2,2);
 
 		// only do this once we've pretty much stopped moving.
 		float diffx = fabs(m_pxMovingTo - m_px);
@@ -219,12 +211,22 @@ void SectorView::DrawSector(int sx, int sy)
 			}
 			pSS->DecRefCount();
 		}
+#if 1 // original populated star pulsing effect
+		// Render the star system with appropriate size
+		glPushMatrix();
+		glRotatef(-m_rot_z, 0, 0, 1);
+		glRotatef(-m_rot_x, 1, 0, 0);
+		glScalef((StarSystem::starScale[(*i).starType[0]]),
+			(StarSystem::starScale[(*i).starType[0]]),
+			(StarSystem::starScale[(*i).starType[0]]));
+		glCallList(m_gluDiskDlist);
+		glScalef(2,2,2);
 		// Pulse populated stars
 		if( (*i).IsSetInhabited() && (*i).IsInhabited() )
 		{
 			// precise to the rendered frame (better than PHYSICS_HZ granularity)
 			double preciseTime = Pi::GetGameTime() + Pi::GetGameTickAlpha()*Pi::GetTimeStep();
-			float radius = 1.5f+(0.5*sin(5.0*(preciseTime+(double)num)));
+			float radius = 1.5f+(s_pulseScale*(0.5+sin(5.0*(preciseTime+(double)num))));
 
 			// I-IS-ALIVE indicator
 			glPushMatrix();
@@ -236,35 +238,67 @@ void SectorView::DrawSector(int sx, int sy)
 			}
 			glPopMatrix();
 		}
+#else
+		glPushMatrix();
+		if( (*i).IsSetInhabited() && (*i).IsInhabited() )
+		{
+			// precise to the rendered frame (better than PHYSICS_HZ granularity)
+			double preciseTime = Pi::GetGameTime() + Pi::GetGameTickAlpha()*Pi::GetTimeStep();
+			float radius = (s_pulseScale*(0.5+sin(5.0*(preciseTime+(double)num))));
+
+			// Render the star system with appropriate size
+			glRotatef(-m_rot_z, 0, 0, 1);
+			glRotatef(-m_rot_x, 1, 0, 0);
+			glPushMatrix(); {
+			glScalef(	(StarSystem::starScale[(*i).starType[0]])+radius,
+						(StarSystem::starScale[(*i).starType[0]])+radius,
+						(StarSystem::starScale[(*i).starType[0]])+radius);
+			glCallList(m_gluDiskDlist);
+			} glPopMatrix();
+		}
+		else
+		{
+			// Render the star system with appropriate size
+			glRotatef(-m_rot_z, 0, 0, 1);
+			glRotatef(-m_rot_x, 1, 0, 0);
+			glPushMatrix(); {
+			glScalef((StarSystem::starScale[(*i).starType[0]]),
+				(StarSystem::starScale[(*i).starType[0]]),
+				(StarSystem::starScale[(*i).starType[0]]));
+			glCallList(m_gluDiskDlist);
+			} glPopMatrix();
+		}
+		glScalef(2,2,2);
+#endif
 
 		// player location indicator
 		if ((sx == playerLocSecX) && (sy == playerLocSecY) && (num == playerLocSysIdx)) {
 			const shipstats_t *stats = Pi::player->CalcStats();
 			glPushMatrix();
-			glColor3f(0,0,1);
-			glScalef(1.0f,1.0f,1.0f);
-			glBegin(GL_LINE_LOOP);
-			// draw a lovely circle around our beloved player
-			for (float theta=0; theta < 2*M_PI; theta += 0.05*M_PI) {
-				glVertex3f(stats->hyperspace_range*sin(theta), stats->hyperspace_range*cos(theta), 0);
-			}
-			glEnd();
+				glColor3f(0,0,1);
+				glScalef(1.0f,1.0f,1.0f);
+				glBegin(GL_LINE_LOOP);
+				// draw a lovely circle around our beloved player
+				for (float theta=0; theta < 2*M_PI; theta += 0.05*M_PI) {
+					glVertex3f(stats->hyperspace_range*sin(theta), stats->hyperspace_range*cos(theta), 0);
+				}
+				glEnd();
 			glPopMatrix();
 
 			glPushMatrix();
-			glDepthRange(0.2,1.0);
-			glColor3f(0,0,0.8);
-			glScalef(3,3,3);
-			glCallList(m_gluDiskDlist);
+				glDepthRange(0.2,1.0);
+				glColor3f(0,0,0.8);
+				glScalef(3,3,3);
+				glCallList(m_gluDiskDlist);
 			glPopMatrix();
 		}
 		// selected indicator
 		if ((sx == m_secx) && (sy == m_secy) && (num == m_selected)) {
 			glPushMatrix();
-			glDepthRange(0.1,1.0);
-			glColor3f(0,0.8,0);
-			glScalef(2,2,2);
-			glCallList(m_gluDiskDlist);
+				glDepthRange(0.1,1.0);
+				glColor3f(0,0.8,0);
+				glScalef(2,2,2);
+				glCallList(m_gluDiskDlist);
 			glPopMatrix();
 		}
 		glDepthRange(0,1);
