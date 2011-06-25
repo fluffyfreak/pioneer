@@ -505,10 +505,19 @@ void StationViewShipView::ShowAll()
 }
 
 ////////////////////////////////////////////////////////////////////
+#define RENDER_PICK_LINES
+#ifdef RENDER_PICK_LINES
+struct Ts2e {
+	vector3f s_start;
+	vector3f s_end;
+};
+static std::vector<Ts2e> s_pickLines;
+#endif
 
+////////////////////////////////////////////////////////////////////
 class StationShipPaintView: public GenericChatForm {
 public:
-	StationShipPaintView(): GenericChatForm(), m_space(0), m_geom(0), m_cmesh(0), m_lmrModel(0) {
+	StationShipPaintView(): GenericChatForm(), m_space(0), m_geom(0), m_cmesh(0), m_lmrModel(0), rot1(-0.6f), rot2(2.5f) {
 		m_lmrModel = Pi::player->GetLmrModel();
 		/* XXX duplicated code in InfoView.cpp */
 		LmrObjParams params = {
@@ -539,6 +548,10 @@ public:
 		
 		// NOT owned by this, pointer is just a reference
 		m_lmrModel=  NULL;
+	
+#ifdef RENDER_PICK_LINES
+		s_pickLines.clear();
+#endif
 	}
 	virtual void ShowAll();
 	void Draw3D();
@@ -570,29 +583,10 @@ private:
 	// local copy of players PaintJob, all changes are made to this then copied
 	// over the players _IF_ they like what they've done.
 	CPaintJob m_paintJob;
+
+	float rot1;
+	float rot2;
 };
-
-vector3f GetOGLPos(const int x, const int y)
-{
-	GLint viewport[4];
-	GLdouble modelview[16];
-	GLdouble projection[16];
-	GLfloat winX, winY, winZ;
-	GLdouble posX, posY, posZ;
-
-	glGetDoublev( GL_MODELVIEW_MATRIX, modelview );
-	glGetDoublev( GL_PROJECTION_MATRIX, projection );
-	glGetIntegerv( GL_VIEWPORT, viewport );
-
-	winX = (float)x;
-	//winY = (float)viewport[3] - (float)y;
-	winY = (float)y;
-	glReadPixels( x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ );
-
-	gluUnProject( winX, winY, winZ, modelview, projection, viewport, &posX, &posY, &posZ);
-
-	return vector3f(posX, posY, posZ);
-}
 
 void StationShipPaintView::RebuildCollMesh() 
 {
@@ -635,10 +629,88 @@ static void render_coll_mesh(const LmrCollMesh *m)
 	glEnable(GL_LIGHTING);
 }
 
-//virtual 
+static vector3f GetOGLPos(const int x, const int y)
+{
+	GLint viewport[4];
+	GLdouble modelview[16];
+	GLdouble projection[16];
+	GLfloat winX, winY, winZ;
+	GLdouble posX, posY, posZ;
+
+	glGetDoublev( GL_MODELVIEW_MATRIX, modelview );
+	glGetDoublev( GL_PROJECTION_MATRIX, projection );
+	glGetIntegerv( GL_VIEWPORT, viewport );
+
+	winX = (float)x;
+	winY = (float)y;
+	winZ = 1.0f;
+	//glReadPixels( x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ );
+
+	gluUnProject( winX, winY, winZ, modelview, projection, viewport, &posX, &posY, &posZ);
+
+	return vector3f(posX, posY, posZ);
+}
+
+static void calcRay(const int x, const int y, vector3f &p1, vector3f &p2)
+{
+	float guiscale[2];
+	Gui::Screen::GetCoords2Pixels(guiscale);
+	matrix4x4f invMatrix;
+	matrix4x4f viewMatrix;
+	matrix4x4f projMatrix;
+	const float	fNEAR	= 1.0f;
+	const float	fFAR	= 10000.0f;
+	//const float	fFOV = 0.8f;
+	//glFrustum(-.5, .5, -.5, .5, 1.0f, 10000.0f);
+	const float tminusb	= (.5)-(-.5);
+	//const float	fFOV	= atan((tminusb*0.5) / fNEAR) * 2.0;
+	const float	fFOV	= atan((tminusb*0.5) / fNEAR);
+	const float	fWIDTH	= 400.0f;
+	const float	fHEIGHT	= 400.0f;
+	const float	fWIDTH_DIV_2 = (fWIDTH*0.5f);
+	const float	fHEIGHT_DIV_2 = (fHEIGHT*0.5f);
+	const float	fASPECT = 1.0f;
+
+	const float dx=tanf(fFOV*0.5f)*(x/fWIDTH_DIV_2-1.0f)/fASPECT;
+	const float dy=tanf(fFOV*0.5f)*(1.0f-y/fHEIGHT_DIV_2);
+
+	glGetFloatv( GL_MODELVIEW_MATRIX, &viewMatrix[0] );
+	glGetFloatv( GL_PROJECTION_MATRIX, &projMatrix[0] );
+	invMatrix = (viewMatrix * projMatrix).InverseOf();
+
+	p1=vector3f(dx*fNEAR, dy*fNEAR, fNEAR);
+	p2=vector3f(dx*fFAR, dy*fFAR, fFAR);
+
+	p1 = p1 * invMatrix;
+	p2 = p2 * invMatrix;
+}
+
+static vector3f calcDir(const int x, const int y)
+{
+	vector3f p1,p2;
+	calcRay(x,y,p1,p2);
+	return (p2-p1).Normalized();
+}
+
+#ifdef RENDER_PICK_LINES
+static void render_pick_line()
+{
+	glDisable(GL_LIGHTING);
+	glColor3f(1,1,1);
+	glBegin(GL_LINES);
+	for( std::vector<Ts2e>::const_iterator iter = s_pickLines.begin() ; iter != s_pickLines.end() ; ++iter ) {
+		glVertex3fv(&iter->s_start[0]);
+		glVertex3fv(&iter->s_end[0]);
+	}
+	glEnd();
+	glEnable(GL_LIGHTING);
+}
+#endif
+
 // override the OnMouseDown virutal method so I can capture the mouse position
 bool StationShipPaintView::OnMouseDown(Gui::MouseButtonEvent *e)
 {
+	if( e->button != 1 ) return false;
 	const float bx = 5.0f;
 	const float by = 40.0f;
 	// work out the screen dimensions
@@ -653,7 +725,7 @@ bool StationShipPaintView::OnMouseDown(Gui::MouseButtonEvent *e)
 	if(sx >= left && sx <= right) {
 		if(sy >= top && sy <= bottom) {
 
-			vector3f mouseworld;
+			vector3f res1;
 			glPushAttrib(GL_ALL_ATTRIB_BITS); {
 				glPushMatrix(); {
 					float guiscale[2];
@@ -676,26 +748,43 @@ bool StationShipPaintView::OnMouseDown(Gui::MouseButtonEvent *e)
 							GLsizei(400/guiscale[0]),
 							GLsizei(400/guiscale[1]));
 
-						mouseworld = GetOGLPos(e->screenX, e->screenY);
+						//vector3f p1, p2;
+						const int sl = sx-left;
+						const int st = sy-top;
+						res1 = calcDir( sl, st );
+
 					} glPopMatrix();
 				} glPopMatrix();
 			} glPopAttrib();
+			
 
 			// Origin of the ray is just the camera position
 			vector3f camPos( 0.0, 0.0, 2.0f * m_lmrModel->GetDrawClipRadius() );
+			//vector3f camPos( 0.0, 0.0, 0.0 );
 
-			// Direction of the ray is the vector from the camera position to the mouse position
-			vector3f rayDirection = vector3f( 0.0001, 0.0001, -0.9998f).Normalized();
-			//vector3f rayDirection = (mouseworld - camPos).Normalized();
-			//vector3f rayDirection = (Pi::player->GetFrame()->GetBodyFor()->GetPosition() - camPos).Normalized();
+			// inverted rotation the ship goes through
+			matrix4x4f rot = matrix4x4f::RotateXMatrix(rot1);
+			rot.RotateY(rot2);
+			//rot[14] = -2.0f * m_lmrModel->GetDrawClipRadius();
+			const matrix4x4f invrot = rot.InverseOf();
+			res1 = invrot * res1;
+			camPos = invrot * camPos;
+
+#ifdef RENDER_PICK_LINES
+			Ts2e t;
+			t.s_start = camPos;
+			t.s_end = camPos + (res1 * 10000.0f);
+			s_pickLines.push_back(t);
+#endif
 
 			// trace laser beam through frame to see who it hits
 			CollisionContact c;
 			m_geom->Enable();
-			m_space->TraceRay(camPos, rayDirection, 10000.0, &c);
+			m_space->TraceRay(camPos, res1, 10000.0, &c);
 			m_geom->Disable();
 			if (c.triIdx != -1) {
-				m_paintJob.AddDecal(c.pos,c.normal,c.normal, 1.0f, 1.0f, 1.0f);
+				vector3f tangent = c.normal;
+				m_paintJob.AddDecal(c.pos, c.normal, tangent, 1.0f, 1.0f, 1.0f);
 			}
 		}
 	}
@@ -707,8 +796,7 @@ void StationShipPaintView::Draw3D()
 {
 	float guiscale[2];
 	Gui::Screen::GetCoords2Pixels(guiscale);
-	static float rot1 = -0.6f;
-	static float rot2 = 2.5f;
+	
 	if (Pi::MouseButtonState(3)) {
 		int m[2];
 		Pi::GetMouseMotion(m);
@@ -761,11 +849,17 @@ void StationShipPaintView::Draw3D()
 	rot.RotateY(rot2);
 	rot[14] = -2.0f * m_lmrModel->GetDrawClipRadius();
 
-	//m_lmrModel->Render(rot, &m_lmrParams);
+#ifdef RENDER_PICK_LINES
+	m_lmrModel->Render(rot, &m_lmrParams);
 	glPushMatrix();
 		glMultMatrixf(&rot[0]);
-		render_coll_mesh(m_cmesh);
+		/*render_coll_mesh(m_cmesh);*/
+		render_pick_line();
 	glPopMatrix();
+#else
+	m_lmrModel->Render(rot, &m_lmrParams);
+#endif
+
 	Render::State::UseProgram(0);
 	Render::UnbindAllBuffers();
 	glPopAttrib();

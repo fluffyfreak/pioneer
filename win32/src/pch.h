@@ -71,3 +71,4 @@
 #include "View.h"
 #include "WorldView.h"
 
+#include "profiler/Profiler.h"

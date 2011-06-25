@@ -182,6 +182,7 @@
     <ClCompile Include="..\..\src\MyLuaMathTypes.cpp" />
     <ClCompile Include="..\..\src\NameGenerator.cpp" />
     <ClCompile Include="..\..\src\ObjectViewerView.cpp" />
+    <ClCompile Include="..\..\src\PaintJob.cpp" />
     <ClCompile Include="..\..\src\perlin.cpp" />
     <ClCompile Include="..\..\src\Pi.cpp" />
     <ClCompile Include="..\..\src\PiLuaClasses.cpp" />

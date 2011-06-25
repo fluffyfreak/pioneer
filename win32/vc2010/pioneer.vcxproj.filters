@@ -408,6 +408,9 @@
     <ClCompile Include="..\..\src\Lengyel.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\PaintJob.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\collider\BVHTree.h">
