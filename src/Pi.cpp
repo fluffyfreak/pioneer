@@ -173,6 +173,7 @@ static void draw_progress(float progress)
 
 static void LuaInit()
 {
+	PROFILE_SCOPED()
 	lua_State *l = Pi::luaManager.GetLuaState();
 
 	// XXX kill CurrentDirectory
@@ -375,6 +376,8 @@ void Pi::Init()
 	}
 	draw_progress(1.0f);
 
+	//exit(0);
+
 #if 0
 	// test code to produce list of ship stats
 
@@ -422,6 +425,7 @@ void Pi::Init()
 
 void Pi::InitOpenGL()
 {
+	PROFILE_SCOPED()
 	glShadeModel(GL_SMOOTH);
 	glCullFace(GL_BACK);
 	glFrontFace(GL_CCW);

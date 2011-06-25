@@ -10,6 +10,7 @@ namespace NameGenerator {
 
 	void Init()
 	{
+		PROFILE_SCOPED()
 		FILE *f = fopen_or_die(PIONEER_DATA_DIR"/forenames_male.txt", "r");
 		assert(f);
 		char buf[256];

@@ -2,6 +2,8 @@
 #include "Gui.h"
 #include "Render.h"
 
+#include "profiler/Profiler.h"
+
 namespace Gui {
 
 namespace RawEvents {
@@ -88,6 +90,7 @@ void Draw()
 
 void Init(int screen_width, int screen_height, int ui_width, int ui_height)
 {
+	PROFILE_SCOPED()
 	SDL_EnableUNICODE(1);
 	Screen::Init(screen_width, screen_height, ui_width, ui_height);
 }

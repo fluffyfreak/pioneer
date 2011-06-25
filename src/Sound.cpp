@@ -389,6 +389,7 @@ static void load_sound(const std::string &basename, const std::string &path)
 
 bool Init ()
 {
+	PROFILE_SCOPED()
 	static bool isInitted = false;
 
 	if (!isInitted) {

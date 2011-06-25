@@ -1,5 +1,7 @@
 #include "Render.h"
 
+#include "profiler/Profiler.h"
+
 static GLuint boundArrayBufferObject = 0;
 static GLuint boundElementArrayBufferObject = 0;
 
@@ -352,6 +354,7 @@ static struct postprocessBuffers_t {
 
 void Init(int screen_width, int screen_height)
 {
+	PROFILE_SCOPED()
 	if (initted) return;
 	shadersAvailable = (GLEW_VERSION_2_0 ? true : false);
 	shadersEnabled = shadersAvailable;

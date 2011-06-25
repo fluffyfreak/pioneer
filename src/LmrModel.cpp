@@ -293,10 +293,12 @@ public:
 		return curTriFlag;
 	}
 	void PreBuild() {
+		PROFILE_SCOPED()
 		FreeGeometry();
 		curTriFlag = 0;
 	}
 	void PostBuild() {
+		PROFILE_SCOPED()
 		PushCurOp();
 		//printf("%d vertices, %d indices, %s\n", m_vertices.size(), m_indices.size(), m_isStatic ? "static" : "dynamic");
 		if (m_isStatic && m_indices.size()) {
@@ -315,6 +317,7 @@ public:
 	}
 
 	void Render(const RenderState *rstate, const vector3f &cameraPos, const LmrObjParams *params) {
+		PROFILE_SCOPED()
 		int activeLights = 0;
 		s_numTrisRendered += m_indices.size()/3;
 		
@@ -458,6 +461,7 @@ public:
 	}
 
 	void RenderThrusters(const RenderState *rstate, const vector3f &cameraPos, const LmrObjParams *params) {
+		PROFILE_SCOPED()
 		// depth sort thrusters so alpha doesn't look fucked up!!!
 		ShipThruster::CameraDistance *dists = static_cast<ShipThruster::CameraDistance*>(alloca (m_thrusters.size() * sizeof(ShipThruster::CameraDistance)));
 
@@ -760,6 +764,7 @@ private:
 
 LmrModel::LmrModel(const char *model_name)
 {
+	PROFILE_SCOPED()
 	m_name = model_name;
 	m_drawClipRadius = 1.0f;
 	m_scale = 1.0f;
@@ -837,6 +842,7 @@ LmrModel::LmrModel(const char *model_name)
 	}
 
 	for (int i=0; i<m_numLods; i++) {
+		PROFILE_SCOPED_DESC(" - m_staticGeometry build")
 		m_staticGeometry[i]->PreBuild();
 		s_curBuf = m_staticGeometry[i];
 		lua_pushcfunction(sLua, pi_lua_panic);
@@ -940,6 +946,7 @@ void LmrModel::PushAttributeToLuaStack(const char *attr_name) const
 
 void LmrModel::Render(const matrix4x4f &trans, const LmrObjParams *params)
 {
+	PROFILE_SCOPED()
 	RenderState rstate;
 	rstate.subTransform = matrix4x4f::Identity();
 	rstate.combinedScale = m_scale;
@@ -948,6 +955,7 @@ void LmrModel::Render(const matrix4x4f &trans, const LmrObjParams *params)
 
 void LmrModel::Render(const RenderState *rstate, const vector3f &cameraPos, const matrix4x4f &trans, const LmrObjParams *params)
 {
+	PROFILE_SCOPED()
 	glPushMatrix();
 	glMultMatrixf(&trans[0]);
 	glScalef(m_scale, m_scale, m_scale);
@@ -981,6 +989,7 @@ void LmrModel::Render(const RenderState *rstate, const vector3f &cameraPos, cons
 
 void LmrModel::Build(int lod, const LmrObjParams *params)
 {
+	PROFILE_SCOPED()
 	if (m_hasDynamicFunc) {
 		m_dynamicGeometry[lod]->PreBuild();
 		s_curBuf = m_dynamicGeometry[lod];
@@ -2690,6 +2699,7 @@ static int define_model(lua_State *L)
 
 void LmrModelCompilerInit()
 {
+	PROFILE_SCOPED()
 	s_staticBufferPool = new BufferObjectPool<sizeof(Vertex)>();
 	s_sunlightShader[0] = new LmrShader("model", "#define NUM_LIGHTS 1\n");
 	s_sunlightShader[1] = new LmrShader("model", "#define NUM_LIGHTS 2\n");

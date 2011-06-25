@@ -161,6 +161,7 @@ static void lookupBuildingListModels(citybuildinglist_t *list)
 
 void CityOnPlanet::Init()
 {
+	PROFILE_SCOPED()
 	/* Resolve city model numbers since it is a bit expensive */
 	if (!s_cityBuildingsInitted) {
 		s_cityBuildingsInitted = true;
@@ -264,6 +265,7 @@ CityOnPlanet::CityOnPlanet(Planet *planet, SpaceStation *station, Uint32 seed)
 
 void CityOnPlanet::Render(const SpaceStation *station, const vector3d &viewCoords, const matrix4x4d &viewTransform)
 {
+	PROFILE_SCOPED()
 	matrix4x4d rot[4];
 	station->GetRotMatrix(rot[0]);
 
@@ -288,8 +290,8 @@ void CityOnPlanet::Render(const SpaceStation *station, const vector3d &viewCoord
 	cityobj_params.argDoubles[4] = Pi::GetGameTime() / (24*3600.0);
 
 
-	for (std::vector<BuildingDef>::const_iterator i = m_buildings.begin();
-			i != m_buildings.end(); ++i) {
+	for (std::vector<BuildingDef>::const_iterator i = m_buildings.begin(); i != m_buildings.end(); ++i) {
+		PROFILE_SCOPED_DESC("per-building.")
 
 		if (!(*i).isEnabled) continue;
 

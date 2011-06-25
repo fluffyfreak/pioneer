@@ -178,6 +178,7 @@ static void _define_ships(const char *tag, ShipType::Tag stag, std::vector<ShipT
 
 void ShipType::Init()
 {
+	PROFILE_SCOPED()
 	static bool isInitted = false;
 	if (isInitted) return;
 	isInitted = true;
