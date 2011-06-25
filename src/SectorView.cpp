@@ -226,7 +226,7 @@ void SectorView::DrawSector(int sx, int sy)
 		{
 			// precise to the rendered frame (better than PHYSICS_HZ granularity)
 			double preciseTime = Pi::GetGameTime() + Pi::GetGameTickAlpha()*Pi::GetTimeStep();
-			float radius = 1.5f+(s_pulseScale*(0.5+sin(5.0*(preciseTime+(double)num))));
+			float radius = 1.5f+fabs(s_pulseScale*(1.0+sin(5.0*(preciseTime+(double)num))));
 
 			// I-IS-ALIVE indicator
 			glPushMatrix();
@@ -244,7 +244,7 @@ void SectorView::DrawSector(int sx, int sy)
 		{
 			// precise to the rendered frame (better than PHYSICS_HZ granularity)
 			double preciseTime = Pi::GetGameTime() + Pi::GetGameTickAlpha()*Pi::GetTimeStep();
-			float radius = (s_pulseScale*(0.5+sin(5.0*(preciseTime+(double)num))));
+			float radius = fabs(s_pulseScale*(1.0+sin(5.0*(preciseTime+(double)num))));
 
 			// Render the star system with appropriate size
 			glRotatef(-m_rot_z, 0, 0, 1);
