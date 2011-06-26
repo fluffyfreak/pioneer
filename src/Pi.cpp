@@ -173,7 +173,7 @@ static void draw_progress(float progress)
 
 static void LuaInit()
 {
-	PROFILE_SCOPED()
+	//PROFILE_SCOPED()
 	lua_State *l = Pi::luaManager.GetLuaState();
 
 	// XXX kill CurrentDirectory
@@ -425,7 +425,7 @@ void Pi::Init()
 
 void Pi::InitOpenGL()
 {
-	PROFILE_SCOPED()
+	//PROFILE_SCOPED()
 	glShadeModel(GL_SMOOTH);
 	glCullFace(GL_BACK);
 	glFrontFace(GL_CCW);
@@ -1103,7 +1103,7 @@ void Pi::MainLoop()
 	memset(fps_readout, 0, sizeof(fps_readout));
 
 	while (isGameStarted) {
-		PROFILE_SCOPED_DESC("MainLoop::while (isGameStarted)")
+		//PROFILE_SCOPED_DESC("MainLoop::while (isGameStarted)")
 		double newTime = 0.001 * double(SDL_GetTicks());
 		Pi::frameTime = newTime - currentTime;
 		if (Pi::frameTime > 0.25) Pi::frameTime = 0.25;

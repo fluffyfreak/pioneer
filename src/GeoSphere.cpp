@@ -113,7 +113,7 @@ public:
 	}
 	
 	GeoPatch(vector3d v0, vector3d v1, vector3d v2, vector3d v3, int depth) {
-		PROFILE_SCOPED()
+		//PROFILE_SCOPED()
 		memset(this, 0, sizeof(GeoPatch));
 		m_kidsLock = SDL_CreateMutex();
 		v[0] = v0; v[1] = v1; v[2] = v2; v[3] = v3;
@@ -131,7 +131,7 @@ public:
 	}
 
 	static void Init() {
-		PROFILE_SCOPED()
+		//PROFILE_SCOPED()
 		GEOPATCH_FRAC = 1.0 / double(GEOPATCH_EDGELEN-1);
 
 		if (midIndices) {
@@ -366,7 +366,7 @@ public:
 	}
 
 	void _UpdateVBOs() {
-		PROFILE_SCOPED()
+		//PROFILE_SCOPED()
 		if (m_needUpdateVBOs) {
 			if (!m_vbo) glGenBuffersARB(1, &m_vbo);
 			m_needUpdateVBOs = false;
@@ -395,7 +395,7 @@ public:
 	 * fucking pointless. one position inwards. used to make edge normals
 	 * for adjacent tiles */
 	void GetEdgeMinusOneVerticesFlipped(int edge, vector3d *ev) {
-		PROFILE_SCOPED()
+		//PROFILE_SCOPED()
 		if (edge == 0) {
 			for (int x=0; x<GEOPATCH_EDGELEN; x++) ev[GEOPATCH_EDGELEN-1-x] = vertices[x + GEOPATCH_EDGELEN];
 		} else if (edge == 1) {
@@ -409,7 +409,7 @@ public:
 		}
 	}
 	static void GetEdge(vector3d *array, int edge, vector3d *ev) {
-		PROFILE_SCOPED()
+		//PROFILE_SCOPED()
 		if (edge == 0) {
 			for (int x=0; x<GEOPATCH_EDGELEN; x++) ev[x] = array[x];
 		} else if (edge == 1) {
@@ -423,7 +423,7 @@ public:
 		}
 	}
 	static void SetEdge(vector3d *array, int edge, const vector3d *ev) {
-		PROFILE_SCOPED()
+		//PROFILE_SCOPED()
 		if (edge == 0) {
 			for (int x=0; x<GEOPATCH_EDGELEN; x++) array[x] = ev[x];
 		} else if (edge == 1) {
@@ -437,7 +437,7 @@ public:
 		}
 	}
 	int GetEdgeIdxOf(GeoPatch *e) {
-		PROFILE_SCOPED()
+		//PROFILE_SCOPED()
 		for (int i=0; i<4; i++) {
 			if (edgeFriend[i] == e) return i;
 		}
@@ -447,7 +447,7 @@ public:
 
 
 	void FixEdgeNormals(const int edge, const vector3d *ev) {
-		PROFILE_SCOPED()
+		//PROFILE_SCOPED()
 		int x, y;
 		switch (edge) {
 		case 0:
@@ -514,7 +514,7 @@ public:
 	}
 
 	int GetChildIdx(GeoPatch *child) {
-		PROFILE_SCOPED()
+		//PROFILE_SCOPED()
 		for (int i=0; i<4; i++) {
 			if (kids[i] == child) return i;
 		}
@@ -523,7 +523,7 @@ public:
 	}
 	
 	void FixEdgeFromParentInterpolated(int edge) {
-		PROFILE_SCOPED()
+		//PROFILE_SCOPED()
 		// noticeable artefacts from not doing so...
 		vector3d ev[GEOPATCH_MAX_EDGELEN];
 		vector3d en[GEOPATCH_MAX_EDGELEN];
@@ -564,7 +564,7 @@ public:
 
 	template <int corner>
 	void MakeCornerNormal(vector3d *ev, vector3d *ev2) {
-		PROFILE_SCOPED()
+		//PROFILE_SCOPED()
 		int p;
 		vector3d x1,x2,y1,y2;
 		switch (corner) {
@@ -631,7 +631,7 @@ public:
 	}
 
 	void FixCornerNormalsByEdge(int edge, vector3d *ev) {
-		PROFILE_SCOPED()
+		//PROFILE_SCOPED()
 		vector3d ev2[GEOPATCH_MAX_EDGELEN];
 		vector3d x1, x2, y1, y2;
 		/* XXX All these 'if's have an unfinished else, when a neighbour
@@ -692,7 +692,7 @@ public:
 	}
 
 	void GenerateEdgeNormalsAndColors() {
-		PROFILE_SCOPED()
+		//PROFILE_SCOPED()
 		vector3d ev[4][GEOPATCH_MAX_EDGELEN];
 		bool doneEdge[4];
 		memset(doneEdge, 0, sizeof(doneEdge));
@@ -723,7 +723,7 @@ public:
 
 	/* in patch surface coords, [0,1] */
 	vector3d GetSpherePoint(double x, double y) {
-		PROFILE_SCOPED()
+		//PROFILE_SCOPED()
 		return (v[0] + x*(1.0-y)*(v[1]-v[0]) +
 			    x*y*(v[2]-v[0]) +
 			    (1.0-x)*y*(v[3]-v[0])).Normalized();
@@ -732,7 +732,7 @@ public:
 	/** Generates full-detail vertices, and also non-edge normals and
 	 * colors */
 	void GenerateMesh() {
-		PROFILE_SCOPED()
+		//PROFILE_SCOPED()
 		vector3d *vts = vertices;
 		vector3d *col = colors;
 		double xfrac;
@@ -771,7 +771,7 @@ public:
 		}
 	}
 	void OnEdgeFriendChanged(int edge, GeoPatch *e) {
-		PROFILE_SCOPED()
+		//PROFILE_SCOPED()
 		edgeFriend[edge] = e;
 		vector3d ev[GEOPATCH_MAX_EDGELEN];
 		int we_are = e->GetEdgeIdxOf(this);
@@ -850,7 +850,7 @@ public:
 		}
 	}
 	void NotifyEdgeFriendSplit(GeoPatch *e) {
-		PROFILE_SCOPED()
+		//PROFILE_SCOPED()
 		int idx = GetEdgeIdxOf(e);
 		int we_are = e->GetEdgeIdxOf(this);
 		if (!kids[0]) return;
@@ -860,7 +860,7 @@ public:
 	}
 	
 	void NotifyEdgeFriendDeleted(GeoPatch *e) {
-		PROFILE_SCOPED()
+		//PROFILE_SCOPED()
 		int idx = GetEdgeIdxOf(e);
 		edgeFriend[idx] = 0;
 		if (!parent) return;
@@ -874,7 +874,7 @@ public:
 	}
 
 	GeoPatch *GetEdgeFriendForKid(int kid, int edge) {
-		PROFILE_SCOPED()
+		//PROFILE_SCOPED()
 		GeoPatch *e = edgeFriend[edge];
 		if (!e) return 0;
 		//assert (e);// && (e->m_depth >= m_depth));
@@ -886,7 +886,7 @@ public:
 	}
 	
 	void Render(vector3d &campos, Plane planes[6]) {
-		PROFILE_SCOPED()
+		//PROFILE_SCOPED()
 		PiVerify(SDL_mutexP(m_kidsLock)==0);
 		if (kids[0]) {
 			for (int i=0; i<4; i++) kids[i]->Render(campos, planes);
@@ -937,7 +937,7 @@ public:
 	static double s_rollingPostGenMeshAverage;
 #endif
 	void LODUpdate(vector3d &campos) {
-		PROFILE_SCOPED()
+		//PROFILE_SCOPED()
 				
 		vector3d centroid = (v[0]+v[1]+v[2]+v[3]).Normalized();
 		centroid = (1.0 + geosphere->GetHeight(centroid)) * centroid;
@@ -1114,7 +1114,7 @@ int GeoSphere::UpdateLODThread(void *data)
 
 void GeoSphere::_UpdateLODs()
 {
-	PROFILE_SCOPED()
+	//PROFILE_SCOPED()
 	for (int i=0; i<6; i++) {
 		m_patches[i]->LODUpdate(m_tempCampos);
 	}
@@ -1132,7 +1132,7 @@ static void _LockoutThreadsBeforeExit()
 
 void GeoSphere::Init()
 {
-	PROFILE_SCOPED()
+	//PROFILE_SCOPED()
 	s_geosphereSurfaceShader[0] = new GeosphereShader("geosphere", "#define NUM_LIGHTS 1\n");
 	s_geosphereSurfaceShader[1] = new GeosphereShader("geosphere", "#define NUM_LIGHTS 2\n");
 	s_geosphereSurfaceShader[2] = new GeosphereShader("geosphere", "#define NUM_LIGHTS 3\n");
@@ -1151,7 +1151,7 @@ void GeoSphere::Init()
 
 void GeoSphere::OnChangeDetailLevel()
 {
-	PROFILE_SCOPED()
+	//PROFILE_SCOPED()
 	SDL_mutexP(s_allGeospheresLock);
 	for(std::list<GeoSphere*>::iterator i = s_allGeospheres.begin();
 			i != s_allGeospheres.end(); ++i) {
@@ -1178,7 +1178,7 @@ void GeoSphere::OnChangeDetailLevel()
 
 GeoSphere::GeoSphere(const SBody *body): m_style(body)
 {
-	PROFILE_SCOPED()
+	//PROFILE_SCOPED()
 	m_vbosToDestroyLock = SDL_CreateMutex();
 	m_runUpdateThread = 0;
 	m_sbody = body;
@@ -1191,7 +1191,7 @@ GeoSphere::GeoSphere(const SBody *body): m_style(body)
 
 GeoSphere::~GeoSphere()
 {
-	PROFILE_SCOPED()
+	//PROFILE_SCOPED()
 	SDL_mutexP(s_allGeospheresLock);
 	s_allGeospheres.remove(this);
 	SDL_mutexV(s_allGeospheresLock);
@@ -1203,7 +1203,7 @@ GeoSphere::~GeoSphere()
 
 void GeoSphere::AddVBOToDestroy(GLuint vbo)
 {
-	PROFILE_SCOPED()
+	//PROFILE_SCOPED()
 	SDL_mutexP(m_vbosToDestroyLock);
 	m_vbosToDestroy.push_back(vbo);
 	SDL_mutexV(m_vbosToDestroyLock);
@@ -1211,7 +1211,7 @@ void GeoSphere::AddVBOToDestroy(GLuint vbo)
 
 void GeoSphere::DestroyVBOs()
 {
-	PROFILE_SCOPED()
+	//PROFILE_SCOPED()
 	SDL_mutexP(m_vbosToDestroyLock);
 	for (std::list<GLuint>::iterator i = m_vbosToDestroy.begin();
 			i != m_vbosToDestroy.end(); ++i) {
@@ -1223,7 +1223,7 @@ void GeoSphere::DestroyVBOs()
 
 void GeoSphere::BuildFirstPatches()
 {
-	PROFILE_SCOPED()
+	//PROFILE_SCOPED()
 	// generate initial wank
 	vector3d p1(1,1,1);
 	vector3d p2(-1,1,1);
@@ -1263,7 +1263,7 @@ static const float g_ambient[4] = { 0, 0, 0, 1.0 };
 
 static void DrawAtmosphereSurface(const vector3d &campos, float rad)
 {
-	PROFILE_SCOPED()
+	//PROFILE_SCOPED()
 	const int LAT_SEGS = 20;
 	const int LONG_SEGS = 20;
 	vector3d yaxis = campos.Normalized();
@@ -1316,7 +1316,7 @@ static void DrawAtmosphereSurface(const vector3d &campos, float rad)
 }
 
 void GeoSphere::Render(vector3d campos, const float radius, const float scale) {
-	PROFILE_SCOPED()
+	//PROFILE_SCOPED()
 	Plane planes[6];
 	GetFrustum(planes);
 	const float atmosRadius = ATMOSPHERE_RADIUS;

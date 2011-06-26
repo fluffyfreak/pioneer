@@ -783,7 +783,8 @@ bool StationShipPaintView::OnMouseDown(Gui::MouseButtonEvent *e)
 			m_space->TraceRay(camPos, res1, 10000.0, &c);
 			m_geom->Disable();
 			if (c.triIdx != -1) {
-				vector3f tangent = c.normal;
+				vector3f camDir = camPos - vector3f(0.0, 0.0, 0.0);
+				vector3f tangent = c.normal.Cross(camDir).Normalized();
 				m_paintJob.AddDecal(c.pos, c.normal, tangent, 1.0f, 1.0f, 1.0f);
 			}
 		}

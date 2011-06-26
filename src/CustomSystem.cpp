@@ -10,7 +10,7 @@ static std::list<CustomSystem> custom_systems;
 
 void CustomSystem::Init()
 {
-	PROFILE_SCOPED()
+	//PROFILE_SCOPED()
 	lua_State *L = csLua = lua_open();
 	luaL_openlibs(L);
 	OOLUA::setup_user_lua_state(L);

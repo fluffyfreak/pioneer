@@ -148,7 +148,7 @@ static std::vector<SpaceStationType> orbitalStationTypes;
 /* Must be called after LmrModel init is called */
 void SpaceStation::Init()
 {
-	PROFILE_SCOPED()
+	//PROFILE_SCOPED()
 	if (stationTypesInitted) return;
 	stationTypesInitted = true;
 	for (int is_orbital=0; is_orbital<2; is_orbital++) {

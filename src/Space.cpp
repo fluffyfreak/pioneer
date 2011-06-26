@@ -35,7 +35,7 @@ static std::list<HyperspaceCloud*> storedArrivalClouds;
 
 void Init()
 {
-	PROFILE_SCOPED()
+	//PROFILE_SCOPED()
 	rootFrame = new Frame(NULL, "System");
 	rootFrame->SetRadius(FLT_MAX);
 }

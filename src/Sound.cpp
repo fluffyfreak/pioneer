@@ -157,6 +157,7 @@ eventid PlaySfx (const char *fx, float volume_left, float volume_right, Op op)
 	}
 	wavstream[idx].sample = GetSample(fx);
 	wavstream[idx].oggv = 0;
+	wavstream[idx].buf_pos = 0;
 	wavstream[idx].volume[0] = volume_left;
 	wavstream[idx].volume[1] = volume_right;
 	wavstream[idx].op = op;
@@ -249,11 +250,7 @@ static void fill_audio_1stream(float *buffer, int len, int stream_num)
 			}
 
 			/* Repeat or end? */
-#if 1
-			if (ev.buf_pos >= ev.sample->buf_len || inbuf_pos >= len) {
-#else
 			if (ev.buf_pos >= ev.sample->buf_len) {
-#endif
 				ev.buf_pos = 0;
 				inbuf_pos = 0;
 				if (!(ev.op & OP_REPEAT)) {
@@ -389,7 +386,7 @@ static void load_sound(const std::string &basename, const std::string &path)
 
 bool Init ()
 {
-	PROFILE_SCOPED()
+	//PROFILE_SCOPED()
 	static bool isInitted = false;
 
 	if (!isInitted) {
