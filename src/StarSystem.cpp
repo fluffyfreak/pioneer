@@ -1978,13 +1978,10 @@ void StarSystem::ShrinkCache()
 	while (iter != s_cachedSystems.end())
 	{
 		StarSystem *s = (*iter).second;
-		if ((NULL!=s) && s->GetRefCount() == 0)
-		{
+		if ((NULL!=s) && s->GetRefCount() == 0)	{
 			delete s;
 			iter = s_cachedSystems.erase( iter ); 
-		}
-		else
-		{
+		} else {
 			++iter;
 		}
 	}

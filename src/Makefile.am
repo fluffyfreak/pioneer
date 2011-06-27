@@ -48,6 +48,7 @@ noinst_HEADERS = \
 	LuaFormat.h \
 	LuaGame.h \
 	LuaManager.h \
+	LuaMusic.h \
 	LuaNameGen.h \
 	LuaObject.h \
 	LuaPlanet.h \
@@ -98,6 +99,7 @@ noinst_HEADERS = \
 	ShipFlavour.h \
 	ShipType.h \
 	Sound.h \
+	SoundMusic.h \
 	Space.h \
 	SpaceStation.h \
 	SpaceStationView.h \
@@ -161,6 +163,7 @@ pioneer_SOURCES	= \
 	LuaFormat.cpp \
 	LuaGame.cpp \
 	LuaManager.cpp \
+	LuaMusic.cpp \
 	LuaNameGen.cpp \
 	LuaObject.cpp \
 	LuaPlanet.cpp \
@@ -206,6 +209,7 @@ pioneer_SOURCES	= \
 	ShipFlavour.cpp \
 	ShipType.cpp \
 	Sound.cpp \
+	SoundMusic.cpp \
 	Space.cpp \
 	SpaceStation.cpp \
 	SpaceStationView.cpp \

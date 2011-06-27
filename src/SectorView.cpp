@@ -169,7 +169,6 @@ void SectorView::PutClickableLabel(std::string &text, int sx, int sy, int sys_id
 	Gui::Screen::LeaveOrtho();
 }
 
-static double s_pulseScale = 0.25;
 void SectorView::DrawSector(int sx, int sy)
 {
 	int playerLocSecX, playerLocSecY, playerLocSysIdx;
@@ -194,7 +193,7 @@ void SectorView::DrawSector(int sx, int sy)
 			glVertex3f(0, 0, (*i).p.z);
 		glEnd();
 		glTranslatef(0, 0, (*i).p.z);
-
+		
 		// only do this once we've pretty much stopped moving.
 		float diffx = fabs(m_pxMovingTo - m_px);
 		float diffy = fabs(m_pyMovingTo - m_py);
@@ -211,7 +210,7 @@ void SectorView::DrawSector(int sx, int sy)
 			}
 			pSS->DecRefCount();
 		}
-#if 1 // original populated star pulsing effect
+#if 0 // original populated star pulsing effect
 		// Render the star system with appropriate size
 		glPushMatrix();
 		glRotatef(-m_rot_z, 0, 0, 1);
@@ -226,7 +225,7 @@ void SectorView::DrawSector(int sx, int sy)
 		{
 			// precise to the rendered frame (better than PHYSICS_HZ granularity)
 			double preciseTime = Pi::GetGameTime() + Pi::GetGameTickAlpha()*Pi::GetTimeStep();
-			float radius = 1.5f+fabs(s_pulseScale*(1.0+sin(5.0*(preciseTime+(double)num))));
+			float radius = 1.5f+fabs(0.25*(1.0+sin(5.0*(preciseTime+(double)num))));
 
 			// I-IS-ALIVE indicator
 			glPushMatrix();
@@ -244,7 +243,7 @@ void SectorView::DrawSector(int sx, int sy)
 		{
 			// precise to the rendered frame (better than PHYSICS_HZ granularity)
 			double preciseTime = Pi::GetGameTime() + Pi::GetGameTickAlpha()*Pi::GetTimeStep();
-			float radius = fabs(s_pulseScale*(1.0+sin(5.0*(preciseTime+(double)num))));
+			float radius = fabs(0.25*(1.0+sin(5.0*(preciseTime+(double)num))));
 
 			// Render the star system with appropriate size
 			glRotatef(-m_rot_z, 0, 0, 1);
@@ -274,32 +273,27 @@ void SectorView::DrawSector(int sx, int sy)
 		// player location indicator
 		if ((sx == playerLocSecX) && (sy == playerLocSecY) && (num == playerLocSysIdx)) {
 			const shipstats_t *stats = Pi::player->CalcStats();
-			glPushMatrix();
-				glColor3f(0,0,1);
-				glScalef(1.0f,1.0f,1.0f);
-				glBegin(GL_LINE_LOOP);
-				// draw a lovely circle around our beloved player
-				for (float theta=0; theta < 2*M_PI; theta += 0.05*M_PI) {
-					glVertex3f(stats->hyperspace_range*sin(theta), stats->hyperspace_range*cos(theta), 0);
-				}
-				glEnd();
-			glPopMatrix();
+			glColor3f(0,0,1);
+			glBegin(GL_LINE_LOOP);
+			// draw a lovely circle around our beloved player
+			for (float theta=0; theta < 2*M_PI; theta += 0.05*M_PI) {
+				glVertex3f(stats->hyperspace_range*sin(theta), stats->hyperspace_range*cos(theta), 0);
+			}
+			glEnd();
 
 			glPushMatrix();
-				glDepthRange(0.2,1.0);
-				glColor3f(0,0,0.8);
-				glScalef(3,3,3);
-				glCallList(m_gluDiskDlist);
+			glDepthRange(0.2,1.0);
+			glColor3f(0,0,0.8);
+			glScalef(3,3,3);
+			glCallList(m_gluDiskDlist);
 			glPopMatrix();
 		}
 		// selected indicator
 		if ((sx == m_secx) && (sy == m_secy) && (num == m_selected)) {
-			glPushMatrix();
-				glDepthRange(0.1,1.0);
-				glColor3f(0,0.8,0);
-				glScalef(2,2,2);
-				glCallList(m_gluDiskDlist);
-			glPopMatrix();
+			glDepthRange(0.1,1.0);
+			glColor3f(0,0.8,0);
+			glScalef(2,2,2);
+			glCallList(m_gluDiskDlist);
 		}
 		glDepthRange(0,1);
 		glPopMatrix();
@@ -398,22 +392,27 @@ void SectorView::Update()
 			case Ship::HYPERJUMP_OK:
 				snprintf(buf, sizeof(buf), "Dist. %.2f light years (fuel required: %dt | time loss: %.1fhrs)", dist, fuelRequired, dur*0.0002778);
 				Pi::player->SetHyperspaceTarget(&sbody_path);
+				m_distance->Color(0.0f, 1.0f, 0.2f);
 				break;
 			case Ship::HYPERJUMP_CURRENT_SYSTEM:
 				snprintf(buf, sizeof(buf), "Current system");
 				Pi::player->ClearHyperspaceTarget();
+				m_distance->Color(0.0f, 1.0f, 1.0f);
 				break;
 			case Ship::HYPERJUMP_INSUFFICIENT_FUEL:
 				snprintf(buf, sizeof(buf), "Dist. %.2f light years (insufficient fuel, required: %dt)", dist, fuelRequired);
 				Pi::player->ClearHyperspaceTarget();
+				m_distance->Color(1.0f, 1.0f, 0.0f);
 				break;
 			case Ship::HYPERJUMP_OUT_OF_RANGE:
 				snprintf(buf, sizeof(buf), "Dist. %.2f light years (out of range)", dist);
 				Pi::player->ClearHyperspaceTarget();
+				m_distance->Color(1.0f, 0.0f, 0.0f);
 				break;
 			case Ship::HYPERJUMP_NO_DRIVE:
 				snprintf(buf, sizeof(buf), "You cannot perform a hyperjump because you do not have a functioning hyperdrive");
 				Pi::player->ClearHyperspaceTarget();
+				m_distance->Color(1.0f, 0.6f, 1.0f);
 				break;
 		}
 
