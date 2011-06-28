@@ -277,6 +277,7 @@ public:
 		curTexMatrix = matrix4x4f::Identity();
 		m_model = model;
 		m_isStatic = isStatic;
+		m_boIndexBase = 0;
 		m_bo = 0;
 		m_putGeomInsideout = false;
 	}
@@ -2471,10 +2472,10 @@ namespace ObjLoader {
 		for (int line_no=1; fgets(buf, sizeof(buf), f); line_no++) {
 			trim(buf);
 			if (!strncasecmp(buf, "newmtl ", 7)) {
-				PiAssert(1 == sscanf(buf, "newmtl %s", name));
+				PiVerify(1 == sscanf(buf, "newmtl %s", name));
 			}
 			if (!strncasecmp(buf, "map_K", 5) && strlen(name) > 0) {
-				PiAssert(1 == sscanf(buf, "map_Kd %s", file));
+				PiVerify(1 == sscanf(buf, "map_Kd %s", file));
 				mtl_map[name] = file;
 			}
 		}
@@ -2514,21 +2515,21 @@ namespace ObjLoader {
 			if ((buf[0] == 'v') && buf[1] == ' ') {
 				// vertex
 				vector3f v;
-				PiAssert(3 == sscanf(buf, "v %f %f %f", &v.x, &v.y, &v.z));
+				PiVerify(3 == sscanf(buf, "v %f %f %f", &v.x, &v.y, &v.z));
 				if (transform) v = (*transform) * v;
 				vertices.push_back(v);
 			}
 			else if ((buf[0] == 'v') && (buf[1] == 'n') && (buf[2] == ' ')) {
 				// normal
 				vector3f v;
-				PiAssert(3 == sscanf(buf, "vn %f %f %f", &v.x, &v.y, &v.z));
+				PiVerify(3 == sscanf(buf, "vn %f %f %f", &v.x, &v.y, &v.z));
 				if (transform) v = ((*transform) * v).Normalized();
 				normals.push_back(v);
 			}
 			else if ((buf[0] == 'v') && (buf[1] == 't') && (buf[2] == ' ')) {
 				// texture
 				vector3f v;
-				PiAssert(2 == sscanf(buf, "vt %f %f", &v.x, &v.y));
+				PiVerify(2 == sscanf(buf, "vt %f %f", &v.x, &v.y));
 				texcoords.push_back(v);
 			}
 			else if ((buf[0] == 'f') && (buf[1] == ' ')) {
