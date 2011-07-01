@@ -14,6 +14,11 @@
 #define OBJECTVIEWER 1
 #endif
 
+// define to include the object viewer in the build
+#ifndef ORBITALVIEWER
+#define ORBITALVIEWER 1
+#endif
+
 // define to include various extra keybindings for dev functions
 #ifndef DEVKEYS
 #define DEVKEYS 1

@@ -4,6 +4,7 @@
 #include "Player.h"
 #include "Space.h"
 #include "Planet.h"
+#include "Orbital.h"
 #include "Star.h"
 #include "Frame.h"
 #include "ShipCpanel.h"
@@ -13,6 +14,7 @@
 #include "SystemInfoView.h"
 #include "WorldView.h"
 #include "ObjectViewerView.h"
+#include "OrbitalViewerView.h"
 #include "StarSystem.h"
 #include "SpaceStation.h"
 #include "SpaceStationView.h"
@@ -21,6 +23,7 @@
 #include "Serializer.h"
 #include "NameGenerator.h"
 #include "GeoSphere.h"
+#include "GeoRing.h"
 #include "Sound.h"
 #include "Polit.h"
 #include "GalacticView.h"
@@ -141,7 +144,11 @@ const char * const Pi::combatRating[] = {
 };
 
 #if OBJECTVIEWER
-ObjectViewerView *Pi::objectViewerView;
+ObjectViewerView *Pi::objectViewerView = 0;
+#endif
+
+#if ORBITALVIEWER
+OrbitalViewerView *Pi::orbitalViewerView = 0;
 #endif
 
 Sound::MusicPlayer Pi::musicPlayer;
@@ -366,6 +373,7 @@ void Pi::Init()
 	draw_progress(0.5f);
 
 	GeoSphere::Init();
+	GeoRing::Init();
 	draw_progress(0.6f);
 
 	CityOnPlanet::Init();
@@ -632,6 +640,16 @@ void Pi::HandleEvents()
                             }
                             break;
                         }
+#if ORBITALVIEWER
+                        case SDLK_F8:
+                            Pi::SetView(Pi::orbitalViewerView);
+                            break;
+						case SDLK_F7:
+                        {
+							Space::AddOrbital();
+                            break;
+                        }
+#endif
                         default:
                             break; // This does nothing but it stops the compiler warnings
                     }
@@ -829,6 +847,10 @@ void Pi::InitGame()
 	objectViewerView = new ObjectViewerView();
 #endif
 
+#if ORBITALVIEWER
+	orbitalViewerView = new OrbitalViewerView();
+#endif
+
 	AmbientSounds::Init();
 
 	LuaInitGame();
@@ -865,6 +887,10 @@ void Pi::UninitGame()
 
 #if OBJECTVIEWER
 	delete objectViewerView;
+#endif
+
+#if ORBITALVIEWER
+	delete orbitalViewerView;
 #endif
 
 	delete infoView;

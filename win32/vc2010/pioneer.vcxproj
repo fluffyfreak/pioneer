@@ -115,6 +115,8 @@
     <ClCompile Include="..\..\src\GameConfig.cpp" />
     <ClCompile Include="..\..\src\GameMenuView.cpp" />
     <ClCompile Include="..\..\src\GenericChatForm.cpp" />
+    <ClCompile Include="..\..\src\GeoRing.cpp" />
+    <ClCompile Include="..\..\src\GeoRingStyle.cpp" />
     <ClCompile Include="..\..\src\GeoSphere.cpp" />
     <ClCompile Include="..\..\src\GeoSphereStyle.cpp" />
     <ClCompile Include="..\..\src\gui\Gui.cpp" />
@@ -160,6 +162,7 @@
     <ClCompile Include="..\..\src\LuaMusic.cpp" />
     <ClCompile Include="..\..\src\LuaNameGen.cpp" />
     <ClCompile Include="..\..\src\LuaObject.cpp" />
+    <ClCompile Include="..\..\src\LuaOrbital.cpp" />
     <ClCompile Include="..\..\src\LuaPlanet.cpp" />
     <ClCompile Include="..\..\src\LuaPlayer.cpp" />
     <ClCompile Include="..\..\src\LuaRand.cpp" />
@@ -183,6 +186,8 @@
     <ClCompile Include="..\..\src\MyLuaMathTypes.cpp" />
     <ClCompile Include="..\..\src\NameGenerator.cpp" />
     <ClCompile Include="..\..\src\ObjectViewerView.cpp" />
+    <ClCompile Include="..\..\src\Orbital.cpp" />
+    <ClCompile Include="..\..\src\OrbitalViewerView.cpp" />
     <ClCompile Include="..\..\src\PaintJob.cpp" />
     <ClCompile Include="..\..\src\perlin.cpp" />
     <ClCompile Include="..\..\src\Pi.cpp" />
@@ -262,6 +267,8 @@
     <ClInclude Include="..\..\src\gameconsts.h" />
     <ClInclude Include="..\..\src\GameMenuView.h" />
     <ClInclude Include="..\..\src\GenericChatForm.h" />
+    <ClInclude Include="..\..\src\GeoRing.h" />
+    <ClInclude Include="..\..\src\GeoRingStyle.h" />
     <ClInclude Include="..\..\src\GeoSphere.h" />
     <ClInclude Include="..\..\src\GeoSphereStyle.h" />
     <ClInclude Include="..\..\src\gui\Gui.h" />
@@ -311,6 +318,7 @@
     <ClInclude Include="..\..\src\LuaMusic.h" />
     <ClInclude Include="..\..\src\LuaNameGen.h" />
     <ClInclude Include="..\..\src\LuaObject.h" />
+    <ClInclude Include="..\..\src\LuaOrbital.h" />
     <ClInclude Include="..\..\src\LuaPlanet.h" />
     <ClInclude Include="..\..\src\LuaPlayer.h" />
     <ClInclude Include="..\..\src\LuaRand.h" />
@@ -335,6 +343,8 @@
     <ClInclude Include="..\..\src\NameGenerator.h" />
     <ClInclude Include="..\..\src\Object.h" />
     <ClInclude Include="..\..\src\ObjectViewerView.h" />
+    <ClInclude Include="..\..\src\Orbital.h" />
+    <ClInclude Include="..\..\src\OrbitalViewerView.h" />
     <ClInclude Include="..\..\src\PaintJob.h" />
     <ClInclude Include="..\..\src\perlin.h" />
     <ClInclude Include="..\..\src\PersistSystemData.h" />

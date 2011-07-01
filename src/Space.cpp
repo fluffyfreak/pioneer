@@ -4,6 +4,7 @@
 #include "Frame.h"
 #include "Star.h"
 #include "Planet.h"
+#include "Orbital.h"
 #include <algorithm>
 #include <functional>
 #include "Pi.h"
@@ -360,6 +361,31 @@ void BuildSystem()
 	rootFrame->SetPosition(vector3d(0,0,0));
 	rootFrame->SetVelocity(vector3d(0,0,0));
 	rootFrame->UpdateOrbitRails();
+}
+
+void AddOrbital()
+{
+	Frame * f = rootFrame;
+	SBody * sbody = Pi::currentSystem->rootBody;
+	Body * primary = 0;
+	std::list<Body*>::iterator iter = bodies.begin();
+	for( ; iter!=bodies.end() ; ++iter )
+	{
+		if( (*iter)->GetType() == Object::STAR ) {
+			primary = (*iter);
+			break;
+		}
+	}
+	f = MakeFrameFor(sbody, primary, f);
+
+	SBody * sorby = Pi::currentSystem->MakeOrbitalAround();
+	Orbital *orby = new Orbital(sorby);
+	Body *b = orby;
+	b->SetLabel(sorby->name.c_str());
+	b->SetPosition(vector3d(0,0,0));
+	AddBody(b);
+
+	f = MakeFrameFor(sorby, b, f);
 }
 
 void AddBody(Body *b)
@@ -1015,7 +1041,7 @@ void Render(const Frame *cam_frame)
 
 		double screenrad = 500 * rad / bz[i].dist;		// approximate pixel size
 		if (!bz[i].b->IsType(Object::STAR) && screenrad < 2) {
-			if (!bz[i].b->IsType(Object::PLANET)) continue;
+			if (!bz[i].b->IsType(Object::PLANET) && !bz[i].b->IsType(Object::ORBITAL)) continue;
 			// absolute bullshit
 			double spikerad = (7 + 1.5*log10(screenrad)) * rad / screenrad;
 			DrawSpike(spikerad, bz[i].viewCoords, bz[i].viewTransform);

@@ -279,6 +279,7 @@ bool Ship::OnCollision(Object *b, Uint32 flags, double relVel)
 		b->IsType(Object::PLAYER) ||
 		b->IsType(Object::SPACESTATION) ||
 		b->IsType(Object::PLANET) ||
+		b->IsType(Object::ORBITAL) ||
 		b->IsType(Object::STAR) ||
 		b->IsType(Object::CARGOBODY))
 	{

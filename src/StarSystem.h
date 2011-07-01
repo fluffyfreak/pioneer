@@ -108,8 +108,9 @@ public:
 		TYPE_PLANET_GAS_GIANT = 37,
 		TYPE_PLANET_ASTEROID = 38,
 		TYPE_PLANET_TERRESTRIAL = 39,
-		TYPE_STARPORT_ORBITAL = 40,
-		TYPE_STARPORT_SURFACE = 41,
+		TYPE_PLANET_ORBITAL = 40,
+		TYPE_STARPORT_ORBITAL = 41,
+		TYPE_STARPORT_SURFACE = 42,
 		TYPE_MIN = TYPE_BROWN_DWARF,
 		TYPE_MAX = TYPE_STARPORT_SURFACE,
 		TYPE_STAR_MIN = TYPE_BROWN_DWARF,
@@ -258,12 +259,16 @@ private:
 	StarSystem(int sector_x, int sector_y, int system_idx);
 	~StarSystem();
 
+public:
+	SBody * MakeOrbitalAround();
+private:
 	SBody *NewBody() {
 		SBody *body = new SBody;
 		body->id = m_bodies.size();
 		m_bodies.push_back(body);
 		return body;
 	}
+
 	void MakeShortDescription(MTRand &rand);
 	void MakePlanetsAround(SBody *primary, MTRand &rand);
 	void MakeRandomStar(SBody *sbody, MTRand &rand);

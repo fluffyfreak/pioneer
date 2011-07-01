@@ -3,6 +3,7 @@
 #include "Frame.h"
 #include "Star.h"
 #include "Planet.h"
+#include "Orbital.h"
 #include "CargoBody.h"
 #include "SpaceStation.h"
 #include "Ship.h"
@@ -51,6 +52,7 @@ void Body::Serialize(Serializer::Writer &_wr)
 	wr.Int32(int(GetType()));
 	switch (GetType()) {
 		case Object::STAR:
+		case Object::ORBITAL:
 		case Object::PLANET:
 		case Object::SPACESTATION:
 		case Object::SHIP:
@@ -79,6 +81,8 @@ Body *Body::Unserialize(Serializer::Reader &_rd)
 	switch (type) {
 		case Object::STAR:
 			b = new Star(); break;
+		case Object::ORBITAL:
+			b = new Orbital(); break;
 		case Object::PLANET:
 			b = new Planet(); break;
 		case Object::SPACESTATION:

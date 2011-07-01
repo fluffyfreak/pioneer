@@ -488,6 +488,7 @@ SBody::BodySuperType SBody::GetSuperType() const
 		     return SUPERTYPE_GAS_GIANT;
 		case TYPE_PLANET_ASTEROID:
 		case TYPE_PLANET_TERRESTRIAL:
+		case TYPE_PLANET_ORBITAL:
 		     return SUPERTYPE_ROCKY_PLANET;
 		case TYPE_STARPORT_ORBITAL:
 		case TYPE_STARPORT_SURFACE:
@@ -546,6 +547,7 @@ std::string SBody::GetAstroDescription()
 		if (mass > 80) return "Medium gas giant";
 		else return "Small gas giant";
 	case TYPE_PLANET_ASTEROID: return "Asteroid";
+	case TYPE_PLANET_ORBITAL:
 	case TYPE_PLANET_TERRESTRIAL: {
 		std::string s;
 		if (mass > fixed(2,1)) s = "Massive";
@@ -689,6 +691,7 @@ const char *SBody::GetIcon()
 		}
 	case TYPE_PLANET_ASTEROID:
 		return "icons/object_planet_asteroid.png";
+	case TYPE_PLANET_ORBITAL:
 	case TYPE_PLANET_TERRESTRIAL:
 		if (m_volatileLiquid > fixed(7,10)) {
 			if (averageTemp > 250) return "icons/object_planet_water.png";
@@ -1483,6 +1486,112 @@ void StarSystem::MakePlanetsAround(SBody *primary, MTRand &rand)
 		if (make_moons) MakePlanetsAround(*i, rand);
 		idx++;
 	}
+}
+
+SBody * StarSystem::MakeOrbitalAround()
+{
+	unsigned long _init[5] = { m_loc.systemNum, m_loc.sectorX, m_loc.sectorY, UNIVERSE_SEED, m_seed };
+	MTRand rand;
+	rand.seed(_init, 5);
+	SBody *primary = rootBody;
+
+	fixed discMin = fixed(0);
+	fixed discMax = fixed(5000,1);
+	fixed discDensity;
+
+	SBody::BodySuperType superType = primary->GetSuperType();
+
+	if (superType <= SBody::SUPERTYPE_STAR) {
+		discMax = 100 * rand.NFixed(2)*fixed::SqrtOf(primary->mass);
+		
+		// having limited discMin by bin-separation/fake roche, and
+		// discMax by some relation to star mass, we can now compute
+		// disc density
+		discDensity = rand.Fixed() * get_disc_density(primary, discMin, discMax, fixed(2,100));
+
+		if ((superType == SBody::SUPERTYPE_STAR) && (primary->parent)) {
+			// limit planets out to 10% distance to star's binary companion
+			discMax = std::min(discMax, primary->orbMin * fixed(1,10));
+		}
+	} else {
+		fixed primary_rad = primary->radius * AU_EARTH_RADIUS;
+		discMin = 4 * primary_rad;
+		/* use hill radius to find max size of moon system. for stars botch it.
+		   And use planets orbit around its primary as a scaler to a moon's orbit*/
+		discMax = std::min(discMax, fixed(1,20)*
+			primary->CalcHillRadius()*primary->orbMin*fixed(1,10));
+		
+		discDensity = rand.Fixed() * get_disc_density(primary, discMin, discMax, fixed(1,500));
+	}
+
+	//fixed discDensity = 20*rand.NFixed(4);
+
+	//printf("Around %s: Range %f -> %f AU\n", primary->name.c_str(), discMin.ToDouble(), discMax.ToDouble());
+
+	fixed initialJump = rand.NFixed(5);
+	fixed pos = (fixed(1,1) - initialJump)*discMin + (initialJump*discMax);
+
+	{
+		// periapsis, apoapsis = closest, farthest distance in orbit
+		fixed periapsis = pos + pos*0.5*rand.NFixed(2);/* + jump */;
+		fixed ecc = rand.NFixed(3);
+		fixed semiMajorAxis = periapsis / (fixed(1,1) - ecc);
+		fixed apoapsis = 2*semiMajorAxis - periapsis;
+		pos = (apoapsis * fixed(135,100)) * 8;
+		if (apoapsis > discMax) {
+			printf("probably wanted to skip this one?\n");
+		}
+
+		periapsis = pos + pos*0.5*rand.NFixed(2);/* + jump */;
+		ecc = rand.NFixed(3);
+		semiMajorAxis = periapsis / (fixed(1,1) - ecc);
+		apoapsis = 2*semiMajorAxis - periapsis;
+
+		fixed mass;
+		{
+			const fixed a = pos;
+			const fixed b = fixed(135,100)*apoapsis;
+			mass = mass_from_disk_area(a, b, discMax);
+			mass *= rand.Fixed() * discDensity;
+		}
+
+		SBody *sorbital = NewBody();
+		sorbital->eccentricity = ecc;
+		sorbital->axialTilt = fixed(100,157)*rand.NFixed(2);
+		sorbital->semiMajorAxis = semiMajorAxis;
+		sorbital->type = SBody::TYPE_PLANET_ORBITAL;
+		sorbital->seed = rand.Int32();
+		sorbital->tmp = 0;
+		sorbital->parent = primary;
+		sorbital->mass = mass;
+		sorbital->rotationPeriod = fixed(rand.Int32(1,200), 24);
+
+		sorbital->orbit.eccentricity = ecc.ToDouble();
+		sorbital->orbit.semiMajorAxis = semiMajorAxis.ToDouble() * AU;
+		sorbital->orbit.period = calc_orbital_period(sorbital->orbit.semiMajorAxis, primary->GetMass());
+
+		double r1 = rand.Double(2*M_PI);		// function parameter evaluation order is implementation-dependent
+		double r2 = rand.NDouble(5);			// can't put two rands in the same expression
+		sorbital->orbit.rotMatrix = matrix4x4d::RotateYMatrix(r1) *
+			matrix4x4d::RotateXMatrix(-0.5*M_PI + r2*M_PI/2.0);
+
+		sorbital->orbMin = periapsis;
+		sorbital->orbMax = apoapsis;
+		primary->children.push_back(sorbital);
+
+		/* minimum separation between sorbitals of 1.35 */
+		pos = apoapsis * fixed(135,100);
+	
+		// Turn them into something!!!!!!!
+		char buf[8];
+		snprintf(buf, sizeof(buf), "%s", "Vavatch");
+		sorbital->name = buf;
+		sorbital->PickPlanetType(this, rand);
+		sorbital->type = SBody::TYPE_PLANET_ORBITAL;
+
+		return sorbital;
+	}
+	return NULL;
 }
 
 /*

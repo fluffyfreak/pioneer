@@ -37,6 +37,10 @@ namespace Sound { class MusicPlayer; }
 class ObjectViewerView;
 #endif
 
+#if ORBITALVIEWER
+class OrbitalViewerView;
+#endif
+
 struct DetailLevel {
 	int planets;
 	int cities;
@@ -154,6 +158,10 @@ public:
 
 #if OBJECTVIEWER
 	static ObjectViewerView *objectViewerView;
+#endif
+
+#if ORBITALVIEWER
+	static OrbitalViewerView *orbitalViewerView;
 #endif
 
 	static int CombatRating(int kills);

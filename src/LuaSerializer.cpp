@@ -4,6 +4,7 @@
 #include "LuaShip.h"
 #include "LuaSpaceStation.h"
 #include "LuaPlanet.h"
+#include "LuaOrbital.h"
 #include "LuaStar.h"
 #include "LuaPlayer.h"
 #include "LuaSBodyPath.h"
@@ -12,6 +13,7 @@
 #include "Ship.h"
 #include "SpaceStation.h"
 #include "Planet.h"
+#include "Orbital.h"
 #include "Star.h"
 #include "Player.h"
 #include "Pi.h"
@@ -240,6 +242,9 @@ const char *LuaSerializer::unpickle(lua_State *l, const char *pos)
 						break;
 					case Object::PLANET:
 						LuaPlanet::PushToLua(dynamic_cast<Planet*>(body));
+						break;
+					case Object::ORBITAL:
+						LuaOrbital::PushToLua(dynamic_cast<Orbital*>(body));
 						break;
 					case Object::STAR:
 						LuaStar::PushToLua(dynamic_cast<Star*>(body));

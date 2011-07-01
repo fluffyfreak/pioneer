@@ -17,6 +17,9 @@ namespace Space {
 	extern void Init();
 	extern void Clear();
 	extern void BuildSystem();
+
+	extern void AddOrbital();
+
 	extern void Serialize(Serializer::Writer &wr);
 	extern void Unserialize(Serializer::Reader &rd);
 	extern void GenBody(SBody *b, Frame *f);

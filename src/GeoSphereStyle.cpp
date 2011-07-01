@@ -161,6 +161,7 @@ void GeoSphereStyle::PickAtmosphere(const SBody *sbody)
 			break;
 		//default:
 		case SBody::TYPE_PLANET_TERRESTRIAL:
+		case SBody::TYPE_PLANET_ORBITAL:
 			double r,g,b;
 			r = sbody->m_atmosOxidizing.ToDouble();
 			g = r;

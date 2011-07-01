@@ -1007,7 +1007,7 @@ void WorldView::UpdateCommsOptions()
 			button->onClick.connect(sigc::bind(sigc::ptr_fun(&autopilot_flyto), navtarget));
 			ypos += 32;
 
-			if (navtarget->IsType(Object::PLANET) || navtarget->IsType(Object::STAR)) {
+			if (navtarget->IsType(Object::PLANET) || navtarget->IsType(Object::ORBITAL) || navtarget->IsType(Object::STAR)) {
 				button = AddCommsOption("Autopilot: Enter low orbit around " + navtarget->GetLabel(), ypos, optnum++);
 				button->onClick.connect(sigc::bind(sigc::ptr_fun(autopilot_orbit), navtarget, 1.1));
 				ypos += 32;
@@ -1175,7 +1175,7 @@ void WorldView::ProjectObjsToScreenPos(const Frame *cam_frame)
 				// Ok here we are hiding the label of distant small objects.
 				// If you are not a planet, star, space station or remote city
 				// and you are > 1000km away then bugger off. :)
-				if (b->IsType(Object::PLANET) || b->IsType(Object::STAR) || b->IsType(Object::SPACESTATION) ||
+				if (b->IsType(Object::PLANET) || b->IsType(Object::ORBITAL) || b->IsType(Object::STAR) || b->IsType(Object::SPACESTATION) ||
 					Pi::player->GetPositionRelTo(b).LengthSqr() < 1000000.0*1000000.0) {
 
 					m_bodyLabels->Add((*i)->GetLabel(), sigc::bind(sigc::mem_fun(this, &WorldView::SelectBody), *i, true), float(pos.x), float(pos.y));
