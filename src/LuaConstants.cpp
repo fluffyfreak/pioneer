@@ -183,6 +183,7 @@ void LuaConstants::Register(lua_State *l)
 	 * PLANET_GAS_GIANT - gas giant
 	 * PLANET_ASTEROID - asteroid
 	 * PLANET_TERRESTRIAL - terrestrial planet
+	 * PLANET_ORBITAL - orbital planet
 	 * STARPORT_ORBITAL - orbital starport (space station)
 	 * STARPORT_SURFACE - surface starport
 	 *

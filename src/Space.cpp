@@ -341,8 +341,13 @@ void GenBody(SBody *sbody, Frame *f)
 			SpaceStation *ss = new SpaceStation(sbody);
 			b = ss;
 		} else {
-			Planet *planet = new Planet(sbody);
-			b = planet;
+			if( SBody::TYPE_PLANET_ORBITAL == sbody->type ) {
+				Orbital *orbital = new Orbital(sbody);
+				b = orbital;
+			} else {
+				Planet *planet = new Planet(sbody);
+				b = planet;
+			}
 		}
 		b->SetLabel(sbody->name.c_str());
 		b->SetPosition(vector3d(0,0,0));

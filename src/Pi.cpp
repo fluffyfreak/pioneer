@@ -40,6 +40,7 @@
 #include "LuaShip.h"
 #include "LuaSpaceStation.h"
 #include "LuaPlanet.h"
+#include "LuaOrbital.h"
 #include "LuaStar.h"
 #include "LuaPlayer.h"
 #include "LuaCargoBody.h"
@@ -196,6 +197,7 @@ static void LuaInit()
 	LuaShip::RegisterClass();
 	LuaSpaceStation::RegisterClass();
 	LuaPlanet::RegisterClass();
+	LuaOrbital::RegisterClass();
 	LuaStar::RegisterClass();
 	LuaPlayer::RegisterClass();
     LuaCargoBody::RegisterClass();

@@ -7,26 +7,20 @@
 
 #include "profiler/Profiler.h"
 
-#define GEOCHUNK_USE_THREADING
-#ifdef GEOCHUNK_USE_THREADING
-	//#define ANDYC_HORRIFIC_TIMING
-	#ifdef ANDYC_HORRIFIC_TIMING
-		#include "Timer.h"
-	#endif //ANDYC_HORRIFIC_TIMING
-#endif GEOCHUNK_USE_THREADING
-
+#define GEOPLATE_USE_THREADING
 
 // tri edge lengths
-#define GEOCHUNK_SUBDIVIDE_AT_CAMDIST	5.0
-#define GEOCHUNK_MAX_DEPTH	15
+#define GEOPLATE_SUBDIVIDE_AT_CAMDIST	5.0
+#define GEOPLATE_MAX_DEPTH	15
 // must be an odd number
-//#define GEOCHUNK_EDGELEN	15
-#define GEOCHUNK_NUMVERTICES	(GEOCHUNK_EDGELEN*GEOCHUNK_EDGELEN)
+//#define GEOPLATE_EDGELEN	15
+#define GEOPLATE_NUMVERTICES	(GEOPLATE_EDGELEN*GEOPLATE_EDGELEN)
 #define GEORING_USE_THREADING
 
-int GEOCHUNK_EDGELEN = 15;
-static const int GEOCHUNK_MAX_EDGELEN = 55;
-static double GEOCHUNK_FRAC;
+int GEOPLATE_EDGELEN = 15;
+static const int GEOPLATE_MAX_EDGELEN = 65;
+static double GEOPLATE_FRAC;
+static double GEOPLATEHULL_FRAC;
 
 #define PRINT_VECTOR(_v) printf("%f,%f,%f\n", (_v).x, (_v).y, (_v).z);
 
@@ -50,11 +44,13 @@ struct VBOVertex
 };
 #pragma pack()
 
-#define VBO_COUNT_LO_EDGE  (3*(GEOCHUNK_EDGELEN/2))
-#define VBO_COUNT_HI_EDGE  (3*(GEOCHUNK_EDGELEN-1))
-#define VBO_COUNT_MID_IDX  (4*3*(GEOCHUNK_EDGELEN-3) + 2*(GEOCHUNK_EDGELEN-3)*(GEOCHUNK_EDGELEN-3)*3)
+#define VBO_COUNT_LO_EDGE  (3*(GEOPLATE_EDGELEN/2))
+#define VBO_COUNT_HI_EDGE  (3*(GEOPLATE_EDGELEN-1))
+#define VBO_COUNT_MID_IDX  (4*3*(GEOPLATE_EDGELEN-3) + 2*(GEOPLATE_EDGELEN-3)*(GEOPLATE_EDGELEN-3)*3)
+#define VBO_COUNT_ALL_IDX  (((GEOPLATE_EDGELEN-1)*(GEOPLATE_EDGELEN-1))*2*3)
+
 //                          ^^ serrated teeth bit      ^^^ square inner bit
-#define IDX_VBO_LO_OFFSET(_i) ((_i)*sizeof(unsigned short)*3*(GEOCHUNK_EDGELEN/2))
+#define IDX_VBO_LO_OFFSET(_i) ((_i)*sizeof(unsigned short)*3*(GEOPLATE_EDGELEN/2))
 #define IDX_VBO_HI_OFFSET(_i) (((_i)*sizeof(unsigned short)*VBO_COUNT_HI_EDGE)+IDX_VBO_LO_OFFSET(4))
 #define IDX_VBO_MAIN_OFFSET IDX_VBO_HI_OFFSET(4)
 
@@ -62,7 +58,271 @@ struct VBOVertex
 static int s_loMinIdx[4], s_loMaxIdx[4];
 static int s_hiMinIdx[4], s_hiMaxIdx[4];
 
-class GeoChunk {
+class GeoPlateHull {
+public:
+	#define NUM_VBE 2
+	vector3d vBE[NUM_VBE];
+	vector3d *vertices;
+	vector3d *normals;
+	vector3d *colors;
+	GeoRing *geoRing;
+	GLuint m_vbo;
+	static unsigned short *indices;
+	static GLuint indices_vbo;
+	static VBOVertex *vbotemp;
+	double m_roughLength;
+	vector3d clipCentroid;
+	double clipRadius;
+
+	// params
+	// v0, v1 - define points on the line describing the loop of the ring/orbital.
+	// depth - 0 is the topmost plate with each depth+1 describing it's depth within the tree.
+	GeoPlateHull(vector3d v0, vector3d v1, int depth) {
+		//PROFILE_SCOPED()
+		memset(this, 0, sizeof(GeoPlateHull));
+		vBE[0] = v0; 
+		vBE[1] = v1;
+		clipCentroid = (v0+v1) * 0.5;
+		clipRadius = 0;
+		for (int i=0; i<NUM_VBE; i++) {
+			clipRadius = std::max(clipRadius, (vBE[i]-clipCentroid).Length());
+		}
+		m_roughLength = GEOPLATE_SUBDIVIDE_AT_CAMDIST / pow(2.0, depth);
+		normals = new vector3d[GEOPLATE_NUMVERTICES];
+		vertices = new vector3d[GEOPLATE_NUMVERTICES];
+		colors = new vector3d[GEOPLATE_NUMVERTICES];
+	}
+
+	~GeoPlateHull() {
+		delete vertices;
+		delete normals;
+		delete colors;
+		geoRing->AddVBOToDestroy(m_vbo);
+	}
+
+	static void Init() {
+		//PROFILE_SCOPED()
+		GEOPLATEHULL_FRAC = 1.0 / double(GEOPLATE_EDGELEN-1);
+
+		if (indices) {
+			delete [] indices;
+			if (indices_vbo) {
+				glDeleteBuffersARB(1, &indices_vbo);
+			}
+			delete [] vbotemp;
+		}
+		{
+			vbotemp = new VBOVertex[GEOPLATE_NUMVERTICES];
+			unsigned short *idx;
+			indices = new unsigned short[VBO_COUNT_ALL_IDX];
+			idx = indices;
+			for (int x=0; x<GEOPLATE_EDGELEN-1; x++) {
+				for (int y=0; y<GEOPLATE_EDGELEN-1; y++) {
+					idx[0] = x + GEOPLATE_EDGELEN*y;		PiAssert(idx[0] < GEOPLATE_NUMVERTICES);
+					idx[1] = x+1 + GEOPLATE_EDGELEN*y;		PiAssert(idx[1] < GEOPLATE_NUMVERTICES);
+					idx[2] = x + GEOPLATE_EDGELEN*(y+1);	PiAssert(idx[2] < GEOPLATE_NUMVERTICES);
+					idx+=3;
+
+					idx[0] = x+1 + GEOPLATE_EDGELEN*y;		PiAssert(idx[0] < GEOPLATE_NUMVERTICES);
+					idx[1] = x+1 + GEOPLATE_EDGELEN*(y+1);	PiAssert(idx[1] < GEOPLATE_NUMVERTICES);
+					idx[2] = x + GEOPLATE_EDGELEN*(y+1);	PiAssert(idx[2] < GEOPLATE_NUMVERTICES);
+					PiAssert(idx < indices+VBO_COUNT_ALL_IDX);
+					idx+=3;
+				}
+			}
+
+			glGenBuffersARB(1, &indices_vbo);
+			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, indices_vbo);
+			glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned short)*VBO_COUNT_ALL_IDX, 0, GL_STATIC_DRAW);
+			glBufferSubDataARB(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(unsigned short)*VBO_COUNT_ALL_IDX, indices);
+			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, 0);
+		}
+	}
+
+	void UpdateVBOs() {
+		//PROFILE_SCOPED()
+		if (!m_vbo) glGenBuffersARB(1, &m_vbo);
+		glBindBufferARB(GL_ARRAY_BUFFER, m_vbo);
+		glBufferDataARB(GL_ARRAY_BUFFER, sizeof(VBOVertex)*GEOPLATE_NUMVERTICES, 0, GL_DYNAMIC_DRAW);
+		for (int i=0; i<GEOPLATE_NUMVERTICES; i++)
+		{
+			clipRadius = std::max(clipRadius, (vertices[i]-clipCentroid).Length());
+			VBOVertex *pData = vbotemp + i;
+			pData->x = float(vertices[i].x);
+			pData->y = float(vertices[i].y);
+			pData->z = float(vertices[i].z);
+			pData->nx = float(normals[i].x);
+			pData->ny = float(normals[i].y);
+			pData->nz = float(normals[i].z);
+			pData->col[0] = static_cast<unsigned char>(Clamp(colors[i].x*255.0, 0.0, 255.0));
+			pData->col[1] = static_cast<unsigned char>(Clamp(colors[i].y*255.0, 0.0, 255.0));
+			pData->col[2] = static_cast<unsigned char>(Clamp(colors[i].z*255.0, 0.0, 255.0));
+			pData->col[3] = 1.0;
+		}
+		glBufferDataARB(GL_ARRAY_BUFFER, sizeof(VBOVertex)*GEOPLATE_NUMVERTICES, vbotemp, GL_DYNAMIC_DRAW);
+		glBindBufferARB(GL_ARRAY_BUFFER, 0);
+	}
+
+	vector3d GetSurfacePointCyl(double x, double y) {
+		//( a + t * (b - a) )
+		const vector3d v01	= (vBE[1] - vBE[0]);			// vector from v0 to v1
+		const double v01HalfLen = v01.Length() * 0.5;	// half length of the edge length defined by v01
+		const double negv01HalfLen = -v01HalfLen;
+
+		float theta = x*2.0*M_PI;
+		double z = (negv01HalfLen + y * (v01HalfLen - -negv01HalfLen));
+		vector3d p(cos(theta), sin(theta), z);
+
+		return p;
+
+		/*
+		float radius, halfLength;
+		int slices;
+		for(int i=0; i<slices; i++) {
+			float theta = ((float)i)*2.0*M_PI;
+			float nextTheta = ((float)i+1)*2.0*M_PI;
+			glBegin(GL_TRIANGLE_STRIP);
+			//vertex at middle of end
+			glVertex3f(0.0, 0.0, halfLength);
+			//vertices at edges of circle
+			glVertex3f(radius*cos(theta), radius*sin(theta), halfLength);
+			glVertex3f (radius*cos(nextTheta), radius*sin(nextTheta), halfLength);
+			// the same vertices at the bottom of the cylinder
+			glVertex3f (radius*cos(nextTheta), radius*sin(nextTheta), -halfLength);
+			glVertex3f(radius*cos(theta), radius*sin(theta), -halfLength);
+			glVertex3f(0.0, 0.0, -halfLength);
+			glEnd();
+		}
+		*/
+	}
+
+	/* in patch surface coords, [0,1] */
+	vector3d GetSurfacePoint(double x, double y) {
+		//PROFILE_SCOPED()
+		//#define lerp(t, a, b) ( a + t * (b - a) )
+		// first we'll find our basis vectors...
+		const vector3d v01	= (vBE[1] - vBE[0]);			// vector from v0 to v1
+		const vector3d v01u	= v01.Normalized();				// unit vector from v0 to v1
+		const vector3d v0c	= (-vBE[0]).Normalized();		// unit vector from v0 to origin, bit of a hack instead of defining v(0,0,0) and then subtracting
+		const vector3d v01ux0c = v01u.Cross(v0c).Normalized();	// unit vector (Normalisation might be redundant) Cross of v01 and v0c
+		const float v01HalfLen = v01.Length() * 0.5;	// half length of the edge length defined by v01
+		const vector3d vY = v01ux0c * v01HalfLen;		// 
+
+		//... plan now is simples... probably -
+		// - v01ux0c is the y-axis
+		// - (vBE[1] - vBE[0]) is the x-axis
+		// using these we can find any point on the square plate of the orbital.
+
+		// first lerp from v0 to v1, then normalise to get point at correct distance from v(0,0,0)
+		const vector3d lerpv01x = (vBE[0] + (x * (v01))).Normalized();
+		// find two points along the y-axis from our x-axis interpolant
+		const vector3d vY0 = lerpv01x + vY;
+		const vector3d vY1 = lerpv01x - vY;
+		// now lerp between the two y-axis points by y input val to find final point on surface... 
+		// DO NOT NORMALISE, otherwise point will be spherised
+		const vector3d surfPos = vY0 + (y * (vY1 - vY0));
+		return surfPos;
+	}
+
+	/** Generates full-detail vertices, and also non-edge normals and
+	 * colors */
+	static double height_val;// = 0.001;
+	void GenerateMesh() {
+		//PROFILE_SCOPED()
+		vector3d *vts = vertices;
+		double xfrac = 0;
+		double yfrac = 0;
+		for (int y=0; y<GEOPLATE_EDGELEN; ++y) {	// across the width
+			xfrac = 0;
+			for (int x=0; x<GEOPLATE_EDGELEN; ++x) {	// along the length (circumference)
+				vector3d p;
+				double height = 0.0;
+				PiAssert(x!=GEOPLATE_EDGELEN);
+				PiAssert(y!=GEOPLATE_EDGELEN);
+				if( y==0 || y==GEOPLATE_EDGELEN-1 ) {	// points in trough
+					height = 0.0;
+					p = GetSurfacePoint(xfrac, (y==0 ? 0.0 : 1.0));
+				}
+				else { // outer hull edge
+					height = 0.01;
+					p = GetSurfacePoint(xfrac, yfrac);
+				}
+
+				*(vts++) = p * (height + 1.0);
+				// remember this -- we will need it later
+				xfrac += GEOPLATEHULL_FRAC;
+				double col = 0.5;
+				colors[x + y*GEOPLATE_EDGELEN] = vector3d(col, col, 1.0);
+			}
+			yfrac += GEOPLATEHULL_FRAC;
+		}
+		assert(vts == &vertices[GEOPLATE_NUMVERTICES]);
+		// Generate normals
+		for (int y=0; y<GEOPLATE_EDGELEN-1; ++y) {
+			for (int x=0; x<GEOPLATE_EDGELEN-1; ++x) {
+				// normal
+				vector3d xy = vertices[x + y*GEOPLATE_EDGELEN];
+				vector3d x1 = vertices[x+1 + y*GEOPLATE_EDGELEN];
+				vector3d y1 = vertices[x + (y+1)*GEOPLATE_EDGELEN];
+
+				vector3d n = (x1-xy).Cross(y1-xy);
+				normals[x + y*GEOPLATE_EDGELEN] = n.Normalized();
+				const vector3d &norm = normals[x + y*GEOPLATE_EDGELEN];
+			}
+		}
+
+		// Generate last col and bottom row normals
+		for (int y=GEOPLATE_EDGELEN-1; y<GEOPLATE_EDGELEN; ++y) {
+			for (int x=GEOPLATE_EDGELEN-1; x<GEOPLATE_EDGELEN; ++x) {
+				// normal
+				vector3d xy = vertices[x + y*GEOPLATE_EDGELEN];
+				vector3d x1 = vertices[x-1 + y*GEOPLATE_EDGELEN];
+				vector3d y1 = vertices[x + (y-1)*GEOPLATE_EDGELEN];
+
+				vector3d n = (xy-x1).Cross(xy-y1);
+				normals[x + y*GEOPLATE_EDGELEN] = (n.Normalized());
+				const vector3d &norm = normals[x + y*GEOPLATE_EDGELEN];
+			}
+		}
+	}
+
+	void Render(vector3d &campos, Plane planes[6]) {
+		//PROFILE_SCOPED()
+		//_UpdateVBOs();
+		/* frustum test! */
+		for (int i=0; i<6; i++) {
+			if (planes[i].DistanceToPoint(clipCentroid) <= -clipRadius) {
+				return;
+			}
+		}
+		Pi::statSceneTris += 2*(GEOPLATE_EDGELEN-1)*(GEOPLATE_EDGELEN-1);
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_NORMAL_ARRAY);
+		glEnableClientState(GL_COLOR_ARRAY);
+
+		glBindBufferARB(GL_ARRAY_BUFFER, m_vbo);
+		glVertexPointer(3, GL_FLOAT, sizeof(VBOVertex), 0);
+		glNormalPointer(GL_FLOAT, sizeof(VBOVertex), reinterpret_cast<void *>(3*sizeof(float)));
+		glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(VBOVertex), reinterpret_cast<void *>(6*sizeof(float)));
+		glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, indices_vbo);
+		//void glDrawRangeElements(	GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid * indices);
+		//glDrawRangeElements(GL_TRIANGLES, 0, GEOPLATE_NUMVERTICES-1, VBO_COUNT_ALL_IDX, GL_UNSIGNED_SHORT, 0);
+		glDrawElements(GL_TRIANGLES, VBO_COUNT_ALL_IDX, GL_UNSIGNED_SHORT, 0);
+		glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+		glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+		glDisableClientState(GL_VERTEX_ARRAY);
+		glDisableClientState(GL_NORMAL_ARRAY);
+		glDisableClientState(GL_COLOR_ARRAY);
+	}
+};
+//static 
+double				GeoPlateHull::height_val = 0.001;
+unsigned short *	GeoPlateHull::indices = 0;
+GLuint				GeoPlateHull::indices_vbo = 0;
+VBOVertex *			GeoPlateHull::vbotemp= 0 ;
+
+class GeoPlate {
 public:
 	#define NUM_VBE 2
 	vector3d vBE[NUM_VBE];
@@ -75,9 +335,9 @@ public:
 	static unsigned short *hiEdgeIndices[4];
 	static GLuint indices_vbo;
 	static VBOVertex *vbotemp;
-	GeoChunk *kids[4];
-	GeoChunk *parent;
-	GeoChunk *edgeFriend[4]; // [0]=v01, [1]=v12, [2]=v20
+	GeoPlate *kids[4];
+	GeoPlate *parent;
+	GeoPlate *edgeFriend[4]; // [0]=v01, [1]=v12, [2]=v20
 	GeoRing *geoRing;
 	double m_roughLength;
 	vector3d clipCentroid;
@@ -86,28 +346,28 @@ public:
 	SDL_mutex *m_kidsLock;
 	bool m_needUpdateVBOs;
 
-	static GeoChunk** s_geoChunks[4];
-	static SDL_mutex *s_geoChunkLock[4];
-	static SDL_sem* s_geoChunkSem[4];
+	static GeoPlate** s_geoPlates[4];
+	static SDL_mutex *s_geoPlateLock[4];
+	static SDL_sem* s_geoPlateSem[4];
 	static SDL_sem* s_geoRingSem[4];
 	static SDL_Thread* s_geoRingThread[4];
 
 	/* Thread(s) that generate the mesh data for a geopatch */
-	static int UpdateGeoChunkThread(void *data)
+	static int UpdateGeoPlateThread(void *data)
 	{
 		PROFILE_THREAD_SCOPED()
 		uint8_t idx = (*(uint8_t*)data);
 		PiAssert( idx>=0 && idx<4 );
-		PiAssert(s_geoChunkLock[idx]);
-		PiAssert(s_geoChunkSem[idx]);
+		PiAssert(s_geoPlateLock[idx]);
+		PiAssert(s_geoPlateSem[idx]);
 		for(;;) {
-			SDL_SemWait(s_geoChunkSem[idx]);
-			SDL_mutexP(s_geoChunkLock[idx]);
-			if (s_geoChunks[idx]) { 
-				(*s_geoChunks[idx])->GenerateMesh();
+			SDL_SemWait(s_geoPlateSem[idx]);
+			SDL_mutexP(s_geoPlateLock[idx]);
+			if (s_geoPlates[idx]) { 
+				(*s_geoPlates[idx])->GenerateMesh();
 			}
-			s_geoChunks[idx] = NULL;
-			SDL_mutexV(s_geoChunkLock[idx]);
+			s_geoPlates[idx] = NULL;
+			SDL_mutexV(s_geoPlateLock[idx]);
 			SDL_SemPost(s_geoRingSem[idx]);
 		}
 		return 0;
@@ -115,10 +375,10 @@ public:
 	
 	// params
 	// v0, v1 - define points on the line describing the loop of the ring/orbital.
-	// depth - 0 is the topmost chunk with each depth+1 describing it's depth within the tree.
-	GeoChunk(vector3d v0, vector3d v1, int depth) {
+	// depth - 0 is the topmost plate with each depth+1 describing it's depth within the tree.
+	GeoPlate(vector3d v0, vector3d v1, int depth) {
 		//PROFILE_SCOPED()
-		memset(this, 0, sizeof(GeoChunk));
+		memset(this, 0, sizeof(GeoPlate));
 		m_kidsLock = SDL_CreateMutex();
 		vBE[0] = v0; 
 		vBE[1] = v1;
@@ -128,16 +388,16 @@ public:
 		for (int i=0; i<NUM_VBE; i++) {
 			clipRadius = std::max(clipRadius, (vBE[i]-clipCentroid).Length());
 		}
-		m_roughLength = GEOCHUNK_SUBDIVIDE_AT_CAMDIST / pow(2.0, depth);
+		m_roughLength = GEOPLATE_SUBDIVIDE_AT_CAMDIST / pow(2.0, depth);
 		m_needUpdateVBOs = false;
-		normals = new vector3d[GEOCHUNK_NUMVERTICES];
-		vertices = new vector3d[GEOCHUNK_NUMVERTICES];
-		colors = new vector3d[GEOCHUNK_NUMVERTICES];
+		normals = new vector3d[GEOPLATE_NUMVERTICES];
+		vertices = new vector3d[GEOPLATE_NUMVERTICES];
+		colors = new vector3d[GEOPLATE_NUMVERTICES];
 	}
 
 	static void Init() {
 		//PROFILE_SCOPED()
-		GEOCHUNK_FRAC = 1.0 / double(GEOCHUNK_EDGELEN-1);
+		GEOPLATE_FRAC = 1.0 / double(GEOPLATE_EDGELEN-1);
 
 		if (midIndices) {
 			delete [] midIndices;
@@ -152,7 +412,7 @@ public:
 		}
 
 		{
-			vbotemp = new VBOVertex[GEOCHUNK_NUMVERTICES];
+			vbotemp = new VBOVertex[GEOPLATE_NUMVERTICES];
 				
 			unsigned short *idx;
 			midIndices = new unsigned short[VBO_COUNT_MID_IDX];
@@ -162,105 +422,105 @@ public:
 			}
 			/* also want vtx indices for tris not touching edge of patch */
 			idx = midIndices;
-			for (int x=1; x<GEOCHUNK_EDGELEN-2; x++) {
-				for (int y=1; y<GEOCHUNK_EDGELEN-2; y++) {
-					idx[0] = x + GEOCHUNK_EDGELEN*y;
-					idx[1] = x+1 + GEOCHUNK_EDGELEN*y;
-					idx[2] = x + GEOCHUNK_EDGELEN*(y+1);
+			for (int x=1; x<GEOPLATE_EDGELEN-2; x++) {
+				for (int y=1; y<GEOPLATE_EDGELEN-2; y++) {
+					idx[0] = x + GEOPLATE_EDGELEN*y;
+					idx[1] = x+1 + GEOPLATE_EDGELEN*y;
+					idx[2] = x + GEOPLATE_EDGELEN*(y+1);
 					idx+=3;
 
-					idx[0] = x+1 + GEOCHUNK_EDGELEN*y;
-					idx[1] = x+1 + GEOCHUNK_EDGELEN*(y+1);
-					idx[2] = x + GEOCHUNK_EDGELEN*(y+1);
+					idx[0] = x+1 + GEOPLATE_EDGELEN*y;
+					idx[1] = x+1 + GEOPLATE_EDGELEN*(y+1);
+					idx[2] = x + GEOPLATE_EDGELEN*(y+1);
 					idx+=3;
 				}
 			}
 			{
-				for (int x=1; x<GEOCHUNK_EDGELEN-3; x+=2) {
+				for (int x=1; x<GEOPLATE_EDGELEN-3; x+=2) {
 					// razor teeth near edge 0
-					idx[0] = x + GEOCHUNK_EDGELEN;
+					idx[0] = x + GEOPLATE_EDGELEN;
 					idx[1] = x+1;
-					idx[2] = x+1 + GEOCHUNK_EDGELEN;
+					idx[2] = x+1 + GEOPLATE_EDGELEN;
 					idx+=3;
 					idx[0] = x+1;
-					idx[1] = x+2 + GEOCHUNK_EDGELEN;
-					idx[2] = x+1 + GEOCHUNK_EDGELEN;
+					idx[1] = x+2 + GEOPLATE_EDGELEN;
+					idx[2] = x+1 + GEOPLATE_EDGELEN;
 					idx+=3;
 				}
-				for (int x=1; x<GEOCHUNK_EDGELEN-3; x+=2) {
+				for (int x=1; x<GEOPLATE_EDGELEN-3; x+=2) {
 					// near edge 2
-					idx[0] = x + GEOCHUNK_EDGELEN*(GEOCHUNK_EDGELEN-2);
-					idx[1] = x+1 + GEOCHUNK_EDGELEN*(GEOCHUNK_EDGELEN-2);
-					idx[2] = x+1 + GEOCHUNK_EDGELEN*(GEOCHUNK_EDGELEN-1);
+					idx[0] = x + GEOPLATE_EDGELEN*(GEOPLATE_EDGELEN-2);
+					idx[1] = x+1 + GEOPLATE_EDGELEN*(GEOPLATE_EDGELEN-2);
+					idx[2] = x+1 + GEOPLATE_EDGELEN*(GEOPLATE_EDGELEN-1);
 					idx+=3;
-					idx[0] = x+1 + GEOCHUNK_EDGELEN*(GEOCHUNK_EDGELEN-2);
-					idx[1] = x+2 + GEOCHUNK_EDGELEN*(GEOCHUNK_EDGELEN-2);
-					idx[2] = x+1 + GEOCHUNK_EDGELEN*(GEOCHUNK_EDGELEN-1);
+					idx[0] = x+1 + GEOPLATE_EDGELEN*(GEOPLATE_EDGELEN-2);
+					idx[1] = x+2 + GEOPLATE_EDGELEN*(GEOPLATE_EDGELEN-2);
+					idx[2] = x+1 + GEOPLATE_EDGELEN*(GEOPLATE_EDGELEN-1);
 					idx+=3;
 				}
-				for (int y=1; y<GEOCHUNK_EDGELEN-3; y+=2) {
+				for (int y=1; y<GEOPLATE_EDGELEN-3; y+=2) {
 					// near edge 1
-					idx[0] = GEOCHUNK_EDGELEN-2 + y*GEOCHUNK_EDGELEN;
-					idx[1] = GEOCHUNK_EDGELEN-1 + (y+1)*GEOCHUNK_EDGELEN;
-					idx[2] = GEOCHUNK_EDGELEN-2 + (y+1)*GEOCHUNK_EDGELEN;
+					idx[0] = GEOPLATE_EDGELEN-2 + y*GEOPLATE_EDGELEN;
+					idx[1] = GEOPLATE_EDGELEN-1 + (y+1)*GEOPLATE_EDGELEN;
+					idx[2] = GEOPLATE_EDGELEN-2 + (y+1)*GEOPLATE_EDGELEN;
 					idx+=3;
-					idx[0] = GEOCHUNK_EDGELEN-2 + (y+1)*GEOCHUNK_EDGELEN;
-					idx[1] = GEOCHUNK_EDGELEN-1 + (y+1)*GEOCHUNK_EDGELEN;
-					idx[2] = GEOCHUNK_EDGELEN-2 + (y+2)*GEOCHUNK_EDGELEN;
+					idx[0] = GEOPLATE_EDGELEN-2 + (y+1)*GEOPLATE_EDGELEN;
+					idx[1] = GEOPLATE_EDGELEN-1 + (y+1)*GEOPLATE_EDGELEN;
+					idx[2] = GEOPLATE_EDGELEN-2 + (y+2)*GEOPLATE_EDGELEN;
 					idx+=3;
 				}
-				for (int y=1; y<GEOCHUNK_EDGELEN-3; y+=2) {
+				for (int y=1; y<GEOPLATE_EDGELEN-3; y+=2) {
 					// near edge 3
-					idx[0] = 1 + y*GEOCHUNK_EDGELEN;
-					idx[1] = 1 + (y+1)*GEOCHUNK_EDGELEN;
-					idx[2] = (y+1)*GEOCHUNK_EDGELEN;
+					idx[0] = 1 + y*GEOPLATE_EDGELEN;
+					idx[1] = 1 + (y+1)*GEOPLATE_EDGELEN;
+					idx[2] = (y+1)*GEOPLATE_EDGELEN;
 					idx+=3;
-					idx[0] = 1 + (y+1)*GEOCHUNK_EDGELEN;
-					idx[1] = 1 + (y+2)*GEOCHUNK_EDGELEN;
-					idx[2] = (y+1)*GEOCHUNK_EDGELEN;
+					idx[0] = 1 + (y+1)*GEOPLATE_EDGELEN;
+					idx[1] = 1 + (y+2)*GEOPLATE_EDGELEN;
+					idx[2] = (y+1)*GEOPLATE_EDGELEN;
 					idx+=3;
 				}
 			}
 			// full detail edge triangles
 			{
 				idx = hiEdgeIndices[0];
-				for (int x=0; x<GEOCHUNK_EDGELEN-1; x+=2) {
-					idx[0] = x; idx[1] = x+1; idx[2] = x+1 + GEOCHUNK_EDGELEN;
+				for (int x=0; x<GEOPLATE_EDGELEN-1; x+=2) {
+					idx[0] = x; idx[1] = x+1; idx[2] = x+1 + GEOPLATE_EDGELEN;
 					idx+=3;
-					idx[0] = x+1; idx[1] = x+2; idx[2] = x+1 + GEOCHUNK_EDGELEN;
+					idx[0] = x+1; idx[1] = x+2; idx[2] = x+1 + GEOPLATE_EDGELEN;
 					idx+=3;
 				}
 				idx = hiEdgeIndices[1];
-				for (int y=0; y<GEOCHUNK_EDGELEN-1; y+=2) {
-					idx[0] = GEOCHUNK_EDGELEN-1 + y*GEOCHUNK_EDGELEN;
-					idx[1] = GEOCHUNK_EDGELEN-1 + (y+1)*GEOCHUNK_EDGELEN;
-					idx[2] = GEOCHUNK_EDGELEN-2 + (y+1)*GEOCHUNK_EDGELEN;
+				for (int y=0; y<GEOPLATE_EDGELEN-1; y+=2) {
+					idx[0] = GEOPLATE_EDGELEN-1 + y*GEOPLATE_EDGELEN;
+					idx[1] = GEOPLATE_EDGELEN-1 + (y+1)*GEOPLATE_EDGELEN;
+					idx[2] = GEOPLATE_EDGELEN-2 + (y+1)*GEOPLATE_EDGELEN;
 					idx+=3;
-					idx[0] = GEOCHUNK_EDGELEN-1 + (y+1)*GEOCHUNK_EDGELEN;
-					idx[1] = GEOCHUNK_EDGELEN-1 + (y+2)*GEOCHUNK_EDGELEN;
-					idx[2] = GEOCHUNK_EDGELEN-2 + (y+1)*GEOCHUNK_EDGELEN;
+					idx[0] = GEOPLATE_EDGELEN-1 + (y+1)*GEOPLATE_EDGELEN;
+					idx[1] = GEOPLATE_EDGELEN-1 + (y+2)*GEOPLATE_EDGELEN;
+					idx[2] = GEOPLATE_EDGELEN-2 + (y+1)*GEOPLATE_EDGELEN;
 					idx+=3;
 				}
 				idx = hiEdgeIndices[2];
-				for (int x=0; x<GEOCHUNK_EDGELEN-1; x+=2) {
-					idx[0] = x + (GEOCHUNK_EDGELEN-1)*GEOCHUNK_EDGELEN;
-					idx[1] = x+1 + (GEOCHUNK_EDGELEN-2)*GEOCHUNK_EDGELEN;
-					idx[2] = x+1 + (GEOCHUNK_EDGELEN-1)*GEOCHUNK_EDGELEN;
+				for (int x=0; x<GEOPLATE_EDGELEN-1; x+=2) {
+					idx[0] = x + (GEOPLATE_EDGELEN-1)*GEOPLATE_EDGELEN;
+					idx[1] = x+1 + (GEOPLATE_EDGELEN-2)*GEOPLATE_EDGELEN;
+					idx[2] = x+1 + (GEOPLATE_EDGELEN-1)*GEOPLATE_EDGELEN;
 					idx+=3;
-					idx[0] = x+1 + (GEOCHUNK_EDGELEN-2)*GEOCHUNK_EDGELEN;
-					idx[1] = x+2 + (GEOCHUNK_EDGELEN-1)*GEOCHUNK_EDGELEN;
-					idx[2] = x+1 + (GEOCHUNK_EDGELEN-1)*GEOCHUNK_EDGELEN;
+					idx[0] = x+1 + (GEOPLATE_EDGELEN-2)*GEOPLATE_EDGELEN;
+					idx[1] = x+2 + (GEOPLATE_EDGELEN-1)*GEOPLATE_EDGELEN;
+					idx[2] = x+1 + (GEOPLATE_EDGELEN-1)*GEOPLATE_EDGELEN;
 					idx+=3;
 				}
 				idx = hiEdgeIndices[3];
-				for (int y=0; y<GEOCHUNK_EDGELEN-1; y+=2) {
-					idx[0] = y*GEOCHUNK_EDGELEN;
-					idx[1] = 1 + (y+1)*GEOCHUNK_EDGELEN;
-					idx[2] = (y+1)*GEOCHUNK_EDGELEN;
+				for (int y=0; y<GEOPLATE_EDGELEN-1; y+=2) {
+					idx[0] = y*GEOPLATE_EDGELEN;
+					idx[1] = 1 + (y+1)*GEOPLATE_EDGELEN;
+					idx[2] = (y+1)*GEOPLATE_EDGELEN;
 					idx+=3;
-					idx[0] = (y+1)*GEOCHUNK_EDGELEN;
-					idx[1] = 1 + (y+1)*GEOCHUNK_EDGELEN;
-					idx[2] = (y+2)*GEOCHUNK_EDGELEN;
+					idx[0] = (y+1)*GEOPLATE_EDGELEN;
+					idx[1] = 1 + (y+1)*GEOPLATE_EDGELEN;
+					idx[2] = (y+2)*GEOPLATE_EDGELEN;
 					idx+=3;
 				}
 			}
@@ -269,31 +529,31 @@ public:
 			// their edge complexity by 1 division
 			{
 				idx = loEdgeIndices[0];
-				for (int x=0; x<GEOCHUNK_EDGELEN-2; x+=2) {
+				for (int x=0; x<GEOPLATE_EDGELEN-2; x+=2) {
 					idx[0] = x;
 					idx[1] = x+2;
-					idx[2] = x+1+GEOCHUNK_EDGELEN;
+					idx[2] = x+1+GEOPLATE_EDGELEN;
 					idx += 3;
 				}
 				idx = loEdgeIndices[1];
-				for (int y=0; y<GEOCHUNK_EDGELEN-2; y+=2) {
-					idx[0] = (GEOCHUNK_EDGELEN-1) + y*GEOCHUNK_EDGELEN;
-					idx[1] = (GEOCHUNK_EDGELEN-1) + (y+2)*GEOCHUNK_EDGELEN;
-					idx[2] = (GEOCHUNK_EDGELEN-2) + (y+1)*GEOCHUNK_EDGELEN;
+				for (int y=0; y<GEOPLATE_EDGELEN-2; y+=2) {
+					idx[0] = (GEOPLATE_EDGELEN-1) + y*GEOPLATE_EDGELEN;
+					idx[1] = (GEOPLATE_EDGELEN-1) + (y+2)*GEOPLATE_EDGELEN;
+					idx[2] = (GEOPLATE_EDGELEN-2) + (y+1)*GEOPLATE_EDGELEN;
 					idx += 3;
 				}
 				idx = loEdgeIndices[2];
-				for (int x=0; x<GEOCHUNK_EDGELEN-2; x+=2) {
-					idx[0] = x+GEOCHUNK_EDGELEN*(GEOCHUNK_EDGELEN-1);
-					idx[2] = x+2+GEOCHUNK_EDGELEN*(GEOCHUNK_EDGELEN-1);
-					idx[1] = x+1+GEOCHUNK_EDGELEN*(GEOCHUNK_EDGELEN-2);
+				for (int x=0; x<GEOPLATE_EDGELEN-2; x+=2) {
+					idx[0] = x+GEOPLATE_EDGELEN*(GEOPLATE_EDGELEN-1);
+					idx[2] = x+2+GEOPLATE_EDGELEN*(GEOPLATE_EDGELEN-1);
+					idx[1] = x+1+GEOPLATE_EDGELEN*(GEOPLATE_EDGELEN-2);
 					idx += 3;
 				}
 				idx = loEdgeIndices[3];
-				for (int y=0; y<GEOCHUNK_EDGELEN-2; y+=2) {
-					idx[0] = y*GEOCHUNK_EDGELEN;
-					idx[2] = (y+2)*GEOCHUNK_EDGELEN;
-					idx[1] = 1 + (y+1)*GEOCHUNK_EDGELEN;
+				for (int y=0; y<GEOPLATE_EDGELEN-2; y+=2) {
+					idx[0] = y*GEOPLATE_EDGELEN;
+					idx[2] = (y+2)*GEOPLATE_EDGELEN;
+					idx[1] = 1 + (y+1)*GEOPLATE_EDGELEN;
 					idx += 3;
 				}
 			}
@@ -301,7 +561,7 @@ public:
 			for (int i=0; i<4; i++) {
 				s_loMinIdx[i] = s_hiMinIdx[i] = 1<<30;
 				s_loMaxIdx[i] = s_hiMaxIdx[i] = 0;
-				for (int j=0; j<3*(GEOCHUNK_EDGELEN/2); j++) {
+				for (int j=0; j<3*(GEOPLATE_EDGELEN/2); j++) {
 					if (loEdgeIndices[i][j] < s_loMinIdx[i]) s_loMinIdx[i] = loEdgeIndices[i][j];
 					if (loEdgeIndices[i][j] > s_loMaxIdx[i]) s_loMaxIdx[i] = loEdgeIndices[i][j];
 				}
@@ -318,7 +578,7 @@ public:
 			for (int i=0; i<4; i++) {
 				glBufferSubDataARB(GL_ELEMENT_ARRAY_BUFFER, 
 					IDX_VBO_LO_OFFSET(i),
-					sizeof(unsigned short)*3*(GEOCHUNK_EDGELEN/2),
+					sizeof(unsigned short)*3*(GEOPLATE_EDGELEN/2),
 					loEdgeIndices[i]);
 			}
 			for (int i=0; i<4; i++) {
@@ -333,29 +593,29 @@ public:
 					midIndices);
 			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-#ifdef GEOCHUNK_USE_THREADING
+#ifdef GEOPLATE_USE_THREADING
 			static const int indexes[4] = {0,1,2,3};
 			for( int i = 0; i<4; ++i ) {
-				assert(NULL==s_geoChunks[i]);
-				s_geoChunks[i] = NULL;
+				assert(NULL==s_geoPlates[i]);
+				s_geoPlates[i] = NULL;
 
-				if(NULL==s_geoChunkLock[i])
-					s_geoChunkLock[i] = SDL_CreateMutex();
+				if(NULL==s_geoPlateLock[i])
+					s_geoPlateLock[i] = SDL_CreateMutex();
 
-				if(!s_geoChunkSem[i])
-					s_geoChunkSem[i] = SDL_CreateSemaphore(0);
+				if(!s_geoPlateSem[i])
+					s_geoPlateSem[i] = SDL_CreateSemaphore(0);
 
 				if(!s_geoRingSem[i])
 					s_geoRingSem[i] = SDL_CreateSemaphore(0);
 
 				if(!s_geoRingThread[i])
-					s_geoRingThread[i] = SDL_CreateThread(&GeoChunk::UpdateGeoChunkThread, (void*)&indexes[i]);
+					s_geoRingThread[i] = SDL_CreateThread(&GeoPlate::UpdateGeoPlateThread, (void*)&indexes[i]);
 			}
-#endif /* GEOCHUNK_USE_THREADING */
+#endif /* GEOPLATE_USE_THREADING */
 		}
 	}
 
-	~GeoChunk() {
+	~GeoPlate() {
 		SDL_DestroyMutex(m_kidsLock);
 		for (int i=0; i<4; i++) {
 			if (edgeFriend[i]) edgeFriend[i]->NotifyEdgeFriendDeleted(this);
@@ -376,8 +636,8 @@ public:
 			if (!m_vbo) glGenBuffersARB(1, &m_vbo);
 			m_needUpdateVBOs = false;
 			glBindBufferARB(GL_ARRAY_BUFFER, m_vbo);
-			glBufferDataARB(GL_ARRAY_BUFFER, sizeof(VBOVertex)*GEOCHUNK_NUMVERTICES, 0, GL_DYNAMIC_DRAW);
-			for (int i=0; i<GEOCHUNK_NUMVERTICES; i++)
+			glBufferDataARB(GL_ARRAY_BUFFER, sizeof(VBOVertex)*GEOPLATE_NUMVERTICES, 0, GL_DYNAMIC_DRAW);
+			for (int i=0; i<GEOPLATE_NUMVERTICES; i++)
 			{
 				clipRadius = std::max(clipRadius, (vertices[i]-clipCentroid).Length());
 				VBOVertex *pData = vbotemp + i;
@@ -392,7 +652,7 @@ public:
 				pData->col[2] = static_cast<unsigned char>(Clamp(colors[i].z*255.0, 0.0, 255.0));
 				pData->col[3] = 1.0;
 			}
-			glBufferDataARB(GL_ARRAY_BUFFER, sizeof(VBOVertex)*GEOCHUNK_NUMVERTICES, vbotemp, GL_DYNAMIC_DRAW);
+			glBufferDataARB(GL_ARRAY_BUFFER, sizeof(VBOVertex)*GEOPLATE_NUMVERTICES, vbotemp, GL_DYNAMIC_DRAW);
 			glBindBufferARB(GL_ARRAY_BUFFER, 0);
 		}
 	}	
@@ -403,48 +663,48 @@ public:
 		//PROFILE_SCOPED()
 		if( edge<0 || edge>4) return;
 		if (edge == 0) {
-			for (int x=0; x<GEOCHUNK_EDGELEN; x++) ev[GEOCHUNK_EDGELEN-1-x] = vertices[x + GEOCHUNK_EDGELEN];
+			for (int x=0; x<GEOPLATE_EDGELEN; x++) ev[GEOPLATE_EDGELEN-1-x] = vertices[x + GEOPLATE_EDGELEN];
 		} else if (edge == 1) {
-			const int x = GEOCHUNK_EDGELEN-2;
-			for (int y=0; y<GEOCHUNK_EDGELEN; y++) ev[GEOCHUNK_EDGELEN-1-y] = vertices[x + y*GEOCHUNK_EDGELEN];
+			const int x = GEOPLATE_EDGELEN-2;
+			for (int y=0; y<GEOPLATE_EDGELEN; y++) ev[GEOPLATE_EDGELEN-1-y] = vertices[x + y*GEOPLATE_EDGELEN];
 		} else if (edge == 2) {
-			const int y = GEOCHUNK_EDGELEN-2;
-			for (int x=0; x<GEOCHUNK_EDGELEN; x++) ev[GEOCHUNK_EDGELEN-1-x] = vertices[(GEOCHUNK_EDGELEN-1)-x + y*GEOCHUNK_EDGELEN];
+			const int y = GEOPLATE_EDGELEN-2;
+			for (int x=0; x<GEOPLATE_EDGELEN; x++) ev[GEOPLATE_EDGELEN-1-x] = vertices[(GEOPLATE_EDGELEN-1)-x + y*GEOPLATE_EDGELEN];
 		} else {
-			for (int y=0; y<GEOCHUNK_EDGELEN; y++) ev[GEOCHUNK_EDGELEN-1-y] = vertices[1 + ((GEOCHUNK_EDGELEN-1)-y)*GEOCHUNK_EDGELEN];
+			for (int y=0; y<GEOPLATE_EDGELEN; y++) ev[GEOPLATE_EDGELEN-1-y] = vertices[1 + ((GEOPLATE_EDGELEN-1)-y)*GEOPLATE_EDGELEN];
 		}
 	}
 	static void GetEdge(vector3d *array, int edge, vector3d *ev) {
 		//PROFILE_SCOPED()
 		if( edge<0 || edge>4) return;
 		if (edge == 0) {
-			for (int x=0; x<GEOCHUNK_EDGELEN; x++) ev[x] = array[x];
+			for (int x=0; x<GEOPLATE_EDGELEN; x++) ev[x] = array[x];
 		} else if (edge == 1) {
-			const int x = GEOCHUNK_EDGELEN-1;
-			for (int y=0; y<GEOCHUNK_EDGELEN; y++) ev[y] = array[x + y*GEOCHUNK_EDGELEN];
+			const int x = GEOPLATE_EDGELEN-1;
+			for (int y=0; y<GEOPLATE_EDGELEN; y++) ev[y] = array[x + y*GEOPLATE_EDGELEN];
 		} else if (edge == 2) {
-			const int y = GEOCHUNK_EDGELEN-1;
-			for (int x=0; x<GEOCHUNK_EDGELEN; x++) ev[x] = array[(GEOCHUNK_EDGELEN-1)-x + y*GEOCHUNK_EDGELEN];
+			const int y = GEOPLATE_EDGELEN-1;
+			for (int x=0; x<GEOPLATE_EDGELEN; x++) ev[x] = array[(GEOPLATE_EDGELEN-1)-x + y*GEOPLATE_EDGELEN];
 		} else {
-			for (int y=0; y<GEOCHUNK_EDGELEN; y++) ev[y] = array[0 + ((GEOCHUNK_EDGELEN-1)-y)*GEOCHUNK_EDGELEN];
+			for (int y=0; y<GEOPLATE_EDGELEN; y++) ev[y] = array[0 + ((GEOPLATE_EDGELEN-1)-y)*GEOPLATE_EDGELEN];
 		}
 	}
 	static void SetEdge(vector3d *array, int edge, const vector3d *ev) {
 		//PROFILE_SCOPED()
 		if( edge<0 || edge>4) return;
 		if (edge == 0) {
-			for (int x=0; x<GEOCHUNK_EDGELEN; x++) array[x] = ev[x];
+			for (int x=0; x<GEOPLATE_EDGELEN; x++) array[x] = ev[x];
 		} else if (edge == 1) {
-			const int x = GEOCHUNK_EDGELEN-1;
-			for (int y=0; y<GEOCHUNK_EDGELEN; y++) array[x + y*GEOCHUNK_EDGELEN] = ev[y];
+			const int x = GEOPLATE_EDGELEN-1;
+			for (int y=0; y<GEOPLATE_EDGELEN; y++) array[x + y*GEOPLATE_EDGELEN] = ev[y];
 		} else if (edge == 2) {
-			const int y = GEOCHUNK_EDGELEN-1;
-			for (int x=0; x<GEOCHUNK_EDGELEN; x++) array[(GEOCHUNK_EDGELEN-1)-x + y*GEOCHUNK_EDGELEN] = ev[x];
+			const int y = GEOPLATE_EDGELEN-1;
+			for (int x=0; x<GEOPLATE_EDGELEN; x++) array[(GEOPLATE_EDGELEN-1)-x + y*GEOPLATE_EDGELEN] = ev[x];
 		} else {
-			for (int y=0; y<GEOCHUNK_EDGELEN; y++) array[0 + ((GEOCHUNK_EDGELEN-1)-y)*GEOCHUNK_EDGELEN] = ev[y];
+			for (int y=0; y<GEOPLATE_EDGELEN; y++) array[0 + ((GEOPLATE_EDGELEN-1)-y)*GEOPLATE_EDGELEN] = ev[y];
 		}
 	}
-	int GetEdgeIdxOf(GeoChunk *e) {
+	int GetEdgeIdxOf(GeoPlate *e) {
 		//PROFILE_SCOPED()
 		for (int i=0; i<4; i++) {
 			if (edgeFriend[i] == e) return i;
@@ -459,69 +719,69 @@ public:
 		int x, y;
 		switch (edge) {
 		case 0:
-			for (x=1; x<GEOCHUNK_EDGELEN-1; x++) {
+			for (x=1; x<GEOPLATE_EDGELEN-1; x++) {
 				const vector3d x1 = vertices[x-1];
 				const vector3d x2 = vertices[x+1];
 				const vector3d y1 = ev[x];
-				const vector3d y2 = vertices[x + GEOCHUNK_EDGELEN];
+				const vector3d y2 = vertices[x + GEOPLATE_EDGELEN];
 				const vector3d norm = -((x2-x1).Cross(y2-y1).Normalized());
 				normals[x] = norm;
 				// make color
-				const vector3d p = GetSurfacePoint(x*GEOCHUNK_FRAC, 0);
+				const vector3d p = GetSurfacePoint(x*GEOPLATE_FRAC, 0);
 				const double height = colors[x].x;
 				colors[x] = geoRing->GetColor(p, height, norm);
 			}
 			break;
 		case 1:
-			x = GEOCHUNK_EDGELEN-1;
-			for (y=1; y<GEOCHUNK_EDGELEN-1; y++) {
-				const vector3d x1 = vertices[(x-1) + y*GEOCHUNK_EDGELEN];
+			x = GEOPLATE_EDGELEN-1;
+			for (y=1; y<GEOPLATE_EDGELEN-1; y++) {
+				const vector3d x1 = vertices[(x-1) + y*GEOPLATE_EDGELEN];
 				const vector3d x2 = ev[y];
-				const vector3d y1 = vertices[x + (y-1)*GEOCHUNK_EDGELEN];
-				const vector3d y2 = vertices[x + (y+1)*GEOCHUNK_EDGELEN];
+				const vector3d y1 = vertices[x + (y-1)*GEOPLATE_EDGELEN];
+				const vector3d y2 = vertices[x + (y+1)*GEOPLATE_EDGELEN];
 				const vector3d norm = -((x2-x1).Cross(y2-y1).Normalized());
-				normals[x + y*GEOCHUNK_EDGELEN] = norm;
+				normals[x + y*GEOPLATE_EDGELEN] = norm;
 				// make color
-				const vector3d p = GetSurfacePoint(x*GEOCHUNK_FRAC, y*GEOCHUNK_FRAC);
-				const double height = colors[x + y*GEOCHUNK_EDGELEN].x;
-				colors[x + y*GEOCHUNK_EDGELEN] = geoRing->GetColor(p, height, norm);
-	//			colors[x+y*GEOCHUNK_EDGELEN] = vector3d(1,0,0);
+				const vector3d p = GetSurfacePoint(x*GEOPLATE_FRAC, y*GEOPLATE_FRAC);
+				const double height = colors[x + y*GEOPLATE_EDGELEN].x;
+				colors[x + y*GEOPLATE_EDGELEN] = geoRing->GetColor(p, height, norm);
+	//			colors[x+y*GEOPLATE_EDGELEN] = vector3d(1,0,0);
 			}
 			break;
 		case 2:
-			y = GEOCHUNK_EDGELEN-1;
-			for (x=1; x<GEOCHUNK_EDGELEN-1; x++) {
-				const vector3d x1 = vertices[x-1 + y*GEOCHUNK_EDGELEN];
-				const vector3d x2 = vertices[x+1 + y*GEOCHUNK_EDGELEN];
-				const vector3d y1 = vertices[x + (y-1)*GEOCHUNK_EDGELEN];
-				const vector3d y2 = ev[GEOCHUNK_EDGELEN-1-x];
+			y = GEOPLATE_EDGELEN-1;
+			for (x=1; x<GEOPLATE_EDGELEN-1; x++) {
+				const vector3d x1 = vertices[x-1 + y*GEOPLATE_EDGELEN];
+				const vector3d x2 = vertices[x+1 + y*GEOPLATE_EDGELEN];
+				const vector3d y1 = vertices[x + (y-1)*GEOPLATE_EDGELEN];
+				const vector3d y2 = ev[GEOPLATE_EDGELEN-1-x];
 				const vector3d norm = -((x2-x1).Cross(y2-y1).Normalized());
-				normals[x + y*GEOCHUNK_EDGELEN] = norm;
+				normals[x + y*GEOPLATE_EDGELEN] = norm;
 				// make color
-				const vector3d p = GetSurfacePoint(x*GEOCHUNK_FRAC, y*GEOCHUNK_FRAC);
-				const double height = colors[x + y*GEOCHUNK_EDGELEN].x;
-				colors[x + y*GEOCHUNK_EDGELEN] = geoRing->GetColor(p, height, norm);
+				const vector3d p = GetSurfacePoint(x*GEOPLATE_FRAC, y*GEOPLATE_FRAC);
+				const double height = colors[x + y*GEOPLATE_EDGELEN].x;
+				colors[x + y*GEOPLATE_EDGELEN] = geoRing->GetColor(p, height, norm);
 			}
 			break;
 		case 3:
-			for (y=1; y<GEOCHUNK_EDGELEN-1; y++) {
-				const vector3d x1 = ev[GEOCHUNK_EDGELEN-1-y];
-				const vector3d x2 = vertices[1 + y*GEOCHUNK_EDGELEN];
-				const vector3d y1 = vertices[(y-1)*GEOCHUNK_EDGELEN];
-				const vector3d y2 = vertices[(y+1)*GEOCHUNK_EDGELEN];
+			for (y=1; y<GEOPLATE_EDGELEN-1; y++) {
+				const vector3d x1 = ev[GEOPLATE_EDGELEN-1-y];
+				const vector3d x2 = vertices[1 + y*GEOPLATE_EDGELEN];
+				const vector3d y1 = vertices[(y-1)*GEOPLATE_EDGELEN];
+				const vector3d y2 = vertices[(y+1)*GEOPLATE_EDGELEN];
 				const vector3d norm = -((x2-x1).Cross(y2-y1).Normalized());
-				normals[y*GEOCHUNK_EDGELEN] = norm;
+				normals[y*GEOPLATE_EDGELEN] = norm;
 				// make color
-				const vector3d p = GetSurfacePoint(0, y*GEOCHUNK_FRAC);
-				const double height = colors[y*GEOCHUNK_EDGELEN].x;
-				colors[y*GEOCHUNK_EDGELEN] = geoRing->GetColor(p, height, norm);
-	//			colors[y*GEOCHUNK_EDGELEN] = vector3d(0,1,0);
+				const vector3d p = GetSurfacePoint(0, y*GEOPLATE_FRAC);
+				const double height = colors[y*GEOPLATE_EDGELEN].x;
+				colors[y*GEOPLATE_EDGELEN] = geoRing->GetColor(p, height, norm);
+	//			colors[y*GEOPLATE_EDGELEN] = vector3d(0,1,0);
 			}
 			break;
 		}
 	}
 
-	int GetChildIdx(GeoChunk *child) {
+	int GetChildIdx(GeoPlate *child) {
 		//PROFILE_SCOPED()
 		for (int i=0; i<4; i++) {
 			if (kids[i] == child) return i;
@@ -533,12 +793,12 @@ public:
 	void FixEdgeFromParentInterpolated(int edge) {
 		//PROFILE_SCOPED()
 		// noticeable artefacts from not doing so...
-		vector3d ev[GEOCHUNK_MAX_EDGELEN];
-		vector3d en[GEOCHUNK_MAX_EDGELEN];
-		vector3d ec[GEOCHUNK_MAX_EDGELEN];
-		vector3d ev2[GEOCHUNK_MAX_EDGELEN];
-		vector3d en2[GEOCHUNK_MAX_EDGELEN];
-		vector3d ec2[GEOCHUNK_MAX_EDGELEN];
+		vector3d ev[GEOPLATE_MAX_EDGELEN];
+		vector3d en[GEOPLATE_MAX_EDGELEN];
+		vector3d ec[GEOPLATE_MAX_EDGELEN];
+		vector3d ev2[GEOPLATE_MAX_EDGELEN];
+		vector3d en2[GEOPLATE_MAX_EDGELEN];
+		vector3d ec2[GEOPLATE_MAX_EDGELEN];
 		GetEdge(parent->vertices, edge, ev);
 		GetEdge(parent->normals, edge, en);
 		GetEdge(parent->colors, edge, ec);
@@ -546,21 +806,21 @@ public:
 		int kid_idx = parent->GetChildIdx(this);
 		if (edge == kid_idx) {
 			// use first half of edge
-			for (int i=0; i<=GEOCHUNK_EDGELEN/2; i++) {
+			for (int i=0; i<=GEOPLATE_EDGELEN/2; i++) {
 				ev2[i<<1] = ev[i];
 				en2[i<<1] = en[i];
 				ec2[i<<1] = ec[i];
 			}
 		} else {
 			// use 2nd half of edge
-			for (int i=GEOCHUNK_EDGELEN/2; i<GEOCHUNK_EDGELEN; i++) {
-				ev2[(i-(GEOCHUNK_EDGELEN/2))<<1] = ev[i];
-				en2[(i-(GEOCHUNK_EDGELEN/2))<<1] = en[i];
-				ec2[(i-(GEOCHUNK_EDGELEN/2))<<1] = ec[i];
+			for (int i=GEOPLATE_EDGELEN/2; i<GEOPLATE_EDGELEN; i++) {
+				ev2[(i-(GEOPLATE_EDGELEN/2))<<1] = ev[i];
+				en2[(i-(GEOPLATE_EDGELEN/2))<<1] = en[i];
+				ec2[(i-(GEOPLATE_EDGELEN/2))<<1] = ec[i];
 			}
 		}
 		// interpolate!!
-		for (int i=1; i<GEOCHUNK_EDGELEN; i+=2) {
+		for (int i=1; i<GEOPLATE_EDGELEN; i+=2) {
 			ev2[i] = (ev2[i-1]+ev2[i+1]) * 0.5;
 			en2[i] = (en2[i-1]+en2[i+1]).Normalized();
 			ec2[i] = (ec2[i-1]+ec2[i+1]) * 0.5;
@@ -577,10 +837,10 @@ public:
 		vector3d x1,x2,y1,y2;
 		switch (corner) {
 		case 0: {
-			x1 = ev[GEOCHUNK_EDGELEN-1];
+			x1 = ev[GEOPLATE_EDGELEN-1];
 			x2 = vertices[1];
 			y1 = ev2[0];
-			y2 = vertices[GEOCHUNK_EDGELEN];
+			y2 = vertices[GEOPLATE_EDGELEN];
 			const vector3d norm = -((x2-x1).Cross(y2-y1).Normalized());
 			normals[0] = norm;
 			// make color
@@ -591,48 +851,48 @@ public:
 			}
 			break;
 		case 1: {
-			p = GEOCHUNK_EDGELEN-1;
+			p = GEOPLATE_EDGELEN-1;
 			x1 = vertices[p-1];
 			x2 = ev2[0];
-			y1 = ev[GEOCHUNK_EDGELEN-1];
-			y2 = vertices[p + GEOCHUNK_EDGELEN];
+			y1 = ev[GEOPLATE_EDGELEN-1];
+			y2 = vertices[p + GEOPLATE_EDGELEN];
 			const vector3d norm = -((x2-x1).Cross(y2-y1).Normalized());
 			normals[p] = norm;
 			// make color
-			const vector3d pt = GetSurfacePoint(p*GEOCHUNK_FRAC, 0);
+			const vector3d pt = GetSurfacePoint(p*GEOPLATE_FRAC, 0);
 		//	const double height = colors[p].x;
 			const double height = geoRing->GetHeight(pt);
 			colors[p] = geoRing->GetColor(pt, height, norm);
 			}
 			break;
 		case 2: {
-			p = GEOCHUNK_EDGELEN-1;
-			x1 = vertices[(p-1) + p*GEOCHUNK_EDGELEN];
-			x2 = ev[GEOCHUNK_EDGELEN-1];
-			y1 = vertices[p + (p-1)*GEOCHUNK_EDGELEN];
+			p = GEOPLATE_EDGELEN-1;
+			x1 = vertices[(p-1) + p*GEOPLATE_EDGELEN];
+			x2 = ev[GEOPLATE_EDGELEN-1];
+			y1 = vertices[p + (p-1)*GEOPLATE_EDGELEN];
 			y2 = ev2[0];
 			const vector3d norm = -((x2-x1).Cross(y2-y1).Normalized());
-			normals[p + p*GEOCHUNK_EDGELEN] = norm;
+			normals[p + p*GEOPLATE_EDGELEN] = norm;
 			// make color
-			const vector3d pt = GetSurfacePoint(p*GEOCHUNK_FRAC, p*GEOCHUNK_FRAC);
-		//	const double height = colors[p + p*GEOCHUNK_EDGELEN].x;
+			const vector3d pt = GetSurfacePoint(p*GEOPLATE_FRAC, p*GEOPLATE_FRAC);
+		//	const double height = colors[p + p*GEOPLATE_EDGELEN].x;
 			const double height = geoRing->GetHeight(pt);
-			colors[p + p*GEOCHUNK_EDGELEN] = geoRing->GetColor(pt, height, norm);
+			colors[p + p*GEOPLATE_EDGELEN] = geoRing->GetColor(pt, height, norm);
 			}
 			break;
 		case 3: {
-			p = GEOCHUNK_EDGELEN-1;
+			p = GEOPLATE_EDGELEN-1;
 			x1 = ev2[0];
-			x2 = vertices[1 + p*GEOCHUNK_EDGELEN];
-			y1 = vertices[(p-1)*GEOCHUNK_EDGELEN];
-			y2 = ev[GEOCHUNK_EDGELEN-1];
+			x2 = vertices[1 + p*GEOPLATE_EDGELEN];
+			y1 = vertices[(p-1)*GEOPLATE_EDGELEN];
+			y2 = ev[GEOPLATE_EDGELEN-1];
 			const vector3d norm = -((x2-x1).Cross(y2-y1).Normalized());
-			normals[p*GEOCHUNK_EDGELEN] = norm;
+			normals[p*GEOPLATE_EDGELEN] = norm;
 			// make color
-			const vector3d pt = GetSurfacePoint(0, p*GEOCHUNK_FRAC);
-		//	const double height = colors[p*GEOCHUNK_EDGELEN].x;
+			const vector3d pt = GetSurfacePoint(0, p*GEOPLATE_FRAC);
+		//	const double height = colors[p*GEOPLATE_EDGELEN].x;
 			const double height = geoRing->GetHeight(pt);
-			colors[p*GEOCHUNK_EDGELEN] = geoRing->GetColor(pt, height, norm);
+			colors[p*GEOPLATE_EDGELEN] = geoRing->GetColor(pt, height, norm);
 			}
 			break;
 		}
@@ -640,7 +900,7 @@ public:
 
 	void FixCornerNormalsByEdge(int edge, vector3d *ev) {
 		//PROFILE_SCOPED()
-		vector3d ev2[GEOCHUNK_MAX_EDGELEN];
+		vector3d ev2[GEOPLATE_MAX_EDGELEN];
 		vector3d x1, x2, y1, y2;
 		/* XXX All these 'if's have an unfinished else, when a neighbour
 		 * of our size doesn't exist and instead we must look at a bigger tile.
@@ -701,11 +961,11 @@ public:
 
 	void GenerateEdgeNormalsAndColors() {
 		//PROFILE_SCOPED()
-		vector3d ev[4][GEOCHUNK_MAX_EDGELEN];
+		vector3d ev[4][GEOPLATE_MAX_EDGELEN];
 		bool doneEdge[4];
 		memset(doneEdge, 0, sizeof(doneEdge));
 		for (int i=0; i<4; i++) {
-			GeoChunk *e = edgeFriend[i];
+			GeoPlate *e = edgeFriend[i];
 			if (e) {
 				int we_are = e->GetEdgeIdxOf(this);
 				e->GetEdgeMinusOneVerticesFlipped(we_are, ev[i]);
@@ -744,7 +1004,7 @@ public:
 		//... plan now is simples... probably -
 		// - v01ux0c is the y-axis
 		// - (vBE[1] - vBE[0]) is the x-axis
-		// using these we can find any point on the square chunk of the orbital.
+		// using these we can find any point on the square plate of the orbital.
 
 		// first lerp from v0 to v1, then normalise to get point at correct distance from v(0,0,0)
 		const vector3d lerpv01x = (vBE[0] + (x * (v01))).Normalized();
@@ -759,96 +1019,95 @@ public:
 
 	/** Generates full-detail vertices, and also non-edge normals and
 	 * colors */
+	static double height_val;// = 0.001;
 	void GenerateMesh() {
 		//PROFILE_SCOPED()
 		vector3d *vts = vertices;
 		vector3d *col = colors;
 		double xfrac;
 		double yfrac = 0;
-		for (int y=0; y<GEOCHUNK_EDGELEN; y++) {
+		for (int y=0; y<GEOPLATE_EDGELEN; ++y) {
 			xfrac = 0;
-			for (int x=0; x<GEOCHUNK_EDGELEN; x++) {
+			for (int x=0; x<GEOPLATE_EDGELEN; ++x) {
 				vector3d p = GetSurfacePoint(xfrac, yfrac);
-				double height = (x%2) ? 0.0 : 0.1;//geoRing->GetHeight(p);
+				//double height = (x%2) ? 0.0 : -height_val;//geoRing->GetHeight(p);
+				double height = -(geoRing->GetHeight(p));
 				*(vts++) = p * (height + 1.0);
 				// remember this -- we will need it later
 				(col++)->x = height;
-				xfrac += GEOCHUNK_FRAC;
 
-				normals[x + y*GEOCHUNK_EDGELEN] = -(p.Normalized());
-				
-				colors[x + y*GEOCHUNK_EDGELEN] = vector3d(1.0 - (1.0/GEOCHUNK_EDGELEN) * x, (1.0/GEOCHUNK_EDGELEN) * y, 0.0);
+				xfrac += GEOPLATE_FRAC;
 			}
-			yfrac += GEOCHUNK_FRAC;
+			yfrac += GEOPLATE_FRAC;
 		}
-		assert(vts == &vertices[GEOCHUNK_NUMVERTICES]);
+		assert(vts == &vertices[GEOPLATE_NUMVERTICES]);
 		// Generate normals & colors for non-edge vertices since they never change
-		/*for (int y=1; y<GEOCHUNK_EDGELEN-1; y++) {
-			for (int x=1; x<GEOCHUNK_EDGELEN-1; x++) {
+		for (int y=1; y<GEOPLATE_EDGELEN-1; y++) {
+			for (int x=1; x<GEOPLATE_EDGELEN-1; x++) {
 				// normal
-				vector3d x1 = vertices[x-1 + y*GEOCHUNK_EDGELEN];
-				vector3d x2 = vertices[x+1 + y*GEOCHUNK_EDGELEN];
-				vector3d y1 = vertices[x + (y-1)*GEOCHUNK_EDGELEN];
-				vector3d y2 = vertices[x + (y+1)*GEOCHUNK_EDGELEN];
+				vector3d x1 = vertices[x-1 + y*GEOPLATE_EDGELEN];
+				vector3d x2 = vertices[x+1 + y*GEOPLATE_EDGELEN];
+				vector3d y1 = vertices[x + (y-1)*GEOPLATE_EDGELEN];
+				vector3d y2 = vertices[x + (y+1)*GEOPLATE_EDGELEN];
 
 				vector3d n = (x2-x1).Cross(y2-y1);
-				normals[x + y*GEOCHUNK_EDGELEN] = -(n.Normalized());
+				const vector3d &norm = normals[x + y*GEOPLATE_EDGELEN] = -(n.Normalized());
 				// color
-				vector3d p = GetSurfacePoint(x*GEOCHUNK_FRAC, y*GEOCHUNK_FRAC);
-				vector3d &col_r = colors[x + y*GEOCHUNK_EDGELEN];
+				vector3d p = GetSurfacePoint(x*GEOPLATE_FRAC, y*GEOPLATE_FRAC);
+				vector3d &col_r = colors[x + y*GEOPLATE_EDGELEN];
 				const double height = col_r.x;
-				const vector3d &norm = normals[x + y*GEOCHUNK_EDGELEN];
-				col_r = geoRing->GetColor(p, height, norm);
+				col_r = geoRing->GetColor(p, -height, -norm);
 			}
-		}*/
+		}
 	}
-	void OnEdgeFriendChanged(int edge, GeoChunk *e) {
+
+	void OnEdgeFriendChanged(int edge, GeoPlate *e) {
 		//PROFILE_SCOPED()
 		assert(e>(void*)0x000000FF);
 		edgeFriend[edge] = e;
-		vector3d ev[GEOCHUNK_MAX_EDGELEN];
+		vector3d ev[GEOPLATE_MAX_EDGELEN];
 		int we_are = e->GetEdgeIdxOf(this);
 		e->GetEdgeMinusOneVerticesFlipped(we_are, ev);
 		/* now we have a valid edge, fix the edge vertices */
 		if (edge == 0) {
-			for (int x=0; x<GEOCHUNK_EDGELEN; x++) {
-				vector3d p = GetSurfacePoint(x * GEOCHUNK_FRAC, 0);
+			for (int x=0; x<GEOPLATE_EDGELEN; x++) {
+				vector3d p = GetSurfacePoint(x * GEOPLATE_FRAC, 0);
 				double height = geoRing->GetHeight(p);
 				vertices[x] = p * (height + 1.0);
 				// XXX These bounds checks in each edge case are
 				// only necessary while the "All these 'if's"
 				// comment in FixCOrnerNormalsByEdge stands
-				if ((x>0) && (x<GEOCHUNK_EDGELEN-1)) {
+				if ((x>0) && (x<GEOPLATE_EDGELEN-1)) {
 					colors[x].x = height;
 				}
 			}
 		} else if (edge == 1) {
-			for (int y=0; y<GEOCHUNK_EDGELEN; y++) {
-				vector3d p = GetSurfacePoint(1.0, y * GEOCHUNK_FRAC);
+			for (int y=0; y<GEOPLATE_EDGELEN; y++) {
+				vector3d p = GetSurfacePoint(1.0, y * GEOPLATE_FRAC);
 				double height = geoRing->GetHeight(p);
-				int pos = (GEOCHUNK_EDGELEN-1) + y*GEOCHUNK_EDGELEN;
+				int pos = (GEOPLATE_EDGELEN-1) + y*GEOPLATE_EDGELEN;
 				vertices[pos] = p * (height + 1.0);
-				if ((y>0) && (y<GEOCHUNK_EDGELEN-1)) {
+				if ((y>0) && (y<GEOPLATE_EDGELEN-1)) {
 					colors[pos].x = height;
 				}
 			}
 		} else if (edge == 2) {
-			for (int x=0; x<GEOCHUNK_EDGELEN; x++) {
-				vector3d p = GetSurfacePoint(x * GEOCHUNK_FRAC, 1.0);
+			for (int x=0; x<GEOPLATE_EDGELEN; x++) {
+				vector3d p = GetSurfacePoint(x * GEOPLATE_FRAC, 1.0);
 				double height = geoRing->GetHeight(p);
-				int pos = x + (GEOCHUNK_EDGELEN-1)*GEOCHUNK_EDGELEN;
+				int pos = x + (GEOPLATE_EDGELEN-1)*GEOPLATE_EDGELEN;
 				vertices[pos] = p * (height + 1.0);
-				if ((x>0) && (x<GEOCHUNK_EDGELEN-1)) {
+				if ((x>0) && (x<GEOPLATE_EDGELEN-1)) {
 					colors[pos].x = height;
 				}
 			}
 		} else {
-			for (int y=0; y<GEOCHUNK_EDGELEN; y++) {
-				vector3d p = GetSurfacePoint(0, y * GEOCHUNK_FRAC);
+			for (int y=0; y<GEOPLATE_EDGELEN; y++) {
+				vector3d p = GetSurfacePoint(0, y * GEOPLATE_FRAC);
 				double height = geoRing->GetHeight(p);
-				int pos = y * GEOCHUNK_EDGELEN;
+				int pos = y * GEOPLATE_EDGELEN;
 				vertices[pos] = p * (height + 1.0);
-				if ((y>0) && (y<GEOCHUNK_EDGELEN-1)) {
+				if ((y>0) && (y<GEOPLATE_EDGELEN-1)) {
 					colors[pos].x = height;
 				}
 			}
@@ -882,7 +1141,7 @@ public:
 			}
 		}
 	}
-	void NotifyEdgeFriendSplit(GeoChunk *e) {
+	void NotifyEdgeFriendSplit(GeoPlate *e) {
 		//PROFILE_SCOPED()
 		int idx = GetEdgeIdxOf(e);
 		int we_are = e->GetEdgeIdxOf(this);
@@ -893,7 +1152,7 @@ public:
 		kids[(idx+1)%4]->OnEdgeFriendChanged(idx, e->kids[we_are]);
 	}
 	
-	void NotifyEdgeFriendDeleted(GeoChunk *e) {
+	void NotifyEdgeFriendDeleted(GeoPlate *e) {
 		//PROFILE_SCOPED()
 		int idx = GetEdgeIdxOf(e);
 		if (-1 == idx) return;
@@ -908,9 +1167,9 @@ public:
 		}
 	}
 
-	GeoChunk *GetEdgeFriendForKid(int kid, int edge) {
+	GeoPlate *GetEdgeFriendForKid(int kid, int edge) {
 		//PROFILE_SCOPED()
-		GeoChunk *e = edgeFriend[edge];
+		GeoPlate *e = edgeFriend[edge];
 		if (!e) return 0;
 		//assert (e);// && (e->m_depth >= m_depth));
 		const int we_are = e->GetEdgeIdxOf(this);
@@ -936,7 +1195,7 @@ public:
 					return;
 				}
 			}
-			Pi::statSceneTris += 2*(GEOCHUNK_EDGELEN-1)*(GEOCHUNK_EDGELEN-1);
+			Pi::statSceneTris += 2*(GEOPLATE_EDGELEN-1)*(GEOPLATE_EDGELEN-1);
 			glEnableClientState(GL_VERTEX_ARRAY);
 			glEnableClientState(GL_NORMAL_ARRAY);
 			glEnableClientState(GL_COLOR_ARRAY);
@@ -946,13 +1205,13 @@ public:
 			glNormalPointer(GL_FLOAT, sizeof(VBOVertex), reinterpret_cast<void *>(3*sizeof(float)));
 			glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(VBOVertex), reinterpret_cast<void *>(6*sizeof(float)));
 			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, indices_vbo);
-			glDrawRangeElements(GL_TRIANGLES, 0, GEOCHUNK_NUMVERTICES-1, VBO_COUNT_MID_IDX, GL_UNSIGNED_SHORT, reinterpret_cast<void*>(IDX_VBO_MAIN_OFFSET));
+			glDrawRangeElements(GL_TRIANGLES, 0, GEOPLATE_NUMVERTICES-1, VBO_COUNT_MID_IDX, GL_UNSIGNED_SHORT, reinterpret_cast<void*>(IDX_VBO_MAIN_OFFSET));
 			for (int i=0; i<4; i++) {
-				if (edgeFriend[i]) {
+				//if (edgeFriend[i]) {
 					glDrawRangeElements(GL_TRIANGLES, s_hiMinIdx[i], s_hiMaxIdx[i], VBO_COUNT_HI_EDGE, GL_UNSIGNED_SHORT, reinterpret_cast<void*>(IDX_VBO_HI_OFFSET(i)));
-				} else {
-					glDrawRangeElements(GL_TRIANGLES, s_loMinIdx[i], s_loMaxIdx[i], VBO_COUNT_LO_EDGE, GL_UNSIGNED_SHORT, reinterpret_cast<void*>(IDX_VBO_LO_OFFSET(i)));
-				}
+				//} else {
+				//	glDrawRangeElements(GL_TRIANGLES, s_loMinIdx[i], s_loMaxIdx[i], VBO_COUNT_LO_EDGE, GL_UNSIGNED_SHORT, reinterpret_cast<void*>(IDX_VBO_LO_OFFSET(i)));
+				//}
 			}
 			glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
 			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -975,7 +1234,7 @@ public:
 				break;
 			}
 		}
-		if (!(canSplit && (m_depth < GEOCHUNK_MAX_DEPTH) &&
+		if (!(canSplit && (m_depth < GEOPLATE_MAX_DEPTH) &&
 		    ((campos - centroid).Length() < m_roughLength)))
 			canSplit = false;
 		// always split at first level
@@ -992,11 +1251,11 @@ public:
 				v12 = (vBE[1]+vBE[2]).Normalized();
 				v23 = (vBE[2]+vBE[3]).Normalized();
 				v30 = (vBE[3]+vBE[0]).Normalized();
-				GeoChunk *_kids[4];
-				_kids[0] = new GeoChunk(vBE[0], v01, cn, v30, m_depth+1);
-				_kids[1] = new GeoChunk(v01, vBE[1], v12, cn, m_depth+1);
-				_kids[2] = new GeoChunk(cn, v12, vBE[2], v23, m_depth+1);
-				_kids[3] = new GeoChunk(v30, cn, v23, vBE[3], m_depth+1);
+				GeoPlate *_kids[4];
+				_kids[0] = new GeoPlate(vBE[0], v01, cn, v30, m_depth+1);
+				_kids[1] = new GeoPlate(v01, vBE[1], v12, cn, m_depth+1);
+				_kids[2] = new GeoPlate(cn, v12, vBE[2], v23, m_depth+1);
+				_kids[3] = new GeoPlate(v30, cn, v23, vBE[3], m_depth+1);
 				// hm.. edges. Not right to pass this
 				// edgeFriend...
 				_kids[0]->edgeFriend[0] = GetEdgeFriendForKid(0, 0);
@@ -1026,14 +1285,14 @@ public:
 					}
 				}
 
-#ifdef GEOCHUNK_USE_THREADING
+#ifdef GEOPLATE_USE_THREADING
 				for (int i=0; i<4; ++i) {
-					PiAssert(GeoChunk::s_geoChunks[i]==0);
-					GeoChunk::s_geoChunks[i] = &_kids[i];
+					PiAssert(GeoPlate::s_geoPlates[i]==0);
+					GeoPlate::s_geoPlates[i] = &_kids[i];
 				}
 				for (int i=0; i<4; ++i) {
-					PiAssert(SDL_SemValue(GeoChunk::s_geoChunkSem[i])==0);
-					SDL_SemPost(GeoChunk::s_geoChunkSem[i]);
+					PiAssert(SDL_SemValue(GeoPlate::s_geoPlateSem[i])==0);
+					SDL_SemPost(GeoPlate::s_geoPlateSem[i]);
 				}
 
 				// not a good enough waiting method
@@ -1043,8 +1302,8 @@ public:
 				SDL_SemWait(s_geoRingSem[3]);
 #ifdef _DEBUG
 				for (int i=0; i<4; ++i) {
-					PiAssert(GeoChunk::s_geoChunks[i]==0);
-					PiAssert(SDL_SemValue(GeoChunk::s_geoChunkSem[i])==0);
+					PiAssert(GeoPlate::s_geoPlates[i]==0);
+					PiAssert(SDL_SemValue(GeoPlate::s_geoPlateSem[i])==0);
 				}
 #endif
 #else
@@ -1071,31 +1330,21 @@ public:
 		}
 	}
 };
+//static 
+double			GeoPlate::height_val = 0.001;
+unsigned short *GeoPlate::midIndices = 0;
+unsigned short *GeoPlate::loEdgeIndices[4];
+unsigned short *GeoPlate::hiEdgeIndices[4];
+GLuint GeoPlate::indices_vbo;
+VBOVertex *GeoPlate::vbotemp;
 
-unsigned short *GeoChunk::midIndices = 0;
-unsigned short *GeoChunk::loEdgeIndices[4];
-unsigned short *GeoChunk::hiEdgeIndices[4];
-GLuint GeoChunk::indices_vbo;
-VBOVertex *GeoChunk::vbotemp;
-
-#ifdef GEOCHUNK_USE_THREADING
-GeoChunk**	GeoChunk::s_geoChunks[4]	= {0};
-SDL_mutex*	GeoChunk::s_geoChunkLock[4] = {0};
-SDL_sem*	GeoChunk::s_geoChunkSem[4]	= {0};
-SDL_sem*	GeoChunk::s_geoRingSem[4]	= {0};
-SDL_Thread*	GeoChunk::s_geoRingThread[4]= {0};
-
-#ifdef ANDYC_HORRIFIC_TIMING
-float		GeoChunk::s_generateMeshTime = 0.0f;
-float		GeoChunk::s_postGenerateMeshTime = 0.0f;
-float		GeoChunk::s_totalTime = 0.0f;
-float		GeoChunk::s_totalNumCalls = 0.0f;
-
-double		GeoChunk::s_rollingGenMeshAverage = 0.0f;
-double		GeoChunk::s_rollingPostGenMeshAverage = 0.0f;
-double		GeoChunk::s_rollingAverage = 0.0f;
-#endif // ANDYC_HORRIFIC_TIMING
-#endif // GEOCHUNK_USE_THREADING
+#ifdef GEOPLATE_USE_THREADING
+GeoPlate**	GeoPlate::s_geoPlates[4]	= {0};
+SDL_mutex*	GeoPlate::s_geoPlateLock[4] = {0};
+SDL_sem*	GeoPlate::s_geoPlateSem[4]	= {0};
+SDL_sem*	GeoPlate::s_geoRingSem[4]	= {0};
+SDL_Thread*	GeoPlate::s_geoRingThread[4]= {0};
+#endif // GEOPLATE_USE_THREADING
 
 static const int geo_ring_edge_friends[4][4] = {
 	{ 3, -1, 1, 2 },
@@ -1139,8 +1388,8 @@ int GeoRing::UpdateLODThread(void *data)
 void GeoRing::_UpdateLODs()
 {
 	//PROFILE_SCOPED()
-	for (size_t i=0; i<m_chunks.size(); i++) {
-		m_chunks[i]->LODUpdate(m_tempCampos);
+	for (size_t i=0; i<m_plates.size(); i++) {
+		m_plates[i]->LODUpdate(m_tempCampos);
 	}
 	m_runUpdateThread = 0;
 }
@@ -1178,23 +1427,34 @@ void GeoRing::OnChangeDetailLevel()
 	//PROFILE_SCOPED()
 	SDL_mutexP(s_allGeoRingsLock);
 	for(std::list<GeoRing*>::iterator i = s_allGeoRings.begin(); i != s_allGeoRings.end(); ++i) {
-		for (size_t p=0; p<(*i)->m_chunks.size(); p++) {
-			if ((*i)->m_chunks[p]) {
-				delete (*i)->m_chunks[p];
+		// remove the plates
+		for (size_t p=0; p<(*i)->m_plates.size(); p++) {
+			if ((*i)->m_plates[p]) {
+				delete (*i)->m_plates[p];
 			}
 		}
-		(*i)->m_chunks.clear();
+		(*i)->m_plates.clear();
+
+		// and strip away the hull
+		for (size_t p=0; p<(*i)->m_hull.size(); p++) {
+			if ((*i)->m_hull[p]) {
+				delete (*i)->m_hull[p];
+			}
+		}
+		(*i)->m_hull.clear();
 	}
+
 	switch (Pi::detail.planets) {
-		case 0: GEOCHUNK_EDGELEN = 7; break;
-		case 1: GEOCHUNK_EDGELEN = 15; break;
-		case 2: GEOCHUNK_EDGELEN = 25; break;
-		case 3: GEOCHUNK_EDGELEN = 35; break;
+		case 0: GEOPLATE_EDGELEN = 15; break;
+		case 1: GEOPLATE_EDGELEN = 25; break;
+		case 2: GEOPLATE_EDGELEN = 45; break;
+		case 3: GEOPLATE_EDGELEN = 65; break;
 		default:
-		case 4: GEOCHUNK_EDGELEN = GEOCHUNK_MAX_EDGELEN; break;
+		case 4: GEOPLATE_EDGELEN = GEOPLATE_MAX_EDGELEN; break;
 	}
-	assert(GEOCHUNK_EDGELEN <= GEOCHUNK_MAX_EDGELEN);
-	GeoChunk::Init();
+	assert(GEOPLATE_EDGELEN <= GEOPLATE_MAX_EDGELEN);
+	GeoPlate::Init();
+	GeoPlateHull::Init();
 	for(std::list<GeoRing*>::iterator i = s_allGeoRings.begin(); i != s_allGeoRings.end(); ++i) {
 		(*i)->BuildFirstPatches();
 	}
@@ -1222,9 +1482,12 @@ GeoRing::~GeoRing()
 	s_allGeoRings.remove(this);
 	SDL_mutexV(s_allGeoRingsLock);
 
-	for (size_t i=0; i<m_chunks.size(); i++) {
-		if (m_chunks[i]) {
-			delete m_chunks[i];
+	for (size_t i=0; i<m_plates.size(); i++) {
+		if (m_plates[i]) {
+			delete m_plates[i];
+		}
+		if (m_hull[i]) {
+			delete m_hull[i];
 		}
 	}
 	DestroyVBOs();
@@ -1272,35 +1535,45 @@ void GeoRing::BuildFirstPatches(const int numSegments)
 		points.push_back( vp.Normalized() );
     }
 
-	m_chunks.clear();
+	// build the terrain plates
+	m_plates.clear();
 	for( int i=0 ; i<points.size()-1 ; ++i ) {
-		m_chunks.push_back( new GeoChunk(points[i], points[i+1], 0) );
+		m_plates.push_back( new GeoPlate(points[i], points[i+1], 0) );
 	}
-	for (size_t i=0; i<m_chunks.size(); i++) {
-		m_chunks[i]->geoRing = this;
+	for (size_t i=0; i<m_plates.size(); i++) {
+		m_plates[i]->geoRing = this;
 		for (int j=0; j<4; j++) {
 			int idx = geo_ring_edge_friends[i][j];
 			if( idx >=0 && idx < 4 )
-				m_chunks[i]->edgeFriend[j] = m_chunks[idx];
+				m_plates[i]->edgeFriend[j] = m_plates[idx];
 			else
-				m_chunks[i]->edgeFriend[j] = 0;
+				m_plates[i]->edgeFriend[j] = 0;
 		}
 	}
-	for (size_t i=0; i<m_chunks.size(); i++) m_chunks[i]->GenerateMesh();
-	//for (size_t i=0; i<m_chunks.size(); i++) m_chunks[i]->GenerateEdgeNormalsAndColors();
-	for (size_t i=0; i<m_chunks.size(); i++) m_chunks[i]->UpdateVBOs();
+	for (size_t i=0; i<m_plates.size(); i++) m_plates[i]->GenerateMesh();
+	//for (size_t i=0; i<m_plates.size(); i++) m_plates[i]->GenerateEdgeNormalsAndColors();
+	for (size_t i=0; i<m_plates.size(); i++) m_plates[i]->UpdateVBOs();
 
 	// hacking
-	for (size_t i=0; i<m_chunks.size(); i++) {
-		for (int y=0; y<GEOCHUNK_EDGELEN; y++) {
-			for (int x=0; x<GEOCHUNK_EDGELEN; x++) {
+	/*for (size_t i=0; i<m_plates.size(); i++) {
+		for (int y=0; y<GEOPLATE_EDGELEN; y++) {
+			for (int x=0; x<GEOPLATE_EDGELEN; x++) {
 				double r = (i%2) ? 1.0 : 0.0;
 				double g = 0.0;//(i%3) ? 1.0 : 0.0;
 				double b = (i%2) ? 0.0 : 1.0;
-				m_chunks[i]->colors[x + y*GEOCHUNK_EDGELEN] = vector3d(r, g, b);
+				m_plates[i]->colors[x + y*GEOPLATE_EDGELEN] = vector3d(r, g, b);
 			}
 		}
+	}*/
+
+	// create the outer hull
+	m_hull.clear();
+	for( int i=0 ; i<points.size()-1 ; ++i ) {
+		m_hull.push_back( new GeoPlateHull(points[i], points[i+1], 0) );
 	}
+	for (size_t i=0; i<m_hull.size(); i++) m_hull[i]->geoRing = this;
+	for (size_t i=0; i<m_hull.size(); i++) m_hull[i]->GenerateMesh();
+	for (size_t i=0; i<m_hull.size(); i++) m_hull[i]->UpdateVBOs();
 }
 
 static const float g_ambient[4] = { 0, 0, 0, 1.0 };
@@ -1405,7 +1678,7 @@ void GeoRing::Render(vector3d campos, const float radius, const float scale) {
 		shader->set_geosphereCenter(center.x, center.y, center.z);
 	}
 
-	if (0==m_chunks.size()) {
+	if (0==m_plates.size()) {
 		BuildFirstPatches();
 	}
 
@@ -1432,12 +1705,32 @@ void GeoRing::Render(vector3d campos, const float radius, const float scale) {
 	glMaterialfv (GL_FRONT, GL_EMISSION, black);
 	glEnable(GL_COLOR_MATERIAL);
 
-//	glLineWidth(1.0);
-//	glPolygonMode(GL_FRONT, GL_LINE);
-	for (size_t i=0; i<m_chunks.size(); i++) {
-		m_chunks[i]->Render(campos, planes);
+	glDisable(GL_CULL_FACE);
+
+	/*glLineWidth(1.0);
+	glPolygonMode(GL_FRONT, GL_LINE);
+	for (size_t i=0; i<m_hull.size(); i++) {
+		m_hull[i]->Render(campos, planes);
+	}
+
+	glPointSize(10.0f);
+	glPolygonMode(GL_FRONT, GL_POINT);
+	for (size_t i=0; i<m_hull.size(); i++) {
+		m_hull[i]->Render(campos, planes);
+	}*/
+
+	glPolygonMode(GL_FRONT, GL_FILL);
+	for (size_t i=0; i<m_hull.size(); i++) {
+		m_hull[i]->Render(campos, planes);
+	}
+
+	glPolygonMode(GL_FRONT, GL_FILL);
+	for (size_t i=0; i<m_plates.size(); i++) {
+		m_plates[i]->Render(campos, planes);
 	}
 	Render::State::UseProgram(0);
+
+	glEnable(GL_CULL_FACE);
 
 	glDisable(GL_COLOR_MATERIAL);
 	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, oldAmbient);

@@ -6,7 +6,7 @@
 #include "LuaBody.h"
 #include "LuaSpaceStation.h"
 #include "LuaStar.h"
-#include "LuaPlanet.h"
+//#include "LuaPlanet.h"
 #include "Space.h"
 #include "Ship.h"
 #include "HyperspaceCloud.h"

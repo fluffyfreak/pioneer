@@ -41,6 +41,23 @@ local venus = CustomSBody:new('Venus', 'PLANET_TERRESTRIAL')
 	:ocean_cover(f(0,1))
 	:ice_cover(f(0,1))
 	:life(f(0,1))
+	
+local vavatch = CustomSBody:new('Vavatch', 'PLANET_ORBITAL')
+	:radius(f(95,100))
+	:mass(f(815,1000))
+	:temp(735)
+	:semi_major_axis(f(723,1000))
+	:eccentricity(f(7,1000))
+	:inclination(math.deg2rad(3.39))
+	:rotation_period(f(243,1))
+	:axial_tilt(math.fixed.deg2rad(f(26,10)))
+	:metallicity(f(1,2))
+	:volcanicity(f(8,10))
+	:atmos_density(f(93,1))
+	:atmos_oxidizing(f(1,1))
+	:ocean_cover(f(0,1))
+	:ice_cover(f(0,1))
+	:life(f(0,1))
 
 local earth = CustomSBody:new('Earth', 'PLANET_TERRESTRIAL')
 	:radius(f(1,1))
@@ -410,6 +427,7 @@ local pluto_starports = {
 s:bodies(sol, {
 	mercury,
 	venus,
+	vavatch,
 	earth,
 		earth_starports,
 		moon,

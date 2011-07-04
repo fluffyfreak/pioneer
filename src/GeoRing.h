@@ -9,7 +9,8 @@ extern int GEOPATCH_EDGELEN;
 #define ATMOSPHERE_RADIUS 1.015
 
 class SBody;
-class GeoChunk;
+class GeoPlate;
+class GeoPlateHull;
 class GeoRing {
 public:
 	GeoRing(const SBody *body);
@@ -27,7 +28,8 @@ public:
 	}
 	// only called from fishy thread
 	void _UpdateLODs();
-	friend class GeoChunk;
+	friend class GeoPlate;
+	friend class GeoPlateHull;
 #if OBJECTVIEWER
 	friend class OrbitalViewerView;
 #endif /* DEBUG */
@@ -40,7 +42,8 @@ public:
 	double GetMaxFeatureHeight() const { return m_style.GetMaxHeight(); }
 private:
 	void BuildFirstPatches(const int numSegments = 16);
-	std::vector<GeoChunk*> m_chunks;
+	std::vector<GeoPlate*>		m_plates;
+	std::vector<GeoPlateHull*>	m_hull;
 	float m_diffColor[4], m_ambColor[4];
 	const SBody *m_sbody;
 
