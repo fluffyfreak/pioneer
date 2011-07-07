@@ -174,26 +174,6 @@ public:
 		vector3d p(cos(theta), sin(theta), z);
 
 		return p;
-
-		/*
-		float radius, halfLength;
-		int slices;
-		for(int i=0; i<slices; i++) {
-			float theta = ((float)i)*2.0*M_PI;
-			float nextTheta = ((float)i+1)*2.0*M_PI;
-			glBegin(GL_TRIANGLE_STRIP);
-			//vertex at middle of end
-			glVertex3f(0.0, 0.0, halfLength);
-			//vertices at edges of circle
-			glVertex3f(radius*cos(theta), radius*sin(theta), halfLength);
-			glVertex3f (radius*cos(nextTheta), radius*sin(nextTheta), halfLength);
-			// the same vertices at the bottom of the cylinder
-			glVertex3f (radius*cos(nextTheta), radius*sin(nextTheta), -halfLength);
-			glVertex3f(radius*cos(theta), radius*sin(theta), -halfLength);
-			glVertex3f(0.0, 0.0, -halfLength);
-			glEnd();
-		}
-		*/
 	}
 
 	/* in patch surface coords, [0,1] */
@@ -267,7 +247,7 @@ public:
 
 				vector3d n = (x1-xy).Cross(y1-xy);
 				normals[x + y*GEOPLATE_EDGELEN] = n.Normalized();
-				const vector3d &norm = normals[x + y*GEOPLATE_EDGELEN];
+				//const vector3d &norm = normals[x + y*GEOPLATE_EDGELEN];
 			}
 		}
 
@@ -281,7 +261,7 @@ public:
 
 				vector3d n = (xy-x1).Cross(xy-y1);
 				normals[x + y*GEOPLATE_EDGELEN] = (n.Normalized());
-				const vector3d &norm = normals[x + y*GEOPLATE_EDGELEN];
+				//const vector3d &norm = normals[x + y*GEOPLATE_EDGELEN];
 			}
 		}
 	}
@@ -324,8 +304,9 @@ VBOVertex *			GeoPlateHull::vbotemp= 0 ;
 
 class GeoPlate {
 public:
-	#define NUM_VBE 2
-	vector3d vBE[NUM_VBE];
+	double ang[NUM_VBE];
+	double m_halfLen;
+	double m_zoffset;		// offset from the centre i.e. newzoffset = (m_zoffset + m_halfLen);
 	vector3d *vertices;
 	vector3d *normals;
 	vector3d *colors;
@@ -337,12 +318,13 @@ public:
 	static VBOVertex *vbotemp;
 	GeoPlate *kids[4];
 	GeoPlate *parent;
-	GeoPlate *edgeFriend[4]; // [0]=v01, [1]=v12, [2]=v20
+	GeoPlate *edgeFriend[4]; // [0]=v01, [1]=v12, [2]=v23, [3]=30 - original from GeoPatch...
 	GeoRing *geoRing;
 	double m_roughLength;
 	vector3d clipCentroid;
 	double clipRadius;
 	int m_depth;
+	int m_cIdx;
 	SDL_mutex *m_kidsLock;
 	bool m_needUpdateVBOs;
 
@@ -356,6 +338,14 @@ public:
 	static int UpdateGeoPlateThread(void *data)
 	{
 		PROFILE_THREAD_SCOPED()
+		// hacking
+		/*vector3d colorIdx[4] = { 
+			vector3d( 1.0, 0.0, 0.0 ),
+			vector3d( 0.0, 1.0, 0.0 ),
+			vector3d( 0.0, 0.0, 1.0 ),
+			vector3d( 1.0, 1.0, 1.0 )
+		};
+		vector3d grey( 0.5, 0.5, 0.5 );*/
 		uint8_t idx = (*(uint8_t*)data);
 		PiAssert( idx>=0 && idx<4 );
 		PiAssert(s_geoPlateLock[idx]);
@@ -365,6 +355,12 @@ public:
 			SDL_mutexP(s_geoPlateLock[idx]);
 			if (s_geoPlates[idx]) { 
 				(*s_geoPlates[idx])->GenerateMesh();
+				// hacking
+				/*for (int y=0; y<GEOPLATE_EDGELEN; y++) {
+					for (int x=0; x<GEOPLATE_EDGELEN; x++) {
+						(*s_geoPlates[idx])->colors[x + y*GEOPLATE_EDGELEN] = colorIdx[ (*s_geoPlates[idx])->m_cIdx ];
+					}
+				}*/
 			}
 			s_geoPlates[idx] = NULL;
 			SDL_mutexV(s_geoPlateLock[idx]);
@@ -376,23 +372,39 @@ public:
 	// params
 	// v0, v1 - define points on the line describing the loop of the ring/orbital.
 	// depth - 0 is the topmost plate with each depth+1 describing it's depth within the tree.
-	GeoPlate(vector3d v0, vector3d v1, int depth) {
+	GeoPlate(const double halfLength, const double startAng, const double endAng, 
+		const double zoffset, const int depth, const int cIdx) {
 		//PROFILE_SCOPED()
 		memset(this, 0, sizeof(GeoPlate));
 		m_kidsLock = SDL_CreateMutex();
-		vBE[0] = v0; 
-		vBE[1] = v1;
+		ang[0] = startAng;
+		ang[1] = endAng;
+		m_halfLen = halfLength;
+		m_zoffset = zoffset;
 		m_depth = depth;
-		clipCentroid = (v0+v1) * 0.5;
+		m_cIdx = cIdx;
+		clipCentroid = GetSurfacePointCyl(0.5, 0.5, m_halfLen);
 		clipRadius = 0;
-		for (int i=0; i<NUM_VBE; i++) {
-			clipRadius = std::max(clipRadius, (vBE[i]-clipCentroid).Length());
+
+		vector3d vcorners[4] = {
+			GetSurfacePointCyl(0.0, 0.0, m_halfLen),
+			GetSurfacePointCyl(1.0, 0.0, m_halfLen),
+			GetSurfacePointCyl(0.0, 1.0, m_halfLen),
+			GetSurfacePointCyl(1.0, 1.0, m_halfLen)
+		};
+		for (int i=0; i<4; i++) {
+			clipRadius = std::max(clipRadius, (vcorners[i]-clipCentroid).Length());
 		}
 		m_roughLength = GEOPLATE_SUBDIVIDE_AT_CAMDIST / pow(2.0, depth);
 		m_needUpdateVBOs = false;
 		normals = new vector3d[GEOPLATE_NUMVERTICES];
 		vertices = new vector3d[GEOPLATE_NUMVERTICES];
 		colors = new vector3d[GEOPLATE_NUMVERTICES];
+#ifdef _DEBUG
+		memset(vertices, 0, sizeof(vector3d)*GEOPLATE_NUMVERTICES);
+		memset(normals, 0, sizeof(vector3d)*GEOPLATE_NUMVERTICES);
+		memset(colors, 0, sizeof(vector3d)*GEOPLATE_NUMVERTICES);
+#endif
 	}
 
 	static void Init() {
@@ -674,34 +686,34 @@ public:
 			for (int y=0; y<GEOPLATE_EDGELEN; y++) ev[GEOPLATE_EDGELEN-1-y] = vertices[1 + ((GEOPLATE_EDGELEN-1)-y)*GEOPLATE_EDGELEN];
 		}
 	}
-	static void GetEdge(vector3d *array, int edge, vector3d *ev) {
+	static void GetEdge(vector3d *verts, int edge, vector3d *ev) {
 		//PROFILE_SCOPED()
 		if( edge<0 || edge>4) return;
 		if (edge == 0) {
-			for (int x=0; x<GEOPLATE_EDGELEN; x++) ev[x] = array[x];
+			for (int x=0; x<GEOPLATE_EDGELEN; x++) ev[x] = verts[x];
 		} else if (edge == 1) {
 			const int x = GEOPLATE_EDGELEN-1;
-			for (int y=0; y<GEOPLATE_EDGELEN; y++) ev[y] = array[x + y*GEOPLATE_EDGELEN];
+			for (int y=0; y<GEOPLATE_EDGELEN; y++) ev[y] = verts[x + y*GEOPLATE_EDGELEN];
 		} else if (edge == 2) {
 			const int y = GEOPLATE_EDGELEN-1;
-			for (int x=0; x<GEOPLATE_EDGELEN; x++) ev[x] = array[(GEOPLATE_EDGELEN-1)-x + y*GEOPLATE_EDGELEN];
+			for (int x=0; x<GEOPLATE_EDGELEN; x++) ev[x] = verts[(GEOPLATE_EDGELEN-1)-x + y*GEOPLATE_EDGELEN];
 		} else {
-			for (int y=0; y<GEOPLATE_EDGELEN; y++) ev[y] = array[0 + ((GEOPLATE_EDGELEN-1)-y)*GEOPLATE_EDGELEN];
+			for (int y=0; y<GEOPLATE_EDGELEN; y++) ev[y] = verts[0 + ((GEOPLATE_EDGELEN-1)-y)*GEOPLATE_EDGELEN];
 		}
 	}
-	static void SetEdge(vector3d *array, int edge, const vector3d *ev) {
+	static void SetEdge(vector3d *verts, int edge, const vector3d *ev) {
 		//PROFILE_SCOPED()
 		if( edge<0 || edge>4) return;
 		if (edge == 0) {
-			for (int x=0; x<GEOPLATE_EDGELEN; x++) array[x] = ev[x];
+			for (int x=0; x<GEOPLATE_EDGELEN; x++) verts[x] = ev[x];
 		} else if (edge == 1) {
 			const int x = GEOPLATE_EDGELEN-1;
-			for (int y=0; y<GEOPLATE_EDGELEN; y++) array[x + y*GEOPLATE_EDGELEN] = ev[y];
+			for (int y=0; y<GEOPLATE_EDGELEN; y++) verts[x + y*GEOPLATE_EDGELEN] = ev[y];
 		} else if (edge == 2) {
 			const int y = GEOPLATE_EDGELEN-1;
-			for (int x=0; x<GEOPLATE_EDGELEN; x++) array[(GEOPLATE_EDGELEN-1)-x + y*GEOPLATE_EDGELEN] = ev[x];
+			for (int x=0; x<GEOPLATE_EDGELEN; x++) verts[(GEOPLATE_EDGELEN-1)-x + y*GEOPLATE_EDGELEN] = ev[x];
 		} else {
-			for (int y=0; y<GEOPLATE_EDGELEN; y++) array[0 + ((GEOPLATE_EDGELEN-1)-y)*GEOPLATE_EDGELEN] = ev[y];
+			for (int y=0; y<GEOPLATE_EDGELEN; y++) verts[0 + ((GEOPLATE_EDGELEN-1)-y)*GEOPLATE_EDGELEN] = ev[y];
 		}
 	}
 	int GetEdgeIdxOf(GeoPlate *e) {
@@ -724,10 +736,10 @@ public:
 				const vector3d x2 = vertices[x+1];
 				const vector3d y1 = ev[x];
 				const vector3d y2 = vertices[x + GEOPLATE_EDGELEN];
-				const vector3d norm = -((x2-x1).Cross(y2-y1).Normalized());
+				const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
 				normals[x] = norm;
 				// make color
-				const vector3d p = GetSurfacePoint(x*GEOPLATE_FRAC, 0);
+				const vector3d p = GetSurfacePointCyl(x*GEOPLATE_FRAC, 0, m_halfLen);
 				const double height = colors[x].x;
 				colors[x] = geoRing->GetColor(p, height, norm);
 			}
@@ -739,13 +751,12 @@ public:
 				const vector3d x2 = ev[y];
 				const vector3d y1 = vertices[x + (y-1)*GEOPLATE_EDGELEN];
 				const vector3d y2 = vertices[x + (y+1)*GEOPLATE_EDGELEN];
-				const vector3d norm = -((x2-x1).Cross(y2-y1).Normalized());
+				const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
 				normals[x + y*GEOPLATE_EDGELEN] = norm;
 				// make color
-				const vector3d p = GetSurfacePoint(x*GEOPLATE_FRAC, y*GEOPLATE_FRAC);
+				const vector3d p = GetSurfacePointCyl(x*GEOPLATE_FRAC, y*GEOPLATE_FRAC, m_halfLen);
 				const double height = colors[x + y*GEOPLATE_EDGELEN].x;
 				colors[x + y*GEOPLATE_EDGELEN] = geoRing->GetColor(p, height, norm);
-	//			colors[x+y*GEOPLATE_EDGELEN] = vector3d(1,0,0);
 			}
 			break;
 		case 2:
@@ -755,10 +766,10 @@ public:
 				const vector3d x2 = vertices[x+1 + y*GEOPLATE_EDGELEN];
 				const vector3d y1 = vertices[x + (y-1)*GEOPLATE_EDGELEN];
 				const vector3d y2 = ev[GEOPLATE_EDGELEN-1-x];
-				const vector3d norm = -((x2-x1).Cross(y2-y1).Normalized());
+				const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
 				normals[x + y*GEOPLATE_EDGELEN] = norm;
 				// make color
-				const vector3d p = GetSurfacePoint(x*GEOPLATE_FRAC, y*GEOPLATE_FRAC);
+				const vector3d p = GetSurfacePointCyl(x*GEOPLATE_FRAC, y*GEOPLATE_FRAC, m_halfLen);
 				const double height = colors[x + y*GEOPLATE_EDGELEN].x;
 				colors[x + y*GEOPLATE_EDGELEN] = geoRing->GetColor(p, height, norm);
 			}
@@ -769,13 +780,12 @@ public:
 				const vector3d x2 = vertices[1 + y*GEOPLATE_EDGELEN];
 				const vector3d y1 = vertices[(y-1)*GEOPLATE_EDGELEN];
 				const vector3d y2 = vertices[(y+1)*GEOPLATE_EDGELEN];
-				const vector3d norm = -((x2-x1).Cross(y2-y1).Normalized());
+				const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
 				normals[y*GEOPLATE_EDGELEN] = norm;
 				// make color
-				const vector3d p = GetSurfacePoint(0, y*GEOPLATE_FRAC);
+				const vector3d p = GetSurfacePointCyl(0, y*GEOPLATE_FRAC, m_halfLen);
 				const double height = colors[y*GEOPLATE_EDGELEN].x;
 				colors[y*GEOPLATE_EDGELEN] = geoRing->GetColor(p, height, norm);
-	//			colors[y*GEOPLATE_EDGELEN] = vector3d(0,1,0);
 			}
 			break;
 		}
@@ -825,6 +835,19 @@ public:
 			en2[i] = (en2[i-1]+en2[i+1]).Normalized();
 			ec2[i] = (ec2[i-1]+ec2[i+1]) * 0.5;
 		}
+		
+		// hacking
+		/*vector3d colorIdx[4] = { 
+			vector3d( 1.0, 0.0, 0.0 ),
+			vector3d( 0.0, 1.0, 0.0 ),
+			vector3d( 0.0, 0.0, 1.0 ),
+			vector3d( 1.0, 0.0, 1.0 )
+		};
+		for (int i=1; i<GEOPLATE_EDGELEN; ++i) {
+			if( edge>=0 && edge<4) {
+				ec2[i] = colorIdx[edge];
+			}
+		}*/
 		SetEdge(this->vertices, edge, ev2);
 		SetEdge(this->normals, edge, en2);
 		SetEdge(this->colors, edge, ec2);
@@ -841,10 +864,10 @@ public:
 			x2 = vertices[1];
 			y1 = ev2[0];
 			y2 = vertices[GEOPLATE_EDGELEN];
-			const vector3d norm = -((x2-x1).Cross(y2-y1).Normalized());
+			const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
 			normals[0] = norm;
 			// make color
-			const vector3d pt = GetSurfacePoint(0, 0);
+			const vector3d pt = GetSurfacePointCyl(0, 0, m_halfLen);
 		//	const double height = colors[0].x;
 			const double height = geoRing->GetHeight(pt);
 			colors[0] = geoRing->GetColor(pt, height, norm);
@@ -856,10 +879,10 @@ public:
 			x2 = ev2[0];
 			y1 = ev[GEOPLATE_EDGELEN-1];
 			y2 = vertices[p + GEOPLATE_EDGELEN];
-			const vector3d norm = -((x2-x1).Cross(y2-y1).Normalized());
+			const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
 			normals[p] = norm;
 			// make color
-			const vector3d pt = GetSurfacePoint(p*GEOPLATE_FRAC, 0);
+			const vector3d pt = GetSurfacePointCyl(p*GEOPLATE_FRAC, 0, m_halfLen);
 		//	const double height = colors[p].x;
 			const double height = geoRing->GetHeight(pt);
 			colors[p] = geoRing->GetColor(pt, height, norm);
@@ -871,10 +894,10 @@ public:
 			x2 = ev[GEOPLATE_EDGELEN-1];
 			y1 = vertices[p + (p-1)*GEOPLATE_EDGELEN];
 			y2 = ev2[0];
-			const vector3d norm = -((x2-x1).Cross(y2-y1).Normalized());
+			const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
 			normals[p + p*GEOPLATE_EDGELEN] = norm;
 			// make color
-			const vector3d pt = GetSurfacePoint(p*GEOPLATE_FRAC, p*GEOPLATE_FRAC);
+			const vector3d pt = GetSurfacePointCyl(p*GEOPLATE_FRAC, p*GEOPLATE_FRAC, m_halfLen);
 		//	const double height = colors[p + p*GEOPLATE_EDGELEN].x;
 			const double height = geoRing->GetHeight(pt);
 			colors[p + p*GEOPLATE_EDGELEN] = geoRing->GetColor(pt, height, norm);
@@ -886,10 +909,10 @@ public:
 			x2 = vertices[1 + p*GEOPLATE_EDGELEN];
 			y1 = vertices[(p-1)*GEOPLATE_EDGELEN];
 			y2 = ev[GEOPLATE_EDGELEN-1];
-			const vector3d norm = -((x2-x1).Cross(y2-y1).Normalized());
+			const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
 			normals[p*GEOPLATE_EDGELEN] = norm;
 			// make color
-			const vector3d pt = GetSurfacePoint(0, p*GEOPLATE_FRAC);
+			const vector3d pt = GetSurfacePointCyl(0, p*GEOPLATE_FRAC, m_halfLen);
 		//	const double height = colors[p*GEOPLATE_EDGELEN].x;
 			const double height = geoRing->GetHeight(pt);
 			colors[p*GEOPLATE_EDGELEN] = geoRing->GetColor(pt, height, norm);
@@ -978,6 +1001,10 @@ public:
 				// XXX needed for corners... probably not
 				// correct
 				GetEdge(vertices, i, ev[i]);
+			} else {
+				// XXX needed for corners... probably not
+				// correct
+				GetEdge(vertices, i, ev[i]);
 			}
 		}
 	
@@ -986,57 +1013,47 @@ public:
 		MakeCornerNormal<2>(ev[1], ev[2]);
 		MakeCornerNormal<3>(ev[2], ev[3]);
 
-		for (int i=0; i<4; i++) if(!doneEdge[i]) FixEdgeNormals(i, ev[i]);
+		for (int i=0; i<4; i++) {
+			if(!doneEdge[i]) {
+				FixEdgeNormals(i, ev[i]);
+			}
+		}
 	}
 
-	/* in patch surface coords, [0,1] */
-	vector3d GetSurfacePoint(double x, double y) {
-		//PROFILE_SCOPED()
-		//#define lerp(t, a, b) ( a + t * (b - a) )
-		// first we'll find our basis vectors...
-		const vector3d v01	= (vBE[1] - vBE[0]);			// vector from v0 to v1
-		const vector3d v01u	= v01.Normalized();				// unit vector from v0 to v1
-		const vector3d v0c	= (-vBE[0]).Normalized();		// unit vector from v0 to origin, bit of a hack instead of defining v(0,0,0) and then subtracting
-		const vector3d v01ux0c = v01u.Cross(v0c).Normalized();	// unit vector (Normalisation might be redundant) Cross of v01 and v0c
-		const float v01HalfLen = v01.Length() * 0.5;	// half length of the edge length defined by v01
-		const vector3d vY = v01ux0c * v01HalfLen;		// 
+	#define lerp(t, a, b) ( a + t * (b - a) )
+	vector3d GetSurfacePointCyl(const double x, const double y, const double halfLength) {
+		double theta = lerp( x, ang[1], ang[0] );//*2.0*M_PI;
+		
+		//const vector3d topEndCentre(0.0, halfLength, 0.0);		// vertex at middle of top end
+		//const vector3d bottomEndcentre(0.0, -halfLength, 0.0);	// vertex at middle of bottom end
 
-		//... plan now is simples... probably -
-		// - v01ux0c is the y-axis
-		// - (vBE[1] - vBE[0]) is the x-axis
-		// using these we can find any point on the square plate of the orbital.
-
-		// first lerp from v0 to v1, then normalise to get point at correct distance from v(0,0,0)
-		const vector3d lerpv01x = (vBE[0] + (x * (v01))).Normalized();
-		// find two points along the y-axis from our x-axis interpolant
-		const vector3d vY0 = lerpv01x + vY;
-		const vector3d vY1 = lerpv01x - vY;
-		// now lerp between the two y-axis points by y input val to find final point on surface... 
-		// DO NOT NORMALISE, otherwise point will be spherised
-		const vector3d surfPos = vY0 + (y * (vY1 - vY0));
-		return surfPos;
+		const vector3d topEndEdge(cos(theta), sin(theta), m_zoffset + halfLength);		// vertices at top edge of circle
+		const vector3d bottomEndEdge(cos(theta), sin(theta), m_zoffset - halfLength);	// vertices at bottom edge of circle
+		
+		const vector3d res = lerp( y, bottomEndEdge, topEndEdge );
+		return res;
 	}
 
-	/** Generates full-detail vertices, and also non-edge normals and
-	 * colors */
-	static double height_val;// = 0.001;
+	// Generates full-detail vertices, and also non-edge normals and colors
 	void GenerateMesh() {
 		//PROFILE_SCOPED()
 		vector3d *vts = vertices;
 		vector3d *col = colors;
 		double xfrac;
 		double yfrac = 0;
+		
 		for (int y=0; y<GEOPLATE_EDGELEN; ++y) {
 			xfrac = 0;
 			for (int x=0; x<GEOPLATE_EDGELEN; ++x) {
-				vector3d p = GetSurfacePoint(xfrac, yfrac);
-				//double height = (x%2) ? 0.0 : -height_val;//geoRing->GetHeight(p);
+				vector3d p = GetSurfacePointCyl(xfrac, yfrac, m_halfLen);
 				double height = -(geoRing->GetHeight(p));
 				*(vts++) = p * (height + 1.0);
 				// remember this -- we will need it later
-				(col++)->x = height;
+				(col++)->x = -height;
 
 				xfrac += GEOPLATE_FRAC;
+
+				normals[x + y*GEOPLATE_EDGELEN] = (p.Normalized());
 			}
 			yfrac += GEOPLATE_FRAC;
 		}
@@ -1051,12 +1068,12 @@ public:
 				vector3d y2 = vertices[x + (y+1)*GEOPLATE_EDGELEN];
 
 				vector3d n = (x2-x1).Cross(y2-y1);
-				const vector3d &norm = normals[x + y*GEOPLATE_EDGELEN] = -(n.Normalized());
+				const vector3d &norm = normals[x + y*GEOPLATE_EDGELEN] = (n.Normalized());
 				// color
-				vector3d p = GetSurfacePoint(x*GEOPLATE_FRAC, y*GEOPLATE_FRAC);
+				vector3d p = GetSurfacePointCyl(x*GEOPLATE_FRAC, y*GEOPLATE_FRAC, m_halfLen);
 				vector3d &col_r = colors[x + y*GEOPLATE_EDGELEN];
 				const double height = col_r.x;
-				col_r = geoRing->GetColor(p, -height, -norm);
+				col_r = geoRing->GetColor(p, height, norm);
 			}
 		}
 	}
@@ -1071,8 +1088,8 @@ public:
 		/* now we have a valid edge, fix the edge vertices */
 		if (edge == 0) {
 			for (int x=0; x<GEOPLATE_EDGELEN; x++) {
-				vector3d p = GetSurfacePoint(x * GEOPLATE_FRAC, 0);
-				double height = geoRing->GetHeight(p);
+				vector3d p = GetSurfacePointCyl(x * GEOPLATE_FRAC, 0, m_halfLen);
+				double height = -geoRing->GetHeight(p);
 				vertices[x] = p * (height + 1.0);
 				// XXX These bounds checks in each edge case are
 				// only necessary while the "All these 'if's"
@@ -1083,8 +1100,8 @@ public:
 			}
 		} else if (edge == 1) {
 			for (int y=0; y<GEOPLATE_EDGELEN; y++) {
-				vector3d p = GetSurfacePoint(1.0, y * GEOPLATE_FRAC);
-				double height = geoRing->GetHeight(p);
+				vector3d p = GetSurfacePointCyl(1.0, y * GEOPLATE_FRAC, m_halfLen);
+				double height = -geoRing->GetHeight(p);
 				int pos = (GEOPLATE_EDGELEN-1) + y*GEOPLATE_EDGELEN;
 				vertices[pos] = p * (height + 1.0);
 				if ((y>0) && (y<GEOPLATE_EDGELEN-1)) {
@@ -1093,8 +1110,8 @@ public:
 			}
 		} else if (edge == 2) {
 			for (int x=0; x<GEOPLATE_EDGELEN; x++) {
-				vector3d p = GetSurfacePoint(x * GEOPLATE_FRAC, 1.0);
-				double height = geoRing->GetHeight(p);
+				vector3d p = GetSurfacePointCyl(x * GEOPLATE_FRAC, 1.0, m_halfLen);
+				double height = -geoRing->GetHeight(p);
 				int pos = x + (GEOPLATE_EDGELEN-1)*GEOPLATE_EDGELEN;
 				vertices[pos] = p * (height + 1.0);
 				if ((x>0) && (x<GEOPLATE_EDGELEN-1)) {
@@ -1103,8 +1120,8 @@ public:
 			}
 		} else {
 			for (int y=0; y<GEOPLATE_EDGELEN; y++) {
-				vector3d p = GetSurfacePoint(0, y * GEOPLATE_FRAC);
-				double height = geoRing->GetHeight(p);
+				vector3d p = GetSurfacePointCyl(0, y * GEOPLATE_FRAC, m_halfLen);
+				double height = -geoRing->GetHeight(p);
 				int pos = y * GEOPLATE_EDGELEN;
 				vertices[pos] = p * (height + 1.0);
 				if ((y>0) && (y<GEOPLATE_EDGELEN-1)) {
@@ -1207,11 +1224,11 @@ public:
 			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, indices_vbo);
 			glDrawRangeElements(GL_TRIANGLES, 0, GEOPLATE_NUMVERTICES-1, VBO_COUNT_MID_IDX, GL_UNSIGNED_SHORT, reinterpret_cast<void*>(IDX_VBO_MAIN_OFFSET));
 			for (int i=0; i<4; i++) {
-				//if (edgeFriend[i]) {
+				if (edgeFriend[i]) {
 					glDrawRangeElements(GL_TRIANGLES, s_hiMinIdx[i], s_hiMaxIdx[i], VBO_COUNT_HI_EDGE, GL_UNSIGNED_SHORT, reinterpret_cast<void*>(IDX_VBO_HI_OFFSET(i)));
-				//} else {
-				//	glDrawRangeElements(GL_TRIANGLES, s_loMinIdx[i], s_loMaxIdx[i], VBO_COUNT_LO_EDGE, GL_UNSIGNED_SHORT, reinterpret_cast<void*>(IDX_VBO_LO_OFFSET(i)));
-				//}
+				} else {
+					glDrawRangeElements(GL_TRIANGLES, s_loMinIdx[i], s_loMaxIdx[i], VBO_COUNT_LO_EDGE, GL_UNSIGNED_SHORT, reinterpret_cast<void*>(IDX_VBO_LO_OFFSET(i)));
+				}
 			}
 			glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
 			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -1222,9 +1239,15 @@ public:
 		}
 	}
 
+	bool AreSame(double a, double b)
+	{
+		return abs(a - b) < (DBL_EPSILON*10000.0);
+	}
+
 	void LODUpdate(vector3d &campos) {
-		vector3d centroid = (vBE[0]+vBE[1]).Normalized();
-		centroid = (1.0 + geoRing->GetHeight(centroid)) * centroid;
+		//vector3d centroid = (vBE[0]+vBE[1]).Normalized();
+		vector3d centroid = GetSurfacePointCyl(0.5, 0.5, m_halfLen);
+		centroid = (1.0 + -geoRing->GetHeight(centroid)) * centroid;
 
 		bool canSplit = true;
 		for (int i=0; i<4; i++) {
@@ -1243,37 +1266,38 @@ public:
 		bool canMerge = true;
 
 		if (canSplit) {
-			/*if (!kids[0]) {
-				vector3d v01, v12, v23, v30, cn;
-				//cn = vBE[0] + (0.5 * (vBE[1]-vBE[0]));	// midpoint - but wrong?
-				cn = centroid.Normalized();
-				v01 = (vBE[0]+vBE[1]).Normalized();
-				v12 = (vBE[1]+vBE[2]).Normalized();
-				v23 = (vBE[2]+vBE[3]).Normalized();
-				v30 = (vBE[3]+vBE[0]).Normalized();
+			if (!kids[0]) {
+				const double halfAng = ang[0] + 0.5 * (ang[1] - ang[0]);
+				const double newLength = (m_halfLen*0.5);
+				const double zoffset0 = m_zoffset + newLength;
+				const double zoffset1 = m_zoffset - newLength;
 				GeoPlate *_kids[4];
-				_kids[0] = new GeoPlate(vBE[0], v01, cn, v30, m_depth+1);
-				_kids[1] = new GeoPlate(v01, vBE[1], v12, cn, m_depth+1);
-				_kids[2] = new GeoPlate(cn, v12, vBE[2], v23, m_depth+1);
-				_kids[3] = new GeoPlate(v30, cn, v23, vBE[3], m_depth+1);
+				_kids[0] = new GeoPlate(newLength, halfAng, ang[1], zoffset1, m_depth+1, 0);
+				_kids[1] = new GeoPlate(newLength, ang[0], halfAng, zoffset1, m_depth+1, 1);
+				_kids[2] = new GeoPlate(newLength, ang[0], halfAng, zoffset0, m_depth+1, 2);
+				_kids[3] = new GeoPlate(newLength, halfAng, ang[1], zoffset0, m_depth+1, 3);
 				// hm.. edges. Not right to pass this
 				// edgeFriend...
 				_kids[0]->edgeFriend[0] = GetEdgeFriendForKid(0, 0);
 				_kids[0]->edgeFriend[1] = _kids[1];
 				_kids[0]->edgeFriend[2] = _kids[3];
 				_kids[0]->edgeFriend[3] = GetEdgeFriendForKid(0, 3);
+
 				_kids[1]->edgeFriend[0] = GetEdgeFriendForKid(1, 0);
 				_kids[1]->edgeFriend[1] = GetEdgeFriendForKid(1, 1);
 				_kids[1]->edgeFriend[2] = _kids[2];
 				_kids[1]->edgeFriend[3] = _kids[0];
+
 				_kids[2]->edgeFriend[0] = _kids[1];
 				_kids[2]->edgeFriend[1] = GetEdgeFriendForKid(2, 1);
 				_kids[2]->edgeFriend[2] = GetEdgeFriendForKid(2, 2);
 				_kids[2]->edgeFriend[3] = _kids[3];
+
 				_kids[3]->edgeFriend[0] = _kids[0];
 				_kids[3]->edgeFriend[1] = _kids[2];
 				_kids[3]->edgeFriend[2] = GetEdgeFriendForKid(3, 2);
 				_kids[3]->edgeFriend[3] = GetEdgeFriendForKid(3, 3);
+
 				_kids[0]->parent = _kids[1]->parent = _kids[2]->parent = _kids[3]->parent = this;
 				_kids[0]->geoRing = _kids[1]->geoRing = _kids[2]->geoRing = _kids[3]->geoRing = geoRing;
 
@@ -1318,9 +1342,19 @@ public:
 					kids[i]->GenerateEdgeNormalsAndColors();
 					kids[i]->UpdateVBOs();
 				}
+				// hacking
+				/*for (int x=0; x<GEOPLATE_EDGELEN; x++) {
+					for (int y=0; y<GEOPLATE_EDGELEN-1; y++) {
+						// normal
+						vector3d v0 = vertices[x + (GEOPLATE_EDGELEN*(y+0))];
+						vector3d v1 = vertices[x + (GEOPLATE_EDGELEN*(y+1))];
+						PiAssert(AreSame(v0.x, v1.x));
+						PiAssert(AreSame(v0.y, v1.y));
+					}
+				}*/
 				PiVerify(SDL_mutexV(m_kidsLock)!=-1);
 			}
-			for (int i=0; i<4; ++i) kids[i]->LODUpdate(campos);*/
+			for (int i=0; i<4; ++i) kids[i]->LODUpdate(campos);
 		} else {
 			if (canMerge && kids[0]) {
 				PiVerify(SDL_mutexP(m_kidsLock)==0);
@@ -1331,7 +1365,6 @@ public:
 	}
 };
 //static 
-double			GeoPlate::height_val = 0.001;
 unsigned short *GeoPlate::midIndices = 0;
 unsigned short *GeoPlate::loEdgeIndices[4];
 unsigned short *GeoPlate::hiEdgeIndices[4];
@@ -1346,24 +1379,6 @@ SDL_sem*	GeoPlate::s_geoRingSem[4]	= {0};
 SDL_Thread*	GeoPlate::s_geoRingThread[4]= {0};
 #endif // GEOPLATE_USE_THREADING
 
-static const int geo_ring_edge_friends[4][4] = {
-	{ 3, -1, 1, 2 },
-	{ 0, -1, -1, 2 },
-	//{ 0, 1, -1, 3 },
-	{ 0, 2, -1, -1 },
-	//{ 0, 3, -1, 1 },
-	{ 1, -1, 3, 2 }
-};
-/*
-static const int geo_ring_edge_friends[6][4] = {
-	{ 3, 4, 1, 2 },
-	{ 0, 4, 5, 2 },
-	{ 0, 1, 5, 3 },
-	{ 0, 2, 5, 4 },
-	{ 0, 3, 5, 1 },
-	{ 1, 4, 3, 2 }
-};
-*/
 #define PLANET_AMBIENT	0.0
 static std::list<GeoRing*> s_allGeoRings;
 SDL_mutex *s_allGeoRingsLock;
@@ -1473,6 +1488,15 @@ GeoRing::GeoRing(const SBody *body): m_style(body)
 	SDL_mutexP(s_allGeoRingsLock);
 	s_allGeoRings.push_back(this);
 	SDL_mutexV(s_allGeoRingsLock);
+
+	// a little aside, this calculates the radius(R) of a torus
+	// that generates 1g for a given rpm.
+	// the numbers get very big very quickly :(
+	/*double rpm = (1.0/60.0)/24.0;//1.0;
+	double cal = ((M_PI*rpm)/30.0);
+	double g = 9.81;
+	double R = g / (cal*cal);
+	printf("Radius of torus with 1g at %.lf rpm is R = %.lf\n", rpm, R);*/
 }
 
 GeoRing::~GeoRing()
@@ -1514,18 +1538,26 @@ void GeoRing::DestroyVBOs()
 	SDL_mutexV(m_vbosToDestroyLock);
 }
 
+GeoPlate* GeoRing::FindGeoPlateByIndex(const int idx) const
+{
+	const int nPlates = m_plates.size();
+	if( idx<0 ) {
+		const int negidx = (nPlates + idx);
+		return m_plates[negidx];
+	} else if( idx>=nPlates ) {
+		const int wrapidx = idx % nPlates;
+		return m_plates[wrapidx];
+	}
+	// default
+	return m_plates[idx];
+}
+
 void GeoRing::BuildFirstPatches(const int numSegments)
 {
 	//PROFILE_SCOPED()
-	
-	/*double va1[ 9 ];
-	double va2[ 9 ];
-	for (int i = 0 ; i < 9 ; i++ ) {
-		va1[i] = M_PI * ((0.25 * i) - 1.0);
-		va2[i] = cos( va1[i] );
-	}*/
 
-	std::vector<vector3d> points;
+	std::vector<vector3d>	points;
+	std::vector<double>		angles;
 	double angleOffset = 0.0 / 180.0 * M_PI;
     for (int i = 0; i <= numSegments; ++i) {
 		double angle = angleOffset + ((M_PI * 360.0) / 180.0) * i / numSegments;
@@ -1533,35 +1565,43 @@ void GeoRing::BuildFirstPatches(const int numSegments)
 		double cosval = cos(angle);
 		vector3d vp(cosval, sinval, 0.0 );
 		points.push_back( vp.Normalized() );
+		angles.push_back( angle );
     }
 
 	// build the terrain plates
 	m_plates.clear();
 	for( int i=0 ; i<points.size()-1 ; ++i ) {
-		m_plates.push_back( new GeoPlate(points[i], points[i+1], 0) );
+		double len = (points[i+1] - points[i]).Length();
+		m_plates.push_back( new GeoPlate(len, angles[i], angles[i+1], 0.0, 0, 0) );
 	}
+
+	// set edge friends
 	for (size_t i=0; i<m_plates.size(); i++) {
 		m_plates[i]->geoRing = this;
-		for (int j=0; j<4; j++) {
-			int idx = geo_ring_edge_friends[i][j];
-			if( idx >=0 && idx < 4 )
-				m_plates[i]->edgeFriend[j] = m_plates[idx];
-			else
-				m_plates[i]->edgeFriend[j] = 0;
-		}
+
+		// trailing edge?
+		m_plates[i]->edgeFriend[0] = 0;//FindGeoPlateByIndex(i+1);	// backward?
+		m_plates[i]->edgeFriend[1] = 0;
+		m_plates[i]->edgeFriend[2] = 0;//FindGeoPlateByIndex(i-1);	// forward?
+		m_plates[i]->edgeFriend[3] = 0;
 	}
+
+	// create mesh(es)
 	for (size_t i=0; i<m_plates.size(); i++) m_plates[i]->GenerateMesh();
-	//for (size_t i=0; i<m_plates.size(); i++) m_plates[i]->GenerateEdgeNormalsAndColors();
+	for (size_t i=0; i<m_plates.size(); i++) m_plates[i]->GenerateEdgeNormalsAndColors();
 	for (size_t i=0; i<m_plates.size(); i++) m_plates[i]->UpdateVBOs();
 
 	// hacking
-	/*for (size_t i=0; i<m_plates.size(); i++) {
+	/*vector3d colorIdx[4] = { 
+		vector3d( 1.0, 0.0, 0.0 ),	// red
+		vector3d( 0.0, 1.0, 0.0 ),	// green
+		vector3d( 0.0, 0.0, 1.0 ),	// blue
+		vector3d( 1.0, 0.0, 1.0 )	// purple
+	};
+	for (size_t i=0; i<m_plates.size(); i++) {
 		for (int y=0; y<GEOPLATE_EDGELEN; y++) {
 			for (int x=0; x<GEOPLATE_EDGELEN; x++) {
-				double r = (i%2) ? 1.0 : 0.0;
-				double g = 0.0;//(i%3) ? 1.0 : 0.0;
-				double b = (i%2) ? 0.0 : 1.0;
-				m_plates[i]->colors[x + y*GEOPLATE_EDGELEN] = vector3d(r, g, b);
+				m_plates[i]->colors[x + y*GEOPLATE_EDGELEN] = colorIdx[ m_plates[i]->m_cIdx ];
 			}
 		}
 	}*/
@@ -1705,7 +1745,7 @@ void GeoRing::Render(vector3d campos, const float radius, const float scale) {
 	glMaterialfv (GL_FRONT, GL_EMISSION, black);
 	glEnable(GL_COLOR_MATERIAL);
 
-	glDisable(GL_CULL_FACE);
+	//glDisable(GL_CULL_FACE);
 
 	/*glLineWidth(1.0);
 	glPolygonMode(GL_FRONT, GL_LINE);
@@ -1730,7 +1770,7 @@ void GeoRing::Render(vector3d campos, const float radius, const float scale) {
 	}
 	Render::State::UseProgram(0);
 
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 
 	glDisable(GL_COLOR_MATERIAL);
 	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, oldAmbient);

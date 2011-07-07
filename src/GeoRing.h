@@ -23,7 +23,7 @@ public:
 		// Fractals absolutely MUST return heights >= 0.0 (one planet radius)
 		// otherwise atmosphere and other things break.
 		assert(h >= 0.0);
-#endif /* DEBUG */
+#endif // DEBUG 
 		return h;
 	}
 	// only called from fishy thread
@@ -41,6 +41,7 @@ public:
 	// in sbody radii
 	double GetMaxFeatureHeight() const { return m_style.GetMaxHeight(); }
 private:
+	GeoPlate* FindGeoPlateByIndex(const int idx) const;
 	void BuildFirstPatches(const int numSegments = 16);
 	std::vector<GeoPlate*>		m_plates;
 	std::vector<GeoPlateHull*>	m_hull;

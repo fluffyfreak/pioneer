@@ -1242,12 +1242,12 @@ void GeoSphere::BuildFirstPatches()
 	p7 = p7.Normalized();
 	p8 = p8.Normalized();
 
-	m_patches[0] = new GeoPatch(p1, p2, p3, p4, 0);
-	m_patches[1] = new GeoPatch(p4, p3, p7, p8, 0);
-	m_patches[2] = new GeoPatch(p1, p4, p8, p5, 0);
-	m_patches[3] = new GeoPatch(p2, p1, p5, p6, 0);
-	m_patches[4] = new GeoPatch(p3, p2, p6, p7, 0);
-	m_patches[5] = new GeoPatch(p8, p7, p6, p5, 0);
+	m_patches[0] = new GeoPatch(p1, p2, p3, p4, 0);	// z+
+	m_patches[1] = new GeoPatch(p4, p3, p7, p8, 0);	// y-
+	m_patches[2] = new GeoPatch(p1, p4, p8, p5, 0);	// x+
+	m_patches[3] = new GeoPatch(p2, p1, p5, p6, 0);	// y+
+	m_patches[4] = new GeoPatch(p3, p2, p6, p7, 0);	// x-
+	m_patches[5] = new GeoPatch(p8, p7, p6, p5, 0);	// z-
 	for (int i=0; i<6; i++) {
 		m_patches[i]->geosphere = this;
 		for (int j=0; j<4; j++) {

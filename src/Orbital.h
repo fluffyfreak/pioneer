@@ -35,13 +35,11 @@ protected:
 	virtual void Load(Serializer::Reader &rd);
 private:
 	void Init();
-	void DrawGasGiantRings();
 	void DrawAtmosphere(vector3d &pos);
 
 	double m_mass;
 	vector3d pos;
 	SBody *sbody;
-	GLuint m_ringsDList;
 	GeoRing *m_geoRing;
 };
 

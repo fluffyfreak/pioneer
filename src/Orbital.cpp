@@ -233,59 +233,6 @@ static void DrawRing(double inner, double outer, const float color[4])
 	glEnd();
 }
 
-void Orbital::DrawGasGiantRings()
-{
-	glPushAttrib(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
-		GL_ENABLE_BIT | GL_LIGHTING_BIT | GL_POLYGON_BIT);
-	glDisable(GL_LIGHTING);
-	glEnable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_NORMALIZE);
-	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
-	glDisable(GL_CULL_FACE);
-
-//	MTRand rng((int)Pi::GetGameTime());
-	MTRand rng(sbody->seed+965467);
-	float col[4];
-
-	double noiseOffset = 256.0*rng.Double();
-	float baseCol[4];
-	
-	// just use a random gas giant flavour for the moment
-	GasGiantDef_t &ggdef = ggdefs[rng.Int32(0,3)];
-	ggdef.ringCol.GenCol(baseCol, rng);
-	
-	const double maxRingWidth = 0.1 / double(2*(Pi::detail.planets + 1));
-
-	Render::State::UseProgram(Render::planetRingsShader[Pi::worldView->GetNumLights()-1]);
-	if (rng.Double(1.0) < ggdef.ringProbability) {
-		float rpos = float(rng.Double(1.15,1.5));
-		float end = rpos + float(rng.Double(0.1, 1.0));
-		end = std::min(end, 2.5f);
-		while (rpos < end) {
-			float size = float(rng.Double(maxRingWidth));
-			float n =
-				0.5 + 0.5*(
-					noise(10.0*rpos, noiseOffset, 0.0) +
-					0.5*noise(20.0*rpos, noiseOffset, 0.0) +
-					0.25*noise(40.0*rpos, noiseOffset, 0.0));
-			col[0] = baseCol[0] * n;
-			col[1] = baseCol[1] * n;
-			col[2] = baseCol[2] * n;
-			col[3] = baseCol[3] * n;
-			DrawRing(rpos, rpos+size, col);
-			rpos += size;
-		}
-	}
-	Render::State::UseProgram(0);
-	
-	glEnable(GL_CULL_FACE);
-	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
-	glDisable(GL_BLEND);
-	glDisable(GL_NORMALIZE);
-	glPopAttrib();
-}
-
 static void _DrawAtmosphere(double rad1, double rad2, vector3d &pos, const float col[4])
 {
 	glPushMatrix();
@@ -469,8 +416,6 @@ void Orbital::Render(const vector3d &viewCoords, const matrix4x4d &viewTransform
 		glScaled(rad, rad, rad);
 		campos = campos * (1.0/rad);
 		m_geoRing->Render(campos, sbody->GetRadius(), scale);
-		
-		if (sbody->GetSuperType() == SBody::SUPERTYPE_GAS_GIANT) DrawGasGiantRings();
 		
 		fpos = ftran.InverseOf() * fpos;
 		fpos *= (1.0/rad);
