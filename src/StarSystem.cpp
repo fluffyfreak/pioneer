@@ -1461,9 +1461,8 @@ void StarSystem::MakePlanetsAround(SBody *primary, MTRand &rand)
 
 SBody * StarSystem::MakeOrbitalAround()
 {
-	unsigned long _init[5] = { m_loc.systemNum, m_loc.sectorX, m_loc.sectorY, UNIVERSE_SEED, m_seed };
-	MTRand rand;
-	rand.seed(_init, 5);
+	unsigned long _init[5] = { m_path.systemIndex, m_path.sectorX, m_path.sectorY, UNIVERSE_SEED, m_seed };
+	MTRand rand(_init, 5);
 	SBody *primary = rootBody;
 
 	fixed discMin = fixed(0);
