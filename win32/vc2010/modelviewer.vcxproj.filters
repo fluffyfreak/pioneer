@@ -16,6 +16,9 @@
     <Filter Include="src\gui">
       <UniqueIdentifier>{de900c24-ff02-4a99-a7fc-10d9ce21daf0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\png">
+      <UniqueIdentifier>{ecc2d6f0-4306-4e2a-893a-291c696713d6}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\profiler">
       <UniqueIdentifier>{811eb28e-1577-4c73-b236-998d8aaaef00}</UniqueIdentifier>
     </Filter>
@@ -149,6 +152,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\gui\GuiWidget.cpp">
       <Filter>src\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\png\lodepng.cpp">
+      <Filter>src\png</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\TextureManager.cpp">
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\profiler\Profiler.cpp">
       <Filter>src\profiler</Filter>
@@ -304,6 +313,15 @@
     </ClInclude>
     <ClInclude Include="..\..\src\gui\GuiVScrollPortal.h">
       <Filter>src\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\png\lodepng.h">
+      <Filter>src\png</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\TextureManager.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SystemPath.h">
+      <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\profiler\Profiler.h">
       <Filter>src\profiler</Filter>
