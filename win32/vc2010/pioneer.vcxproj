@@ -164,7 +164,6 @@
     <ClCompile Include="..\..\src\LuaPlayer.cpp" />
     <ClCompile Include="..\..\src\LuaRand.cpp" />
     <ClCompile Include="..\..\src\LuaSBody.cpp" />
-    <ClCompile Include="..\..\src\LuaSBodyPath.cpp" />
     <ClCompile Include="..\..\src\LuaSerializer.cpp" />
     <ClCompile Include="..\..\src\LuaShip.cpp" />
     <ClCompile Include="..\..\src\LuaShipType.cpp" />
@@ -172,6 +171,7 @@
     <ClCompile Include="..\..\src\LuaSpaceStation.cpp" />
     <ClCompile Include="..\..\src\LuaStar.cpp" />
     <ClCompile Include="..\..\src\LuaStarSystem.cpp" />
+    <ClCompile Include="..\..\src\LuaSystemPath.cpp" />
     <ClCompile Include="..\..\src\LuaTimer.cpp" />
     <ClCompile Include="..\..\src\LuaUI.cpp" />
     <ClCompile Include="..\..\src\LuaUtils.cpp" />
@@ -189,6 +189,7 @@
     <ClCompile Include="..\..\src\PiLuaClasses.cpp" />
     <ClCompile Include="..\..\src\Planet.cpp" />
     <ClCompile Include="..\..\src\Player.cpp" />
+    <ClCompile Include="..\..\src\png\lodepng.cpp" />
     <ClCompile Include="..\..\src\PoliceChatForm.cpp" />
     <ClCompile Include="..\..\src\Polit.cpp" />
     <ClCompile Include="..\..\src\profiler\Profiler.cpp" />
@@ -213,10 +214,10 @@
     <ClCompile Include="..\..\src\SpaceStationView.cpp" />
     <ClCompile Include="..\..\src\Star.cpp" />
     <ClCompile Include="..\..\src\StarSystem.cpp" />
-    <ClCompile Include="..\..\src\SysLoc.cpp" />
     <ClCompile Include="..\..\src\SystemInfoView.cpp" />
     <ClCompile Include="..\..\src\SystemView.cpp" />
     <ClCompile Include="..\..\src\TextureFont.cpp" />
+    <ClCompile Include="..\..\src\TextureManager.cpp" />
     <ClCompile Include="..\..\src\utils.cpp" />
     <ClCompile Include="..\..\src\VectorFont.cpp" />
     <ClCompile Include="..\..\src\WorldView.cpp" />
@@ -315,7 +316,6 @@
     <ClInclude Include="..\..\src\LuaPlayer.h" />
     <ClInclude Include="..\..\src\LuaRand.h" />
     <ClInclude Include="..\..\src\LuaSBody.h" />
-    <ClInclude Include="..\..\src\LuaSBodyPath.h" />
     <ClInclude Include="..\..\src\LuaSerializer.h" />
     <ClInclude Include="..\..\src\LuaShip.h" />
     <ClInclude Include="..\..\src\LuaShipType.h" />
@@ -323,6 +323,7 @@
     <ClInclude Include="..\..\src\LuaSpaceStation.h" />
     <ClInclude Include="..\..\src\LuaStar.h" />
     <ClInclude Include="..\..\src\LuaStarSystem.h" />
+    <ClInclude Include="..\..\src\LuaSystemPath.h" />
     <ClInclude Include="..\..\src\LuaTimer.h" />
     <ClInclude Include="..\..\src\LuaUI.h" />
     <ClInclude Include="..\..\src\LuaUtils.h" />
@@ -343,6 +344,7 @@
     <ClInclude Include="..\..\src\PiLuaClasses.h" />
     <ClInclude Include="..\..\src\Planet.h" />
     <ClInclude Include="..\..\src\Player.h" />
+    <ClInclude Include="..\..\src\png\lodepng.h" />
     <ClInclude Include="..\..\src\PoliceChatForm.h" />
     <ClInclude Include="..\..\src\Polit.h" />
     <ClInclude Include="..\..\src\profiler\Profiler.h" />
@@ -369,10 +371,11 @@
     <ClInclude Include="..\..\src\SpaceStationView.h" />
     <ClInclude Include="..\..\src\Star.h" />
     <ClInclude Include="..\..\src\StarSystem.h" />
-    <ClInclude Include="..\..\src\SysLoc.h" />
     <ClInclude Include="..\..\src\SystemInfoView.h" />
+    <ClInclude Include="..\..\src\SystemPath.h" />
     <ClInclude Include="..\..\src\SystemView.h" />
     <ClInclude Include="..\..\src\TextureFont.h" />
+    <ClInclude Include="..\..\src\TextureManager.h" />
     <ClInclude Include="..\..\src\Timer.h" />
     <ClInclude Include="..\..\src\utils.h" />
     <ClInclude Include="..\..\src\vector2.h" />

@@ -41,7 +41,7 @@
 #include "LuaPlayer.h"
 #include "LuaCargoBody.h"
 #include "LuaStarSystem.h"
-#include "LuaSBodyPath.h"
+#include "LuaSystemPath.h"
 #include "LuaSBody.h"
 #include "LuaShipType.h"
 #include "LuaEquipType.h"
@@ -84,6 +84,7 @@ LuaEventQueue<> Pi::luaOnGameStart("onGameStart");
 LuaEventQueue<> Pi::luaOnGameEnd("onGameEnd");
 LuaEventQueue<Ship> Pi::luaOnEnterSystem("onEnterSystem");
 LuaEventQueue<Ship> Pi::luaOnLeaveSystem("onLeaveSystem");
+LuaEventQueue<Body> Pi::luaOnFrameChanged("onFrameChanged");
 LuaEventQueue<Ship,Body> Pi::luaOnShipDestroyed("onShipDestroyed");
 LuaEventQueue<Ship,Body> Pi::luaOnShipHit("onShipHit");
 LuaEventQueue<Ship,Body> Pi::luaOnShipCollided("onShipCollided");
@@ -191,10 +192,10 @@ static void LuaInit()
 	LuaPlanet::RegisterClass();
 	LuaStar::RegisterClass();
 	LuaPlayer::RegisterClass();
-    LuaCargoBody::RegisterClass();
+	LuaCargoBody::RegisterClass();
 	LuaStarSystem::RegisterClass();
-	LuaSBodyPath::RegisterClass();
-    LuaSBody::RegisterClass();
+	LuaSystemPath::RegisterClass();
+	LuaSBody::RegisterClass();
 	LuaShipType::RegisterClass();
 	LuaEquipType::RegisterClass();
 	LuaRand::RegisterClass();
@@ -209,6 +210,7 @@ static void LuaInit()
 	Pi::luaOnGameEnd.RegisterEventQueue();
 	Pi::luaOnEnterSystem.RegisterEventQueue();
 	Pi::luaOnLeaveSystem.RegisterEventQueue();
+	Pi::luaOnFrameChanged.RegisterEventQueue();
 	Pi::luaOnShipDestroyed.RegisterEventQueue();
 	Pi::luaOnShipHit.RegisterEventQueue();
 	Pi::luaOnShipCollided.RegisterEventQueue();
@@ -240,6 +242,7 @@ static void LuaInit()
 static void LuaInitGame() {
 	Pi::luaOnGameStart.ClearEvents();
 	Pi::luaOnGameEnd.ClearEvents();
+	Pi::luaOnFrameChanged.ClearEvents();
 	Pi::luaOnShipDestroyed.ClearEvents();
 	Pi::luaOnShipHit.ClearEvents();
 	Pi::luaOnShipCollided.ClearEvents();
@@ -960,7 +963,7 @@ void Pi::Start()
     switch (choice) {
         case 1: // Earth start point
         {
-            SBodyPath path(0,0,0);
+            SystemPath path(0,0,0);
             Space::SetupSystemForGameStart(&path, 4, 0);
             StartGame();
             MainLoop();
@@ -968,7 +971,7 @@ void Pi::Start()
         }
         case 2: // Epsilon Eridani start point
         {
-            SBodyPath path(1,0,1);
+            SystemPath path(1,0,1);
             Space::SetupSystemForGameStart(&path, 0, 0);
             StartGame();
             MainLoop();
@@ -976,7 +979,7 @@ void Pi::Start()
         }
         case 3: // Debug start point
         {
-            SBodyPath path(1,0,1);
+            SystemPath path(1,0,1);
             Space::DoHyperspaceTo(&path);
             for (std::list<Body*>::iterator i = Space::bodies.begin(); i != Space::bodies.end(); i++) {
                 const SBody *sbody = (*i)->GetSBody();
@@ -1174,7 +1177,7 @@ void Pi::MainLoop()
 		//if (glGetError()) printf ("GL: %s\n", gluErrorString (glGetError ()));
 		
 		int timeAccel = Pi::requestedTimeAccelIdx;
-		if (Pi::player->GetFlightState() == Ship::FLYING && !Space::GetHyperspaceAnim()) {
+		if (Pi::player->GetFlightState() == Ship::FLYING) {
 
 			// special timeaccel lock rules while in alert
 			if (Pi::player->GetAlertState() == Ship::ALERT_SHIP_NEARBY)
@@ -1265,21 +1268,15 @@ void Pi::MainLoop()
 
 StarSystem *Pi::GetSelectedSystem()
 {
-	int sector_x, sector_y, system_idx;
-	Pi::sectorView->GetSelectedSystem(&sector_x, &sector_y, &system_idx);
-	if (system_idx == -1) {
-		selectedSystem = 0;
-		return NULL;
-	}
+	SystemPath selectedPath = Pi::sectorView->GetSelectedSystem();
+
 	if (selectedSystem) {
-		if (!selectedSystem->IsSystem(sector_x, sector_y, system_idx)) {
-            selectedSystem->Release();
-			selectedSystem = 0;
-		}
+		if (selectedSystem->GetPath().IsSameSystem(selectedPath))
+			return selectedSystem;
+		selectedSystem->Release();
 	}
-	if (!selectedSystem) {
-		selectedSystem = StarSystem::GetCached(sector_x, sector_y, system_idx);
-	}
+
+	selectedSystem = StarSystem::GetCached(selectedPath);
 	return selectedSystem;
 }
 
