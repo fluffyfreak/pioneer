@@ -61,7 +61,9 @@ static int s_hiMinIdx[4], s_hiMaxIdx[4];
 class GeoPlateHull {
 public:
 	#define NUM_VBE 2
-	vector3d vBE[NUM_VBE];
+	double ang[NUM_VBE];
+	double m_halfLen;
+	double m_zoffset;		// offset from the centre i.e. newzoffset = (m_zoffset + m_halfLen);
 	vector3d *vertices;
 	vector3d *normals;
 	vector3d *colors;
@@ -77,15 +79,24 @@ public:
 	// params
 	// v0, v1 - define points on the line describing the loop of the ring/orbital.
 	// depth - 0 is the topmost plate with each depth+1 describing it's depth within the tree.
-	GeoPlateHull(vector3d v0, vector3d v1, int depth) {
+	GeoPlateHull(const double halfLength, const double startAng, const double endAng, 
+		const double zoffset, const int depth) {
 		//PROFILE_SCOPED()
 		memset(this, 0, sizeof(GeoPlateHull));
-		vBE[0] = v0; 
-		vBE[1] = v1;
-		clipCentroid = (v0+v1) * 0.5;
+		ang[0] = startAng; 
+		ang[1] = endAng;
+		m_halfLen = halfLength;
+		m_zoffset = zoffset;
+		clipCentroid = GetSurfacePoint(0.5, 0.5, m_halfLen);
 		clipRadius = 0;
-		for (int i=0; i<NUM_VBE; i++) {
-			clipRadius = std::max(clipRadius, (vBE[i]-clipCentroid).Length());
+		vector3d vcorners[4] = {
+			GetSurfacePoint(0.0, 0.0, m_halfLen),
+			GetSurfacePoint(1.0, 0.0, m_halfLen),
+			GetSurfacePoint(0.0, 1.0, m_halfLen),
+			GetSurfacePoint(1.0, 1.0, m_halfLen)
+		};
+		for (int i=0; i<4; i++) {
+			clipRadius = std::max(clipRadius, (vcorners[i]-clipCentroid).Length());
 		}
 		m_roughLength = GEOPLATE_SUBDIVIDE_AT_CAMDIST / pow(2.0, depth);
 		normals = new vector3d[GEOPLATE_NUMVERTICES];
@@ -163,45 +174,18 @@ public:
 		glBindBufferARB(GL_ARRAY_BUFFER, 0);
 	}
 
-	vector3d GetSurfacePointCyl(double x, double y) {
-		//( a + t * (b - a) )
-		const vector3d v01	= (vBE[1] - vBE[0]);			// vector from v0 to v1
-		const double v01HalfLen = v01.Length() * 0.5;	// half length of the edge length defined by v01
-		const double negv01HalfLen = -v01HalfLen;
+	#define lerp(t, a, b) ( a + t * (b - a) )
+	vector3d GetSurfacePoint(const double x, const double y, const double halfLength) {
+		double theta = lerp( x, ang[1], ang[0] );//*2.0*M_PI;
+		
+		//const vector3d topEndCentre(0.0, 0.0, m_zoffset + halfLength);		// vertex at middle of top end
+		//const vector3d bottomEndcentre(0.0, 0.0, m_zoffset - halfLength);	// vertex at middle of bottom end
 
-		float theta = x*2.0*M_PI;
-		double z = (negv01HalfLen + y * (v01HalfLen - -negv01HalfLen));
-		vector3d p(cos(theta), sin(theta), z);
-
-		return p;
-	}
-
-	/* in patch surface coords, [0,1] */
-	vector3d GetSurfacePoint(double x, double y) {
-		//PROFILE_SCOPED()
-		//#define lerp(t, a, b) ( a + t * (b - a) )
-		// first we'll find our basis vectors...
-		const vector3d v01	= (vBE[1] - vBE[0]);			// vector from v0 to v1
-		const vector3d v01u	= v01.Normalized();				// unit vector from v0 to v1
-		const vector3d v0c	= (-vBE[0]).Normalized();		// unit vector from v0 to origin, bit of a hack instead of defining v(0,0,0) and then subtracting
-		const vector3d v01ux0c = v01u.Cross(v0c).Normalized();	// unit vector (Normalisation might be redundant) Cross of v01 and v0c
-		const float v01HalfLen = v01.Length() * 0.5;	// half length of the edge length defined by v01
-		const vector3d vY = v01ux0c * v01HalfLen;		// 
-
-		//... plan now is simples... probably -
-		// - v01ux0c is the y-axis
-		// - (vBE[1] - vBE[0]) is the x-axis
-		// using these we can find any point on the square plate of the orbital.
-
-		// first lerp from v0 to v1, then normalise to get point at correct distance from v(0,0,0)
-		const vector3d lerpv01x = (vBE[0] + (x * (v01))).Normalized();
-		// find two points along the y-axis from our x-axis interpolant
-		const vector3d vY0 = lerpv01x + vY;
-		const vector3d vY1 = lerpv01x - vY;
-		// now lerp between the two y-axis points by y input val to find final point on surface... 
-		// DO NOT NORMALISE, otherwise point will be spherised
-		const vector3d surfPos = vY0 + (y * (vY1 - vY0));
-		return surfPos;
+		const vector3d topEndEdge(cos(theta), sin(theta), m_zoffset + halfLength);		// vertices at top edge of circle
+		const vector3d bottomEndEdge(cos(theta), sin(theta), m_zoffset - halfLength);	// vertices at bottom edge of circle
+		
+		const vector3d res = lerp( y, bottomEndEdge, topEndEdge );
+		return res;
 	}
 
 	/** Generates full-detail vertices, and also non-edge normals and
@@ -221,11 +205,11 @@ public:
 				PiAssert(y!=GEOPLATE_EDGELEN);
 				if( y==0 || y==GEOPLATE_EDGELEN-1 ) {	// points in trough
 					height = 0.0;
-					p = GetSurfacePoint(xfrac, (y==0 ? 0.0 : 1.0));
+					p = GetSurfacePoint(xfrac, (y==0 ? 0.0 : 1.0), m_halfLen);
 				}
 				else { // outer hull edge
 					height = 0.01;
-					p = GetSurfacePoint(xfrac, yfrac);
+					p = GetSurfacePoint(xfrac, yfrac, m_halfLen);
 				}
 
 				*(vts++) = p * (height + 1.0);
@@ -1001,10 +985,6 @@ public:
 				// XXX needed for corners... probably not
 				// correct
 				GetEdge(vertices, i, ev[i]);
-			} else {
-				// XXX needed for corners... probably not
-				// correct
-				GetEdge(vertices, i, ev[i]);
 			}
 		}
 	
@@ -1024,9 +1004,6 @@ public:
 	vector3d GetSurfacePointCyl(const double x, const double y, const double halfLength) {
 		double theta = lerp( x, ang[1], ang[0] );//*2.0*M_PI;
 		
-		//const vector3d topEndCentre(0.0, halfLength, 0.0);		// vertex at middle of top end
-		//const vector3d bottomEndcentre(0.0, -halfLength, 0.0);	// vertex at middle of bottom end
-
 		const vector3d topEndEdge(cos(theta), sin(theta), m_zoffset + halfLength);		// vertices at top edge of circle
 		const vector3d bottomEndEdge(cos(theta), sin(theta), m_zoffset - halfLength);	// vertices at bottom edge of circle
 		
@@ -1046,7 +1023,7 @@ public:
 			xfrac = 0;
 			for (int x=0; x<GEOPLATE_EDGELEN; ++x) {
 				vector3d p = GetSurfacePointCyl(xfrac, yfrac, m_halfLen);
-				double height = -(geoRing->GetHeight(p));
+				double height = -geoRing->GetHeight(p);
 				*(vts++) = p * (height + 1.0);
 				// remember this -- we will need it later
 				(col++)->x = -height;
@@ -1095,7 +1072,7 @@ public:
 				// only necessary while the "All these 'if's"
 				// comment in FixCOrnerNormalsByEdge stands
 				if ((x>0) && (x<GEOPLATE_EDGELEN-1)) {
-					colors[x].x = height;
+					colors[x].x = -height;
 				}
 			}
 		} else if (edge == 1) {
@@ -1105,7 +1082,7 @@ public:
 				int pos = (GEOPLATE_EDGELEN-1) + y*GEOPLATE_EDGELEN;
 				vertices[pos] = p * (height + 1.0);
 				if ((y>0) && (y<GEOPLATE_EDGELEN-1)) {
-					colors[pos].x = height;
+					colors[pos].x = -height;
 				}
 			}
 		} else if (edge == 2) {
@@ -1115,7 +1092,7 @@ public:
 				int pos = x + (GEOPLATE_EDGELEN-1)*GEOPLATE_EDGELEN;
 				vertices[pos] = p * (height + 1.0);
 				if ((x>0) && (x<GEOPLATE_EDGELEN-1)) {
-					colors[pos].x = height;
+					colors[pos].x = -height;
 				}
 			}
 		} else {
@@ -1125,7 +1102,7 @@ public:
 				int pos = y * GEOPLATE_EDGELEN;
 				vertices[pos] = p * (height + 1.0);
 				if ((y>0) && (y<GEOPLATE_EDGELEN-1)) {
-					colors[pos].x = height;
+					colors[pos].x = -height;
 				}
 			}
 		}
@@ -1236,22 +1213,59 @@ public:
 			glDisableClientState(GL_VERTEX_ARRAY);
 			glDisableClientState(GL_NORMAL_ARRAY);
 			glDisableClientState(GL_COLOR_ARRAY);
-		}
-	}
 
-	bool AreSame(double a, double b)
-	{
-		return abs(a - b) < (DBL_EPSILON*10000.0);
+			/*static const vector3d colorIdx[4] = { 
+				vector3d( 1.0, 0.0, 0.0 ),	// red
+				vector3d( 0.0, 1.0, 0.0 ),	// green
+				vector3d( 0.0, 0.0, 1.0 ),	// blue
+				vector3d( 1.0, 0.0, 1.0 )	// purple
+			};
+			glLineWidth(1.0);
+			for (int i=0; i<4; ++i) {
+				if (edgeFriend[i]) {
+					glBegin(GL_LINES);
+					glColor3dv( &colorIdx[i][0] );
+					glVertex3dv( &clipCentroid[0] );
+					vector3d dir = (edgeFriend[i]->clipCentroid - clipCentroid).Normalized()*0.000075;
+					glVertex3dv( &(clipCentroid + dir)[0] );
+					glEnd();
+				}
+			}
+
+			glLineWidth(5.0);
+			glBegin(GL_LINES);
+			//glColor3f( 1.0f, 1.0f, 1.0f );
+			glColor3dv( &colorIdx[m_cIdx][0] );
+			static const vector3d right(0.00001, 0.0, 0.0);
+			static const vector3d up(0.0, 0.00001, 0.0);
+			static const vector3d fwd(0.0, 0.0, 0.00001);
+			// x axis
+			glVertex3dv( &(clipCentroid-right)[0] );
+			glVertex3dv( &(clipCentroid+right)[0] );
+			// y axis
+			glVertex3dv( &(clipCentroid-up)[0] );
+			glVertex3dv( &(clipCentroid+up)[0] );
+			// z axis
+			glVertex3dv( &(clipCentroid-fwd)[0] );
+			glVertex3dv( &(clipCentroid+fwd)[0] );
+			glEnd();*/
+		}
 	}
 
 	void LODUpdate(vector3d &campos) {
 		//vector3d centroid = (vBE[0]+vBE[1]).Normalized();
 		vector3d centroid = GetSurfacePointCyl(0.5, 0.5, m_halfLen);
-		centroid = (1.0 + -geoRing->GetHeight(centroid)) * centroid;
+		centroid = (1.0 + (-geoRing->GetHeight(centroid))) * centroid;
 
 		bool canSplit = true;
+		int nullFriends = 0;
 		for (int i=0; i<4; i++) {
-			//if (!edgeFriend[i]) { canSplit = false; break; }
+			if (!edgeFriend[i]) { 
+				if( (++nullFriends)>1 && m_depth>0 ) {
+					canSplit = false; 
+					break; 
+				}
+			}
 			if (edgeFriend[i] && (edgeFriend[i]->m_depth < m_depth)) {
 				canSplit = false;
 				break;
@@ -1342,16 +1356,6 @@ public:
 					kids[i]->GenerateEdgeNormalsAndColors();
 					kids[i]->UpdateVBOs();
 				}
-				// hacking
-				/*for (int x=0; x<GEOPLATE_EDGELEN; x++) {
-					for (int y=0; y<GEOPLATE_EDGELEN-1; y++) {
-						// normal
-						vector3d v0 = vertices[x + (GEOPLATE_EDGELEN*(y+0))];
-						vector3d v1 = vertices[x + (GEOPLATE_EDGELEN*(y+1))];
-						PiAssert(AreSame(v0.x, v1.x));
-						PiAssert(AreSame(v0.y, v1.y));
-					}
-				}*/
 				PiVerify(SDL_mutexV(m_kidsLock)!=-1);
 			}
 			for (int i=0; i<4; ++i) kids[i]->LODUpdate(campos);
@@ -1563,16 +1567,18 @@ void GeoRing::BuildFirstPatches(const int numSegments)
 		double angle = angleOffset + ((M_PI * 360.0) / 180.0) * i / numSegments;
 		double sinval = sin(angle);
 		double cosval = cos(angle);
-		vector3d vp(cosval, sinval, 0.0 );
+		vector3d vp(sinval, cosval, 0.0 );
 		points.push_back( vp.Normalized() );
 		angles.push_back( angle );
     }
 
+	// calculate the width of the orbital
+	mRingWidth = (points[1] - points[0]).Length();
+
 	// build the terrain plates
 	m_plates.clear();
 	for( int i=0 ; i<points.size()-1 ; ++i ) {
-		double len = (points[i+1] - points[i]).Length();
-		m_plates.push_back( new GeoPlate(len, angles[i], angles[i+1], 0.0, 0, 0) );
+		m_plates.push_back( new GeoPlate(mRingWidth, angles[i], angles[i+1], 0.0, 0, 0) );
 	}
 
 	// set edge friends
@@ -1580,10 +1586,10 @@ void GeoRing::BuildFirstPatches(const int numSegments)
 		m_plates[i]->geoRing = this;
 
 		// trailing edge?
-		m_plates[i]->edgeFriend[0] = 0;//FindGeoPlateByIndex(i+1);	// backward?
-		m_plates[i]->edgeFriend[1] = 0;
-		m_plates[i]->edgeFriend[2] = 0;//FindGeoPlateByIndex(i-1);	// forward?
-		m_plates[i]->edgeFriend[3] = 0;
+		m_plates[i]->edgeFriend[0] = 0;
+		m_plates[i]->edgeFriend[1] = FindGeoPlateByIndex(i-1);	// backward?
+		m_plates[i]->edgeFriend[2] = 0;
+		m_plates[i]->edgeFriend[3] = FindGeoPlateByIndex(i+1);	// forward?
 	}
 
 	// create mesh(es)
@@ -1609,7 +1615,8 @@ void GeoRing::BuildFirstPatches(const int numSegments)
 	// create the outer hull
 	m_hull.clear();
 	for( int i=0 ; i<points.size()-1 ; ++i ) {
-		m_hull.push_back( new GeoPlateHull(points[i], points[i+1], 0) );
+		double len = (points[i+1] - points[i]).Length();
+		m_hull.push_back( new GeoPlateHull(len, angles[i+1], angles[i], 0.0, 0) );
 	}
 	for (size_t i=0; i<m_hull.size(); i++) m_hull[i]->geoRing = this;
 	for (size_t i=0; i<m_hull.size(); i++) m_hull[i]->GenerateMesh();
@@ -1757,12 +1764,12 @@ void GeoRing::Render(vector3d campos, const float radius, const float scale) {
 	glPolygonMode(GL_FRONT, GL_POINT);
 	for (size_t i=0; i<m_hull.size(); i++) {
 		m_hull[i]->Render(campos, planes);
-	}*/
+	}
 
 	glPolygonMode(GL_FRONT, GL_FILL);
 	for (size_t i=0; i<m_hull.size(); i++) {
 		m_hull[i]->Render(campos, planes);
-	}
+	}*/
 
 	glPolygonMode(GL_FRONT, GL_FILL);
 	for (size_t i=0; i<m_plates.size(); i++) {
@@ -1792,3 +1799,21 @@ void GeoRing::Render(vector3d campos, const float radius, const float scale) {
 #endif /* !GEORING_USE_THREADING */
 }
 
+double GeoRing::GetDistFromSurface(const vector3d p, const double radius) {
+	const vector3d CP1(0.0, 0.0, mRingWidth);		// vertex at middle of top end
+	const vector3d CP2(0.0, 0.0, -mRingWidth);	// vertex at middle of bottom end
+	const vector3d CN1 = (CP2 - CP1).Normalized();
+	const vector3d CN2 = -CN1;
+	const double fDistanceToPlane1 = (p-CP1).Dot( CN1 );
+	const double fDistanceToPlane2 = (p-CP2).Dot( CN2 );
+	if (fDistanceToPlane1 < 0.0)	
+		return DBL_MAX;	
+	if (fDistanceToPlane2 < 0.0) 
+		return DBL_MAX; 
+	const vector3d TempP =  p - (CN1 * fDistanceToPlane1);
+	const double fDistanceFromCenter = (TempP-CP1).Length();//TempP.Distance(CP1);
+	if (fDistanceFromCenter > 1.0/*radius*/) 
+		return DBL_MAX;	
+
+	return 0.0; // All tests passed, point is in cylinder
+}

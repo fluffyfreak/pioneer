@@ -21,6 +21,7 @@
 #include "Polit.h"
 #include "CityOnPlanet.h"
 #include "Missile.h"
+#include "Orbital.h"
 
 #define TONS_HULL_PER_SHIELD 10.0f
 
@@ -262,7 +263,7 @@ bool Ship::OnCollision(Object *b, Uint32 flags, double relVel)
 		return true;
 	}
 
-	if (b->IsType(Object::PLANET)) {
+	if (b->IsType(Object::PLANET) || b->IsType(Object::ORBITAL)) {
 		// geoms still enabled when landed
 		if (m_flightState != FLYING) return false;
 		else {
@@ -549,6 +550,48 @@ void Ship::TestLanded()
 		double speed = GetVelocity().Length();
 		vector3d up = GetPosition().Normalized();
 		const double planetRadius = static_cast<Planet*>(GetFrame()->GetBodyFor())->GetTerrainHeight(up);
+
+		if (speed < MAX_LANDING_SPEED) {
+			// orient the damn thing right
+			// Q: i'm totally lost. why is the inverse of the body rot matrix being used?
+			// A: NFI. it just works this way
+			matrix4x4d rot;
+			GetRotMatrix(rot);
+			matrix4x4d invRot = rot.InverseOf();
+
+			// check player is sortof sensibly oriented for landing
+			const double dot = vector3d(invRot[1], invRot[5], invRot[9]).Normalized().Dot(up);
+			if (dot > 0.99) {
+
+				Aabb aabb;
+				GetAabb(aabb);
+
+				// position at zero altitude
+				SetPosition(up * (planetRadius - aabb.min.y));
+
+				vector3d forward = rot * vector3d(0,0,1);
+				vector3d other = up.Cross(forward).Normalized();
+				forward = other.Cross(up);
+
+				rot = matrix4x4d::MakeRotMatrix(other, up, forward);
+				rot = rot.InverseOf();
+				SetRotMatrix(rot);
+
+				SetVelocity(vector3d(0, 0, 0));
+				SetAngVelocity(vector3d(0, 0, 0));
+				SetForce(vector3d(0, 0, 0));
+				SetTorque(vector3d(0, 0, 0));
+				// we don't use DynamicBody::Disable because that also disables the geom, and that must still get collisions
+				DisableBodyOnly();
+				ClearThrusterState();
+				m_flightState = LANDED;
+				Sound::PlaySfx("Rough_Landing", 1.0f, 1.0f, 0);
+			}
+		}
+	} else if (GetFrame()->GetBodyFor()->IsType(Object::ORBITAL)) {
+		double speed = GetVelocity().Length();
+		vector3d up = GetPosition().Normalized();
+		const double planetRadius = static_cast<Orbital*>(GetFrame()->GetBodyFor())->GetTerrainHeight(up);
 
 		if (speed < MAX_LANDING_SPEED) {
 			// orient the damn thing right

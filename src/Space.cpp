@@ -557,6 +557,47 @@ void CollideFrame(Frame *f)
 			}
 		}
 	}
+	if (f->m_astroBody && (f->m_astroBody->IsType(Object::ORBITAL))) {
+		// this is pretty retarded
+		for (bodiesIter_t i = bodies.begin(); i!=bodies.end(); ++i) {
+			if ((*i)->GetFrame() != f) continue;
+			if (!(*i)->IsType(Object::DYNAMICBODY)) continue;
+			DynamicBody *dynBody = static_cast<DynamicBody*>(*i);
+
+			Aabb aabb;
+			dynBody->GetAabb(aabb);
+			const matrix4x4d &trans = dynBody->GetGeom()->GetTransform();
+
+			const vector3d aabbCorners[8] = {
+				vector3d(aabb.min.x, aabb.min.y, aabb.min.z),
+				vector3d(aabb.min.x, aabb.min.y, aabb.max.z),
+				vector3d(aabb.min.x, aabb.max.y, aabb.min.z),
+				vector3d(aabb.min.x, aabb.max.y, aabb.max.z),
+				vector3d(aabb.max.x, aabb.min.y, aabb.min.z),
+				vector3d(aabb.max.x, aabb.min.y, aabb.max.z),
+				vector3d(aabb.max.x, aabb.max.y, aabb.min.z),
+				vector3d(aabb.max.x, aabb.max.y, aabb.max.z)
+			};
+
+			CollisionContact c;
+
+			for (int j=0; j<8; j++) {
+				const vector3d &s = aabbCorners[j];
+				vector3d pos = trans * s;
+				double terrain_height = static_cast<Orbital*>(f->m_astroBody)->GetTerrainHeight(pos);
+				double altitude = pos.Length();
+				double hitDepth = terrain_height - altitude;
+				/*if (altitude < terrain_height) {
+					c.pos = pos;
+					c.normal = pos.Normalized();
+					c.depth = hitDepth;
+					c.userData1 = static_cast<void*>(dynBody);
+					c.userData2 = static_cast<void*>(f->m_astroBody);
+					hitCallback(&c);
+				}*/
+			}
+		}
+	}
 	f->GetCollisionSpace()->Collide(&hitCallback);
 	for (std::list<Frame*>::iterator i = f->m_children.begin(); i != f->m_children.end(); ++i) {
 		CollideFrame(*i);

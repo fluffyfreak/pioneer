@@ -429,9 +429,6 @@
     <ClCompile Include="..\..\src\GeoRing.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\GeoRingStyle.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\OrbitalViewerView.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -921,9 +918,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\GeoRing.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\GeoRingStyle.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\OrbitalViewerView.h">

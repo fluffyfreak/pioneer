@@ -3,7 +3,7 @@
 
 #include "vector3.h"
 #include "mtrand.h"
-#include "GeoRingStyle.h"
+#include "GeoSphereStyle.h"
 
 extern int GEOPATCH_EDGELEN;
 #define ATMOSPHERE_RADIUS 1.015
@@ -16,16 +16,7 @@ public:
 	GeoRing(const SBody *body);
 	~GeoRing();
 	void Render(vector3d campos, const float radius, const float scale);
-	inline double GetHeight(vector3d p) {
-		const double h = m_style.GetHeight(p);
-#ifdef DEBUG
-		// XXX don't remove this. Fix your fractals instead
-		// Fractals absolutely MUST return heights >= 0.0 (one planet radius)
-		// otherwise atmosphere and other things break.
-		assert(h >= 0.0);
-#endif // DEBUG 
-		return h;
-	}
+	double GetDistFromSurface(const vector3d p, const double radius);// { return 0.0; }
 	// only called from fishy thread
 	void _UpdateLODs();
 	friend class GeoPlate;
@@ -41,15 +32,27 @@ public:
 	// in sbody radii
 	double GetMaxFeatureHeight() const { return m_style.GetMaxHeight(); }
 private:
+	inline double GetHeight(vector3d p) {
+		/*return 0.0;*/
+		const double h = m_style.GetHeight(p);
+#ifdef DEBUG
+		// XXX don't remove this. Fix your fractals instead
+		// Fractals absolutely MUST return heights >= 0.0 (one planet radius)
+		// otherwise atmosphere and other things break.
+		assert(h >= 0.0);
+#endif // DEBUG 
+		return h;
+	}
 	GeoPlate* FindGeoPlateByIndex(const int idx) const;
 	void BuildFirstPatches(const int numSegments = 16);
 	std::vector<GeoPlate*>		m_plates;
 	std::vector<GeoPlateHull*>	m_hull;
 	float m_diffColor[4], m_ambColor[4];
 	const SBody *m_sbody;
+	double mRingWidth;
 
 	/* all variables for GetHeight(), GetColor() */
-	GeoRingStyle m_style;
+	GeoSphereStyle m_style;
 
 	///////////////////////////
 	// threading rubbbbbish
@@ -65,6 +68,7 @@ private:
 	//////////////////////////////
 
 	inline vector3d GetColor(const vector3d &p, double height, const vector3d &norm) {
+		//return vector3d(0.5, 0.5, 0.5);
 		return m_style.GetColor(p, height, norm);
 	}
 };

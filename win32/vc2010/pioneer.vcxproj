@@ -116,7 +116,6 @@
     <ClCompile Include="..\..\src\GameMenuView.cpp" />
     <ClCompile Include="..\..\src\GenericChatForm.cpp" />
     <ClCompile Include="..\..\src\GeoRing.cpp" />
-    <ClCompile Include="..\..\src\GeoRingStyle.cpp" />
     <ClCompile Include="..\..\src\GeoSphere.cpp" />
     <ClCompile Include="..\..\src\GeoSphereStyle.cpp" />
     <ClCompile Include="..\..\src\gui\Gui.cpp" />
@@ -269,7 +268,6 @@
     <ClInclude Include="..\..\src\GameMenuView.h" />
     <ClInclude Include="..\..\src\GenericChatForm.h" />
     <ClInclude Include="..\..\src\GeoRing.h" />
-    <ClInclude Include="..\..\src\GeoRingStyle.h" />
     <ClInclude Include="..\..\src\GeoSphere.h" />
     <ClInclude Include="..\..\src\GeoSphereStyle.h" />
     <ClInclude Include="..\..\src\gui\Gui.h" />

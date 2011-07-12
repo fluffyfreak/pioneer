@@ -5,7 +5,7 @@
 #include "Player.h"
 #include "Space.h"
 #include "GeoRing.h"
-#include "GeoRingStyle.h"
+#include "GeoSphereStyle.h"
 #include "Orbital.h"
 
 #if ORBITALVIEWER
@@ -91,14 +91,14 @@ void OrbitalViewerView::Draw3D()
 	float lightPos[4] = { .577, .577, .577, 0 };
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 
-	glDisable( GL_CULL_FACE );
+	//glDisable( GL_CULL_FACE );
 	
 	Body *body = Pi::player->GetNavTarget();
 	if (body) {
 		body->Render(vector3d(0,0,-viewingDist), m_camRot);
 	}
 
-	glEnable( GL_CULL_FACE );
+	//glEnable( GL_CULL_FACE );
 }
 
 void OrbitalViewerView::OnSwitchTo()
@@ -157,7 +157,7 @@ void OrbitalViewerView::OnChangeGeoRingStyle()
 
 	sbody.parent = 0;
 	sbody.name = "Test";
-	/* These should be the only SBody attributes GeoRingStyle uses */
+	/* These should be the only SBody attributes GeoSphereStyle uses */
 	sbody.type = SBody::TYPE_PLANET_ORBITAL;
 	sbody.seed = atoi(m_sbodySeed->GetText().c_str());
 	sbody.radius = radius;
@@ -175,7 +175,7 @@ void OrbitalViewerView::OnChangeGeoRingStyle()
 	if (body && body->IsType(Object::ORBITAL)) {
 		Orbital *orbital = static_cast<Orbital*>(body);
 		GeoRing *gs = orbital->m_geoRing;
-		gs->m_style = GeoRingStyle(&sbody);
+		gs->m_style = GeoSphereStyle(&sbody);
 		// force rebuild
 		gs->OnChangeDetailLevel();
 	}

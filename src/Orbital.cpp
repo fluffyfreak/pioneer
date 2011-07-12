@@ -9,24 +9,6 @@
 #include "Render.h"
 #include "perlin.h"
 
-struct ColRangeObj_t {
-	float baseCol[4]; float modCol[4]; float modAll;
-
-	void GenCol(float col[4], MTRand &rng) const {
-		float ma = 1 + float(rng.Double(modAll*2)-modAll);
-		for (int i=0; i<4; i++) col[i] = baseCol[i] + float(rng.Double(-modCol[i], modCol[i]));
-		for (int i=0; i<3; i++) col[i] = Clamp(ma*col[i], 0.0f, 1.0f);
-	}
-};
-
-//ColRangeObj_t barrenBodyCol = { { .3f,.3f,.3f,1 },{0,0,0,0},.3f };
-//ColRangeObj_t barrenContCol = { { .2f,.2f,.2f,1 },{0,0,0,0},.3f };
-//ColRangeObj_t barrenEjectaCraterCol = { { .5f,.5f,.5f,1 },{0,0,0,0},.2f };
-//float darkblue[4] = { .05f, .05f, .2f, 1 };
-//float blue[4] = { .2f, .2f, 1, 1 };
-//float green[4] = { .2f, .8f, .2f, 1 };
-//float white[4] = { 1, 1, 1, 1 };
-
 Orbital::Orbital(): Body()
 {
 	pos = vector3d(0,0,0);
@@ -125,83 +107,15 @@ double Orbital::GetTerrainHeight(const vector3d pos_) const
 {
 	double radius = sbody->GetRadius();
 	if (m_geoRing) {
-		return radius * (1.0 + m_geoRing->GetHeight(pos_));
+		double height = -(m_geoRing->GetDistFromSurface(pos_, radius));
+		//*(vts++) = p * (height + 1.0);
+		return radius * (1.0 + height);
 	} else {
 		assert(0);
 		return radius;
 	}
 }
 
-struct GasGiantDef_t {
-	int hoopMin, hoopMax; float hoopWobble;
-	int blobMin, blobMax;
-	float poleMin, poleMax; // size range in radians. zero for no poles.
-	float ringProbability;
-	ColRangeObj_t ringCol;
-	ColRangeObj_t bodyCol;
-	ColRangeObj_t hoopCol;
-	ColRangeObj_t blobCol;
-	ColRangeObj_t poleCol;
-};
-
-static GasGiantDef_t ggdefs[] = {
-{
-	/* jupiter */
-	30, 40, 0.05f,
-	20, 30,
-	0, 0,
-	0.5,
-	{ { .61f,.48f,.384f,.4f }, {0,0,0,.2}, 0.3f },
-	{ { .99f,.76f,.62f,1 }, { 0,.1f,.1f,0 }, 0.3f },
-	{ { .99f,.76f,.62f,.5f }, { 0,.1f,.1f,0 }, 0.3f },
-	{ { .99f,.76f,.62f,1 }, { 0,.1f,.1f,0 }, 0.7f },
-    { { 0.0f,0.0f,0.0f,0 }, { 0,0.0f,0.0f,0}, 0.0f}
-}, {
-	/* saturnish */
-	10, 15, 0.0,
-	8, 20, // blob range
-	0.2f, 0.2f, // pole size
-	0.5,
-	{ { .61f,.48f,.384f,.75f }, {0,0,0,.2}, 0.3f },
-	{ { .87f, .68f, .39f, 1 }, { 0,0,0,0 }, 0.1f },
-	{ { .87f, .68f, .39f, 1 }, { 0,0,0,0 }, 0.1f },
-	{ { .87f, .68f, .39f, 1 }, { 0,0,0,0 }, 0.1f },
-	{ { .77f, .58f, .29f, 1 }, { 0,0,0,0 }, 0.1f },
-}, {
-	/* neptunish */
-	3, 6, 0.0,
-	2, 6,
-	0, 0,
-	0.5,
-	{ { .61f,.48f,.384f,.4f }, {0,0,0,.2f}, 0.3f },
-	{ { .31f,.44f,.73f,1 }, {0,0,0,0}, .05f}, // body col
-	{ { .31f,.44f,.73f,0.5f }, {0,0,0,0}, .1f},// hoop col
-	{ { .21f,.34f,.54f,1 }, {0,0,0,0}, .05f},// blob col
-    { { 0.0f,0.0f,0.0f,0 }, { 0,0.0f,0.0f,0}, 0.0f}
-}, {
-	/* uranus-like *wink* */
-	0, 0, 0.0,
-	0, 0,
-	0, 0,
-	0.5,
-	{ { .61f,.48f,.384f,.4f }, {0,0,0,.3f}, 0.3f },
-	{ { .70f,.85f,.86f,1 }, {.1f,.1f,.1f,0}, 0 },
-	{ { .70f,.85f,.86f,1 }, {.1f,.1f,.1f,0}, 0 },
-	{ { .70f,.85f,.86f,1 }, {.1f,.1f,.1f,0}, 0 },
-	{ { .70f,.85f,.86f,1 }, {.1f,.1f,.1f,0}, 0 }
-}, {
-	/* brown dwarf-like */
-	0, 0, 0.05f,
-	10, 20,
-	0, 0,
-	0.5,
-	{ { .81f,.48f,.384f,.5f }, {0,0,0,.3f}, 0.3f },
-	{ { .4f,.1f,0,1 }, {0,0,0,0}, 0.1f },
-	{ { .4f,.1f,0,1 }, {0,0,0,0}, 0.1f },
-	{ { .4f,.1f,0,1 }, {0,0,0,0}, 0.1f },
-    { { 0.0f,0.0f,0.0f,0 }, { 0,0.0f,0.0f,0}, 0.0f}
-},
-};
 
 #define PLANET_AMBIENT	0.1f
 
@@ -214,23 +128,6 @@ static void SetMaterialColor(const float col[4])
 	mambient[3] = col[3];
 	glMaterialfv (GL_FRONT, GL_AMBIENT, mambient);
 	glMaterialfv (GL_FRONT, GL_DIFFUSE, col);
-}
-
-static void DrawRing(double inner, double outer, const float color[4])
-{
-	glColor4fv(color);
-
-	float step = 0.1f / (Pi::detail.planets + 1);
-
-	glBegin(GL_TRIANGLE_STRIP);
-	glNormal3f(0,1,0);
-	for (float ang=0; ang<2*M_PI; ang+=step) {
-		glVertex3f(float(inner)*sin(ang), 0, float(inner)*cos(ang));
-		glVertex3f(float(outer)*sin(ang), 0, float(outer)*cos(ang));
-	}
-	glVertex3f(0, 0, float(inner));
-	glVertex3f(0, 0, float(outer));
-	glEnd();
 }
 
 static void _DrawAtmosphere(double rad1, double rad2, vector3d &pos, const float col[4])
