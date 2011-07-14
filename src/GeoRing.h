@@ -46,6 +46,7 @@ private:
 	GeoPlate* FindGeoPlateByIndex(const int idx) const;
 	void BuildFirstPatches(const int numSegments = 16);
 	std::vector<GeoPlate*>		m_plates;
+	typedef std::vector<GeoPlate*>::iterator PlateIter;
 	std::vector<GeoPlateHull*>	m_hull;
 	float m_diffColor[4], m_ambColor[4];
 	const SBody *m_sbody;

@@ -556,8 +556,7 @@ void CollideFrame(Frame *f)
 				}
 			}
 		}
-	}
-	if (f->m_astroBody && (f->m_astroBody->IsType(Object::ORBITAL))) {
+	}else if (f->m_astroBody && (f->m_astroBody->IsType(Object::ORBITAL))) {
 		// this is pretty retarded
 		for (bodiesIter_t i = bodies.begin(); i!=bodies.end(); ++i) {
 			if ((*i)->GetFrame() != f) continue;
@@ -584,7 +583,7 @@ void CollideFrame(Frame *f)
 			for (int j=0; j<8; j++) {
 				const vector3d &s = aabbCorners[j];
 				vector3d pos = trans * s;
-				double terrain_height = static_cast<Orbital*>(f->m_astroBody)->GetTerrainHeight(pos);
+				double terrain_height = static_cast<Orbital*>(f->m_astroBody)->GetTerrainHeight(pos.Normalized());
 				double altitude = pos.Length();
 				double hitDepth = terrain_height - altitude;
 				/*if (altitude < terrain_height) {

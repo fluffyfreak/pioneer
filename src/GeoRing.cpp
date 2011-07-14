@@ -318,6 +318,37 @@ public:
 	static SDL_sem* s_geoRingSem[4];
 	static SDL_Thread* s_geoRingThread[4];
 
+	double distFromSurface(const vector3d dir, const double radius, const double rad, const double z) const
+	{
+		PiAssert( IsWithinAng(rad,z) );
+
+		// do we have kids?
+		if(kids[0]) {
+			// yes, so recurse into them.
+			for(int i=0;i<4;++i) {
+				if( kids[i]->IsWithinAng(rad,z) ) {
+					return kids[i]->distFromSurface(dir, radius, rad, z);
+				}
+			}
+		} else {
+			// no, we're the leaf node - find where the ray meets the surface
+			return 0.0;
+		}
+		return DBL_MAX;
+	}
+
+	bool IsWithinAng(const double rad, const double z) const
+	{
+		if( rad>=ang[0] && rad<=ang[1] ) {
+			const double zoffsetpos = (m_zoffset + m_halfLen);
+			const double zoffsetneg = (m_zoffset - m_halfLen);
+			if( z>=zoffsetneg && z<=zoffsetpos ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/* Thread(s) that generate the mesh data for a geopatch */
 	static int UpdateGeoPlateThread(void *data)
 	{
@@ -1799,21 +1830,31 @@ void GeoRing::Render(vector3d campos, const float radius, const float scale) {
 #endif /* !GEORING_USE_THREADING */
 }
 
-double GeoRing::GetDistFromSurface(const vector3d p, const double radius) {
-	const vector3d CP1(0.0, 0.0, mRingWidth);		// vertex at middle of top end
+double GeoRing::GetDistFromSurface(const vector3d dir_, const double radius) {
+	static const vector3d up(0.0, 1.0, 0.0);
+	const vector3d xyUp = vector3d(dir_.x, dir_.y, 0.0).Normalized();
+	const double angDirUp = up.Dot(xyUp);
+	const double radang = acos(angDirUp);
+	PlateIter iter = m_plates.begin();
+	for( ; iter!=m_plates.end() ; ++iter ) {
+		if( (*iter)->IsWithinAng(radang,dir_.z) ) {
+			return (*iter)->distFromSurface(dir_, radius, radang, dir_.z);
+		}
+	}
+	/*const vector3d CP1(0.0, 0.0, mRingWidth);		// vertex at middle of top end
 	const vector3d CP2(0.0, 0.0, -mRingWidth);	// vertex at middle of bottom end
 	const vector3d CN1 = (CP2 - CP1).Normalized();
 	const vector3d CN2 = -CN1;
-	const double fDistanceToPlane1 = (p-CP1).Dot( CN1 );
-	const double fDistanceToPlane2 = (p-CP2).Dot( CN2 );
+	const double fDistanceToPlane1 = (dir_-CP1).Dot( CN1 );
+	const double fDistanceToPlane2 = (dir_-CP2).Dot( CN2 );
 	if (fDistanceToPlane1 < 0.0)	
 		return DBL_MAX;	
 	if (fDistanceToPlane2 < 0.0) 
 		return DBL_MAX; 
-	const vector3d TempP =  p - (CN1 * fDistanceToPlane1);
-	const double fDistanceFromCenter = (TempP-CP1).Length();//TempP.Distance(CP1);
-	if (fDistanceFromCenter > 1.0/*radius*/) 
-		return DBL_MAX;	
+	const vector3d TempP =  dir_ - (CN1 * fDistanceToPlane1);
+	const double fDistanceFromCenter = (TempP-CP1).Length();
+	if (fDistanceFromCenter > 1.0) 
+		return DBL_MAX;	*/
 
 	return 0.0; // All tests passed, point is in cylinder
 }
