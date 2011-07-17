@@ -107,9 +107,8 @@ double Orbital::GetTerrainHeight(const vector3d dir_) const
 {
 	double radius = sbody->GetRadius();
 	if (m_geoRing) {
-		double height = -(m_geoRing->GetDistFromSurface(dir_, radius));
-		//*(vts++) = p * (height + 1.0);
-		return radius * (1.0 + height);
+		double height = m_geoRing->GetDistFromSurface(dir_, radius);
+		return radius * height;
 	} else {
 		assert(0);
 		return radius;

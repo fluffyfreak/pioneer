@@ -584,16 +584,18 @@ void CollideFrame(Frame *f)
 				const vector3d &s = aabbCorners[j];
 				vector3d pos = trans * s;
 				double terrain_height = static_cast<Orbital*>(f->m_astroBody)->GetTerrainHeight(pos.Normalized());
-				double altitude = pos.Length();
-				double hitDepth = terrain_height - altitude;
-				/*if (altitude < terrain_height) {
-					c.pos = pos;
-					c.normal = pos.Normalized();
-					c.depth = hitDepth;
-					c.userData1 = static_cast<void*>(dynBody);
-					c.userData2 = static_cast<void*>(f->m_astroBody);
-					hitCallback(&c);
-				}*/
+				if( terrain_height < DBL_MAX ) {
+					double altitude = pos.Length();
+					double hitDepth = terrain_height - altitude;
+					if (altitude > terrain_height) {
+						c.pos = pos;
+						c.normal = -pos.Normalized();
+						c.depth = hitDepth;
+						c.userData1 = static_cast<void*>(dynBody);
+						c.userData2 = static_cast<void*>(f->m_astroBody);
+						hitCallback(&c);
+					}
+				}
 			}
 		}
 	}

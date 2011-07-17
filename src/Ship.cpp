@@ -527,8 +527,14 @@ void Ship::Blastoff()
 	
 	vector3d up = GetPosition().Normalized();
 	Enable();
-	assert(GetFrame()->m_astroBody->IsType(Object::PLANET));
-	const double planetRadius = 2.0 + static_cast<Planet*>(GetFrame()->m_astroBody)->GetTerrainHeight(up);
+	//assert(GetFrame()->m_astroBody->IsType(Object::PLANET));
+	double planetRadius = 1.0;
+	if( GetFrame()->m_astroBody->IsType(Object::PLANET) ) {
+		planetRadius = 2.0 + static_cast<Planet*>(GetFrame()->m_astroBody)->GetTerrainHeight(up);
+	} else if( GetFrame()->m_astroBody->IsType(Object::ORBITAL) ) {
+		planetRadius = 2.0 + static_cast<Orbital*>(GetFrame()->m_astroBody)->GetTerrainHeight(up);
+	}
+	
 	SetVelocity(vector3d(0, 0, 0));
 	SetAngVelocity(vector3d(0, 0, 0));
 	SetForce(vector3d(0, 0, 0));
@@ -547,8 +553,8 @@ void Ship::TestLanded()
 	if (m_launchLockTimeout != 0) return;
 	if (m_wheelState != 1.0) return;
 	if (GetFrame()->GetBodyFor()->IsType(Object::PLANET)) {
-		double speed = GetVelocity().Length();
-		vector3d up = GetPosition().Normalized();
+		const double speed = GetVelocity().Length();
+		const vector3d up = GetPosition().Normalized();
 		const double planetRadius = static_cast<Planet*>(GetFrame()->GetBodyFor())->GetTerrainHeight(up);
 
 		if (speed < MAX_LANDING_SPEED) {
@@ -589,8 +595,9 @@ void Ship::TestLanded()
 			}
 		}
 	} else if (GetFrame()->GetBodyFor()->IsType(Object::ORBITAL)) {
-		double speed = GetVelocity().Length();
-		vector3d up = GetPosition().Normalized();
+		const double speed = GetVelocity().Length();
+		// position as spherical direction reference doesn't work within a cylinder
+		const vector3d up = GetPosition().Normalized();
 		const double planetRadius = static_cast<Orbital*>(GetFrame()->GetBodyFor())->GetTerrainHeight(up);
 
 		if (speed < MAX_LANDING_SPEED) {
@@ -601,8 +608,10 @@ void Ship::TestLanded()
 			GetRotMatrix(rot);
 			matrix4x4d invRot = rot.InverseOf();
 
+			const vector3d negup = -up;
+
 			// check player is sortof sensibly oriented for landing
-			const double dot = vector3d(invRot[1], invRot[5], invRot[9]).Normalized().Dot(up);
+			const double dot = vector3d(invRot[1], invRot[5], invRot[9]).Normalized().Dot(negup);
 			if (dot > 0.99) {
 
 				Aabb aabb;
@@ -612,10 +621,10 @@ void Ship::TestLanded()
 				SetPosition(up * (planetRadius - aabb.min.y));
 
 				vector3d forward = rot * vector3d(0,0,1);
-				vector3d other = up.Cross(forward).Normalized();
-				forward = other.Cross(up);
+				vector3d other = negup.Cross(forward).Normalized();
+				forward = other.Cross(negup);
 
-				rot = matrix4x4d::MakeRotMatrix(other, up, forward);
+				rot = matrix4x4d::MakeRotMatrix(other, negup, forward);
 				rot = rot.InverseOf();
 				SetRotMatrix(rot);
 

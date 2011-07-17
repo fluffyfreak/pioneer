@@ -3,6 +3,7 @@
 #include "Frame.h"
 #include "Player.h"
 #include "Planet.h"
+#include "Orbital.h"
 #include "Space.h"
 #include "SpaceStation.h"
 #include "ShipCpanel.h"
@@ -604,6 +605,8 @@ void WorldView::RefreshButtonStateAndVisibility()
 			vector3d surface_pos = Pi::player->GetPosition().Normalized();
 			if (astro->IsType(Object::PLANET)) {
 				radius = static_cast<Planet*>(astro)->GetTerrainHeight(surface_pos);
+			} else if (astro->IsType(Object::ORBITAL)) {
+				radius = static_cast<Orbital*>(astro)->GetTerrainHeight(surface_pos);
 			} else {
 				// XXX this is an improper use of GetBoundingRadius
 				// since it is not a surface radius
