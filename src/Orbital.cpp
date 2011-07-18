@@ -115,6 +115,16 @@ double Orbital::GetTerrainHeight(const vector3d dir_) const
 	}
 }
 
+bool Orbital::CanCollide(const vector3d pos, const double radius) const
+{
+	// needs to be a case where this can be true
+	// that means that:
+	// - pos.z must be within the edges/wall of the GeoRing
+	// - pos must be within the "atmosphere" band eg:
+	//     (axisDist-posDist > axisDist-maxPlateHeight && axisDist-posDist < axisDist-minPlateHeight)
+	return false;
+}
+
 
 #define PLANET_AMBIENT	0.1f
 

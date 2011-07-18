@@ -563,6 +563,12 @@ void CollideFrame(Frame *f)
 			if (!(*i)->IsType(Object::DYNAMICBODY)) continue;
 			DynamicBody *dynBody = static_cast<DynamicBody*>(*i);
 
+			const double boundRad = dynBody->GetBoundingRadius();
+			const vector3d dynPos = dynBody->GetPosition();
+
+			if( !static_cast<Orbital*>(f->m_astroBody)->CanCollide( dynPos, boundRad ) )
+				continue;
+
 			Aabb aabb;
 			dynBody->GetAabb(aabb);
 			const matrix4x4d &trans = dynBody->GetGeom()->GetTransform();

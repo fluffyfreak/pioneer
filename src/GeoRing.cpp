@@ -1193,7 +1193,7 @@ public:
 		centroid = (1.0 + (-geoRing->GetHeight(centroid))) * centroid;
 
 		bool canSplit = true;
-		/*int nullFriends = 0;
+		int nullFriends = 0;
 		for (int i=0; i<4; i++) {
 			if (!edgeFriend[i]) { 
 				if( (++nullFriends)>1 && m_depth>0 ) {
@@ -1210,8 +1210,8 @@ public:
 		    ((campos - centroid).Length() < m_roughLength)))
 			canSplit = false;
 		// always split at first level
-		if (!parent) canSplit = true;*/
-		canSplit = false;
+		if (!parent) canSplit = true;
+		/*canSplit = false;*/
 
 		bool canMerge = true;
 
