@@ -1718,3 +1718,32 @@ double GeoRing::GetDistFromSurface(const vector3d dir_, const double radius) {
 
 	return 0.0; // All tests passed, point is in cylinder
 }
+
+bool GeoRing::CanCollide(const vector3d &pos, const double radius) const
+{
+	// needs to be a case where this can be true
+	// that means that:
+	// - pos.z must be within the edges/wall of the GeoRing
+	const vector3d posNorm		= pos.Normalized();		// unit position
+	const vector3d axisNormPos(0.0, 0.0, posNorm.z);	// corrsponding point on cylinder axis
+	if( posNorm.z<(-mRingWidth) || posNorm.z>mRingWidth )
+		return false;
+	
+	// - pos must be within the "atmosphere" band eg:
+	//     (axisDist-posDist > axisDist-maxPlateHeight && axisDist-posDist < axisDist-minPlateHeight)
+	const vector3d axisPt(0.0, 0.0, pos.z);				// corrsponding point on cylinder axis
+	const vector3d posDir		= pos - axisPt;			// vec from cylinder axis to pos
+	const double posDist		= posDir.Length();		// length of distance (non-Unit obviously)
+	const double axisDist		= m_sbody->GetRadius();
+	const double maxPlateHeight = m_style.GetMaxHeight()*axisDist;
+
+	// we're too far out (to hit terrain)
+	if( posDist > axisDist )
+		return false;
+
+	// we're too far IN (to hit terrain) - this doesn't seem to work, the maxPlateHeight is all wrong :/
+	if( posDist > (axisDist - maxPlateHeight) )
+		return false;
+
+	return true;
+}

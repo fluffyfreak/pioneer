@@ -16,6 +16,7 @@ public:
 	~GeoRing();
 	void Render(vector3d campos, const float radius, const float scale);
 	double GetDistFromSurface(const vector3d p, const double radius);// { return 0.0; }
+	bool CanCollide(const vector3d &pos, const double radius) const;
 	// only called from fishy thread
 	void _UpdateLODs();
 	friend class GeoPlate;
@@ -66,8 +67,8 @@ private:
 	//////////////////////////////
 
 	inline vector3d GetColor(const vector3d &p, double height, const vector3d &norm) {
-		//return vector3d(0.5, 0.5, 0.5);
-		return m_style.GetColor(p, height, norm);
+		return vector3d(0.5, 0.5, 0.5);
+		//return m_style.GetColor(p, height, norm);
 	}
 };
 
