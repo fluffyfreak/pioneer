@@ -107,6 +107,7 @@ bool rayIntersectsTriangle(
 
 class GeoPlate {
 public:
+	vector3d vbe[NUM_VBE];
 	double ang[NUM_VBE];
 	double m_halfLen;
 	double m_zoffset;		// offset from the centre i.e. newzoffset = (m_zoffset + m_halfLen);
@@ -236,11 +237,14 @@ public:
 	// params
 	// v0, v1 - define points on the line describing the loop of the ring/orbital.
 	// depth - 0 is the topmost plate with each depth+1 describing it's depth within the tree.
-	GeoPlate(const double halfLength, const double startAng, const double endAng, 
+	GeoPlate(const double halfLength, const vector3d &startVBE, const vector3d &endVBE, 
+		const double startAng, const double endAng, 
 		const double zoffset, const int depth, const int cIdx) {
 		//PROFILE_SCOPED()
 		memset(this, 0, sizeof(GeoPlate));
 		m_kidsLock = SDL_CreateMutex();
+		vbe[0] = startVBE;
+		vbe[1] = endVBE;
 		ang[0] = startAng;
 		ang[1] = endAng;
 		m_halfLen = halfLength;
@@ -1199,15 +1203,17 @@ public:
 
 		if (canSplit) {
 			if (!kids[0]) {
+				const vector3d halfVBE = vbe[0] + 0.5 * (vbe[1] - vbe[0]);
+
 				const double halfAng = ang[0] + 0.5 * (ang[1] - ang[0]);
 				const double newLength = (m_halfLen*0.5);
 				const double zoffset0 = m_zoffset + newLength;
 				const double zoffset1 = m_zoffset - newLength;
 				GeoPlate *_kids[4];
-				_kids[0] = new GeoPlate(newLength, halfAng, ang[1], zoffset1, m_depth+1, 0);
-				_kids[1] = new GeoPlate(newLength, ang[0], halfAng, zoffset1, m_depth+1, 1);
-				_kids[2] = new GeoPlate(newLength, ang[0], halfAng, zoffset0, m_depth+1, 2);
-				_kids[3] = new GeoPlate(newLength, halfAng, ang[1], zoffset0, m_depth+1, 3);
+				_kids[0] = new GeoPlate(newLength, halfVBE, vbe[1], halfAng, ang[1], zoffset1, m_depth+1, 0);
+				_kids[1] = new GeoPlate(newLength, vbe[0], halfVBE, ang[0], halfAng, zoffset1, m_depth+1, 1);
+				_kids[2] = new GeoPlate(newLength, vbe[0], halfVBE, ang[0], halfAng, zoffset0, m_depth+1, 2);
+				_kids[3] = new GeoPlate(newLength, halfVBE, vbe[1], halfAng, ang[1], zoffset0, m_depth+1, 3);
 				// hm.. edges. Not right to pass this
 				// edgeFriend...
 				_kids[0]->edgeFriend[0] = GetEdgeFriendForKid(0, 0);
@@ -1482,7 +1488,7 @@ void GeoRing::BuildFirstPatches(const int numSegments)
 	// build the terrain plates
 	m_plates.clear();
 	for( int i=0 ; i<points.size()-1 ; ++i ) {
-		m_plates.push_back( new GeoPlate(mRingWidth, angles[i], angles[i+1], 0.0, 0, 0) );
+		m_plates.push_back( new GeoPlate(mRingWidth, points[i], points[i+1], angles[i], angles[i+1], 0.0, 0, 0) );
 	}
 
 	// set edge friends
@@ -1500,21 +1506,6 @@ void GeoRing::BuildFirstPatches(const int numSegments)
 	for (size_t i=0; i<m_plates.size(); i++) m_plates[i]->GenerateMesh();
 	for (size_t i=0; i<m_plates.size(); i++) m_plates[i]->GenerateEdgeNormalsAndColors();
 	for (size_t i=0; i<m_plates.size(); i++) m_plates[i]->UpdateVBOs();
-
-	// hacking
-	/*vector3d colorIdx[4] = { 
-		vector3d( 1.0, 0.0, 0.0 ),	// red
-		vector3d( 0.0, 1.0, 0.0 ),	// green
-		vector3d( 0.0, 0.0, 1.0 ),	// blue
-		vector3d( 1.0, 0.0, 1.0 )	// purple
-	};
-	for (size_t i=0; i<m_plates.size(); i++) {
-		for (int y=0; y<GEOPLATE_EDGELEN; y++) {
-			for (int x=0; x<GEOPLATE_EDGELEN; x++) {
-				m_plates[i]->colors[x + y*GEOPLATE_EDGELEN] = colorIdx[ m_plates[i]->m_cIdx ];
-			}
-		}
-	}*/
 }
 
 static const float g_ambient[4] = { 0, 0, 0, 1.0 };
@@ -1623,7 +1614,7 @@ void GeoRing::Render(vector3d campos, const float radius, const float scale) {
 	}
 
 	const float black[4] = { 0,0,0,0 };
-	float ambient[4];// = { 0.1, 0.1, 0.1, 1.0 };
+	float ambient[4] = { 0.1, 0.1, 0.1, 1.0 };
 
 	// save old global ambient
 	float oldAmbient[4];
@@ -1671,7 +1662,7 @@ void GeoRing::Render(vector3d campos, const float radius, const float scale) {
 double GeoRing::GetDistFromSurface(const vector3d p) {
 	//return DBL_MAX;
 	// one way to find angle (radians)
-	double radang = atan2(p.y,p.x);
+	double radang = atan2(p.y, p.x);
 	//double radang = atan2(p.x, p.y);
 	if( radang<0.0 ) {
 		radang = (2*M_PI) + radang;
@@ -1681,10 +1672,10 @@ double GeoRing::GetDistFromSurface(const vector3d p) {
 	PlateIter iter = m_plates.begin();
 	for( ; iter!=m_plates.end() ; ++iter ) {
 		// scale the p.z into the 0.0 to 1.0 range
-		const double realZ = (p.z + (*iter)->m_halfLen) / (2.0*(*iter)->m_halfLen);
-		if( (*iter)->IsWithinAng(radang,p.z) ) {
+		//const double realZ = (p.z + (*iter)->m_halfLen) / (2.0*(*iter)->m_halfLen);
+		if( (*iter)->IsWithinAng(radang, p.z) ) {
 			// then get distance from surface
-			return (*iter)->DistFromSurface(radang, realZ);
+			return (*iter)->DistFromSurface(radang, p.z);
 		}
 	}
 
