@@ -556,18 +556,12 @@ void CollideFrame(Frame *f)
 				}
 			}
 		}
-	}else if (f->m_astroBody && (f->m_astroBody->IsType(Object::ORBITAL))) {
+	} /*else if (f->m_astroBody && (f->m_astroBody->IsType(Object::ORBITAL))) {
 		// this is pretty retarded
 		for (bodiesIter_t i = bodies.begin(); i!=bodies.end(); ++i) {
 			if ((*i)->GetFrame() != f) continue;
 			if (!(*i)->IsType(Object::DYNAMICBODY)) continue;
 			DynamicBody *dynBody = static_cast<DynamicBody*>(*i);
-
-			const double boundRad = dynBody->GetBoundingRadius();
-			const vector3d dynPos = dynBody->GetPosition();
-
-			if( !static_cast<Orbital*>(f->m_astroBody)->CanCollide( dynPos, boundRad ) )
-				continue;
 
 			Aabb aabb;
 			dynBody->GetAabb(aabb);
@@ -589,11 +583,21 @@ void CollideFrame(Frame *f)
 			for (int j=0; j<8; j++) {
 				const vector3d &s = aabbCorners[j];
 				vector3d pos = trans * s;
-				double terrain_height = static_cast<Orbital*>(f->m_astroBody)->GetTerrainHeight(pos.Normalized());
+
+				vector3d axisPos(0.0, 0.0, pos.z);
+				double distToAxis = (axisPos - pos).Length();	// dist to axis
+				const double radius = static_cast<Orbital*>(f->m_astroBody)->GetSBody()->GetRadius();
+				const double scaleVal = radius / distToAxis;
+				vector3d surfPos = scaleVal * pos;
+				axisPos.z = surfPos.z;
+				distToAxis = (axisPos - surfPos).Length();	// dist to axis
+
+				double terrain_height = static_cast<Orbital*>(f->m_astroBody)->GetTerrainHeight(surfPos / distToAxis);
 				if( terrain_height < DBL_MAX ) {
-					double altitude = pos.Length();
-					double hitDepth = terrain_height - altitude;
-					if (altitude > terrain_height) {
+					vector3d axisPos(0.0, 0.0, pos.z);
+					distToAxis = (axisPos - pos).Length();	// dist to axis
+					const double hitDepth = distToAxis - terrain_height;
+					if (hitDepth>0.0) {
 						c.pos = pos;
 						c.normal = -pos.Normalized();
 						c.depth = hitDepth;
@@ -604,7 +608,7 @@ void CollideFrame(Frame *f)
 				}
 			}
 		}
-	}
+	}*/
 	f->GetCollisionSpace()->Collide(&hitCallback);
 	for (std::list<Frame*>::iterator i = f->m_children.begin(); i != f->m_children.end(); ++i) {
 		CollideFrame(*i);

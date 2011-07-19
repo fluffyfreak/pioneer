@@ -601,26 +601,44 @@ void WorldView::RefreshButtonStateAndVisibility()
 		if (Pi::player->GetFrame()->m_astroBody) {
 			Body *astro = Pi::player->GetFrame()->m_astroBody;
 			//(GetFrame()->m_sbody->GetSuperType() == SUPERTYPE_ROCKY_PLANET)) {
-			double radius;
-			vector3d surface_pos = Pi::player->GetPosition().Normalized();
-			if (astro->IsType(Object::PLANET)) {
-				radius = static_cast<Planet*>(astro)->GetTerrainHeight(surface_pos);
-			} else if (astro->IsType(Object::ORBITAL)) {
-				radius = static_cast<Orbital*>(astro)->GetTerrainHeight(surface_pos);
-			} else {
-				// XXX this is an improper use of GetBoundingRadius
-				// since it is not a surface radius
-				radius = Pi::player->GetFrame()->m_astroBody->GetBoundingRadius();
-			}
-			double altitude = Pi::player->GetPosition().Length() - radius;
-			if (altitude > 9999999.0 || astro->IsType(Object::SPACESTATION)) {
+			if (astro->IsType(Object::ORBITAL)) {
+				/*const vector3d playerPos = Pi::player->GetPosition();
+				const vector3d axisToPos = (vector3d(0.0,0.0,playerPos.z) - playerPos);
+				vector3d surfacePos = axisToPos.Normalized();
+				surfacePos.z = playerPos.z / astro->GetSBody()->GetRadius();
+				double height = static_cast<Orbital*>(astro)->GetTerrainHeight(surfacePos);
+
+				double altitude = height - axisToPos.Length();
+				if (altitude < -9999999.0 || altitude > 9999999.0) {
+					m_hudAltitude->Hide();
+				} else {
+					if (altitude < 0) altitude = 0;
+					char buf[128];
+					snprintf(buf, sizeof(buf), "Alt: %.0fm", altitude);
+					m_hudAltitude->SetText(buf);
+					m_hudAltitude->Show();
+				}*/
 				m_hudAltitude->Hide();
 			} else {
-				if (altitude < 0) altitude = 0;
-				char buf[128];
-				snprintf(buf, sizeof(buf), "Alt: %.0fm", altitude);
-				m_hudAltitude->SetText(buf);
-				m_hudAltitude->Show();
+				double radius;
+				vector3d surface_pos = Pi::player->GetPosition().Normalized();
+				if (astro->IsType(Object::PLANET)) {
+					radius = static_cast<Planet*>(astro)->GetTerrainHeight(surface_pos);
+				} else {
+					// XXX this is an improper use of GetBoundingRadius
+					// since it is not a surface radius
+					radius = Pi::player->GetFrame()->m_astroBody->GetBoundingRadius();
+				}
+				double altitude = Pi::player->GetPosition().Length() - radius;
+				if (altitude > 9999999.0 || astro->IsType(Object::SPACESTATION)) {
+					m_hudAltitude->Hide();
+				} else {
+					if (altitude < 0) altitude = 0;
+					char buf[128];
+					snprintf(buf, sizeof(buf), "Alt: %.0fm", altitude);
+					m_hudAltitude->SetText(buf);
+					m_hudAltitude->Show();
+				}
 			}
 
 			if (astro->IsType(Object::PLANET)) {

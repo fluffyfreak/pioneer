@@ -22,6 +22,8 @@ static const int GEOPLATE_MAX_EDGELEN = 65;
 static double GEOPLATE_FRAC;
 static double GEOPLATEHULL_FRAC;
 
+#define lerp(t, a, b) ( a + t * (b - a) )
+
 #define PRINT_VECTOR(_v) printf("%f,%f,%f\n", (_v).x, (_v).y, (_v).z);
 
 SHADER_CLASS_BEGIN(GeoRingShader)
@@ -177,30 +179,22 @@ public:
 		return result;
 	}
 
-	double DistFromSurface(const vector3d dir, const double radius, const double rad, const double z, const bool bForce=false) const
+	double DistFromSurface(const double rad, const double z) const
 	{
-		PiAssert( bForce || IsWithinAng(rad,z) );
+		PiAssert( IsWithinAng(rad, z) );
 
 		// do we have kids?
 		if(kids[0]) {
 			// yes, so recurse into them.
 			for(int i=0;i<4;++i) {
-				if( bForce || kids[i]->IsWithinAng(rad,z) ) {
-					if(bForce) {
-						kids[i]->DistFromSurface(dir, radius, rad, z, bForce);
-					}else{
-						return kids[i]->DistFromSurface(dir, radius, rad, z, bForce);
-					}
+				if( kids[i]->IsWithinAng(rad, z) ) {
+					return kids[i]->DistFromSurface(rad, z);
 				}
 			}
 		} else {
-			// no, we're the leaf node - find where the ray meets the surface
-			std::vector<double> tOI;
-			double minTime=DBL_MAX;
-			if( RayIntersect( dir, minTime, tOI ) ) {
-				PiAssert(minTime>=0.00001);
-			}
-			return minTime;
+			// find point on _surface_ of the cylinder
+			const vector3d p = GetSurfacePointCyl(rad, z, m_halfLen);
+			return geoRing->GetHeight(p);
 		}
 		return DBL_MAX;
 	}
@@ -221,14 +215,7 @@ public:
 	static int UpdateGeoPlateThread(void *data)
 	{
 		PROFILE_THREAD_SCOPED()
-		// hacking
-		/*vector3d colorIdx[4] = { 
-			vector3d( 1.0, 0.0, 0.0 ),
-			vector3d( 0.0, 1.0, 0.0 ),
-			vector3d( 0.0, 0.0, 1.0 ),
-			vector3d( 1.0, 1.0, 1.0 )
-		};
-		vector3d grey( 0.5, 0.5, 0.5 );*/
+
 		uint8_t idx = (*(uint8_t*)data);
 		PiAssert( idx>=0 && idx<4 );
 		PiAssert(s_geoPlateLock[idx]);
@@ -238,12 +225,6 @@ public:
 			SDL_mutexP(s_geoPlateLock[idx]);
 			if (s_geoPlates[idx]) { 
 				(*s_geoPlates[idx])->GenerateMesh();
-				// hacking
-				/*for (int y=0; y<GEOPLATE_EDGELEN; y++) {
-					for (int x=0; x<GEOPLATE_EDGELEN; x++) {
-						(*s_geoPlates[idx])->colors[x + y*GEOPLATE_EDGELEN] = colorIdx[ (*s_geoPlates[idx])->m_cIdx ];
-					}
-				}*/
 			}
 			s_geoPlates[idx] = NULL;
 			SDL_mutexV(s_geoPlateLock[idx]);
@@ -899,14 +880,15 @@ public:
 		}
 	}
 
-	#define lerp(t, a, b) ( a + t * (b - a) )
-	vector3d GetSurfacePointCyl(const double x, const double y, const double halfLength) {
+	vector3d GetSurfacePointCyl(const double x, const double y, const double halfLength) const {
+		//PiAssert(y>=-0.000001);
 		double theta = lerp( x, ang[1], ang[0] );//*2.0*M_PI;
 		
 		const vector3d topEndEdge(cos(theta), sin(theta), m_zoffset + halfLength);		// vertices at top edge of circle
 		const vector3d bottomEndEdge(cos(theta), sin(theta), m_zoffset - halfLength);	// vertices at bottom edge of circle
 		
 		const vector3d res = lerp( y, bottomEndEdge, topEndEdge );
+		//PiAssert(res.z>bottomEndEdge.z);
 		return res;
 	}
 
@@ -1485,9 +1467,8 @@ void GeoRing::BuildFirstPatches(const int numSegments)
 	//PROFILE_SCOPED()
 	std::vector<vector3d>	points;
 	std::vector<double>		angles;
-	double angleOffset = 0.0 / 180.0 * M_PI;
     for (int i = 0; i <= numSegments; ++i) {
-		double angle = angleOffset + ((M_PI * 360.0) / 180.0) * i / numSegments;
+		double angle = ((M_PI * 360.0) / 180.0) * i / numSegments;
 		double sinval = sin(angle);
 		double cosval = cos(angle);
 		vector3d vp(sinval, cosval, 0.0 );
@@ -1649,14 +1630,14 @@ void GeoRing::Render(vector3d campos, const float radius, const float scale) {
 	glGetFloatv(GL_LIGHT_MODEL_AMBIENT, oldAmbient);
 
 	// give planet some ambient lighting if the viewer is close to it
-	{
+	/*{
 		double camdist = campos.Length();
 		camdist = 0.1 / (camdist*camdist);
 		// why the fuck is this returning 0.1 when we are sat on the planet??
 		// XXX oh well, it is the value we want anyway...
 		ambient[0] = ambient[1] = ambient[2] = float(camdist);
 		ambient[3] = 1.0f;
-	}
+	}*/
 	
 	glLightModelfv (GL_LIGHT_MODEL_AMBIENT, ambient);
 	glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
@@ -1687,17 +1668,23 @@ void GeoRing::Render(vector3d campos, const float radius, const float scale) {
 #endif /* !GEORING_USE_THREADING */
 }
 
-double GeoRing::GetDistFromSurface(const vector3d dir_, const double radius) {
+double GeoRing::GetDistFromSurface(const vector3d p) {
+	//return DBL_MAX;
 	// one way to find angle (radians)
-	double radang = atan2(dir_.y,dir_.x);
+	double radang = atan2(p.y,p.x);
+	//double radang = atan2(p.x, p.y);
 	if( radang<0.0 ) {
 		radang = (2*M_PI) + radang;
 	}
-	// iterate through plates until we find our distance from surface
+
+	// iterate through plates until we find the one our angles/z are within
 	PlateIter iter = m_plates.begin();
 	for( ; iter!=m_plates.end() ; ++iter ) {
-		if( (*iter)->IsWithinAng(radang,dir_.z) ) {
-			return (*iter)->DistFromSurface(dir_, radius, radang, dir_.z);
+		// scale the p.z into the 0.0 to 1.0 range
+		const double realZ = (p.z + (*iter)->m_halfLen) / (2.0*(*iter)->m_halfLen);
+		if( (*iter)->IsWithinAng(radang,p.z) ) {
+			// then get distance from surface
+			return (*iter)->DistFromSurface(radang, realZ);
 		}
 	}
 
@@ -1705,45 +1692,16 @@ double GeoRing::GetDistFromSurface(const vector3d dir_, const double radius) {
 	const vector3d CP2(0.0, 0.0, -mRingWidth);	// vertex at middle of bottom end
 	const vector3d CN1 = (CP2 - CP1).Normalized();
 	const vector3d CN2 = -CN1;
-	const double fDistanceToPlane1 = (dir_-CP1).Dot( CN1 );
-	const double fDistanceToPlane2 = (dir_-CP2).Dot( CN2 );
+	const double fDistanceToPlane1 = (p-CP1).Dot( CN1 );
+	const double fDistanceToPlane2 = (p-CP2).Dot( CN2 );
 	if (fDistanceToPlane1 < 0.0)	
 		return DBL_MAX;	
 	if (fDistanceToPlane2 < 0.0) 
 		return DBL_MAX; 
-	const vector3d TempP =  dir_ - (CN1 * fDistanceToPlane1);
+	const vector3d TempP =  p - (CN1 * fDistanceToPlane1);
 	const double fDistanceFromCenter = (TempP-CP1).Length();
 	if (fDistanceFromCenter > 1.0) 
 		return DBL_MAX;	*/
 
-	return 0.0; // All tests passed, point is in cylinder
-}
-
-bool GeoRing::CanCollide(const vector3d &pos, const double radius) const
-{
-	// needs to be a case where this can be true
-	// that means that:
-	// - pos.z must be within the edges/wall of the GeoRing
-	const vector3d posNorm		= pos.Normalized();		// unit position
-	const vector3d axisNormPos(0.0, 0.0, posNorm.z);	// corrsponding point on cylinder axis
-	if( posNorm.z<(-mRingWidth) || posNorm.z>mRingWidth )
-		return false;
-	
-	// - pos must be within the "atmosphere" band eg:
-	//     (axisDist-posDist > axisDist-maxPlateHeight && axisDist-posDist < axisDist-minPlateHeight)
-	const vector3d axisPt(0.0, 0.0, pos.z);				// corrsponding point on cylinder axis
-	const vector3d posDir		= pos - axisPt;			// vec from cylinder axis to pos
-	const double posDist		= posDir.Length();		// length of distance (non-Unit obviously)
-	const double axisDist		= m_sbody->GetRadius();
-	const double maxPlateHeight = m_style.GetMaxHeight()*axisDist;
-
-	// we're too far out (to hit terrain)
-	if( posDist > axisDist )
-		return false;
-
-	// we're too far IN (to hit terrain) - this doesn't seem to work, the maxPlateHeight is all wrong :/
-	if( posDist > (axisDist - maxPlateHeight) )
-		return false;
-
-	return true;
+	return DBL_MAX; // All tests passed, point is in cylinder
 }

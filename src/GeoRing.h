@@ -15,8 +15,7 @@ public:
 	GeoRing(const SBody *body);
 	~GeoRing();
 	void Render(vector3d campos, const float radius, const float scale);
-	double GetDistFromSurface(const vector3d p, const double radius);// { return 0.0; }
-	bool CanCollide(const vector3d &pos, const double radius) const;
+	double GetDistFromSurface(const vector3d p);
 	// only called from fishy thread
 	void _UpdateLODs();
 	friend class GeoPlate;

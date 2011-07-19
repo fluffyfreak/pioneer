@@ -103,23 +103,16 @@ void Orbital::GetAtmosphericState(double dist, double *outPressure, double *outD
 	*outPressure = KPA_2_ATMOS*(*outDensity/GAS_MOLAR_MASS)*GAS_CONSTANT*double(sbody->averageTemp);
 }
 
-double Orbital::GetTerrainHeight(const vector3d dir_) const
+double Orbital::GetTerrainHeight(const vector3d pos) const
 {
 	double radius = sbody->GetRadius();
 	if (m_geoRing) {
-		double height = m_geoRing->GetDistFromSurface(dir_, radius);
-		return radius * height;
+		return radius * (1.0 - m_geoRing->GetDistFromSurface(pos));
 	} else {
 		assert(0);
 		return radius;
 	}
 }
-
-bool Orbital::CanCollide(const vector3d &pos, const double radius) const
-{
-	return m_geoRing->CanCollide(pos, radius);
-}
-
 
 #define PLANET_AMBIENT	0.1f
 
