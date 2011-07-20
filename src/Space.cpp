@@ -556,7 +556,7 @@ void CollideFrame(Frame *f)
 				}
 			}
 		}
-	} else if (f->m_astroBody && (f->m_astroBody->IsType(Object::ORBITAL))) {
+	} /*else if (f->m_astroBody && (f->m_astroBody->IsType(Object::ORBITAL))) {
 		// this is pretty retarded
 		for (bodiesIter_t i = bodies.begin(); i!=bodies.end(); ++i) {
 			if ((*i)->GetFrame() != f) continue;
@@ -608,7 +608,7 @@ void CollideFrame(Frame *f)
 				}
 			}
 		}
-	}
+	}*/
 	f->GetCollisionSpace()->Collide(&hitCallback);
 	for (std::list<Frame*>::iterator i = f->m_children.begin(); i != f->m_children.end(); ++i) {
 		CollideFrame(*i);

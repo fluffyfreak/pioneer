@@ -10,6 +10,7 @@ extern int GEOPATCH_EDGELEN;
 
 class SBody;
 class GeoPlate;
+class GeoPlateHull;
 class GeoRing {
 public:
 	GeoRing(const SBody *body);
@@ -19,6 +20,7 @@ public:
 	// only called from fishy thread
 	void _UpdateLODs();
 	friend class GeoPlate;
+	friend class GeoPlateHull;
 #if OBJECTVIEWER
 	friend class OrbitalViewerView;
 #endif /* DEBUG */
@@ -42,9 +44,10 @@ private:
 		return h;
 	}
 	GeoPlate* FindGeoPlateByIndex(const int idx) const;
-	void BuildFirstPatches(const int numSegments = 16);
-	std::vector<GeoPlate*>		m_plates;
+	void BuildFirstPatches();
 	typedef std::vector<GeoPlate*>::iterator PlateIter;
+	std::vector<GeoPlate*>		m_plates;
+	std::vector<GeoPlateHull*>	m_hull;
 	float m_diffColor[4], m_ambColor[4];
 	const SBody *m_sbody;
 	double mRingWidth;
@@ -66,8 +69,8 @@ private:
 	//////////////////////////////
 
 	inline vector3d GetColor(const vector3d &p, double height, const vector3d &norm) {
-		return vector3d(0.5, 0.5, 0.5);
-		//return m_style.GetColor(p, height, norm);
+		//return vector3d(0.5, 0.5, 0.5);
+		return m_style.GetColor(p, height, norm);
 	}
 };
 

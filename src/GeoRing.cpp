@@ -10,15 +10,15 @@
 #define GEOPLATE_USE_THREADING
 
 // tri edge lengths
-#define GEOPLATE_SUBDIVIDE_AT_CAMDIST	5.0
-#define GEOPLATE_MAX_DEPTH	15
+#define GEOPLATE_SUBDIVIDE_AT_CAMDIST	3.0 //5.0
+#define GEOPLATE_MAX_DEPTH	10 //15
 // must be an odd number
-//#define GEOPLATE_EDGELEN	15
+#define GEOPLATE_EDGELEN_DEFAULT	7 //15
 #define GEOPLATE_NUMVERTICES	(GEOPLATE_EDGELEN*GEOPLATE_EDGELEN)
 #define GEORING_USE_THREADING
 
-int GEOPLATE_EDGELEN = 15;
-static const int GEOPLATE_MAX_EDGELEN = 65;
+int GEOPLATE_EDGELEN = GEOPLATE_EDGELEN_DEFAULT;	// 15;
+static const int GEOPLATE_MAX_EDGELEN = 55;
 static double GEOPLATE_FRAC;
 static double GEOPLATEHULL_FRAC;
 
@@ -61,6 +61,229 @@ static int s_loMinIdx[4], s_loMaxIdx[4];
 static int s_hiMinIdx[4], s_hiMaxIdx[4];
 
 #define NUM_VBE 2
+
+class GeoPlateHull {
+public:
+	#define NUM_VBE 2
+	double ang[NUM_VBE];
+	double m_halfLen;
+	double m_zoffset;		// offset from the centre i.e. newzoffset = (m_zoffset + m_halfLen);
+	vector3d *vertices;
+	vector3d *normals;
+	vector3d *colors;
+	GeoRing *geoRing;
+	GLuint m_vbo;
+	static unsigned short *indices;
+	static GLuint indices_vbo;
+	static VBOVertex *vbotemp;
+	double m_roughLength;
+	vector3d clipCentroid;
+	double clipRadius;
+
+	// params
+	// v0, v1 - define points on the line describing the loop of the ring/orbital.
+	// depth - 0 is the topmost plate with each depth+1 describing it's depth within the tree.
+	GeoPlateHull(const double halfLength, const double startAng, const double endAng, 
+		const double zoffset, const int depth) {
+		//PROFILE_SCOPED()
+		memset(this, 0, sizeof(GeoPlateHull));
+		ang[0] = startAng; 
+		ang[1] = endAng;
+		m_halfLen = halfLength;
+		m_zoffset = zoffset;
+		clipCentroid = GetSurfacePoint(0.5, 0.5, m_halfLen);
+		clipRadius = 0;
+		vector3d vcorners[4] = {
+			GetSurfacePoint(0.0, 0.0, m_halfLen),
+			GetSurfacePoint(1.0, 0.0, m_halfLen),
+			GetSurfacePoint(0.0, 1.0, m_halfLen),
+			GetSurfacePoint(1.0, 1.0, m_halfLen)
+		};
+		for (int i=0; i<4; i++) {
+			clipRadius = std::max(clipRadius, (vcorners[i]-clipCentroid).Length());
+		}
+		m_roughLength = GEOPLATE_SUBDIVIDE_AT_CAMDIST / pow(2.0, depth);
+		normals = new vector3d[GEOPLATE_NUMVERTICES];
+		vertices = new vector3d[GEOPLATE_NUMVERTICES];
+		colors = new vector3d[GEOPLATE_NUMVERTICES];
+	}
+
+	~GeoPlateHull() {
+		delete vertices;
+		delete normals;
+		delete colors;
+		geoRing->AddVBOToDestroy(m_vbo);
+	}
+
+	static void Init() {
+		//PROFILE_SCOPED()
+		GEOPLATEHULL_FRAC = 1.0 / double(GEOPLATE_EDGELEN-1);
+
+		if (indices) {
+			delete [] indices;
+			if (indices_vbo) {
+				glDeleteBuffersARB(1, &indices_vbo);
+			}
+			delete [] vbotemp;
+		}
+		{
+			vbotemp = new VBOVertex[GEOPLATE_NUMVERTICES];
+			unsigned short *idx;
+			indices = new unsigned short[VBO_COUNT_ALL_IDX];
+			idx = indices;
+			for (int x=0; x<GEOPLATE_EDGELEN-1; x++) {
+				for (int y=0; y<GEOPLATE_EDGELEN-1; y++) {
+					idx[0] = x + GEOPLATE_EDGELEN*y;		PiAssert(idx[0] < GEOPLATE_NUMVERTICES);
+					idx[1] = x+1 + GEOPLATE_EDGELEN*y;		PiAssert(idx[1] < GEOPLATE_NUMVERTICES);
+					idx[2] = x + GEOPLATE_EDGELEN*(y+1);	PiAssert(idx[2] < GEOPLATE_NUMVERTICES);
+					idx+=3;
+
+					idx[0] = x+1 + GEOPLATE_EDGELEN*y;		PiAssert(idx[0] < GEOPLATE_NUMVERTICES);
+					idx[1] = x+1 + GEOPLATE_EDGELEN*(y+1);	PiAssert(idx[1] < GEOPLATE_NUMVERTICES);
+					idx[2] = x + GEOPLATE_EDGELEN*(y+1);	PiAssert(idx[2] < GEOPLATE_NUMVERTICES);
+					PiAssert(idx < indices+VBO_COUNT_ALL_IDX);
+					idx+=3;
+				}
+			}
+
+			glGenBuffersARB(1, &indices_vbo);
+			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, indices_vbo);
+			glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned short)*VBO_COUNT_ALL_IDX, 0, GL_STATIC_DRAW);
+			glBufferSubDataARB(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(unsigned short)*VBO_COUNT_ALL_IDX, indices);
+			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, 0);
+		}
+	}
+
+	void UpdateVBOs() {
+		//PROFILE_SCOPED()
+		if (!m_vbo) glGenBuffersARB(1, &m_vbo);
+		glBindBufferARB(GL_ARRAY_BUFFER, m_vbo);
+		glBufferDataARB(GL_ARRAY_BUFFER, sizeof(VBOVertex)*GEOPLATE_NUMVERTICES, 0, GL_DYNAMIC_DRAW);
+		for (int i=0; i<GEOPLATE_NUMVERTICES; i++)
+		{
+			clipRadius = std::max(clipRadius, (vertices[i]-clipCentroid).Length());
+			VBOVertex *pData = vbotemp + i;
+			pData->x = float(vertices[i].x);
+			pData->y = float(vertices[i].y);
+			pData->z = float(vertices[i].z);
+			pData->nx = float(normals[i].x);
+			pData->ny = float(normals[i].y);
+			pData->nz = float(normals[i].z);
+			pData->col[0] = static_cast<unsigned char>(Clamp(colors[i].x*255.0, 0.0, 255.0));
+			pData->col[1] = static_cast<unsigned char>(Clamp(colors[i].y*255.0, 0.0, 255.0));
+			pData->col[2] = static_cast<unsigned char>(Clamp(colors[i].z*255.0, 0.0, 255.0));
+			pData->col[3] = 1.0;
+		}
+		glBufferDataARB(GL_ARRAY_BUFFER, sizeof(VBOVertex)*GEOPLATE_NUMVERTICES, vbotemp, GL_DYNAMIC_DRAW);
+		glBindBufferARB(GL_ARRAY_BUFFER, 0);
+	}
+
+	vector3d GetSurfacePoint(const double x, const double y, const double halfLength) {
+		double theta = lerp( x, ang[1], ang[0] );//*2.0*M_PI;
+		
+		const vector3d topEndEdge(cos(theta), sin(theta), m_zoffset + halfLength);		// vertices at top edge of circle
+		const vector3d bottomEndEdge(cos(theta), sin(theta), m_zoffset - halfLength);	// vertices at bottom edge of circle
+		
+		const vector3d res = lerp( y, bottomEndEdge, topEndEdge );
+		return res;
+	}
+
+	// Generates full-detail vertices, and also non-edge normals and colors
+	static double height_val;// = 0.001;
+	void GenerateMesh() {
+		//PROFILE_SCOPED()
+		vector3d *vts = vertices;
+		double xfrac = 0;
+		double yfrac = 0;
+		for (int y=0; y<GEOPLATE_EDGELEN; ++y) {	// across the width
+			xfrac = 0;
+			for (int x=0; x<GEOPLATE_EDGELEN; ++x) {	// along the length (circumference)
+				vector3d p;
+				double height = 0.0;
+				PiAssert(x!=GEOPLATE_EDGELEN);
+				PiAssert(y!=GEOPLATE_EDGELEN);
+				if( y==0 || y==GEOPLATE_EDGELEN-1 ) {	// points in trough
+					height = 0.0;
+					p = GetSurfacePoint(xfrac, (y==0 ? 0.0 : 1.0), m_halfLen);
+				}
+				else { // outer hull edge
+					height = 0.01;
+					p = GetSurfacePoint(xfrac, yfrac, m_halfLen);
+				}
+
+				*(vts++) = p * (height + 1.0);
+				// remember this -- we will need it later
+				xfrac += GEOPLATEHULL_FRAC;
+				double col = 0.5;
+				colors[x + y*GEOPLATE_EDGELEN] = vector3d(col, col, 1.0);
+			}
+			yfrac += GEOPLATEHULL_FRAC;
+		}
+		assert(vts == &vertices[GEOPLATE_NUMVERTICES]);
+		// Generate normals
+		for (int y=0; y<GEOPLATE_EDGELEN-1; ++y) {
+			for (int x=0; x<GEOPLATE_EDGELEN-1; ++x) {
+				// normal
+				vector3d xy = vertices[x + y*GEOPLATE_EDGELEN];
+				vector3d x1 = vertices[x+1 + y*GEOPLATE_EDGELEN];
+				vector3d y1 = vertices[x + (y+1)*GEOPLATE_EDGELEN];
+
+				vector3d n = (x1-xy).Cross(y1-xy);
+				normals[x + y*GEOPLATE_EDGELEN] = n.Normalized();
+				//const vector3d &norm = normals[x + y*GEOPLATE_EDGELEN];
+			}
+		}
+
+		// Generate last col and bottom row normals
+		for (int y=GEOPLATE_EDGELEN-1; y<GEOPLATE_EDGELEN; ++y) {
+			for (int x=GEOPLATE_EDGELEN-1; x<GEOPLATE_EDGELEN; ++x) {
+				// normal
+				vector3d xy = vertices[x + y*GEOPLATE_EDGELEN];
+				vector3d x1 = vertices[x-1 + y*GEOPLATE_EDGELEN];
+				vector3d y1 = vertices[x + (y-1)*GEOPLATE_EDGELEN];
+
+				vector3d n = (xy-x1).Cross(xy-y1);
+				normals[x + y*GEOPLATE_EDGELEN] = (n.Normalized());
+				//const vector3d &norm = normals[x + y*GEOPLATE_EDGELEN];
+			}
+		}
+	}
+
+	void Render(vector3d &campos, Plane planes[6]) {
+		//PROFILE_SCOPED()
+		//_UpdateVBOs();
+		/* frustum test! */
+		for (int i=0; i<6; i++) {
+			if (planes[i].DistanceToPoint(clipCentroid) <= -clipRadius) {
+				return;
+			}
+		}
+		Pi::statSceneTris += 2*(GEOPLATE_EDGELEN-1)*(GEOPLATE_EDGELEN-1);
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_NORMAL_ARRAY);
+		glEnableClientState(GL_COLOR_ARRAY);
+
+		glBindBufferARB(GL_ARRAY_BUFFER, m_vbo);
+		glVertexPointer(3, GL_FLOAT, sizeof(VBOVertex), 0);
+		glNormalPointer(GL_FLOAT, sizeof(VBOVertex), reinterpret_cast<void *>(3*sizeof(float)));
+		glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(VBOVertex), reinterpret_cast<void *>(6*sizeof(float)));
+		glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, indices_vbo);
+		//void glDrawRangeElements(	GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid * indices);
+		//glDrawRangeElements(GL_TRIANGLES, 0, GEOPLATE_NUMVERTICES-1, VBO_COUNT_ALL_IDX, GL_UNSIGNED_SHORT, 0);
+		glDrawElements(GL_TRIANGLES, VBO_COUNT_ALL_IDX, GL_UNSIGNED_SHORT, 0);
+		glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+		glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+		glDisableClientState(GL_VERTEX_ARRAY);
+		glDisableClientState(GL_NORMAL_ARRAY);
+		glDisableClientState(GL_COLOR_ARRAY);
+	}
+};
+//static 
+double				GeoPlateHull::height_val = 0.001;
+unsigned short *	GeoPlateHull::indices = 0;
+GLuint				GeoPlateHull::indices_vbo = 0;
+VBOVertex *			GeoPlateHull::vbotemp= 0 ;
 
 bool rayIntersectsTriangle(
 	const vector3d p, 
@@ -180,7 +403,7 @@ public:
 		return result;
 	}
 
-	double DistFromSurface(const double rad, const double z) const
+	double DistFromSurface(const double rad, const double z, const vector3d &rp) const
 	{
 		PiAssert( IsWithinAng(rad, z) );
 
@@ -189,7 +412,7 @@ public:
 			// yes, so recurse into them.
 			for(int i=0;i<4;++i) {
 				if( kids[i]->IsWithinAng(rad, z) ) {
-					return kids[i]->DistFromSurface(rad, z);
+					return kids[i]->DistFromSurface(rad, z, rp);
 				}
 			}
 		} else {
@@ -869,6 +1092,8 @@ public:
 				// XXX needed for corners... probably not
 				// correct
 				GetEdge(vertices, i, ev[i]);
+			} else {
+				printf("omg its gone bad!\n");
 			}
 		}
 	
@@ -1377,18 +1602,27 @@ void GeoRing::OnChangeDetailLevel()
 			}
 		}
 		(*i)->m_plates.clear();
+
+		// and strip away the hull
+		for (size_t p=0; p<(*i)->m_hull.size(); p++) {
+			if ((*i)->m_hull[p]) {
+				delete (*i)->m_hull[p];
+			}
+		}
+		(*i)->m_hull.clear();
 	}
 
 	switch (Pi::detail.planets) {
-		case 0: GEOPLATE_EDGELEN = 15; break;
-		case 1: GEOPLATE_EDGELEN = 25; break;
-		case 2: GEOPLATE_EDGELEN = 45; break;
-		case 3: GEOPLATE_EDGELEN = 65; break;
+		case 0: GEOPLATE_EDGELEN = 7;  break;
+		case 1: GEOPLATE_EDGELEN = 15; break;
+		case 2: GEOPLATE_EDGELEN = 25; break;
+		case 3: GEOPLATE_EDGELEN = 35; break;
 		default:
 		case 4: GEOPLATE_EDGELEN = GEOPLATE_MAX_EDGELEN; break;
 	}
 	assert(GEOPLATE_EDGELEN <= GEOPLATE_MAX_EDGELEN);
 	GeoPlate::Init();
+	GeoPlateHull::Init();
 	for(std::list<GeoRing*>::iterator i = s_allGeoRings.begin(); i != s_allGeoRings.end(); ++i) {
 		(*i)->BuildFirstPatches();
 	}
@@ -1429,6 +1663,9 @@ GeoRing::~GeoRing()
 		if (m_plates[i]) {
 			delete m_plates[i];
 		}
+		if (m_hull[i]) {
+			delete m_hull[i];
+		}
 	}
 	DestroyVBOs();
 	SDL_DestroyMutex(m_vbosToDestroyLock);
@@ -1468,8 +1705,19 @@ GeoPlate* GeoRing::FindGeoPlateByIndex(const int idx) const
 	return m_plates[idx];
 }
 
-void GeoRing::BuildFirstPatches(const int numSegments)
+void GeoRing::BuildFirstPatches()
 {
+	// This is a somewhat hacky way to decide how "wide" an orbital should be
+	// for a given comparison to the earth.
+	// The NUM_SEGMENTS defines how many "plates" we'd use if the orbital was the radius of
+	// the planet Earth, at 8 this makes each plate approximately half the width & length
+	// of a patch used on the GeoSphere Earth.
+	// An SBoday radius is stored in terms or it's multiples for the Earths radius, which
+	// gives us the perfect multiplier for our NUM_SEGMENTS. Orbitals smaller than Earth
+	// will use less segments whereas larger Orbitals will use more.
+	#define NUM_SEGMENTS 8
+	const int numSegments = (NUM_SEGMENTS * m_sbody->radius.ToDouble());
+
 	//PROFILE_SCOPED()
 	std::vector<vector3d>	points;
 	std::vector<double>		angles;
@@ -1477,7 +1725,7 @@ void GeoRing::BuildFirstPatches(const int numSegments)
 		double angle = ((M_PI * 360.0) / 180.0) * i / numSegments;
 		double sinval = sin(angle);
 		double cosval = cos(angle);
-		vector3d vp(sinval, cosval, 0.0 );
+		vector3d vp(cosval, sinval, 0.0 );
 		points.push_back( vp.Normalized() );
 		angles.push_back( angle );
     }
@@ -1506,6 +1754,16 @@ void GeoRing::BuildFirstPatches(const int numSegments)
 	for (size_t i=0; i<m_plates.size(); i++) m_plates[i]->GenerateMesh();
 	for (size_t i=0; i<m_plates.size(); i++) m_plates[i]->GenerateEdgeNormalsAndColors();
 	for (size_t i=0; i<m_plates.size(); i++) m_plates[i]->UpdateVBOs();
+
+	// create the outer hull
+	m_hull.clear();
+	for( int i=0 ; i<points.size()-1 ; ++i ) {
+		double len = (points[i+1] - points[i]).Length();
+		m_hull.push_back( new GeoPlateHull(len, angles[i+1], angles[i], 0.0, 0) );
+	}
+	for (size_t i=0; i<m_hull.size(); i++) m_hull[i]->geoRing = this;
+	for (size_t i=0; i<m_hull.size(); i++) m_hull[i]->GenerateMesh();
+	for (size_t i=0; i<m_hull.size(); i++) m_hull[i]->UpdateVBOs();
 }
 
 static const float g_ambient[4] = { 0, 0, 0, 1.0 };
@@ -1636,7 +1894,24 @@ void GeoRing::Render(vector3d campos, const float radius, const float scale) {
 	glMaterialfv (GL_FRONT, GL_EMISSION, black);
 	glEnable(GL_COLOR_MATERIAL);
 
+	/*glLineWidth(1.0);
+	glPolygonMode(GL_FRONT, GL_LINE);
+	for (size_t i=0; i<m_hull.size(); i++) {
+		m_hull[i]->Render(campos, planes);
+	}
+
+	glPointSize(10.0f);
+	glPolygonMode(GL_FRONT, GL_POINT);
+	for (size_t i=0; i<m_hull.size(); i++) {
+		m_hull[i]->Render(campos, planes);
+	}*/
+
 	glPolygonMode(GL_FRONT, GL_FILL);
+	for (size_t i=0; i<m_hull.size(); i++) {
+		m_hull[i]->Render(campos, planes);
+	}
+
+	//glPolygonMode(GL_FRONT, GL_FILL);
 	for (size_t i=0; i<m_plates.size(); i++) {
 		m_plates[i]->Render(campos, planes);
 	}
@@ -1675,7 +1950,7 @@ double GeoRing::GetDistFromSurface(const vector3d p) {
 		//const double realZ = (p.z + (*iter)->m_halfLen) / (2.0*(*iter)->m_halfLen);
 		if( (*iter)->IsWithinAng(radang, p.z) ) {
 			// then get distance from surface
-			return (*iter)->DistFromSurface(radang, p.z);
+			return (*iter)->DistFromSurface(radang, p.z, p);
 		}
 	}
 
