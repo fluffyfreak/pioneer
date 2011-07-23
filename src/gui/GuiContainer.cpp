@@ -246,7 +246,9 @@ void Container::Show()
 void Container::ShowAll()
 {
 	for (std::list<widget_pos>::iterator i = m_children.begin(); i != m_children.end(); ++i) {
-		(*i).w->ShowAll();
+		if( (*i).w ) {
+			(*i).w->ShowAll();
+		}
 	}
 	Show();
 }

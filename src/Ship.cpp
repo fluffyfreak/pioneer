@@ -43,7 +43,6 @@ void Ship::Save(Serializer::Writer &wr)
 
 	m_hyperspace.dest.Serialize(wr);
 	wr.Float(m_hyperspace.countdown);
-	wr.Int32(m_hyperspace.followHypercloudId);
 
 	for (int i=0; i<ShipType::GUNMOUNT_MAX; i++) {
 		wr.Int32(m_gunState[i]);
@@ -80,7 +79,6 @@ void Ship::Load(Serializer::Reader &rd)
 	
 	m_hyperspace.dest = SystemPath::Unserialize(rd);
 	m_hyperspace.countdown = rd.Float();
-	m_hyperspace.followHypercloudId = rd.Int32();
 
 	for (int i=0; i<ShipType::GUNMOUNT_MAX; i++) {
 		m_gunState[i] = rd.Int32();
@@ -136,7 +134,6 @@ Ship::Ship(ShipType::Type shipType): DynamicBody()
 	m_angThrusters.x = m_angThrusters.y = m_angThrusters.z = 0;
 	m_equipment.InitSlotSizes(shipType);
 	m_hyperspace.countdown = 0;
-	m_hyperspace.followHypercloudId = 0;
 	for (int i=0; i<ShipType::GUNMOUNT_MAX; i++) {
 		m_gunState[i] = 0;
 		m_gunRecharge[i] = 0;
@@ -147,38 +144,6 @@ Ship::Ship(ShipType::Type shipType): DynamicBody()
 	m_curAICmd = 0;
 
 	Init();	
-}
-
-void Ship::SetHyperspaceTarget(const SystemPath *path)
-{
-	if (path == 0) {
-		// need to properly handle unsetting target
-		SystemPath p(0,0,0);
-		SetHyperspaceTarget(&p);
-	} else {
-		m_hyperspace.followHypercloudId = 0;
-		m_hyperspace.dest = *path;
-		if (this == reinterpret_cast<Ship*>(Pi::player)) Pi::onPlayerChangeHyperspaceTarget.emit();
-	}
-}
-
-void Ship::SetHyperspaceTarget(HyperspaceCloud *cloud)
-{
-	m_hyperspace.followHypercloudId = cloud->GetId();
-	m_hyperspace.dest = *cloud->GetShip()->GetHyperspaceTarget();
-	if (this == reinterpret_cast<Ship*>(Pi::player)) Pi::onPlayerChangeHyperspaceTarget.emit();
-}
-
-void Ship::ClearHyperspaceTarget()
-{
-	m_hyperspace.followHypercloudId = 0;
-	m_hyperspace.dest = SystemPath();
-	m_hyperspace.countdown = 0;
-}
-
-void Ship::ResetHyperspaceCountdown()
-{
-    m_hyperspace.countdown = 0;
 }
 
 float Ship::GetPercentHull() const
@@ -446,18 +411,25 @@ bool Ship::CanHyperspaceTo(const SystemPath *dest, int &outFuelRequired, double 
 	}
 }
 
-void Ship::TryHyperspaceTo(const SystemPath *dest)
+Ship::HyperjumpStatus Ship::StartHyperspaceCountdown(const SystemPath &dest)
 {
-	if (GetFlightState() != Ship::FLYING) return;
-
 	int fuelUsage;
-	double dur;
+	double duration;
+
+	HyperjumpStatus status;
+	if (!CanHyperspaceTo(&dest, fuelUsage, duration, &status))
+		return status;
+
 	Equip::Type t = m_equipment.Get(Equip::SLOT_ENGINE);
-	int hyperclass = EquipType::types[t].pval;
-	if (m_hyperspace.countdown) return;
-	if (!CanHyperspaceTo(dest, fuelUsage, dur)) return;
-	m_hyperspace.countdown = 1 + hyperclass;
-	m_hyperspace.dest = *dest;
+	m_hyperspace.countdown = 1 + EquipType::types[t].pval;
+	m_hyperspace.dest = dest;
+
+	return Ship::HYPERJUMP_OK;
+}
+
+void Ship::ResetHyperspaceCountdown()
+{
+    m_hyperspace.countdown = 0;
 }
 
 float Ship::GetECMRechargeTime()
@@ -545,6 +517,8 @@ void Ship::Blastoff()
 	// XXX hm. we need to be able to get sbre aabb
 	SetPosition(up*planetRadius - aabb.min.y*up);
 	SetThrusterState(1, 1.0);		// thrust upwards
+
+	Pi::luaOnShipTakeOff.Queue(this, GetFrame()->m_astroBody);
 }
 
 void Ship::TestLanded()
@@ -592,6 +566,7 @@ void Ship::TestLanded()
 				ClearThrusterState();
 				m_flightState = LANDED;
 				Sound::PlaySfx("Rough_Landing", 1.0f, 1.0f, 0);
+				Pi::luaOnShipLanded.Queue(this, GetFrame()->GetBodyFor());
 			}
 		}
 	} else if (GetFrame()->GetBodyFor()->IsType(Object::ORBITAL)) {

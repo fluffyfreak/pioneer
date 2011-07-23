@@ -62,6 +62,7 @@
 #include "LuaNameGen.h"
 #include "LuaMusic.h"
 #include "SoundMusic.h"
+#include "Background.h"
 
 #include "profiler/Profiler.h"
 
@@ -77,7 +78,6 @@ sigc::signal<void, SDL_keysym*> Pi::onKeyRelease;
 sigc::signal<void, int, int, int> Pi::onMouseButtonUp;
 sigc::signal<void, int, int, int> Pi::onMouseButtonDown;
 sigc::signal<void> Pi::onPlayerChangeTarget;
-sigc::signal<void> Pi::onPlayerChangeHyperspaceTarget;
 sigc::signal<void> Pi::onPlayerChangeFlightControlState;
 sigc::signal<void> Pi::onPlayerChangeEquipment;
 sigc::signal<void, const SpaceStation*> Pi::onDockingClearanceExpired;
@@ -94,6 +94,8 @@ LuaEventQueue<Ship,Body> Pi::luaOnShipHit("onShipHit");
 LuaEventQueue<Ship,Body> Pi::luaOnShipCollided("onShipCollided");
 LuaEventQueue<Ship,SpaceStation> Pi::luaOnShipDocked("onShipDocked");
 LuaEventQueue<Ship,SpaceStation> Pi::luaOnShipUndocked("onShipUndocked");
+LuaEventQueue<Ship, Body> Pi::luaOnShipLanded("onShipLanded");
+LuaEventQueue<Ship, Body> Pi::luaOnShipTakeOff("onShipTakeOff");
 LuaEventQueue<Ship,const char *> Pi::luaOnShipAlertChanged("onShipAlertChanged");
 LuaEventQueue<Ship,CargoBody> Pi::luaOnJettison("onJettison");
 LuaEventQueue<Ship> Pi::luaOnAICompleted("onAICompleted");
@@ -224,6 +226,8 @@ static void LuaInit()
 	Pi::luaOnShipHit.RegisterEventQueue();
 	Pi::luaOnShipCollided.RegisterEventQueue();
 	Pi::luaOnShipDocked.RegisterEventQueue();
+	Pi::luaOnShipLanded.RegisterEventQueue();
+	Pi::luaOnShipTakeOff.RegisterEventQueue();
 	Pi::luaOnShipUndocked.RegisterEventQueue();
 	Pi::luaOnShipAlertChanged.RegisterEventQueue();
 	Pi::luaOnJettison.RegisterEventQueue();
@@ -257,6 +261,8 @@ static void LuaInitGame() {
 	Pi::luaOnShipCollided.ClearEvents();
 	Pi::luaOnShipDocked.ClearEvents();
 	Pi::luaOnShipUndocked.ClearEvents();
+	Pi::luaOnShipLanded.ClearEvents();
+	Pi::luaOnShipTakeOff.ClearEvents();
 	Pi::luaOnShipAlertChanged.ClearEvents();
 	Pi::luaOnJettison.ClearEvents();
 	Pi::luaOnAICompleted.ClearEvents();
@@ -395,7 +401,11 @@ void Pi::Init()
 		Sound::SetMasterVolume(config.Float("MasterVolume"));
 		Sound::SetSfxVolume(config.Float("SfxVolume"));
 		GetMusicPlayer().SetVolume(config.Float("MusicVolume"));
+
 		Sound::Pause(0);
+		if (config.Int("MasterMuted")) Sound::Pause(1);
+		if (config.Int("SfxMuted")) Sound::SetSfxVolume(0.f);
+		if (config.Int("MusicMuted")) GetMusicPlayer().SetEnabled(false);
 	}
 	draw_progress(1.0f);
 
@@ -709,7 +719,7 @@ void Pi::HandleEvents()
 	}
 }
 
-static void draw_intro(WorldView *view, float _time)
+static void draw_intro(Background::Starfield *starfield, Background::MilkyWay *milkyway, float _time)
 {
 	float lightCol[4] = { 1,1,1,0 };
 	float lightDir[4] = { 0,1,1,0 };
@@ -726,9 +736,14 @@ static void draw_intro(WorldView *view, float _time)
 		{ { 0.5f, 0.5f, 0.5f, 1.0f }, { 0, 0, 0 }, { 0, 0, 0 }, 0 },
 		{ { 0.8f, 0.8f, 0.8f, 1.0f }, { 0, 0, 0 }, { 0, 0, 0 }, 0 } },
 	};
+
 	glPushMatrix();
 	glRotatef(_time*10, 1, 0, 0);
-	view->DrawBgStars();
+	glPushMatrix();
+	glRotatef(40.0, 1.0, 2.0, 3.0);
+	milkyway->Draw();
+	glPopMatrix();
+	starfield->Draw();
 	glPopMatrix();
 	
 	glPushAttrib(GL_ALL_ATTRIB_BITS);
@@ -840,8 +855,8 @@ void Pi::InitGame()
 	Space::AddBody(player);
 	
 	cpan = new ShipCpanel();
-	worldView = new WorldView();
 	sectorView = new SectorView();
+	worldView = new WorldView();
 	galacticView = new GalacticView();
 	systemView = new SystemView();
 	systemInfoView = new SystemInfoView();
@@ -856,8 +871,7 @@ void Pi::InitGame()
 	orbitalViewerView = new OrbitalViewerView();
 #endif
 
-	AmbientSounds::Init();
-
+	if (!config.Int("DisableSound")) AmbientSounds::Init();
 	LuaInitGame();
 }
 
@@ -887,7 +901,7 @@ void Pi::StartGame()
 
 void Pi::UninitGame()
 {
-	AmbientSounds::Uninit();
+	if (!config.Int("DisableSound")) AmbientSounds::Uninit();
 	Sound::DestroyAllEvents();
 
 #if OBJECTVIEWER
@@ -917,7 +931,8 @@ void Pi::UninitGame()
 
 void Pi::Start()
 {
-	WorldView *view = new WorldView();
+	Background::Starfield *starfield = new Background::Starfield();
+	Background::MilkyWay *milkyway = new Background::MilkyWay();
 	
 	Gui::Fixed *splash = new Gui::Fixed(Gui::Screen::GetWidth(), Gui::Screen::GetHeight());
 	Gui::Screen::AddBaseWidget(splash, 0, 0);
@@ -968,7 +983,7 @@ void Pi::Start()
 
 		Pi::SetMouseGrab(false);
 
-		draw_intro(view, _time);
+		draw_intro(starfield, milkyway, _time);
 		Render::PostProcess();
 		Gui::Draw();
 		Render::SwapBuffers();
@@ -984,7 +999,8 @@ void Pi::Start()
 	
 	Gui::Screen::RemoveBaseWidget(splash);
 	delete splash;
-	delete view;
+	delete starfield;
+	delete milkyway;
 	
 	InitGame();
 
@@ -1223,7 +1239,7 @@ void Pi::MainLoop()
 					double dist = toBody.Length();
 					double rad = (*i)->GetBoundingRadius();
 
-					if (dist < 1000.0) {
+					/*if (dist < 1000.0) {
 						timeAccel = std::min(timeAccel, 1);
 					} else if (dist < std::min(rad+0.0001*AU, rad*1.1)) {
 						timeAccel = std::min(timeAccel, 2);
@@ -1232,6 +1248,15 @@ void Pi::MainLoop()
 					} else if (dist < std::min(rad+0.01*AU,rad*10.0)) {
 						timeAccel = std::min(timeAccel, 4);
 					} else if (dist < std::min(rad+0.1*AU, rad*1000.0)) {
+						timeAccel = std::min(timeAccel, 5);
+					}*/
+					if (dist < 1000.0) {
+						timeAccel = std::min(timeAccel, 2);
+					} else if (dist < std::min(rad+0.0001*AU, rad*1.1)) {
+						timeAccel = std::min(timeAccel, 3);
+					} else if (dist < std::min(rad+0.001*AU,rad*5.0)) {
+						timeAccel = std::min(timeAccel, 4);
+					} else if (dist < std::min(rad+0.01*AU, rad*10.0)) {
 						timeAccel = std::min(timeAccel, 5);
 					}
 				}
@@ -1266,7 +1291,7 @@ void Pi::MainLoop()
 			}
 		} else {
 			// this is something we need not do every turn...
-			AmbientSounds::Update();
+			if (!config.Int("DisableSound")) AmbientSounds::Update();
 			StarSystem::ShrinkCache();
 		}
 		cpan->Update();

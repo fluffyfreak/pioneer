@@ -37,27 +37,27 @@ local venus = CustomSBody:new('Venus', 'PLANET_TERRESTRIAL')
 	:metallicity(f(1,2))
 	:volcanicity(f(8,10))
 	:atmos_density(f(93,1))
-	:atmos_oxidizing(f(1,1))
+	:atmos_oxidizing(f(12,100))
 	:ocean_cover(f(0,1))
 	:ice_cover(f(0,1))
 	:life(f(0,1))
 	
 local vavatch = CustomSBody:new('Vavatch', 'PLANET_ORBITAL')
 	:radius(f(950,100))
-	:mass(f(8150,1000))
-	:temp(735)
+	:mass(f(1,1))
+	:temp(288)
 	:semi_major_axis(f(1229,1000))
 	:eccentricity(f(444,10000))
 	:inclination(math.deg2rad(0.772))
 	:rotation_period(f(243,1))
 	:axial_tilt(math.fixed.deg2rad(f(6500,100)))
 	:metallicity(f(1,2))
-	:volcanicity(f(8,10))
-	:atmos_density(f(93,1))
-	:atmos_oxidizing(f(1,1))
-	:ocean_cover(f(0,1))
-	:ice_cover(f(0,1))
-	:life(f(0,1))
+	:volcanicity(f(1,10))
+	:atmos_density(f(1,1))
+	:atmos_oxidizing(f(99,100))
+	:ocean_cover(f(7,10))
+	:ice_cover(f(7,10))
+	:life(f(9,10))
 
 local earth = CustomSBody:new('Earth', 'PLANET_TERRESTRIAL')
 	:radius(f(1,1))
@@ -71,7 +71,7 @@ local earth = CustomSBody:new('Earth', 'PLANET_TERRESTRIAL')
 	:metallicity(f(1,2))
 	:volcanicity(f(1,10))
 	:atmos_density(f(1,1))
-	:atmos_oxidizing(f(8,10))
+	:atmos_oxidizing(f(99,100))
 	:ocean_cover(f(7,10))
 	:ice_cover(f(7,10))
 	:life(f(9,10))
@@ -102,7 +102,7 @@ local earth_starports = {
 
 local moon = {
 	CustomSBody:new('Moon', 'PLANET_TERRESTRIAL')
-		:seed(191080)
+		:seed(1900)
 		:radius(f(273,1000))
 		:mass(f(12,1000))
 		:temp(220)
@@ -133,7 +133,7 @@ local mars = CustomSBody:new('Mars', 'PLANET_TERRESTRIAL')
 	:metallicity(f(4,5))
 	:volcanicity(f(2,10))
 	:atmos_density(f(3,5))
-	:atmos_oxidizing(f(8,10))
+	:atmos_oxidizing(f(950001,1000000))
 	:ocean_cover(f(38,100))
 	:ice_cover(f(678,1000))
 	:life(f(15,100))
@@ -182,7 +182,7 @@ local mars_moons = {
 }
 
 local jupiter = CustomSBody:new('Jupiter', 'PLANET_GAS_GIANT')
-	:seed(3)
+	:seed(21)
 	:radius(f(11,1))
 	:mass(f(3178,10))
 	:temp(165)
@@ -196,6 +196,7 @@ local jupiter = CustomSBody:new('Jupiter', 'PLANET_GAS_GIANT')
 
 local jupiter_moons = {
 	CustomSBody:new('Io', 'PLANET_TERRESTRIAL')
+		:seed(7510)
 		:radius(f(286,1000))
 		:mass(f(15,1000))
 		:temp(130)
@@ -206,9 +207,9 @@ local jupiter_moons = {
 		:metallicity(f(7,10))
 		:volcanicity(f(1,1))
 		:atmos_density(f(1,10))
-		:atmos_oxidizing(f(8,10))
-		:ocean_cover(f(0,1))
-		:ice_cover(f(1,1000))
+		:atmos_oxidizing(f(12,100))
+		:ocean_cover(f(1,5))
+		:ice_cover(f(0,1))
 		:life(f(0,1)),
 	{
 		CustomSBody:new('Dante\'s Base', 'STARPORT_SURFACE')
@@ -216,17 +217,18 @@ local jupiter_moons = {
 			:longitude(math.deg2rad(26.2)),
 	},
 	CustomSBody:new('Europa', 'PLANET_TERRESTRIAL')
-		:seed(5)
+		:seed(10)
 		:radius(f(245,1000))
 		:mass(f(8,1000))
 		:temp(102)
 		:semi_major_axis(f(441,100000))
 		:eccentricity(f(9,1000))
 		:rotation_period(f(355,100))
-		:ocean_cover(f(8,10))
-		:ice_cover(f(9,10))
+		:ocean_cover(f(9,10))
+		:ice_cover(f(1,1))
 		:atmos_density(f(1,12))
-		:metallicity(f(4,5))
+		:atmos_oxidizing(f(1,1))
+		:metallicity(f(3,4))
 		:volcanicity(f(0,1)),
 	{
 		CustomSBody:new('Clarke\'s Station', 'STARPORT_ORBITAL')
@@ -234,13 +236,18 @@ local jupiter_moons = {
 			:rotation_period(f(1,24*60*3)),
 	},
 	CustomSBody:new('Ganymede', 'PLANET_TERRESTRIAL')
+		:seed(4)
 		:radius(f(413,1000))
 		:mass(f(25,1000))
-		:temp(110)
+		:temp(180)
+		:atmos_oxidizing(f(1,1))
+		:ocean_cover(f(3,10))
+		:ice_cover(f(7,10))
+		:metallicity(f(3,5))
 		:semi_major_axis(f(72,10000))
 		:eccentricity(f(13,10000))
 		:inclination(math.deg2rad(0.2))
-		:atmos_density(f(1,14))
+		:atmos_density(f(10,98))
 		:rotation_period(f(72,10)),
 	{
 		CustomSBody:new('Enki Catena', 'STARPORT_SURFACE')
@@ -261,6 +268,7 @@ local jupiter_moons = {
 }
 
 local saturn = CustomSBody:new('Saturn', 'PLANET_GAS_GIANT')
+	:seed(14)
 	:radius(f(9,1))
 	:mass(f(95152,1000))
 	:temp(134)
@@ -279,6 +287,7 @@ local saturn_moons = {
 		:eccentricity(f(288,10000))
 		:inclination(math.deg2rad(0.34854))
 		:atmos_density(f(10,1))
+		:atmos_oxidizing(f(6,10))
 		:rotation_period(f(15945,1000)),
 	{
 		CustomSBody:new('Oasis City', 'STARPORT_SURFACE')
@@ -320,6 +329,7 @@ local saturn_moons = {
 }
 
 local uranus = CustomSBody:new('Uranus', 'PLANET_GAS_GIANT')
+	:seed(28)
 	:radius(f(4,1))
 	:mass(f(145,10))
 	:temp(76)
@@ -366,6 +376,7 @@ local uranus_moons = {
 }
 
 local neptune = CustomSBody:new('Neptune', 'PLANET_GAS_GIANT')
+	:seed(24) --22, 17
 	:radius(f(38,10))
 	:mass(f(17147,1000))
 	:temp(72)
@@ -385,7 +396,8 @@ local neptune_moons = {
 		:volcanicity(f(3,10)) -- Cryovolcanos!
 		:inclination(math.deg2rad(156.885))
 		:rotation_period(f(141,24))
-		:atmos_density(f(1,10)),
+		:atmos_density(f(1,10))
+		:atmos_oxidizing(f(1,20)),
 	{
 		CustomSBody:new('Poseidon Station', 'STARPORT_ORBITAL')
 			:semi_major_axis(f(12,500000))
@@ -412,6 +424,7 @@ local pluto = CustomSBody:new('Pluto', 'PLANET_TERRESTRIAL')
 	:radius(f(18,100))
 	:mass(f(21,10000))
 	:temp(44)
+	:atmos_oxidizing(f(66,100))
 	:semi_major_axis(f(394,10))
 	:eccentricity(f(249,1000))
 	:inclination(math.deg2rad(11.88))
@@ -422,6 +435,19 @@ local pluto_starports = {
 	CustomSBody:new('Pluto Research Base', 'STARPORT_SURFACE')
 		:latitude(math.deg2rad(84))
 		:longitude(math.deg2rad(96)),
+}
+
+local charon = {
+   CustomSBody:new('Charon', 'PLANET_TERRESTRIAL')
+      :radius(f(9,100))
+      :mass(f(2,10000))
+      :temp(44)
+      :semi_major_axis(f(1172,10000000))
+      :eccentricity(f(220,10000))
+      :inclination(math.deg2rad(119.5))
+      :rotation_period(f(6,10))
+      :axial_tilt(math.fixed.deg2rad(f(668,100)))
+      :volcanicity(f(0,1)),
 }
 
 s:bodies(sol, {
@@ -444,6 +470,7 @@ s:bodies(sol, {
 		neptune_moons,
 	pluto,
 		pluto_starports,
+		charon,
 })
 
 s:add_to_sector(0,0,v(0.5,0.5,0))

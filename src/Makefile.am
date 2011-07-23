@@ -8,11 +8,11 @@ noinst_HEADERS = \
 	Aabb.h \
 	AmbientSounds.h \
 	Background.h \
-	BBAdvertChatForm.h \
 	BezierCurve.h \
 	Body.h \
 	BufferObject.h \
 	CargoBody.h \
+	ChatForm.h \
 	CityOnPlanet.h \
 	Color.h \
 	CommodityTradeWidget.h \
@@ -24,11 +24,12 @@ noinst_HEADERS = \
 	FaceVideoLink.h \
 	Font.h \
 	FontManager.h \
+	Form.h \
+	FormController.h \
 	Frame.h \
 	GalacticView.h \
 	Galaxy.h \
 	GameMenuView.h \
-	GenericChatForm.h \
 	GeoSphere.h \
 	GeoSphereStyle.h \
 	HyperspaceCloud.h \
@@ -79,7 +80,6 @@ noinst_HEADERS = \
 	PiLuaClasses.h \
 	Planet.h \
 	Player.h \
-	PoliceChatForm.h \
 	Polit.h \
 	Projectile.h \
 	Profiler/Profiler.h \
@@ -91,12 +91,23 @@ noinst_HEADERS = \
 	Sector.h \
 	SectorView.h \
 	Serializer.h \
+	StationAdvertForm.h \
+	StationBulletinBoardForm.h \
+	StationCommodityMarketForm.h \
+	StationPoliceForm.h \
+	StationServicesForm.h \
+	StationShipEquipmentForm.h \
+	StationShipMarketForm.h \
+	StationShipRepairForm.h \
+	StationShipViewForm.h \
+	StationShipyardForm.h \
 	Sfx.h \
 	Ship.h \
 	ShipAICmd.h \
 	ShipCpanel.h \
 	ShipCpanelMultiFuncDisplays.h \
 	ShipFlavour.h \
+	ShipSpinnerWidget.h \
 	ShipType.h \
 	Sound.h \
 	SoundMusic.h \
@@ -128,9 +139,9 @@ noinst_HEADERS = \
 pioneer_SOURCES	= \
 	AmbientSounds.cpp \
 	Background.cpp \
-	BBAdvertChatForm.cpp \
 	Body.cpp \
 	CargoBody.cpp \
+	ChatForm.cpp \
 	CityOnPlanet.cpp \
 	CommodityTradeWidget.cpp \
 	CustomSystem.cpp \
@@ -140,11 +151,11 @@ pioneer_SOURCES	= \
 	FaceVideoLink.cpp \
 	Font.cpp \
 	FontManager.cpp \
+	FormController.cpp \
 	Frame.cpp \
 	GalacticView.cpp \
 	Galaxy.cpp \
 	GameMenuView.cpp \
-	GenericChatForm.cpp \
 	GeoSphere.cpp \
 	GeoSphereStyle.cpp \
 	HyperspaceCloud.cpp \
@@ -192,7 +203,6 @@ pioneer_SOURCES	= \
 	PiLuaClasses.cpp \
 	Planet.cpp \
 	Player.cpp \
-	PoliceChatForm.cpp \
 	Polit.cpp \
 	Projectile.cpp \
 	Profiler/Profiler.cpp \
@@ -201,6 +211,16 @@ pioneer_SOURCES	= \
 	Sector.cpp \
 	SectorView.cpp \
 	Serializer.cpp \
+	StationAdvertForm.cpp \
+	StationBulletinBoardForm.cpp \
+	StationCommodityMarketForm.cpp \
+	StationPoliceForm.cpp \
+	StationServicesForm.cpp \
+	StationShipEquipmentForm.cpp \
+	StationShipMarketForm.cpp \
+	StationShipRepairForm.cpp \
+	StationShipViewForm.cpp \
+	StationShipyardForm.cpp \
 	Sfx.cpp \
 	Ship-AI.cpp \
 	Ship.cpp \
@@ -208,6 +228,7 @@ pioneer_SOURCES	= \
 	ShipCpanel.cpp \
 	ShipCpanelMultiFuncDisplays.cpp \
 	ShipFlavour.cpp \
+	ShipSpinnerWidget.cpp \
 	ShipType.cpp \
 	Sound.cpp \
 	SoundMusic.cpp \

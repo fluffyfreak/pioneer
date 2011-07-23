@@ -18,6 +18,7 @@
 #include "HyperspaceCloud.h"
 #include "Render.h"
 #include "WorldView.h"
+#include "SectorView.h"
 
 namespace Space {
 
@@ -657,6 +658,8 @@ void TimeStep(float step)
 	Pi::luaOnShipDocked.Emit();
 	Pi::luaOnShipAlertChanged.Emit();
 	Pi::luaOnShipUndocked.Emit();
+	Pi::luaOnShipLanded.Emit();
+	Pi::luaOnShipTakeOff.Emit();
 	Pi::luaOnJettison.Emit();
 	Pi::luaOnAICompleted.Emit();
 	Pi::luaOnCreateBB.Emit();
@@ -698,10 +701,9 @@ void StartHyperspaceTo(Ship *ship, const SystemPath *dest)
 		if (navtarget && navtarget->IsType(Object::HYPERSPACECLOUD)) {
 			HyperspaceCloud *cloud = dynamic_cast<HyperspaceCloud*>(navtarget);
 			if (Ship *hship = cloud->GetShip()) {
-				const SystemPath *hdest = hship->GetHyperspaceTarget();
-				if (hdest->IsSameSystem(*dest)) {
-					Pi::player->SetHyperspaceTarget(cloud);
-					dest = Pi::player->GetHyperspaceTarget();
+				const SystemPath hdest = hship->GetHyperspaceDest();
+				if (hdest.IsSameSystem(*dest)) {
+					Pi::player->SetFollowCloud(cloud);
 				}
 			}
 		}
@@ -713,7 +715,7 @@ void StartHyperspaceTo(Ship *ship, const SystemPath *dest)
 			if ((*i)->IsType(Object::HYPERSPACECLOUD) && (!cloud->IsArrival()) &&
 					(cloud->GetShip() != 0)) {
 				// only comparing system, not precise body target
-				const SystemPath cloudDest = cloud->GetShip()->GetHyperspaceTarget();
+				const SystemPath cloudDest = cloud->GetShip()->GetHyperspaceDest();
 				if (cloudDest.IsSameSystem(*dest)) {
 					Pi::player->NotifyDeleted(cloud);
 					cloud->SetIsArrival(true);
@@ -747,7 +749,9 @@ void StartHyperspaceTo(Ship *ship, const SystemPath *dest)
 		cloud->SetFrame(ship->GetFrame());
 		cloud->SetPosition(ship->GetPosition());
 		ship->SetFrame(0);
+#if 0
 		ship->SetHyperspaceTarget(dest);
+#endif
 		// need to swap ship out of bodies list, replacing it with
 		// cloud
 		for (bodiesIter_t i = bodies.begin(); i != bodies.end(); ++i) {
@@ -829,7 +833,7 @@ void DoHyperspaceTo(const SystemPath *dest)
 		cloud->SetFrame(Space::rootFrame);
 		cloud->SetVelocity(vector3d(0,0,0));
 
-		if (cloud->GetId() == Pi::player->GetHyperspaceCloudTargetId())
+		if (cloud == Pi::player->GetFollowCloud())
 			// player is following it, so put it somewhere near the player
 			cloud->SetPosition(Pi::player->GetPosition() + _get_random_pos(5.0,20.0)*1000.0); // 5-20km
 		else
@@ -848,11 +852,14 @@ void DoHyperspaceTo(const SystemPath *dest)
 			ship->Enable();
 			ship->SetFlightState(Ship::FLYING);
 
+#if 0
 			const SystemPath *sdest = ship->GetHyperspaceTarget();
 			if (sdest->bodyIndex == 0) {
 				// travelling to the system as a whole, so just dump them on
 				// the cloud - we can't do any better in this case
+#endif
 				ship->SetPosition(cloud->GetPosition());
+#if 0
 			}
 
 			else {
@@ -913,6 +920,7 @@ void DoHyperspaceTo(const SystemPath *dest)
 					}
 				}
 			}
+#endif
 
 			Space::AddBody(ship);
 
@@ -929,6 +937,8 @@ void DoHyperspaceTo(const SystemPath *dest)
 	delete hyperspacingTo;
 	hyperspacingTo = 0;
 	
+	Pi::sectorView->ResetHyperspaceTarget();
+	Pi::player->ClearFollowCloud();
 }
 
 /* called at game start to load the system and put the player in a starport */
