@@ -833,12 +833,16 @@ const BBAdvert *SpaceStation::GetBBAdvert(int ref)
 
 bool SpaceStation::RemoveBBAdvert(int ref)
 {
-	for (std::vector<BBAdvert>::iterator i = m_bbAdverts.begin(); i != m_bbAdverts.end(); i++)
+	std::vector<BBAdvert>::iterator i = m_bbAdverts.begin();
+	while (i != m_bbAdverts.end())
+	{
 		if (i->ref == ref) {
-			m_bbAdverts.erase(i);
 			onBulletinBoardAdvertDeleted.emit(*i);
-			return true;
+			i = m_bbAdverts.erase( i ); 
+		} else {
+			++i;
 		}
+	}
 	return false;
 }
 

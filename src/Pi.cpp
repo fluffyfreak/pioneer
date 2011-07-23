@@ -1250,7 +1250,7 @@ void Pi::MainLoop()
 					} else if (dist < std::min(rad+0.1*AU, rad*1000.0)) {
 						timeAccel = std::min(timeAccel, 5);
 					}*/
-					if (dist < 1000.0) {
+					/*if (dist < 1000.0) {
 						timeAccel = std::min(timeAccel, 2);
 					} else if (dist < std::min(rad+0.0001*AU, rad*1.1)) {
 						timeAccel = std::min(timeAccel, 3);
@@ -1258,7 +1258,7 @@ void Pi::MainLoop()
 						timeAccel = std::min(timeAccel, 4);
 					} else if (dist < std::min(rad+0.01*AU, rad*10.0)) {
 						timeAccel = std::min(timeAccel, 5);
-					}
+					}*/
 				}
 			}
 		}
