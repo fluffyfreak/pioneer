@@ -4,7 +4,16 @@
 void Texture::Load()
 {
 	if (isLoaded) return;
+
 	SDL_Surface *s = IMG_Load(filename.c_str());
+
+#if 1
+	const GLint components32bit = GL_COMPRESSED_RGBA;
+	const GLint components24bit = GL_COMPRESSED_RGB;
+#else
+	const GLint components32bit = GL_RGBA;
+	const GLint components24bit = GL_RGB;
+#endif
 
 	if (s) {
 		glGenTextures (1, &tex);
@@ -14,10 +23,10 @@ void Texture::Load()
 		switch ( s->format->BitsPerPixel )
 		{
 		case 32:
-			gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, s->w, s->h, GL_RGBA, GL_UNSIGNED_BYTE, s->pixels);
+			gluBuild2DMipmaps(GL_TEXTURE_2D, components32bit, s->w, s->h, GL_RGBA, GL_UNSIGNED_BYTE, s->pixels);
 			break;
 		case 24:
-			gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, s->w, s->h, GL_RGB, GL_UNSIGNED_BYTE, s->pixels);
+			gluBuild2DMipmaps(GL_TEXTURE_2D, components24bit, s->w, s->h, GL_RGB, GL_UNSIGNED_BYTE, s->pixels);
 			break;
 		default:
 			Error("Texture '%s' needs to be 24 or 32 bit.", filename.c_str());

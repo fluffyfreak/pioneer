@@ -11,6 +11,7 @@ extern int GEOPATCH_EDGELEN;
 class SBody;
 class GeoPlate;
 class GeoPlateHull;
+class GeoPlateWall;
 class GeoRing {
 public:
 	GeoRing(const SBody *body);
@@ -21,6 +22,7 @@ public:
 	void _UpdateLODs();
 	friend class GeoPlate;
 	friend class GeoPlateHull;
+	friend class GeoPlateWall;
 #if OBJECTVIEWER
 	friend class OrbitalViewerView;
 #endif /* DEBUG */
@@ -48,6 +50,8 @@ private:
 	typedef std::vector<GeoPlate*>::iterator PlateIter;
 	std::vector<GeoPlate*>		m_plates;
 	std::vector<GeoPlateHull*>	m_hull;
+	std::vector<GeoPlateWall*>	m_wallInner;
+	std::vector<GeoPlateWall*>	m_wallOuter;
 	float m_diffColor[4], m_ambColor[4];
 	const SBody *m_sbody;
 	double mRingWidth;

@@ -10,8 +10,8 @@
 #define GEOPLATE_USE_THREADING
 
 // tri edge lengths
-#define GEOPLATE_SUBDIVIDE_AT_CAMDIST	3.0 //5.0
-#define GEOPLATE_MAX_DEPTH	10 //15
+#define GEOPLATE_SUBDIVIDE_AT_CAMDIST	2.0 //5.0
+#define GEOPLATE_MAX_DEPTH	15
 // must be an odd number
 #define GEOPLATE_EDGELEN_DEFAULT	7 //15
 #define GEOPLATE_NUMVERTICES	(GEOPLATE_EDGELEN*GEOPLATE_EDGELEN)
@@ -43,6 +43,14 @@ struct VBOVertex
 	float nx,ny,nz;
 	unsigned char col[4];
 	float padding;
+};
+#pragma pack()
+
+#pragma pack(4)
+struct VBOVertexTex
+{
+	float x,y,z;
+	float s,t;	// can I pack these into two 16 bit hlaf-floats? (Ans: yes I should, but how?)
 };
 #pragma pack()
 
@@ -179,7 +187,7 @@ public:
 	}
 
 	vector3d GetSurfacePoint(const double x, const double y, const double halfLength) {
-		double theta = lerp( x, ang[1], ang[0] );//*2.0*M_PI;
+		double theta = lerp( x, ang[1], ang[0] );
 		
 		const vector3d topEndEdge(cos(theta), sin(theta), m_zoffset + halfLength);		// vertices at top edge of circle
 		const vector3d bottomEndEdge(cos(theta), sin(theta), m_zoffset - halfLength);	// vertices at bottom edge of circle
@@ -189,29 +197,36 @@ public:
 	}
 
 	// Generates full-detail vertices, and also non-edge normals and colors
-	static double height_val;// = 0.001;
 	void GenerateMesh() {
 		//PROFILE_SCOPED()
 		vector3d *vts = vertices;
 		double xfrac = 0;
 		double yfrac = 0;
+#ifdef _DEBUG
+		memset(normals, 0, sizeof(vector3d)*GEOPLATE_NUMVERTICES);
+#endif
+		const vector3d topEnd(0.0, 0.0, m_zoffset + m_halfLen);		// vertices at top edge of circle
+		const vector3d btmEnd(0.0, 0.0, m_zoffset - m_halfLen);	// vertices at bottom edge of circle
+
 		for (int y=0; y<GEOPLATE_EDGELEN; ++y) {	// across the width
 			xfrac = 0;
+			const vector3d axisPt = lerp( yfrac, btmEnd, topEnd );// point along z-axis by yfrac amount
 			for (int x=0; x<GEOPLATE_EDGELEN; ++x) {	// along the length (circumference)
 				vector3d p;
-				double height = 0.0;
+				const double height = 0.005;
 				PiAssert(x!=GEOPLATE_EDGELEN);
 				PiAssert(y!=GEOPLATE_EDGELEN);
 				if( y==0 || y==GEOPLATE_EDGELEN-1 ) {	// points in trough
-					height = 0.0;
 					p = GetSurfacePoint(xfrac, (y==0 ? 0.0 : 1.0), m_halfLen);
-				}
-				else { // outer hull edge
-					height = 0.01;
+				} else { // outer hull edge
 					p = GetSurfacePoint(xfrac, yfrac, m_halfLen);
 				}
 
-				*(vts++) = p * (height + 1.0);
+				// vector from axis to point-on-surface
+				const vector3d cDir = (p - axisPt).Normalized();
+				// vertex is moved in direction of point-on-surface FROM point-in-axis by height.
+				*(vts++) = p + (cDir * height);
+
 				// remember this -- we will need it later
 				xfrac += GEOPLATEHULL_FRAC;
 				double col = 0.5;
@@ -230,13 +245,25 @@ public:
 
 				vector3d n = (x1-xy).Cross(y1-xy);
 				normals[x + y*GEOPLATE_EDGELEN] = n.Normalized();
-				//const vector3d &norm = normals[x + y*GEOPLATE_EDGELEN];
 			}
 		}
 
-		// Generate last col and bottom row normals
-		for (int y=GEOPLATE_EDGELEN-1; y<GEOPLATE_EDGELEN; ++y) {
-			for (int x=GEOPLATE_EDGELEN-1; x<GEOPLATE_EDGELEN; ++x) {
+		// Generate bottom row normals
+		for (int y=0; y<GEOPLATE_EDGELEN-1; ++y) {
+			const int x=GEOPLATE_EDGELEN-1;
+			// normal
+			vector3d xy = vertices[x + y*GEOPLATE_EDGELEN];
+			vector3d x1 = vertices[x-1 + y*GEOPLATE_EDGELEN];
+			vector3d y1 = vertices[x + (y+1)*GEOPLATE_EDGELEN];
+
+			vector3d n = (xy-x1).Cross(y1-xy);
+			normals[x + y*GEOPLATE_EDGELEN] = (n.Normalized());
+		}
+
+		// Generate last col normals
+		{
+			const int y=GEOPLATE_EDGELEN-1;
+			for (int x=1; x<GEOPLATE_EDGELEN; ++x) {
 				// normal
 				vector3d xy = vertices[x + y*GEOPLATE_EDGELEN];
 				vector3d x1 = vertices[x-1 + y*GEOPLATE_EDGELEN];
@@ -244,15 +271,40 @@ public:
 
 				vector3d n = (xy-x1).Cross(xy-y1);
 				normals[x + y*GEOPLATE_EDGELEN] = (n.Normalized());
-				//const vector3d &norm = normals[x + y*GEOPLATE_EDGELEN];
+			}
+		}
+
+		// corner normals
+		{
+			const int y=GEOPLATE_EDGELEN-1;
+			const int x=0;
+			{
+				// normal
+				vector3d xy = vertices[x + y*GEOPLATE_EDGELEN];
+				vector3d x1 = vertices[x+1 + y*GEOPLATE_EDGELEN];
+				vector3d y1 = vertices[x + (y-1)*GEOPLATE_EDGELEN];
+
+				vector3d n = (x1-xy).Cross(xy-y1);
+				normals[x + y*GEOPLATE_EDGELEN] = (n.Normalized());
+			}
+		}
+		{
+			const int y=0;
+			const int x=GEOPLATE_EDGELEN-1;
+			{
+				// normal
+				vector3d xy = vertices[x + y*GEOPLATE_EDGELEN];
+				vector3d x1 = vertices[x-1 + y*GEOPLATE_EDGELEN];
+				vector3d y1 = vertices[x + (y+1)*GEOPLATE_EDGELEN];
+
+				vector3d n = (xy-x1).Cross(y1-xy);
+				normals[x + y*GEOPLATE_EDGELEN] = (n.Normalized());
 			}
 		}
 	}
 
 	void Render(vector3d &campos, Plane planes[6]) {
-		//PROFILE_SCOPED()
-		//_UpdateVBOs();
-		/* frustum test! */
+		// frustum test!
 		for (int i=0; i<6; i++) {
 			if (planes[i].DistanceToPoint(clipCentroid) <= -clipRadius) {
 				return;
@@ -268,8 +320,6 @@ public:
 		glNormalPointer(GL_FLOAT, sizeof(VBOVertex), reinterpret_cast<void *>(3*sizeof(float)));
 		glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(VBOVertex), reinterpret_cast<void *>(6*sizeof(float)));
 		glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, indices_vbo);
-		//void glDrawRangeElements(	GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid * indices);
-		//glDrawRangeElements(GL_TRIANGLES, 0, GEOPLATE_NUMVERTICES-1, VBO_COUNT_ALL_IDX, GL_UNSIGNED_SHORT, 0);
 		glDrawElements(GL_TRIANGLES, VBO_COUNT_ALL_IDX, GL_UNSIGNED_SHORT, 0);
 		glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
 		glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -278,12 +328,360 @@ public:
 		glDisableClientState(GL_NORMAL_ARRAY);
 		glDisableClientState(GL_COLOR_ARRAY);
 	}
+
+	void RenderNormals(vector3d &campos, Plane planes[6]) {
+		for (int i=0; i<6; i++) {
+			if (planes[i].DistanceToPoint(clipCentroid) <= -clipRadius) {
+				return;
+			}
+		}
+		glLineWidth(2.0);
+		glBegin(GL_LINES);
+		glColor3f( 1.0f, 1.0f, 1.0f );
+		for (int y=0; y<GEOPLATE_EDGELEN; ++y) {	// across the width
+			for (int x=0; x<GEOPLATE_EDGELEN; ++x) {	// along the length (circumference)
+				vector3d xy = vertices[x + y*GEOPLATE_EDGELEN];
+				vector3d nxy = (normals[x + y*GEOPLATE_EDGELEN])*0.01;
+
+				// normal
+				glVertex3dv( &(xy)[0] );
+				glVertex3dv( &(xy+nxy)[0] );
+			}
+		}
+		glEnd();
+	}
 };
 //static 
-double				GeoPlateHull::height_val = 0.001;
 unsigned short *	GeoPlateHull::indices = 0;
 GLuint				GeoPlateHull::indices_vbo = 0;
 VBOVertex *			GeoPlateHull::vbotemp= 0 ;
+
+// must be an odd number
+#define GEOPLATE_WALL_LEN 7
+#define GEOPLATE_NUM_WALL_VERTICES	(GEOPLATE_WALL_LEN*GEOPLATE_WALL_LEN)
+
+class GeoPlateWall {
+public:
+	#define NUM_VBE 2
+	double ang[NUM_VBE];
+	double m_halfLen;
+	double m_zoffset;		// offset from the centre i.e. newzoffset = (m_zoffset + m_halfLen);
+	vector3d *vertices;
+	vector3d *normals;
+	vector3d *colors;
+	GeoRing *geoRing;
+	GLuint m_vbo;
+	static unsigned short *indices;
+	static GLuint indices_vbo;
+	static VBOVertex *vbotemp;
+	double m_roughLength;
+	vector3d clipCentroid;
+	double clipRadius;
+	bool bInnerWall;
+
+	// params
+	// v0, v1 - define points on the line describing the loop of the ring/orbital.
+	// depth - 0 is the topmost plate with each depth+1 describing it's depth within the tree.
+	GeoPlateWall(const bool isInnerWall, const double halfLength, const double startAng, const double endAng, 
+		const double zoffset, const int depth) {
+		//PROFILE_SCOPED()
+		memset(this, 0, sizeof(GeoPlateWall));
+		bInnerWall = isInnerWall;
+		ang[0] = startAng; 
+		ang[1] = endAng;
+		m_halfLen = halfLength;
+		m_zoffset = zoffset;
+		clipCentroid = GetSurfacePoint(0.5, 0.5, m_halfLen);
+		clipRadius = 0;
+		vector3d vcorners[4] = {
+			GetSurfacePoint(0.0, 0.0, m_halfLen),
+			GetSurfacePoint(1.0, 0.0, m_halfLen),
+			GetSurfacePoint(0.0, 1.0, m_halfLen),
+			GetSurfacePoint(1.0, 1.0, m_halfLen)
+		};
+		for (int i=0; i<4; i++) {
+			clipRadius = std::max(clipRadius, (vcorners[i]-clipCentroid).Length());
+		}
+		m_roughLength = GEOPLATE_SUBDIVIDE_AT_CAMDIST / pow(2.0, depth);
+		normals = new vector3d[GEOPLATE_NUM_WALL_VERTICES];
+		vertices = new vector3d[GEOPLATE_NUM_WALL_VERTICES];
+		colors = new vector3d[GEOPLATE_NUM_WALL_VERTICES];
+	}
+
+	~GeoPlateWall() {
+		delete vertices;
+		delete normals;
+		delete colors;
+		geoRing->AddVBOToDestroy(m_vbo);
+	}
+
+	static void Init() {
+		//PROFILE_SCOPED()
+		GEOPLATEHULL_FRAC = 1.0 / double(GEOPLATE_WALL_LEN-1);
+
+		if (indices) {
+			delete [] indices;
+			if (indices_vbo) {
+				glDeleteBuffersARB(1, &indices_vbo);
+			}
+			delete [] vbotemp;
+		}
+		{
+			vbotemp = new VBOVertex[GEOPLATE_NUM_WALL_VERTICES];
+			unsigned short *idx;
+			indices = new unsigned short[VBO_COUNT_ALL_IDX];
+			idx = indices;
+			for (int x=0; x<GEOPLATE_WALL_LEN-1; x++) {
+				for (int y=0; y<GEOPLATE_WALL_LEN-1; y++) {
+					idx[0] = x + GEOPLATE_WALL_LEN*y;		PiAssert(idx[0] < GEOPLATE_NUM_WALL_VERTICES);
+					idx[1] = x+1 + GEOPLATE_WALL_LEN*y;		PiAssert(idx[1] < GEOPLATE_NUM_WALL_VERTICES);
+					idx[2] = x + GEOPLATE_WALL_LEN*(y+1);	PiAssert(idx[2] < GEOPLATE_NUM_WALL_VERTICES);
+					idx+=3;
+
+					idx[0] = x+1 + GEOPLATE_WALL_LEN*y;		PiAssert(idx[0] < GEOPLATE_NUM_WALL_VERTICES);
+					idx[1] = x+1 + GEOPLATE_WALL_LEN*(y+1);	PiAssert(idx[1] < GEOPLATE_NUM_WALL_VERTICES);
+					idx[2] = x + GEOPLATE_WALL_LEN*(y+1);	PiAssert(idx[2] < GEOPLATE_NUM_WALL_VERTICES);
+					PiAssert(idx < indices+VBO_COUNT_ALL_IDX);
+					idx+=3;
+				}
+			}
+
+			glGenBuffersARB(1, &indices_vbo);
+			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, indices_vbo);
+			glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned short)*VBO_COUNT_ALL_IDX, 0, GL_STATIC_DRAW);
+			glBufferSubDataARB(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(unsigned short)*VBO_COUNT_ALL_IDX, indices);
+			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, 0);
+		}
+	}
+
+	void UpdateVBOs() {
+		//PROFILE_SCOPED()
+		if (!m_vbo) glGenBuffersARB(1, &m_vbo);
+		glBindBufferARB(GL_ARRAY_BUFFER, m_vbo);
+		glBufferDataARB(GL_ARRAY_BUFFER, sizeof(VBOVertex)*GEOPLATE_NUM_WALL_VERTICES, 0, GL_DYNAMIC_DRAW);
+		for (int i=0; i<GEOPLATE_NUM_WALL_VERTICES; i++)
+		{
+			clipRadius = std::max(clipRadius, (vertices[i]-clipCentroid).Length());
+			VBOVertex *pData = vbotemp + i;
+			pData->x = float(vertices[i].x);
+			pData->y = float(vertices[i].y);
+			pData->z = float(vertices[i].z);
+			pData->nx = float(normals[i].x);
+			pData->ny = float(normals[i].y);
+			pData->nz = float(normals[i].z);
+			pData->col[0] = static_cast<unsigned char>(Clamp(colors[i].x*255.0, 0.0, 255.0));
+			pData->col[1] = static_cast<unsigned char>(Clamp(colors[i].y*255.0, 0.0, 255.0));
+			pData->col[2] = static_cast<unsigned char>(Clamp(colors[i].z*255.0, 0.0, 255.0));
+			pData->col[3] = 1.0;
+		}
+		glBufferDataARB(GL_ARRAY_BUFFER, sizeof(VBOVertex)*GEOPLATE_NUM_WALL_VERTICES, vbotemp, GL_DYNAMIC_DRAW);
+		glBindBufferARB(GL_ARRAY_BUFFER, 0);
+	}
+
+	vector3d GetSurfacePoint(const double x, const double y, const double halfLength) {
+		double theta = lerp( x, ang[1], ang[0] );
+		
+		const vector3d topEndEdge(cos(theta), sin(theta), m_zoffset + halfLength);		// vertices at top edge of circle
+		const vector3d bottomEndEdge(cos(theta), sin(theta), m_zoffset - halfLength);	// vertices at bottom edge of circle
+		
+		const vector3d res = lerp( y, bottomEndEdge, topEndEdge );
+		return res;
+	}
+
+	// Generates full-detail vertices, and also non-edge normals and colors
+	void GenerateMesh() {
+		//PROFILE_SCOPED()
+		vector3d *vts = vertices;
+		double xfrac = 0;
+		double yfrac = 0;
+#ifdef _DEBUG
+		memset(normals, 0, sizeof(vector3d)*GEOPLATE_NUM_WALL_VERTICES);
+#endif
+		const vector3d topEnd(0.0, 0.0, m_zoffset + m_halfLen);		// vertices at top edge of circle
+		const vector3d btmEnd(0.0, 0.0, m_zoffset - m_halfLen);	// vertices at bottom edge of circle
+
+		const double heights[2][GEOPLATE_WALL_LEN] = {
+			{
+				0.005,	// start, bottom
+				-0.01,	// above start, top inner wall
+				-0.011,	// peak, top inner wall
+				-0.011,	// peak, top outer wall
+				-0.01,	// top edge outer wall
+				0.0,	// base, outer wall
+				0.005	// end==start, bottom
+			}, {
+				0.005,	// end==start, bottom
+				0.0,	// base, outer wall
+				-0.01,	// top edge outer wall
+				-0.011,	// peak, top outer wall
+				-0.011,	// peak, top inner wall
+				-0.01,	// above start, top inner wall
+				0.005	// start, bottom
+			}
+		};
+
+		const double yvals[2][GEOPLATE_WALL_LEN] = {
+			{
+				-0.0,	// start, bottom
+				-0.0,	// above start, top inner wall
+				-0.025,	// peak, top inner wall
+				-0.075,	// peak, top outer wall
+				-0.1,	// top edge outer wall
+				-0.1,	// base, outer wall
+				-0.0		// end==start, bottom
+			}, {
+				1.0,	// end==start, bottom
+				1.1,	// base, outer wall
+				1.1,	// top edge outer wall
+				1.075,	// peak, top outer wall
+				1.025,	// peak, top inner wall
+				1.0,	// above start, top inner wall
+				1.0	// start, bottom
+			}
+		};
+
+		const int PriIdx = bInnerWall ? 0 : 1;
+
+		vector3d p;
+		for (int y=0; y<GEOPLATE_WALL_LEN; ++y) {	// across the width
+			xfrac = 0;
+			const double height = heights[PriIdx][y];
+			const vector3d axisPt = lerp( yvals[PriIdx][y], btmEnd, topEnd );// point along z-axis by yfrac amount
+			for (int x=0; x<GEOPLATE_WALL_LEN; ++x) {	// along the length (circumference)
+				p = GetSurfacePoint(xfrac, yvals[PriIdx][y], m_halfLen);
+				
+				// vector from axis to point-on-surface
+				const vector3d cDir = (p - axisPt).Normalized();
+				// vertex is moved in direction of point-on-surface FROM point-in-axis by height.
+				*(vts++) = p + (cDir * height);
+
+				xfrac += GEOPLATEHULL_FRAC;
+
+				double col = 0.5;
+				colors[x + y*GEOPLATE_WALL_LEN] = vector3d(col, col, 1.0);
+			}
+		}
+		assert(vts == &vertices[GEOPLATE_NUM_WALL_VERTICES]);
+		// Generate normals
+		for (int y=0; y<GEOPLATE_WALL_LEN-1; ++y) {
+			for (int x=0; x<GEOPLATE_WALL_LEN-1; ++x) {
+				// normal
+				vector3d xy = vertices[x + y*GEOPLATE_WALL_LEN];
+				vector3d x1 = vertices[x+1 + y*GEOPLATE_WALL_LEN];
+				vector3d y1 = vertices[x + (y+1)*GEOPLATE_WALL_LEN];
+
+				vector3d n = (x1-xy).Cross(y1-xy);
+				normals[x + y*GEOPLATE_WALL_LEN] = (n.Normalized());
+			}
+		}
+
+		// Generate bottom row normals
+		for (int y=0; y<GEOPLATE_WALL_LEN-1; ++y) {
+			const int x=GEOPLATE_WALL_LEN-1;
+			// normal
+			vector3d xy = vertices[x + y*GEOPLATE_WALL_LEN];
+			vector3d x1 = vertices[x-1 + y*GEOPLATE_WALL_LEN];
+			vector3d y1 = vertices[x + (y+1)*GEOPLATE_WALL_LEN];
+
+			vector3d n = (xy-x1).Cross(y1-xy);
+			normals[x + y*GEOPLATE_WALL_LEN] = (n.Normalized());
+		}
+
+		// Generate last col normals
+		{
+			const int y=GEOPLATE_WALL_LEN-1;
+			for (int x=1; x<GEOPLATE_WALL_LEN; ++x) {
+				// normal
+				vector3d xy = vertices[x + y*GEOPLATE_WALL_LEN];
+				vector3d x1 = vertices[x-1 + y*GEOPLATE_WALL_LEN];
+				vector3d y1 = vertices[x + (y-1)*GEOPLATE_WALL_LEN];
+
+				vector3d n = (xy-x1).Cross(xy-y1);
+				normals[x + y*GEOPLATE_WALL_LEN] = (n.Normalized());
+			}
+		}
+
+		// corner normals
+		{
+			const int y=GEOPLATE_WALL_LEN-1;
+			const int x=0;
+			{
+				// normal
+				vector3d xy = vertices[x + y*GEOPLATE_WALL_LEN];
+				vector3d x1 = vertices[x+1 + y*GEOPLATE_WALL_LEN];
+				vector3d y1 = vertices[x + (y-1)*GEOPLATE_WALL_LEN];
+
+				vector3d n = (x1-xy).Cross(xy-y1);
+				normals[x + y*GEOPLATE_WALL_LEN] = (n.Normalized());
+			}
+		}
+		{
+			const int y=0;
+			const int x=GEOPLATE_WALL_LEN-1;
+			{
+				// normal
+				vector3d xy = vertices[x + y*GEOPLATE_WALL_LEN];
+				vector3d x1 = vertices[x-1 + y*GEOPLATE_WALL_LEN];
+				vector3d y1 = vertices[x + (y+1)*GEOPLATE_WALL_LEN];
+
+				vector3d n = (xy-x1).Cross(y1-xy);
+				normals[x + y*GEOPLATE_WALL_LEN] = (n.Normalized());
+			}
+		}
+	}
+
+	void Render(vector3d &campos, Plane planes[6]) {
+		// frustum test!
+		for (int i=0; i<6; i++) {
+			if (planes[i].DistanceToPoint(clipCentroid) <= -clipRadius) {
+				return;
+			}
+		}
+		Pi::statSceneTris += 2*(GEOPLATE_WALL_LEN-1)*(GEOPLATE_WALL_LEN-1);
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_NORMAL_ARRAY);
+		glEnableClientState(GL_COLOR_ARRAY);
+
+		glBindBufferARB(GL_ARRAY_BUFFER, m_vbo);
+		glVertexPointer(3, GL_FLOAT, sizeof(VBOVertex), 0);
+		glNormalPointer(GL_FLOAT, sizeof(VBOVertex), reinterpret_cast<void *>(3*sizeof(float)));
+		glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(VBOVertex), reinterpret_cast<void *>(6*sizeof(float)));
+		glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, indices_vbo);
+		glDrawElements(GL_TRIANGLES, VBO_COUNT_ALL_IDX, GL_UNSIGNED_SHORT, 0);
+		glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+		glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+		glDisableClientState(GL_VERTEX_ARRAY);
+		glDisableClientState(GL_NORMAL_ARRAY);
+		glDisableClientState(GL_COLOR_ARRAY);
+	}
+
+	void RenderNormals(vector3d &campos, Plane planes[6]) {
+		for (int i=0; i<6; i++) {
+			if (planes[i].DistanceToPoint(clipCentroid) <= -clipRadius) {
+				return;
+			}
+		}
+		glLineWidth(2.0);
+		glBegin(GL_LINES);
+		glColor3f( 1.0f, 1.0f, 1.0f );
+		for (int y=0; y<GEOPLATE_WALL_LEN; ++y) {	// across the width
+			for (int x=0; x<GEOPLATE_WALL_LEN; ++x) {	// along the length (circumference)
+				vector3d xy = vertices[x + y*GEOPLATE_WALL_LEN];
+				vector3d nxy = (normals[x + y*GEOPLATE_WALL_LEN])*0.01;
+
+				// normal
+				glVertex3dv( &(xy)[0] );
+				glVertex3dv( &(xy+nxy)[0] );
+			}
+		}
+		glEnd();
+	}
+};
+//static 
+unsigned short *	GeoPlateWall::indices = 0;
+GLuint				GeoPlateWall::indices_vbo = 0;
+VBOVertex *			GeoPlateWall::vbotemp= 0 ;
 
 bool rayIntersectsTriangle(
 	const vector3d p, 
@@ -1093,7 +1491,7 @@ public:
 				// correct
 				GetEdge(vertices, i, ev[i]);
 			} else {
-				printf("omg its gone bad!\n");
+				//printf("omg its gone bad!\n");
 			}
 		}
 	
@@ -1610,6 +2008,22 @@ void GeoRing::OnChangeDetailLevel()
 			}
 		}
 		(*i)->m_hull.clear();
+
+		// and strip away the walls:
+		// inner first...
+		for (size_t p=0; p<(*i)->m_wallInner.size(); p++) {
+			if ((*i)->m_wallInner[p]) {
+				delete (*i)->m_wallInner[p];
+			}
+		}
+		(*i)->m_wallInner.clear();
+		// ... then outer
+		for (size_t p=0; p<(*i)->m_wallOuter.size(); p++) {
+			if ((*i)->m_wallOuter[p]) {
+				delete (*i)->m_wallOuter[p];
+			}
+		}
+		(*i)->m_wallOuter.clear();
 	}
 
 	switch (Pi::detail.planets) {
@@ -1623,6 +2037,7 @@ void GeoRing::OnChangeDetailLevel()
 	assert(GEOPLATE_EDGELEN <= GEOPLATE_MAX_EDGELEN);
 	GeoPlate::Init();
 	GeoPlateHull::Init();
+	GeoPlateWall::Init();
 	for(std::list<GeoRing*>::iterator i = s_allGeoRings.begin(); i != s_allGeoRings.end(); ++i) {
 		(*i)->BuildFirstPatches();
 	}
@@ -1665,6 +2080,12 @@ GeoRing::~GeoRing()
 		}
 		if (m_hull[i]) {
 			delete m_hull[i];
+		}
+		if (m_wallInner[i]) {
+			delete m_wallInner[i];
+		}
+		if (m_wallOuter[i]) {
+			delete m_wallOuter[i];
 		}
 	}
 	DestroyVBOs();
@@ -1764,6 +2185,26 @@ void GeoRing::BuildFirstPatches()
 	for (size_t i=0; i<m_hull.size(); i++) m_hull[i]->geoRing = this;
 	for (size_t i=0; i<m_hull.size(); i++) m_hull[i]->GenerateMesh();
 	for (size_t i=0; i<m_hull.size(); i++) m_hull[i]->UpdateVBOs();
+
+	// create the inner wall
+	m_wallInner.clear();
+	for( int i=0 ; i<points.size()-1 ; ++i ) {
+		double len = (points[i+1] - points[i]).Length();
+		m_wallInner.push_back( new GeoPlateWall(true, len, angles[i+1], angles[i], 0.0, 0) );
+	}
+	for (size_t i=0; i<m_wallInner.size(); i++) m_wallInner[i]->geoRing = this;
+	for (size_t i=0; i<m_wallInner.size(); i++) m_wallInner[i]->GenerateMesh();
+	for (size_t i=0; i<m_wallInner.size(); i++) m_wallInner[i]->UpdateVBOs();
+
+	// create the outer wall
+	m_wallOuter.clear();
+	for( int i=0 ; i<points.size()-1 ; ++i ) {
+		double len = (points[i+1] - points[i]).Length();
+		m_wallOuter.push_back( new GeoPlateWall(false, len, angles[i+1], angles[i], 0.0, 0) );
+	}
+	for (size_t i=0; i<m_wallOuter.size(); i++) m_wallOuter[i]->geoRing = this;
+	for (size_t i=0; i<m_wallOuter.size(); i++) m_wallOuter[i]->GenerateMesh();
+	for (size_t i=0; i<m_wallOuter.size(); i++) m_wallOuter[i]->UpdateVBOs();
 }
 
 static const float g_ambient[4] = { 0, 0, 0, 1.0 };
@@ -1894,25 +2335,40 @@ void GeoRing::Render(vector3d campos, const float radius, const float scale) {
 	glMaterialfv (GL_FRONT, GL_EMISSION, black);
 	glEnable(GL_COLOR_MATERIAL);
 
-	/*glLineWidth(1.0);
+	/*glDisable(GL_CULL_FACE);
+
+	glLineWidth(1.0);
 	glPolygonMode(GL_FRONT, GL_LINE);
 	for (size_t i=0; i<m_hull.size(); i++) {
-		m_hull[i]->Render(campos, planes);
+		//m_hull[i]->Render(campos, planes);
+		m_hull[i]->RenderNormals(campos, planes);
 	}
 
 	glPointSize(10.0f);
 	glPolygonMode(GL_FRONT, GL_POINT);
 	for (size_t i=0; i<m_hull.size(); i++) {
 		m_hull[i]->Render(campos, planes);
-	}*/
+	}
+
+	glEnable(GL_CULL_FACE);*/
 
 	glPolygonMode(GL_FRONT, GL_FILL);
-	for (size_t i=0; i<m_hull.size(); i++) {
+
+	for (size_t i=0; i<m_wallInner.size(); ++i) {
+		m_wallInner[i]->Render(campos, planes);
+		//m_wallInner[i]->RenderNormals(campos, planes);
+	}
+
+	for (size_t i=0; i<m_wallOuter.size(); ++i) {
+		m_wallOuter[i]->Render(campos, planes);
+		//m_wallOuter[i]->RenderNormals(campos, planes);
+	}
+
+	for (size_t i=0; i<m_hull.size(); ++i) {
 		m_hull[i]->Render(campos, planes);
 	}
 
-	//glPolygonMode(GL_FRONT, GL_FILL);
-	for (size_t i=0; i<m_plates.size(); i++) {
+	for (size_t i=0; i<m_plates.size(); ++i) {
 		m_plates[i]->Render(campos, planes);
 	}
 	Render::State::UseProgram(0);
