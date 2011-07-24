@@ -75,7 +75,7 @@ public:
 	#define NUM_VBE 2
 	double ang[NUM_VBE];
 	double m_halfLen;
-	double m_zoffset;		// offset from the centre i.e. newzoffset = (m_zoffset + m_halfLen);
+	double m_yoffset;		// offset from the centre i.e. newyoffset = (m_yoffset + m_halfLen);
 	vector3d *vertices;
 	vector3d *normals;
 	vector3d *colors;
@@ -92,13 +92,13 @@ public:
 	// v0, v1 - define points on the line describing the loop of the ring/orbital.
 	// depth - 0 is the topmost plate with each depth+1 describing it's depth within the tree.
 	GeoPlateHull(const double halfLength, const double startAng, const double endAng, 
-		const double zoffset, const int depth) {
+		const double yoffset, const int depth) {
 		//PROFILE_SCOPED()
 		memset(this, 0, sizeof(GeoPlateHull));
 		ang[0] = startAng; 
 		ang[1] = endAng;
 		m_halfLen = halfLength;
-		m_zoffset = zoffset;
+		m_yoffset = yoffset;
 		clipCentroid = GetSurfacePoint(0.5, 0.5, m_halfLen);
 		clipRadius = 0;
 		vector3d vcorners[4] = {
@@ -189,8 +189,8 @@ public:
 	vector3d GetSurfacePoint(const double x, const double y, const double halfLength) {
 		double theta = lerp( x, ang[1], ang[0] );
 		
-		const vector3d topEndEdge(cos(theta), sin(theta), m_zoffset + halfLength);		// vertices at top edge of circle
-		const vector3d bottomEndEdge(cos(theta), sin(theta), m_zoffset - halfLength);	// vertices at bottom edge of circle
+		const vector3d topEndEdge(sin(theta), m_yoffset + halfLength,cos(theta));		// vertices at top edge of circle
+		const vector3d bottomEndEdge(sin(theta), m_yoffset - halfLength, cos(theta));	// vertices at bottom edge of circle
 		
 		const vector3d res = lerp( y, bottomEndEdge, topEndEdge );
 		return res;
@@ -201,16 +201,16 @@ public:
 		//PROFILE_SCOPED()
 		vector3d *vts = vertices;
 		double xfrac = 0;
-		double yfrac = 0;
+		double zfrac = 0;
 #ifdef _DEBUG
 		memset(normals, 0, sizeof(vector3d)*GEOPLATE_NUMVERTICES);
 #endif
-		const vector3d topEnd(0.0, 0.0, m_zoffset + m_halfLen);		// vertices at top edge of circle
-		const vector3d btmEnd(0.0, 0.0, m_zoffset - m_halfLen);	// vertices at bottom edge of circle
+		const vector3d topEnd(0.0, 0.0, m_yoffset + m_halfLen);		// vertices at top edge of circle
+		const vector3d btmEnd(0.0, 0.0, m_yoffset - m_halfLen);	// vertices at bottom edge of circle
 
 		for (int y=0; y<GEOPLATE_EDGELEN; ++y) {	// across the width
 			xfrac = 0;
-			const vector3d axisPt = lerp( yfrac, btmEnd, topEnd );// point along z-axis by yfrac amount
+			const vector3d axisPt = lerp( zfrac, btmEnd, topEnd );// point along z-axis by zfrac amount
 			for (int x=0; x<GEOPLATE_EDGELEN; ++x) {	// along the length (circumference)
 				vector3d p;
 				const double height = 0.005;
@@ -219,7 +219,7 @@ public:
 				if( y==0 || y==GEOPLATE_EDGELEN-1 ) {	// points in trough
 					p = GetSurfacePoint(xfrac, (y==0 ? 0.0 : 1.0), m_halfLen);
 				} else { // outer hull edge
-					p = GetSurfacePoint(xfrac, yfrac, m_halfLen);
+					p = GetSurfacePoint(xfrac, zfrac, m_halfLen);
 				}
 
 				// vector from axis to point-on-surface
@@ -232,7 +232,7 @@ public:
 				double col = 0.5;
 				colors[x + y*GEOPLATE_EDGELEN] = vector3d(col, col, 1.0);
 			}
-			yfrac += GEOPLATEHULL_FRAC;
+			zfrac += GEOPLATEHULL_FRAC;
 		}
 		assert(vts == &vertices[GEOPLATE_NUMVERTICES]);
 		// Generate normals
@@ -365,7 +365,7 @@ public:
 	#define NUM_VBE 2
 	double ang[NUM_VBE];
 	double m_halfLen;
-	double m_zoffset;		// offset from the centre i.e. newzoffset = (m_zoffset + m_halfLen);
+	double m_yoffset;		// offset from the centre i.e. newyoffset = (m_yoffset + m_halfLen);
 	vector3d *vertices;
 	vector3d *normals;
 	vector3d *colors;
@@ -383,14 +383,14 @@ public:
 	// v0, v1 - define points on the line describing the loop of the ring/orbital.
 	// depth - 0 is the topmost plate with each depth+1 describing it's depth within the tree.
 	GeoPlateWall(const bool isInnerWall, const double halfLength, const double startAng, const double endAng, 
-		const double zoffset, const int depth) {
+		const double yoffset, const int depth) {
 		//PROFILE_SCOPED()
 		memset(this, 0, sizeof(GeoPlateWall));
 		bInnerWall = isInnerWall;
 		ang[0] = startAng; 
 		ang[1] = endAng;
 		m_halfLen = halfLength;
-		m_zoffset = zoffset;
+		m_yoffset = yoffset;
 		clipCentroid = GetSurfacePoint(0.5, 0.5, m_halfLen);
 		clipRadius = 0;
 		vector3d vcorners[4] = {
@@ -481,8 +481,8 @@ public:
 	vector3d GetSurfacePoint(const double x, const double y, const double halfLength) {
 		double theta = lerp( x, ang[1], ang[0] );
 		
-		const vector3d topEndEdge(cos(theta), sin(theta), m_zoffset + halfLength);		// vertices at top edge of circle
-		const vector3d bottomEndEdge(cos(theta), sin(theta), m_zoffset - halfLength);	// vertices at bottom edge of circle
+		const vector3d topEndEdge(sin(theta), m_yoffset + halfLength, cos(theta));		// vertices at top edge of circle
+		const vector3d bottomEndEdge(sin(theta), m_yoffset - halfLength, cos(theta));	// vertices at bottom edge of circle
 		
 		const vector3d res = lerp( y, bottomEndEdge, topEndEdge );
 		return res;
@@ -493,12 +493,12 @@ public:
 		//PROFILE_SCOPED()
 		vector3d *vts = vertices;
 		double xfrac = 0;
-		double yfrac = 0;
+		double zfrac = 0;
 #ifdef _DEBUG
 		memset(normals, 0, sizeof(vector3d)*GEOPLATE_NUM_WALL_VERTICES);
 #endif
-		const vector3d topEnd(0.0, 0.0, m_zoffset + m_halfLen);		// vertices at top edge of circle
-		const vector3d btmEnd(0.0, 0.0, m_zoffset - m_halfLen);	// vertices at bottom edge of circle
+		const vector3d topEnd(0.0, m_yoffset + m_halfLen, 0.0);		// vertices at top edge of circle
+		const vector3d btmEnd(0.0, m_yoffset - m_halfLen, 0.0);	// vertices at bottom edge of circle
 
 		const double heights[2][GEOPLATE_WALL_LEN] = {
 			{
@@ -520,7 +520,7 @@ public:
 			}
 		};
 
-		const double yvals[2][GEOPLATE_WALL_LEN] = {
+		const double zvals[2][GEOPLATE_WALL_LEN] = {
 			{
 				-0.0,	// start, bottom
 				-0.0,	// above start, top inner wall
@@ -546,9 +546,9 @@ public:
 		for (int y=0; y<GEOPLATE_WALL_LEN; ++y) {	// across the width
 			xfrac = 0;
 			const double height = heights[PriIdx][y];
-			const vector3d axisPt = lerp( yvals[PriIdx][y], btmEnd, topEnd );// point along z-axis by yfrac amount
+			const vector3d axisPt = lerp( zvals[PriIdx][y], btmEnd, topEnd );// point along z-axis by zfrac amount
 			for (int x=0; x<GEOPLATE_WALL_LEN; ++x) {	// along the length (circumference)
-				p = GetSurfacePoint(xfrac, yvals[PriIdx][y], m_halfLen);
+				p = GetSurfacePoint(xfrac, zvals[PriIdx][y], m_halfLen);
 				
 				// vector from axis to point-on-surface
 				const vector3d cDir = (p - axisPt).Normalized();
@@ -731,7 +731,7 @@ public:
 	vector3d vbe[NUM_VBE];
 	double ang[NUM_VBE];
 	double m_halfLen;
-	double m_zoffset;		// offset from the centre i.e. newzoffset = (m_zoffset + m_halfLen);
+	double m_yoffset;		// offset from the centre i.e. newyoffset = (m_yoffset + m_halfLen);
 	vector3d *vertices;
 	vector3d *normals;
 	vector3d *colors;
@@ -801,32 +801,32 @@ public:
 		return result;
 	}
 
-	double DistFromSurface(const double rad, const double z, const vector3d &rp) const
+	double DistFromSurface(const double rad, const double y, const vector3d &rp) const
 	{
-		PiAssert( IsWithinAng(rad, z) );
+		PiAssert( IsWithinAng(rad, y) );
 
 		// do we have kids?
 		if(kids[0]) {
 			// yes, so recurse into them.
 			for(int i=0;i<4;++i) {
-				if( kids[i]->IsWithinAng(rad, z) ) {
-					return kids[i]->DistFromSurface(rad, z, rp);
+				if( kids[i]->IsWithinAng(rad, y) ) {
+					return kids[i]->DistFromSurface(rad, y, rp);
 				}
 			}
 		} else {
 			// find point on _surface_ of the cylinder
-			const vector3d p = GetSurfacePointCyl(rad, z, m_halfLen);
+			const vector3d p = GetSurfacePointCyl(rad, y, m_halfLen);
 			return geoRing->GetHeight(p);
 		}
 		return DBL_MAX;
 	}
 
-	bool IsWithinAng(const double rad, const double z) const
+	bool IsWithinAng(const double rad, const double y) const
 	{
 		if( rad>=ang[0] && rad<=ang[1] ) {
-			const double zoffsetpos = (m_zoffset + m_halfLen);
-			const double zoffsetneg = (m_zoffset - m_halfLen);
-			if( z>=zoffsetneg && z<=zoffsetpos ) {
+			const double yoffsetpos = (m_yoffset + m_halfLen);
+			const double yoffsetneg = (m_yoffset - m_halfLen);
+			if( y>=yoffsetneg && y<=yoffsetpos ) {
 				return true;
 			}
 		}
@@ -860,7 +860,7 @@ public:
 	// depth - 0 is the topmost plate with each depth+1 describing it's depth within the tree.
 	GeoPlate(const double halfLength, const vector3d &startVBE, const vector3d &endVBE, 
 		const double startAng, const double endAng, 
-		const double zoffset, const int depth, const int cIdx) {
+		const double yoffset, const int depth, const int cIdx) {
 		//PROFILE_SCOPED()
 		memset(this, 0, sizeof(GeoPlate));
 		m_kidsLock = SDL_CreateMutex();
@@ -869,7 +869,7 @@ public:
 		ang[0] = startAng;
 		ang[1] = endAng;
 		m_halfLen = halfLength;
-		m_zoffset = zoffset;
+		m_yoffset = yoffset;
 		m_depth = depth;
 		m_cIdx = cIdx;
 		clipCentroid = GetSurfacePointCyl(0.5, 0.5, m_halfLen);
@@ -1508,14 +1508,12 @@ public:
 	}
 
 	vector3d GetSurfacePointCyl(const double x, const double y, const double halfLength) const {
-		//PiAssert(y>=-0.000001);
 		double theta = lerp( x, ang[1], ang[0] );//*2.0*M_PI;
 		
-		const vector3d topEndEdge(cos(theta), sin(theta), m_zoffset + halfLength);		// vertices at top edge of circle
-		const vector3d bottomEndEdge(cos(theta), sin(theta), m_zoffset - halfLength);	// vertices at bottom edge of circle
+		const vector3d topEndEdge(sin(theta), m_yoffset + halfLength, cos(theta));		// vertices at top edge of circle
+		const vector3d bottomEndEdge(sin(theta), m_yoffset - halfLength, cos(theta));	// vertices at bottom edge of circle
 		
 		const vector3d res = lerp( y, bottomEndEdge, topEndEdge );
-		//PiAssert(res.z>bottomEndEdge.z);
 		return res;
 	}
 
@@ -1525,19 +1523,19 @@ public:
 		vector3d *vts = vertices;
 		vector3d *col = colors;
 		double xfrac;
-		double yfrac = 0;
+		double zfrac = 0;
 		vector3d axisPt(0.0, 0.0, 0.0);
 
-		const vector3d topEnd(0.0, 0.0, m_zoffset + m_halfLen);		// vertices at top edge of circle
-		const vector3d btmEnd(0.0, 0.0, m_zoffset - m_halfLen);	// vertices at bottom edge of circle
+		const vector3d topEnd(0.0, 0.0, m_yoffset + m_halfLen);		// vertices at top edge of circle
+		const vector3d btmEnd(0.0, 0.0, m_yoffset - m_halfLen);	// vertices at bottom edge of circle
 				
 		for (int y=0; y<GEOPLATE_EDGELEN; ++y) {
 			xfrac = 0;
-			// point along z-axis by yfrac amount
-			const vector3d axisPt = lerp( yfrac, btmEnd, topEnd );
+			// point along z-axis by zfrac amount
+			const vector3d axisPt = lerp( zfrac, btmEnd, topEnd );
 			for (int x=0; x<GEOPLATE_EDGELEN; ++x) {
 				// find point on _surface_ of the cylinder
-				const vector3d p = GetSurfacePointCyl(xfrac, yfrac, m_halfLen);
+				const vector3d p = GetSurfacePointCyl(xfrac, zfrac, m_halfLen);
 				// vector from axis to point-on-surface
 				const vector3d cDir = (p - axisPt).Normalized();
 				// height
@@ -1552,7 +1550,7 @@ public:
 
 				normals[x + y*GEOPLATE_EDGELEN] = (cDir);
 			}
-			yfrac += GEOPLATE_FRAC;
+			zfrac += GEOPLATE_FRAC;
 		}
 		assert(vts == &vertices[GEOPLATE_NUMVERTICES]);
 		// Generate normals & colors for non-edge vertices since they never change
@@ -1584,12 +1582,12 @@ public:
 		e->GetEdgeMinusOneVerticesFlipped(we_are, ev);
 		
 		vector3d axisPt(0.0, 0.0, 0.0);
-		const vector3d topEnd(0.0, 0.0, m_zoffset + m_halfLen);		// vertices at top edge of circle
-		const vector3d btmEnd(0.0, 0.0, m_zoffset - m_halfLen);	// vertices at bottom edge of circle
+		const vector3d topEnd(0.0, 0.0, m_yoffset + m_halfLen);		// vertices at top edge of circle
+		const vector3d btmEnd(0.0, 0.0, m_yoffset - m_halfLen);	// vertices at bottom edge of circle
 
 		/* now we have a valid edge, fix the edge vertices */
 		if (edge == 0) {
-			// point along z-axis by yfrac amount
+			// point along z-axis by zfrac amount
 			const vector3d axisPt = lerp( 0.0, btmEnd, topEnd );
 			for (int x=0; x<GEOPLATE_EDGELEN; x++) {
 				vector3d p = GetSurfacePointCyl(x * GEOPLATE_FRAC, 0, m_halfLen);
@@ -1606,10 +1604,10 @@ public:
 			}
 		} else if (edge == 1) {
 			for (int y=0; y<GEOPLATE_EDGELEN; y++) {
-				const double yfrac = y * GEOPLATE_FRAC;
-				// point along z-axis by yfrac amount
-				const vector3d axisPt = lerp( yfrac, btmEnd, topEnd );
-				vector3d p = GetSurfacePointCyl(1.0, yfrac, m_halfLen);
+				const double zfrac = y * GEOPLATE_FRAC;
+				// point along z-axis by zfrac amount
+				const vector3d axisPt = lerp( zfrac, btmEnd, topEnd );
+				vector3d p = GetSurfacePointCyl(1.0, zfrac, m_halfLen);
 				double height = -geoRing->GetHeight(p);
 				// vector from axis to point-on-surface
 				const vector3d cDir = (p - axisPt).Normalized();
@@ -1621,7 +1619,7 @@ public:
 				}
 			}
 		} else if (edge == 2) {
-			// point along z-axis by yfrac amount
+			// point along z-axis by zfrac amount
 			const vector3d axisPt = lerp( 1.0, btmEnd, topEnd );
 			for (int x=0; x<GEOPLATE_EDGELEN; x++) {
 				vector3d p = GetSurfacePointCyl(x * GEOPLATE_FRAC, 1.0, m_halfLen);
@@ -1636,10 +1634,10 @@ public:
 			}
 		} else {
 			for (int y=0; y<GEOPLATE_EDGELEN; y++) {
-				const double yfrac = y * GEOPLATE_FRAC;
-				// point along z-axis by yfrac amount
-				const vector3d axisPt = lerp( yfrac, btmEnd, topEnd );
-				vector3d p = GetSurfacePointCyl(0, yfrac, m_halfLen);
+				const double zfrac = y * GEOPLATE_FRAC;
+				// point along z-axis by zfrac amount
+				const vector3d axisPt = lerp( zfrac, btmEnd, topEnd );
+				vector3d p = GetSurfacePointCyl(0, zfrac, m_halfLen);
 				double height = -geoRing->GetHeight(p);
 				// vector from axis to point-on-surface
 				const vector3d cDir = (p - axisPt).Normalized();
@@ -1830,13 +1828,13 @@ public:
 
 				const double halfAng = ang[0] + 0.5 * (ang[1] - ang[0]);
 				const double newLength = (m_halfLen*0.5);
-				const double zoffset0 = m_zoffset + newLength;
-				const double zoffset1 = m_zoffset - newLength;
+				const double yoffset0 = m_yoffset + newLength;
+				const double yoffset1 = m_yoffset - newLength;
 				GeoPlate *_kids[4];
-				_kids[0] = new GeoPlate(newLength, halfVBE, vbe[1], halfAng, ang[1], zoffset1, m_depth+1, 0);
-				_kids[1] = new GeoPlate(newLength, vbe[0], halfVBE, ang[0], halfAng, zoffset1, m_depth+1, 1);
-				_kids[2] = new GeoPlate(newLength, vbe[0], halfVBE, ang[0], halfAng, zoffset0, m_depth+1, 2);
-				_kids[3] = new GeoPlate(newLength, halfVBE, vbe[1], halfAng, ang[1], zoffset0, m_depth+1, 3);
+				_kids[0] = new GeoPlate(newLength, halfVBE, vbe[1], halfAng, ang[1], yoffset1, m_depth+1, 0);
+				_kids[1] = new GeoPlate(newLength, vbe[0], halfVBE, ang[0], halfAng, yoffset1, m_depth+1, 1);
+				_kids[2] = new GeoPlate(newLength, vbe[0], halfVBE, ang[0], halfAng, yoffset0, m_depth+1, 2);
+				_kids[3] = new GeoPlate(newLength, halfVBE, vbe[1], halfAng, ang[1], yoffset0, m_depth+1, 3);
 				// hm.. edges. Not right to pass this
 				// edgeFriend...
 				_kids[0]->edgeFriend[0] = GetEdgeFriendForKid(0, 0);
