@@ -408,6 +408,7 @@
     <ClInclude Include="..\..\src\TextureManager.h" />
     <ClInclude Include="..\..\src\Timer.h" />
     <ClInclude Include="..\..\src\utils.h" />
+    <ClInclude Include="..\..\src\vcacheopt.h" />
     <ClInclude Include="..\..\src\vector2.h" />
     <ClInclude Include="..\..\src\vector3.h" />
     <ClInclude Include="..\..\src\vector4.h" />
