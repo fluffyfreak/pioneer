@@ -28,13 +28,13 @@ static double GEOPLATEHULL_FRAC;
 
 SHADER_CLASS_BEGIN(GeoRingShader)
 	SHADER_UNIFORM_VEC4(atmosColor)
-	SHADER_UNIFORM_FLOAT(geosphereScale)
-	SHADER_UNIFORM_FLOAT(geosphereAtmosTopRad)
-	SHADER_UNIFORM_VEC3(geosphereCenter)
-	SHADER_UNIFORM_FLOAT(geosphereAtmosFogDensity)
+	SHADER_UNIFORM_FLOAT(georingScale)
+	SHADER_UNIFORM_FLOAT(georingAtmosTopRad)
+	SHADER_UNIFORM_VEC3(georingCenter)
+	SHADER_UNIFORM_FLOAT(georingAtmosFogDensity)
 SHADER_CLASS_END()
 
-static GeoRingShader *s_geoRingSurfaceShader[4];//, *s_geoRingSkyShader[4];
+static GeoRingShader *s_geoRingSurfaceShader[4], *s_geoRingSkyShader[4];
 
 #pragma pack(4)
 struct VBOVertex
@@ -1974,10 +1974,10 @@ void GeoRing::Init()
 	s_geoRingSurfaceShader[1] = new GeoRingShader("geoRing", "#define NUM_LIGHTS 2\n");
 	s_geoRingSurfaceShader[2] = new GeoRingShader("geoRing", "#define NUM_LIGHTS 3\n");
 	s_geoRingSurfaceShader[3] = new GeoRingShader("geoRing", "#define NUM_LIGHTS 4\n");
-	/*s_geoRingSkyShader[0] = new GeoRingShader("geosphere_sky", "#define NUM_LIGHTS 1\n");
-	s_geoRingSkyShader[1] = new GeoRingShader("geosphere_sky", "#define NUM_LIGHTS 2\n");
-	s_geoRingSkyShader[2] = new GeoRingShader("geosphere_sky", "#define NUM_LIGHTS 3\n");
-	s_geoRingSkyShader[3] = new GeoRingShader("geosphere_sky", "#define NUM_LIGHTS 4\n");*/
+	s_geoRingSkyShader[0] = new GeoRingShader("geoRing_sky", "#define NUM_LIGHTS 1\n");
+	s_geoRingSkyShader[1] = new GeoRingShader("geoRing_sky", "#define NUM_LIGHTS 2\n");
+	s_geoRingSkyShader[2] = new GeoRingShader("geoRing_sky", "#define NUM_LIGHTS 3\n");
+	s_geoRingSkyShader[3] = new GeoRingShader("geoRing_sky", "#define NUM_LIGHTS 4\n");
 	s_allGeoRingsLock = SDL_CreateMutex();
 	OnChangeDetailLevel();
 #ifdef GEORING_USE_THREADING
@@ -2279,14 +2279,14 @@ void GeoRing::Render(vector3d campos, const float radius, const float scale) {
 		GetAtmosphereFlavor(&atmosCol, &atmosDensity);
 		atmosDensity *= 0.00005;
 
-		/*if (atmosDensity != 0.0) {
+		if (atmosDensity != 0.0) {
 			GeoRingShader *shader = s_geoRingSkyShader[Render::State::GetNumLights()-1];
 			Render::State::UseProgram(shader);
-			shader->set_geosphereScale(scale);
-			shader->set_geosphereAtmosTopRad(atmosRadius*radius/scale);
-			shader->set_geosphereAtmosFogDensity(atmosDensity);
+			shader->set_georingScale(scale);
+			shader->set_georingAtmosTopRad(atmosRadius*radius/scale);
+			shader->set_georingAtmosFogDensity(atmosDensity);
 			shader->set_atmosColor(atmosCol.r, atmosCol.g, atmosCol.b, atmosCol.a);
-			shader->set_geosphereCenter(center.x, center.y, center.z);
+			shader->set_georingCenter(center.x, center.y, center.z);
 			
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
@@ -2295,15 +2295,15 @@ void GeoRing::Render(vector3d campos, const float radius, const float scale) {
 			// show ugly polygonal angles
 			DrawAtmosphereSurface(campos, atmosRadius*1.01);
 			glDisable(GL_BLEND);
-		}*/
+		}
 
 		GeoRingShader *shader = s_geoRingSurfaceShader[Render::State::GetNumLights()-1];
 		Render::State::UseProgram(shader);
-		shader->set_geosphereScale(scale);
-		shader->set_geosphereAtmosTopRad(atmosRadius*radius/scale);
-		shader->set_geosphereAtmosFogDensity(atmosDensity);
+		shader->set_georingScale(scale);
+		shader->set_georingAtmosTopRad(atmosRadius*radius/scale);
+		shader->set_georingAtmosFogDensity(atmosDensity);
 		shader->set_atmosColor(atmosCol.r, atmosCol.g, atmosCol.b, atmosCol.a);
-		shader->set_geosphereCenter(center.x, center.y, center.z);
+		shader->set_georingCenter(center.x, center.y, center.z);
 	}
 
 	if (0==m_plates.size()) {
