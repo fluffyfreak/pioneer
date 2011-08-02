@@ -25,43 +25,40 @@
 #define _VCACHEOPT_H_
 
 #include <vector>
-#include <math.h>
-#include <assert.h>
+#include <cmath>
+#include <cassert>
+#include <climits>
 
-class VertexCacheData
+template <typename T, int ERR_VAL>
+class TVertexCacheData
 {
 public:
 	int position_in_cache;
 	float current_score;
 	int total_valence; // toatl number of triangles using this vertex
 	int remaining_valence; // number of triangles using it but not yet rendered
-	std::vector<int> tri_indices; // indices to the indices that use this vertex
+	std::vector<T> tri_indices; // indices to the indices that use this vertex
 	bool calculated; // was the score calculated during this iteration?
 
 
-	int FindTriangle(int tri)
+	T FindTriangle(const T tri) const 
 	{
-		for (int i=0; i<(int)tri_indices.size(); i++)
-		{
-			if (tri_indices[i] == tri) return i;
+		for (size_t i=0; i<tri_indices.size(); ++i)	{
+			if (tri_indices[i] == tri) 
+				return i;
 		}
-
-		return -1;
+		return ERR_VAL;
 	}
 
-	void MoveTriangleToEnd(int tri)
+	void MoveTriangleToEnd(const T tri)
 	{
-		int t_ind = FindTriangle(tri);
-
+		T t_ind = FindTriangle(tri);
 		assert(t_ind >= 0);
-
-		tri_indices.erase(tri_indices.begin() + t_ind,
-			tri_indices.begin() + t_ind + 1);
-
+		tri_indices.erase(tri_indices.begin() + t_ind, tri_indices.begin() + t_ind + 1);
 		tri_indices.push_back(tri);
 	}
 
-	VertexCacheData()
+	TVertexCacheData()
 	{
 		position_in_cache = -1;
 		current_score = 0.0f;
@@ -69,44 +66,44 @@ public:
 		remaining_valence = 0;
 	}
 };
+typedef TVertexCacheData<int, INT_MAX >					VertexCacheDataInt;
+typedef TVertexCacheData<unsigned short, USHRT_MAX >	VertexCacheDataUShort;
 
-class TriangleCacheData
+template <typename T, int ERR_VAL>
+class TTriangleCacheData
 {
 public:
 	bool rendered; // has the triangle been added to the draw list yet?
-	float current_score; // sum of the score of its vertices
-	int verts[3]; // indices to the triangle's vertices
 	bool calculated; // was the score calculated during this iteration?
+	float current_score; // sum of the score of its vertices
+	T verts[3]; // indices to the triangle's vertices
 
-	TriangleCacheData()
-	{
-		rendered = false;
-		current_score = 0.0f;
-		verts[0] = verts[1] = verts[2] = -1;
-		calculated = false;
+	TTriangleCacheData() : rendered(false), calculated(false), current_score(0.0f)	{
+		verts[0] = verts[1] = verts[2] = ERR_VAL;
 	}
 };
+typedef TTriangleCacheData<int, INT_MAX >				TriangleCacheDataInt;
+typedef TTriangleCacheData<unsigned short, USHRT_MAX >	TriangleCacheDataUShort;
 
-class VertexCache
+template <typename T, int N, int ERR_VAL>
+class TVertexCache
 {
 protected:
-	int cache[40];
+	T cache[N];
 	int misses; // cache miss count
 
-	int FindVertex(int v)
+	T FindVertex(const T v) const
 	{
-		for (int i=0; i<32; i++)
-		{
+		for (int i=0; i<(N-1); ++i)	{
 			if (cache[i] == v) return i;
 		}
 
-		return -1;
+		return ERR_VAL;
 	}
 
-	void RemoveVertex(int stack_index)
+	void RemoveVertex(const int stack_index)
 	{
-		for (int i=stack_index; i<38; i++)
-		{
+		for (int i=stack_index; i<(N-1); ++i) {
 			cache[i] = cache[i+1];
 		}
 	}
@@ -115,23 +112,19 @@ public:
 	// the vertex will be placed on top
 	// if the vertex didn't exist previewsly in
 	// the cache, then miss count is incermented
-	void AddVertex(int v)
+	void AddVertex(const int v)
 	{
 		int w = FindVertex(v);
-		if (w >= 0)
-		{
+		if (w >= 0)	{
 			// remove the vertex from the cache (to reinsert it later on the top)
 			RemoveVertex(w);
-		}
-		else
-		{
+		} else {
 			// the vertex was not found in the cache - increment misses
-			misses++;
+			++misses;
 		}
 
 		// shift all vertices down (to make room for the new top vertex)
-		for (int i=39; i>0; i--)
-		{
+		for (int i=(N-1); i>0; --i) {
 			cache[i] = cache[i-1];
 		}
 
@@ -141,21 +134,21 @@ public:
 
 	void Clear()
 	{
-		for (int i=0; i<40; i++) cache[i] = -1;
+		for (int i=0; i<N; ++i) cache[i] = ERR_VAL;
 		misses = 0;
 	}
 
-	VertexCache()
+	TVertexCache()
 	{
 		Clear();
 	}
 
-	int GetCacheMissCount()
+	int GetCacheMissCount() const
 	{
 		return misses;
 	}
 
-	int GetCachedVertex(int which)
+	T GetCachedVertex(int which) const
 	{
 		return cache[which];
 	}
@@ -172,8 +165,11 @@ public:
 		return misses;
 	}
 };
+typedef TVertexCache<int, 40, INT_MAX >					VertexCacheInt;
+typedef TVertexCache<unsigned short, 40, USHRT_MAX >	VertexCacheUShort;
 
-class VertexCacheOptimizer
+template <typename T, int N, int ERR_VAL>
+class TVertexCacheOptimizer
 {
 public:
 	// CalculateVertexScore constants
@@ -195,40 +191,33 @@ public:
 	}
 
 protected:
-	std::vector<VertexCacheData> verts;
-	std::vector<TriangleCacheData> tris;
-	std::vector<int> inds;
+	std::vector<TVertexCacheData<T, ERR_VAL > > verts;
+	std::vector<TTriangleCacheData<T, ERR_VAL > > tris;
+	std::vector<T> inds;
 	int best_tri; // the next triangle to add to the render list
-	VertexCache vertex_cache;
-	std::vector<int> draw_list;
+	TVertexCache<T, N, ERR_VAL > vertex_cache;
+	std::vector<T> draw_list;
 
-	float CalculateVertexScore(int vertex)
+	float CalculateVertexScore(const int vertex)
 	{
-		VertexCacheData *v = &verts[vertex];
-		if (v->remaining_valence <= 0)
-		{
+		TVertexCacheData<T, ERR_VAL > *v = &verts[vertex];
+		if (v->remaining_valence <= 0) {
 			// No tri needs this vertex!
 			return -1.0f;
 		}
 	 
 		float ret = 0.0f;
-		if (v->position_in_cache < 0)
-		{
+		if (v->position_in_cache < 0) {
 			// Vertex is not in FIFO cache - no score.
-		}
-		else
-		{
-			if (v->position_in_cache < 3)
-			{
+		} else {
+			if (v->position_in_cache < 3) {
 				// This vertex was used in the last triangle,
 				// so it has a fixed score, whichever of the three
 				// it's in. Otherwise, you can get very different
 				// answers depending on whether you add
 				// the triangle 1,2,3 or 3,1,2 - which is silly.
 				ret = LastTriScore;
-			}
-			else
-			{
+			} else {
 				// Points for being high in the cache.
 				const float Scaler = 1.0f / (32  - 3);
 				ret = 1.0f - (v->position_in_cache - 3) * Scaler;
@@ -249,8 +238,7 @@ protected:
 	int FullScoreRecalculation()
 	{
 		// calculate score for all vertices
-		for (int i=0; i<(int)verts.size(); i++)
-		{
+		for (size_t i=0; i<verts.size(); ++i) {
 			verts[i].current_score = CalculateVertexScore(i);
 		}
 
@@ -258,8 +246,7 @@ protected:
 		float max_score;
 		int max_score_tri = -1;
 		bool first_time = true;
-		for (int i=0; i<(int)tris.size(); i++)
-		{
+		for (int i=0; i<(int)tris.size(); ++i) {
 			if (tris[i].rendered) continue;
 			// sum the score of all the triangle's vertices
 			float sc = verts[tris[i].verts[0]].current_score +
@@ -268,8 +255,7 @@ protected:
 			
 			tris[i].current_score = sc;
 	
-			if (first_time || sc > max_score)
-			{
+			if (first_time || sc > max_score) {
 				first_time = false;
 				max_score = sc;
 				max_score_tri = i;
@@ -281,10 +267,10 @@ protected:
 
 	Result InitialPass()
 	{
-		for (int i=0; i<(int)inds.size(); i++)
+		for (size_t i=0; i<inds.size(); ++i)
 		{
 			int index = inds[i];
-			if (index < 0 || index >= (int)verts.size()) return Fail_BadIndex;
+			if (ERR_VAL==index || index >= (int)verts.size()) return Fail_BadIndex;
 
 			verts[index].total_valence++;
 			verts[index].remaining_valence++;
@@ -297,21 +283,19 @@ protected:
 		return Success;
 	}
 
-	Result Init(int *inds, int tri_count, int vertex_count)
+	Result Init(T *inds, const int tri_count, const int vertex_count)
 	{
 		// clear the draw list
 		draw_list.clear();
 
 		// allocate and initialize vertices and triangles
 		verts.clear();
-		for (int i=0; i<vertex_count; i++) verts.push_back(VertexCacheData());
+		for (int i=0; i<vertex_count; ++i) verts.push_back( TVertexCacheData<T, ERR_VAL >() );
 		
 		tris.clear();
-		for (int i=0; i<tri_count; i++)
-		{
-			TriangleCacheData dat;
-			for (int j=0; j<3; j++)
-			{
+		for (int i=0; i<tri_count; ++i) {
+			TTriangleCacheData<T, ERR_VAL > dat;
+			for (int j=0; j<3; ++j)	{
 				dat.verts[j] = inds[i * 3 + j];
 			}
 			tris.push_back(dat);
@@ -319,7 +303,7 @@ protected:
 
 		// copy the indices
 		this->inds.clear();
-		for (int i=0; i<tri_count * 3; i++) this->inds.push_back(inds[i]);
+		for (int i=0; i<tri_count * 3; ++i) this->inds.push_back(inds[i]);
 
 		vertex_cache.Clear();
 		best_tri = -1;
@@ -327,25 +311,23 @@ protected:
 		return InitialPass();
 	}
 
-	void AddTriangleToDrawList(int tri)
+	void AddTriangleToDrawList(const int tri)
 	{
 		// reset all cache positions
-		for (int i=0; i<32; i++)
-		{
+		for (int i=0; i<32; ++i) {
 			int ind = vertex_cache.GetCachedVertex(i);
-			if (ind < 0) continue;
+			if (ERR_VAL==ind) continue;
 			verts[ind].position_in_cache = -1;
 		}
 
-		TriangleCacheData *t = &tris[tri];
+		TTriangleCacheData<T, ERR_VAL > *t = &tris[tri];
 		if (t->rendered) return; // triangle is already in the draw list
 	
-		for (int i=0; i<3; i++)
-		{
+		for (int i=0; i<3; ++i)	{
 			// add all triangle vertices to the cache
 			vertex_cache.AddVertex(t->verts[i]);
 
-			VertexCacheData *v = &verts[t->verts[i]];
+			TVertexCacheData<T, ERR_VAL > *v = &verts[t->verts[i]];
 
 			// decrease remaining velence
 			v->remaining_valence--;
@@ -361,10 +343,9 @@ protected:
 		t->rendered = true;
 
 		// update all vertex cache positions
-		for (int i=0; i<32; i++)
-		{
-			int ind = vertex_cache.GetCachedVertex(i);
-			if (ind < 0) continue;
+		for (int i=0; i<32; ++i) {
+			T ind = vertex_cache.GetCachedVertex(i);
+			if (ERR_VAL==ind) continue;
 			verts[ind].position_in_cache = i;
 		}
 
@@ -380,16 +361,14 @@ protected:
 	bool CleanCalculationFlags()
 	{
 		bool ret = false;
-		for (int i=0; i<32; i++)
-		{
-			int vert = vertex_cache.GetCachedVertex(i);
-			if (vert < 0) continue;
+		for (int i=0; i<32; i++) {
+			T vert = vertex_cache.GetCachedVertex(i);
+			if (ERR_VAL==vert) continue;
 
-			VertexCacheData *v = &verts[vert];
+			TVertexCacheData<T, ERR_VAL > *v = &verts[vert];
 
-			for (int j=0; j<v->remaining_valence; j++)
-			{
-				TriangleCacheData *t = &tris[v->tri_indices[j]];
+			for (int j=0; j<v->remaining_valence; j++) {
+				TTriangleCacheData<T, ERR_VAL > *t = &tris[v->tri_indices[j]];
 
 				// we actually found a triangle to process
 				ret = true;
@@ -398,8 +377,7 @@ protected:
 				t->calculated = false;
 
 				// clear vertex flags
-				for (int tri_vert=0; tri_vert<3; tri_vert++)
-				{
+				for (int tri_vert=0; tri_vert<3; tri_vert++) {
 					verts[t->verts[tri_vert]].calculated = false;
 				}
 			}
@@ -408,18 +386,16 @@ protected:
 		return ret;
 	}
 
-	void TriangleScoreRecalculation(int tri)
+	void TriangleScoreRecalculation(const int tri)
 	{
-		TriangleCacheData *t = &tris[tri];
+		TTriangleCacheData<T, ERR_VAL > *t = &tris[tri];
 
 		// calculate vertex scores
 		float sum = 0.0f;
-		for (int i=0; i<3; i++)
-		{
-			VertexCacheData *v = &verts[t->verts[i]];
+		for (int i=0; i<3; i++)	{
+			TVertexCacheData<T, ERR_VAL > *v = &verts[t->verts[i]];
 			float sc = v->current_score;
-			if (!v->calculated)
-			{
+			if (!v->calculated)	{
 				sc = CalculateVertexScore(t->verts[i]);
 			}
 			v->current_score = sc;
@@ -437,20 +413,17 @@ protected:
 		bool first_time = true;
 		float max_score;
 		int max_score_tri = -1;
-		for (int i=0; i<32; i++)
-		{
+		for (int i=0; i<32; i++) {
 			int vert = vertex_cache.GetCachedVertex(i);
-			if (vert < 0) continue;
+			if (ERR_VAL==vert) continue;
 
-			VertexCacheData *v = &verts[vert];
+			TVertexCacheData<T, ERR_VAL > *v = &verts[vert];
 
 			// iterate through all *active* triangles of this vertex
-			for (int j=0; j<v->remaining_valence; j++)
-			{
+			for (int j=0; j<v->remaining_valence; j++) {
 				int tri = v->tri_indices[j];
-				TriangleCacheData *t = &tris[tri];
-				if (!t->calculated)
-				{
+				TTriangleCacheData<T, ERR_VAL > *t = &tris[tri];
+				if (!t->calculated) {
 					// calculate triangle score
 					TriangleScoreRecalculation(tri);
 				}
@@ -458,8 +431,7 @@ protected:
 				float sc = t->current_score;
 
 				// we actually found a triangle to process
-				if (first_time || sc > max_score)
-				{
+				if (first_time || sc > max_score) {
 					first_time = false;
 					max_score = sc;
 					max_score_tri = tri;
@@ -481,12 +453,9 @@ protected:
 
 		// recalculate vertex and triangle scores and
 		// select the best triangle for the next iteration
-		if (CleanCalculationFlags())
-		{
+		if (CleanCalculationFlags()) {
 			best_tri = PartialScoreRecalculation();
-		}
-		else
-		{
+		} else {
 			best_tri = FullScoreRecalculation();
 		}
 
@@ -494,7 +463,7 @@ protected:
 	}
 
 public:
-	VertexCacheOptimizer()
+	TVertexCacheOptimizer()
 	{
 		// initialize constants
 		CacheDecayPower = 1.5f;
@@ -506,12 +475,11 @@ public:
 	}
 	
 	// stores new indices in place
-	Result Optimize(int *inds, int tri_count)
+	Result Optimize(T *inds, int tri_count)
 	{
 		// find vertex count
 		int max_vert = -1;
-		for (int i=0; i<tri_count * 3; i++)
-		{
+		for (int i=0; i<tri_count * 3; i++)	{
 			if (inds[i] > max_vert) max_vert = inds[i];
 		}
 
@@ -524,8 +492,7 @@ public:
 		while (Iterate());
 
 		// rewrite optimized index list
-		for (int i=0; i<(int)draw_list.size(); i++)
-		{
+		for (size_t i=0; i<draw_list.size(); i++)	{
 			inds[3 * i + 0] = tris[draw_list[i]].verts[0];
 			inds[3 * i + 1] = tris[draw_list[i]].verts[1];
 			inds[3 * i + 2] = tris[draw_list[i]].verts[2];
@@ -534,5 +501,7 @@ public:
 		return Success;
 	}
 };
+typedef TVertexCacheOptimizer<int, 40, INT_MAX >				VertexCacheOptimizerInt;
+typedef TVertexCacheOptimizer<unsigned short, 40, USHRT_MAX >	VertexCacheOptimizerUShort;
 
 #endif // ndef _VCACHEOPT_H_

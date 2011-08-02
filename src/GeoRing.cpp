@@ -934,7 +934,8 @@ public:
 		indices_tri_count = indices_tri_counts[acc];
 	}
 
-	static int getIndices(std::vector<int> &pl, const bool *isHigh)
+	template<typename T>
+	static int getIndices(std::vector<T> &pl, const bool *isHigh)
 	{
 		// calculate how many tri's there are
 		int tri_count = (VBO_COUNT_MID_IDX / 3); 
@@ -1189,6 +1190,7 @@ public:
 					test_e[acc].e[3] = (acc & 0x08) ? true : false;
 				}
 
+#if 0
 				// populate the N indices lists from the arrays built during InitTerrainIndices()
 				VecHolder pl[NUM_INDEX_LISTS];
 				for( int i=0; i<NUM_INDEX_LISTS; ++i ) {
@@ -1198,9 +1200,9 @@ public:
 				// iterate over each index list and optimize it
 				for( int i=0; i<NUM_INDEX_LISTS; ++i ) {
 					int tri_count = indices_tri_counts[i];
-					VertexCacheOptimizer vco;
-					VertexCacheOptimizer::Result res = vco.Optimize(&pl[i].v[0], tri_count);
-					PiAssert(VertexCacheOptimizer::Result::Success == res);
+					VertexCacheOptimizerInt vco;
+					VertexCacheOptimizerInt::Result res = vco.Optimize(&pl[i].v[0], tri_count);
+					PiAssert(0 == res);
 				}
 
 				// copy the short values
@@ -1211,6 +1213,21 @@ public:
 						pl_short[i].v.push_back( pl[i].v[j] );
 					}
 				}
+#else
+				// populate the N indices lists from the arrays built during InitTerrainIndices()
+				VecHolder pl[NUM_INDEX_LISTS];
+				for( int i=0; i<NUM_INDEX_LISTS; ++i ) {
+					indices_tri_counts[i] = getIndices<unsigned short>(pl_short[i].v, test_e[i].e);
+				}
+
+				// iterate over each index list and optimize it
+				for( int i=0; i<NUM_INDEX_LISTS; ++i ) {
+					int tri_count = indices_tri_counts[i];
+					VertexCacheOptimizerUShort vco;
+					VertexCacheOptimizerUShort::Result res = vco.Optimize(&pl_short[i].v[0], tri_count);
+					PiAssert(0 == res);
+				}
+#endif
 			}
 
 			// everything should be hunky-dory for setting up as OpenGL index buffers now.
@@ -1221,7 +1238,7 @@ public:
 				glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, 0);
 			}
 
-			// default it to the last entry which should be fully hi-res
+			// default it to the last entry which uses the hi-res borders
 			indices_vbo			= indices_list[NUM_INDEX_LISTS-1];
 			indices_tri_count	= indices_tri_counts[NUM_INDEX_LISTS-1];
 
