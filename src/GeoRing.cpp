@@ -28,6 +28,9 @@ static double GEOPLATEHULL_FRAC;
 
 #define PRINT_VECTOR(_v) printf("%f,%f,%f\n", (_v).x, (_v).y, (_v).z);
 
+#define SAFE_DELETE(d) delete d; d=0;
+#define SAFE_DELETE_ARRAY(d) delete[] d; d=0;
+
 SHADER_CLASS_BEGIN(GeoRingShader)
 	SHADER_UNIFORM_VEC4(atmosColor)
 	SHADER_UNIFORM_FLOAT(georingScale)
@@ -48,14 +51,6 @@ struct VBOVertex
 };
 #pragma pack()
 
-#pragma pack(4)
-struct VBOVertexTex
-{
-	float x,y,z;
-	float s,t;	// can I pack these into two 16 bit half-floats? (Ans: yes I should, but how?)
-};
-#pragma pack()
-
 #define VBO_COUNT_LO_EDGE  (3*(GEOPLATE_EDGELEN/2))
 #define VBO_COUNT_HI_EDGE  (3*(GEOPLATE_EDGELEN-1))
 #define VBO_COUNT_MID_IDX  (4*3*(GEOPLATE_EDGELEN-3) + 2*(GEOPLATE_EDGELEN-3)*(GEOPLATE_EDGELEN-3)*3)
@@ -66,15 +61,8 @@ struct VBOVertexTex
 #define IDX_VBO_HI_OFFSET(_i) (((_i)*sizeof(unsigned short)*VBO_COUNT_HI_EDGE)+IDX_VBO_LO_OFFSET(4))
 #define IDX_VBO_MAIN_OFFSET IDX_VBO_HI_OFFSET(4)
 
-// for glDrawRangeElements
-static int s_loMinIdx[4], s_loMaxIdx[4];
-static int s_hiMinIdx[4], s_hiMaxIdx[4];
-
 // hold the 16 possible terrain edge connections
 const int NUM_INDEX_LISTS = 16;
-typedef struct {
-	std::vector<int> v;
-} VecHolder;
 typedef struct {
 	std::vector<unsigned short> v;
 } VecShortHolder;
@@ -760,14 +748,6 @@ public:
 	vector3d *normals;
 	vector3d *colors;
 	GLuint m_vbo;
-	static unsigned short *midIndices;
-	static unsigned short *loEdgeIndices[4];
-	static unsigned short *hiEdgeIndices[4];
-	static GLuint indices_vbo;
-	static GLuint indices_list[NUM_PLATE_INDICES];
-	static GLuint indices_tri_count;
-	static GLuint indices_tri_counts[NUM_PLATE_INDICES];
-	static VBOVertex *vbotemp;
 	GeoPlate *kids[4];
 	GeoPlate *parent;
 	GeoPlate *edgeFriend[4]; // [0]=v01, [1]=v12, [2]=v23, [3]=30 - original from GeoPatch...
@@ -779,6 +759,15 @@ public:
 	int m_cIdx;
 	SDL_mutex *m_kidsLock;
 	bool m_needUpdateVBOs;
+
+	static unsigned short *midIndices;
+	static unsigned short *loEdgeIndices[4];
+	static unsigned short *hiEdgeIndices[4];
+	static GLuint indices_vbo;
+	static GLuint indices_list[NUM_PLATE_INDICES];
+	static GLuint indices_tri_count;
+	static GLuint indices_tri_counts[NUM_PLATE_INDICES];
+	static VBOVertex *vbotemp;
 
 	static GeoPlate** s_geoPlates[4];
 	static SDL_mutex *s_geoPlateLock[4];
@@ -923,13 +912,25 @@ public:
 #endif
 	}
 
+	~GeoPlate() {
+		SDL_DestroyMutex(m_kidsLock);
+		for (int i=0; i<4; i++) {
+			if (edgeFriend[i]) edgeFriend[i]->NotifyEdgeFriendDeleted(this);
+		}
+		for (int i=0; i<4; i++) if (kids[i]) delete kids[i];
+		SAFE_DELETE_ARRAY(vertices);
+		SAFE_DELETE_ARRAY(normals);
+		SAFE_DELETE_ARRAY(colors);
+		geoRing->AddVBOToDestroy(m_vbo);
+	}
+
 	void updateIndexBufferId() {
 		GLuint acc = 0;
 		for (int i=0; i<4; i++) {
 			GLuint x = (edgeFriend[i]) ? 1 : 0;
 			acc = acc | (x<<i);
 		}
-		assert(acc<16);
+		PiAssert(acc<NUM_INDEX_LISTS);
 		indices_vbo = indices_list[acc];
 		indices_tri_count = indices_tri_counts[acc];
 	}
@@ -975,15 +976,16 @@ public:
 		GEOPLATE_FRAC = 1.0 / double(GEOPLATE_EDGELEN-1);
 
 		if (midIndices) {
-			delete [] midIndices;
+			SAFE_DELETE_ARRAY(midIndices);
 			for (int i=0; i<4; i++) {
-				delete [] loEdgeIndices[i];
-				delete [] hiEdgeIndices[i];
+				SAFE_DELETE_ARRAY(loEdgeIndices[i]);
+				SAFE_DELETE_ARRAY(hiEdgeIndices[i]);
 			}
-			if (indices_vbo) {
-				glDeleteBuffersARB(1, &indices_vbo);
-			}
-			delete [] vbotemp;
+			SAFE_DELETE_ARRAY(vbotemp);
+		}
+
+		if (indices_vbo) {
+			glDeleteBuffersARB(1, &indices_vbo);
 		}
 
 		{
@@ -1132,19 +1134,6 @@ public:
 					idx += 3;
 				}
 			}
-			// find min/max indices
-			for (int i=0; i<4; i++) {
-				s_loMinIdx[i] = s_hiMinIdx[i] = 1<<30;
-				s_loMaxIdx[i] = s_hiMaxIdx[i] = 0;
-				for (int j=0; j<3*(GEOPLATE_EDGELEN/2); j++) {
-					if (loEdgeIndices[i][j] < s_loMinIdx[i]) s_loMinIdx[i] = loEdgeIndices[i][j];
-					if (loEdgeIndices[i][j] > s_loMaxIdx[i]) s_loMaxIdx[i] = loEdgeIndices[i][j];
-				}
-				for (int j=0; j<VBO_COUNT_HI_EDGE; j++) {
-					if (hiEdgeIndices[i][j] < s_hiMinIdx[i]) s_hiMinIdx[i] = hiEdgeIndices[i][j];
-					if (hiEdgeIndices[i][j] > s_hiMaxIdx[i]) s_hiMaxIdx[i] = hiEdgeIndices[i][j];
-				}
-			}
 
 			// these will hold the optimised indices
 			VecShortHolder pl_short[NUM_INDEX_LISTS];
@@ -1190,32 +1179,7 @@ public:
 					test_e[acc].e[3] = (acc & 0x08) ? true : false;
 				}
 
-#if 0
 				// populate the N indices lists from the arrays built during InitTerrainIndices()
-				VecHolder pl[NUM_INDEX_LISTS];
-				for( int i=0; i<NUM_INDEX_LISTS; ++i ) {
-					indices_tri_counts[i] = getIndices(pl[i].v, test_e[i].e);
-				}
-
-				// iterate over each index list and optimize it
-				for( int i=0; i<NUM_INDEX_LISTS; ++i ) {
-					int tri_count = indices_tri_counts[i];
-					VertexCacheOptimizerInt vco;
-					VertexCacheOptimizerInt::Result res = vco.Optimize(&pl[i].v[0], tri_count);
-					PiAssert(0 == res);
-				}
-
-				// copy the short values
-				for( int i=0; i<NUM_INDEX_LISTS; ++i ) {
-					pl_short[i].v.reserve( pl[i].v.size() );
-					for( int j=0; j<pl[i].v.size(); ++j ) {
-						PiAssert( USHRT_MAX > pl[i].v[j] );
-						pl_short[i].v.push_back( pl[i].v[j] );
-					}
-				}
-#else
-				// populate the N indices lists from the arrays built during InitTerrainIndices()
-				VecHolder pl[NUM_INDEX_LISTS];
 				for( int i=0; i<NUM_INDEX_LISTS; ++i ) {
 					indices_tri_counts[i] = getIndices<unsigned short>(pl_short[i].v, test_e[i].e);
 				}
@@ -1227,7 +1191,6 @@ public:
 					VertexCacheOptimizerUShort::Result res = vco.Optimize(&pl_short[i].v[0], tri_count);
 					PiAssert(0 == res);
 				}
-#endif
 			}
 
 			// everything should be hunky-dory for setting up as OpenGL index buffers now.
@@ -1263,19 +1226,16 @@ public:
 			}
 #endif /* GEOPLATE_USE_THREADING */
 		}
+
+		if (midIndices) {
+			SAFE_DELETE_ARRAY(midIndices);
+			for (int i=0; i<4; i++) {
+				SAFE_DELETE_ARRAY(loEdgeIndices[i]);
+				SAFE_DELETE_ARRAY(hiEdgeIndices[i]);
+			}
+		}
 	}
 
-	~GeoPlate() {
-		SDL_DestroyMutex(m_kidsLock);
-		for (int i=0; i<4; i++) {
-			if (edgeFriend[i]) edgeFriend[i]->NotifyEdgeFriendDeleted(this);
-		}
-		for (int i=0; i<4; i++) if (kids[i]) delete kids[i];
-		delete vertices;
-		delete normals;
-		delete colors;
-		geoRing->AddVBOToDestroy(m_vbo);
-	}
 	void UpdateVBOs() {
 		m_needUpdateVBOs = true;
 	}
@@ -1311,6 +1271,7 @@ public:
 	 * for adjacent tiles */
 	void GetEdgeMinusOneVerticesFlipped(int edge, vector3d *ev) {
 		//PROFILE_SCOPED()
+		PiAssert(edge!=-1);
 		if( edge<0 || edge>4) return;
 		if (edge == 0) {
 			for (int x=0; x<GEOPLATE_EDGELEN; x++) ev[GEOPLATE_EDGELEN-1-x] = vertices[x + GEOPLATE_EDGELEN];
@@ -1326,6 +1287,7 @@ public:
 	}
 	static void GetEdge(vector3d *verts, int edge, vector3d *ev) {
 		//PROFILE_SCOPED()
+		PiAssert(edge!=-1);
 		if( edge<0 || edge>4) return;
 		if (edge == 0) {
 			for (int x=0; x<GEOPLATE_EDGELEN; x++) ev[x] = verts[x];
@@ -1341,6 +1303,7 @@ public:
 	}
 	static void SetEdge(vector3d *verts, int edge, const vector3d *ev) {
 		//PROFILE_SCOPED()
+		PiAssert(edge!=-1);
 		if( edge<0 || edge>4) return;
 		if (edge == 0) {
 			for (int x=0; x<GEOPLATE_EDGELEN; x++) verts[x] = ev[x];
@@ -1377,7 +1340,7 @@ public:
 				const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
 				normals[x] = norm;
 				// make color
-				const vector3d p = GetSurfacePointCyl(x*GEOPLATE_FRAC, 0, m_halfLen);
+				const vector3d p = GetSurfacePointCyl(x*GEOPLATE_FRAC, 0.0, m_halfLen);
 				const double height = colors[x].x;
 				colors[x] = geoRing->GetColor(p, height, norm);
 			}
@@ -1421,7 +1384,7 @@ public:
 				const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
 				normals[y*GEOPLATE_EDGELEN] = norm;
 				// make color
-				const vector3d p = GetSurfacePointCyl(0, y*GEOPLATE_FRAC, m_halfLen);
+				const vector3d p = GetSurfacePointCyl(0.0, y*GEOPLATE_FRAC, m_halfLen);
 				const double height = colors[y*GEOPLATE_EDGELEN].x;
 				colors[y*GEOPLATE_EDGELEN] = geoRing->GetColor(p, height, norm);
 			}
@@ -1473,19 +1436,7 @@ public:
 			en2[i] = (en2[i-1]+en2[i+1]).Normalized();
 			ec2[i] = (ec2[i-1]+ec2[i+1]) * 0.5;
 		}
-		
-		// hacking
-		/*vector3d colorIdx[4] = { 
-			vector3d( 1.0, 0.0, 0.0 ),
-			vector3d( 0.0, 1.0, 0.0 ),
-			vector3d( 0.0, 0.0, 1.0 ),
-			vector3d( 1.0, 0.0, 1.0 )
-		};
-		for (int i=1; i<GEOPLATE_EDGELEN; ++i) {
-			if( edge>=0 && edge<4) {
-				ec2[i] = colorIdx[edge];
-			}
-		}*/
+
 		SetEdge(this->vertices, edge, ev2);
 		SetEdge(this->normals, edge, en2);
 		SetEdge(this->colors, edge, ec2);
@@ -1640,7 +1591,10 @@ public:
 				// correct
 				GetEdge(vertices, i, ev[i]);
 			} else {
-				//printf("omg its gone bad!\n");
+				// what this does is gets the points from our own edge - 
+				// - and just copies them, it is most certainly not correct,
+				// - however it looks effective enough for the normals.
+				GetEdge(vertices, i, ev[i]);
 			}
 		}
 	
@@ -1657,7 +1611,7 @@ public:
 	}
 
 	vector3d GetSurfacePointCyl(const double x, const double y, const double halfLength) const {
-		double theta = lerp( x, ang[1], ang[0] );//*2.0*M_PI;
+		double theta = lerp( x, ang[1], ang[0] );
 		
 		const vector3d topEndEdge(sin(theta), m_yoffset + halfLength, cos(theta));		// vertices at top edge of circle
 		const vector3d bottomEndEdge(sin(theta), m_yoffset - halfLength, cos(theta));	// vertices at bottom edge of circle
@@ -1856,7 +1810,6 @@ public:
 		//PROFILE_SCOPED()
 		GeoPlate *e = edgeFriend[edge];
 		if (!e) return 0;
-		//assert (e);// && (e->m_depth >= m_depth));
 		const int we_are = e->GetEdgeIdxOf(this);
 		if (-1 == we_are ) return 0;
 		// neighbour patch has not split yet (is at depth of this patch), so kids of this patch do
@@ -1890,22 +1843,6 @@ public:
 			glEnableClientState(GL_NORMAL_ARRAY);
 			glEnableClientState(GL_COLOR_ARRAY);
 
-			/*glBindBufferARB(GL_ARRAY_BUFFER, m_vbo);
-			glVertexPointer(3, GL_FLOAT, sizeof(VBOVertex), 0);
-			glNormalPointer(GL_FLOAT, sizeof(VBOVertex), reinterpret_cast<void *>(3*sizeof(float)));
-			glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(VBOVertex), reinterpret_cast<void *>(6*sizeof(float)));
-			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, indices_vbo);
-			glDrawRangeElements(GL_TRIANGLES, 0, GEOPLATE_NUMVERTICES-1, VBO_COUNT_MID_IDX, GL_UNSIGNED_SHORT, reinterpret_cast<void*>(IDX_VBO_MAIN_OFFSET));
-			for (int i=0; i<4; i++) {
-				if (edgeFriend[i]) {
-					glDrawRangeElements(GL_TRIANGLES, s_hiMinIdx[i], s_hiMaxIdx[i], VBO_COUNT_HI_EDGE, GL_UNSIGNED_SHORT, reinterpret_cast<void*>(IDX_VBO_HI_OFFSET(i)));
-				} else {
-					glDrawRangeElements(GL_TRIANGLES, s_loMinIdx[i], s_loMaxIdx[i], VBO_COUNT_LO_EDGE, GL_UNSIGNED_SHORT, reinterpret_cast<void*>(IDX_VBO_LO_OFFSET(i)));
-				}
-			}
-			glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, 0);*/
-
 			// update the indices used for rendering
 			updateIndexBufferId();
 
@@ -1922,47 +1859,10 @@ public:
 			glDisableClientState(GL_NORMAL_ARRAY);
 			glDisableClientState(GL_COLOR_ARRAY);
 			glPopMatrix();
-
-			/*static const vector3d colorIdx[4] = { 
-				vector3d( 1.0, 0.0, 0.0 ),	// red
-				vector3d( 0.0, 1.0, 0.0 ),	// green
-				vector3d( 0.0, 0.0, 1.0 ),	// blue
-				vector3d( 1.0, 0.0, 1.0 )	// purple
-			};
-			glLineWidth(1.0);
-			for (int i=0; i<4; ++i) {
-				if (edgeFriend[i]) {
-					glBegin(GL_LINES);
-					glColor3dv( &colorIdx[i][0] );
-					glVertex3dv( &clipCentroid[0] );
-					vector3d dir = (edgeFriend[i]->clipCentroid - clipCentroid).Normalized()*0.000075;
-					glVertex3dv( &(clipCentroid + dir)[0] );
-					glEnd();
-				}
-			}
-
-			glLineWidth(5.0);
-			glBegin(GL_LINES);
-			//glColor3f( 1.0f, 1.0f, 1.0f );
-			glColor3dv( &colorIdx[m_cIdx][0] );
-			static const vector3d right(0.00001, 0.0, 0.0);
-			static const vector3d up(0.0, 0.00001, 0.0);
-			static const vector3d fwd(0.0, 0.0, 0.00001);
-			// x axis
-			glVertex3dv( &(clipCentroid-right)[0] );
-			glVertex3dv( &(clipCentroid+right)[0] );
-			// y axis
-			glVertex3dv( &(clipCentroid-up)[0] );
-			glVertex3dv( &(clipCentroid+up)[0] );
-			// z axis
-			glVertex3dv( &(clipCentroid-fwd)[0] );
-			glVertex3dv( &(clipCentroid+fwd)[0] );
-			glEnd();*/
 		}
 	}
 
 	void LODUpdate(vector3d &campos) {
-		//vector3d centroid = (vBE[0]+vBE[1]).Normalized();
 		vector3d centroid = GetSurfacePointCyl(0.5, 0.5, m_halfLen);
 		centroid = (1.0 + (-geoRing->GetHeight(centroid))) * centroid;
 
@@ -1981,11 +1881,11 @@ public:
 			}
 		}
 		if (!(canSplit && (m_depth < GEOPLATE_MAX_DEPTH) &&
-		    ((campos - centroid).Length() < m_roughLength)))
+		    ((campos - centroid).Length() < m_roughLength))) {
 			canSplit = false;
+		}
 		// always split at first level
 		if (!parent) canSplit = true;
-		/*canSplit = false;*/
 
 		bool canMerge = true;
 
@@ -2050,12 +1950,6 @@ public:
 				SDL_SemWait(s_geoRingSem[1]);
 				SDL_SemWait(s_geoRingSem[2]);
 				SDL_SemWait(s_geoRingSem[3]);
-#ifdef _DEBUG
-				for (int i=0; i<4; ++i) {
-					PiAssert(GeoPlate::s_geoPlates[i]==0);
-					PiAssert(SDL_SemValue(GeoPlate::s_geoPlateSem[i])==0);
-				}
-#endif
 #else
 				for (int i=0; i<4; ++i) _kids[i]->GenerateMesh();
 #endif
@@ -2082,8 +1976,8 @@ public:
 };
 //static 
 unsigned short *GeoPlate::midIndices = 0;
-unsigned short *GeoPlate::loEdgeIndices[4];
-unsigned short *GeoPlate::hiEdgeIndices[4];
+unsigned short *GeoPlate::loEdgeIndices[4] = {0};
+unsigned short *GeoPlate::hiEdgeIndices[4] = {0};
 GLuint GeoPlate::indices_vbo = 0;
 GLuint GeoPlate::indices_list[NUM_PLATE_INDICES] = {0};
 GLuint GeoPlate::indices_tri_count = 0;
@@ -2507,33 +2401,14 @@ void GeoRing::Render(vector3d campos, const float radius, const float scale) {
 	glMaterialfv (GL_FRONT, GL_EMISSION, black);
 	glEnable(GL_COLOR_MATERIAL);
 
-	/*glDisable(GL_CULL_FACE);
-
-	glLineWidth(1.0);
-	glPolygonMode(GL_FRONT, GL_LINE);
-	for (size_t i=0; i<m_hull.size(); i++) {
-		//m_hull[i]->Render(campos, planes);
-		m_hull[i]->RenderNormals(campos, planes);
-	}
-
-	glPointSize(10.0f);
-	glPolygonMode(GL_FRONT, GL_POINT);
-	for (size_t i=0; i<m_hull.size(); i++) {
-		m_hull[i]->Render(campos, planes);
-	}
-
-	glEnable(GL_CULL_FACE);*/
-
 	glPolygonMode(GL_FRONT, GL_FILL);
 
 	for (size_t i=0; i<m_wallInner.size(); ++i) {
 		m_wallInner[i]->Render(campos, planes);
-		//m_wallInner[i]->RenderNormals(campos, planes);
 	}
 
 	for (size_t i=0; i<m_wallOuter.size(); ++i) {
 		m_wallOuter[i]->Render(campos, planes);
-		//m_wallOuter[i]->RenderNormals(campos, planes);
 	}
 
 	for (size_t i=0; i<m_hull.size(); ++i) {
