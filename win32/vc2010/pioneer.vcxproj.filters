@@ -992,6 +992,9 @@
     <ClInclude Include="..\..\src\StationShipyardForm.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\vcacheopt.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\Makefile.am">

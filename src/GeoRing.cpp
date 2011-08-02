@@ -7,13 +7,15 @@
 
 #include "profiler/Profiler.h"
 
+#include "vcacheopt.h"
+
 #define GEOPLATE_USE_THREADING
 
 // tri edge lengths
-#define GEOPLATE_SUBDIVIDE_AT_CAMDIST	2.0 //5.0
+#define GEOPLATE_SUBDIVIDE_AT_CAMDIST	1.5 //5.0
 #define GEOPLATE_MAX_DEPTH	15
 // must be an odd number
-#define GEOPLATE_EDGELEN_DEFAULT	7 //15
+#define GEOPLATE_EDGELEN_DEFAULT	7//15
 #define GEOPLATE_NUMVERTICES	(GEOPLATE_EDGELEN*GEOPLATE_EDGELEN)
 #define GEORING_USE_THREADING
 
@@ -50,7 +52,7 @@ struct VBOVertex
 struct VBOVertexTex
 {
 	float x,y,z;
-	float s,t;	// can I pack these into two 16 bit hlaf-floats? (Ans: yes I should, but how?)
+	float s,t;	// can I pack these into two 16 bit half-floats? (Ans: yes I should, but how?)
 };
 #pragma pack()
 
@@ -67,6 +69,15 @@ struct VBOVertexTex
 // for glDrawRangeElements
 static int s_loMinIdx[4], s_loMaxIdx[4];
 static int s_hiMinIdx[4], s_hiMaxIdx[4];
+
+// hold the 16 possible terrain edge connections
+const int NUM_INDEX_LISTS = 16;
+typedef struct {
+	std::vector<int> v;
+} VecHolder;
+typedef struct {
+	std::vector<unsigned short> v;
+} VecShortHolder;
 
 #define NUM_VBE 2
 
@@ -171,16 +182,16 @@ public:
 		{
 			clipRadius = std::max(clipRadius, (vertices[i]-clipCentroid).Length());
 			VBOVertex *pData = vbotemp + i;
-			pData->x = float(vertices[i].x);
-			pData->y = float(vertices[i].y);
-			pData->z = float(vertices[i].z);
+			pData->x = float(vertices[i].x - clipCentroid.x);
+			pData->y = float(vertices[i].y - clipCentroid.y);
+			pData->z = float(vertices[i].z - clipCentroid.z);
 			pData->nx = float(normals[i].x);
 			pData->ny = float(normals[i].y);
 			pData->nz = float(normals[i].z);
 			pData->col[0] = static_cast<unsigned char>(Clamp(colors[i].x*255.0, 0.0, 255.0));
 			pData->col[1] = static_cast<unsigned char>(Clamp(colors[i].y*255.0, 0.0, 255.0));
 			pData->col[2] = static_cast<unsigned char>(Clamp(colors[i].z*255.0, 0.0, 255.0));
-			pData->col[3] = 1.0;
+			pData->col[3] = 255;
 		}
 		glBufferDataARB(GL_ARRAY_BUFFER, sizeof(VBOVertex)*GEOPLATE_NUMVERTICES, vbotemp, GL_DYNAMIC_DRAW);
 		glBindBufferARB(GL_ARRAY_BUFFER, 0);
@@ -310,6 +321,11 @@ public:
 				return;
 			}
 		}
+
+		vector3d relpos = clipCentroid - campos;
+		glPushMatrix();
+		glTranslated(relpos.x, relpos.y, relpos.z);
+
 		Pi::statSceneTris += 2*(GEOPLATE_EDGELEN-1)*(GEOPLATE_EDGELEN-1);
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glEnableClientState(GL_NORMAL_ARRAY);
@@ -327,6 +343,7 @@ public:
 		glDisableClientState(GL_VERTEX_ARRAY);
 		glDisableClientState(GL_NORMAL_ARRAY);
 		glDisableClientState(GL_COLOR_ARRAY);
+		glPopMatrix();
 	}
 
 	void RenderNormals(vector3d &campos, Plane planes[6]) {
@@ -463,9 +480,9 @@ public:
 		{
 			clipRadius = std::max(clipRadius, (vertices[i]-clipCentroid).Length());
 			VBOVertex *pData = vbotemp + i;
-			pData->x = float(vertices[i].x);
-			pData->y = float(vertices[i].y);
-			pData->z = float(vertices[i].z);
+			pData->x = float(vertices[i].x - clipCentroid.x);
+			pData->y = float(vertices[i].y - clipCentroid.y);
+			pData->z = float(vertices[i].z - clipCentroid.z);
 			pData->nx = float(normals[i].x);
 			pData->ny = float(normals[i].y);
 			pData->nz = float(normals[i].z);
@@ -637,6 +654,11 @@ public:
 				return;
 			}
 		}
+
+		vector3d relpos = clipCentroid - campos;
+		glPushMatrix();
+		glTranslated(relpos.x, relpos.y, relpos.z);
+
 		Pi::statSceneTris += 2*(GEOPLATE_WALL_LEN-1)*(GEOPLATE_WALL_LEN-1);
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glEnableClientState(GL_NORMAL_ARRAY);
@@ -654,6 +676,7 @@ public:
 		glDisableClientState(GL_VERTEX_ARRAY);
 		glDisableClientState(GL_NORMAL_ARRAY);
 		glDisableClientState(GL_COLOR_ARRAY);
+		glPopMatrix();
 	}
 
 	void RenderNormals(vector3d &campos, Plane planes[6]) {
@@ -726,6 +749,7 @@ bool rayIntersectsTriangle(
 	}
 }
 
+#define NUM_PLATE_INDICES 16
 class GeoPlate {
 public:
 	vector3d vbe[NUM_VBE];
@@ -740,6 +764,9 @@ public:
 	static unsigned short *loEdgeIndices[4];
 	static unsigned short *hiEdgeIndices[4];
 	static GLuint indices_vbo;
+	static GLuint indices_list[NUM_PLATE_INDICES];
+	static GLuint indices_tri_count;
+	static GLuint indices_tri_counts[NUM_PLATE_INDICES];
 	static VBOVertex *vbotemp;
 	GeoPlate *kids[4];
 	GeoPlate *parent;
@@ -894,6 +921,53 @@ public:
 		memset(normals, 0, sizeof(vector3d)*GEOPLATE_NUMVERTICES);
 		memset(colors, 0, sizeof(vector3d)*GEOPLATE_NUMVERTICES);
 #endif
+	}
+
+	void updateIndexBufferId() {
+		GLuint acc = 0;
+		for (int i=0; i<4; i++) {
+			GLuint x = (edgeFriend[i]) ? 1 : 0;
+			acc = acc | (x<<i);
+		}
+		assert(acc<16);
+		indices_vbo = indices_list[acc];
+		indices_tri_count = indices_tri_counts[acc];
+	}
+
+	template<typename T>
+	static int getIndices(std::vector<T> &pl, const bool *isHigh)
+	{
+		// calculate how many tri's there are
+		int tri_count = (VBO_COUNT_MID_IDX / 3); 
+		for( int i=0; i<4; ++i ) {
+			if( isHigh[i] ) {
+				tri_count += (VBO_COUNT_HI_EDGE / 3);
+			} else {
+				tri_count += (VBO_COUNT_LO_EDGE / 3);
+			}
+		}
+
+		// pre-allocate enough space
+		pl.reserve(tri_count);
+
+		// add all of the middle indices
+		for(int i=0; i<VBO_COUNT_MID_IDX; ++i) {
+			pl.push_back(midIndices[i]);
+		}
+		// selectively add the HI or LO detail indices
+		for (int i=0; i<4; i++) {
+			if( isHigh[i] ) {
+				for(int j=0; j<VBO_COUNT_HI_EDGE; ++j) {
+					pl.push_back(hiEdgeIndices[i][j]);
+				}
+			} else {
+				for(int j=0; j<VBO_COUNT_LO_EDGE; ++j) {
+					pl.push_back(loEdgeIndices[i][j]);
+				}
+			}
+		}
+
+		return tri_count;
 	}
 
 	static void Init() {
@@ -1070,30 +1144,105 @@ public:
 					if (hiEdgeIndices[i][j] < s_hiMinIdx[i]) s_hiMinIdx[i] = hiEdgeIndices[i][j];
 					if (hiEdgeIndices[i][j] > s_hiMaxIdx[i]) s_hiMaxIdx[i] = hiEdgeIndices[i][j];
 				}
-				//printf("%d:\nLo %d:%d\nHi: %d:%d\n", i, s_loMinIdx[i], s_loMaxIdx[i], s_hiMinIdx[i], s_hiMaxIdx[i]);
 			}
 
-			glGenBuffersARB(1, &indices_vbo);
-			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, indices_vbo);
-			glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, IDX_VBO_MAIN_OFFSET + sizeof(unsigned short)*VBO_COUNT_MID_IDX, 0, GL_STATIC_DRAW);
-			for (int i=0; i<4; i++) {
-				glBufferSubDataARB(GL_ELEMENT_ARRAY_BUFFER, 
-					IDX_VBO_LO_OFFSET(i),
-					sizeof(unsigned short)*3*(GEOPLATE_EDGELEN/2),
-					loEdgeIndices[i]);
-			}
-			for (int i=0; i<4; i++) {
-				glBufferSubDataARB(GL_ELEMENT_ARRAY_BUFFER,
-					IDX_VBO_HI_OFFSET(i),
-					sizeof(unsigned short)*VBO_COUNT_HI_EDGE,
-					hiEdgeIndices[i]);
-			}
-			glBufferSubDataARB(GL_ELEMENT_ARRAY_BUFFER,
-					IDX_VBO_MAIN_OFFSET,
-					sizeof(unsigned short)*VBO_COUNT_MID_IDX,
-					midIndices);
-			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, 0);
+			// these will hold the optimised indices
+			VecShortHolder pl_short[NUM_INDEX_LISTS];
+			{
+				// an initial bunch of values that will get used to sort out the above and following real lists
+				typedef struct {
+					bool e[4];
+				} edgebools;
+				edgebools e[NUM_INDEX_LISTS] = {
+					{0000,0000,0000,0000},
+					{true,0000,0000,0000},
+					{0000,true,0000,0000},
+					{true,true,0000,0000},
+					{0000,0000,true,0000},
+					{true,0000,true,0000},
+					{0000,true,true,0000},
+					{true,true,true,0000},
+					{0000,0000,0000,true},
+					{true,0000,0000,true},
+					{0000,true,0000,true},
+					{true,true,0000,true},
+					{0000,0000,true,true},
+					{true,0000,true,true},
+					{0000,true,true,true},
+					{true,true,true,true}
+				};
 
+				// Calculate the index based on the four binary ops
+				// then generate the entry at that index. 
+				// Means I don't have to work it out by hand ;)
+				unsigned char acc = 0;
+				edgebools test_e[NUM_INDEX_LISTS] = {0};
+				for( int i=0; i<NUM_INDEX_LISTS; ++i ) {
+					acc=0;
+					for( size_t j=0; j<4; ++j ) {
+						size_t x = e[i].e[j] ? 1 : 0;
+						acc = acc | (x<<j);
+					}
+					assert(acc<16);
+					test_e[acc].e[0] = (acc & 0x01) ? true : false;
+					test_e[acc].e[1] = (acc & 0x02) ? true : false;
+					test_e[acc].e[2] = (acc & 0x04) ? true : false;
+					test_e[acc].e[3] = (acc & 0x08) ? true : false;
+				}
+
+#if 0
+				// populate the N indices lists from the arrays built during InitTerrainIndices()
+				VecHolder pl[NUM_INDEX_LISTS];
+				for( int i=0; i<NUM_INDEX_LISTS; ++i ) {
+					indices_tri_counts[i] = getIndices(pl[i].v, test_e[i].e);
+				}
+
+				// iterate over each index list and optimize it
+				for( int i=0; i<NUM_INDEX_LISTS; ++i ) {
+					int tri_count = indices_tri_counts[i];
+					VertexCacheOptimizerInt vco;
+					VertexCacheOptimizerInt::Result res = vco.Optimize(&pl[i].v[0], tri_count);
+					PiAssert(0 == res);
+				}
+
+				// copy the short values
+				for( int i=0; i<NUM_INDEX_LISTS; ++i ) {
+					pl_short[i].v.reserve( pl[i].v.size() );
+					for( int j=0; j<pl[i].v.size(); ++j ) {
+						PiAssert( USHRT_MAX > pl[i].v[j] );
+						pl_short[i].v.push_back( pl[i].v[j] );
+					}
+				}
+#else
+				// populate the N indices lists from the arrays built during InitTerrainIndices()
+				VecHolder pl[NUM_INDEX_LISTS];
+				for( int i=0; i<NUM_INDEX_LISTS; ++i ) {
+					indices_tri_counts[i] = getIndices<unsigned short>(pl_short[i].v, test_e[i].e);
+				}
+
+				// iterate over each index list and optimize it
+				for( int i=0; i<NUM_INDEX_LISTS; ++i ) {
+					int tri_count = indices_tri_counts[i];
+					VertexCacheOptimizerUShort vco;
+					VertexCacheOptimizerUShort::Result res = vco.Optimize(&pl_short[i].v[0], tri_count);
+					PiAssert(0 == res);
+				}
+#endif
+			}
+
+			// everything should be hunky-dory for setting up as OpenGL index buffers now.
+			for( int i=0; i<NUM_INDEX_LISTS; ++i ) {
+				glGenBuffersARB(1, &indices_list[i]);
+				glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, indices_list[i]);
+				glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned short)*indices_tri_counts[i]*3, &(pl_short[i].v[0]), GL_STATIC_DRAW);
+				glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, 0);
+			}
+
+			// default it to the last entry which uses the hi-res borders
+			indices_vbo			= indices_list[NUM_INDEX_LISTS-1];
+			indices_tri_count	= indices_tri_counts[NUM_INDEX_LISTS-1];
+
+			// if enabled we create the threads which can build the terrain
 #ifdef GEOPLATE_USE_THREADING
 			static const int indexes[4] = {0,1,2,3};
 			for( int i = 0; i<4; ++i ) {
@@ -1142,9 +1291,9 @@ public:
 			{
 				clipRadius = std::max(clipRadius, (vertices[i]-clipCentroid).Length());
 				VBOVertex *pData = vbotemp + i;
-				pData->x = float(vertices[i].x);
-				pData->y = float(vertices[i].y);
-				pData->z = float(vertices[i].z);
+				pData->x = float(vertices[i].x - clipCentroid.x);
+				pData->y = float(vertices[i].y - clipCentroid.y);
+				pData->z = float(vertices[i].z - clipCentroid.z);
 				pData->nx = float(normals[i].x);
 				pData->ny = float(normals[i].y);
 				pData->nz = float(normals[i].z);
@@ -1731,12 +1880,17 @@ public:
 					return;
 				}
 			}
+
+			vector3d relpos = clipCentroid - campos;
+			glPushMatrix();
+			glTranslated(relpos.x, relpos.y, relpos.z);
+
 			Pi::statSceneTris += 2*(GEOPLATE_EDGELEN-1)*(GEOPLATE_EDGELEN-1);
 			glEnableClientState(GL_VERTEX_ARRAY);
 			glEnableClientState(GL_NORMAL_ARRAY);
 			glEnableClientState(GL_COLOR_ARRAY);
 
-			glBindBufferARB(GL_ARRAY_BUFFER, m_vbo);
+			/*glBindBufferARB(GL_ARRAY_BUFFER, m_vbo);
 			glVertexPointer(3, GL_FLOAT, sizeof(VBOVertex), 0);
 			glNormalPointer(GL_FLOAT, sizeof(VBOVertex), reinterpret_cast<void *>(3*sizeof(float)));
 			glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(VBOVertex), reinterpret_cast<void *>(6*sizeof(float)));
@@ -1750,11 +1904,24 @@ public:
 				}
 			}
 			glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, 0);*/
+
+			// update the indices used for rendering
+			updateIndexBufferId();
+
+			glBindBufferARB(GL_ARRAY_BUFFER, m_vbo);
+			glVertexPointer(3, GL_FLOAT, sizeof(VBOVertex), 0);
+			glNormalPointer(GL_FLOAT, sizeof(VBOVertex), reinterpret_cast<void *>(3*sizeof(float)));
+			glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(VBOVertex), reinterpret_cast<void *>(6*sizeof(float)));
+			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, indices_vbo);
+			glDrawElements(GL_TRIANGLES, indices_tri_count*3, GL_UNSIGNED_SHORT, 0);
+			glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
 			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 			glDisableClientState(GL_VERTEX_ARRAY);
 			glDisableClientState(GL_NORMAL_ARRAY);
 			glDisableClientState(GL_COLOR_ARRAY);
+			glPopMatrix();
 
 			/*static const vector3d colorIdx[4] = { 
 				vector3d( 1.0, 0.0, 0.0 ),	// red
@@ -1917,7 +2084,10 @@ public:
 unsigned short *GeoPlate::midIndices = 0;
 unsigned short *GeoPlate::loEdgeIndices[4];
 unsigned short *GeoPlate::hiEdgeIndices[4];
-GLuint GeoPlate::indices_vbo;
+GLuint GeoPlate::indices_vbo = 0;
+GLuint GeoPlate::indices_list[NUM_PLATE_INDICES] = {0};
+GLuint GeoPlate::indices_tri_count = 0;
+GLuint GeoPlate::indices_tri_counts[NUM_PLATE_INDICES] = {0};
 VBOVertex *GeoPlate::vbotemp;
 
 #ifdef GEOPLATE_USE_THREADING
@@ -2264,6 +2434,8 @@ static void DrawAtmosphereSurface(const vector3d &campos, float rad)
 void GeoRing::Render(vector3d campos, const float radius, const float scale) {
 	//PROFILE_SCOPED()
 	Plane planes[6];
+	glPushMatrix();
+ 	glTranslated(-campos.x, -campos.y, -campos.z);
 	GetFrustum(planes);
 	const float atmosRadius = ATMOSPHERE_RADIUS;
 	
@@ -2305,6 +2477,8 @@ void GeoRing::Render(vector3d campos, const float radius, const float scale) {
 		shader->set_atmosColor(atmosCol.r, atmosCol.g, atmosCol.b, atmosCol.a);
 		shader->set_georingCenter(center.x, center.y, center.z);
 	}
+
+	glPopMatrix();
 
 	if (0==m_plates.size()) {
 		BuildFirstPatches();
