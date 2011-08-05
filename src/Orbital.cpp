@@ -107,11 +107,18 @@ double Orbital::GetTerrainHeight(const vector3d pos) const
 {
 	double radius = sbody->GetRadius();
 	if (m_geoRing) {
-		return radius * (1.0 - m_geoRing->GetDistFromSurface(pos));
+		return radius * (1.0 - m_geoRing->GetHeight(pos));//GetDistFromSurface(pos));
 	} else {
 		assert(0);
 		return radius;
 	}
+}
+
+double Orbital::GetRingWidth() const 
+{ 
+	double ret=0.0; 
+	(m_geoRing) ? ret=m_geoRing->GetRingWidth() : ret=0.0; 
+	return ret; 
 }
 
 #define PLANET_AMBIENT	0.1f

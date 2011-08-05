@@ -18,6 +18,7 @@ public:
 	~GeoRing();
 	void Render(vector3d campos, const float radius, const float scale);
 	double GetDistFromSurface(const vector3d p);
+	double GetRingWidth() const { return mRingWidth; }
 	// only called from fishy thread
 	void _UpdateLODs();
 	friend class GeoPlate;
@@ -33,7 +34,7 @@ public:
 	}
 	// in sbody radii
 	double GetMaxFeatureHeight() const { return m_style.GetMaxHeight(); }
-private:
+
 	inline double GetHeight(vector3d p) {
 		/*return 0.0;*/
 		const double h = m_style.GetHeight(p);
@@ -45,6 +46,7 @@ private:
 #endif // DEBUG 
 		return h;
 	}
+private:
 	GeoPlate* FindGeoPlateByIndex(const int idx) const;
 	void BuildFirstPatches();
 	typedef std::vector<GeoPlate*>::iterator PlateIter;

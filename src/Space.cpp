@@ -557,12 +557,24 @@ void CollideFrame(Frame *f)
 				}
 			}
 		}
-	} /*else if (f->m_astroBody && (f->m_astroBody->IsType(Object::ORBITAL))) {
+	} else if (f->m_astroBody && (f->m_astroBody->IsType(Object::ORBITAL))) {
+		// get the width of the orbital (eqiv' to height of cylinder)
+		const double ringWidth = static_cast<Orbital*>(f->m_astroBody)->GetRingWidth();
+		// get the radius of the orbital
+		const double radius = static_cast<Orbital*>(f->m_astroBody)->GetSBody()->GetRadius();
+
 		// this is pretty retarded
 		for (bodiesIter_t i = bodies.begin(); i!=bodies.end(); ++i) {
 			if ((*i)->GetFrame() != f) continue;
 			if (!(*i)->IsType(Object::DYNAMICBODY)) continue;
 			DynamicBody *dynBody = static_cast<DynamicBody*>(*i);
+
+			// early out - can't collide with inner surface if we're past it, probably.
+			// such collision might be a valid test if we had water/sub-surface features.
+			// also this totally ignores the hull and walls... bugger, test is crap :(
+			vector3d dynPos = dynBody->GetPosition();
+			if( dynPos.Length() > (radius*1.001) ) break;
+			if( (dynPos.y / radius) > ringWidth || (dynPos.y / radius) < -ringWidth ) break;
 
 			Aabb aabb;
 			dynBody->GetAabb(aabb);
@@ -585,18 +597,15 @@ void CollideFrame(Frame *f)
 				const vector3d &s = aabbCorners[j];
 				vector3d pos = trans * s;
 
-				vector3d axisPos(0.0, 0.0, pos.z);
+				vector3d axisPos(0.0, pos.y, 0.0);
+				// find the 2-axis distance from the axis to surface
 				double distToAxis = (axisPos - pos).Length();	// dist to axis
-				const double radius = static_cast<Orbital*>(f->m_astroBody)->GetSBody()->GetRadius();
-				const double scaleVal = radius / distToAxis;
-				vector3d surfPos = scaleVal * pos;
-				axisPos.z = surfPos.z;
-				distToAxis = (axisPos - surfPos).Length();	// dist to axis
-
-				double terrain_height = static_cast<Orbital*>(f->m_astroBody)->GetTerrainHeight(surfPos / distToAxis);
+				// normalise the x & y axis by the dist to central axis, but the z but the radius - 
+				// - should give us the position on the surface of the "unit length cylinder".
+				vector3d surfPos = vector3d(pos.x/distToAxis, pos.y/radius, pos.z/distToAxis);
+				// now get the height at that point on the terrain.
+				double terrain_height = static_cast<Orbital*>(f->m_astroBody)->GetTerrainHeight(surfPos);
 				if( terrain_height < DBL_MAX ) {
-					vector3d axisPos(0.0, 0.0, pos.z);
-					distToAxis = (axisPos - pos).Length();	// dist to axis
 					const double hitDepth = distToAxis - terrain_height;
 					if (hitDepth>0.0) {
 						c.pos = pos;
@@ -604,12 +613,13 @@ void CollideFrame(Frame *f)
 						c.depth = hitDepth;
 						c.userData1 = static_cast<void*>(dynBody);
 						c.userData2 = static_cast<void*>(f->m_astroBody);
-						//hitCallback(&c);
+						hitCallback(&c);
 					}
 				}
 			}
 		}
-	}*/
+	}
+
 	f->GetCollisionSpace()->Collide(&hitCallback);
 	for (std::list<Frame*>::iterator i = f->m_children.begin(); i != f->m_children.end(); ++i) {
 		CollideFrame(*i);

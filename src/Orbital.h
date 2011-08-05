@@ -30,6 +30,7 @@ public:
 #if OBJECTVIEWER
 	friend class OrbitalViewerView;
 #endif
+	double GetRingWidth() const;
 protected:
 	virtual void Save(Serializer::Writer &wr);
 	virtual void Load(Serializer::Reader &rd);

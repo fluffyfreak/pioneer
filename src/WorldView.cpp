@@ -605,13 +605,19 @@ void WorldView::RefreshButtonStateAndVisibility()
 			Body *astro = Pi::player->GetFrame()->m_astroBody;
 			//(GetFrame()->m_sbody->GetSuperType() == SUPERTYPE_ROCKY_PLANET)) {
 			if (astro->IsType(Object::ORBITAL)) {
-				/*const vector3d playerPos = Pi::player->GetPosition();
-				const vector3d axisToPos = (vector3d(0.0,0.0,playerPos.z) - playerPos);
-				vector3d surfacePos = axisToPos.Normalized();
-				surfacePos.z = playerPos.z / astro->GetSBody()->GetRadius();
-				double height = static_cast<Orbital*>(astro)->GetTerrainHeight(surfacePos);
+				const vector3d pos = Pi::player->GetPosition();
+				vector3d axisPos(0.0, pos.y, 0.0);
+				// find the 2-axis distance from the axis to surface
+				double distToAxis = (axisPos - pos).Length();	// dist to axis
+				// get the radius of the orbital
+				const double radius = astro->GetSBody()->GetRadius();
+				// normalise the x & y axis by the dist to central axis, but the z but the radius - 
+				// - should give us the position on the surface of the "unit length cylinder".
+				vector3d surfPos = vector3d(pos.x/distToAxis, pos.y/radius, pos.z/distToAxis);
+				// now get the height at that point on the terrain.
+				double terrain_height = static_cast<Orbital*>(astro)->GetTerrainHeight(surfPos);
 
-				double altitude = height - axisToPos.Length();
+				double altitude = terrain_height - distToAxis;
 				if (altitude < -9999999.0 || altitude > 9999999.0) {
 					m_hudAltitude->Hide();
 				} else {
@@ -620,8 +626,8 @@ void WorldView::RefreshButtonStateAndVisibility()
 					snprintf(buf, sizeof(buf), "Alt: %.0fm", altitude);
 					m_hudAltitude->SetText(buf);
 					m_hudAltitude->Show();
-				}*/
-				m_hudAltitude->Hide();
+				}
+				//m_hudAltitude->Hide();
 			} else {
 				double radius;
 				vector3d surface_pos = Pi::player->GetPosition().Normalized();
