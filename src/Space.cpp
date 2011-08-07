@@ -573,7 +573,7 @@ void CollideFrame(Frame *f)
 			// such collision might be a valid test if we had water/sub-surface features.
 			// also this totally ignores the hull and walls... bugger, test is crap :(
 			vector3d dynPos = dynBody->GetPosition();
-			if( dynPos.Length() > (radius*1.001) ) break;
+			if( dynPos.Length() > (radius*1.1) ) break;
 			if( (dynPos.y / radius) > ringWidth || (dynPos.y / radius) < -ringWidth ) break;
 
 			Aabb aabb;
