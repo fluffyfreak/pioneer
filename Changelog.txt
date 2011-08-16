@@ -1,3 +1,11 @@
+Alpha 14
+
+  * New features
+    * Lua attribute SBody.parent to find the parent of a system body (#359, #368)
+
+  * Fixes
+    * Remove a couple of hardcoded references to the data directory (#363)
+
 Alpha 13
 
   * New features
@@ -17,6 +25,13 @@ Alpha 13
       ship lands and takes off from a planet's surface (rough landing) (#295, #297)
     * New Lua method StarSystem.GetBodyPaths to get paths to all bodies in a
       system (#313)
+    * Outline overlay text (eg world labels) for improved visibility (#325,
+      #314, #258, #39, #349)
+    * Make the "video link established" text disappear after a few seconds
+      instead of flashing constantly (#319, #326)
+    * Support for translated strings; first language is German (#332)
+    * Name & title/occupation overlaid on station faces (#346)
+    * Added 'Inconsolata' font for debug and (later) console text (#343)
 
   * Fixes
     * Move sector view to current system on first open (#262)
@@ -37,6 +52,13 @@ Alpha 13
       launch (#259)
     * Enable GL extensions earlier in shader compilation to conform to shader
       spec (#329, #330)
+    * Fix occasional crash on game load (#331)
+    * Fix terrain jitter (#179)
+    * Support extended ASCII characters in texture fonts (#338)
+    * Make sure all bodies have a minimum radius of at least 10km (#321, #301)
+    * All city models checked and proper collision meshes added, drastically
+      improving city rendering performance (#348)
+    * Fix crash when music changes while in hyperspace (#345)
 
   * Internal changes
     * Merged SysLoc and SBodyPath into a single SystemPath class (#261)
@@ -46,6 +68,7 @@ Alpha 13
       variable-size containers and widgets (#279)
     * Rewrote station menus and refactored several GUI elements to have better
       abstraction and consistency (306)
+    * Debug output now shows terrain vertices and font glyphs per second
 
 Alpha 12
 
@@ -124,7 +147,7 @@ Alpha 11
     * Remove duplicate system 'EI Cancri' [2,0]
     * Crash on call to Lua method Player.AddCrime
     * Crash on any mission failure (#144)
-	* Mission status screen layout tweaks (#145)
+    * Mission status screen layout tweaks (#145)
 
   * Internal changes
     * Lots of code cleanups, warnings silenced, etc
