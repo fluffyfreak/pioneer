@@ -2345,7 +2345,7 @@ void GeoRing::Render(vector3d campos, const float radius, const float scale) {
 		GetAtmosphereFlavor(&atmosCol, &atmosDensity);
 		atmosDensity *= 0.00005;
 
-		if (atmosDensity != 0.0) {
+		/*if (atmosDensity != 0.0) {
 			GeoRingShader *shader = s_geoRingSkyShader[Render::State::GetNumLights()-1];
 			Render::State::UseProgram(shader);
 			shader->set_georingScale(scale);
@@ -2361,7 +2361,7 @@ void GeoRing::Render(vector3d campos, const float radius, const float scale) {
 			// show ugly polygonal angles
 			DrawAtmosphereSurface(campos, atmosRadius*1.01);
 			glDisable(GL_BLEND);
-		}
+		}*/
 
 		GeoRingShader *shader = s_geoRingSurfaceShader[Render::State::GetNumLights()-1];
 		Render::State::UseProgram(shader);
