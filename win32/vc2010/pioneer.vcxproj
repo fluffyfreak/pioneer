@@ -123,6 +123,7 @@
     <ClCompile Include="..\..\src\gui\GuiButton.cpp" />
     <ClCompile Include="..\..\src\gui\GuiContainer.cpp" />
     <ClCompile Include="..\..\src\gui\GuiFixed.cpp" />
+    <ClCompile Include="..\..\src\gui\GuiGradient.cpp" />
     <ClCompile Include="..\..\src\gui\GuiImage.cpp" />
     <ClCompile Include="..\..\src\gui\GuiImageButton.cpp" />
     <ClCompile Include="..\..\src\gui\GuiImageRadioButton.cpp" />
@@ -148,6 +149,7 @@
     <ClCompile Include="..\..\src\IniConfig.cpp" />
     <ClCompile Include="..\..\src\KeyBindings.cpp" />
     <ClCompile Include="..\..\src\Lengyel.cpp" />
+    <ClCompile Include="..\..\src\Lang.cpp" />
     <ClCompile Include="..\..\src\LmrModel.cpp" />
     <ClCompile Include="..\..\src\LuaBody.cpp" />
     <ClCompile Include="..\..\src\LuaCargoBody.cpp" />
@@ -288,6 +290,7 @@
     <ClInclude Include="..\..\src\gui\GuiContainer.h" />
     <ClInclude Include="..\..\src\gui\GuiEvents.h" />
     <ClInclude Include="..\..\src\gui\GuiFixed.h" />
+    <ClInclude Include="..\..\src\gui\GuiGradient.h" />
     <ClInclude Include="..\..\src\gui\GuiImage.h" />
     <ClInclude Include="..\..\src\gui\GuiImageButton.h" />
     <ClInclude Include="..\..\src\gui\GuiImageRadioButton.h" />

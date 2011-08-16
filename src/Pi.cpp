@@ -63,6 +63,8 @@
 #include "LuaMusic.h"
 #include "SoundMusic.h"
 #include "Background.h"
+#include "Lang.h"
+#include "Lang.h"
 
 #include "profiler/Profiler.h"
 
@@ -136,15 +138,15 @@ bool Pi::mouseYInvert;
 std::vector<Pi::JoystickState> Pi::joysticks;
 const float Pi::timeAccelRates[] = { 0.0, 1.0, 10.0, 100.0, 1000.0, 10000.0, 100000.0 };
 const char * const Pi::combatRating[] = {
-	"Harmless",
-	"Mostly harmless",
-	"Poor",
-	"Average",
-	"Above Average",
-	"Competent",
-	"Dangerous",
-	"Deadly",
-	"ELITE"
+	Lang::HARMLESS,
+	Lang::MOSTLY_HARMLESS,
+	Lang::POOR,
+	Lang::AVERAGE,
+	Lang::ABOVE_AVERAGE,
+	Lang::COMPETENT,
+	Lang::DANGEROUS,
+	Lang::DEADLY,
+	Lang::ELITE
 };
 
 #if OBJECTVIEWER
@@ -179,7 +181,7 @@ static void draw_progress(float progress)
 	Gui::Screen::EnterOrtho();
 	glClearColor(0,0,0,0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	std::string msg = stringf(256, "Simulating evolution of the universe: %.1f billion years ;-)", progress * 15.0f);
+	std::string msg = stringf(256, Lang::SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS, progress * 15.0f);
 	Gui::Screen::MeasureString(msg, w, h);
 	glColor3f(1.0f,1.0f,1.0f);
 	Gui::Screen::RenderString(msg, 0.5f*(Gui::Screen::GetWidth()-w), 0.5f*(Gui::Screen::GetHeight()-h));
@@ -273,6 +275,9 @@ static void LuaInitGame() {
 
 void Pi::Init()
 {
+	if (!Lang::LoadStrings(config.String("Lang")))
+        abort();
+
 	Pi::detail.planets = config.Int("DetailPlanets");
 	Pi::detail.cities = config.Int("DetailCities");
 
@@ -651,7 +656,7 @@ void Pi::HandleEvents()
                             if(Pi::IsGameStarted()) {
                                 std::string name = join_path(GetFullSavefileDirPath().c_str(), "_quicksave", 0);
                                 Serializer::SaveGame(name.c_str());
-                                Pi::cpan->MsgLog()->Message("", "Game saved to "+name);
+                                Pi::cpan->MsgLog()->Message("", Lang::GAME_SAVED_TO+name);
                             }
                             break;
                         }
@@ -729,7 +734,7 @@ static void draw_intro(Background::Starfield *starfield, Background::MilkyWay *m
 	Render::State::SetZnearZfar(1.0f, 10000.0f);
 	LmrObjParams params = {
 		{ },
-		{ "PIONEER" },
+		{ Lang::PIONEER },
 		{ 0.0f, 0.0f, -1.0f }, { 0.0f, 0.0f, 0.0f },
 		{	// pColor[3]
 		{ { .2f, .2f, .5f, 1.0f }, { 1, 1, 1 }, { 0, 0, 0 }, 100.0 },
@@ -772,7 +777,7 @@ static void draw_tombstone(float _time)
 
 	LmrObjParams params = {
 		{ 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-		{ "RIP OLD BEAN" },
+		{ Lang::TOMBSTONE_EPITAPH },
 		{ 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 0.0f },
 		{	// pColor[3]
 		{ { 1.0f, 1.0f, 1.0f, 1.0f }, { 0, 0, 0 }, { 0, 0, 0 }, 0 },
@@ -938,6 +943,8 @@ void Pi::Start()
 	Gui::Screen::AddBaseWidget(splash, 0, 0);
 	splash->SetTransparency(true);
 
+	Gui::Screen::PushFont("OverlayFont");
+
 	const float w = Gui::Screen::GetWidth() / 2;
 	const float h = Gui::Screen::GetHeight() / 2;
 	const int OPTS = 5;
@@ -948,20 +955,22 @@ void Pi::Start()
 	opts[3] = new Gui::ToggleButton(); opts[3]->SetShortcut(SDLK_4, KMOD_NONE);
 	opts[4] = new Gui::ToggleButton(); opts[4]->SetShortcut(SDLK_5, KMOD_NONE);
 	splash->Add(opts[0], w, h-64);
-	splash->Add(new Gui::Label("New game starting on Earth"), w+32, h-64);
+	splash->Add(new Gui::Label(Lang::MM_START_NEW_GAME_EARTH), w+32, h-64);
 	splash->Add(opts[1], w, h-32);
-	splash->Add(new Gui::Label("New game starting on Epsilon Eridani"), w+32, h-32);
+	splash->Add(new Gui::Label(Lang::MM_START_NEW_GAME_E_ERIDANI), w+32, h-32);
 	splash->Add(opts[2], w, h);
-	splash->Add(new Gui::Label("New game starting on debug point"), w+32, h);
+	splash->Add(new Gui::Label(Lang::MM_START_NEW_GAME_DEBUG), w+32, h);
 	splash->Add(opts[3], w, h+32);
-	splash->Add(new Gui::Label("Load a saved game"), w+32, h+32);
+	splash->Add(new Gui::Label(Lang::MM_LOAD_SAVED_GAME), w+32, h+32);
 	splash->Add(opts[4], w, h+64);
-	splash->Add(new Gui::Label("Quit"), w+32, h+64);
+	splash->Add(new Gui::Label(Lang::MM_QUIT), w+32, h+64);
 
     std::string version("Pioneer " PIONEER_VERSION);
     if (strlen(PIONEER_EXTRAVERSION)) version += " (" PIONEER_EXTRAVERSION ")";
 
     splash->Add(new Gui::Label(version), Gui::Screen::GetWidth()-200, Gui::Screen::GetHeight()-32);
+
+	Gui::Screen::PopFont();
 
 	splash->ShowAll();
 
@@ -1211,7 +1220,9 @@ void Pi::MainLoop()
 		if (Pi::showDebugInfo) {
 			Gui::Screen::EnterOrtho();
 			glColor3f(1,1,1);
+			Gui::Screen::PushFont("ConsoleFont");
 			Gui::Screen::RenderString(fps_readout, 0, 0);
+			Gui::Screen::PopFont();
 			Gui::Screen::LeaveOrtho();
 		}
 #endif
@@ -1300,9 +1311,17 @@ void Pi::MainLoop()
 
 		if (SDL_GetTicks() - last_stats > 1000) {
 			Pi::statSceneTris += LmrModelGetStatsTris();
-			snprintf(fps_readout, sizeof(fps_readout), "%d fps, %d phys updates, %d triangles, %.3f M tris/sec", frame_stat, phys_stat, Pi::statSceneTris, Pi::statSceneTris*frame_stat*1e-6);
+			int vtxGenPerSec = GeoSphere::GetVtxGenCount();
+			snprintf(
+				fps_readout, sizeof(fps_readout),
+				"%d fps, %d phys updates, %d triangles, %.3f M tris/sec, %d terrain vtx/sec, %d glyphs/sec",
+				frame_stat, phys_stat, Pi::statSceneTris, Pi::statSceneTris*frame_stat*1e-6,
+				GeoSphere::GetVtxGenCount(), TextureFont::GetGlyphCount()
+			);
 			frame_stat = 0;
 			phys_stat = 0;
+			TextureFont::ClearGlyphCount();
+			GeoSphere::ClearVtxGenCount();
 			last_stats += 1000;
 		}
 		Pi::statSceneTris = 0;
@@ -1312,7 +1331,7 @@ void Pi::MainLoop()
 		if (SDL_GetTicks() - last_screendump > 50) {
 			last_screendump = SDL_GetTicks();
 			char buf[256];
-			snprintf(buf, sizeof(buf), "screenshot%08d.png", dumpnum++);
+			snprintf(buf, sizeof(buf), Lang::SCREENSHOT_FILENAME_TEMPLATE, dumpnum++);
 			Screendump(buf, GetScrWidth(), GetScrHeight());
 		}
 #endif /* MAKING_VIDEO */
