@@ -498,14 +498,34 @@ void Ship::Blastoff()
 	m_dockedWith = 0;
 	m_launchLockTimeout = 2.0; // two second of applying thrusters
 	
-	vector3d up = GetPosition().Normalized();
+	
 	Enable();
 	//assert(GetFrame()->m_astroBody->IsType(Object::PLANET));
+	Aabb aabb;
+	GetAabb(aabb);
 	double planetRadius = 1.0;
 	if( GetFrame()->m_astroBody->IsType(Object::PLANET) ) {
+		vector3d up = GetPosition().Normalized();
 		planetRadius = 2.0 + static_cast<Planet*>(GetFrame()->m_astroBody)->GetTerrainHeight(up);
+		// XXX hm. we need to be able to get sbre aabb
+		SetPosition(up*planetRadius - aabb.min.y*up);
 	} else if( GetFrame()->m_astroBody->IsType(Object::ORBITAL) ) {
-		planetRadius = 2.0 + static_cast<Orbital*>(GetFrame()->m_astroBody)->GetTerrainHeight(up);
+		// calculate position along axis
+		const Body* astro = GetFrame()->GetBodyFor();
+		const vector3d pos = GetPosition();
+		vector3d axisPos(0.0, pos.y, 0.0);
+		// find the 2-axis distance from the axis to surface
+		double distToAxis = (axisPos - pos).Length();	// dist to axis
+		const vector3d up = (axisPos - pos).Normalized();
+		// get the radius of the orbital
+		const double radius = astro->GetSBody()->GetRadius();
+		// normalise the x & y axis by the dist to central axis, but the z but the radius - 
+		// - should give us the position on the surface of the "unit length cylinder".
+		vector3d surfPos = vector3d(pos.x/distToAxis, pos.y/radius, pos.z/distToAxis);
+		// now get the height at that point on the terrain.
+		const double planetRadius = static_cast<const Orbital*>(astro)->GetTerrainHeight(surfPos);
+		// position at zero altitude
+		SetPosition(axisPos + ((-up) * (planetRadius - aabb.min.y)));
 	}
 	
 	SetVelocity(vector3d(0, 0, 0));
@@ -513,10 +533,6 @@ void Ship::Blastoff()
 	SetForce(vector3d(0, 0, 0));
 	SetTorque(vector3d(0, 0, 0));
 	
-	Aabb aabb;
-	GetAabb(aabb);
-	// XXX hm. we need to be able to get sbre aabb
-	SetPosition(up*planetRadius - aabb.min.y*up);
 	SetThrusterState(1, 1.0);		// thrust upwards
 
 	Pi::luaOnShipTakeOff.Queue(this, GetFrame()->m_astroBody);
@@ -573,8 +589,22 @@ void Ship::TestLanded()
 	} else if (GetFrame()->GetBodyFor()->IsType(Object::ORBITAL)) {
 		const double speed = GetVelocity().Length();
 		// position as spherical direction reference doesn't work within a cylinder
-		const vector3d up = GetPosition().Normalized();
-		const double planetRadius = static_cast<Orbital*>(GetFrame()->GetBodyFor())->GetTerrainHeight(up);
+		//const vector3d up = GetPosition().Normalized();
+		//const double planetRadius = static_cast<Orbital*>(GetFrame()->GetBodyFor())->GetTerrainHeight(up);
+
+		const Body* astro = GetFrame()->GetBodyFor();
+		const vector3d pos = GetPosition();
+		vector3d axisPos(0.0, pos.y, 0.0);
+		// find the 2-axis distance from the axis to surface
+		double distToAxis = (axisPos - pos).Length();	// dist to axis
+		const vector3d up = (axisPos - pos).Normalized();
+		// get the radius of the orbital
+		const double radius = astro->GetSBody()->GetRadius();
+		// normalise the x & y axis by the dist to central axis, but the z but the radius - 
+		// - should give us the position on the surface of the "unit length cylinder".
+		vector3d surfPos = vector3d(pos.x/distToAxis, pos.y/radius, pos.z/distToAxis);
+		// now get the height at that point on the terrain.
+		const double planetRadius = static_cast<const Orbital*>(astro)->GetTerrainHeight(surfPos);
 
 		if (speed < MAX_LANDING_SPEED) {
 			// orient the damn thing right
@@ -584,23 +614,22 @@ void Ship::TestLanded()
 			GetRotMatrix(rot);
 			matrix4x4d invRot = rot.InverseOf();
 
-			const vector3d negup = -up;
-
 			// check player is sortof sensibly oriented for landing
-			const double dot = vector3d(invRot[1], invRot[5], invRot[9]).Normalized().Dot(negup);
+			const double dot = vector3d(invRot[1], invRot[5], invRot[9]).Normalized().Dot(up);
 			if (dot > 0.99) {
 
 				Aabb aabb;
 				GetAabb(aabb);
 
 				// position at zero altitude
-				SetPosition(up * (planetRadius - aabb.min.y));
+				SetPosition(axisPos + ((-up) * (planetRadius - aabb.min.y)));
+				//SetPosition((-up) * (planetRadius - aabb.min.y));
 
 				vector3d forward = rot * vector3d(0,0,1);
-				vector3d other = negup.Cross(forward).Normalized();
-				forward = other.Cross(negup);
+				vector3d other = up.Cross(forward).Normalized();
+				forward = other.Cross(up);
 
-				rot = matrix4x4d::MakeRotMatrix(other, negup, forward);
+				rot = matrix4x4d::MakeRotMatrix(other, up, forward);
 				rot = rot.InverseOf();
 				SetRotMatrix(rot);
 
