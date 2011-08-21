@@ -5,7 +5,7 @@
 #include "Ship.h"
 #include "ShipCpanel.h"
 #include "LmrModel.h"
-#include "Render.h"
+#include "render/Render.h"
 #include "Lang.h"
 
 class InfoViewPage: public Gui::Fixed {
@@ -74,7 +74,7 @@ public:
 			l = new Gui::Label((*i)->client);
 			innerbox->Add(l, 80, ypos);
 			
-			l = new Gui::Label(stringf(256, "%s,\n%s (%d, %d)", sbody->name.c_str(), s->GetName().c_str(), path.sectorX, path.sectorY));
+			l = new Gui::Label(stringf(256, "%s,\n%s [%d,%d,%d]", sbody->name.c_str(), s->GetName().c_str(), path.sectorX, path.sectorY, path.sectorZ));
 			innerbox->Add(l, 240, ypos);
 			
 			l = new Gui::Label(format_date((*i)->due));

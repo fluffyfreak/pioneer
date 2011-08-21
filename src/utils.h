@@ -12,7 +12,7 @@
 #define glError() { \
 	GLenum err = glGetError(); \
 	while (err != GL_NO_ERROR) { \
-		fprintf(stderr, "glError: %s caught at %s:%u\n", (char *)gluErrorString(err), __FILE__, __LINE__); \
+		fprintf(stderr, "glError: %s caught at %s:%u\n", reinterpret_cast<const char *>(gluErrorString(err)), __FILE__, __LINE__); \
 		err = glGetError(); \
 	} \
 }
@@ -31,8 +31,6 @@ void SilentWarning(const char *format, ...) __attribute((format(printf,1,2)));
 std::string GetPiUserDir(const std::string &subdir = "");
 std::string GetPiDataDir();
 
-struct MissingFileException {};
-
 // joinpath("data","models","some.def") = "data/models/some.def"
 std::string join_path(const char *firstbit, ...);
 std::string string_join(std::vector<std::string> &v, std::string sep);
@@ -46,6 +44,7 @@ void strip_cr_lf(char *string);
 GLuint util_load_tex_rgba(const char *filename);
 
 FILE *fopen_or_die(const char *filename, const char *mode);
+size_t fread_or_die(void* ptr, size_t size, size_t nmemb, FILE* stream, bool allow_truncated = false);
 
 static inline std::string stringf(int maxlen, const char *format, ...)
 		__attribute((format(printf,2,3)));
@@ -101,6 +100,9 @@ void Screendump(const char* destFile, const int w, const int h);
 //  src: multibyte string
 //  returns: number of bytes swallowed, or 0 if end of string
 int conv_mb_to_wc(Uint32 *chr, const char *src);
+
+// find string in bigger string, ignoring case
+const char *pi_strcasestr(const char *haystack, const char *needle);
 
 // add a few things that MSVC is missing
 #ifdef _MSC_VER

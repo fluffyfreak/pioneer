@@ -3,7 +3,7 @@
 #include "perlin.h"
 #include "Pi.h"
 #include "StarSystem.h"
-#include "Render.h"
+#include "render/Render.h"
 
 #include "profiler/Profiler.h"
 
@@ -1345,7 +1345,7 @@ void GeoSphere::Render(vector3d campos, const float radius, const float scale) {
 		GetAtmosphereFlavor(&atmosCol, &atmosDensity);
 		atmosDensity *= 0.00005;
 
-		if (atmosDensity != 0.0) {
+		if (atmosDensity > 0.0) {
 			GeosphereShader *shader = s_geosphereSkyShader[Render::State::GetNumLights()-1];
 			Render::State::UseProgram(shader);
 			shader->set_geosphereScale(scale);

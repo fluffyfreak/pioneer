@@ -31,7 +31,7 @@
 #include "GameMenuView.h"
 #include "Missile.h"
 #include "LmrModel.h"
-#include "Render.h"
+#include "render/Render.h"
 #include "AmbientSounds.h"
 #include "CustomSystem.h"
 #include "CityOnPlanet.h"
@@ -361,7 +361,7 @@ void Pi::Init()
 	// Gui::Init shouldn't initialise any VBOs, since we haven't tested
 	// that the capability exists. (Gui does not use VBOs so far)
 	Gui::Init(scrWidth, scrHeight, 800, 600);
-	if (!GLEW_ARB_vertex_buffer_object) {
+	if (!glewIsSupported("GL_ARB_vertex_buffer_object")) {
 		Error("OpenGL extension ARB_vertex_buffer_object not supported. Pioneer can not run on your graphics card.");
 	}
 	Render::Init(width, height);
@@ -479,11 +479,12 @@ void Pi::InitOpenGL()
 
 	gluQuadric = gluNewQuadric ();
 	
-	fprintf(stderr, "GL_ARB_point_sprite: %s\n", GLEW_ARB_point_sprite ? "Yes" : "No");
+	fprintf(stderr, "GL_ARB_point_sprite: %s\n", glewIsSupported("GLEW_ARB_point_sprite") ? "Yes" : "No");
 }
 
 void Pi::Quit()
 {
+	Render::Uninit();
 	SDL_Quit();
 	exit(0);
 }
@@ -580,16 +581,6 @@ void Pi::HandleEvents()
                         case SDLK_i: // Toggle Debug info
                             Pi::showDebugInfo = !Pi::showDebugInfo;
                             break;
-                        case SDLK_p: // Increase Crime
-                        {
-                            Sint64 crime, fine;
-                            Polit::GetCrime(&crime, &fine);
-                            printf("Criminal record: %llx, $%lld\n", crime, fine);
-                            Polit::AddCrime(0x1, 100);
-                            Polit::GetCrime(&crime, &fine);
-                            printf("Criminal record now: %llx, $%lld\n", crime, fine);
-                            break;
-                        }
                         case SDLK_m:  // Gimme money!
                             Pi::player->SetMoney(Pi::player->GetMoney() + 10000000);
                             break;
@@ -1016,7 +1007,7 @@ void Pi::Start()
     switch (choice) {
         case 1: // Earth start point
         {
-            SystemPath path(0,0,0);
+            SystemPath path(0,0,0, 0);
             Space::SetupSystemForGameStart(&path, 4, 0);
             StartGame();
             MainLoop();
@@ -1024,7 +1015,7 @@ void Pi::Start()
         }
         case 2: // Epsilon Eridani start point
         {
-            SystemPath path(1,0,1);
+            SystemPath path(1,0,-1, 0);
             Space::SetupSystemForGameStart(&path, 0, 0);
             StartGame();
             MainLoop();
@@ -1032,7 +1023,7 @@ void Pi::Start()
         }
         case 3: // Debug start point
         {
-            SystemPath path(1,0,1);
+            SystemPath path(1,0,-1, 0);
             Space::DoHyperspaceTo(&path);
             for (std::list<Body*>::iterator i = Space::bodies.begin(); i != Space::bodies.end(); i++) {
                 const SBody *sbody = (*i)->GetSBody();
@@ -1042,7 +1033,7 @@ void Pi::Start()
                     break;
                 }
             }
-            player->SetPosition(vector3d(2*EARTH_RADIUS,0,0));
+            player->SetPosition(vector3d(0,2*EARTH_RADIUS,0));
             player->SetVelocity(vector3d(0,0,0));
             player->m_equipment.Add(Equip::HYPERCLOUD_ANALYZER);
             player->UpdateMass();
@@ -1177,7 +1168,7 @@ void Pi::MainLoop()
 		accumulator += Pi::frameTime * GetTimeAccel();
 		
 		const float step = Pi::GetTimeStep();
-		if (step) {
+		if (step > 0.0f) {
 			while (accumulator >= step) {
 				Space::TimeStep(step);
 				gameTime += step;
@@ -1286,7 +1277,7 @@ void Pi::MainLoop()
 
 		// fuckadoodledoo, did the player die?
 		if (Pi::player->IsDead()) {
-			if (time_player_died) {
+			if (time_player_died > 0.0) {
 				if (Pi::GetGameTime() - time_player_died > 8.0) {
 					Sound::DestroyAllEvents();
 					isGameStarted = false;
@@ -1311,7 +1302,6 @@ void Pi::MainLoop()
 
 		if (SDL_GetTicks() - last_stats > 1000) {
 			Pi::statSceneTris += LmrModelGetStatsTris();
-			int vtxGenPerSec = GeoSphere::GetVtxGenCount();
 			snprintf(
 				fps_readout, sizeof(fps_readout),
 				"%d fps, %d phys updates, %d triangles, %.3f M tris/sec, %d terrain vtx/sec, %d glyphs/sec",

@@ -6,7 +6,7 @@
 #include "Serializer.h"
 #include "StarSystem.h"
 #include "GeoRing.h"
-#include "Render.h"
+#include "render/Render.h"
 #include "perlin.h"
 
 Orbital::Orbital(): Body()

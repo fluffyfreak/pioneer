@@ -2,9 +2,22 @@ Alpha 14
 
   * New features
     * Lua attribute SBody.parent to find the parent of a system body (#359, #368)
+    * Delivery missions to other starports in the same system (#388)
+    * 3D galaxy (#394)
 
   * Fixes
     * Remove a couple of hardcoded references to the data directory (#363)
+    * Fix crash when closing police form triggered from inside a advert (#371, #372)
+    * Fix occasional crash in DeliverPackage when cleaning up old ads (#123, #379)
+    * Fix inverted mouse control (#389)
+    * Tweak to texture scaling to make edges sharper (#391)
+
+  * Internal changes
+    * Lots of internal cleanups; silences most remaining warnings (#373, #375, #389, #392)
+    * New utility functions for floating-point comparisons (#389)
+    * Dump Lua engine state to file on exception in Lua module (#370)
+    * Lua documentation fixes (#380)
+    * Abstracted the HDR rendering pipeline into discrete components (#396)
 
 Alpha 13
 
