@@ -553,31 +553,6 @@ void SectorView::DrawSector(int sx, int sy, int sz, const vector3f &playerAbsPos
 		glCallList(m_gluDiskDlist);
 		glScalef(2,2,2);
 
-			// Render the star system with appropriate size
-			glRotatef(-m_rot_z, 0, 0, 1);
-			glRotatef(-m_rot_x, 1, 0, 0);
-			glPushMatrix(); {
-			glScalef(	(StarSystem::starScale[(*i).starType[0]])+radius,
-						(StarSystem::starScale[(*i).starType[0]])+radius,
-						(StarSystem::starScale[(*i).starType[0]])+radius);
-			glCallList(m_gluDiskDlist);
-			} glPopMatrix();
-		}
-		else
-		{
-			// Render the star system with appropriate size
-			glRotatef(-m_rot_z, 0, 0, 1);
-			glRotatef(-m_rot_x, 1, 0, 0);
-			glPushMatrix(); {
-			glScalef((StarSystem::starScale[(*i).starType[0]]),
-				(StarSystem::starScale[(*i).starType[0]]),
-				(StarSystem::starScale[(*i).starType[0]]));
-			glCallList(m_gluDiskDlist);
-			} glPopMatrix();
-		}
-		glScalef(2,2,2);
-#endif
-
 		// player location indicator
 		if (current == m_current) {
 			glPushMatrix();
@@ -871,9 +846,9 @@ void SectorView::ShrinkCache()
 		//check_point_in_box
 		if (s && !s->WithinBox( xmin, xmax, ymin, ymax, zmin, zmax )) {
 			delete s;
-			iter = m_sectorCache.erase( iter ); 
+			m_sectorCache.erase( iter++ ); 
 		} else {
-			++iter;
+			iter++;
 		}
 	}
 }
