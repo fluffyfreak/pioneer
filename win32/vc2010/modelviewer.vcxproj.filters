@@ -16,6 +16,9 @@
     <Filter Include="src\gui">
       <UniqueIdentifier>{de900c24-ff02-4a99-a7fc-10d9ce21daf0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\render">
+      <UniqueIdentifier>{6f64c905-909e-49d1-a175-b072e12acd1a}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\png">
       <UniqueIdentifier>{ecc2d6f0-4306-4e2a-893a-291c696713d6}</UniqueIdentifier>
     </Filter>
@@ -51,16 +54,10 @@
     <ClCompile Include="..\..\src\perlin.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\Render.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\utils.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\LuaUtils.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\RenderShader.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\TextureFont.cpp">
@@ -156,6 +153,18 @@
     <ClCompile Include="..\..\src\TextureManager.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\render\Render.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\render\RenderShader.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\render\RenderTarget.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\render\RenderTexture.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\pch.h">
@@ -197,9 +206,6 @@
     <ClInclude Include="..\..\src\perlin.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\Render.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\utils.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -207,9 +213,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\LuaUtils.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\RenderShader.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\TextureFont.h">
@@ -313,6 +316,18 @@
     </ClInclude>
     <ClInclude Include="..\..\src\TextureManager.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\render\Render.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\render\RenderShader.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\render\RenderTarget.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\render\RenderTexture.h">
+      <Filter>src\render</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\SystemPath.h">
       <Filter>src</Filter>

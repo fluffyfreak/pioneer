@@ -28,8 +28,7 @@ static double crater_function(const fracdef_t &def, const vector3d &p);
 static double impact_crater_function(const fracdef_t &def, const vector3d &p);
 static double volcano_function(const fracdef_t &def, const vector3d &p);
 static double megavolcano_function(const fracdef_t &def, const vector3d &p);
-static double river_function(const fracdef_t &def, const vector3d &p);
-static double river2_function(const fracdef_t &def, const vector3d &p);
+static double river_function(const fracdef_t &def, const vector3d &p, int style = 0);
 static double cliff_function(const fracdef_t &def, const vector3d &p);
 
 int GeoSphereStyle::GetRawHeightMapVal(int x, int y)
@@ -166,7 +165,7 @@ void GeoSphereStyle::PickAtmosphere(const SBody *sbody)
 			break;
 		default:
 		case SBody::TYPE_PLANET_TERRESTRIAL:
-			double r,g,b = 0;
+			double r = 0, g = 0, b = 0;
 			double atmo = sbody->m_atmosOxidizing.ToDouble();
 			if (sbody->m_volatileGas.ToDouble() > 0.001) {
 				if (atmo > 0.95) {
@@ -243,14 +242,14 @@ void GeoSphereStyle::InitHeightMap(const SBody *body)
 	/* Height map? */
 	if (body->heightMapFilename) {
 		FILE *f;
-		f = fopen_or_die(body->heightMapFilename, "r");
+		f = fopen_or_die(body->heightMapFilename, "rb");
 		// read size!
 		Uint16 v;
-		fread(&v, 2, 1, f); m_heightMapSizeX = v;
-		fread(&v, 2, 1, f); m_heightMapSizeY = v;
+		fread_or_die(&v, 2, 1, f); m_heightMapSizeX = v;
+		fread_or_die(&v, 2, 1, f); m_heightMapSizeY = v;
 		m_heightMap = new Sint16[m_heightMapSizeX * m_heightMapSizeY];
 		// XXX TODO XXX what about bigendian archs...
-		fread(m_heightMap, sizeof(Sint16), m_heightMapSizeX * m_heightMapSizeY, f);
+		fread_or_die(m_heightMap, sizeof(Sint16), m_heightMapSizeX * m_heightMapSizeY, f);
 		fclose(f);
 	} else {
 		m_heightMap = 0;
@@ -3371,45 +3370,23 @@ static double megavolcano_function(const fracdef_t &def, const vector3d &p)
 	return 4.0 * crater;
 }
 
-double river_function(const fracdef_t &def, const vector3d &p)
+double river_function(const fracdef_t &def, const vector3d &p, int style)
 {
+	assert(style >= 0 && style < 2);
 	double h;
 	double n = octavenoise(def.octaves, 0.585, 2.0, def.frequency*p*0.5);
-	const double outer = 0.67;
-	const double inner = 0.715;
-	const double inner2 = 0.715;
-	const double outer2 = 0.76;
-	if (n > outer2) {
+	const double outer[] = {0.67, 0.01};
+	const double inner[] = {0.715, 0.49};
+	const double inner2[] = {0.715, 0.51};
+	const double outer2[] = {0.76, 0.99};
+	if (n > outer2[style]) {
 		h = 1;
-	} else if (n > inner2) {
-		h = 0.0+1.0*(n-inner2)*(1.0/(outer2-inner2));
-	} else if (n > inner) {
+	} else if (n > inner2[style]) {
+		h = 0.0+1.0*(n-inner2[style])*(1.0/(outer2[style]-inner2[style]));
+	} else if (n > inner[style]) {
 		h = 0;
-	} else if (n > outer) {
-		h = 1.0-1.0*(n-outer)*(1.0/(inner-outer));
-	} else {
-		h = 1.0;
-	}
-	return h * def.amplitude;
-}
-
-// Wider river.
-double river2_function(const fracdef_t &def, const vector3d &p)
-{
-	double h;
-	double n = octavenoise(def.octaves, 0.585, 2.0, def.frequency*p*0.5);
-	const double outer = 0.01;
-	const double inner = 0.49;
-	const double inner2 = 0.51;
-	const double outer2 = 0.99;
-	if (n > outer2) {
-		h = 1;
-	} else if (n > inner2) {
-		h = 0.0+1.0*(n-inner2)*(1.0/(outer2-inner2));
-	} else if (n > inner) {
-		h = 0;
-	} else if (n > outer) {
-		h = 1.0-1.0*(n-outer)*(1.0/(inner-outer));
+	} else if (n > outer[style]) {
+		h = 1.0-1.0*(n-outer[style])*(1.0/(inner[style]-outer[style]));
 	} else {
 		h = 1.0;
 	}

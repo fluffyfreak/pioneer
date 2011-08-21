@@ -80,10 +80,20 @@ FILE *fopen_or_die(const char *filename, const char *mode)
 {
 	FILE *f = fopen(filename, mode);
 	if (!f) {
-		printf("Error: could not open file '%s'\n", filename);
-		throw MissingFileException();
+		fprintf(stderr, "Error: could not open file '%s'\n", filename);
+		abort();
 	}
 	return f;
+}
+
+size_t fread_or_die(void* ptr, size_t size, size_t nmemb, FILE* stream, bool allow_truncated)
+{
+	size_t read_count = fread(ptr, size, nmemb, stream);
+	if ((read_count < nmemb) && (!allow_truncated || ferror(stream))) {
+		fprintf(stderr, "Error: failed to read file (%s)\n", (feof(stream) ? "truncated" : "read error"));
+		abort();
+	}
+	return read_count;
 }
 
 std::string format_money(Sint64 money)
@@ -534,7 +544,7 @@ void Screendump(const char* destFile, const int W, const int H)
 
 	png_bytepp rows = new png_bytep[H];
 
-	for (unsigned int i = 0; i < H; ++i) {
+	for (int i = 0; i < H; ++i) {
 		rows[i] = reinterpret_cast<png_bytep>(&pixel_data[(H-i-1) * W * 3]);
 	}
 	png_set_rows(png_ptr, info_ptr, rows);
@@ -575,5 +585,42 @@ int conv_mb_to_wc(Uint32 *chr, const char *src)
 		c = (c & 0x1f) << 6;
 		c |= src[1] & 0x3f;
 		*chr = c; return 2;
+	}
+}
+
+
+// strcasestr() adapted from gnulib
+// (c) 2005 FSF. GPL2+
+
+#define TOLOWER(c) (isupper(c) ? tolower(c) : (c))
+
+const char *pi_strcasestr (const char *haystack, const char *needle)
+{
+	if (!*needle)
+		return haystack;
+
+	// cache the first character for speed
+	char b = TOLOWER(*needle);
+
+	needle++;
+	for (;; haystack++) {
+		if (!*haystack)
+			return 0;
+
+		if (TOLOWER(*haystack) == b) {
+			const char *rhaystack = haystack + 1;
+			const char *rneedle = needle;
+
+			for (;; rhaystack++, rneedle++) {
+				if (!*rneedle)
+					return haystack;
+
+				if (!*rhaystack)
+					return NULL;
+
+				if (TOLOWER(*rhaystack) != TOLOWER(*rneedle))
+					break;
+			}
+		}
 	}
 }
