@@ -88,6 +88,12 @@ inline int isfinite(double x) { return _finite(x); }
 #define PiAssert(x) assert(x)
 #endif
 
+#ifdef _WIN32
+#define	PiNoReturn(x) __declspec(noreturn) x
+#else
+#define	PiNoReturn(x) x  __attribute((noreturn))
+#endif
+
 #define UNIVERSE_SEED	0xabcd1234
 
 #define EARTH_RADIUS	6378135.0
