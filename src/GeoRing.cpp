@@ -2457,20 +2457,5 @@ double GeoRing::GetDistFromSurface(const vector3d p) {
 		}
 	}
 
-	/*const vector3d CP1(0.0, 0.0, mRingWidth);		// vertex at middle of top end
-	const vector3d CP2(0.0, 0.0, -mRingWidth);	// vertex at middle of bottom end
-	const vector3d CN1 = (CP2 - CP1).Normalized();
-	const vector3d CN2 = -CN1;
-	const double fDistanceToPlane1 = (p-CP1).Dot( CN1 );
-	const double fDistanceToPlane2 = (p-CP2).Dot( CN2 );
-	if (fDistanceToPlane1 < 0.0)	
-		return DBL_MAX;	
-	if (fDistanceToPlane2 < 0.0) 
-		return DBL_MAX; 
-	const vector3d TempP =  p - (CN1 * fDistanceToPlane1);
-	const double fDistanceFromCenter = (TempP-CP1).Length();
-	if (fDistanceFromCenter > 1.0) 
-		return DBL_MAX;	*/
-
 	return DBL_MAX; // All tests passed, point is in cylinder
 }
