@@ -17,7 +17,7 @@ public:
 	GeoRing(const SBody *body);
 	~GeoRing();
 	void Render(vector3d campos, const float radius, const float scale);
-	double GetDistFromSurface(const vector3d p);
+	//double GetDistFromSurface(const vector3d p);
 	double GetRingWidth() const { return mRingWidth; }
 	// only called from fishy thread
 	void _UpdateLODs();

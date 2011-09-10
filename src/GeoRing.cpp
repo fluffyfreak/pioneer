@@ -98,13 +98,13 @@ public:
 		ang[1] = endAng;
 		m_halfLen = halfLength;
 		m_yoffset = yoffset;
-		clipCentroid = GetSurfacePoint(0.5, 0.5, m_halfLen);
+		clipCentroid = GetSurfacePointCyl(0.5, 0.5, m_halfLen);
 		clipRadius = 0;
 		vector3d vcorners[4] = {
-			GetSurfacePoint(0.0, 0.0, m_halfLen),
-			GetSurfacePoint(1.0, 0.0, m_halfLen),
-			GetSurfacePoint(0.0, 1.0, m_halfLen),
-			GetSurfacePoint(1.0, 1.0, m_halfLen)
+			GetSurfacePointCyl(0.0, 0.0, m_halfLen),
+			GetSurfacePointCyl(1.0, 0.0, m_halfLen),
+			GetSurfacePointCyl(0.0, 1.0, m_halfLen),
+			GetSurfacePointCyl(1.0, 1.0, m_halfLen)
 		};
 		for (int i=0; i<4; i++) {
 			clipRadius = std::max(clipRadius, (vcorners[i]-clipCentroid).Length());
@@ -185,10 +185,10 @@ public:
 		glBindBufferARB(GL_ARRAY_BUFFER, 0);
 	}
 
-	vector3d GetSurfacePoint(const double x, const double y, const double halfLength) {
+	vector3d GetSurfacePointCyl(const double x, const double y, const double halfLength) {
 		double theta = lerp( x, ang[1], ang[0] );
 		
-		const vector3d topEndEdge(sin(theta), m_yoffset + halfLength,cos(theta));		// vertices at top edge of circle
+		const vector3d topEndEdge(sin(theta), m_yoffset + halfLength, cos(theta));		// vertices at top edge of circle
 		const vector3d bottomEndEdge(sin(theta), m_yoffset - halfLength, cos(theta));	// vertices at bottom edge of circle
 		
 		const vector3d res = lerp( y, bottomEndEdge, topEndEdge );
@@ -204,8 +204,10 @@ public:
 #ifdef _DEBUG
 		memset(normals, 0, sizeof(vector3d)*GEOPLATE_NUMVERTICES);
 #endif
-		const vector3d topEnd(0.0, 0.0, m_yoffset + m_halfLen);		// vertices at top edge of circle
-		const vector3d btmEnd(0.0, 0.0, m_yoffset - m_halfLen);	// vertices at bottom edge of circle
+		const vector3d topEnd(0.0, m_yoffset + m_halfLen, 0.0);		// vertices at top edge of circle
+		const vector3d btmEnd(0.0, m_yoffset - m_halfLen, 0.0);		// vertices at bottom edge of circle
+		//const vector3d topEnd(0.0, 0.0, m_yoffset + m_halfLen);		// vertices at top edge of circle
+		//const vector3d btmEnd(0.0, 0.0, m_yoffset - m_halfLen);	// vertices at bottom edge of circle
 
 		for (int y=0; y<GEOPLATE_EDGELEN; ++y) {	// across the width
 			xfrac = 0;
@@ -216,9 +218,9 @@ public:
 				PiAssert(x!=GEOPLATE_EDGELEN);
 				PiAssert(y!=GEOPLATE_EDGELEN);
 				if( y==0 || y==GEOPLATE_EDGELEN-1 ) {	// points in trough
-					p = GetSurfacePoint(xfrac, (y==0 ? 0.0 : 1.0), m_halfLen);
+					p = GetSurfacePointCyl(xfrac, (y==0 ? 0.0 : 1.0), m_halfLen);
 				} else { // outer hull edge
-					p = GetSurfacePoint(xfrac, zfrac, m_halfLen);
+					p = GetSurfacePointCyl(xfrac, zfrac, m_halfLen);
 				}
 
 				// vector from axis to point-on-surface
@@ -396,13 +398,13 @@ public:
 		ang[1] = endAng;
 		m_halfLen = halfLength;
 		m_yoffset = yoffset;
-		clipCentroid = GetSurfacePoint(0.5, 0.5, m_halfLen);
+		clipCentroid = GetSurfacePointCyl(0.5, 0.5, m_halfLen);
 		clipRadius = 0;
 		vector3d vcorners[4] = {
-			GetSurfacePoint(0.0, 0.0, m_halfLen),
-			GetSurfacePoint(1.0, 0.0, m_halfLen),
-			GetSurfacePoint(0.0, 1.0, m_halfLen),
-			GetSurfacePoint(1.0, 1.0, m_halfLen)
+			GetSurfacePointCyl(0.0, 0.0, m_halfLen),
+			GetSurfacePointCyl(1.0, 0.0, m_halfLen),
+			GetSurfacePointCyl(0.0, 1.0, m_halfLen),
+			GetSurfacePointCyl(1.0, 1.0, m_halfLen)
 		};
 		for (int i=0; i<4; i++) {
 			clipRadius = std::max(clipRadius, (vcorners[i]-clipCentroid).Length());
@@ -483,7 +485,7 @@ public:
 		glBindBufferARB(GL_ARRAY_BUFFER, 0);
 	}
 
-	vector3d GetSurfacePoint(const double x, const double y, const double halfLength) {
+	vector3d GetSurfacePointCyl(const double x, const double y, const double halfLength) {
 		double theta = lerp( x, ang[1], ang[0] );
 		
 		const vector3d topEndEdge(sin(theta), m_yoffset + halfLength, cos(theta));		// vertices at top edge of circle
@@ -503,7 +505,7 @@ public:
 		memset(normals, 0, sizeof(vector3d)*GEOPLATE_NUM_WALL_VERTICES);
 #endif
 		const vector3d topEnd(0.0, m_yoffset + m_halfLen, 0.0);		// vertices at top edge of circle
-		const vector3d btmEnd(0.0, m_yoffset - m_halfLen, 0.0);	// vertices at bottom edge of circle
+		const vector3d btmEnd(0.0, m_yoffset - m_halfLen, 0.0);		// vertices at bottom edge of circle
 
 		const double heights[2][GEOPLATE_WALL_LEN] = {
 			{
@@ -553,7 +555,7 @@ public:
 			const double height = heights[PriIdx][y];
 			const vector3d axisPt = lerp( zvals[PriIdx][y], btmEnd, topEnd );// point along z-axis by zfrac amount
 			for (int x=0; x<GEOPLATE_WALL_LEN; ++x) {	// along the length (circumference)
-				p = GetSurfacePoint(xfrac, zvals[PriIdx][y], m_halfLen);
+				p = GetSurfacePointCyl(xfrac, zvals[PriIdx][y], m_halfLen);
 				
 				// vector from axis to point-on-surface
 				const vector3d cDir = (p - axisPt).Normalized();
@@ -1629,8 +1631,10 @@ public:
 		double zfrac = 0;
 		vector3d axisPt(0.0, 0.0, 0.0);
 
-		const vector3d topEnd(0.0, 0.0, m_yoffset + m_halfLen);		// vertices at top edge of circle
-		const vector3d btmEnd(0.0, 0.0, m_yoffset - m_halfLen);	// vertices at bottom edge of circle
+		const vector3d topEnd(0.0, m_yoffset + m_halfLen, 0.0);		// vertices at top edge of circle
+		const vector3d btmEnd(0.0, m_yoffset - m_halfLen, 0.0);		// vertices at bottom edge of circle
+		//const vector3d topEnd(0.0, 0.0, m_yoffset + m_halfLen);		// vertices at top edge of circle
+		//const vector3d btmEnd(0.0, 0.0, m_yoffset - m_halfLen);	// vertices at bottom edge of circle
 				
 		for (int y=0; y<GEOPLATE_EDGELEN; ++y) {
 			xfrac = 0;
@@ -2436,7 +2440,7 @@ void GeoRing::Render(vector3d campos, const float radius, const float scale) {
 	_UpdateLODs();
 #endif /* !GEORING_USE_THREADING */
 }
-
+/*
 double GeoRing::GetDistFromSurface(const vector3d p) {
 	//return DBL_MAX;
 	// one way to find angle (radians)
@@ -2459,3 +2463,4 @@ double GeoRing::GetDistFromSurface(const vector3d p) {
 
 	return DBL_MAX; // All tests passed, point is in cylinder
 }
+*/
