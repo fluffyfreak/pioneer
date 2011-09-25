@@ -168,6 +168,9 @@
     <ClCompile Include="..\..\src\render\RenderTexture.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\StringF.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\profiler\Profiler.cpp">
       <Filter>src\profiler</Filter>
     </ClCompile>
@@ -336,6 +339,9 @@
       <Filter>src\render</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\SystemPath.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\StringF.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\profiler\Profiler.h">

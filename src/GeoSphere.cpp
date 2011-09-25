@@ -3,31 +3,22 @@
 #include "perlin.h"
 #include "Pi.h"
 #include "StarSystem.h"
+#include "RefCounted.h"
 #include "render/Render.h"
-
-#include "profiler/Profiler.h"
-
-#define GEOPATCH_USE_THREADING
-#ifdef GEOPATCH_USE_THREADING
-	//#define ANDYC_HORRIFIC_TIMING
-	#ifdef ANDYC_HORRIFIC_TIMING
-		#include "Timer.h"
-	#endif //ANDYC_HORRIFIC_TIMING
-#endif GEOPATCH_USE_THREADING
-
 
 // tri edge lengths
 #define GEOPATCH_SUBDIVIDE_AT_CAMDIST	5.0
-#define GEOPATCH_MAX_DEPTH	15
-// must be an odd number
-//#define GEOPATCH_EDGELEN	15
-#define GEOPATCH_NUMVERTICES	(GEOPATCH_EDGELEN*GEOPATCH_EDGELEN)
+#define GEOPATCH_MAX_DEPTH  15 + (2*Pi::detail.fracmult) //15 
 #define GEOSPHERE_USE_THREADING
 
-int GEOPATCH_EDGELEN = 15;
 static const int GEOPATCH_MAX_EDGELEN = 55;
-static double GEOPATCH_FRAC;
 int GeoSphere::s_vtxGenCount = 0;
+GeoPatchContext *GeoSphere::s_patchContext = 0;
+
+// must be odd numbers
+static const int detail_edgeLen[5] = {
+	7, 15, 25, 35, 55
+};
 
 
 #define PRINT_VECTOR(_v) printf("%f,%f,%f\n", (_v).x, (_v).y, (_v).z);
@@ -52,30 +43,281 @@ struct VBOVertex
 };
 #pragma pack()
 
-#define VBO_COUNT_LO_EDGE  (3*(GEOPATCH_EDGELEN/2))
-#define VBO_COUNT_HI_EDGE  (3*(GEOPATCH_EDGELEN-1))
-#define VBO_COUNT_MID_IDX  (4*3*(GEOPATCH_EDGELEN-3) + 2*(GEOPATCH_EDGELEN-3)*(GEOPATCH_EDGELEN-3)*3)
-//                          ^^ serrated teeth bit      ^^^ square inner bit
-#define IDX_VBO_LO_OFFSET(_i) ((_i)*sizeof(unsigned short)*3*(GEOPATCH_EDGELEN/2))
-#define IDX_VBO_HI_OFFSET(_i) (((_i)*sizeof(unsigned short)*VBO_COUNT_HI_EDGE)+IDX_VBO_LO_OFFSET(4))
-#define IDX_VBO_MAIN_OFFSET IDX_VBO_HI_OFFSET(4)
-
 // for glDrawRangeElements
 static int s_loMinIdx[4], s_loMaxIdx[4];
 static int s_hiMinIdx[4], s_hiMaxIdx[4];
 
+class GeoPatchContext : public RefCounted {
+public:
+	int edgeLen;
+
+	inline int VBO_COUNT_LO_EDGE() const { return 3*(edgeLen/2); }
+	inline int VBO_COUNT_HI_EDGE() const { return 3*(edgeLen-1); }
+	inline int VBO_COUNT_MID_IDX() const { return (4*3*(edgeLen-3))    + 2*(edgeLen-3)*(edgeLen-3)*3; }
+	//                                            ^^ serrated teeth bit  ^^^ square inner bit
+
+	inline int IDX_VBO_LO_OFFSET(int i) const { return i*sizeof(unsigned short)*3*(edgeLen/2); }
+	inline int IDX_VBO_HI_OFFSET(int i) const { return (i*sizeof(unsigned short)*VBO_COUNT_HI_EDGE())+IDX_VBO_LO_OFFSET(4); }
+	inline int IDX_VBO_MAIN_OFFSET()    const { return IDX_VBO_HI_OFFSET(4); }
+
+	inline int NUMVERTICES() const { return edgeLen*edgeLen; }
+
+	double frac;
+
+	unsigned short *midIndices;
+	unsigned short *loEdgeIndices[4];
+	unsigned short *hiEdgeIndices[4];
+	GLuint indices_vbo;
+	VBOVertex *vbotemp;
+
+	GeoPatchContext(int _edgeLen) : edgeLen(_edgeLen) {
+		Init();
+	}
+
+	~GeoPatchContext() {
+		Cleanup();
+	}
+
+	void Refresh() {
+		Cleanup();
+		Init();
+	}
+
+	void Cleanup() {
+		delete [] midIndices;
+		for (int i=0; i<4; i++) {
+			delete [] loEdgeIndices[i];
+			delete [] hiEdgeIndices[i];
+		}
+		if (indices_vbo) {
+			glDeleteBuffersARB(1, &indices_vbo);
+		}
+		delete [] vbotemp;
+	}
+
+	void Init() {
+		frac = 1.0 / double(edgeLen-1);
+
+		vbotemp = new VBOVertex[NUMVERTICES()];
+			
+		unsigned short *idx;
+		midIndices = new unsigned short[VBO_COUNT_MID_IDX()];
+		for (int i=0; i<4; i++) {
+			loEdgeIndices[i] = new unsigned short[VBO_COUNT_LO_EDGE()];
+			hiEdgeIndices[i] = new unsigned short[VBO_COUNT_HI_EDGE()];
+		}
+		/* also want vtx indices for tris not touching edge of patch */
+		idx = midIndices;
+		for (int x=1; x<edgeLen-2; x++) {
+			for (int y=1; y<edgeLen-2; y++) {
+				idx[0] = x + edgeLen*y;
+				idx[1] = x+1 + edgeLen*y;
+				idx[2] = x + edgeLen*(y+1);
+				idx+=3;
+
+				idx[0] = x+1 + edgeLen*y;
+				idx[1] = x+1 + edgeLen*(y+1);
+				idx[2] = x + edgeLen*(y+1);
+				idx+=3;
+			}
+		}
+		{
+			for (int x=1; x<edgeLen-3; x+=2) {
+				// razor teeth near edge 0
+				idx[0] = x + edgeLen;
+				idx[1] = x+1;
+				idx[2] = x+1 + edgeLen;
+				idx+=3;
+				idx[0] = x+1;
+				idx[1] = x+2 + edgeLen;
+				idx[2] = x+1 + edgeLen;
+				idx+=3;
+			}
+			for (int x=1; x<edgeLen-3; x+=2) {
+				// near edge 2
+				idx[0] = x + edgeLen*(edgeLen-2);
+				idx[1] = x+1 + edgeLen*(edgeLen-2);
+				idx[2] = x+1 + edgeLen*(edgeLen-1);
+				idx+=3;
+				idx[0] = x+1 + edgeLen*(edgeLen-2);
+				idx[1] = x+2 + edgeLen*(edgeLen-2);
+				idx[2] = x+1 + edgeLen*(edgeLen-1);
+				idx+=3;
+			}
+			for (int y=1; y<edgeLen-3; y+=2) {
+				// near edge 1
+				idx[0] = edgeLen-2 + y*edgeLen;
+				idx[1] = edgeLen-1 + (y+1)*edgeLen;
+				idx[2] = edgeLen-2 + (y+1)*edgeLen;
+				idx+=3;
+				idx[0] = edgeLen-2 + (y+1)*edgeLen;
+				idx[1] = edgeLen-1 + (y+1)*edgeLen;
+				idx[2] = edgeLen-2 + (y+2)*edgeLen;
+				idx+=3;
+			}
+			for (int y=1; y<edgeLen-3; y+=2) {
+				// near edge 3
+				idx[0] = 1 + y*edgeLen;
+				idx[1] = 1 + (y+1)*edgeLen;
+				idx[2] = (y+1)*edgeLen;
+				idx+=3;
+				idx[0] = 1 + (y+1)*edgeLen;
+				idx[1] = 1 + (y+2)*edgeLen;
+				idx[2] = (y+1)*edgeLen;
+				idx+=3;
+			}
+		}
+		// full detail edge triangles
+		{
+			idx = hiEdgeIndices[0];
+			for (int x=0; x<edgeLen-1; x+=2) {
+				idx[0] = x; idx[1] = x+1; idx[2] = x+1 + edgeLen;
+				idx+=3;
+				idx[0] = x+1; idx[1] = x+2; idx[2] = x+1 + edgeLen;
+				idx+=3;
+			}
+			idx = hiEdgeIndices[1];
+			for (int y=0; y<edgeLen-1; y+=2) {
+				idx[0] = edgeLen-1 + y*edgeLen;
+				idx[1] = edgeLen-1 + (y+1)*edgeLen;
+				idx[2] = edgeLen-2 + (y+1)*edgeLen;
+				idx+=3;
+				idx[0] = edgeLen-1 + (y+1)*edgeLen;
+				idx[1] = edgeLen-1 + (y+2)*edgeLen;
+				idx[2] = edgeLen-2 + (y+1)*edgeLen;
+				idx+=3;
+			}
+			idx = hiEdgeIndices[2];
+			for (int x=0; x<edgeLen-1; x+=2) {
+				idx[0] = x + (edgeLen-1)*edgeLen;
+				idx[1] = x+1 + (edgeLen-2)*edgeLen;
+				idx[2] = x+1 + (edgeLen-1)*edgeLen;
+				idx+=3;
+				idx[0] = x+1 + (edgeLen-2)*edgeLen;
+				idx[1] = x+2 + (edgeLen-1)*edgeLen;
+				idx[2] = x+1 + (edgeLen-1)*edgeLen;
+				idx+=3;
+			}
+			idx = hiEdgeIndices[3];
+			for (int y=0; y<edgeLen-1; y+=2) {
+				idx[0] = y*edgeLen;
+				idx[1] = 1 + (y+1)*edgeLen;
+				idx[2] = (y+1)*edgeLen;
+				idx+=3;
+				idx[0] = (y+1)*edgeLen;
+				idx[1] = 1 + (y+1)*edgeLen;
+				idx[2] = (y+2)*edgeLen;
+				idx+=3;
+			}
+		}
+		// these edge indices are for patches with no
+		// neighbour of equal or greater detail -- they reduce
+		// their edge complexity by 1 division
+		{
+			idx = loEdgeIndices[0];
+			for (int x=0; x<edgeLen-2; x+=2) {
+				idx[0] = x;
+				idx[1] = x+2;
+				idx[2] = x+1+edgeLen;
+				idx += 3;
+			}
+			idx = loEdgeIndices[1];
+			for (int y=0; y<edgeLen-2; y+=2) {
+				idx[0] = (edgeLen-1) + y*edgeLen;
+				idx[1] = (edgeLen-1) + (y+2)*edgeLen;
+				idx[2] = (edgeLen-2) + (y+1)*edgeLen;
+				idx += 3;
+			}
+			idx = loEdgeIndices[2];
+			for (int x=0; x<edgeLen-2; x+=2) {
+				idx[0] = x+edgeLen*(edgeLen-1);
+				idx[2] = x+2+edgeLen*(edgeLen-1);
+				idx[1] = x+1+edgeLen*(edgeLen-2);
+				idx += 3;
+			}
+			idx = loEdgeIndices[3];
+			for (int y=0; y<edgeLen-2; y+=2) {
+				idx[0] = y*edgeLen;
+				idx[2] = (y+2)*edgeLen;
+				idx[1] = 1 + (y+1)*edgeLen;
+				idx += 3;
+			}
+		}
+		// find min/max indices
+		for (int i=0; i<4; i++) {
+			s_loMinIdx[i] = s_hiMinIdx[i] = 1<<30;
+			s_loMaxIdx[i] = s_hiMaxIdx[i] = 0;
+			for (int j=0; j<3*(edgeLen/2); j++) {
+				if (loEdgeIndices[i][j] < s_loMinIdx[i]) s_loMinIdx[i] = loEdgeIndices[i][j];
+				if (loEdgeIndices[i][j] > s_loMaxIdx[i]) s_loMaxIdx[i] = loEdgeIndices[i][j];
+			}
+			for (int j=0; j<VBO_COUNT_HI_EDGE(); j++) {
+				if (hiEdgeIndices[i][j] < s_hiMinIdx[i]) s_hiMinIdx[i] = hiEdgeIndices[i][j];
+				if (hiEdgeIndices[i][j] > s_hiMaxIdx[i]) s_hiMaxIdx[i] = hiEdgeIndices[i][j];
+			}
+			//printf("%d:\nLo %d:%d\nHi: %d:%d\n", i, s_loMinIdx[i], s_loMaxIdx[i], s_hiMinIdx[i], s_hiMaxIdx[i]);
+		}
+
+		glGenBuffersARB(1, &indices_vbo);
+		glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, indices_vbo);
+		glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, IDX_VBO_MAIN_OFFSET() + sizeof(unsigned short)*VBO_COUNT_MID_IDX(), 0, GL_STATIC_DRAW);
+		for (int i=0; i<4; i++) {
+			glBufferSubDataARB(GL_ELEMENT_ARRAY_BUFFER, 
+				IDX_VBO_LO_OFFSET(i),
+				sizeof(unsigned short)*3*(edgeLen/2),
+				loEdgeIndices[i]);
+		}
+		for (int i=0; i<4; i++) {
+			glBufferSubDataARB(GL_ELEMENT_ARRAY_BUFFER,
+				IDX_VBO_HI_OFFSET(i),
+				sizeof(unsigned short)*VBO_COUNT_HI_EDGE(),
+				hiEdgeIndices[i]);
+		}
+		glBufferSubDataARB(GL_ELEMENT_ARRAY_BUFFER,
+				IDX_VBO_MAIN_OFFSET(),
+				sizeof(unsigned short)*VBO_COUNT_MID_IDX(),
+				midIndices);
+		glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, 0);
+	}
+
+	void GetEdge(vector3d *array, int edge, vector3d *ev) {
+		if (edge == 0) {
+			for (int x=0; x<edgeLen; x++) ev[x] = array[x];
+		} else if (edge == 1) {
+			const int x = edgeLen-1;
+			for (int y=0; y<edgeLen; y++) ev[y] = array[x + y*edgeLen];
+		} else if (edge == 2) {
+			const int y = edgeLen-1;
+			for (int x=0; x<edgeLen; x++) ev[x] = array[(edgeLen-1)-x + y*edgeLen];
+		} else {
+			for (int y=0; y<edgeLen; y++) ev[y] = array[0 + ((edgeLen-1)-y)*edgeLen];
+		}
+	}
+
+	void SetEdge(vector3d *array, int edge, const vector3d *ev) {
+		if (edge == 0) {
+			for (int x=0; x<edgeLen; x++) array[x] = ev[x];
+		} else if (edge == 1) {
+			const int x = edgeLen-1;
+			for (int y=0; y<edgeLen; y++) array[x + y*edgeLen] = ev[y];
+		} else if (edge == 2) {
+			const int y = edgeLen-1;
+			for (int x=0; x<edgeLen; x++) array[(edgeLen-1)-x + y*edgeLen] = ev[x];
+		} else {
+			for (int y=0; y<edgeLen; y++) array[0 + ((edgeLen-1)-y)*edgeLen] = ev[y];
+		}
+	}
+};
+
+
 class GeoPatch {
 public:
+	GeoPatchContext *ctx;
 	vector3d v[4];
 	vector3d *vertices;
 	vector3d *normals;
 	vector3d *colors;
 	GLuint m_vbo;
-	static unsigned short *midIndices;
-	static unsigned short *loEdgeIndices[4];
-	static unsigned short *hiEdgeIndices[4];
-	static GLuint indices_vbo;
-	static VBOVertex *vbotemp;
 	GeoPatch *kids[4];
 	GeoPatch *parent;
 	GeoPatch *edgeFriend[4]; // [0]=v01, [1]=v12, [2]=v20
@@ -86,37 +328,13 @@ public:
 	int m_depth;
 	SDL_mutex *m_kidsLock;
 	bool m_needUpdateVBOs;
-
-	static GeoPatch** s_geoPatches[4];
-	static SDL_mutex *s_geoPatchLock[4];
-	static SDL_sem* s_geoPatchSem[4];
-	static SDL_sem* s_geoSphereSem[4];
-	static SDL_Thread* s_geoThread[4];
-
-	/* Thread(s) that generate the mesh data for a geopatch */
-	static int UpdateGeoPatchThread(void *data)
-	{
-		PROFILE_THREAD_SCOPED()
-		uint8_t idx = (*(uint8_t*)data);
-		PiAssert( idx>=0 && idx<4 );
-		PiAssert(s_geoPatchLock[idx]);
-		PiAssert(s_geoPatchSem[idx]);
-		for(;;) {
-			SDL_SemWait(s_geoPatchSem[idx]);
-			SDL_mutexP(s_geoPatchLock[idx]);
-			if (s_geoPatches[idx]) { 
-				(*s_geoPatches[idx])->GenerateMesh();
-			}
-			s_geoPatches[idx] = NULL;
-			SDL_mutexV(s_geoPatchLock[idx]);
-			SDL_SemPost(s_geoSphereSem[idx]);
-		}
-		return 0;
-	}
 	
-	GeoPatch(vector3d v0, vector3d v1, vector3d v2, vector3d v3, int depth) {
-		//PROFILE_SCOPED()
+	GeoPatch(GeoPatchContext *_ctx, vector3d v0, vector3d v1, vector3d v2, vector3d v3, int depth) {
 		memset(this, 0, sizeof(GeoPatch));
+
+		ctx = _ctx;
+		ctx->IncRefCount();
+
 		m_kidsLock = SDL_CreateMutex();
 		v[0] = v0; v[1] = v1; v[2] = v2; v[3] = v3;
 		m_depth = depth;
@@ -127,229 +345,9 @@ public:
 		}
 		m_roughLength = GEOPATCH_SUBDIVIDE_AT_CAMDIST / pow(2.0, depth);
 		m_needUpdateVBOs = false;
-		normals = new vector3d[GEOPATCH_NUMVERTICES];
-		vertices = new vector3d[GEOPATCH_NUMVERTICES];
-		colors = new vector3d[GEOPATCH_NUMVERTICES];
-	}
-
-	static void Init() {
-		//PROFILE_SCOPED()
-		GEOPATCH_FRAC = 1.0 / double(GEOPATCH_EDGELEN-1);
-
-		if (midIndices) {
-			delete [] midIndices;
-			for (int i=0; i<4; i++) {
-				delete [] loEdgeIndices[i];
-				delete [] hiEdgeIndices[i];
-			}
-			if (indices_vbo) {
-				glDeleteBuffersARB(1, &indices_vbo);
-			}
-			delete [] vbotemp;
-		}
-
-		{
-			vbotemp = new VBOVertex[GEOPATCH_NUMVERTICES];
-				
-			unsigned short *idx;
-			midIndices = new unsigned short[VBO_COUNT_MID_IDX];
-			for (int i=0; i<4; i++) {
-				loEdgeIndices[i] = new unsigned short[VBO_COUNT_LO_EDGE];
-				hiEdgeIndices[i] = new unsigned short[VBO_COUNT_HI_EDGE];
-			}
-			/* also want vtx indices for tris not touching edge of patch */
-			idx = midIndices;
-			for (int x=1; x<GEOPATCH_EDGELEN-2; x++) {
-				for (int y=1; y<GEOPATCH_EDGELEN-2; y++) {
-					idx[0] = x + GEOPATCH_EDGELEN*y;
-					idx[1] = x+1 + GEOPATCH_EDGELEN*y;
-					idx[2] = x + GEOPATCH_EDGELEN*(y+1);
-					idx+=3;
-
-					idx[0] = x+1 + GEOPATCH_EDGELEN*y;
-					idx[1] = x+1 + GEOPATCH_EDGELEN*(y+1);
-					idx[2] = x + GEOPATCH_EDGELEN*(y+1);
-					idx+=3;
-				}
-			}
-			{
-				for (int x=1; x<GEOPATCH_EDGELEN-3; x+=2) {
-					// razor teeth near edge 0
-					idx[0] = x + GEOPATCH_EDGELEN;
-					idx[1] = x+1;
-					idx[2] = x+1 + GEOPATCH_EDGELEN;
-					idx+=3;
-					idx[0] = x+1;
-					idx[1] = x+2 + GEOPATCH_EDGELEN;
-					idx[2] = x+1 + GEOPATCH_EDGELEN;
-					idx+=3;
-				}
-				for (int x=1; x<GEOPATCH_EDGELEN-3; x+=2) {
-					// near edge 2
-					idx[0] = x + GEOPATCH_EDGELEN*(GEOPATCH_EDGELEN-2);
-					idx[1] = x+1 + GEOPATCH_EDGELEN*(GEOPATCH_EDGELEN-2);
-					idx[2] = x+1 + GEOPATCH_EDGELEN*(GEOPATCH_EDGELEN-1);
-					idx+=3;
-					idx[0] = x+1 + GEOPATCH_EDGELEN*(GEOPATCH_EDGELEN-2);
-					idx[1] = x+2 + GEOPATCH_EDGELEN*(GEOPATCH_EDGELEN-2);
-					idx[2] = x+1 + GEOPATCH_EDGELEN*(GEOPATCH_EDGELEN-1);
-					idx+=3;
-				}
-				for (int y=1; y<GEOPATCH_EDGELEN-3; y+=2) {
-					// near edge 1
-					idx[0] = GEOPATCH_EDGELEN-2 + y*GEOPATCH_EDGELEN;
-					idx[1] = GEOPATCH_EDGELEN-1 + (y+1)*GEOPATCH_EDGELEN;
-					idx[2] = GEOPATCH_EDGELEN-2 + (y+1)*GEOPATCH_EDGELEN;
-					idx+=3;
-					idx[0] = GEOPATCH_EDGELEN-2 + (y+1)*GEOPATCH_EDGELEN;
-					idx[1] = GEOPATCH_EDGELEN-1 + (y+1)*GEOPATCH_EDGELEN;
-					idx[2] = GEOPATCH_EDGELEN-2 + (y+2)*GEOPATCH_EDGELEN;
-					idx+=3;
-				}
-				for (int y=1; y<GEOPATCH_EDGELEN-3; y+=2) {
-					// near edge 3
-					idx[0] = 1 + y*GEOPATCH_EDGELEN;
-					idx[1] = 1 + (y+1)*GEOPATCH_EDGELEN;
-					idx[2] = (y+1)*GEOPATCH_EDGELEN;
-					idx+=3;
-					idx[0] = 1 + (y+1)*GEOPATCH_EDGELEN;
-					idx[1] = 1 + (y+2)*GEOPATCH_EDGELEN;
-					idx[2] = (y+1)*GEOPATCH_EDGELEN;
-					idx+=3;
-				}
-			}
-			// full detail edge triangles
-			{
-				idx = hiEdgeIndices[0];
-				for (int x=0; x<GEOPATCH_EDGELEN-1; x+=2) {
-					idx[0] = x; idx[1] = x+1; idx[2] = x+1 + GEOPATCH_EDGELEN;
-					idx+=3;
-					idx[0] = x+1; idx[1] = x+2; idx[2] = x+1 + GEOPATCH_EDGELEN;
-					idx+=3;
-				}
-				idx = hiEdgeIndices[1];
-				for (int y=0; y<GEOPATCH_EDGELEN-1; y+=2) {
-					idx[0] = GEOPATCH_EDGELEN-1 + y*GEOPATCH_EDGELEN;
-					idx[1] = GEOPATCH_EDGELEN-1 + (y+1)*GEOPATCH_EDGELEN;
-					idx[2] = GEOPATCH_EDGELEN-2 + (y+1)*GEOPATCH_EDGELEN;
-					idx+=3;
-					idx[0] = GEOPATCH_EDGELEN-1 + (y+1)*GEOPATCH_EDGELEN;
-					idx[1] = GEOPATCH_EDGELEN-1 + (y+2)*GEOPATCH_EDGELEN;
-					idx[2] = GEOPATCH_EDGELEN-2 + (y+1)*GEOPATCH_EDGELEN;
-					idx+=3;
-				}
-				idx = hiEdgeIndices[2];
-				for (int x=0; x<GEOPATCH_EDGELEN-1; x+=2) {
-					idx[0] = x + (GEOPATCH_EDGELEN-1)*GEOPATCH_EDGELEN;
-					idx[1] = x+1 + (GEOPATCH_EDGELEN-2)*GEOPATCH_EDGELEN;
-					idx[2] = x+1 + (GEOPATCH_EDGELEN-1)*GEOPATCH_EDGELEN;
-					idx+=3;
-					idx[0] = x+1 + (GEOPATCH_EDGELEN-2)*GEOPATCH_EDGELEN;
-					idx[1] = x+2 + (GEOPATCH_EDGELEN-1)*GEOPATCH_EDGELEN;
-					idx[2] = x+1 + (GEOPATCH_EDGELEN-1)*GEOPATCH_EDGELEN;
-					idx+=3;
-				}
-				idx = hiEdgeIndices[3];
-				for (int y=0; y<GEOPATCH_EDGELEN-1; y+=2) {
-					idx[0] = y*GEOPATCH_EDGELEN;
-					idx[1] = 1 + (y+1)*GEOPATCH_EDGELEN;
-					idx[2] = (y+1)*GEOPATCH_EDGELEN;
-					idx+=3;
-					idx[0] = (y+1)*GEOPATCH_EDGELEN;
-					idx[1] = 1 + (y+1)*GEOPATCH_EDGELEN;
-					idx[2] = (y+2)*GEOPATCH_EDGELEN;
-					idx+=3;
-				}
-			}
-			// these edge indices are for patches with no
-			// neighbour of equal or greater detail -- they reduce
-			// their edge complexity by 1 division
-			{
-				idx = loEdgeIndices[0];
-				for (int x=0; x<GEOPATCH_EDGELEN-2; x+=2) {
-					idx[0] = x;
-					idx[1] = x+2;
-					idx[2] = x+1+GEOPATCH_EDGELEN;
-					idx += 3;
-				}
-				idx = loEdgeIndices[1];
-				for (int y=0; y<GEOPATCH_EDGELEN-2; y+=2) {
-					idx[0] = (GEOPATCH_EDGELEN-1) + y*GEOPATCH_EDGELEN;
-					idx[1] = (GEOPATCH_EDGELEN-1) + (y+2)*GEOPATCH_EDGELEN;
-					idx[2] = (GEOPATCH_EDGELEN-2) + (y+1)*GEOPATCH_EDGELEN;
-					idx += 3;
-				}
-				idx = loEdgeIndices[2];
-				for (int x=0; x<GEOPATCH_EDGELEN-2; x+=2) {
-					idx[0] = x+GEOPATCH_EDGELEN*(GEOPATCH_EDGELEN-1);
-					idx[2] = x+2+GEOPATCH_EDGELEN*(GEOPATCH_EDGELEN-1);
-					idx[1] = x+1+GEOPATCH_EDGELEN*(GEOPATCH_EDGELEN-2);
-					idx += 3;
-				}
-				idx = loEdgeIndices[3];
-				for (int y=0; y<GEOPATCH_EDGELEN-2; y+=2) {
-					idx[0] = y*GEOPATCH_EDGELEN;
-					idx[2] = (y+2)*GEOPATCH_EDGELEN;
-					idx[1] = 1 + (y+1)*GEOPATCH_EDGELEN;
-					idx += 3;
-				}
-			}
-			// find min/max indices
-			for (int i=0; i<4; i++) {
-				s_loMinIdx[i] = s_hiMinIdx[i] = 1<<30;
-				s_loMaxIdx[i] = s_hiMaxIdx[i] = 0;
-				for (int j=0; j<3*(GEOPATCH_EDGELEN/2); j++) {
-					if (loEdgeIndices[i][j] < s_loMinIdx[i]) s_loMinIdx[i] = loEdgeIndices[i][j];
-					if (loEdgeIndices[i][j] > s_loMaxIdx[i]) s_loMaxIdx[i] = loEdgeIndices[i][j];
-				}
-				for (int j=0; j<VBO_COUNT_HI_EDGE; j++) {
-					if (hiEdgeIndices[i][j] < s_hiMinIdx[i]) s_hiMinIdx[i] = hiEdgeIndices[i][j];
-					if (hiEdgeIndices[i][j] > s_hiMaxIdx[i]) s_hiMaxIdx[i] = hiEdgeIndices[i][j];
-				}
-				//printf("%d:\nLo %d:%d\nHi: %d:%d\n", i, s_loMinIdx[i], s_loMaxIdx[i], s_hiMinIdx[i], s_hiMaxIdx[i]);
-			}
-
-			glGenBuffersARB(1, &indices_vbo);
-			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, indices_vbo);
-			glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, IDX_VBO_MAIN_OFFSET + sizeof(unsigned short)*VBO_COUNT_MID_IDX, 0, GL_STATIC_DRAW);
-			for (int i=0; i<4; i++) {
-				glBufferSubDataARB(GL_ELEMENT_ARRAY_BUFFER, 
-					IDX_VBO_LO_OFFSET(i),
-					sizeof(unsigned short)*3*(GEOPATCH_EDGELEN/2),
-					loEdgeIndices[i]);
-			}
-			for (int i=0; i<4; i++) {
-				glBufferSubDataARB(GL_ELEMENT_ARRAY_BUFFER,
-					IDX_VBO_HI_OFFSET(i),
-					sizeof(unsigned short)*VBO_COUNT_HI_EDGE,
-					hiEdgeIndices[i]);
-			}
-			glBufferSubDataARB(GL_ELEMENT_ARRAY_BUFFER,
-					IDX_VBO_MAIN_OFFSET,
-					sizeof(unsigned short)*VBO_COUNT_MID_IDX,
-					midIndices);
-			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-#ifdef GEOPATCH_USE_THREADING
-			static const int indexes[4] = {0,1,2,3};
-			for( int i = 0; i<4; ++i ) {
-				assert(NULL==s_geoPatches[i]);
-				s_geoPatches[i] = NULL;
-
-				if(NULL==s_geoPatchLock[i])
-					s_geoPatchLock[i] = SDL_CreateMutex();
-
-				if(!s_geoPatchSem[i])
-					s_geoPatchSem[i] = SDL_CreateSemaphore(0);
-
-				if(!s_geoSphereSem[i])
-					s_geoSphereSem[i] = SDL_CreateSemaphore(0);
-
-				if(!s_geoThread[i])
-					s_geoThread[i] = SDL_CreateThread(&GeoPatch::UpdateGeoPatchThread, (void*)&indexes[i]);
-			}
-#endif /* GEOPATCH_USE_THREADING */
-		}
+		normals = new vector3d[ctx->NUMVERTICES()];
+		vertices = new vector3d[ctx->NUMVERTICES()];
+		colors = new vector3d[ctx->NUMVERTICES()];
 	}
 
 	~GeoPatch() {
@@ -362,22 +360,25 @@ public:
 		delete normals;
 		delete colors;
 		geosphere->AddVBOToDestroy(m_vbo);
+
+		ctx->DecRefCount();
+		if (ctx->GetRefCount() == 0) delete ctx;
 	}
+
 	void UpdateVBOs() {
 		m_needUpdateVBOs = true;
 	}
 
 	void _UpdateVBOs() {
-		//PROFILE_SCOPED()
 		if (m_needUpdateVBOs) {
 			if (!m_vbo) glGenBuffersARB(1, &m_vbo);
 			m_needUpdateVBOs = false;
 			glBindBufferARB(GL_ARRAY_BUFFER, m_vbo);
-			glBufferDataARB(GL_ARRAY_BUFFER, sizeof(VBOVertex)*GEOPATCH_NUMVERTICES, 0, GL_DYNAMIC_DRAW);
-			for (int i=0; i<GEOPATCH_NUMVERTICES; i++)
+			glBufferDataARB(GL_ARRAY_BUFFER, sizeof(VBOVertex)*ctx->NUMVERTICES(), 0, GL_DYNAMIC_DRAW);
+			for (int i=0; i<ctx->NUMVERTICES(); i++)
 			{
 				clipRadius = std::max(clipRadius, (vertices[i]-clipCentroid).Length());
-				VBOVertex *pData = vbotemp + i;
+				VBOVertex *pData = ctx->vbotemp + i;
 				pData->x = float(vertices[i].x - clipCentroid.x);
 				pData->y = float(vertices[i].y - clipCentroid.y);
 				pData->z = float(vertices[i].z - clipCentroid.z);
@@ -389,7 +390,7 @@ public:
 				pData->col[2] = static_cast<unsigned char>(Clamp(colors[i].z*255.0, 0.0, 255.0));
 				pData->col[3] = 255;
 			}
-			glBufferDataARB(GL_ARRAY_BUFFER, sizeof(VBOVertex)*GEOPATCH_NUMVERTICES, vbotemp, GL_DYNAMIC_DRAW);
+			glBufferDataARB(GL_ARRAY_BUFFER, sizeof(VBOVertex)*ctx->NUMVERTICES(), ctx->vbotemp, GL_DYNAMIC_DRAW);
 			glBindBufferARB(GL_ARRAY_BUFFER, 0);
 		}
 	}	
@@ -397,49 +398,19 @@ public:
 	 * fucking pointless. one position inwards. used to make edge normals
 	 * for adjacent tiles */
 	void GetEdgeMinusOneVerticesFlipped(int edge, vector3d *ev) {
-		//PROFILE_SCOPED()
 		if (edge == 0) {
-			for (int x=0; x<GEOPATCH_EDGELEN; x++) ev[GEOPATCH_EDGELEN-1-x] = vertices[x + GEOPATCH_EDGELEN];
+			for (int x=0; x<ctx->edgeLen; x++) ev[ctx->edgeLen-1-x] = vertices[x + ctx->edgeLen];
 		} else if (edge == 1) {
-			const int x = GEOPATCH_EDGELEN-2;
-			for (int y=0; y<GEOPATCH_EDGELEN; y++) ev[GEOPATCH_EDGELEN-1-y] = vertices[x + y*GEOPATCH_EDGELEN];
+			const int x = ctx->edgeLen-2;
+			for (int y=0; y<ctx->edgeLen; y++) ev[ctx->edgeLen-1-y] = vertices[x + y*ctx->edgeLen];
 		} else if (edge == 2) {
-			const int y = GEOPATCH_EDGELEN-2;
-			for (int x=0; x<GEOPATCH_EDGELEN; x++) ev[GEOPATCH_EDGELEN-1-x] = vertices[(GEOPATCH_EDGELEN-1)-x + y*GEOPATCH_EDGELEN];
+			const int y = ctx->edgeLen-2;
+			for (int x=0; x<ctx->edgeLen; x++) ev[ctx->edgeLen-1-x] = vertices[(ctx->edgeLen-1)-x + y*ctx->edgeLen];
 		} else {
-			for (int y=0; y<GEOPATCH_EDGELEN; y++) ev[GEOPATCH_EDGELEN-1-y] = vertices[1 + ((GEOPATCH_EDGELEN-1)-y)*GEOPATCH_EDGELEN];
-		}
-	}
-	static void GetEdge(vector3d *array, int edge, vector3d *ev) {
-		//PROFILE_SCOPED()
-		if (edge == 0) {
-			for (int x=0; x<GEOPATCH_EDGELEN; x++) ev[x] = array[x];
-		} else if (edge == 1) {
-			const int x = GEOPATCH_EDGELEN-1;
-			for (int y=0; y<GEOPATCH_EDGELEN; y++) ev[y] = array[x + y*GEOPATCH_EDGELEN];
-		} else if (edge == 2) {
-			const int y = GEOPATCH_EDGELEN-1;
-			for (int x=0; x<GEOPATCH_EDGELEN; x++) ev[x] = array[(GEOPATCH_EDGELEN-1)-x + y*GEOPATCH_EDGELEN];
-		} else {
-			for (int y=0; y<GEOPATCH_EDGELEN; y++) ev[y] = array[0 + ((GEOPATCH_EDGELEN-1)-y)*GEOPATCH_EDGELEN];
-		}
-	}
-	static void SetEdge(vector3d *array, int edge, const vector3d *ev) {
-		//PROFILE_SCOPED()
-		if (edge == 0) {
-			for (int x=0; x<GEOPATCH_EDGELEN; x++) array[x] = ev[x];
-		} else if (edge == 1) {
-			const int x = GEOPATCH_EDGELEN-1;
-			for (int y=0; y<GEOPATCH_EDGELEN; y++) array[x + y*GEOPATCH_EDGELEN] = ev[y];
-		} else if (edge == 2) {
-			const int y = GEOPATCH_EDGELEN-1;
-			for (int x=0; x<GEOPATCH_EDGELEN; x++) array[(GEOPATCH_EDGELEN-1)-x + y*GEOPATCH_EDGELEN] = ev[x];
-		} else {
-			for (int y=0; y<GEOPATCH_EDGELEN; y++) array[0 + ((GEOPATCH_EDGELEN-1)-y)*GEOPATCH_EDGELEN] = ev[y];
+			for (int y=0; y<ctx->edgeLen; y++) ev[ctx->edgeLen-1-y] = vertices[1 + ((ctx->edgeLen-1)-y)*ctx->edgeLen];
 		}
 	}
 	int GetEdgeIdxOf(GeoPatch *e) {
-		//PROFILE_SCOPED()
 		for (int i=0; i<4; i++) {
 			if (edgeFriend[i] == e) return i;
 		}
@@ -449,74 +420,72 @@ public:
 
 
 	void FixEdgeNormals(const int edge, const vector3d *ev) {
-		//PROFILE_SCOPED()
 		int x, y;
 		switch (edge) {
 		case 0:
-			for (x=1; x<GEOPATCH_EDGELEN-1; x++) {
+			for (x=1; x<ctx->edgeLen-1; x++) {
 				const vector3d x1 = vertices[x-1];
 				const vector3d x2 = vertices[x+1];
 				const vector3d y1 = ev[x];
-				const vector3d y2 = vertices[x + GEOPATCH_EDGELEN];
+				const vector3d y2 = vertices[x + ctx->edgeLen];
 				const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
 				normals[x] = norm;
 				// make color
-				const vector3d p = GetSpherePoint(x*GEOPATCH_FRAC, 0);
+				const vector3d p = GetSpherePoint(x*ctx->frac, 0);
 				const double height = colors[x].x;
 				colors[x] = geosphere->GetColor(p, height, norm);
 			}
 			break;
 		case 1:
-			x = GEOPATCH_EDGELEN-1;
-			for (y=1; y<GEOPATCH_EDGELEN-1; y++) {
-				const vector3d x1 = vertices[(x-1) + y*GEOPATCH_EDGELEN];
+			x = ctx->edgeLen-1;
+			for (y=1; y<ctx->edgeLen-1; y++) {
+				const vector3d x1 = vertices[(x-1) + y*ctx->edgeLen];
 				const vector3d x2 = ev[y];
-				const vector3d y1 = vertices[x + (y-1)*GEOPATCH_EDGELEN];
-				const vector3d y2 = vertices[x + (y+1)*GEOPATCH_EDGELEN];
+				const vector3d y1 = vertices[x + (y-1)*ctx->edgeLen];
+				const vector3d y2 = vertices[x + (y+1)*ctx->edgeLen];
 				const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
-				normals[x + y*GEOPATCH_EDGELEN] = norm;
+				normals[x + y*ctx->edgeLen] = norm;
 				// make color
-				const vector3d p = GetSpherePoint(x*GEOPATCH_FRAC, y*GEOPATCH_FRAC);
-				const double height = colors[x + y*GEOPATCH_EDGELEN].x;
-				colors[x + y*GEOPATCH_EDGELEN] = geosphere->GetColor(p, height, norm);
-	//			colors[x+y*GEOPATCH_EDGELEN] = vector3d(1,0,0);
+				const vector3d p = GetSpherePoint(x*ctx->frac, y*ctx->frac);
+				const double height = colors[x + y*ctx->edgeLen].x;
+				colors[x + y*ctx->edgeLen] = geosphere->GetColor(p, height, norm);
+	//			colors[x+y*ctx->edgeLen] = vector3d(1,0,0);
 			}
 			break;
 		case 2:
-			y = GEOPATCH_EDGELEN-1;
-			for (x=1; x<GEOPATCH_EDGELEN-1; x++) {
-				const vector3d x1 = vertices[x-1 + y*GEOPATCH_EDGELEN];
-				const vector3d x2 = vertices[x+1 + y*GEOPATCH_EDGELEN];
-				const vector3d y1 = vertices[x + (y-1)*GEOPATCH_EDGELEN];
-				const vector3d y2 = ev[GEOPATCH_EDGELEN-1-x];
+			y = ctx->edgeLen-1;
+			for (x=1; x<ctx->edgeLen-1; x++) {
+				const vector3d x1 = vertices[x-1 + y*ctx->edgeLen];
+				const vector3d x2 = vertices[x+1 + y*ctx->edgeLen];
+				const vector3d y1 = vertices[x + (y-1)*ctx->edgeLen];
+				const vector3d y2 = ev[ctx->edgeLen-1-x];
 				const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
-				normals[x + y*GEOPATCH_EDGELEN] = norm;
+				normals[x + y*ctx->edgeLen] = norm;
 				// make color
-				const vector3d p = GetSpherePoint(x*GEOPATCH_FRAC, y*GEOPATCH_FRAC);
-				const double height = colors[x + y*GEOPATCH_EDGELEN].x;
-				colors[x + y*GEOPATCH_EDGELEN] = geosphere->GetColor(p, height, norm);
+				const vector3d p = GetSpherePoint(x*ctx->frac, y*ctx->frac);
+				const double height = colors[x + y*ctx->edgeLen].x;
+				colors[x + y*ctx->edgeLen] = geosphere->GetColor(p, height, norm);
 			}
 			break;
 		case 3:
-			for (y=1; y<GEOPATCH_EDGELEN-1; y++) {
-				const vector3d x1 = ev[GEOPATCH_EDGELEN-1-y];
-				const vector3d x2 = vertices[1 + y*GEOPATCH_EDGELEN];
-				const vector3d y1 = vertices[(y-1)*GEOPATCH_EDGELEN];
-				const vector3d y2 = vertices[(y+1)*GEOPATCH_EDGELEN];
+			for (y=1; y<ctx->edgeLen-1; y++) {
+				const vector3d x1 = ev[ctx->edgeLen-1-y];
+				const vector3d x2 = vertices[1 + y*ctx->edgeLen];
+				const vector3d y1 = vertices[(y-1)*ctx->edgeLen];
+				const vector3d y2 = vertices[(y+1)*ctx->edgeLen];
 				const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
-				normals[y*GEOPATCH_EDGELEN] = norm;
+				normals[y*ctx->edgeLen] = norm;
 				// make color
-				const vector3d p = GetSpherePoint(0, y*GEOPATCH_FRAC);
-				const double height = colors[y*GEOPATCH_EDGELEN].x;
-				colors[y*GEOPATCH_EDGELEN] = geosphere->GetColor(p, height, norm);
-	//			colors[y*GEOPATCH_EDGELEN] = vector3d(0,1,0);
+				const vector3d p = GetSpherePoint(0, y*ctx->frac);
+				const double height = colors[y*ctx->edgeLen].x;
+				colors[y*ctx->edgeLen] = geosphere->GetColor(p, height, norm);
+	//			colors[y*ctx->edgeLen] = vector3d(0,1,0);
 			}
 			break;
 		}
 	}
 
 	int GetChildIdx(GeoPatch *child) {
-		//PROFILE_SCOPED()
 		for (int i=0; i<4; i++) {
 			if (kids[i] == child) return i;
 		}
@@ -525,7 +494,6 @@ public:
 	}
 	
 	void FixEdgeFromParentInterpolated(int edge) {
-		//PROFILE_SCOPED()
 		// noticeable artefacts from not doing so...
 		vector3d ev[GEOPATCH_MAX_EDGELEN];
 		vector3d en[GEOPATCH_MAX_EDGELEN];
@@ -533,48 +501,47 @@ public:
 		vector3d ev2[GEOPATCH_MAX_EDGELEN];
 		vector3d en2[GEOPATCH_MAX_EDGELEN];
 		vector3d ec2[GEOPATCH_MAX_EDGELEN];
-		GetEdge(parent->vertices, edge, ev);
-		GetEdge(parent->normals, edge, en);
-		GetEdge(parent->colors, edge, ec);
+		ctx->GetEdge(parent->vertices, edge, ev);
+		ctx->GetEdge(parent->normals, edge, en);
+		ctx->GetEdge(parent->colors, edge, ec);
 
 		int kid_idx = parent->GetChildIdx(this);
 		if (edge == kid_idx) {
 			// use first half of edge
-			for (int i=0; i<=GEOPATCH_EDGELEN/2; i++) {
+			for (int i=0; i<=ctx->edgeLen/2; i++) {
 				ev2[i<<1] = ev[i];
 				en2[i<<1] = en[i];
 				ec2[i<<1] = ec[i];
 			}
 		} else {
 			// use 2nd half of edge
-			for (int i=GEOPATCH_EDGELEN/2; i<GEOPATCH_EDGELEN; i++) {
-				ev2[(i-(GEOPATCH_EDGELEN/2))<<1] = ev[i];
-				en2[(i-(GEOPATCH_EDGELEN/2))<<1] = en[i];
-				ec2[(i-(GEOPATCH_EDGELEN/2))<<1] = ec[i];
+			for (int i=ctx->edgeLen/2; i<ctx->edgeLen; i++) {
+				ev2[(i-(ctx->edgeLen/2))<<1] = ev[i];
+				en2[(i-(ctx->edgeLen/2))<<1] = en[i];
+				ec2[(i-(ctx->edgeLen/2))<<1] = ec[i];
 			}
 		}
 		// interpolate!!
-		for (int i=1; i<GEOPATCH_EDGELEN; i+=2) {
+		for (int i=1; i<ctx->edgeLen; i+=2) {
 			ev2[i] = (ev2[i-1]+ev2[i+1]) * 0.5;
 			en2[i] = (en2[i-1]+en2[i+1]).Normalized();
 			ec2[i] = (ec2[i-1]+ec2[i+1]) * 0.5;
 		}
-		SetEdge(this->vertices, edge, ev2);
-		SetEdge(this->normals, edge, en2);
-		SetEdge(this->colors, edge, ec2);
+		ctx->SetEdge(this->vertices, edge, ev2);
+		ctx->SetEdge(this->normals, edge, en2);
+		ctx->SetEdge(this->colors, edge, ec2);
 	}
 
 	template <int corner>
 	void MakeCornerNormal(vector3d *ev, vector3d *ev2) {
-		//PROFILE_SCOPED()
 		int p;
 		vector3d x1,x2,y1,y2;
 		switch (corner) {
 		case 0: {
-			x1 = ev[GEOPATCH_EDGELEN-1];
+			x1 = ev[ctx->edgeLen-1];
 			x2 = vertices[1];
 			y1 = ev2[0];
-			y2 = vertices[GEOPATCH_EDGELEN];
+			y2 = vertices[ctx->edgeLen];
 			const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
 			normals[0] = norm;
 			// make color
@@ -585,55 +552,54 @@ public:
 			}
 			break;
 		case 1: {
-			p = GEOPATCH_EDGELEN-1;
+			p = ctx->edgeLen-1;
 			x1 = vertices[p-1];
 			x2 = ev2[0];
-			y1 = ev[GEOPATCH_EDGELEN-1];
-			y2 = vertices[p + GEOPATCH_EDGELEN];
+			y1 = ev[ctx->edgeLen-1];
+			y2 = vertices[p + ctx->edgeLen];
 			const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
 			normals[p] = norm;
 			// make color
-			const vector3d pt = GetSpherePoint(p*GEOPATCH_FRAC, 0);
+			const vector3d pt = GetSpherePoint(p*ctx->frac, 0);
 		//	const double height = colors[p].x;
 			const double height = geosphere->GetHeight(pt);
 			colors[p] = geosphere->GetColor(pt, height, norm);
 			}
 			break;
 		case 2: {
-			p = GEOPATCH_EDGELEN-1;
-			x1 = vertices[(p-1) + p*GEOPATCH_EDGELEN];
-			x2 = ev[GEOPATCH_EDGELEN-1];
-			y1 = vertices[p + (p-1)*GEOPATCH_EDGELEN];
+			p = ctx->edgeLen-1;
+			x1 = vertices[(p-1) + p*ctx->edgeLen];
+			x2 = ev[ctx->edgeLen-1];
+			y1 = vertices[p + (p-1)*ctx->edgeLen];
 			y2 = ev2[0];
 			const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
-			normals[p + p*GEOPATCH_EDGELEN] = norm;
+			normals[p + p*ctx->edgeLen] = norm;
 			// make color
-			const vector3d pt = GetSpherePoint(p*GEOPATCH_FRAC, p*GEOPATCH_FRAC);
-		//	const double height = colors[p + p*GEOPATCH_EDGELEN].x;
+			const vector3d pt = GetSpherePoint(p*ctx->frac, p*ctx->frac);
+		//	const double height = colors[p + p*ctx->edgeLen].x;
 			const double height = geosphere->GetHeight(pt);
-			colors[p + p*GEOPATCH_EDGELEN] = geosphere->GetColor(pt, height, norm);
+			colors[p + p*ctx->edgeLen] = geosphere->GetColor(pt, height, norm);
 			}
 			break;
 		case 3: {
-			p = GEOPATCH_EDGELEN-1;
+			p = ctx->edgeLen-1;
 			x1 = ev2[0];
-			x2 = vertices[1 + p*GEOPATCH_EDGELEN];
-			y1 = vertices[(p-1)*GEOPATCH_EDGELEN];
-			y2 = ev[GEOPATCH_EDGELEN-1];
+			x2 = vertices[1 + p*ctx->edgeLen];
+			y1 = vertices[(p-1)*ctx->edgeLen];
+			y2 = ev[ctx->edgeLen-1];
 			const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
-			normals[p*GEOPATCH_EDGELEN] = norm;
+			normals[p*ctx->edgeLen] = norm;
 			// make color
-			const vector3d pt = GetSpherePoint(0, p*GEOPATCH_FRAC);
-		//	const double height = colors[p*GEOPATCH_EDGELEN].x;
+			const vector3d pt = GetSpherePoint(0, p*ctx->frac);
+		//	const double height = colors[p*ctx->edgeLen].x;
 			const double height = geosphere->GetHeight(pt);
-			colors[p*GEOPATCH_EDGELEN] = geosphere->GetColor(pt, height, norm);
+			colors[p*ctx->edgeLen] = geosphere->GetColor(pt, height, norm);
 			}
 			break;
 		}
 	}
 
 	void FixCornerNormalsByEdge(int edge, vector3d *ev) {
-		//PROFILE_SCOPED()
 		vector3d ev2[GEOPATCH_MAX_EDGELEN];
 		vector3d x1, x2, y1, y2;
 		/* XXX All these 'if's have an unfinished else, when a neighbour
@@ -694,7 +660,6 @@ public:
 	}
 
 	void GenerateEdgeNormalsAndColors() {
-		//PROFILE_SCOPED()
 		vector3d ev[4][GEOPATCH_MAX_EDGELEN];
 		bool doneEdge[4];
 		memset(doneEdge, 0, sizeof(doneEdge));
@@ -711,7 +676,7 @@ public:
 				FixEdgeFromParentInterpolated(i);
 				// XXX needed for corners... probably not
 				// correct
-				GetEdge(vertices, i, ev[i]);
+				ctx->GetEdge(vertices, i, ev[i]);
 			}
 		}
 	
@@ -725,7 +690,6 @@ public:
 
 	/* in patch surface coords, [0,1] */
 	vector3d GetSpherePoint(double x, double y) {
-		//PROFILE_SCOPED()
 		return (v[0] + x*(1.0-y)*(v[1]-v[0]) +
 			    x*y*(v[2]-v[0]) +
 			    (1.0-x)*y*(v[3]-v[0])).Normalized();
@@ -734,91 +698,89 @@ public:
 	/** Generates full-detail vertices, and also non-edge normals and
 	 * colors */
 	void GenerateMesh() {
-		//PROFILE_SCOPED()
 		vector3d *vts = vertices;
 		vector3d *col = colors;
 		double xfrac;
 		double yfrac = 0;
-		for (int y=0; y<GEOPATCH_EDGELEN; y++) {
+		for (int y=0; y<ctx->edgeLen; y++) {
 			xfrac = 0;
-			for (int x=0; x<GEOPATCH_EDGELEN; x++) {
+			for (int x=0; x<ctx->edgeLen; x++) {
 				vector3d p = GetSpherePoint(xfrac, yfrac);
 				double height = geosphere->GetHeight(p);
 				*(vts++) = p * (height + 1.0);
 				// remember this -- we will need it later
 				(col++)->x = height;
-				xfrac += GEOPATCH_FRAC;
+				xfrac += ctx->frac;
 			}
-			yfrac += GEOPATCH_FRAC;
+			yfrac += ctx->frac;
 		}
-		assert(vts == &vertices[GEOPATCH_NUMVERTICES]);
+		assert(vts == &vertices[ctx->NUMVERTICES()]);
 		// Generate normals & colors for non-edge vertices since they never change
-		for (int y=1; y<GEOPATCH_EDGELEN-1; y++) {
-			for (int x=1; x<GEOPATCH_EDGELEN-1; x++) {
+		for (int y=1; y<ctx->edgeLen-1; y++) {
+			for (int x=1; x<ctx->edgeLen-1; x++) {
 				// normal
-				vector3d x1 = vertices[x-1 + y*GEOPATCH_EDGELEN];
-				vector3d x2 = vertices[x+1 + y*GEOPATCH_EDGELEN];
-				vector3d y1 = vertices[x + (y-1)*GEOPATCH_EDGELEN];
-				vector3d y2 = vertices[x + (y+1)*GEOPATCH_EDGELEN];
+				vector3d x1 = vertices[x-1 + y*ctx->edgeLen];
+				vector3d x2 = vertices[x+1 + y*ctx->edgeLen];
+				vector3d y1 = vertices[x + (y-1)*ctx->edgeLen];
+				vector3d y2 = vertices[x + (y+1)*ctx->edgeLen];
 
 				vector3d n = (x2-x1).Cross(y2-y1);
-				normals[x + y*GEOPATCH_EDGELEN] = n.Normalized();
+				normals[x + y*ctx->edgeLen] = n.Normalized();
 				// color
-				vector3d p = GetSpherePoint(x*GEOPATCH_FRAC, y*GEOPATCH_FRAC);
-				vector3d &col_r = colors[x + y*GEOPATCH_EDGELEN];
+				vector3d p = GetSpherePoint(x*ctx->frac, y*ctx->frac);
+				vector3d &col_r = colors[x + y*ctx->edgeLen];
 				const double height = col_r.x;
-				const vector3d &norm = normals[x + y*GEOPATCH_EDGELEN];
+				const vector3d &norm = normals[x + y*ctx->edgeLen];
 				col_r = geosphere->GetColor(p, height, norm);
 			}
 		}
 		
 	}
 	void OnEdgeFriendChanged(int edge, GeoPatch *e) {
-		//PROFILE_SCOPED()
 		edgeFriend[edge] = e;
 		vector3d ev[GEOPATCH_MAX_EDGELEN];
 		int we_are = e->GetEdgeIdxOf(this);
 		e->GetEdgeMinusOneVerticesFlipped(we_are, ev);
 		/* now we have a valid edge, fix the edge vertices */
 		if (edge == 0) {
-			for (int x=0; x<GEOPATCH_EDGELEN; x++) {
-				vector3d p = GetSpherePoint(x * GEOPATCH_FRAC, 0);
+			for (int x=0; x<ctx->edgeLen; x++) {
+				vector3d p = GetSpherePoint(x * ctx->frac, 0);
 				double height = geosphere->GetHeight(p);
 				vertices[x] = p * (height + 1.0);
 				// XXX These bounds checks in each edge case are
 				// only necessary while the "All these 'if's"
 				// comment in FixCOrnerNormalsByEdge stands
-				if ((x>0) && (x<GEOPATCH_EDGELEN-1)) {
+				if ((x>0) && (x<ctx->edgeLen-1)) {
 					colors[x].x = height;
 				}
 			}
 		} else if (edge == 1) {
-			for (int y=0; y<GEOPATCH_EDGELEN; y++) {
-				vector3d p = GetSpherePoint(1.0, y * GEOPATCH_FRAC);
+			for (int y=0; y<ctx->edgeLen; y++) {
+				vector3d p = GetSpherePoint(1.0, y * ctx->frac);
 				double height = geosphere->GetHeight(p);
-				int pos = (GEOPATCH_EDGELEN-1) + y*GEOPATCH_EDGELEN;
+				int pos = (ctx->edgeLen-1) + y*ctx->edgeLen;
 				vertices[pos] = p * (height + 1.0);
-				if ((y>0) && (y<GEOPATCH_EDGELEN-1)) {
+				if ((y>0) && (y<ctx->edgeLen-1)) {
 					colors[pos].x = height;
 				}
 			}
 		} else if (edge == 2) {
-			for (int x=0; x<GEOPATCH_EDGELEN; x++) {
-				vector3d p = GetSpherePoint(x * GEOPATCH_FRAC, 1.0);
+			for (int x=0; x<ctx->edgeLen; x++) {
+				vector3d p = GetSpherePoint(x * ctx->frac, 1.0);
 				double height = geosphere->GetHeight(p);
-				int pos = x + (GEOPATCH_EDGELEN-1)*GEOPATCH_EDGELEN;
+				int pos = x + (ctx->edgeLen-1)*ctx->edgeLen;
 				vertices[pos] = p * (height + 1.0);
-				if ((x>0) && (x<GEOPATCH_EDGELEN-1)) {
+				if ((x>0) && (x<ctx->edgeLen-1)) {
 					colors[pos].x = height;
 				}
 			}
 		} else {
-			for (int y=0; y<GEOPATCH_EDGELEN; y++) {
-				vector3d p = GetSpherePoint(0, y * GEOPATCH_FRAC);
+			for (int y=0; y<ctx->edgeLen; y++) {
+				vector3d p = GetSpherePoint(0, y * ctx->frac);
 				double height = geosphere->GetHeight(p);
-				int pos = y * GEOPATCH_EDGELEN;
+				int pos = y * ctx->edgeLen;
 				vertices[pos] = p * (height + 1.0);
-				if ((y>0) && (y<GEOPATCH_EDGELEN-1)) {
+				if ((y>0) && (y<ctx->edgeLen-1)) {
 					colors[pos].x = height;
 				}
 			}
@@ -853,7 +815,6 @@ public:
 		}
 	}
 	void NotifyEdgeFriendSplit(GeoPatch *e) {
-		//PROFILE_SCOPED()
 		int idx = GetEdgeIdxOf(e);
 		int we_are = e->GetEdgeIdxOf(this);
 		if (!kids[0]) return;
@@ -863,7 +824,6 @@ public:
 	}
 	
 	void NotifyEdgeFriendDeleted(GeoPatch *e) {
-		//PROFILE_SCOPED()
 		int idx = GetEdgeIdxOf(e);
 		edgeFriend[idx] = 0;
 		if (!parent) return;
@@ -877,7 +837,6 @@ public:
 	}
 
 	GeoPatch *GetEdgeFriendForKid(int kid, int edge) {
-		//PROFILE_SCOPED()
 		GeoPatch *e = edgeFriend[edge];
 		if (!e) return 0;
 		//assert (e);// && (e->m_depth >= m_depth));
@@ -889,7 +848,6 @@ public:
 	}
 	
 	void Render(vector3d &campos, Plane planes[6]) {
-		//PROFILE_SCOPED()
 		PiVerify(SDL_mutexP(m_kidsLock)==0);
 		if (kids[0]) {
 			for (int i=0; i<4; i++) kids[i]->Render(campos, planes);
@@ -908,7 +866,7 @@ public:
 			glPushMatrix();
 			glTranslated(relpos.x, relpos.y, relpos.z);
 
-			Pi::statSceneTris += 2*(GEOPATCH_EDGELEN-1)*(GEOPATCH_EDGELEN-1);
+			Pi::statSceneTris += 2*(ctx->edgeLen-1)*(ctx->edgeLen-1);
 			glEnableClientState(GL_VERTEX_ARRAY);
 			glEnableClientState(GL_NORMAL_ARRAY);
 			glEnableClientState(GL_COLOR_ARRAY);
@@ -917,13 +875,13 @@ public:
 			glVertexPointer(3, GL_FLOAT, sizeof(VBOVertex), 0);
 			glNormalPointer(GL_FLOAT, sizeof(VBOVertex), reinterpret_cast<void *>(3*sizeof(float)));
 			glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(VBOVertex), reinterpret_cast<void *>(6*sizeof(float)));
-			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, indices_vbo);
-			glDrawRangeElements(GL_TRIANGLES, 0, GEOPATCH_NUMVERTICES-1, VBO_COUNT_MID_IDX, GL_UNSIGNED_SHORT, reinterpret_cast<void*>(IDX_VBO_MAIN_OFFSET));
+			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, ctx->indices_vbo);
+			glDrawRangeElements(GL_TRIANGLES, 0, ctx->NUMVERTICES()-1, ctx->VBO_COUNT_MID_IDX(), GL_UNSIGNED_SHORT, reinterpret_cast<void*>(ctx->IDX_VBO_MAIN_OFFSET()));
 			for (int i=0; i<4; i++) {
 				if (edgeFriend[i]) {
-					glDrawRangeElements(GL_TRIANGLES, s_hiMinIdx[i], s_hiMaxIdx[i], VBO_COUNT_HI_EDGE, GL_UNSIGNED_SHORT, reinterpret_cast<void*>(IDX_VBO_HI_OFFSET(i)));
+					glDrawRangeElements(GL_TRIANGLES, s_hiMinIdx[i], s_hiMaxIdx[i], ctx->VBO_COUNT_HI_EDGE(), GL_UNSIGNED_SHORT, reinterpret_cast<void*>(ctx->IDX_VBO_HI_OFFSET(i)));
 				} else {
-					glDrawRangeElements(GL_TRIANGLES, s_loMinIdx[i], s_loMaxIdx[i], VBO_COUNT_LO_EDGE, GL_UNSIGNED_SHORT, reinterpret_cast<void*>(IDX_VBO_LO_OFFSET(i)));
+					glDrawRangeElements(GL_TRIANGLES, s_loMinIdx[i], s_loMaxIdx[i], ctx->VBO_COUNT_LO_EDGE(), GL_UNSIGNED_SHORT, reinterpret_cast<void*>(ctx->IDX_VBO_LO_OFFSET(i)));
 				}
 			}
 			glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
@@ -936,17 +894,15 @@ public:
 		}
 	}
 
-#ifdef ANDYC_HORRIFIC_TIMING
-	static float s_generateMeshTime;
-	static float s_postGenerateMeshTime;
-	static float s_totalTime;
-	static float s_totalNumCalls;
-	static double s_rollingAverage;
-	static double s_rollingGenMeshAverage;
-	static double s_rollingPostGenMeshAverage;
-#endif
 	void LODUpdate(vector3d &campos) {
-		//PROFILE_SCOPED()
+		// if we've been asked to abort then get out as quickly as possible
+		// this function is recursive so we might be very deep. this is about
+		// as fast as we can go
+		SDL_mutexP(geosphere->m_abortLock);
+		bool abort = geosphere->m_abort;
+		SDL_mutexV(geosphere->m_abortLock);
+		if (abort)
+			return;
 				
 		vector3d centroid = (v[0]+v[1]+v[2]+v[3]).Normalized();
 		centroid = (1.0 + geosphere->GetHeight(centroid)) * centroid;
@@ -976,10 +932,10 @@ public:
 				v23 = (v[2]+v[3]).Normalized();
 				v30 = (v[3]+v[0]).Normalized();
 				GeoPatch *_kids[4];
-				_kids[0] = new GeoPatch(v[0], v01, cn, v30, m_depth+1);
-				_kids[1] = new GeoPatch(v01, v[1], v12, cn, m_depth+1);
-				_kids[2] = new GeoPatch(cn, v12, v[2], v23, m_depth+1);
-				_kids[3] = new GeoPatch(v30, cn, v23, v[3], m_depth+1);
+				_kids[0] = new GeoPatch(ctx, v[0], v01, cn, v30, m_depth+1);
+				_kids[1] = new GeoPatch(ctx, v01, v[1], v12, cn, m_depth+1);
+				_kids[2] = new GeoPatch(ctx, cn, v12, v[2], v23, m_depth+1);
+				_kids[3] = new GeoPatch(ctx, v30, cn, v23, v[3], m_depth+1);
 				// hm.. edges. Not right to pass this
 				// edgeFriend...
 				_kids[0]->edgeFriend[0] = GetEdgeFriendForKid(0, 0);
@@ -1000,96 +956,26 @@ public:
 				_kids[3]->edgeFriend[3] = GetEdgeFriendForKid(3, 3);
 				_kids[0]->parent = _kids[1]->parent = _kids[2]->parent = _kids[3]->parent = this;
 				_kids[0]->geosphere = _kids[1]->geosphere = _kids[2]->geosphere = _kids[3]->geosphere = geosphere;
-
-#ifdef ANDYC_HORRIFIC_TIMING
-				CTimer cTimer;
-				cTimer.Reset();
-				cTimer.Update();
-#endif
-#ifdef GEOPATCH_USE_THREADING
-				for (int i=0; i<4; ++i) {
-					PiAssert(GeoPatch::s_geoPatches[i]==0);
-					GeoPatch::s_geoPatches[i] = &_kids[i];
-				}
-				for (int i=0; i<4; ++i) {
-					PiAssert(SDL_SemValue(GeoPatch::s_geoPatchSem[i])==0);
-					SDL_SemPost(GeoPatch::s_geoPatchSem[i]);
-				}
-
-				// not a good enough waiting method
-				SDL_SemWait(s_geoSphereSem[0]);
-				SDL_SemWait(s_geoSphereSem[1]);
-				SDL_SemWait(s_geoSphereSem[2]);
-				SDL_SemWait(s_geoSphereSem[3]);
-#ifdef _DEBUG
-				for (int i=0; i<4; ++i) {
-					PiAssert(GeoPatch::s_geoPatches[i]==0);
-					PiAssert(SDL_SemValue(GeoPatch::s_geoPatchSem[i])==0);
-				}
-#endif
-#else
-				for (int i=0; i<4; ++i) _kids[i]->GenerateMesh();
-#endif
-#ifdef ANDYC_HORRIFIC_TIMING
-				cTimer.Update();
-				s_generateMeshTime += cTimer.GetElapsedTimeInSec();
-				cTimer.Reset();
-#endif // ANDYC_HORRIFIC_TIMING
+				for (int i=0; i<4; i++) _kids[i]->GenerateMesh();
 				PiVerify(SDL_mutexP(m_kidsLock)==0);
-				for (int i=0; i<4; ++i) kids[i] = _kids[i];
-				for (int i=0; i<4; ++i) edgeFriend[i]->NotifyEdgeFriendSplit(this);
-				for (int i=0; i<4; ++i) {
+				for (int i=0; i<4; i++) kids[i] = _kids[i];
+				for (int i=0; i<4; i++) edgeFriend[i]->NotifyEdgeFriendSplit(this);
+				for (int i=0; i<4; i++) {
 					kids[i]->GenerateEdgeNormalsAndColors();
 					kids[i]->UpdateVBOs();
 				}
 				PiVerify(SDL_mutexV(m_kidsLock)!=-1);
-#ifdef ANDYC_HORRIFIC_TIMING
-				cTimer.Update();
-				s_postGenerateMeshTime += cTimer.GetElapsedTimeInSec();
-
-				// what's the sum of the time taken - we'll output this later (maybe?)
-				s_totalTime = s_generateMeshTime + s_postGenerateMeshTime;
-				s_totalNumCalls += 1.0f;
-				s_rollingAverage = s_totalTime / s_totalNumCalls;
-				s_rollingGenMeshAverage = s_generateMeshTime / s_totalNumCalls;
-				s_rollingPostGenMeshAverage = s_postGenerateMeshTime / s_totalNumCalls;
-#endif // ANDYC_HORRIFIC_TIMING
 			}
-			for (int i=0; i<4; ++i) kids[i]->LODUpdate(campos);
+			for (int i=0; i<4; i++) kids[i]->LODUpdate(campos);
 		} else {
 			if (canMerge && kids[0]) {
 				PiVerify(SDL_mutexP(m_kidsLock)==0);
-				for (int i=0; i<4; ++i) { delete kids[i]; kids[i] = 0; }
+				for (int i=0; i<4; i++) { delete kids[i]; kids[i] = 0; }
 				PiVerify(SDL_mutexV(m_kidsLock)!=-1);
 			}
 		}
 	}
 };
-
-unsigned short *GeoPatch::midIndices = 0;
-unsigned short *GeoPatch::loEdgeIndices[4];
-unsigned short *GeoPatch::hiEdgeIndices[4];
-GLuint GeoPatch::indices_vbo;
-VBOVertex *GeoPatch::vbotemp;
-
-#ifdef GEOPATCH_USE_THREADING
-GeoPatch**	GeoPatch::s_geoPatches[4]	= {0};
-SDL_mutex*	GeoPatch::s_geoPatchLock[4] = {0};
-SDL_sem*	GeoPatch::s_geoPatchSem[4]	= {0};
-SDL_sem*	GeoPatch::s_geoSphereSem[4]	= {0};
-SDL_Thread*	GeoPatch::s_geoThread[4]	= {0};
-
-#ifdef ANDYC_HORRIFIC_TIMING
-float		GeoPatch::s_generateMeshTime = 0.0f;
-float		GeoPatch::s_postGenerateMeshTime = 0.0f;
-float		GeoPatch::s_totalTime = 0.0f;
-float		GeoPatch::s_totalNumCalls = 0.0f;
-
-double		GeoPatch::s_rollingGenMeshAverage = 0.0f;
-double		GeoPatch::s_rollingPostGenMeshAverage = 0.0f;
-double		GeoPatch::s_rollingAverage = 0.0f;
-#endif // ANDYC_HORRIFIC_TIMING
-#endif // GEOPATCH_USE_THREADING
 
 static const int geo_sphere_edge_friends[6][4] = {
 	{ 3, 4, 1, 2 },
@@ -1100,34 +986,55 @@ static const int geo_sphere_edge_friends[6][4] = {
 	{ 1, 4, 3, 2 }
 };
 
-#define PLANET_AMBIENT	0.0
 static std::list<GeoSphere*> s_allGeospheres;
 SDL_mutex *s_allGeospheresLock;
 
 /* Thread that updates geosphere level of detail thingies */
 int GeoSphere::UpdateLODThread(void *data)
 {
-	PROFILE_THREAD_SCOPED()
 	for(;;) {
+		// make a copy of the list of geospheres for this iteration. we don't
+		// want to stop the main thread from updating
 		SDL_mutexP(s_allGeospheresLock);
-		for(std::list<GeoSphere*>::iterator i = s_allGeospheres.begin();
-				i != s_allGeospheres.end(); ++i) {
-			if ((*i)->m_runUpdateThread) (*i)->_UpdateLODs();
-		}
+		std::list<GeoSphere*> geospheres = s_allGeospheres;
 		SDL_mutexV(s_allGeospheresLock);
+
+		for(std::list<GeoSphere*>::iterator i = geospheres.begin();
+				i != geospheres.end(); ++i) {
+
+			// yes, holding the flag lock as we call into _UpdateLODs(). it
+			// will release it after taking the update lock. needed to avoid
+			// the scenario where we decide we want the update, and the root
+			// patches get deleted while we're waiting for the update lock
+			SDL_mutexP((*i)->m_needUpdateLock);
+			if ((*i)->m_needUpdate) {
+				(*i)->_UpdateLODs();
+				(*i)->m_needUpdate = false;
+			}
+			SDL_mutexV((*i)->m_needUpdateLock);
+		}
 
 		SDL_Delay(10);
 	}
-	return 0;
+
+	RETURN_ZERO_NONGNU_ONLY;
 }
 
 void GeoSphere::_UpdateLODs()
 {
-	//PROFILE_SCOPED()
+	// lock the geosphere for update. this will stop the main thread from
+	// trying to destroy it while we're using it
+	SDL_mutexP(m_updateLock);
+
+	// release the flag lock before doing the update proper so the main thread
+	// can check it without waiting for us to finish
+	SDL_mutexV(m_needUpdateLock);
 	for (int i=0; i<6; i++) {
 		m_patches[i]->LODUpdate(m_tempCampos);
 	}
-	m_runUpdateThread = 0;
+	SDL_mutexP(m_needUpdateLock);
+
+	SDL_mutexV(m_updateLock);
 }
 
 /* This is to stop threads keeping on iterating over the s_allGeospheres list,
@@ -1136,12 +1043,10 @@ void GeoSphere::_UpdateLODs()
 static void _LockoutThreadsBeforeExit()
 {
 	SDL_mutexP(s_allGeospheresLock);
-	Profiler::dumphtml();
 }
 
 void GeoSphere::Init()
 {
-	//PROFILE_SCOPED()
 	s_geosphereSurfaceShader[0] = new GeosphereShader("geosphere", "#define NUM_LIGHTS 1\n");
 	s_geosphereSurfaceShader[1] = new GeosphereShader("geosphere", "#define NUM_LIGHTS 2\n");
 	s_geosphereSurfaceShader[2] = new GeosphereShader("geosphere", "#define NUM_LIGHTS 3\n");
@@ -1151,7 +1056,11 @@ void GeoSphere::Init()
 	s_geosphereSkyShader[2] = new GeosphereShader("geosphere_sky", "#define NUM_LIGHTS 3\n");
 	s_geosphereSkyShader[3] = new GeosphereShader("geosphere_sky", "#define NUM_LIGHTS 4\n");
 	s_allGeospheresLock = SDL_CreateMutex();
-	OnChangeDetailLevel();
+
+	s_patchContext = new GeoPatchContext(detail_edgeLen[Pi::detail.planets > 4 ? 4 : Pi::detail.planets]);
+	assert(s_patchContext->edgeLen <= GEOPATCH_MAX_EDGELEN);
+	s_patchContext->IncRefCount();
+
 #ifdef GEOSPHERE_USE_THREADING
 	SDL_CreateThread(&GeoSphere::UpdateLODThread, 0);
 #endif /* GEOSPHERE_USE_THREADING */
@@ -1160,38 +1069,70 @@ void GeoSphere::Init()
 
 void GeoSphere::OnChangeDetailLevel()
 {
-	//PROFILE_SCOPED()
-	SDL_mutexP(s_allGeospheresLock);
+	s_patchContext->DecRefCount();
+
+	s_patchContext = new GeoPatchContext(detail_edgeLen[Pi::detail.planets > 4 ? 4 : Pi::detail.planets]);
+	assert(s_patchContext->edgeLen <= GEOPATCH_MAX_EDGELEN);
+	s_patchContext->IncRefCount();
+
 	for(std::list<GeoSphere*>::iterator i = s_allGeospheres.begin();
 			i != s_allGeospheres.end(); ++i) {
-		for (int p=0; p<6; p++) if ((*i)->m_patches[p]) delete (*i)->m_patches[p];
+
+		// we're about to force the thread back to its main loop. make sure it
+		// stops once it gets there
+		SDL_mutexP((*i)->m_needUpdateLock);
+		(*i)->m_needUpdate = false;
+		SDL_mutexV((*i)->m_needUpdateLock);
+
+		// flag all terrain gen for abort. this will cause the recursive
+		// _UpdateLODs to exit as fast as it can and get the thread back to its
+		// mainloop
+		SDL_mutexP((*i)->m_abortLock);
+		(*i)->m_abort = true;
+		SDL_mutexV((*i)->m_abortLock);
 	}
-	switch (Pi::detail.planets) {
-		case 0: GEOPATCH_EDGELEN = 7; break;
-		case 1: GEOPATCH_EDGELEN = 15; break;
-		case 2: GEOPATCH_EDGELEN = 25; break;
-		case 3: GEOPATCH_EDGELEN = 35; break;
-		default:
-		case 4: GEOPATCH_EDGELEN = 55; break;
-	}
-	assert(GEOPATCH_EDGELEN <= GEOPATCH_MAX_EDGELEN);
-	GeoPatch::Init();
+
+	// reinit the geosphere terrain data
 	for(std::list<GeoSphere*>::iterator i = s_allGeospheres.begin();
 			i != s_allGeospheres.end(); ++i) {
-		(*i)->BuildFirstPatches();
+
+		// we need the update lock so we don't delete working data out from
+		// under the thread. it should finish very quickly since we told it to
+		// abort quickly
+		SDL_mutexP((*i)->m_updateLock);
+
+		for (int p=0; p<6; p++) {
+			// delete patches
+			if ((*i)->m_patches[p]) {
+				delete (*i)->m_patches[p];
+				(*i)->m_patches[p] = 0;
+			}
+
+			// reinit the styles with the new settings
+			(*i)->m_style.ChangeDetailLevel();
+		}
+
+		// clear the abort for the next run (with the new settings)
+		(*i)->m_abort = false;
+
+		// finished update
+		SDL_mutexV((*i)->m_updateLock);
 	}
-	SDL_mutexV(s_allGeospheresLock);
 }
 
 #define GEOSPHERE_TYPE	(m_sbody->type)
 
 GeoSphere::GeoSphere(const SBody *body): m_style(body)
 {
-	//PROFILE_SCOPED()
 	m_vbosToDestroyLock = SDL_CreateMutex();
-	m_runUpdateThread = 0;
 	m_sbody = body;
 	memset(m_patches, 0, 6*sizeof(GeoPatch*));
+
+	m_updateLock = SDL_CreateMutex();
+	m_needUpdateLock = SDL_CreateMutex();
+	m_needUpdate = false;
+	m_abortLock = SDL_CreateMutex();
+	m_abort = false;
 
 	SDL_mutexP(s_allGeospheresLock);
 	s_allGeospheres.push_back(this);
@@ -1200,10 +1141,21 @@ GeoSphere::GeoSphere(const SBody *body): m_style(body)
 
 GeoSphere::~GeoSphere()
 {
-	//PROFILE_SCOPED()
+	// tell the thread to finish up with this geosphere
+	SDL_mutexP(m_abortLock);
+	m_abort = true;
+	SDL_mutexV(m_abortLock);
+
+	// wait until it completes update
+	SDL_mutexP(m_updateLock);
+	SDL_mutexV(m_updateLock);
+
 	SDL_mutexP(s_allGeospheresLock);
 	s_allGeospheres.remove(this);
 	SDL_mutexV(s_allGeospheresLock);
+
+	SDL_DestroyMutex(m_abortLock);
+	SDL_DestroyMutex(m_updateLock);
 
 	for (int i=0; i<6; i++) if (m_patches[i]) delete m_patches[i];
 	DestroyVBOs();
@@ -1212,7 +1164,6 @@ GeoSphere::~GeoSphere()
 
 void GeoSphere::AddVBOToDestroy(GLuint vbo)
 {
-	//PROFILE_SCOPED()
 	SDL_mutexP(m_vbosToDestroyLock);
 	m_vbosToDestroy.push_back(vbo);
 	SDL_mutexV(m_vbosToDestroyLock);
@@ -1220,7 +1171,6 @@ void GeoSphere::AddVBOToDestroy(GLuint vbo)
 
 void GeoSphere::DestroyVBOs()
 {
-	//PROFILE_SCOPED()
 	SDL_mutexP(m_vbosToDestroyLock);
 	for (std::list<GLuint>::iterator i = m_vbosToDestroy.begin();
 			i != m_vbosToDestroy.end(); ++i) {
@@ -1232,7 +1182,6 @@ void GeoSphere::DestroyVBOs()
 
 void GeoSphere::BuildFirstPatches()
 {
-	//PROFILE_SCOPED()
 	// generate initial wank
 	vector3d p1(1,1,1);
 	vector3d p2(-1,1,1);
@@ -1251,12 +1200,12 @@ void GeoSphere::BuildFirstPatches()
 	p7 = p7.Normalized();
 	p8 = p8.Normalized();
 
-	m_patches[0] = new GeoPatch(p1, p2, p3, p4, 0);	// z+
-	m_patches[1] = new GeoPatch(p4, p3, p7, p8, 0);	// y-
-	m_patches[2] = new GeoPatch(p1, p4, p8, p5, 0);	// x+
-	m_patches[3] = new GeoPatch(p2, p1, p5, p6, 0);	// y+
-	m_patches[4] = new GeoPatch(p3, p2, p6, p7, 0);	// x-
-	m_patches[5] = new GeoPatch(p8, p7, p6, p5, 0);	// z-
+	m_patches[0] = new GeoPatch(s_patchContext, p1, p2, p3, p4, 0);
+	m_patches[1] = new GeoPatch(s_patchContext, p4, p3, p7, p8, 0);
+	m_patches[2] = new GeoPatch(s_patchContext, p1, p4, p8, p5, 0);
+	m_patches[3] = new GeoPatch(s_patchContext, p2, p1, p5, p6, 0);
+	m_patches[4] = new GeoPatch(s_patchContext, p3, p2, p6, p7, 0);
+	m_patches[5] = new GeoPatch(s_patchContext, p8, p7, p6, p5, 0);
 	for (int i=0; i<6; i++) {
 		m_patches[i]->geosphere = this;
 		for (int j=0; j<4; j++) {
@@ -1272,7 +1221,6 @@ static const float g_ambient[4] = { 0, 0, 0, 1.0 };
 
 static void DrawAtmosphereSurface(const vector3d &campos, float rad)
 {
-	//PROFILE_SCOPED()
 	const int LAT_SEGS = 20;
 	const int LONG_SEGS = 20;
 	vector3d yaxis = campos.Normalized();
@@ -1325,7 +1273,6 @@ static void DrawAtmosphereSurface(const vector3d &campos, float rad)
 }
 
 void GeoSphere::Render(vector3d campos, const float radius, const float scale) {
-	//PROFILE_SCOPED()
 	Plane planes[6];
 	glPushMatrix();
 	glTranslated(-campos.x, -campos.y, -campos.z);
@@ -1416,10 +1363,13 @@ void GeoSphere::Render(vector3d campos, const float radius, const float scale) {
 		UpdateLODThread(this);
 		return;*/
 	
-	if (!m_runUpdateThread) {
+	SDL_mutexP(m_needUpdateLock);
+	if (!m_needUpdate) {
 		this->m_tempCampos = campos;
-		m_runUpdateThread = 1;
+		m_needUpdate = true;
 	}
+	SDL_mutexV(m_needUpdateLock);
+
 #ifndef GEOSPHERE_USE_THREADING
 	m_tempCampos = campos;
 	_UpdateLODs();

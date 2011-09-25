@@ -277,7 +277,7 @@ const char *LuaSerializer::unpickle(lua_State *l, const char *pos)
 
 void LuaSerializer::Serialize(Serializer::Writer &wr)
 {
-	lua_State *l = Pi::luaManager.GetLuaState();
+	lua_State *l = Pi::luaManager->GetLuaState();
 
 	LUA_DEBUG_START(l);
 
@@ -317,7 +317,7 @@ void LuaSerializer::Serialize(Serializer::Writer &wr)
 
 void LuaSerializer::Unserialize(Serializer::Reader &rd)
 {
-	lua_State *l = Pi::luaManager.GetLuaState();
+	lua_State *l = Pi::luaManager->GetLuaState();
 
 	LUA_DEBUG_START(l);
 
