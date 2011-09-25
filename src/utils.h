@@ -24,6 +24,15 @@
 #define __attribute(x)
 #endif /* __GNUC__ */
 
+// GCC warns when a function marked __attribute((noreturn)) actually returns a value
+// but other compilers which don't see the noreturn attribute of course require that
+// a function with a non-void return type should return something.
+#ifndef __GNUC__
+#define RETURN_ZERO_NONGNU_ONLY return 0;
+#else
+#define RETURN_ZERO_NONGNU_ONLY
+#endif
+
 void Error(const char *format, ...) __attribute((format(printf,1,2))) __attribute((noreturn));
 void Warning(const char *format, ...) __attribute((format(printf,1,2)));
 void SilentWarning(const char *format, ...) __attribute((format(printf,1,2)));
@@ -45,19 +54,6 @@ GLuint util_load_tex_rgba(const char *filename);
 
 FILE *fopen_or_die(const char *filename, const char *mode);
 size_t fread_or_die(void* ptr, size_t size, size_t nmemb, FILE* stream, bool allow_truncated = false);
-
-static inline std::string stringf(int maxlen, const char *format, ...)
-		__attribute((format(printf,2,3)));
-
-static inline std::string stringf(int maxlen, const char *format, ...)
-{
-	char *buf = reinterpret_cast<char*>(alloca(maxlen));
-	va_list argptr;
-	va_start(argptr, format);
-	vsnprintf(buf, maxlen, format, argptr);
-	va_end(argptr);
-	return std::string(buf);
-}
 
 static inline Sint64 isqrt(Sint64 a)
 {
@@ -100,6 +96,13 @@ void Screendump(const char* destFile, const int w, const int h);
 //  src: multibyte string
 //  returns: number of bytes swallowed, or 0 if end of string
 int conv_mb_to_wc(Uint32 *chr, const char *src);
+
+// encode one Unicode code-point as UTF-8
+//  chr: the Unicode code-point
+//  buf: a character buffer, which must have space for at least 4 bytes
+//       (i.e., assigning to buf[3] must be a valid operation)
+//  returns: number of bytes in the encoded character
+int conv_wc_to_mb(Uint32 chr, char buf[4]);
 
 // find string in bigger string, ignoring case
 const char *pi_strcasestr(const char *haystack, const char *needle);

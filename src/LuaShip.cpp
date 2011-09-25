@@ -117,6 +117,97 @@ static int l_ship_get_stats(lua_State *l)
 	return 1;
 }
 
+/* Method: SetShipType
+ *
+ * Replaces the ship with a new ship of the specified type. Can only be done
+ * while docked.
+ *
+ * > ship:SetShipType(newtype)
+ *
+ * Parameters:
+ *
+ *   newtype - the name of the ship
+ *
+ * Example:
+ *
+ * > ship:SetShipType('Sirius Interdictor')
+ *
+ * Availability:
+ * 
+ *   alpha 15
+ *
+ * Status:
+ *
+ *   experimental
+ */
+static int l_set_ship_type(lua_State *l)
+{
+	LUA_DEBUG_START(l);
+
+	Ship *s = LuaShip::GetFromLua(1);
+
+	const char *type = luaL_checkstring(l, 2);
+	if (! ShipType::Get(type))
+		luaL_error(l, "Unknown ship type '%s'", type);
+
+	if (s->GetFlightState() != Ship::DOCKED)
+		luaL_error(l, "Cannot change ship type unless docked");
+
+	ShipFlavour f(type);
+
+	s->ResetFlavour(&f);
+	s->m_equipment.Set(Equip::SLOT_ENGINE, 0, ShipType::types[f.type].hyperdrive);
+	s->UpdateMass();
+
+	LUA_DEBUG_END(l, 0);
+
+	return 0;
+}
+
+/*
+ * Method: SetHullPercent
+ *
+ * Sets the hull mass of the ship to the given precentage of its maximum.
+ *
+ * > ship:SetHullPercent(percent)
+ *
+ * Setting the hull percentage to 0 will not destroy the ship until it takes
+ * damage.
+ *
+ * Parameters:
+ *
+ *   percent - optional. A number from 0 to 100. Less then 0 will use 0 and
+ *             greater than 100 will use 100. Defaults to 100.
+ *
+ * Example:
+ *
+ * > ship:SetHullPercent(3.14)
+ *
+ * Availability:
+ *
+ *  alpha 15
+ *
+ * Status:
+ *
+ *  experimental
+ */
+static int l_ship_set_hull_percent(lua_State *l)
+{
+	LUA_DEBUG_START(l);
+
+	Ship *s = LuaShip::GetFromLua(1);
+
+	float percent = 100;
+	if (lua_isnumber(l, 2))
+		percent = float(luaL_checknumber(l, 2));
+
+	s->SetPercentHull(percent);
+
+	LUA_DEBUG_END(l, 0);
+
+	return 0;
+}
+
 /*
  * Method: SetLabel
  *
@@ -585,8 +676,6 @@ static int l_ship_get_equip_free(lua_State *l)
  *
  * On sucessful jettison, the <EventQueue.onJettison> event is triggered.
  *
- * Calli
- *
  * Parameters:
  *
  *   item - the item to jettison
@@ -646,9 +735,14 @@ static int l_ship_get_docked_with(lua_State *l)
  *
  * Undock from the station currently docked with
  *
- * > ship:Undock()
+ * > success = ship:Undock()
  *
  * <EventQueue.onShipUndocked> will be triggered once undocking is complete
+ *
+ * Return:
+ *
+ *   success - true if ship is undocking, false if the ship is unable to undock,
+ *             probably because another ship is currently undocking
  *
  * Availability:
  *
@@ -815,7 +909,7 @@ static int l_ship_hyperspace_to(lua_State *l)
 		return 1;
 	}
 
-	Space::StartHyperspaceTo(s, dest);
+	s->Hyperspace(dest);
 
 	lua_pushstring(l, LuaConstants::GetConstantString(l, "ShipJumpStatus", Ship::HYPERJUMP_OK));
 	return 1;
@@ -1080,6 +1174,8 @@ template <> void LuaObject<Ship>::RegisterClass()
 		{ "IsPlayer", l_ship_is_player },
 
 		{ "GetStats", l_ship_get_stats },
+        { "SetShipType", l_set_ship_type },
+		{ "SetHullPercent", l_ship_set_hull_percent },
 
 		{ "SetLabel",           l_ship_set_label            },
 		{ "SetPrimaryColour",   l_ship_set_primary_colour   },

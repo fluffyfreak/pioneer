@@ -43,6 +43,7 @@ noinst_HEADERS = \
 	LuaBody.h \
 	LuaCargoBody.h \
 	LuaChatForm.h \
+	LuaConsole.h \
 	LuaConstants.h \
 	LuaEngine.h \
 	LuaEquipType.h \
@@ -98,6 +99,7 @@ noinst_HEADERS = \
 	StationShipRepairForm.h \
 	StationShipViewForm.h \
 	StationShipyardForm.h \
+	StringF.h \
 	Sfx.h \
 	Ship.h \
 	ShipAICmd.h \
@@ -165,6 +167,7 @@ pioneer_SOURCES	= \
 	LuaBody.cpp \
 	LuaCargoBody.cpp \
 	LuaChatForm.cpp \
+	LuaConsole.cpp \
 	LuaConstants.cpp \
 	LuaEngine.cpp \
 	LuaEquipType.cpp \
@@ -215,6 +218,7 @@ pioneer_SOURCES	= \
 	StationShipRepairForm.cpp \
 	StationShipViewForm.cpp \
 	StationShipyardForm.cpp \
+	StringF.cpp \
 	Sfx.cpp \
 	Ship-AI.cpp \
 	Ship.cpp \
@@ -260,6 +264,7 @@ modelviewer_SOURCES = \
 	LuaModelViewer.cpp \
 	LuaUtils.cpp \
 	MyLuaMathTypes.cpp \
+	StringF.cpp \
 	TextureFont.cpp \
 	TextureManager.cpp \
 	VectorFont.cpp \
@@ -273,45 +278,16 @@ if !HAVE_LUA
 modelviewer_LDADD += ../contrib/lua/liblua.a
 endif
 
-#check_PROGRAMS = tests
+check_PROGRAMS = tests
 tests_SOURCES = \
-	Body.cpp \
-	CargoBody.cpp \
-	DynamicBody.cpp \
-	EquipType.cpp \
-	Frame.cpp \
-	GeoSphere.cpp \
-	InfoView.cpp \
-	MarketAgent.cpp \
-	ModelBody.cpp \
-	NameGenerator.cpp \
-	ObjectViewerView.cpp \
-	Pi.cpp \
-	Planet.cpp \
-	Player.cpp \
-	Sector.cpp \
-	SectorView.cpp \
-	Serializer.cpp \
-	Sfx.cpp \
-	Ship-AI.cpp \
-	Ship.cpp \
-	ShipCpanel.cpp \
-	ShipType.cpp \
-	Space.cpp \
-	SpaceStation.cpp \
-	SpaceStationView.cpp \
-	Star.cpp \
-	StarSystem.cpp \
-	SystemInfoView.cpp \
-	SystemView.cpp \
-	WorldView.cpp \
-	glfreetype.cpp \
-	mtrand.cpp \
-	perlin.cpp \
+	StringF.cpp \
 	tests.cpp \
-	utils.cpp
+	test_Frame.cpp \
+	test_StringF.cpp
+
+TESTS = tests
  
-tests_LDADD = collider/libcollider.a libgui.a librender.a
+tests_LDADD = collider/libcollider.a gui/libgui.a render/librender.a
 
 INCLUDES = -I@top_srcdir@/contrib
 if !HAVE_LUA

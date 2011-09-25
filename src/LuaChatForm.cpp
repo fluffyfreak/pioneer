@@ -11,12 +11,14 @@
 #include "CommodityTradeWidget.h"
 #include "FaceVideoLink.h"
 #include "StationPoliceForm.h"
+#include "Lang.h"
+#include "StringF.h"
 
 void LuaChatForm::OnOptionClicked(int option)
 {
     SetMoney(1000000000);
 
-	lua_State *l = Pi::luaManager.GetLuaState();
+	lua_State *l = Pi::luaManager->GetLuaState();
 
 	LUA_DEBUG_START(l);
 
@@ -43,7 +45,7 @@ void LuaChatForm::OnOptionClicked(int option)
 void LuaChatForm::OnClose() {
 	StationAdvertForm::OnClose();
 
-	lua_State *l = Pi::luaManager.GetLuaState();
+	lua_State *l = Pi::luaManager->GetLuaState();
 	int ref = GetAdvert()->ref;
 
 	LUA_DEBUG_START(l);
@@ -121,7 +123,7 @@ bool LuaChatForm::CanSell(Equip::Type t, bool verbose) const {
 	return (GetStock(t) > 0) && DoesSell(t);
 }
 bool LuaChatForm::DoesSell(Equip::Type t) const {
-	lua_State *l = Pi::luaManager.GetLuaState();
+	lua_State *l = Pi::luaManager->GetLuaState();
 
 	LUA_DEBUG_START(l);
 
@@ -140,7 +142,7 @@ bool LuaChatForm::DoesSell(Equip::Type t) const {
 }
 
 int LuaChatForm::GetStock(Equip::Type t) const {
-	lua_State *l = Pi::luaManager.GetLuaState();
+	lua_State *l = Pi::luaManager->GetLuaState();
 
 	LUA_DEBUG_START(l);
 
@@ -159,7 +161,7 @@ int LuaChatForm::GetStock(Equip::Type t) const {
 }
 
 Sint64 LuaChatForm::GetPrice(Equip::Type t) const {
-	lua_State *l = Pi::luaManager.GetLuaState();
+	lua_State *l = Pi::luaManager->GetLuaState();
 
 	LUA_DEBUG_START(l);
 
@@ -178,7 +180,7 @@ Sint64 LuaChatForm::GetPrice(Equip::Type t) const {
 }
 
 void LuaChatForm::OnClickBuy(int t) {
-	lua_State *l = Pi::luaManager.GetLuaState();
+	lua_State *l = Pi::luaManager->GetLuaState();
 
 	LUA_DEBUG_START(l);
 
@@ -195,14 +197,14 @@ void LuaChatForm::OnClickBuy(int t) {
 
 	if (allow_buy) {
 		if (SellTo(Pi::player, static_cast<Equip::Type>(t), true)) {
-			Pi::Message(stringf(512, "You have bought 1t of %s.", EquipType::types[t].name));
+			Pi::Message(stringf(Lang::BOUGHT_1T_OF, formatarg("commodity", EquipType::types[t].name)));
 		}
 		m_commodityTradeWidget->UpdateStock(t);
 	}
 }
 
 void LuaChatForm::OnClickSell(int t) {
-	lua_State *l = Pi::luaManager.GetLuaState();
+	lua_State *l = Pi::luaManager->GetLuaState();
 
 	LUA_DEBUG_START(l);
 
@@ -219,14 +221,14 @@ void LuaChatForm::OnClickSell(int t) {
 
 	if (allow_sell) {
 		if (BuyFrom(Pi::player, static_cast<Equip::Type>(t), true)) {
-			Pi::Message(stringf(512, "You have sold 1t of %s.", EquipType::types[t].name));
+			Pi::Message(stringf(Lang::SOLD_1T_OF, formatarg("commodity", EquipType::types[t].name)));
 		}
 		m_commodityTradeWidget->UpdateStock(t);
 	}
 }
 
 void LuaChatForm::Bought(Equip::Type t) {
-	lua_State *l = Pi::luaManager.GetLuaState();
+	lua_State *l = Pi::luaManager->GetLuaState();
 
 	LUA_DEBUG_START(l);
 
@@ -240,7 +242,7 @@ void LuaChatForm::Bought(Equip::Type t) {
 }
 
 void LuaChatForm::Sold(Equip::Type t) {
-	lua_State *l = Pi::luaManager.GetLuaState();
+	lua_State *l = Pi::luaManager->GetLuaState();
 
 	LUA_DEBUG_START(l);
 
@@ -696,27 +698,6 @@ int LuaChatForm::l_luachatform_close(lua_State *l)
 }
 
 /*
- * Method: Refresh
- *
- * > form:Refresh()
- *
- * Since alpha 12 it is no longer necessary to request that the form be
- * updated - it is handled automatically.
- *
- * Availability:
- *
- *   alpha 10 (stable), alpha 13 (deprecated)
- *
- * Status:
- *
- *   deprecated
- */
-static int l_luachatform_refresh(lua_State *l)
-{
-	return 0;
-}
-
-/*
  * Method: GotoPolice
  *
  * Aborts the chat form and takes the player to the station police screen
@@ -778,8 +759,6 @@ template <> void LuaObject<LuaChatForm>::RegisterClass()
 		{ "AddGoodsTrader",      LuaChatForm::l_luachatform_add_goods_trader },
 		{ "GotoPolice",          LuaChatForm::l_luachatform_goto_police      },
 		{ "RemoveAdvertOnClose", l_luachatform_remove_advert_on_close        },
-
-		{ "Refresh",             l_luachatform_refresh                       },
 		{ 0, 0 }
 	};
 

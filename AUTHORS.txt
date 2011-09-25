@@ -1,4 +1,4 @@
-The Pioneer team are (12 August 2011, alpha 13):
+The Pioneer team are (9 September 2011, alpha 14):
 
 Project leads: Tom Morton, John Jordan
 
@@ -19,6 +19,7 @@ Programming:
   John Bartholomew
   Benjamin Hodgetts
   Sean Bailey
+  Brian Ronald
 
 Art:
   Gernot
@@ -30,6 +31,7 @@ Art:
   Ulf Pettersson
   Konrad Mruk
   Marcel Tulloh
+  Michele Botticelli
 
 Music:
   Dan Bennett
@@ -37,6 +39,7 @@ Music:
 
 Translations:
   Brian Ronald
+  Piotr Gredka
 
 Thanks to those that have moved on (we hope to see you back!)
 

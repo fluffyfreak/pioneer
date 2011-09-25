@@ -9,6 +9,7 @@
 #include "Sector.h"
 #include "Sound.h"
 #include "Lang.h"
+#include "StringF.h"
 
 #define SCANNER_SCALE	0.01f
 #define SCANNER_YSHRINK 0.75f
@@ -25,7 +26,7 @@ void MsgLogWidget::Update()
 {
 	if (curMsgType != NONE) {
 		// has it expired?
-		bool expired = (Pi::GetGameTime() - msgAge > 5.0);
+		bool expired = (SDL_GetTicks() - msgAge > 5000);
 
 		if (expired || ((curMsgType == NOT_IMPORTANT) && !m_msgQueue.empty())) {
 			ShowNext();
@@ -45,6 +46,8 @@ void MsgLogWidget::ShowNext()
 	} else {
 		// current message expired and more in queue
 		Pi::BoinkNoise();
+		Pi::SetTimeAccel(1);
+		Pi::RequestTimeAccel(1);
 		message_t msg("","",NONE);
 		// use MUST_SEE messages first
 		for (std::list<message_t>::iterator i = m_msgQueue.begin();
@@ -63,9 +66,11 @@ void MsgLogWidget::ShowNext()
 		if (msg.sender == "") {
 			msgLabel->SetText("#0f0"+msg.message);
 		} else {
-			msgLabel->SetText(stringf(1024, std::string(std::string("#ca0")+std::string(Lang::MESSAGE_FROM_X)+std::string("\n#0f0%s")).c_str(), msg.sender.c_str(), msg.message.c_str()));
+			msgLabel->SetText(
+				std::string("#ca0") + stringf(Lang::MESSAGE_FROM_X, formatarg("sender", msg.sender)) +
+				std::string("\n#0f0") + msg.message);
 		}
-		msgAge = float(Pi::GetGameTime());
+		msgAge = SDL_GetTicks();
 		curMsgType = msg.type;
 		onGrabFocus.emit();
 	}

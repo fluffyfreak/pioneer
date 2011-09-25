@@ -3,6 +3,8 @@
 #include "SectorView.h"
 #include "StarSystem.h"
 #include "Lang.h"
+#include "StringF.h"
+#include "FloatComparison.h"
 
 SystemView::SystemView()
 {
@@ -112,7 +114,7 @@ void SystemView::OnClickObject(SBody *b)
 	desc += std::string(Lang::DAY_LENGTH);
 	desc += std::string(Lang::ROTATIONAL_PERIOD);
     desc += ":\n";
-	data += stringf(128, std::string(std::string(Lang::N_DAYS)+std::string("\n")).c_str(), b->rotationPeriod.ToFloat());
+	data += stringf(Lang::N_DAYS, formatarg("days", b->rotationPeriod.ToFloat())) + "\n";
 	
 	desc += std::string(Lang::RADIUS);
     desc += ":\n";
@@ -125,7 +127,7 @@ void SystemView::OnClickObject(SBody *b)
 
 		desc += std::string(Lang::ORBITAL_PERIOD);
         desc += ":\n";
-		data += stringf(128, std::string(std::string(Lang::N_DAYS)+std::string("\n")).c_str(), b->orbit.period / (24*60*60));
+		data += stringf(Lang::N_DAYS, formatarg("days", b->orbit.period / (24*60*60))) + "\n";
 	}
 	m_infoLabel->SetText(desc);
 	m_infoText->SetText(data);
@@ -172,7 +174,7 @@ void SystemView::PutBody(SBody *b, vector3d offset)
 
 	if (b->children.size()) for(std::vector<SBody*>::iterator kid = b->children.begin(); kid != b->children.end(); ++kid) {
 
-		if ((*kid)->semiMajorAxis == 0) continue;
+		if (float_is_zero_general((*kid)->orbit.semiMajorAxis)) continue;
 		if ((*kid)->orbit.semiMajorAxis * m_zoom < ROUGH_SIZE_OF_TURD) {
 			PutOrbit(*kid, offset);
 		}
@@ -248,12 +250,15 @@ void SystemView::Draw3D()
 void SystemView::Update()
 {
 	const float ft = Pi::GetFrameTime();
-	if (Pi::KeyState(SDLK_EQUALS) ||
-	    m_zoomInButton->IsPressed()) 
-			m_zoom *= pow(4.0f, ft);
-	if (Pi::KeyState(SDLK_MINUS) ||
-	    m_zoomOutButton->IsPressed()) 
-			m_zoom *= pow(0.25f, ft);
+	// XXX ugly hack checking for console here
+	if (!Pi::IsConsoleActive()) {
+		if (Pi::KeyState(SDLK_EQUALS) ||
+			m_zoomInButton->IsPressed()) 
+				m_zoom *= pow(4.0f, ft);
+		if (Pi::KeyState(SDLK_MINUS) ||
+			m_zoomOutButton->IsPressed()) 
+				m_zoom *= pow(0.25f, ft);
+	}
 	if (Pi::MouseButtonState(SDL_BUTTON_RIGHT)) {
 		int motion[2];
 		Pi::GetMouseMotion(motion);
