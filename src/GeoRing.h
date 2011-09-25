@@ -38,12 +38,10 @@ public:
 	inline double GetHeight(vector3d p) {
 		/*return 0.0;*/
 		const double h = m_style.GetHeight(p);
-#ifdef DEBUG
 		// XXX don't remove this. Fix your fractals instead
 		// Fractals absolutely MUST return heights >= 0.0 (one planet radius)
 		// otherwise atmosphere and other things break.
-		assert(h >= 0.0);
-#endif // DEBUG 
+		PiAssert(h >= 0.0);
 		return h;
 	}
 private:
