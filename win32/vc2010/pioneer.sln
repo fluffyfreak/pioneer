@@ -19,23 +19,32 @@ EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
+		Profile|Win32 = Profile|Win32
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{65A1BBFB-7A42-497C-BF65-A0A06664A204}.Debug|Win32.ActiveCfg = Debug|Win32
 		{65A1BBFB-7A42-497C-BF65-A0A06664A204}.Debug|Win32.Build.0 = Debug|Win32
+		{65A1BBFB-7A42-497C-BF65-A0A06664A204}.Profile|Win32.ActiveCfg = Profile|Win32
+		{65A1BBFB-7A42-497C-BF65-A0A06664A204}.Profile|Win32.Build.0 = Profile|Win32
 		{65A1BBFB-7A42-497C-BF65-A0A06664A204}.Release|Win32.ActiveCfg = Release|Win32
 		{65A1BBFB-7A42-497C-BF65-A0A06664A204}.Release|Win32.Build.0 = Release|Win32
 		{5085B12D-F9AC-4878-9672-1FD4EB0EFB67}.Debug|Win32.ActiveCfg = Debug|Win32
 		{5085B12D-F9AC-4878-9672-1FD4EB0EFB67}.Debug|Win32.Build.0 = Debug|Win32
+		{5085B12D-F9AC-4878-9672-1FD4EB0EFB67}.Profile|Win32.ActiveCfg = Profile|Win32
+		{5085B12D-F9AC-4878-9672-1FD4EB0EFB67}.Profile|Win32.Build.0 = Profile|Win32
 		{5085B12D-F9AC-4878-9672-1FD4EB0EFB67}.Release|Win32.ActiveCfg = Release|Win32
 		{5085B12D-F9AC-4878-9672-1FD4EB0EFB67}.Release|Win32.Build.0 = Release|Win32
 		{BD7B420B-07C1-43F2-A987-F9A4915005E5}.Debug|Win32.ActiveCfg = Debug|Win32
 		{BD7B420B-07C1-43F2-A987-F9A4915005E5}.Debug|Win32.Build.0 = Debug|Win32
+		{BD7B420B-07C1-43F2-A987-F9A4915005E5}.Profile|Win32.ActiveCfg = Profile|Win32
+		{BD7B420B-07C1-43F2-A987-F9A4915005E5}.Profile|Win32.Build.0 = Profile|Win32
 		{BD7B420B-07C1-43F2-A987-F9A4915005E5}.Release|Win32.ActiveCfg = Release|Win32
 		{BD7B420B-07C1-43F2-A987-F9A4915005E5}.Release|Win32.Build.0 = Release|Win32
 		{6A8518C3-D81A-4428-BD7F-C37933088AC1}.Debug|Win32.ActiveCfg = Debug|Win32
 		{6A8518C3-D81A-4428-BD7F-C37933088AC1}.Debug|Win32.Build.0 = Debug|Win32
+		{6A8518C3-D81A-4428-BD7F-C37933088AC1}.Profile|Win32.ActiveCfg = Profile|Win32
+		{6A8518C3-D81A-4428-BD7F-C37933088AC1}.Profile|Win32.Build.0 = Profile|Win32
 		{6A8518C3-D81A-4428-BD7F-C37933088AC1}.Release|Win32.ActiveCfg = Release|Win32
 		{6A8518C3-D81A-4428-BD7F-C37933088AC1}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection

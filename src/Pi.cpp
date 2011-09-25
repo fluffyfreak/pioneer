@@ -21,6 +21,7 @@
 #include "Serializer.h"
 #include "NameGenerator.h"
 #include "GeoSphere.h"
+#include "GeoRing.h"
 #include "Sound.h"
 #include "Polit.h"
 #include "GalacticView.h"
@@ -477,6 +478,9 @@ void Pi::Init()
 
 	GeoSphere::Init();
 	draw_progress(0.6f);
+
+	GeoRing::Init();
+	draw_progress(0.65f);
 
 	CityOnPlanet::Init();
 	draw_progress(0.7f);
@@ -1238,7 +1242,6 @@ void Pi::EndGame()
 	Pi::isGameStarted = false;
 }
 
-
 void Pi::MainLoop()
 {
 	Uint32 last_stats = SDL_GetTicks();
@@ -1321,7 +1324,6 @@ void Pi::MainLoop()
 		
 		int timeAccel = Pi::requestedTimeAccelIdx;
 		if (Pi::player->GetFlightState() == Ship::FLYING) {
-
 			// special timeaccel lock rules while in alert
 			if (Pi::player->GetAlertState() == Ship::ALERT_SHIP_NEARBY)
 				timeAccel = std::min(timeAccel, 2);

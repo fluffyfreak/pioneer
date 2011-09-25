@@ -2032,7 +2032,6 @@ void GeoRing::_UpdateLODs()
 static void _LockoutThreadsBeforeExit()
 {
 	SDL_mutexP(s_allGeoRingsLock);
-	Profiler::dumphtml();
 }
 
 void GeoRing::Init()

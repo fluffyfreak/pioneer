@@ -360,8 +360,8 @@ void WorldView::Draw3D()
 	float znear, zfar;
 	GetNearFarClipPlane(&znear, &zfar);
 	// why the hell do i give these functions such big names..
-   const float FOV_MAX = 170.0f; // Maximum FOV in degrees
-   const float FOV_MIN = 20.0f;  // Minimum FOV in degrees
+	const float FOV_MAX = 170.0f; // Maximum FOV in degrees
+	const float FOV_MIN = 20.0f;  // Minimum FOV in degrees
 	const float zoom = tan(DEG2RAD(Clamp(Pi::config.Float("FOV"), FOV_MIN, FOV_MAX)/2.0f)); // angle of viewing = 2.0*atan(zoom);
 	const float left = zoom * znear;
 	const float fracH = left / Pi::GetScrAspect();
@@ -627,12 +627,9 @@ void WorldView::RefreshButtonStateAndVisibility()
 					m_hudAltitude->Hide();
 				} else {
 					if (altitude < 0) altitude = 0;
-					char buf[128];
-					snprintf(buf, sizeof(buf), Lang::ALT_IN_METRES, altitude);
-					m_hudAltitude->SetText(buf);
+					m_hudAltitude->SetText(stringf(Lang::ALT_IN_METRES, formatarg("altitude", altitude)));
 					m_hudAltitude->Show();
 				}
-				//m_hudAltitude->Hide();
 			} else {
 				double radius;
 				vector3d surface_pos = Pi::player->GetPosition().Normalized();
@@ -648,19 +645,9 @@ void WorldView::RefreshButtonStateAndVisibility()
 					m_hudAltitude->Hide();
 				} else {
 					if (altitude < 0) altitude = 0;
-					char buf[128];
-					snprintf(buf, sizeof(buf), Lang::ALT_IN_METRES, altitude);
-					m_hudAltitude->SetText(buf);
+					m_hudAltitude->SetText(stringf(Lang::ALT_IN_METRES, formatarg("altitude", altitude)));
 					m_hudAltitude->Show();
 				}
-			}
-			double altitude = Pi::player->GetPosition().Length() - radius;
-			if (altitude > 9999999.0 || astro->IsType(Object::SPACESTATION)) {
-				m_hudAltitude->Hide();
-			} else {
-				if (altitude < 0) altitude = 0;
-				m_hudAltitude->SetText(stringf(Lang::ALT_IN_METRES, formatarg("altitude", altitude)));
-				m_hudAltitude->Show();
 			}
 
 			if (astro->IsType(Object::PLANET)) {
