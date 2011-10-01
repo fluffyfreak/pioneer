@@ -2198,7 +2198,7 @@ void GeoRing::BuildFirstPatches()
 	// The NUM_SEGMENTS defines how many "plates" we'd use if the orbital was the radius of
 	// the planet Earth, at 8 this makes each plate approximately half the width & length
 	// of a patch used on the GeoSphere Earth.
-	// An SBoday radius is stored in terms or it's multiples for the Earths radius, which
+	// An SBoday radius is stored in terms of it's multiples for the Earths radius, which
 	// gives us the perfect multiplier for our NUM_SEGMENTS. Orbitals smaller than Earth
 	// will use less segments whereas larger Orbitals will use more.
 	#define NUM_SEGMENTS 8
