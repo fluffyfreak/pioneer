@@ -633,7 +633,9 @@ void WorldView::RefreshButtonStateAndVisibility()
 			} else {
 				double radius;
 				vector3d surface_pos = Pi::player->GetPosition().Normalized();
-				if (astro->IsType(Object::PLANET)) {
+				if (astro->IsType(Object::TERRAINBODY)) {
+					radius = static_cast<TerrainBody*>(astro)->GetTerrainHeight(surface_pos);
+				} else if (astro->IsType(Object::PLANET)) {
 					radius = static_cast<Planet*>(astro)->GetTerrainHeight(surface_pos);
 				} else {
 					// XXX this is an improper use of GetBoundingRadius
@@ -759,8 +761,7 @@ void WorldView::RefreshButtonStateAndVisibility()
 			else {
 				const SystemPath dest = ship->GetHyperspaceDest();
 				Sector s(dest.sectorX, dest.sectorY, dest.sectorZ);
-				text += stringf(Lang::HYPERSPACE_X_CLOUD, formatarg("direction",
-					std::string(cloud->IsArrival() ? Lang::ARRIVAL : Lang::DEPARTURE)));
+				text += (cloud->IsArrival() ? Lang::HYPERSPACE_ARRIVAL_CLOUD : Lang::HYPERSPACE_DEPARTURE_CLOUD);
 				text += "\n";
 				text += stringf(Lang::SHIP_MASS_N_TONNES, formatarg("mass", ship->CalcStats()->total_mass));
 				text += "\n";

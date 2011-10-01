@@ -918,9 +918,9 @@ VAST_STRIP_MINE
 HIGH_POPULATION_OUTDOOR_WORLD
     Zewnętrzny świat o wysokim zaludnieniu.
 SOMEWHERE_SPACEPORT
-     "-port kosmiczny"
+    stacja kosmiczna %spaceport
 SOMEWHERE_STARPORT
-     "-stacja kosmiczna"
+    port kosmiczny %starport
 MASS
     Masa
 N_WHATEVER_MASSES
@@ -1085,16 +1085,10 @@ CARGO_N
     Ładownia: %{mass}t
 HYPERSPACE_ARRIVAL_CLOUD_REMNANT
     Ślad wyjściowej chmury nadprzestrzennej
-HYPERSPACE_X_CLOUD
-    %direction tunelu nadprzestrzennego
 SHIP_MASS_N_TONNES
     Masa statku: %{mass}t
 DATE_DUE_N
     Data przybycia: %date
-ARRIVAL
-    Wylot
-DEPARTURE
-    Wlot
 SOURCE
     Punkt wyjściowy
 DESTINATION

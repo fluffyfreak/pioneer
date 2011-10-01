@@ -861,8 +861,9 @@ bool SpaceStation::RemoveBBAdvert(int ref)
 	while (i != m_bbAdverts.end())
 	{
 		if (i->ref == ref) {
-			onBulletinBoardAdvertDeleted.emit(*i);
-			i = m_bbAdverts.erase( i ); 
+			BBAdvert ad = (*i);
+			m_bbAdverts.erase(i);
+			onBulletinBoardAdvertDeleted.emit(ad);
 		} else {
 			++i;
 		}

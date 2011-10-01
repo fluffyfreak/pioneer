@@ -19,6 +19,7 @@
 #include "render/Render.h"
 #include "WorldView.h"
 #include "SectorView.h"
+#include "Lang.h"
 
 namespace Space {
 
@@ -35,8 +36,7 @@ static std::list<HyperspaceCloud*> storedArrivalClouds;
 
 void Init()
 {
-	//PROFILE_SCOPED()
-	rootFrame = new Frame(NULL, "System");
+	rootFrame = new Frame(NULL, Lang::SYSTEM);
 	rootFrame->SetRadius(FLT_MAX);
 }
 
@@ -515,7 +515,7 @@ static void hitCallback(CollisionContact *c)
 
 void CollideFrame(Frame *f)
 {
-	if (f->m_astroBody && (f->m_astroBody->IsType(Object::PLANET))) {
+	if (f->m_astroBody && (f->m_astroBody->IsType(Object::TERRAINBODY))) {
 		// this is pretty retarded
 		for (bodiesIter_t i = bodies.begin(); i!=bodies.end(); ++i) {
 			if ((*i)->GetFrame() != f) continue;

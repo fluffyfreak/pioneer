@@ -187,6 +187,94 @@
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
+		<Configuration
+			Name="PreRelease|Win32"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="1"
+			CharacterSet="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="2"
+				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
+				AdditionalIncludeDirectories="../../src;../../win32/src;../../win32/include;../../contrib"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USE_MATH_DEFINES;_CRT_SECURE_NO_WARNINGS"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="0"
+				SmallerTypeCheck="false"
+				RuntimeLibrary="3"
+				BufferSecurityCheck="false"
+				EnableEnhancedInstructionSet="2"
+				FloatingPointModel="2"
+				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="pch.h"
+				ProgramDataBaseFileName="$(IntDir)\$(ProjectName)D.pdb"
+				WarningLevel="3"
+				DebugInformationFormat="3"
+				ForcedIncludeFiles="pch.h"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="shlwapi.lib libogg.lib libvorbis.lib libvorbisfile.lib sdl.lib sdlmain.lib sigc-vc90-d-2_0.lib opengl32.lib glu32.lib SDL_image.lib freetype2312MT.lib glew32.lib libpng15d.lib"
+				OutputFile="$(OutDir)\$(ProjectName)_debug.exe"
+				LinkIncremental="2"
+				AdditionalLibraryDirectories="..\lib"
+				IgnoreDefaultLibraryNames="libcmt.lib"
+				DelayLoadDLLs=""
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				OptimizeForWindows98="1"
+				TargetMachine="1"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
 	</Configurations>
 	<References>
 	</References>
@@ -453,6 +541,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\LuaConsole.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\LuaConstants.cpp"
 				>
 			</File>
@@ -617,6 +709,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -806,6 +906,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\SystemView.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\TerrainBody.cpp"
 				>
 			</File>
 			<File
@@ -1259,6 +1363,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\LuaBody.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\LuaCargoBody.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\LuaChatForm.h"
 				>
 			</File>
@@ -1267,7 +1379,39 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\LuaConsole.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\LuaConstants.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\LuaEngine.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\LuaEquipType.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\LuaEventQueue.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\LuaFormat.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\LuaGame.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\contrib\lua\lualib.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\LuaManager.h"
 				>
 			</File>
 			<File
@@ -1275,11 +1419,71 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\LuaNameGen.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\LuaObject.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\LuaPlanet.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\LuaPlayer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\LuaRand.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\LuaSBody.h"
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\LuaSerializer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\LuaShip.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\LuaShipType.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\LuaSpace.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\LuaSpaceStation.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\LuaStar.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\LuaStarSystem.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\LuaSystemPath.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\LuaTimer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\LuaUI.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\LuaUtils.h"
 				>
 			</File>
 			<File
@@ -1495,11 +1699,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\render\Render.h"
+				RelativePath="..\..\src\Render.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\Render.h"
+				RelativePath="..\..\src\render\Render.h"
 				>
 			</File>
 			<File
@@ -1643,6 +1847,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\TerrainBody.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\TextureFont.h"
 				>
 			</File>
@@ -1717,6 +1925,15 @@
 						ForcedIncludeFiles="$(NOINHERIT)"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\contrib\lua\lauxlib.c"
@@ -1732,6 +1949,15 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1761,6 +1987,15 @@
 						ForcedIncludeFiles="$(NOINHERIT)"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\contrib\lua\lcode.c"
@@ -1776,6 +2011,15 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1805,6 +2049,15 @@
 						ForcedIncludeFiles="$(NOINHERIT)"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\contrib\lua\ldebug.c"
@@ -1820,6 +2073,15 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1849,6 +2111,15 @@
 						ForcedIncludeFiles="$(NOINHERIT)"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\contrib\lua\ldump.c"
@@ -1864,6 +2135,15 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1893,6 +2173,15 @@
 						ForcedIncludeFiles="$(NOINHERIT)"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\contrib\lua\lgc.c"
@@ -1908,6 +2197,15 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1937,6 +2235,15 @@
 						ForcedIncludeFiles="$(NOINHERIT)"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\contrib\lua\liolib.c"
@@ -1952,6 +2259,15 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1981,6 +2297,15 @@
 						ForcedIncludeFiles="$(NOINHERIT)"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\contrib\lua\lmathlib.c"
@@ -1996,6 +2321,15 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -2025,6 +2359,15 @@
 						ForcedIncludeFiles="$(NOINHERIT)"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\contrib\lua\loadlib.c"
@@ -2040,6 +2383,15 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -2069,6 +2421,15 @@
 						ForcedIncludeFiles="$(NOINHERIT)"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\contrib\lua\lopcodes.c"
@@ -2084,6 +2445,15 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -2113,6 +2483,15 @@
 						ForcedIncludeFiles="$(NOINHERIT)"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\contrib\lua\lparser.c"
@@ -2128,6 +2507,15 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -2157,6 +2545,15 @@
 						ForcedIncludeFiles="$(NOINHERIT)"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\contrib\lua\lstring.c"
@@ -2172,6 +2569,15 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -2201,6 +2607,15 @@
 						ForcedIncludeFiles="$(NOINHERIT)"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\contrib\lua\ltable.c"
@@ -2216,6 +2631,15 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -2245,6 +2669,15 @@
 						ForcedIncludeFiles="$(NOINHERIT)"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\contrib\lua\ltm.c"
@@ -2260,6 +2693,15 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -2289,6 +2731,15 @@
 						ForcedIncludeFiles="$(NOINHERIT)"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\contrib\lua\lvm.c"
@@ -2304,6 +2755,15 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -2333,6 +2793,15 @@
 						ForcedIncludeFiles="$(NOINHERIT)"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\contrib\lua\print.c"
@@ -2348,6 +2817,15 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						ForcedIncludeFiles="$(NOINHERIT)"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="PreRelease|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
