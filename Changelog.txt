@@ -1,16 +1,19 @@
 Alpha 15
 
   * New features
+    * Star "terrains". Stars now have complex surface colours and patterns (#567)
     * Assassination missions (#290, #500)
     * Restored "hoop" orbital station (#499, #516)
     * Restored "Panther" ship (#497)
     * Big mushroom station with four bays (#530)
     * New futuristic city buildings (#518, #557)
     * Four new ambient music tracks (#543)
+    * Ship drives now break down over time and require repairs (#552)
     * Ship landing lights now only flash when landing gear is down or ship is
       docking (#236, #478)
     * Station landing lights now coloured to indicate occupied (red), free
       (orange) and cleared for docking (green) (#4, #489, #498)
+    * Romanian, Dutch, Italian and Croatian translations (#565, #571, #573)
 
   * Minor changes and tweaks
     * Landed and docked ships will no longer cause alerts (#454, #466)
@@ -19,8 +22,10 @@ Alpha 15
     * Mushroom station now has ads in bay 2 (#524)
     * Display surface gravity of bodies in system info view (#533)
     * Model fixes: Ship bounding radii, LOD checked and fixed, adverts cleaned
-      up and other minor fixes (#530, #542, #556, #515, #72)
+      up and other minor fixes (#530, #542, #556, #515, #72, #582))
     * Support for glowmaps (#557)
+    * Terrains. Snow on mountains and polar ice caps. Various optimisations
+    * and fixes (#440, #566)
 
   * Fixes
     * Certain in-game keys will no longer crash when used in the menu (#453, #463)
@@ -33,12 +38,20 @@ Alpha 15
     * Fix LMR stack leaks that could cause heap corruption (#555, #342, #470)
     * Fix display of co-orbital bodies in system view (#551)
     * Don't respawn bulk ships on game load (#539)
+    * Fix rare crash when NPC ship is destroyed that previously attacked the
+      player (#568)
+    * Fix a case where we try to access an object after its been freed (#342, #470)
+    * Fix various depth bugs when shaders are enabled. Fixes gas giant rings,
+      hyperspace clouds, etc (#24, #234, #504)
 
   * Script changes
     * Experimental Lua console (#537)
     * Lua events onShipEquipmentChanged and onShipFlavourChanged (#544, #547)
     * Lua method Ship.SetHullPercent to set a ship's damage level (#420, #472)
     * Lua method Ship.SetShipType to change the type of a ship (#404, #507)
+    * Lua methods Player.GetNavTarget and Player.GetCombatTarget to get the
+      currently-targetted bodies (#588, #583)
+    * Lua Lang interface to access translated strings (#579, #575, #553)
  
   * Internal changes
     * Lots of internal cleanups; silences many warnings under GCC (#477,
@@ -55,6 +68,8 @@ Alpha 15
     * Load glyphs up to 0x1ff to better support certain European translations (#415)
     * LuaManager now allocated from the heap to avoid some startup/shutdown
       problems (#535)
+    * (OSX Only) Refactored and Restructured ObjectiveC code to be more
+      manageable (#559)
 
 Alpha 14
 
