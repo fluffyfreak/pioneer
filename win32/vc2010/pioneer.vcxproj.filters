@@ -489,10 +489,10 @@
     <ClCompile Include="..\..\src\LuaConsole.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\TerrainBody.cpp">
+    <ClCompile Include="..\..\src\LuaLang.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\LuaLang.cpp">
+    <ClCompile Include="..\..\src\TerrainBody.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1037,10 +1037,10 @@
     <ClInclude Include="..\..\src\StringF.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\TerrainBody.h">
+    <ClInclude Include="..\..\src\LuaLang.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\LuaLang.h">
+    <ClInclude Include="..\..\src\TerrainBody.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

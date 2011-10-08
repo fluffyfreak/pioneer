@@ -64,6 +64,7 @@
 #include "Background.h"
 #include "Lang.h"
 #include "StringF.h"
+#include "TextureManager.h"
 
 float Pi::gameTickAlpha;
 int Pi::timeAccelIdx = 1;
@@ -596,8 +597,16 @@ void Pi::InitOpenGL()
 
 void Pi::Quit()
 {
+	// TODO: still loads of stuff to clean up
+	Pi::UninitGame();
+	delete Pi::gameMenuView;
+	delete Pi::luaConsole;
+	Sound::Uninit();
+	LmrModelCompilerUninit();
+	TextureManager::Clear();
 	Render::Uninit();
 	LuaUninit();
+	Gui::Uninit();
 	SDL_Quit();
 	exit(0);
 }
@@ -1029,6 +1038,7 @@ void Pi::UninitGame()
 	}
 }
 
+
 void Pi::Start()
 {
 	Background::Starfield *starfield = new Background::Starfield();
@@ -1282,9 +1292,6 @@ void Pi::MainLoop()
 		} else {
 			// paused
 		}
-
-		if (frame_stat == 0)
-            Pi::luaTimer->Tick();
 		frame_stat++;
 
 		Render::PrepareFrame();
@@ -1405,6 +1412,7 @@ void Pi::MainLoop()
 			TextureFont::ClearGlyphCount();
 			GeoSphere::ClearVtxGenCount();
 			last_stats += 1000;
+			GeoSphere::ClearVtxGenCount();
 		}
 		Pi::statSceneTris = 0;
 		LmrModelClearStatsTris();

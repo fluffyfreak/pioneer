@@ -141,6 +141,12 @@ Ship::Ship(ShipType::Type shipType): DynamicBody()
 	Init();	
 }
 
+Ship::~Ship()
+{
+	if (m_curAICmd) delete m_curAICmd;
+}
+
+
 float Ship::GetPercentHull() const
 {
 	const ShipType &stype = GetShipType();
@@ -834,7 +840,7 @@ void Ship::StaticUpdate(const float timeStep)
 					double rate = speed*density*0.00001f;
 					if (Pi::rng.Double() < rate) {
 						m_equipment.Add(Equip::HYDROGEN);
-						if (this == reinterpret_cast<Ship*>(Pi::player)) {
+						if (this->IsType(Object::PLAYER)) {
 							Pi::Message(stringf(Lang::FUEL_SCOOP_ACTIVE_N_TONNES_H_COLLECTED,
 									formatarg("quantity", m_equipment.Count(Equip::SLOT_CARGO, Equip::HYDROGEN))));
 						}
@@ -856,7 +862,7 @@ void Ship::StaticUpdate(const float timeStep)
 			
 			if (m_equipment.Remove(t, 1)) {
 				m_equipment.Add(Equip::FERTILIZER);
-				if (this == reinterpret_cast<Ship*>(Pi::player)) {
+				if (this->IsType(Object::PLAYER)) {
 					Pi::Message(Lang::CARGO_BAY_LIFE_SUPPORT_LOST);
 				}
 			}
@@ -1037,7 +1043,7 @@ void Ship::Render(const vector3d &viewCoords, const matrix4x4d &viewTransform)
 	if ((!IsEnabled()) && !m_flightState) return;
 	LmrObjParams &params = GetLmrObjParams();
 	
-	if ( (this != reinterpret_cast<Ship*>(Pi::player)) ||
+	if ( (!this->IsType(Object::PLAYER)) ||
 	     (Pi::worldView->GetCamType() == WorldView::CAM_EXTERNAL) ) {
 		m_shipFlavour.ApplyTo(&params);
 		SetLmrTimeParams();

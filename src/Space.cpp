@@ -675,6 +675,8 @@ void TimeStep(float step)
 	Pi::luaOnShipFlavourChanged->Emit();
 	Pi::luaOnShipEquipmentChanged->Emit();
 
+	Pi::luaTimer->Tick();
+
 	PruneCorpses();
 }
 
