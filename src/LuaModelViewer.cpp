@@ -8,7 +8,8 @@ static SDL_Surface *g_screen;
 static int g_width, g_height;
 static int g_mouseMotion[2];
 static char g_keyState[SDLK_LAST];
-static int g_mouseButton[5];
+#define NUM_MOUSE_BUTTONS 8
+static int g_mouseButton[NUM_MOUSE_BUTTONS];
 static float g_zbias;
 static bool g_doBenchmark = false;
 
@@ -533,16 +534,18 @@ void Viewer::MainLoop()
 	}
 }
 
+static SDL_Event s_input_event_exposed;
 static void PollEvents()
 {
-	SDL_Event event;
+	SDL_Event input_event;
 
 	g_mouseMotion[0] = g_mouseMotion[1] = 0;
-	while (SDL_PollEvent(&event)) {
-		Gui::HandleSDLEvent(&event);
-		switch (event.type) {
+	while (SDL_PollEvent(&input_event)) {
+		s_input_event_exposed = input_event;
+		Gui::HandleSDLEvent(&input_event);
+		switch (input_event.type) {
 			case SDL_KEYDOWN:
-				if (event.key.keysym.sym == SDLK_ESCAPE) {
+				if (input_event.key.keysym.sym == SDLK_ESCAPE) {
                     if (g_viewer->m_model) {
                         g_viewer->PickModel();
                     } else {
@@ -550,28 +553,32 @@ static void PollEvents()
                         exit(0);
                     }
 				}
-				if (event.key.keysym.sym == SDLK_F11) SDL_WM_ToggleFullScreen(g_screen);
-				if (event.key.keysym.sym == SDLK_s && (g_viewer->m_model)) {
+				if (input_event.key.keysym.sym == SDLK_F11) SDL_WM_ToggleFullScreen(g_screen);
+				if (input_event.key.keysym.sym == SDLK_s && (g_viewer->m_model)) {
 					Render::ToggleShaders();
 				}
-				g_keyState[event.key.keysym.sym] = 1;
+				g_keyState[input_event.key.keysym.sym] = 1;
 				break;
 			case SDL_KEYUP:
-				g_keyState[event.key.keysym.sym] = 0;
+				g_keyState[input_event.key.keysym.sym] = 0;
 				break;
 			case SDL_MOUSEBUTTONDOWN:
-				g_mouseButton[event.button.button] = 1;
-	//			Pi::onMouseButtonDown.emit(event.button.button,
-	//					event.button.x, event.button.y);
+				if( input_event.button.button >= 0 && input_event.button.button < NUM_MOUSE_BUTTONS ) {
+					g_mouseButton[input_event.button.button] = 1;
+				}
+	//			Pi::onMouseButtonDown.emit(input_event.button.button,
+	//					input_event.button.x, input_event.button.y);
 				break;
 			case SDL_MOUSEBUTTONUP:
-				g_mouseButton[event.button.button] = 0;
-	//			Pi::onMouseButtonUp.emit(event.button.button,
-	//					event.button.x, event.button.y);
+				if( input_event.button.button >= 0 && input_event.button.button < NUM_MOUSE_BUTTONS ) {
+					g_mouseButton[input_event.button.button] = 0;
+				}
+	//			Pi::onMouseButtonUp.emit(input_event.button.button,
+	//					input_event.button.x, input_event.button.y);
 				break;
 			case SDL_MOUSEMOTION:
-				g_mouseMotion[0] += event.motion.xrel;
-				g_mouseMotion[1] += event.motion.yrel;
+				g_mouseMotion[0] += input_event.motion.xrel;
+				g_mouseMotion[1] += input_event.motion.yrel;
 				break;
 			case SDL_QUIT:
 				SDL_Quit();

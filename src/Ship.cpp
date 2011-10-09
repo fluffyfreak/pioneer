@@ -74,6 +74,7 @@ void Ship::Load(Serializer::Reader &rd)
 	
 	m_hyperspace.dest = SystemPath::Unserialize(rd);
 	m_hyperspace.countdown = rd.Float();
+	m_hyperspace.now = false;	// otherwise defaults to true!
 
 	for (int i=0; i<ShipType::GUNMOUNT_MAX; i++) {
 		m_gunState[i] = rd.Int32();

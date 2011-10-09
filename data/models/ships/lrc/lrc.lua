@@ -32,19 +32,25 @@ define_model('lrc', {
 	},
 	static = function(lod)
 		if lod > 1 then
+			-- define our materials
 			set_material('chrome', .63,.7,.83,.99,1.26,1.4,1.66,30)
 			set_material('darksteel', .08,.08,.1,1,.50,.60,.72,90)
 			set_material('medsteel', .65,.65,.65,1,.85,.85,.85,80)
+			-- use a material, optionally with a texture
 			use_material('darksteel')
 			texture('lrc_out.png')
 			load_obj('lrc_out.obj', Matrix.rotate(0.5*math.pi,v(-1,0,0)))
+			-- ... and another
 			use_material('medsteel')
 			texture(nil)
 			load_obj('lrc_city.obj', Matrix.rotate(0.5*math.pi,v(-1,0,0)))
+			-- ... and another
 			use_material('glow')
 			load_obj('lrc_engine.obj', Matrix.rotate(0.5*math.pi,v(-1,0,0)))
+			-- ... and another
 			use_material('chrome')
 			load_obj('lrc_window.obj', Matrix.rotate(0.5*math.pi,v(-1,0,0)))
+			-- finally define the location and direction of the thrusters
 			thruster(v(-3,1,16), v(0,0,1), 40, true)
 			thruster(v(0.5,1,16), v(0,0,1), 40, true)
 			thruster(v(4.1,1,16), v(0,0,1), 40, true)

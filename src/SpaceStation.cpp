@@ -849,9 +849,11 @@ int SpaceStation::AddBBAdvert(std::string description, AdvertFormBuilder builder
 
 const BBAdvert *SpaceStation::GetBBAdvert(int ref)
 {
-	for (std::vector<BBAdvert>::const_iterator i = m_bbAdverts.begin(); i != m_bbAdverts.end(); i++)
-		if (i->ref == ref)
+	for (std::vector<BBAdvert>::const_iterator i = m_bbAdverts.begin(); i != m_bbAdverts.end(); i++) {
+		if (i->ref == ref) {
 			return &(*i);
+		}
+	}
 	return NULL;
 }
 
@@ -862,8 +864,8 @@ bool SpaceStation::RemoveBBAdvert(int ref)
 	{
 		if (i->ref == ref) {
 			BBAdvert ad = (*i);
-			m_bbAdverts.erase(i);
 			onBulletinBoardAdvertDeleted.emit(ad);
+			i = m_bbAdverts.erase(i);
 		} else {
 			++i;
 		}
