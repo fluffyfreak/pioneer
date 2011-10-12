@@ -23,6 +23,7 @@ int GEOPLATE_EDGELEN = GEOPLATE_EDGELEN_DEFAULT;	// 15;
 static const int GEOPLATE_MAX_EDGELEN = 55;
 static double GEOPLATE_FRAC;
 static double GEOPLATEHULL_FRAC;
+static double GEOPLATEWALL_FRAC;
 
 #define lerp(t, a, b) ( a + t * (b - a) )
 
@@ -206,7 +207,7 @@ public:
 #endif
 		const vector3d topEnd(0.0, m_yoffset + m_halfLen, 0.0);		// vertices at top edge of circle
 		const vector3d btmEnd(0.0, m_yoffset - m_halfLen, 0.0);		// vertices at bottom edge of circle
-		//const vector3d topEnd(0.0, 0.0, m_yoffset + m_halfLen);		// vertices at top edge of circle
+		//const vector3d topEnd(0.0, 0.0, m_yoffset + m_halfLen);	// vertices at top edge of circle
 		//const vector3d btmEnd(0.0, 0.0, m_yoffset - m_halfLen);	// vertices at bottom edge of circle
 
 		for (int y=0; y<GEOPLATE_EDGELEN; ++y) {	// across the width
@@ -424,7 +425,7 @@ public:
 
 	static void Init() {
 		//PROFILE_SCOPED()
-		GEOPLATEHULL_FRAC = 1.0 / double(GEOPLATE_WALL_LEN-1);
+		GEOPLATEWALL_FRAC = 1.0 / double(GEOPLATE_WALL_LEN-1);
 
 		if (indices) {
 			delete [] indices;
@@ -562,7 +563,7 @@ public:
 				// vertex is moved in direction of point-on-surface FROM point-in-axis by height.
 				*(vts++) = p + (cDir * height);
 
-				xfrac += GEOPLATEHULL_FRAC;
+				xfrac += GEOPLATEWALL_FRAC;
 
 				double col = 0.5;
 				colors[x + y*GEOPLATE_WALL_LEN] = vector3d(col, col, 1.0);
@@ -1689,8 +1690,8 @@ public:
 		e->GetEdgeMinusOneVerticesFlipped(we_are, ev);
 		
 		vector3d axisPt(0.0, 0.0, 0.0);
-		const vector3d topEnd(0.0, 0.0, m_yoffset + m_halfLen);		// vertices at top edge of circle
-		const vector3d btmEnd(0.0, 0.0, m_yoffset - m_halfLen);	// vertices at bottom edge of circle
+		const vector3d topEnd(0.0, m_yoffset + m_halfLen, 0.0);		// vertices at top edge of circle
+		const vector3d btmEnd(0.0, m_yoffset - m_halfLen, 0.0);	// vertices at bottom edge of circle
 
 		/* now we have a valid edge, fix the edge vertices */
 		if (edge == 0) {
@@ -1889,7 +1890,7 @@ public:
 			canSplit = false;
 		}
 		// always split at first level
-		if (!parent) canSplit = true;
+		//if (!parent) canSplit = true;
 
 		bool canMerge = true;
 
@@ -2406,20 +2407,28 @@ void GeoRing::Render(vector3d campos, const float radius, const float scale) {
 
 	glPolygonMode(GL_FRONT, GL_FILL);
 
-	for (size_t i=0; i<m_wallInner.size(); ++i) {
-		m_wallInner[i]->Render(campos, planes);
+	{
+		for (size_t i=0; i<m_wallInner.size(); ++i) {
+			m_wallInner[i]->Render(campos, planes);
+		}
 	}
 
-	for (size_t i=0; i<m_wallOuter.size(); ++i) {
-		m_wallOuter[i]->Render(campos, planes);
+	{
+		for (size_t i=0; i<m_wallOuter.size(); ++i) {
+			m_wallOuter[i]->Render(campos, planes);
+		}
 	}
-
-	for (size_t i=0; i<m_hull.size(); ++i) {
-		m_hull[i]->Render(campos, planes);
+	
+	{
+		for (size_t i=0; i<m_hull.size(); ++i) {
+			m_hull[i]->Render(campos, planes);
+		}
 	}
-
-	for (size_t i=0; i<m_plates.size(); ++i) {
-		m_plates[i]->Render(campos, planes);
+	
+	{
+		for (size_t i=0; i<m_plates.size(); ++i) {
+			m_plates[i]->Render(campos, planes);
+		}
 	}
 	Render::State::UseProgram(0);
 
