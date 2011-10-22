@@ -11,6 +11,7 @@
 #include "TextureManager.h"
 #include <set>
 #include <algorithm>
+#include "triple.h"
 
 /*
  * Interface: LMR
@@ -3903,7 +3904,7 @@ namespace ObjLoader {
 	 * Example:
 	 *
 	 * > load_obj_file('wing.obj')
-   * > load_obj_file('wing.obj', Matrix.translate(v(-5,0,0)) --shift left
+	 * > load_obj_file('wing.obj', Matrix.translate(v(-5,0,0)) --shift left
 	 *
 	 * Availability:
 	 *
@@ -3940,7 +3941,8 @@ namespace ObjLoader {
 		std::string texture;
 
 		// maps obj file vtx_idx,norm_idx to a single GeomBuffer vertex index
-		std::map< std::pair<int,int>, int> vtxmap;
+		//std::map< std::pair<int,int>, int> vtxmap;
+		std::map< std::triple<int,int,int>, int> vtxmap;
 
 		for (int line_no=1; fgets(buf, sizeof(buf), f); line_no++) {
 			if ((buf[0] == 'v') && buf[1] == ' ') {
@@ -4019,7 +4021,23 @@ namespace ObjLoader {
 				} else {
 					for (int i=0; i<numBits; i++) {
 						// SHARE THE PAIN!
-						std::map< std::pair<int, int>, int>::iterator it = vtxmap.find(std::pair<int,int>(vi[i], ni[i]));
+						std::map< std::triple<int,int,int>, int>::iterator it = vtxmap.find(std::triple<int,int,int>(vi[i], ni[i], ti[i]));
+						if (it == vtxmap.end()) {
+							// insert the horrible thing - "that's what she said!"
+							int vtxStart = s_curBuf->AllocVertices(1);
+							if (texcoords.empty()) {
+								// no UV coords
+								s_curBuf->SetVertex(vtxStart, vertices[vi[i]], normals[ni[i]]);
+							} else {
+								s_curBuf->SetVertex(vtxStart, vertices[vi[i]], normals[ni[i]], texcoords[ti[i]].x, texcoords[ti[i]].y);
+							}
+							vtxmap[std::triple<int,int,int>(vi[i], ni[i], ti[i])] = vtxStart;
+							realVtxIdx[i] = vtxStart;
+						} else {
+							realVtxIdx[i] = (*it).second;
+						}
+						// SHARE THE PAIN!
+						/*std::map< std::pair<int, int>, int>::iterator it = vtxmap.find(std::pair<int,int>(vi[i], ni[i]));
 						if (it == vtxmap.end()) {
 							// insert the horrible thing
 							int vtxStart = s_curBuf->AllocVertices(1);
@@ -4033,7 +4051,7 @@ namespace ObjLoader {
 							realVtxIdx[i] = vtxStart;
 						} else {
 							realVtxIdx[i] = (*it).second;
-						}
+						}*/
 					}
 					if (texture.size()) s_curBuf->SetTexture(texture.c_str());
 					if (numBits == 3) {

@@ -1043,6 +1043,9 @@
     <ClInclude Include="..\..\src\TerrainBody.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\triple.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\Makefile.am">
