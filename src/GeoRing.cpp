@@ -207,8 +207,6 @@ public:
 #endif
 		const vector3d topEnd(0.0, m_yoffset + m_halfLen, 0.0);		// vertices at top edge of circle
 		const vector3d btmEnd(0.0, m_yoffset - m_halfLen, 0.0);		// vertices at bottom edge of circle
-		//const vector3d topEnd(0.0, 0.0, m_yoffset + m_halfLen);	// vertices at top edge of circle
-		//const vector3d btmEnd(0.0, 0.0, m_yoffset - m_halfLen);	// vertices at bottom edge of circle
 
 		for (int y=0; y<GEOPLATE_EDGELEN; ++y) {	// across the width
 			xfrac = 0;
@@ -1634,8 +1632,6 @@ public:
 
 		const vector3d topEnd(0.0, m_yoffset + m_halfLen, 0.0);		// vertices at top edge of circle
 		const vector3d btmEnd(0.0, m_yoffset - m_halfLen, 0.0);		// vertices at bottom edge of circle
-		//const vector3d topEnd(0.0, 0.0, m_yoffset + m_halfLen);		// vertices at top edge of circle
-		//const vector3d btmEnd(0.0, 0.0, m_yoffset - m_halfLen);	// vertices at bottom edge of circle
 				
 		for (int y=0; y<GEOPLATE_EDGELEN; ++y) {
 			xfrac = 0;
