@@ -956,6 +956,7 @@ void Pi::InitGame()
 
 	Polit::Init();
 
+#if 0
 	player = new Player("Eagle Long Range Fighter");
 	player->m_equipment.Set(Equip::SLOT_ENGINE, 0, Equip::DRIVE_CLASS1);
 	player->m_equipment.Set(Equip::SLOT_LASER, 0, Equip::PULSECANNON_1MW);
@@ -968,6 +969,47 @@ void Pi::InitGame()
 	player->m_equipment.Add(Equip::SCANNER);
 	player->UpdateMass();
 	player->SetMoney(10000);
+#elif 1
+	player = new Player("Viper Police Craft");
+	player->m_equipment.Set(Equip::SLOT_ENGINE, 0, Equip::DRIVE_MIL3);
+	player->m_equipment.Set(Equip::SLOT_LASER, 0, Equip::PULSECANNON_2MW);
+	player->m_equipment.Add(Equip::MILITARY_FUEL, 4);
+	player->m_equipment.Add(Equip::ATMOSPHERIC_SHIELDING);
+	player->m_equipment.Add(Equip::MISSILE_NAVAL);
+	player->m_equipment.Add(Equip::MISSILE_NAVAL);
+	player->m_equipment.Add(Equip::ATMOSPHERIC_SHIELDING);
+	player->m_equipment.Add(Equip::AUTOPILOT);
+	player->m_equipment.Add(Equip::SCANNER);
+	player->m_equipment.Add(Equip::RADAR_MAPPER);
+	player->m_equipment.Add(Equip::ECM_ADVANCED);
+	player->UpdateMass();
+	player->SetMoney(100000);
+#else
+	player = new Player("Beetle");
+	player->m_equipment.Set(Equip::SLOT_ENGINE, 0, Equip::DRIVE_CLASS9);
+	player->m_equipment.Set(Equip::SLOT_LASER, 0, Equip::PULSECANNON_RAPID_2MW);
+	player->m_equipment.Add(Equip::HYDROGEN, 100);
+	player->m_equipment.Add(Equip::ATMOSPHERIC_SHIELDING);
+	for(int i=0; i<4; ++i) {
+		player->m_equipment.Add(Equip::MISSILE_NAVAL);
+	}
+	player->m_equipment.Add(Equip::ATMOSPHERIC_SHIELDING);
+	player->m_equipment.Add(Equip::SCANNER);
+	player->m_equipment.Add(Equip::ECM_ADVANCED);
+	player->m_equipment.Add(Equip::LASER_COOLING_BOOSTER);
+	player->m_equipment.Add(Equip::CARGO_LIFE_SUPPORT);
+	player->m_equipment.Add(Equip::AUTOPILOT);
+	player->m_equipment.Add(Equip::RADAR_MAPPER);
+	player->m_equipment.Add(Equip::FUEL_SCOOP);
+	player->m_equipment.Add(Equip::HYPERCLOUD_ANALYZER);
+	player->m_equipment.Add(Equip::HULL_AUTOREPAIR);
+	player->m_equipment.Add(Equip::SHIELD_ENERGY_BOOSTER);
+	for(int i=0; i<10; ++i) {
+		player->m_equipment.Add(Equip::SHIELD_GENERATOR);
+	}
+	player->UpdateMass();
+	player->SetMoney(10000000);
+#endif
 	Space::AddBody(player);
 	
 	cpan = new ShipCpanel();
@@ -1152,7 +1194,7 @@ void Pi::Start()
             player->m_equipment.Add(Equip::HYPERCLOUD_ANALYZER);
             player->UpdateMass();
 
-            Ship *enemy = new Ship(ShipType::EAGLE_LRF);
+            /*Ship *enemy = new Ship(ShipType::EAGLE_LRF);
             enemy->SetFrame(player->GetFrame());
             enemy->SetPosition(player->GetPosition()+vector3d(0,0,-9000.0));
             enemy->SetVelocity(vector3d(0,0,0));
@@ -1166,12 +1208,12 @@ void Pi::Start()
             enemy->AIKill(player);
             Space::AddBody(enemy);
 
-            player->SetCombatTarget(enemy);
+            player->SetCombatTarget(enemy);*/
 
             const ShipType *shipdef;
             double mass, acc1, acc2, acc3;
-            printf("Player ship mass = %.0fkg, Enemy ship mass = %.0fkg\n",
-                   player->GetMass(), enemy->GetMass());
+            /*printf("Player ship mass = %.0fkg, Enemy ship mass = %.0fkg\n",
+                   player->GetMass(), enemy->GetMass());*/
 
             shipdef = &player->GetShipType();
             mass = player->GetMass();
@@ -1180,12 +1222,12 @@ void Pi::Start()
             acc3 = shipdef->linThrust[ShipType::THRUSTER_UP] / (9.81*mass);
             printf("Player ship thrust = %.1fg, %.1fg, %.1fg\n", acc1, acc2, acc3);
 
-            shipdef = &enemy->GetShipType();
+            /*shipdef = &enemy->GetShipType();
             mass = enemy->GetMass();
             acc1 = shipdef->linThrust[ShipType::THRUSTER_FORWARD] / (9.81*mass);
             acc2 = shipdef->linThrust[ShipType::THRUSTER_REVERSE] / (9.81*mass);
             acc3 = shipdef->linThrust[ShipType::THRUSTER_UP] / (9.81*mass);
-            printf("Enemy ship thrust = %.1fg, %.1fg, %.1fg\n", acc1, acc2, acc3);
+            printf("Enemy ship thrust = %.1fg, %.1fg, %.1fg\n", acc1, acc2, acc3);*/
 
             /*	Frame *stationFrame = new Frame(pframe, "Station frame...");
              stationFrame->SetRadius(5000);
