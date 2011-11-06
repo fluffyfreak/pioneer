@@ -4,6 +4,10 @@
 #include "LmrModel.h"
 #include "render/Render.h"
 
+#ifdef WIN32
+#include <SDL_syswm.h>
+#endif //WIN32
+
 static SDL_Surface *g_screen;
 static int g_width, g_height;
 static int g_mouseMotion[2];
@@ -62,6 +66,7 @@ public:
 		m_geom = 0;
 		m_space = new CollisionSpace();
 		m_showBoundingRadius = false;
+		m_showWorldAxes = false;
 		Gui::Screen::AddBaseWidget(this, 0, 0);
 		SetTransparency(true);
 
@@ -102,6 +107,14 @@ public:
 			Add(b, 10, 90);
 			Add(new Gui::Label("[shift-b] Visualize bounding radius"), 30, 90);
 		}
+		{
+			Gui::Button *b = new Gui::SolidButton();
+			b->SetShortcut(SDLK_w, KMOD_LSHIFT);
+			b->onClick.connect(sigc::mem_fun(*this, &Viewer::OnToggleWorldAxes));
+			Add(b, 10, 110);
+			Add(new Gui::Label("[shift-w] Render World Axes"), 30, 110);
+		}
+		
 #if 0
 		{
 			Gui::Button *b = new Gui::SolidButton();
@@ -204,12 +217,18 @@ public:
 		m_showBoundingRadius = !m_showBoundingRadius;
 	}
 
+	void OnToggleWorldAxes() {
+		m_showWorldAxes = !m_showWorldAxes;
+	}
+
 	void MainLoop() __attribute((noreturn));
 	void SetSbreParams();
 private:
 	void TryModel(const SDL_keysym *sym, Gui::TextEntry *entry, Gui::Label *errormsg);
 	void VisualizeBoundingRadius(matrix4x4f& trans, double radius);
+	void RenderWorldAxes(matrix4x4f& trans, float scale);
 	bool m_showBoundingRadius;
+	bool m_showWorldAxes;
 };
 
 void Viewer::SetModel(LmrModel *model)
@@ -494,6 +513,12 @@ void Viewer::MainLoop()
 			matrix4x4f mo = g_camorient.InverseOf() * matrix4x4f::Translation(-g_campos);// * modelRot.InverseOf();
 			VisualizeBoundingRadius(mo, m_model->GetDrawClipRadius());
 		}
+		if (m_showWorldAxes) {
+			//matrix4x4f mo = /*g_camorient.InverseOf() **/ matrix4x4f::Translation(-g_campos);// * modelRot.InverseOf();
+			matrix4x4f mo = g_camorient.InverseOf() * matrix4x4f::Translation(-g_campos) * modelRot.InverseOf();
+			float axesscale = m_model->GetDrawClipRadius();
+			RenderWorldAxes(mo, 4000.0f);
+		}
 		Render::UnbindAllBuffers();
 
 		{
@@ -606,6 +631,33 @@ void Viewer::VisualizeBoundingRadius(matrix4x4f& trans, double radius)
 	glPopMatrix();
 }
 
+void Viewer::RenderWorldAxes(matrix4x4f& trans, float scale)
+{
+	if ( scale <= 0.1f )
+		scale = 1.0f;
+
+	glPushMatrix();
+	glPushAttrib(GL_ALL_ATTRIB_BITS);
+	glDisable(GL_LIGHTING);
+	glDisable(GL_CULL_FACE);
+	glMultMatrixf(&trans[0]);	
+	glBegin(GL_LINES);
+		// x-axis
+		glColor3f(1.0f,0.0f,0.0f);
+		glVertex3f(0.0f, 0.0f, 0.0f);
+		glVertex3f(scale, 0.0f, 0.0f);
+		// y-axis
+		glColor3f(0.0f,1.0f,0.0f);
+		glVertex3f(0.0f, 0.0f, 0.0f);
+		glVertex3f(0.0f, scale, 0.0f);
+		// z-axis
+		glColor3f(0.0f,0.0f,1.0f);
+		glVertex3f(0.0f, 0.0f, 0.0f);
+		glVertex3f(0.0f, 0.0f, scale);
+	glEnd();
+	glPopAttrib();
+	glPopMatrix();
+}
 
 int main(int argc, char **argv)
 {
@@ -649,6 +701,28 @@ int main(int argc, char **argv)
 		}
 	}
 	glewInit();
+
+#if 0//def WIN32
+	SDL_SysWMinfo i;
+	//First, get the resolution size of the monitor. (Well, the size of the desktop anyway)
+	RECT rect;
+	GetClientRect(GetDesktopWindow(),&rect);
+	int monitorWidth = rect.right;
+	int monitorHeight = rect.bottom;
+	//Then, get the width and height of your own window.
+	int windowWidth = SDL_GetVideoSurface()->w;
+	int windowHeight = SDL_GetVideoSurface()->h;
+	//Center the window's size into the monitor.
+	int newPositionX = (monitorWidth - windowWidth) / 2;
+	int newPositionY = (monitorHeight - windowHeight) / 2;
+	//Use SetWindowPos to position it, like above.
+	SDL_VERSION( &i.version );
+	if ( SDL_GetWMInfo ( &i) ) 
+	{  
+		HWND hwnd = i.window;  
+		SetWindowPos( hwnd, HWND_TOP, newPositionX, newPositionY, windowWidth, windowHeight, 0 );
+	}
+#endif // WIN32
 
 	glShadeModel(GL_SMOOTH);
 	glCullFace(GL_BACK);
