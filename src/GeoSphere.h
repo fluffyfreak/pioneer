@@ -34,7 +34,7 @@ public:
 	friend class GeoPatch;
 #if OBJECTVIEWER
 	friend class ObjectViewerView;
-#endif /* DEBUG */
+#endif
 	static void Init();
 	static void OnChangeDetailLevel();
 	void GetAtmosphereFlavor(Color *outColor, double *outDensity) const {

@@ -26,7 +26,7 @@ public:
 	friend class GeoPlateWall;
 #if OBJECTVIEWER
 	friend class OrbitalViewerView;
-#endif /* DEBUG */
+#endif
 	static void Init();
 	static void OnChangeDetailLevel();
 	void GetAtmosphereFlavor(Color *outColor, double *outDensity) const {
