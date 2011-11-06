@@ -70,31 +70,11 @@ typedef struct {
 
 #define NUM_VBE 2
 
-class GeoPlateHull {
+class BaseGeo {
 public:
-	#define NUM_VBE 2
-	double ang[NUM_VBE];
-	double m_halfLen;
-	double m_yoffset;		// offset from the centre i.e. newyoffset = (m_yoffset + m_halfLen);
-	vector3d *vertices;
-	vector3d *normals;
-	vector3d *colors;
-	GeoRing *geoRing;
-	GLuint m_vbo;
-	static unsigned short *indices;
-	static GLuint indices_vbo;
-	static VBOVertex *vbotemp;
-	double m_roughLength;
-	vector3d clipCentroid;
-	double clipRadius;
-
-	// params
-	// v0, v1 - define points on the line describing the loop of the ring/orbital.
-	// depth - 0 is the topmost plate with each depth+1 describing it's depth within the tree.
-	GeoPlateHull(const double halfLength, const double startAng, const double endAng, 
-		const double yoffset, const int depth) {
-		//PROFILE_SCOPED()
-		memset(this, 0, sizeof(GeoPlateHull));
+	BaseGeo(const double halfLength, const double startAng, const double endAng, 
+		const double yoffset, const int depth) : vertices(NULL), normals(NULL), colors(NULL), geoRing(NULL), m_vbo(0)
+	{
 		ang[0] = startAng; 
 		ang[1] = endAng;
 		m_halfLen = halfLength;
@@ -111,6 +91,46 @@ public:
 			clipRadius = std::max(clipRadius, (vcorners[i]-clipCentroid).Length());
 		}
 		m_roughLength = GEOPLATE_SUBDIVIDE_AT_CAMDIST / pow(2.0, depth);
+	}
+
+	vector3d GetSurfacePointCyl(const double x, const double y, const double halfLength) const {
+		double theta = lerp( x, ang[1], ang[0] );
+		
+		const vector3d topEndEdge(sin(theta), m_yoffset + halfLength, cos(theta));		// vertices at top edge of circle
+		const vector3d bottomEndEdge(sin(theta), m_yoffset - halfLength, cos(theta));	// vertices at bottom edge of circle
+		
+		const vector3d res = lerp( y, bottomEndEdge, topEndEdge );
+		return res;
+	}
+
+	void SetGeoRingPtr( GeoRing *ptr ) { PiAssert(ptr!=NULL); geoRing = ptr; }
+
+protected:
+	double ang[NUM_VBE];
+	double m_halfLen;
+	double m_yoffset;		// offset from the centre i.e. newyoffset = (m_yoffset + m_halfLen);
+	vector3d *vertices;
+	vector3d *normals;
+	vector3d *colors;
+	GeoRing *geoRing;
+	GLuint m_vbo;
+	double m_roughLength;
+	vector3d clipCentroid;
+	double clipRadius;
+};
+
+class GeoPlateHull : public BaseGeo {
+public:
+	static unsigned short *indices;
+	static GLuint indices_vbo;
+	static VBOVertex *vbotemp;
+
+	// params
+	// v0, v1 - define points on the line describing the loop of the ring/orbital.
+	// depth - 0 is the topmost plate with each depth+1 describing it's depth within the tree.
+	GeoPlateHull(const double halfLength, const double startAng, const double endAng, 
+		const double yoffset, const int depth) : BaseGeo(halfLength, startAng, endAng, yoffset, depth) 
+	{
 		normals = new vector3d[GEOPLATE_NUMVERTICES];
 		vertices = new vector3d[GEOPLATE_NUMVERTICES];
 		colors = new vector3d[GEOPLATE_NUMVERTICES];
@@ -124,7 +144,6 @@ public:
 	}
 
 	static void Init() {
-		//PROFILE_SCOPED()
 		GEOPLATEHULL_FRAC = 1.0 / double(GEOPLATE_EDGELEN-1);
 
 		if (indices) {
@@ -163,7 +182,6 @@ public:
 	}
 
 	void UpdateVBOs() {
-		//PROFILE_SCOPED()
 		if (!m_vbo) glGenBuffersARB(1, &m_vbo);
 		glBindBufferARB(GL_ARRAY_BUFFER, m_vbo);
 		glBufferDataARB(GL_ARRAY_BUFFER, sizeof(VBOVertex)*GEOPLATE_NUMVERTICES, 0, GL_DYNAMIC_DRAW);
@@ -186,19 +204,8 @@ public:
 		glBindBufferARB(GL_ARRAY_BUFFER, 0);
 	}
 
-	vector3d GetSurfacePointCyl(const double x, const double y, const double halfLength) {
-		double theta = lerp( x, ang[1], ang[0] );
-		
-		const vector3d topEndEdge(sin(theta), m_yoffset + halfLength, cos(theta));		// vertices at top edge of circle
-		const vector3d bottomEndEdge(sin(theta), m_yoffset - halfLength, cos(theta));	// vertices at bottom edge of circle
-		
-		const vector3d res = lerp( y, bottomEndEdge, topEndEdge );
-		return res;
-	}
-
 	// Generates full-detail vertices, and also non-edge normals and colors
 	void GenerateMesh() {
-		//PROFILE_SCOPED()
 		vector3d *vts = vertices;
 		double xfrac = 0;
 		double zfrac = 0;
@@ -366,49 +373,19 @@ VBOVertex *			GeoPlateHull::vbotemp= 0 ;
 #define GEOPLATE_WALL_LEN 7
 #define GEOPLATE_NUM_WALL_VERTICES	(GEOPLATE_WALL_LEN*GEOPLATE_WALL_LEN)
 
-class GeoPlateWall {
+class GeoPlateWall : public BaseGeo {
 public:
-	#define NUM_VBE 2
-	double ang[NUM_VBE];
-	double m_halfLen;
-	double m_yoffset;		// offset from the centre i.e. newyoffset = (m_yoffset + m_halfLen);
-	vector3d *vertices;
-	vector3d *normals;
-	vector3d *colors;
-	GeoRing *geoRing;
-	GLuint m_vbo;
 	static unsigned short *indices;
 	static GLuint indices_vbo;
 	static VBOVertex *vbotemp;
-	double m_roughLength;
-	vector3d clipCentroid;
-	double clipRadius;
 	bool bInnerWall;
 
 	// params
 	// v0, v1 - define points on the line describing the loop of the ring/orbital.
 	// depth - 0 is the topmost plate with each depth+1 describing it's depth within the tree.
 	GeoPlateWall(const bool isInnerWall, const double halfLength, const double startAng, const double endAng, 
-		const double yoffset, const int depth) {
-		//PROFILE_SCOPED()
-		memset(this, 0, sizeof(GeoPlateWall));
-		bInnerWall = isInnerWall;
-		ang[0] = startAng; 
-		ang[1] = endAng;
-		m_halfLen = halfLength;
-		m_yoffset = yoffset;
-		clipCentroid = GetSurfacePointCyl(0.5, 0.5, m_halfLen);
-		clipRadius = 0;
-		vector3d vcorners[4] = {
-			GetSurfacePointCyl(0.0, 0.0, m_halfLen),
-			GetSurfacePointCyl(1.0, 0.0, m_halfLen),
-			GetSurfacePointCyl(0.0, 1.0, m_halfLen),
-			GetSurfacePointCyl(1.0, 1.0, m_halfLen)
-		};
-		for (int i=0; i<4; i++) {
-			clipRadius = std::max(clipRadius, (vcorners[i]-clipCentroid).Length());
-		}
-		m_roughLength = GEOPLATE_SUBDIVIDE_AT_CAMDIST / pow(2.0, depth);
+		const double yoffset, const int depth) : BaseGeo(halfLength, startAng, endAng, yoffset, depth), bInnerWall(isInnerWall)
+	{
 		normals = new vector3d[GEOPLATE_NUM_WALL_VERTICES];
 		vertices = new vector3d[GEOPLATE_NUM_WALL_VERTICES];
 		colors = new vector3d[GEOPLATE_NUM_WALL_VERTICES];
@@ -422,7 +399,6 @@ public:
 	}
 
 	static void Init() {
-		//PROFILE_SCOPED()
 		GEOPLATEWALL_FRAC = 1.0 / double(GEOPLATE_WALL_LEN-1);
 
 		if (indices) {
@@ -461,7 +437,6 @@ public:
 	}
 
 	void UpdateVBOs() {
-		//PROFILE_SCOPED()
 		if (!m_vbo) glGenBuffersARB(1, &m_vbo);
 		glBindBufferARB(GL_ARRAY_BUFFER, m_vbo);
 		glBufferDataARB(GL_ARRAY_BUFFER, sizeof(VBOVertex)*GEOPLATE_NUM_WALL_VERTICES, 0, GL_DYNAMIC_DRAW);
@@ -484,19 +459,8 @@ public:
 		glBindBufferARB(GL_ARRAY_BUFFER, 0);
 	}
 
-	vector3d GetSurfacePointCyl(const double x, const double y, const double halfLength) {
-		double theta = lerp( x, ang[1], ang[0] );
-		
-		const vector3d topEndEdge(sin(theta), m_yoffset + halfLength, cos(theta));		// vertices at top edge of circle
-		const vector3d bottomEndEdge(sin(theta), m_yoffset - halfLength, cos(theta));	// vertices at bottom edge of circle
-		
-		const vector3d res = lerp( y, bottomEndEdge, topEndEdge );
-		return res;
-	}
-
 	// Generates full-detail vertices, and also non-edge normals and colors
 	void GenerateMesh() {
-		//PROFILE_SCOPED()
 		vector3d *vts = vertices;
 		double xfrac = 0;
 		double zfrac = 0;
@@ -739,23 +703,12 @@ bool rayIntersectsTriangle(
 }
 
 #define NUM_PLATE_INDICES 16
-class GeoPlate {
+class GeoPlate : public BaseGeo {
 public:
 	vector3d vbe[NUM_VBE];
-	double ang[NUM_VBE];
-	double m_halfLen;
-	double m_yoffset;		// offset from the centre i.e. newyoffset = (m_yoffset + m_halfLen);
-	vector3d *vertices;
-	vector3d *normals;
-	vector3d *colors;
-	GLuint m_vbo;
 	GeoPlate *kids[4];
 	GeoPlate *parent;
 	GeoPlate *edgeFriend[4]; // [0]=v01, [1]=v12, [2]=v23, [3]=30 - original from GeoPatch...
-	GeoRing *geoRing;
-	double m_roughLength;
-	vector3d clipCentroid;
-	double clipRadius;
 	int m_depth;
 	int m_cIdx;
 	SDL_mutex *m_kidsLock;
@@ -775,80 +728,6 @@ public:
 	static SDL_sem* s_geoPlateSem[4];
 	static SDL_sem* s_geoRingSem[4];
 	static SDL_Thread* s_geoRingThread[4];
-
-	bool RayIntersect(const vector3d& ray, double &minTime, std::vector<double> &timeOI) const
-	{
-		bool result=false;
-		int pointInTriTests=0;
-		const vector3d zero(0.0, 0.0, 0.0);
-		double time=DBL_MAX;
-
-		for(int y=0; y<GEOPLATE_EDGELEN-1; ++y) 
-		{
-			for(int x=0; x<GEOPLATE_EDGELEN-1; ++x) 
-			{
-				// check
-				if( rayIntersectsTriangle( zero, ray,
-					vertices[x + (y*GEOPLATE_EDGELEN)],
-					vertices[(x+1) + (y*GEOPLATE_EDGELEN)],
-					vertices[x + ((y+1)*GEOPLATE_EDGELEN)],
-					time) ) 
-				{
-					++pointInTriTests;
-					result = true;
-					timeOI.push_back( time );
-					minTime = std::min( time, minTime );
-				}
-
-				// check
-				if( rayIntersectsTriangle( zero, ray,
-					vertices[(x+1) + (y*GEOPLATE_EDGELEN)],
-					vertices[(x+1) + ((y+1)*GEOPLATE_EDGELEN)],
-					vertices[x + ((y+1)*GEOPLATE_EDGELEN)],
-					time) ) 
-				{
-					++pointInTriTests;
-					result = true;
-					timeOI.push_back( time );
-					minTime = std::min( time, minTime );
-				}
-			}
-		}
-		
-		return result;
-	}
-
-	double DistFromSurface(const double rad, const double y, const vector3d &rp) const
-	{
-		PiAssert( IsWithinAng(rad, y) );
-
-		// do we have kids?
-		if(kids[0]) {
-			// yes, so recurse into them.
-			for(int i=0;i<4;++i) {
-				if( kids[i]->IsWithinAng(rad, y) ) {
-					return kids[i]->DistFromSurface(rad, y, rp);
-				}
-			}
-		} else {
-			// find point on _surface_ of the cylinder
-			const vector3d p = GetSurfacePointCyl(rad, y, m_halfLen);
-			return geoRing->GetHeight(p);
-		}
-		return DBL_MAX;
-	}
-
-	bool IsWithinAng(const double rad, const double y) const
-	{
-		if( rad>=ang[0] && rad<=ang[1] ) {
-			const double yoffsetpos = (m_yoffset + m_halfLen);
-			const double yoffsetneg = (m_yoffset - m_halfLen);
-			if( y>=yoffsetneg && y<=yoffsetpos ) {
-				return true;
-			}
-		}
-		return false;
-	}
 
 	/* Thread(s) that generate the mesh data for a geopatch */
 	static int UpdateGeoPlateThread(void *data)
@@ -877,40 +756,24 @@ public:
 	// depth - 0 is the topmost plate with each depth+1 describing it's depth within the tree.
 	GeoPlate(const double halfLength, const vector3d &startVBE, const vector3d &endVBE, 
 		const double startAng, const double endAng, 
-		const double yoffset, const int depth, const int cIdx) {
-		//PROFILE_SCOPED()
-		memset(this, 0, sizeof(GeoPlate));
+		const double yoffset, const int depth, const int cIdx) : BaseGeo(halfLength, startAng, endAng, yoffset, depth) 
+		, parent(0), m_kidsLock(0), m_needUpdateVBOs(false)
+	{
+		for( int i=0; i<4; ++i )
+		{
+			kids[i] = 0;
+			edgeFriend[i] = 0;
+		}
+
 		m_kidsLock = SDL_CreateMutex();
 		vbe[0] = startVBE;
 		vbe[1] = endVBE;
-		ang[0] = startAng;
-		ang[1] = endAng;
-		m_halfLen = halfLength;
-		m_yoffset = yoffset;
 		m_depth = depth;
 		m_cIdx = cIdx;
-		clipCentroid = GetSurfacePointCyl(0.5, 0.5, m_halfLen);
-		clipRadius = 0;
-
-		vector3d vcorners[4] = {
-			GetSurfacePointCyl(0.0, 0.0, m_halfLen),
-			GetSurfacePointCyl(1.0, 0.0, m_halfLen),
-			GetSurfacePointCyl(0.0, 1.0, m_halfLen),
-			GetSurfacePointCyl(1.0, 1.0, m_halfLen)
-		};
-		for (int i=0; i<4; i++) {
-			clipRadius = std::max(clipRadius, (vcorners[i]-clipCentroid).Length());
-		}
-		m_roughLength = GEOPLATE_SUBDIVIDE_AT_CAMDIST / pow(2.0, depth);
 		m_needUpdateVBOs = false;
 		normals = new vector3d[GEOPLATE_NUMVERTICES];
 		vertices = new vector3d[GEOPLATE_NUMVERTICES];
 		colors = new vector3d[GEOPLATE_NUMVERTICES];
-#ifdef _DEBUG
-		memset(vertices, 0, sizeof(vector3d)*GEOPLATE_NUMVERTICES);
-		memset(normals, 0, sizeof(vector3d)*GEOPLATE_NUMVERTICES);
-		memset(colors, 0, sizeof(vector3d)*GEOPLATE_NUMVERTICES);
-#endif
 	}
 
 	~GeoPlate() {
@@ -973,7 +836,6 @@ public:
 	}
 
 	static void Init() {
-		//PROFILE_SCOPED()
 		GEOPLATE_FRAC = 1.0 / double(GEOPLATE_EDGELEN-1);
 
 		if (midIndices) {
@@ -1242,7 +1104,6 @@ public:
 	}
 
 	void _UpdateVBOs() {
-		//PROFILE_SCOPED()
 		if (m_needUpdateVBOs) {
 			if (!m_vbo) glGenBuffersARB(1, &m_vbo);
 			m_needUpdateVBOs = false;
@@ -1271,7 +1132,6 @@ public:
 	 * fucking pointless. one position inwards. used to make edge normals
 	 * for adjacent tiles */
 	void GetEdgeMinusOneVerticesFlipped(int edge, vector3d *ev) {
-		//PROFILE_SCOPED()
 		PiAssert(edge!=-1);
 		if( edge<0 || edge>4) return;
 		if (edge == 0) {
@@ -1287,7 +1147,6 @@ public:
 		}
 	}
 	static void GetEdge(vector3d *verts, int edge, vector3d *ev) {
-		//PROFILE_SCOPED()
 		PiAssert(edge!=-1);
 		if( edge<0 || edge>4) return;
 		if (edge == 0) {
@@ -1303,7 +1162,6 @@ public:
 		}
 	}
 	static void SetEdge(vector3d *verts, int edge, const vector3d *ev) {
-		//PROFILE_SCOPED()
 		PiAssert(edge!=-1);
 		if( edge<0 || edge>4) return;
 		if (edge == 0) {
@@ -1319,7 +1177,6 @@ public:
 		}
 	}
 	int GetEdgeIdxOf(GeoPlate *e) {
-		//PROFILE_SCOPED()
 		for (int i=0; i<4; i++) {
 			if (edgeFriend[i] == e) return i;
 		}
@@ -1329,7 +1186,6 @@ public:
 
 
 	void FixEdgeNormals(const int edge, const vector3d *ev) {
-		//PROFILE_SCOPED()
 		int x, y;
 		switch (edge) {
 		case 0:
@@ -1394,7 +1250,6 @@ public:
 	}
 
 	int GetChildIdx(GeoPlate *child) {
-		//PROFILE_SCOPED()
 		for (int i=0; i<4; i++) {
 			if (kids[i] == child) return i;
 		}
@@ -1403,7 +1258,6 @@ public:
 	}
 	
 	void FixEdgeFromParentInterpolated(int edge) {
-		//PROFILE_SCOPED()
 		// noticeable artefacts from not doing so...
 		vector3d ev[GEOPLATE_MAX_EDGELEN];
 		vector3d en[GEOPLATE_MAX_EDGELEN];
@@ -1445,7 +1299,6 @@ public:
 
 	template <int corner>
 	void MakeCornerNormal(vector3d *ev, vector3d *ev2) {
-		//PROFILE_SCOPED()
 		int p;
 		vector3d x1,x2,y1,y2;
 		switch (corner) {
@@ -1512,7 +1365,6 @@ public:
 	}
 
 	void FixCornerNormalsByEdge(int edge, vector3d *ev) {
-		//PROFILE_SCOPED()
 		vector3d ev2[GEOPLATE_MAX_EDGELEN];
 		vector3d x1, x2, y1, y2;
 		/* XXX All these 'if's have an unfinished else, when a neighbour
@@ -1573,7 +1425,6 @@ public:
 	}
 
 	void GenerateEdgeNormalsAndColors() {
-		//PROFILE_SCOPED()
 		vector3d ev[4][GEOPLATE_MAX_EDGELEN];
 		bool doneEdge[4];
 		memset(doneEdge, 0, sizeof(doneEdge));
@@ -1611,19 +1462,8 @@ public:
 		}
 	}
 
-	vector3d GetSurfacePointCyl(const double x, const double y, const double halfLength) const {
-		double theta = lerp( x, ang[1], ang[0] );
-		
-		const vector3d topEndEdge(sin(theta), m_yoffset + halfLength, cos(theta));		// vertices at top edge of circle
-		const vector3d bottomEndEdge(sin(theta), m_yoffset - halfLength, cos(theta));	// vertices at bottom edge of circle
-		
-		const vector3d res = lerp( y, bottomEndEdge, topEndEdge );
-		return res;
-	}
-
 	// Generates full-detail vertices, and also non-edge normals and colors
 	void GenerateMesh() {
-		//PROFILE_SCOPED()
 		vector3d *vts = vertices;
 		vector3d *col = colors;
 		double xfrac;
@@ -1678,7 +1518,6 @@ public:
 	}
 
 	void OnEdgeFriendChanged(int edge, GeoPlate *e) {
-		//PROFILE_SCOPED()
 		assert(e>(void*)0x000000FF);
 		edgeFriend[edge] = e;
 		vector3d ev[GEOPLATE_MAX_EDGELEN];
@@ -1782,7 +1621,6 @@ public:
 		}
 	}
 	void NotifyEdgeFriendSplit(GeoPlate *e) {
-		//PROFILE_SCOPED()
 		int idx = GetEdgeIdxOf(e);
 		int we_are = e->GetEdgeIdxOf(this);
 		if (!kids[0]) return;
@@ -1793,7 +1631,6 @@ public:
 	}
 	
 	void NotifyEdgeFriendDeleted(GeoPlate *e) {
-		//PROFILE_SCOPED()
 		int idx = GetEdgeIdxOf(e);
 		if (-1 == idx) return;
 		edgeFriend[idx] = 0;
@@ -1808,7 +1645,6 @@ public:
 	}
 
 	GeoPlate *GetEdgeFriendForKid(int kid, int edge) {
-		//PROFILE_SCOPED()
 		GeoPlate *e = edgeFriend[edge];
 		if (!e) return 0;
 		const int we_are = e->GetEdgeIdxOf(this);
@@ -1820,7 +1656,6 @@ public:
 	}
 	
 	void Render(vector3d &campos, Plane planes[6]) {
-		//PROFILE_SCOPED()
 		PiVerify(SDL_mutexP(m_kidsLock)==0);
 		if (kids[0]) {
 			for (int i=0; i<4; i++) kids[i]->Render(campos, planes);
@@ -2016,7 +1851,6 @@ int GeoRing::UpdateLODThread(void *data)
 
 void GeoRing::_UpdateLODs()
 {
-	//PROFILE_SCOPED()
 	for (size_t i=0; i<m_plates.size(); i++) {
 		m_plates[i]->LODUpdate(m_tempCampos);
 	}
@@ -2033,7 +1867,6 @@ static void _LockoutThreadsBeforeExit()
 
 void GeoRing::Init()
 {
-	//PROFILE_SCOPED()
 	s_geoRingSurfaceShader[0] = new GeoRingShader("geoRing", "#define NUM_LIGHTS 1\n");
 	s_geoRingSurfaceShader[1] = new GeoRingShader("geoRing", "#define NUM_LIGHTS 2\n");
 	s_geoRingSurfaceShader[2] = new GeoRingShader("geoRing", "#define NUM_LIGHTS 3\n");
@@ -2052,7 +1885,6 @@ void GeoRing::Init()
 
 void GeoRing::OnChangeDetailLevel()
 {
-	//PROFILE_SCOPED()
 	SDL_mutexP(s_allGeoRingsLock);
 	for(std::list<GeoRing*>::iterator i = s_allGeoRings.begin(); i != s_allGeoRings.end(); ++i) {
 		// remove the plates
@@ -2110,7 +1942,6 @@ void GeoRing::OnChangeDetailLevel()
 
 GeoRing::GeoRing(const SBody *body): m_style(body)
 {
-	//PROFILE_SCOPED()
 	m_vbosToDestroyLock = SDL_CreateMutex();
 	m_runUpdateThread = 0;
 	m_sbody = body;
@@ -2131,7 +1962,6 @@ GeoRing::GeoRing(const SBody *body): m_style(body)
 
 GeoRing::~GeoRing()
 {
-	//PROFILE_SCOPED()
 	SDL_mutexP(s_allGeoRingsLock);
 	s_allGeoRings.remove(this);
 	SDL_mutexV(s_allGeoRingsLock);
@@ -2156,7 +1986,6 @@ GeoRing::~GeoRing()
 
 void GeoRing::AddVBOToDestroy(GLuint vbo)
 {
-	//PROFILE_SCOPED()
 	SDL_mutexP(m_vbosToDestroyLock);
 	m_vbosToDestroy.push_back(vbo);
 	SDL_mutexV(m_vbosToDestroyLock);
@@ -2164,7 +1993,6 @@ void GeoRing::AddVBOToDestroy(GLuint vbo)
 
 void GeoRing::DestroyVBOs()
 {
-	//PROFILE_SCOPED()
 	SDL_mutexP(m_vbosToDestroyLock);
 	for (std::list<GLuint>::iterator i = m_vbosToDestroy.begin();
 			i != m_vbosToDestroy.end(); ++i) {
@@ -2201,7 +2029,6 @@ void GeoRing::BuildFirstPatches()
 	#define NUM_SEGMENTS 8
 	const int numSegments = (NUM_SEGMENTS * m_sbody->radius.ToDouble());
 
-	//PROFILE_SCOPED()
 	std::vector<vector3d>	points;
 	std::vector<double>		angles;
     for (int i = 0; i <= numSegments; ++i) {
@@ -2224,9 +2051,11 @@ void GeoRing::BuildFirstPatches()
 
 	// set edge friends
 	for (size_t i=0; i<m_plates.size(); i++) {
-		m_plates[i]->geoRing = this;
+		m_plates[i]->SetGeoRingPtr( this );
 
-		// trailing edge?
+		// The winding for these edges is not at all clear.
+		// This is probably due to me adapting it for squares on the -
+		// - outside of a spherised-cube to the inside of a cylinderised-lidless-cube!!!
 		m_plates[i]->edgeFriend[0] = 0;
 		m_plates[i]->edgeFriend[1] = FindGeoPlateByIndex(i-1);	// backward?
 		m_plates[i]->edgeFriend[2] = 0;
@@ -2244,7 +2073,7 @@ void GeoRing::BuildFirstPatches()
 		double len = (points[i+1] - points[i]).Length();
 		m_hull.push_back( new GeoPlateHull(len, angles[i+1], angles[i], 0.0, 0) );
 	}
-	for (size_t i=0; i<m_hull.size(); i++) m_hull[i]->geoRing = this;
+	for (size_t i=0; i<m_hull.size(); i++) m_hull[i]->SetGeoRingPtr( this );
 	for (size_t i=0; i<m_hull.size(); i++) m_hull[i]->GenerateMesh();
 	for (size_t i=0; i<m_hull.size(); i++) m_hull[i]->UpdateVBOs();
 
@@ -2254,7 +2083,7 @@ void GeoRing::BuildFirstPatches()
 		double len = (points[i+1] - points[i]).Length();
 		m_wallInner.push_back( new GeoPlateWall(true, len, angles[i+1], angles[i], 0.0, 0) );
 	}
-	for (size_t i=0; i<m_wallInner.size(); i++) m_wallInner[i]->geoRing = this;
+	for (size_t i=0; i<m_wallInner.size(); i++) m_wallInner[i]->SetGeoRingPtr( this );
 	for (size_t i=0; i<m_wallInner.size(); i++) m_wallInner[i]->GenerateMesh();
 	for (size_t i=0; i<m_wallInner.size(); i++) m_wallInner[i]->UpdateVBOs();
 
@@ -2264,7 +2093,7 @@ void GeoRing::BuildFirstPatches()
 		double len = (points[i+1] - points[i]).Length();
 		m_wallOuter.push_back( new GeoPlateWall(false, len, angles[i+1], angles[i], 0.0, 0) );
 	}
-	for (size_t i=0; i<m_wallOuter.size(); i++) m_wallOuter[i]->geoRing = this;
+	for (size_t i=0; i<m_wallOuter.size(); i++) m_wallOuter[i]->SetGeoRingPtr( this );
 	for (size_t i=0; i<m_wallOuter.size(); i++) m_wallOuter[i]->GenerateMesh();
 	for (size_t i=0; i<m_wallOuter.size(); i++) m_wallOuter[i]->UpdateVBOs();
 }
@@ -2273,7 +2102,6 @@ static const float g_ambient[4] = { 0, 0, 0, 1.0 };
 
 static void DrawAtmosphereSurface(const vector3d &campos, float rad)
 {
-	//PROFILE_SCOPED()
 	const int LAT_SEGS = 20;
 	const int LONG_SEGS = 20;
 	vector3d yaxis = campos.Normalized();
@@ -2326,7 +2154,6 @@ static void DrawAtmosphereSurface(const vector3d &campos, float rad)
 }
 
 void GeoRing::Render(vector3d campos, const float radius, const float scale) {
-	//PROFILE_SCOPED()
 	Plane planes[6];
 	glPushMatrix();
  	glTranslated(-campos.x, -campos.y, -campos.z);
@@ -2444,27 +2271,3 @@ void GeoRing::Render(vector3d campos, const float radius, const float scale) {
 	_UpdateLODs();
 #endif /* !GEORING_USE_THREADING */
 }
-/*
-double GeoRing::GetDistFromSurface(const vector3d p) {
-	//return DBL_MAX;
-	// one way to find angle (radians)
-	double radang = atan2(p.y, p.x);
-	//double radang = atan2(p.x, p.y);
-	if( radang<0.0 ) {
-		radang = (2*M_PI) + radang;
-	}
-
-	// iterate through plates until we find the one our angles/z are within
-	PlateIter iter = m_plates.begin();
-	for( ; iter!=m_plates.end() ; ++iter ) {
-		// scale the p.z into the 0.0 to 1.0 range
-		//const double realZ = (p.z + (*iter)->m_halfLen) / (2.0*(*iter)->m_halfLen);
-		if( (*iter)->IsWithinAng(radang, p.z) ) {
-			// then get distance from surface
-			return (*iter)->DistFromSurface(radang, p.z, p);
-		}
-	}
-
-	return DBL_MAX; // All tests passed, point is in cylinder
-}
-*/
