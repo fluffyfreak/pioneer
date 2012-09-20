@@ -86,6 +86,7 @@
     <ClCompile Include="..\..\..\src\graphics\gl2\GeoSphereMaterial.cpp" />
     <ClCompile Include="..\..\..\src\graphics\gl2\GL2Material.cpp" />
     <ClCompile Include="..\..\..\src\graphics\gl2\MultiMaterial.cpp" />
+    <ClCompile Include="..\..\..\src\graphics\gl2\OceanSphereMaterial.cpp" />
     <ClCompile Include="..\..\..\src\graphics\gl2\Program.cpp" />
     <ClCompile Include="..\..\..\src\graphics\gl2\RingMaterial.cpp" />
     <ClCompile Include="..\..\..\src\graphics\gl2\Uniform.cpp" />
@@ -113,6 +114,7 @@
     <ClInclude Include="..\..\..\src\graphics\gl2\GeoSphereMaterial.h" />
     <ClInclude Include="..\..\..\src\graphics\gl2\GL2Material.h" />
     <ClInclude Include="..\..\..\src\graphics\gl2\MultiMaterial.h" />
+    <ClInclude Include="..\..\..\src\graphics\gl2\OceanSphereMaterial.h" />
     <ClInclude Include="..\..\..\src\graphics\gl2\Program.h" />
     <ClInclude Include="..\..\..\src\graphics\gl2\RingMaterial.h" />
     <ClInclude Include="..\..\..\src\graphics\gl2\StarfieldMaterial.h" />

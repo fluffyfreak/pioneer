@@ -181,6 +181,7 @@
     <ClCompile Include="..\..\src\ModManager.cpp" />
     <ClCompile Include="..\..\src\mtrand.cpp" />
     <ClCompile Include="..\..\src\ObjectViewerView.cpp" />
+    <ClCompile Include="..\..\src\OceanSphere.cpp" />
     <ClCompile Include="..\..\src\perlin.cpp" />
     <ClCompile Include="..\..\src\Pi.cpp" />
     <ClCompile Include="..\..\src\Planet.cpp" />
@@ -334,6 +335,7 @@
     <ClInclude Include="..\..\src\mtrand.h" />
     <ClInclude Include="..\..\src\Object.h" />
     <ClInclude Include="..\..\src\ObjectViewerView.h" />
+    <ClInclude Include="..\..\src\OceanSphere.h" />
     <ClInclude Include="..\..\src\OS.h" />
     <ClInclude Include="..\..\src\perlin.h" />
     <ClInclude Include="..\..\src\PersistSystemData.h" />
