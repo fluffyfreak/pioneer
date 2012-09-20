@@ -18,6 +18,7 @@
 #include "Frame.h"
 #include "gameconsts.h"
 #include "GeoSphere.h"
+#include "OceanSphere.h"
 //#include "glfreetype.h"
 #include "gui/Gui.h"
 #include "gui/GuiAdjustment.h"

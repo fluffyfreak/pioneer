@@ -11,6 +11,7 @@
 
 namespace Graphics { class Renderer; }
 class SystemBody;
+class OceanSphere;
 class GeoPatch;
 class GeoPatchContext;
 class GeoSphere {
@@ -42,6 +43,7 @@ private:
 	void BuildFirstPatches();
 	GeoPatch *m_patches[6];
 	const SystemBody *m_sbody;
+	OceanSphere *m_ocean;
 
 	/* all variables for GetHeight(), GetColor() */
 	Terrain *m_terrain;

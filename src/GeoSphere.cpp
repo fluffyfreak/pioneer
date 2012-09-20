@@ -1,5 +1,6 @@
 #include "libs.h"
 #include "GeoSphere.h"
+#include "OceanSphere.h"
 #include "perlin.h"
 #include "Pi.h"
 #include "RefCounted.h"
@@ -1104,6 +1105,8 @@ void GeoSphere::Init()
 	s_patchContext.Reset(new GeoPatchContext(detail_edgeLen[Pi::detail.planets > 4 ? 4 : Pi::detail.planets]));
 	assert(s_patchContext->edgeLen <= GEOPATCH_MAX_EDGELEN);
 
+	OceanSphere::Init();
+
 #ifdef GEOSPHERE_USE_THREADING
 	s_updateThread = SDL_CreateThread(&GeoSphere::UpdateLODThread, 0);
 #endif /* GEOSPHERE_USE_THREADING */
@@ -1121,6 +1124,8 @@ void GeoSphere::Uninit()
 
 	SDL_WaitThread(s_updateThread, 0);
 #endif /* GEOSPHERE_USE_THREADING */
+
+	OceanSphere::Uninit();
 
 	assert (s_patchContext.Unique());
 	s_patchContext.Reset();
@@ -1143,6 +1148,8 @@ void GeoSphere::OnChangeDetailLevel()
 {
 	s_patchContext.Reset(new GeoPatchContext(detail_edgeLen[Pi::detail.planets > 4 ? 4 : Pi::detail.planets]));
 	assert(s_patchContext->edgeLen <= GEOPATCH_MAX_EDGELEN);
+
+	OceanSphere::OnChangeDetailLevel();
 
 	// cancel all queued updates
 	SDL_mutexP(s_geosphereUpdateQueueLock);
@@ -1174,6 +1181,10 @@ void GeoSphere::OnChangeDetailLevel()
 			}
 		}
 
+		if ((*i)->m_ocean) {
+			(*i)->m_ocean->DestroyPatches();
+		}
+
 		// reinit the terrain with the new settings
 		delete (*i)->m_terrain;
 		(*i)->m_terrain = Terrain::InstanceTerrain((*i)->m_sbody);
@@ -1189,7 +1200,7 @@ void GeoSphere::OnChangeDetailLevel()
 
 #define GEOSPHERE_TYPE	(m_sbody->type)
 
-GeoSphere::GeoSphere(const SystemBody *body)
+GeoSphere::GeoSphere(const SystemBody *body) : m_ocean(0)
 {
 	m_terrain = Terrain::InstanceTerrain(body);
 	print_info(body, m_terrain);
@@ -1197,6 +1208,10 @@ GeoSphere::GeoSphere(const SystemBody *body)
 	m_vbosToDestroyLock = SDL_CreateMutex();
 	m_sbody = body;
 	memset(m_patches, 0, 6*sizeof(GeoPatch*));
+
+	if (body->m_volatileLiquid.ToFloat() > 0.5f && body->type == SystemBody::TYPE_PLANET_TERRESTRIAL) {
+		m_ocean = new OceanSphere(body);
+	}
 
 	m_updateLock = SDL_CreateMutex();
 	m_abortLock = SDL_CreateMutex();
@@ -1233,6 +1248,10 @@ GeoSphere::~GeoSphere()
 	SDL_DestroyMutex(m_updateLock);
 
 	for (int i=0; i<6; i++) if (m_patches[i]) delete m_patches[i];
+	if (m_ocean) {
+		delete m_ocean;
+		m_ocean = 0;
+	}
 	DestroyVBOs();
 	SDL_DestroyMutex(m_vbosToDestroyLock);
 
@@ -1291,6 +1310,10 @@ void GeoSphere::BuildFirstPatches()
 	for (int i=0; i<6; i++) m_patches[i]->GenerateMesh();
 	for (int i=0; i<6; i++) m_patches[i]->GenerateEdgeNormalsAndColors();
 	for (int i=0; i<6; i++) m_patches[i]->UpdateVBOs();
+
+	if (m_ocean) {
+		m_ocean->BuildFirstPatches();
+	}
 }
 
 static const float g_ambient[4] = { 0, 0, 0, 1.0 };
@@ -1432,6 +1455,10 @@ void GeoSphere::Render(Graphics::Renderer *renderer, vector3d campos, const floa
 
 	m_surfaceMaterial->Unapply();
 
+	if (m_ocean) {
+		m_ocean->Render(renderer, campos, radius, scale);
+	}
+
 	renderer->SetAmbientColor(oldAmbient);
 
 	// if the update thread has deleted any geopatches, destroy the vbos
@@ -1491,5 +1518,9 @@ void GeoSphere::SetUpMaterials()
 		skyDesc.effect = Graphics::EFFECT_GEOSPHERE_SKY;
 		skyDesc.lighting = true;
 		m_atmosphereMaterial.Reset(Pi::renderer->CreateMaterial(skyDesc));
+	}
+
+	if (m_ocean) {
+		m_ocean->SetUpMaterials();
 	}
 }

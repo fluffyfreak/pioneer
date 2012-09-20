@@ -7,6 +7,7 @@
 #include "VertexArray.h"
 #include "gl2/GL2Material.h"
 #include "gl2/GeoSphereMaterial.h"
+#include "gl2/OceanSphereMaterial.h"
 #include "gl2/MultiMaterial.h"
 #include "gl2/Program.h"
 #include "gl2/RingMaterial.h"
@@ -133,6 +134,9 @@ Material *RendererGL2::CreateMaterial(const MaterialDescriptor &d)
 		break;
 	case EFFECT_GEOSPHERE_SKY:
 		mat = new GL2::GeoSphereSkyMaterial();
+		break;
+	case EFFECT_OCEANSPHERE_TERRAIN:
+		mat = new GL2::OceanSphereSurfaceMaterial();
 		break;
 	default:
 		mat = new GL2::MultiMaterial();
