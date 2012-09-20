@@ -758,7 +758,7 @@ public:
 			xfrac = 0;
 			for (int x=0; x<ctx->edgeLen; x++) {
 				vector3d p = GetSpherePoint(xfrac, yfrac);
-				double height = 0.001;//oceansphere->GetHeight(p);
+				double height = oceansphere->GetHeight(p);
 				*(vts++) = p * (height + 1.0);
 				// remember this -- we will need it later
 				(col++)->x = height;
@@ -783,7 +783,7 @@ public:
 				vector3d &col_r = colors[x + y*ctx->edgeLen];
 				const double height = col_r.x;
 				const vector3d &norm = normals[x + y*ctx->edgeLen];
-				col_r = vector3d(1.0,0.0,0.0);//oceansphere->GetColor(p, height, norm);
+				col_r = oceansphere->GetColor(p, height, norm);
 			}
 		}
 

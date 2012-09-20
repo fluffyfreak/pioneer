@@ -19,7 +19,7 @@ public:
 	GeoSphere(const SystemBody *body);
 	~GeoSphere();
 	void Render(Graphics::Renderer *r, vector3d campos, const float radius, const float scale);
-	inline double GetHeight(vector3d p) {
+	inline double GetHeight(const vector3d &p) const {
 		const double h = m_terrain->GetHeight(p);
 		s_vtxGenCount++;
 #ifdef DEBUG

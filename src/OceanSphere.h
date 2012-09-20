@@ -21,8 +21,8 @@ public:
 	void Render(Graphics::Renderer *r, const vector3d campos, const float radius, const float scale);
 	void BuildFirstPatches();
 	void DestroyPatches();
-	inline double GetHeight(vector3d p) {
-		const double h = m_terrain->GetHeight(p);
+	inline double GetHeight(const vector3d &p) const {
+		const double h = 0.00001;//m_terrain->GetHeight(p);
 		s_vtxGenCount++;
 #ifdef DEBUG
 		// XXX don't remove this. Fix your fractals instead
@@ -57,7 +57,7 @@ private:
 	//////////////////////////////
 
 	inline vector3d GetColor(const vector3d &p, double height, const vector3d &norm) {
-		return m_terrain->GetColor(p, height, norm);
+		return vector3d(1.0,0.0,0.0);//m_terrain->GetColor(p, height, norm);
 	}
 
 	static int s_vtxGenCount;
