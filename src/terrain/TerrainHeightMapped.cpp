@@ -3,6 +3,8 @@
 
 using namespace TerrainNoise;
 
+static double s_minHeight = DBL_MAX;
+
 template <>
 const char *TerrainHeightFractal<TerrainHeightMapped>::GetHeightFractalName() const { return "Mapped"; }
 
@@ -80,10 +82,10 @@ double TerrainHeightFractal<TerrainHeightMapped>::GetHeight(const vector3d &p)
 		double v = a0 + a1*dy + a2*dy*dy + a3*dy*dy*dy;
 
 		//v = (v<0 ? 0 : v);
-		if( v<=0 )
+		if( v<0 )
 		{
 			// make the water very deep, gives sheer edges where water meets land though
-			v *= 100;
+			//v *= 100;
 		}
 		else
 		{
@@ -139,6 +141,10 @@ double TerrainHeightFractal<TerrainHeightMapped>::GetHeight(const vector3d &p)
 				h *= h*h*2.0;
 				h -= 3.0;
 				v += h;
+			}
+
+			if( v>0 ) {
+				s_minHeight = std::min(s_minHeight, v);
 			}
 		}
 

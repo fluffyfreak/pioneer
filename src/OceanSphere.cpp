@@ -1216,7 +1216,7 @@ void OceanSphere::SetUpMaterials()
 	// Request material for this star or planet, with or without
 	// atmosphere. Separate material for surface and sky.
 	Graphics::MaterialDescriptor surfDesc;
-	surfDesc.effect = Graphics::EFFECT_OCEANSPHERE_TERRAIN;
+	surfDesc.effect = Graphics::EFFECT_OCEANSPHERE_PATCH;
 	//planetoid with or without atmosphere
 	const SystemBody::AtmosphereParameters ap(m_sbody->CalcAtmosphereParams());
 	surfDesc.lighting = true;

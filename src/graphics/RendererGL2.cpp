@@ -135,7 +135,7 @@ Material *RendererGL2::CreateMaterial(const MaterialDescriptor &d)
 	case EFFECT_GEOSPHERE_SKY:
 		mat = new GL2::GeoSphereSkyMaterial();
 		break;
-	case EFFECT_OCEANSPHERE_TERRAIN:
+	case EFFECT_OCEANSPHERE_PATCH:
 		mat = new GL2::OceanSphereSurfaceMaterial();
 		break;
 	default:

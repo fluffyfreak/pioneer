@@ -20,23 +20,23 @@ void OceanSphereProgram::InitUniforms()
 {
 	Program::InitUniforms();
 	atmosColor.Init("atmosColor", m_program);
-	geosphereAtmosFogDensity.Init("geosphereAtmosFogDensity", m_program);
-	geosphereAtmosInvScaleHeight.Init("geosphereAtmosInvScaleHeight", m_program);
-	geosphereAtmosTopRad.Init("geosphereAtmosTopRad", m_program);
-	geosphereCenter.Init("geosphereCenter", m_program);
-	geosphereScale.Init("geosphereScale", m_program);
-	geosphereScaledRadius.Init("geosphereScaledRadius", m_program);
+	oceansphereAtmosFogDensity.Init("oceansphereAtmosFogDensity", m_program);
+	oceansphereAtmosInvScaleHeight.Init("oceansphereAtmosInvScaleHeight", m_program);
+	oceansphereAtmosTopRad.Init("oceansphereAtmosTopRad", m_program);
+	oceansphereCenter.Init("oceansphereCenter", m_program);
+	oceansphereScale.Init("oceansphereScale", m_program);
+	oceansphereScaledRadius.Init("oceansphereScaledRadius", m_program);
 }
 
 Program *OceanSphereSurfaceMaterial::CreateProgram(const MaterialDescriptor &desc)
 {
-	assert(desc.effect == EFFECT_OCEANSPHERE_TERRAIN);
+	assert(desc.effect == EFFECT_OCEANSPHERE_PATCH);
 	assert(desc.dirLights < 5);
 	std::stringstream ss;
 	ss << stringf("#define NUM_LIGHTS %0{u}\n", desc.dirLights);
 	if (desc.atmosphere)
 		ss << "#define ATMOSPHERE\n";
-	return new Graphics::GL2::OceanSphereProgram("geosphere_terrain", ss.str());
+	return new Graphics::GL2::OceanSphereProgram("oceansphere_patch", ss.str());
 }
 
 void OceanSphereSurfaceMaterial::Apply()
@@ -56,12 +56,12 @@ void OceanSphereSurfaceMaterial::SetGSUniforms()
 	p->invLogZfarPlus1.Set(m_renderer->m_invLogZfarPlus1);
 	p->sceneAmbient.Set(m_renderer->GetAmbientColor());
 	p->atmosColor.Set(ap.atmosCol);
-	p->geosphereAtmosFogDensity.Set(ap.atmosDensity);
-	p->geosphereAtmosInvScaleHeight.Set(ap.atmosInvScaleHeight);
-	p->geosphereAtmosTopRad.Set(ap.atmosRadius);
-	p->geosphereCenter.Set(ap.center);
-	p->geosphereScaledRadius.Set(ap.planetRadius / ap.scale);
-	p->geosphereScale.Set(ap.scale);
+	p->oceansphereAtmosFogDensity.Set(ap.atmosDensity);
+	p->oceansphereAtmosInvScaleHeight.Set(ap.atmosInvScaleHeight);
+	p->oceansphereAtmosTopRad.Set(ap.atmosRadius);
+	p->oceansphereCenter.Set(ap.center);
+	p->oceansphereScaledRadius.Set(ap.planetRadius / ap.scale);
+	p->oceansphereScale.Set(ap.scale);
 }
 
 }

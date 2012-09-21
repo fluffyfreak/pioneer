@@ -15,12 +15,12 @@ namespace Graphics {
 			OceanSphereProgram(const std::string &filename, const std::string &defines);
 
 			Uniform atmosColor;
-			Uniform geosphereAtmosFogDensity;
-			Uniform geosphereAtmosInvScaleHeight;
-			Uniform geosphereAtmosTopRad; // in planet radii
-			Uniform geosphereCenter;
-			Uniform geosphereScale;
-			Uniform geosphereScaledRadius; // (planet radius) / scale
+			Uniform oceansphereAtmosFogDensity;
+			Uniform oceansphereAtmosInvScaleHeight;
+			Uniform oceansphereAtmosTopRad; // in planet radii
+			Uniform oceansphereCenter;
+			Uniform oceansphereScale;
+			Uniform oceansphereScaledRadius; // (planet radius) / scale
 
 		protected:
 			virtual void InitUniforms();

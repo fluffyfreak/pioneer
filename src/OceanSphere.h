@@ -22,7 +22,7 @@ public:
 	void BuildFirstPatches();
 	void DestroyPatches();
 	inline double GetHeight(const vector3d &p) const {
-		const double h = 0.00001;//m_terrain->GetHeight(p);
+		const double h = 0.0;//m_terrain->GetHeight(p);
 		s_vtxGenCount++;
 #ifdef DEBUG
 		// XXX don't remove this. Fix your fractals instead
