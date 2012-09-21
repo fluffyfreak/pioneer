@@ -29,7 +29,7 @@ template <>
 double TerrainHeightFractal<TerrainHeightHillsNormal>::GetHeight(const vector3d &p)
 {
 	double continents = octavenoise(GetFracDef(3-m_fracnum), 0.65, p) * (1.0-m_sealevel) - (m_sealevel*0.1);
-	if (continents < 0) return 0;
+	//if (continents < 0) return 0;
 	double n = continents;
 	double distrib = octavenoise(GetFracDef(4-m_fracnum), 0.5, p);
 	distrib *= distrib;
@@ -45,7 +45,8 @@ double TerrainHeightFractal<TerrainHeightHillsNormal>::GetHeight(const vector3d 
 	// cliffs at shore
 	if (continents < 0.01) n += m * continents * 100.0f;
 	else n += m;
-
+	
+	n+=1000.0/(m_planetRadius*m_maxHeight); // change the 1000 to raise sea floor
 	if (n > 0.0) return n*m_maxHeight;
     return 0.0;
 }
