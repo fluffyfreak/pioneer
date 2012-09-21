@@ -605,7 +605,7 @@ void WorldView::RefreshButtonStateAndVisibility()
 		else
 			Pi::cpan->SetOverlayText(ShipCpanel::OVERLAY_TOP_RIGHT, "");
 
-		// altitude (above sea surface for planets with seasd)
+		// altitude (above sea surface for planets with seas)
 		if (Pi::player->GetFrame()->m_astroBody) {
 			Body *astro = Pi::player->GetFrame()->m_astroBody;
 			//(GetFrame()->m_sbody->GetSuperType() == SUPERTYPE_ROCKY_PLANET)) {
