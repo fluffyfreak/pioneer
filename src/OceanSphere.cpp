@@ -33,8 +33,8 @@ struct VBOVertex
 {
 	float x,y,z;
 	float nx,ny,nz;
-	unsigned char col[4];
 	float padding;
+	float padding2;
 };
 #pragma pack()
 
@@ -43,14 +43,15 @@ const int NUM_INDEX_LISTS = 16;
 
 class OceanPatchContext : public RefCounted {
 public:
-	int edgeLen;
+	const int edgeLen;
+	const int halfEdgeLen;
 
-	inline int VBO_COUNT_LO_EDGE() const { return 3*(edgeLen/2); }
+	inline int VBO_COUNT_LO_EDGE() const { return 3*(halfEdgeLen); }
 	inline int VBO_COUNT_HI_EDGE() const { return 3*(edgeLen-1); }
 	inline int VBO_COUNT_MID_IDX() const { return (4*3*(edgeLen-3))    + 2*(edgeLen-3)*(edgeLen-3)*3; }
 	//                                            ^^ serrated teeth bit  ^^^ square inner bit
 
-	inline int IDX_VBO_LO_OFFSET(int i) const { return i*sizeof(unsigned short)*3*(edgeLen/2); }
+	inline int IDX_VBO_LO_OFFSET(int i) const { return i*sizeof(unsigned short)*3*(halfEdgeLen); }
 	inline int IDX_VBO_HI_OFFSET(int i) const { return (i*sizeof(unsigned short)*VBO_COUNT_HI_EDGE())+IDX_VBO_LO_OFFSET(4); }
 	inline int IDX_VBO_MAIN_OFFSET()    const { return IDX_VBO_HI_OFFSET(4); }
 	inline int IDX_VBO_COUNT_ALL_IDX()	const { return ((edgeLen-1)*(edgeLen-1))*2*3; }
@@ -68,7 +69,7 @@ public:
 	GLuint indices_tri_counts[NUM_INDEX_LISTS];
 	VBOVertex *vbotemp;
 
-	OceanPatchContext(int _edgeLen) : edgeLen(_edgeLen) {
+	OceanPatchContext(const int _edgeLen) : edgeLen(_edgeLen), halfEdgeLen(_edgeLen>>1) {
 		Init();
 	}
 
@@ -361,7 +362,6 @@ public:
 	vector3d v[4];
 	vector3d *vertices;
 	vector3d *normals;
-	vector3d *colors;
 	GLuint m_vbo;
 	OceanPatch *kids[4];
 	OceanPatch *parent;
@@ -400,7 +400,6 @@ public:
 		m_needUpdateVBOs = false;
 		normals = new vector3d[ctx->NUMVERTICES()];
 		vertices = new vector3d[ctx->NUMVERTICES()];
-		colors = new vector3d[ctx->NUMVERTICES()];
 	}
 
 	~OceanPatch() {
@@ -411,7 +410,6 @@ public:
 		for (int i=0; i<4; i++) if (kids[i]) delete kids[i];
 		delete[] vertices;
 		delete[] normals;
-		delete[] colors;
 		oceansphere->AddVBOToDestroy(m_vbo);
 	}
 
@@ -435,10 +433,6 @@ public:
 				pData->nx = float(normals[i].x);
 				pData->ny = float(normals[i].y);
 				pData->nz = float(normals[i].z);
-				pData->col[0] = static_cast<unsigned char>(Clamp(colors[i].x*255.0, 0.0, 255.0));
-				pData->col[1] = static_cast<unsigned char>(Clamp(colors[i].y*255.0, 0.0, 255.0));
-				pData->col[2] = static_cast<unsigned char>(Clamp(colors[i].z*255.0, 0.0, 255.0));
-				pData->col[3] = 255;
 			}
 			glBufferDataARB(GL_ARRAY_BUFFER, sizeof(VBOVertex)*ctx->NUMVERTICES(), ctx->vbotemp, GL_DYNAMIC_DRAW);
 			glBindBufferARB(GL_ARRAY_BUFFER, 0);
@@ -469,72 +463,6 @@ public:
 	}
 
 
-	void FixEdgeNormals(const int edge, const vector3d *ev) {
-		int x, y;
-		switch (edge) {
-		case 0:
-			for (x=1; x<ctx->edgeLen-1; x++) {
-				const vector3d x1 = vertices[x-1];
-				const vector3d x2 = vertices[x+1];
-				const vector3d y1 = ev[x];
-				const vector3d y2 = vertices[x + ctx->edgeLen];
-				const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
-				normals[x] = norm;
-				// make color
-				const vector3d p = GetSpherePoint(x*ctx->frac, 0);
-				const double height = colors[x].x;
-				colors[x] = oceansphere->GetColor(p, height, norm);
-			}
-			break;
-		case 1:
-			x = ctx->edgeLen-1;
-			for (y=1; y<ctx->edgeLen-1; y++) {
-				const vector3d x1 = vertices[(x-1) + y*ctx->edgeLen];
-				const vector3d x2 = ev[y];
-				const vector3d y1 = vertices[x + (y-1)*ctx->edgeLen];
-				const vector3d y2 = vertices[x + (y+1)*ctx->edgeLen];
-				const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
-				normals[x + y*ctx->edgeLen] = norm;
-				// make color
-				const vector3d p = GetSpherePoint(x*ctx->frac, y*ctx->frac);
-				const double height = colors[x + y*ctx->edgeLen].x;
-				colors[x + y*ctx->edgeLen] = oceansphere->GetColor(p, height, norm);
-	//			colors[x+y*ctx->edgeLen] = vector3d(1,0,0);
-			}
-			break;
-		case 2:
-			y = ctx->edgeLen-1;
-			for (x=1; x<ctx->edgeLen-1; x++) {
-				const vector3d x1 = vertices[x-1 + y*ctx->edgeLen];
-				const vector3d x2 = vertices[x+1 + y*ctx->edgeLen];
-				const vector3d y1 = vertices[x + (y-1)*ctx->edgeLen];
-				const vector3d y2 = ev[ctx->edgeLen-1-x];
-				const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
-				normals[x + y*ctx->edgeLen] = norm;
-				// make color
-				const vector3d p = GetSpherePoint(x*ctx->frac, y*ctx->frac);
-				const double height = colors[x + y*ctx->edgeLen].x;
-				colors[x + y*ctx->edgeLen] = oceansphere->GetColor(p, height, norm);
-			}
-			break;
-		case 3:
-			for (y=1; y<ctx->edgeLen-1; y++) {
-				const vector3d x1 = ev[ctx->edgeLen-1-y];
-				const vector3d x2 = vertices[1 + y*ctx->edgeLen];
-				const vector3d y1 = vertices[(y-1)*ctx->edgeLen];
-				const vector3d y2 = vertices[(y+1)*ctx->edgeLen];
-				const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
-				normals[y*ctx->edgeLen] = norm;
-				// make color
-				const vector3d p = GetSpherePoint(0, y*ctx->frac);
-				const double height = colors[y*ctx->edgeLen].x;
-				colors[y*ctx->edgeLen] = oceansphere->GetColor(p, height, norm);
-	//			colors[y*ctx->edgeLen] = vector3d(0,1,0);
-			}
-			break;
-		}
-	}
-
 	int GetChildIdx(OceanPatch *child) {
 		for (int i=0; i<4; i++) {
 			if (kids[i] == child) return i;
@@ -547,195 +475,32 @@ public:
 		// noticeable artefacts from not doing so...
 		vector3d ev[OCEANPATCH_MAX_EDGELEN];
 		vector3d en[OCEANPATCH_MAX_EDGELEN];
-		vector3d ec[OCEANPATCH_MAX_EDGELEN];
 		vector3d ev2[OCEANPATCH_MAX_EDGELEN];
 		vector3d en2[OCEANPATCH_MAX_EDGELEN];
-		vector3d ec2[OCEANPATCH_MAX_EDGELEN];
 		ctx->GetEdge(parent->vertices, edge, ev);
 		ctx->GetEdge(parent->normals, edge, en);
-		ctx->GetEdge(parent->colors, edge, ec);
 
 		int kid_idx = parent->GetChildIdx(this);
 		if (edge == kid_idx) {
 			// use first half of edge
-			for (int i=0; i<=ctx->edgeLen/2; i++) {
+			for (int i=0; i<=ctx->halfEdgeLen; i++) {
 				ev2[i<<1] = ev[i];
 				en2[i<<1] = en[i];
-				ec2[i<<1] = ec[i];
 			}
 		} else {
 			// use 2nd half of edge
-			for (int i=ctx->edgeLen/2; i<ctx->edgeLen; i++) {
-				ev2[(i-(ctx->edgeLen/2))<<1] = ev[i];
-				en2[(i-(ctx->edgeLen/2))<<1] = en[i];
-				ec2[(i-(ctx->edgeLen/2))<<1] = ec[i];
+			for (int i=ctx->halfEdgeLen; i<ctx->edgeLen; i++) {
+				ev2[(i-(ctx->halfEdgeLen))<<1] = ev[i];
+				en2[(i-(ctx->halfEdgeLen))<<1] = en[i];
 			}
 		}
 		// interpolate!!
 		for (int i=1; i<ctx->edgeLen; i+=2) {
 			ev2[i] = (ev2[i-1]+ev2[i+1]) * 0.5;
 			en2[i] = (en2[i-1]+en2[i+1]).Normalized();
-			ec2[i] = (ec2[i-1]+ec2[i+1]) * 0.5;
 		}
 		ctx->SetEdge(this->vertices, edge, ev2);
 		ctx->SetEdge(this->normals, edge, en2);
-		ctx->SetEdge(this->colors, edge, ec2);
-	}
-
-	template <int corner>
-	void MakeCornerNormal(vector3d *ev, vector3d *ev2) {
-		int p;
-		vector3d x1,x2,y1,y2;
-		switch (corner) {
-		case 0: {
-			x1 = ev[ctx->edgeLen-1];
-			x2 = vertices[1];
-			y1 = ev2[0];
-			y2 = vertices[ctx->edgeLen];
-			const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
-			normals[0] = norm;
-			// make color
-			const vector3d pt = GetSpherePoint(0, 0);
-		//	const double height = colors[0].x;
-			const double height = oceansphere->GetHeight(pt);
-			colors[0] = oceansphere->GetColor(pt, height, norm);
-			}
-			break;
-		case 1: {
-			p = ctx->edgeLen-1;
-			x1 = vertices[p-1];
-			x2 = ev2[0];
-			y1 = ev[ctx->edgeLen-1];
-			y2 = vertices[p + ctx->edgeLen];
-			const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
-			normals[p] = norm;
-			// make color
-			const vector3d pt = GetSpherePoint(p*ctx->frac, 0);
-		//	const double height = colors[p].x;
-			const double height = oceansphere->GetHeight(pt);
-			colors[p] = oceansphere->GetColor(pt, height, norm);
-			}
-			break;
-		case 2: {
-			p = ctx->edgeLen-1;
-			x1 = vertices[(p-1) + p*ctx->edgeLen];
-			x2 = ev[ctx->edgeLen-1];
-			y1 = vertices[p + (p-1)*ctx->edgeLen];
-			y2 = ev2[0];
-			const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
-			normals[p + p*ctx->edgeLen] = norm;
-			// make color
-			const vector3d pt = GetSpherePoint(p*ctx->frac, p*ctx->frac);
-		//	const double height = colors[p + p*ctx->edgeLen].x;
-			const double height = oceansphere->GetHeight(pt);
-			colors[p + p*ctx->edgeLen] = oceansphere->GetColor(pt, height, norm);
-			}
-			break;
-		case 3: {
-			p = ctx->edgeLen-1;
-			x1 = ev2[0];
-			x2 = vertices[1 + p*ctx->edgeLen];
-			y1 = vertices[(p-1)*ctx->edgeLen];
-			y2 = ev[ctx->edgeLen-1];
-			const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
-			normals[p*ctx->edgeLen] = norm;
-			// make color
-			const vector3d pt = GetSpherePoint(0, p*ctx->frac);
-		//	const double height = colors[p*ctx->edgeLen].x;
-			const double height = oceansphere->GetHeight(pt);
-			colors[p*ctx->edgeLen] = oceansphere->GetColor(pt, height, norm);
-			}
-			break;
-		}
-	}
-
-	void FixCornerNormalsByEdge(int edge, vector3d *ev) {
-		vector3d ev2[OCEANPATCH_MAX_EDGELEN];
-		vector3d x1, x2, y1, y2;
-		/* XXX All these 'if's have an unfinished else, when a neighbour
-		 * of our size doesn't exist and instead we must look at a bigger tile.
-		 * But let's just leave it for the mo because it is a pain.
-		 * See comment in OnEdgeFriendChanged() */
-		switch (edge) {
-		case 0:
-			if (edgeFriend[3]) {
-				int we_are = edgeFriend[3]->GetEdgeIdxOf(this);
-				edgeFriend[3]->GetEdgeMinusOneVerticesFlipped(we_are, ev2);
-				MakeCornerNormal<0>(ev2, ev);
-			}
-			if (edgeFriend[1]) {
-				int we_are = edgeFriend[1]->GetEdgeIdxOf(this);
-				edgeFriend[1]->GetEdgeMinusOneVerticesFlipped(we_are, ev2);
-				MakeCornerNormal<1>(ev, ev2);
-			}
-			break;
-		case 1:
-			if (edgeFriend[0]) {
-				int we_are = edgeFriend[0]->GetEdgeIdxOf(this);
-				edgeFriend[0]->GetEdgeMinusOneVerticesFlipped(we_are, ev2);
-				MakeCornerNormal<1>(ev2, ev);
-			}
-			if (edgeFriend[2]) {
-				int we_are = edgeFriend[2]->GetEdgeIdxOf(this);
-				edgeFriend[2]->GetEdgeMinusOneVerticesFlipped(we_are, ev2);
-				MakeCornerNormal<2>(ev, ev2);
-			}
-			break;
-		case 2:
-			if (edgeFriend[1]) {
-				int we_are = edgeFriend[1]->GetEdgeIdxOf(this);
-				edgeFriend[1]->GetEdgeMinusOneVerticesFlipped(we_are, ev2);
-				MakeCornerNormal<2>(ev2, ev);
-			}
-			if (edgeFriend[3]) {
-				int we_are = edgeFriend[3]->GetEdgeIdxOf(this);
-				edgeFriend[3]->GetEdgeMinusOneVerticesFlipped(we_are, ev2);
-				MakeCornerNormal<3>(ev, ev2);
-			}
-			break;
-		case 3:
-			if (edgeFriend[2]) {
-				int we_are = edgeFriend[2]->GetEdgeIdxOf(this);
-				edgeFriend[2]->GetEdgeMinusOneVerticesFlipped(we_are, ev2);
-				MakeCornerNormal<3>(ev2, ev);
-			}
-			if (edgeFriend[0]) {
-				int we_are = edgeFriend[0]->GetEdgeIdxOf(this);
-				edgeFriend[0]->GetEdgeMinusOneVerticesFlipped(we_are, ev2);
-				MakeCornerNormal<0>(ev, ev2);
-			}
-			break;
-		}
-
-	}
-
-	void GenerateEdgeNormalsAndColors() {
-		vector3d ev[4][OCEANPATCH_MAX_EDGELEN];
-		bool doneEdge[4];
-		memset(doneEdge, 0, sizeof(doneEdge));
-		for (int i=0; i<4; i++) {
-			OceanPatch *e = edgeFriend[i];
-			if (e) {
-				int we_are = e->GetEdgeIdxOf(this);
-				e->GetEdgeMinusOneVerticesFlipped(we_are, ev[i]);
-			} else {
-				assert(parent->edgeFriend[i]);
-				doneEdge[i] = true;
-				// parent has valid edge, so take our
-				// bit of that, interpolated.
-				FixEdgeFromParentInterpolated(i);
-				// XXX needed for corners... probably not
-				// correct
-				ctx->GetEdge(vertices, i, ev[i]);
-			}
-		}
-
-		MakeCornerNormal<0>(ev[3], ev[0]);
-		MakeCornerNormal<1>(ev[0], ev[1]);
-		MakeCornerNormal<2>(ev[1], ev[2]);
-		MakeCornerNormal<3>(ev[2], ev[3]);
-
-		for (int i=0; i<4; i++) if(!doneEdge[i]) FixEdgeNormals(i, ev[i]);
 	}
 
 	/* in patch surface coords, [0,1] */
@@ -745,48 +510,34 @@ public:
 			    (1.0-x)*y*(v[3]-v[0])).Normalized();
 	}
 
-	/** Generates full-detail vertices, and also non-edge normals and
-	 * colors */
+	/** Generates full-detail vertices, and also non-edge normals */
 	void GenerateMesh() {
 		centroid = clipCentroid.Normalized();
 		centroid = (1.0 + oceansphere->GetHeight(centroid)) * centroid;
 		vector3d *vts = vertices;
-		vector3d *col = colors;
+		vector3d *nor = normals;
 		double xfrac;
 		double yfrac = 0;
 		for (int y=0; y<ctx->edgeLen; y++) {
 			xfrac = 0;
 			for (int x=0; x<ctx->edgeLen; x++) {
-				vector3d p = GetSpherePoint(xfrac, yfrac);
+				const vector3d p = GetSpherePoint(xfrac, yfrac);
 				double height = oceansphere->GetHeight(p);
+				/*const double waveTime = 1.0;
+				const double waveWidth = 0.1;
+				const double waveHeight = 3.0;
+			//	const double r = pow(p.x*p.x + p.y*p.y + p.z*p.z, 0.5);
+				const double theta = atan(p.z/pow(p.x*p.x+p.y*p.y, 0.5));//atan(p.z/sqrt(p.x*p.x+p.y*p.y));
+				const double phi = atan(p.y/p.x);
+				const double height = (sin(waveWidth * (theta*1000.0) + waveTime) * cos(waveWidth * (phi*1000.0) + waveTime) * waveHeight) * 0.01;*/
 				*(vts++) = p * (height + 1.0);
-				// remember this -- we will need it later
-				(col++)->x = height;
+				*(nor++) = p;
 				xfrac += ctx->frac;
 			}
 			yfrac += ctx->frac;
 		}
 		assert(vts == &vertices[ctx->NUMVERTICES()]);
-		// Generate normals & colors for non-edge vertices since they never change
-		for (int y=1; y<ctx->edgeLen-1; y++) {
-			for (int x=1; x<ctx->edgeLen-1; x++) {
-				// normal
-				vector3d x1 = vertices[x-1 + y*ctx->edgeLen];
-				vector3d x2 = vertices[x+1 + y*ctx->edgeLen];
-				vector3d y1 = vertices[x + (y-1)*ctx->edgeLen];
-				vector3d y2 = vertices[x + (y+1)*ctx->edgeLen];
-
-				vector3d n = (x2-x1).Cross(y2-y1);
-				normals[x + y*ctx->edgeLen] = n.Normalized();
-				// color
-				vector3d p = GetSpherePoint(x*ctx->frac, y*ctx->frac);
-				vector3d &col_r = colors[x + y*ctx->edgeLen];
-				const double height = col_r.x;
-				const vector3d &norm = normals[x + y*ctx->edgeLen];
-				col_r = oceansphere->GetColor(p, height, norm);
-			}
-		}
-
+		assert(nor == &normals[ctx->NUMVERTICES()]);
 	}
 	void OnEdgeFriendChanged(int edge, OceanPatch *e) {
 		edgeFriend[edge] = e;
@@ -799,12 +550,6 @@ public:
 				vector3d p = GetSpherePoint(x * ctx->frac, 0);
 				double height = oceansphere->GetHeight(p);
 				vertices[x] = p * (height + 1.0);
-				// XXX These bounds checks in each edge case are
-				// only necessary while the "All these 'if's"
-				// comment in FixCOrnerNormalsByEdge stands
-				if ((x>0) && (x<ctx->edgeLen-1)) {
-					colors[x].x = height;
-				}
 			}
 		} else if (edge == 1) {
 			for (int y=0; y<ctx->edgeLen; y++) {
@@ -812,9 +557,6 @@ public:
 				double height = oceansphere->GetHeight(p);
 				int pos = (ctx->edgeLen-1) + y*ctx->edgeLen;
 				vertices[pos] = p * (height + 1.0);
-				if ((y>0) && (y<ctx->edgeLen-1)) {
-					colors[pos].x = height;
-				}
 			}
 		} else if (edge == 2) {
 			for (int x=0; x<ctx->edgeLen; x++) {
@@ -822,9 +564,6 @@ public:
 				double height = oceansphere->GetHeight(p);
 				int pos = x + (ctx->edgeLen-1)*ctx->edgeLen;
 				vertices[pos] = p * (height + 1.0);
-				if ((x>0) && (x<ctx->edgeLen-1)) {
-					colors[pos].x = height;
-				}
 			}
 		} else {
 			for (int y=0; y<ctx->edgeLen; y++) {
@@ -832,14 +571,9 @@ public:
 				double height = oceansphere->GetHeight(p);
 				int pos = y * ctx->edgeLen;
 				vertices[pos] = p * (height + 1.0);
-				if ((y>0) && (y<ctx->edgeLen-1)) {
-					colors[pos].x = height;
-				}
 			}
 		}
 
-		FixEdgeNormals(edge, ev);
-		FixCornerNormalsByEdge(edge, ev);
 		UpdateVBOs();
 
 		if (kids[0]) {
@@ -926,7 +660,6 @@ public:
 			Pi::statSceneTris += 2*(ctx->edgeLen-1)*(ctx->edgeLen-1);
 			glEnableClientState(GL_VERTEX_ARRAY);
 			glEnableClientState(GL_NORMAL_ARRAY);
-			glEnableClientState(GL_COLOR_ARRAY);
 
 			// update the indices used for rendering
 			ctx->updateIndexBufferId(determineIndexbuffer());
@@ -942,7 +675,6 @@ public:
 
 			glDisableClientState(GL_VERTEX_ARRAY);
 			glDisableClientState(GL_NORMAL_ARRAY);
-			glDisableClientState(GL_COLOR_ARRAY);
 			glPopMatrix();
 		}
 	}
@@ -1002,7 +734,6 @@ public:
 				for (int i=0; i<4; i++) kids[i] = _kids[i];
 				for (int i=0; i<4; i++) edgeFriend[i]->NotifyEdgeFriendSplit(this);
 				for (int i=0; i<4; i++) {
-					kids[i]->GenerateEdgeNormalsAndColors();
 					kids[i]->UpdateVBOs();
 				}
 				PiVerify(SDL_mutexV(m_kidsLock)!=-1);
@@ -1060,7 +791,7 @@ void OceanSphere::OnChangeDetailLevel()
 
 OceanSphere::OceanSphere(const SystemBody *body)
 {
-	m_terrain = Terrain::InstanceTerrain(body);
+	//m_terrain = Terrain::InstanceTerrain(body);
 
 	m_vbosToDestroyLock = SDL_CreateMutex();
 	m_sbody = body;
@@ -1077,7 +808,7 @@ OceanSphere::~OceanSphere()
 	DestroyVBOs();
 	SDL_DestroyMutex(m_vbosToDestroyLock);
 
-	delete m_terrain;
+	//delete m_terrain;
 }
 
 void OceanSphere::AddVBOToDestroy(GLuint vbo)
@@ -1130,7 +861,6 @@ void OceanSphere::BuildFirstPatches()
 		}
 	}
 	for (int i=0; i<6; i++) m_patches[i]->GenerateMesh();
-	for (int i=0; i<6; i++) m_patches[i]->GenerateEdgeNormalsAndColors();
 	for (int i=0; i<6; i++) m_patches[i]->UpdateVBOs();
 }
 

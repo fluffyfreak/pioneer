@@ -11,6 +11,12 @@ vec4 logarithmicTransform()
 	varLogDepth = vertexPosClip.z;
 	return vertexPosClip;
 }
+vec4 logarithmicTransformParam(vec4 v)
+{
+	vec4 vertexPosClip = gl_ModelViewProjectionMatrix * v;
+	varLogDepth = vertexPosClip.z;
+	return vertexPosClip;
+}
 #else
 void SetFragDepth()
 {

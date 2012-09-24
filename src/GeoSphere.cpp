@@ -45,14 +45,15 @@ const int NUM_INDEX_LISTS = 16;
 
 class GeoPatchContext : public RefCounted {
 public:
-	int edgeLen;
+	const int edgeLen;
+	const int halfEdgeLen;
 
-	inline int VBO_COUNT_LO_EDGE() const { return 3*(edgeLen/2); }
+	inline int VBO_COUNT_LO_EDGE() const { return 3*(halfEdgeLen); }
 	inline int VBO_COUNT_HI_EDGE() const { return 3*(edgeLen-1); }
 	inline int VBO_COUNT_MID_IDX() const { return (4*3*(edgeLen-3))    + 2*(edgeLen-3)*(edgeLen-3)*3; }
 	//                                            ^^ serrated teeth bit  ^^^ square inner bit
 
-	inline int IDX_VBO_LO_OFFSET(int i) const { return i*sizeof(unsigned short)*3*(edgeLen/2); }
+	inline int IDX_VBO_LO_OFFSET(int i) const { return i*sizeof(unsigned short)*3*(halfEdgeLen); }
 	inline int IDX_VBO_HI_OFFSET(int i) const { return (i*sizeof(unsigned short)*VBO_COUNT_HI_EDGE())+IDX_VBO_LO_OFFSET(4); }
 	inline int IDX_VBO_MAIN_OFFSET()    const { return IDX_VBO_HI_OFFSET(4); }
 	inline int IDX_VBO_COUNT_ALL_IDX()	const { return ((edgeLen-1)*(edgeLen-1))*2*3; }
@@ -70,7 +71,7 @@ public:
 	GLuint indices_tri_counts[NUM_INDEX_LISTS];
 	VBOVertex *vbotemp;
 
-	GeoPatchContext(int _edgeLen) : edgeLen(_edgeLen) {
+	GeoPatchContext(int _edgeLen) : edgeLen(_edgeLen), halfEdgeLen(_edgeLen>>1) {
 		Init();
 	}
 
@@ -359,35 +360,33 @@ public:
 
 class GeoPatch {
 public:
-	RefCountedPtr<GeoPatchContext> ctx;
+	const RefCountedPtr<GeoPatchContext> ctx;
+	vector3d clipCentroid, centroid;
 	vector3d v[4];
 	vector3d *vertices;
 	vector3d *normals;
 	vector3d *colors;
-	GLuint m_vbo;
+	SDL_mutex *m_kidsLock;
 	GeoPatch *kids[4];
-	GeoPatch *parent;
+	const GeoPatch *parent;
 	GeoPatch *edgeFriend[4]; // [0]=v01, [1]=v12, [2]=v20
 	GeoSphere *geosphere;
-	double m_roughLength;
-	vector3d clipCentroid, centroid;
-	double clipRadius;
-	int m_depth;
-	SDL_mutex *m_kidsLock;
-	bool m_needUpdateVBOs;
+	GLuint m_vbo;
+	const int m_depth;
 	double m_distMult;
+	double clipRadius;
+	double m_roughLength;
+	bool m_needUpdateVBOs;
 
-	GeoPatch(const RefCountedPtr<GeoPatchContext> &_ctx, GeoSphere *gs, vector3d v0, vector3d v1, vector3d v2, vector3d v3, int depth) {
-		memset(this, 0, sizeof(GeoPatch));
-
-		ctx = _ctx;
-
-		geosphere = gs;
-
+	GeoPatch(const RefCountedPtr<GeoPatchContext> &_ctx, GeoSphere *gs, 
+		const vector3d &v0, const vector3d &v1, const vector3d &v2, const vector3d &v3, const int depth) :
+		ctx(_ctx), /*vertices(NULL), normals(NULL), colors(NULL),*/ parent(NULL), geosphere(gs), m_vbo(0), m_depth(depth)
+	{
 		m_kidsLock = SDL_CreateMutex();
 		v[0] = v0; v[1] = v1; v[2] = v2; v[3] = v3;
-		//depth -= Pi::detail.fracmult;
-		m_depth = depth;
+		kids[0] = kids[1] = kids[2] = kids[3] = NULL;
+		edgeFriend[0] = edgeFriend[1] = edgeFriend[2] = edgeFriend[3] = NULL;
+		centroid = vector3d(0.0);
 		clipCentroid = (v0+v1+v2+v3) * 0.25;
 		clipRadius = 0;
 		for (int i=0; i<4; i++) {
@@ -501,7 +500,6 @@ public:
 				const vector3d p = GetSpherePoint(x*ctx->frac, y*ctx->frac);
 				const double height = colors[x + y*ctx->edgeLen].x;
 				colors[x + y*ctx->edgeLen] = geosphere->GetColor(p, height, norm);
-	//			colors[x+y*ctx->edgeLen] = vector3d(1,0,0);
 			}
 			break;
 		case 2:
@@ -531,13 +529,12 @@ public:
 				const vector3d p = GetSpherePoint(0, y*ctx->frac);
 				const double height = colors[y*ctx->edgeLen].x;
 				colors[y*ctx->edgeLen] = geosphere->GetColor(p, height, norm);
-	//			colors[y*ctx->edgeLen] = vector3d(0,1,0);
 			}
 			break;
 		}
 	}
 
-	int GetChildIdx(GeoPatch *child) {
+	int GetChildIdx(GeoPatch *child) const {
 		for (int i=0; i<4; i++) {
 			if (kids[i] == child) return i;
 		}
@@ -560,17 +557,17 @@ public:
 		int kid_idx = parent->GetChildIdx(this);
 		if (edge == kid_idx) {
 			// use first half of edge
-			for (int i=0; i<=ctx->edgeLen/2; i++) {
+			for (int i=0; i<=ctx->halfEdgeLen; i++) {
 				ev2[i<<1] = ev[i];
 				en2[i<<1] = en[i];
 				ec2[i<<1] = ec[i];
 			}
 		} else {
 			// use 2nd half of edge
-			for (int i=ctx->edgeLen/2; i<ctx->edgeLen; i++) {
-				ev2[(i-(ctx->edgeLen/2))<<1] = ev[i];
-				en2[(i-(ctx->edgeLen/2))<<1] = en[i];
-				ec2[(i-(ctx->edgeLen/2))<<1] = ec[i];
+			for (int i=ctx->halfEdgeLen; i<ctx->edgeLen; i++) {
+				ev2[(i-(ctx->halfEdgeLen))<<1] = ev[i];
+				en2[(i-(ctx->halfEdgeLen))<<1] = en[i];
+				ec2[(i-(ctx->halfEdgeLen))<<1] = ec[i];
 			}
 		}
 		// interpolate!!

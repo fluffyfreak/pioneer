@@ -21,7 +21,7 @@ public:
 	void Render(Graphics::Renderer *r, vector3d campos, const float radius, const float scale);
 	inline double GetHeight(const vector3d &p) const {
 		const double h = m_terrain->GetHeight(p);
-		s_vtxGenCount++;
+		++s_vtxGenCount;
 #ifdef DEBUG
 		// XXX don't remove this. Fix your fractals instead
 		// Fractals absolutely MUST return heights >= 0.0 (one planet radius)

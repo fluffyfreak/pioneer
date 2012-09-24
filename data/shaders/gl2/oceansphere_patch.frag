@@ -12,7 +12,6 @@ uniform Scene scene;
 
 varying vec3 varyingEyepos;
 varying vec3 varyingNormal;
-varying vec4 vertexColor;
 
 void main(void)
 {
@@ -20,6 +19,7 @@ void main(void)
 	vec3 eyenorm = normalize(eyepos);
 	vec3 tnorm = normalize(varyingNormal);
 	vec4 diff = vec4(0.0);
+	vec4 vertexColor = vec4(1.0, 0.0, 0.0, 1.0);
 
 #if (NUM_LIGHTS > 0)
 	for (int i=0; i<NUM_LIGHTS; ++i) {
