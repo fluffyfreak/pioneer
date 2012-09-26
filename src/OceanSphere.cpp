@@ -441,7 +441,7 @@ public:
 	/* not quite edge, since we share edge vertices so that would be
 	 * fucking pointless. one position inwards. used to make edge normals
 	 * for adjacent tiles */
-	void GetEdgeMinusOneVerticesFlipped(int edge, vector3d *ev) {
+	void GetEdgeMinusOneVerticesFlipped(int edge, vector3d *ev) const {
 		if (edge == 0) {
 			for (int x=0; x<ctx->edgeLen; x++) ev[ctx->edgeLen-1-x] = vertices[x + ctx->edgeLen];
 		} else if (edge == 1) {
@@ -463,7 +463,7 @@ public:
 	}
 
 
-	int GetChildIdx(OceanPatch *child) {
+	int GetChildIdx(OceanPatch *child) const {
 		for (int i=0; i<4; i++) {
 			if (kids[i] == child) return i;
 		}
@@ -522,7 +522,7 @@ public:
 			xfrac = 0;
 			for (int x=0; x<ctx->edgeLen; x++) {
 				const vector3d p = GetSpherePoint(xfrac, yfrac);
-				double height = oceansphere->GetHeight(p);
+				const double height = oceansphere->GetHeight(p);
 				/*const double waveTime = 1.0;
 				const double waveWidth = 0.1;
 				const double waveHeight = 3.0;
@@ -539,10 +539,10 @@ public:
 		assert(vts == &vertices[ctx->NUMVERTICES()]);
 		assert(nor == &normals[ctx->NUMVERTICES()]);
 	}
-	void OnEdgeFriendChanged(int edge, OceanPatch *e) {
+	void OnEdgeFriendChanged(const int edge, OceanPatch *e) {
 		edgeFriend[edge] = e;
 		vector3d ev[OCEANPATCH_MAX_EDGELEN];
-		int we_are = e->GetEdgeIdxOf(this);
+		const int we_are = e->GetEdgeIdxOf(this);
 		e->GetEdgeMinusOneVerticesFlipped(we_are, ev);
 		/* now we have a valid edge, fix the edge vertices */
 		if (edge == 0) {
