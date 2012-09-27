@@ -738,6 +738,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\OceanSphere.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\win32\OSWin32.cpp"
 				>
 			</File>
@@ -1753,6 +1757,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\ObjectViewerView.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\OceanSphere.h"
 				>
 			</File>
 			<File
@@ -3371,6 +3379,14 @@
 				</File>
 				<File
 					RelativePath="..\..\src\graphics\gl2\MultiMaterial.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\src\graphics\gl2\OceanSphereMaterial.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\src\graphics\gl2\OceanSphereMaterial.h"
 					>
 				</File>
 				<File
