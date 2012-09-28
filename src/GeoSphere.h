@@ -39,6 +39,7 @@ public:
 	static void OnChangeDetailLevel();
 	// in sbody radii
 	double GetMaxFeatureHeight() const { return m_terrain->GetMaxHeight(); }
+	Terrain *GetTerrain() const { return m_terrain; }
 	static int GetVtxGenCount() { return s_vtxGenCount; }
 	static void ClearVtxGenCount() { s_vtxGenCount = 0; }
 
