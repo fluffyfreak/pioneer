@@ -87,7 +87,8 @@ void Planet::GetAtmosphericState(double dist, double *outPressure, double *outDe
 	// fairly accurate in the troposphere
 	const double lapseRate_L = -surfaceGravity_g/SPECIFIC_HEAT_AIR_CP; // negative deg/m
 
-	const double height_h = (dist-GetSystemBody()->GetRadius()); // height in m
+	const double seaLevel = GetGeoSphere()->GetTerrain()->GetSeaLevelInMeters();
+	const double height_h = (dist-this->GetGeoSphere()->GetTerrain()->GetSeaLevelInMeters()-GetSystemBody()->GetRadius()); // height in m above the surface of the sea which is zero for planets without oceans
 	const double surfaceTemperature_T0 = this->GetSystemBody()->averageTemp; //K
 
 	Color c;
