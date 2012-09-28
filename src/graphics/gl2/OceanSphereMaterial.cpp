@@ -23,6 +23,7 @@ void OceanSphereProgram::InitUniforms()
 	oceansphereAtmosFogDensity.Init("oceansphereAtmosFogDensity", m_program);
 	oceansphereAtmosInvScaleHeight.Init("oceansphereAtmosInvScaleHeight", m_program);
 	oceansphereAtmosTopRad.Init("oceansphereAtmosTopRad", m_program);
+	oceansphereSeaLevelInRadii.Init("oceansphereSeaLevelInRadii", m_program);
 	oceansphereCenter.Init("oceansphereCenter", m_program);
 	oceansphereScale.Init("oceansphereScale", m_program);
 	oceansphereScaledRadius.Init("oceansphereScaledRadius", m_program);
@@ -59,6 +60,7 @@ void OceanSphereSurfaceMaterial::SetGSUniforms()
 	p->oceansphereAtmosFogDensity.Set(ap.atmosDensity);
 	p->oceansphereAtmosInvScaleHeight.Set(ap.atmosInvScaleHeight);
 	p->oceansphereAtmosTopRad.Set(ap.atmosRadius);
+	p->oceansphereSeaLevelInRadii.Set(ap.seaLevelInRadii);
 	p->oceansphereCenter.Set(ap.center);
 	p->oceansphereScaledRadius.Set(ap.planetRadius / ap.scale);
 	p->oceansphereScale.Set(ap.scale);

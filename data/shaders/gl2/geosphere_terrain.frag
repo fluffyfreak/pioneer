@@ -4,6 +4,7 @@ uniform vec4 atmosColor;
 uniform float geosphereScale;
 uniform float geosphereScaledRadius;
 uniform float geosphereAtmosTopRad;
+uniform float geosphereSeaLevelInRadii;
 uniform vec3 geosphereCenter;
 uniform float geosphereAtmosFogDensity;
 uniform float geosphereAtmosInvScaleHeight;
@@ -38,7 +39,7 @@ void main(void)
 		// a&b scaled so length of 1.0 means planet surface.
 		vec3 a = (atmosStart * eyenorm - geosphereCenter) / geosphereScaledRadius;
 		vec3 b = (eyepos - geosphereCenter) / geosphereScaledRadius;
-		ldprod = AtmosLengthDensityProduct(a, b, atmosColor.w*geosphereAtmosFogDensity, atmosDist, geosphereAtmosInvScaleHeight);
+		ldprod = AtmosLengthDensityProduct(a, b, atmosColor.w*geosphereAtmosFogDensity, atmosDist, geosphereAtmosInvScaleHeight, geosphereSeaLevelInRadii);
 		fogFactor = 1.0 / exp(ldprod);
 	}
 

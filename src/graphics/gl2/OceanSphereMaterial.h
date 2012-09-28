@@ -18,6 +18,7 @@ namespace Graphics {
 			Uniform oceansphereAtmosFogDensity;
 			Uniform oceansphereAtmosInvScaleHeight;
 			Uniform oceansphereAtmosTopRad; // in planet radii
+			Uniform oceansphereSeaLevelInRadii; // in planet radii
 			Uniform oceansphereCenter;
 			Uniform oceansphereScale;
 			Uniform oceansphereScaledRadius; // (planet radius) / scale
