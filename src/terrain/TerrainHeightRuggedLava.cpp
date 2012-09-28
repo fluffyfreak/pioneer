@@ -37,7 +37,7 @@ TerrainHeightFractal<TerrainHeightRuggedLava>::TerrainHeightFractal(const System
 template <>
 double TerrainHeightFractal<TerrainHeightRuggedLava>::GetHeight(const vector3d &p)
 {
-	double continents = octavenoise(GetFracDef(0), Clamp(0.725-(m_sealevel/2), 0.1, 0.725), p) - m_sealevel;
+	double continents = octavenoise(GetFracDef(0), Clamp(0.725-(m_seaFraction/2), 0.1, 0.725), p) - m_seaFraction;
 	if (continents < 0) return 0;
 	double mountain_distrib = octavenoise(GetFracDef(1), 0.55, p);
 	double mountains = octavenoise(GetFracDef(2), 0.5, p) * ridged_octavenoise(GetFracDef(2), 0.575, p);
@@ -47,7 +47,7 @@ double TerrainHeightFractal<TerrainHeightRuggedLava>::GetHeight(const vector3d &
 	double rocks = octavenoise(GetFracDef(9), 0.5, p);
 
 
-	double n = continents - (GetFracDef(0).amplitude*m_sealevel);
+	double n = continents - (GetFracDef(0).amplitude*m_seaFraction);
 	//double n = (megavolcano_function(p) + volcano_function(p) + smlvolcano_function(p));
 	n += mountains*mountains2*5.0*megavolcano_function(GetFracDef(6), p);
 	n += 2.5*megavolcano_function(GetFracDef(6), p);

@@ -36,7 +36,7 @@ TerrainHeightFractal<TerrainHeightMountainsRiversVolcano>::TerrainHeightFractal(
 template <>
 double TerrainHeightFractal<TerrainHeightMountainsRiversVolcano>::GetHeight(const vector3d &p)
 {
-	double continents = octavenoise(GetFracDef(0), 0.5, p) - m_sealevel;
+	double continents = octavenoise(GetFracDef(0), 0.5, p) - m_seaFraction;
 	if (continents < 0) return 0;
 	// unused variable \\ double mountain_distrib = octavenoise(GetFracDef(1), 0.5, p);
 	double mountains = octavenoise(GetFracDef(2), 0.5, p);
@@ -47,7 +47,7 @@ double TerrainHeightFractal<TerrainHeightMountainsRiversVolcano>::GetHeight(cons
 
 
 
-	double n = continents - (GetFracDef(0).amplitude*m_sealevel);
+	double n = continents - (GetFracDef(0).amplitude*m_seaFraction);
 
 
 	if (n < 0.01) n += megavolcano_function(GetFracDef(7), p) * n * 800.0f;
@@ -142,7 +142,7 @@ double TerrainHeightFractal<TerrainHeightMountainsRiversVolcano>::GetHeight(cons
 
 	n = n*.03f;
 
-	//n += continents - (GetFracDef(0).amplitude*m_sealevel);
+	//n += continents - (GetFracDef(0).amplitude*m_seaFraction);
 
 	if (n > 0.0) {
 		// smooth in hills at shore edges

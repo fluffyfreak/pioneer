@@ -30,13 +30,13 @@ template <>
 double TerrainHeightFractal<TerrainHeightMountainsRivers>::GetHeight(const vector3d &p)
 {
 	double continents = octavenoise(GetFracDef(0), 0.7*
-		ridged_octavenoise(GetFracDef(8), 0.58, p), p) - m_sealevel*0.65;
+		ridged_octavenoise(GetFracDef(8), 0.58, p), p) - m_seaFraction*0.65;
 	if (continents < 0) return 0;
 	double n = (river_function(GetFracDef(9), p)*
 		river_function(GetFracDef(7), p)*
 		river_function(GetFracDef(6), p)*
 		canyon3_normal_function(GetFracDef(1), p)*continents) -
-		(GetFracDef(0).amplitude*m_sealevel*0.1);
+		(GetFracDef(0).amplitude*m_seaFraction*0.1);
 	n *= 0.5;
 
 	double h = n;

@@ -14,7 +14,7 @@ const char *TerrainHeightFractal<TerrainHeightRuggedDesert>::GetHeightFractalNam
 template <>
 double TerrainHeightFractal<TerrainHeightRuggedDesert>::GetHeight(const vector3d &p)
 {
-	double continents = octavenoise(GetFracDef(0), 0.5, p) - m_sealevel;// + (cliff_function(GetFracDef(7), p)*0.5);
+	double continents = octavenoise(GetFracDef(0), 0.5, p) - m_seaFraction;// + (cliff_function(GetFracDef(7), p)*0.5);
 	if (continents < 0) return 0;
 	double mountain_distrib = octavenoise(GetFracDef(2), 0.5, p);
 	double mountains = ridged_octavenoise(GetFracDef(1), 0.5, p);

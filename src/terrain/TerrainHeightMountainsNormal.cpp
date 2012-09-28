@@ -31,10 +31,10 @@ double TerrainHeightFractal<TerrainHeightMountainsNormal>::GetHeight(const vecto
 	// for making 'broken up' coast lines, as opposed to circular land masses, it will reduce the frequency of our
 	// continents depending on the ridged noise value, we subtract sealevel so that sea level will have an effect on the continents size
 	double continents = octavenoise(GetFracDef(0), 0.7*
-		ridged_octavenoise(GetFracDef(8), 0.58, p), p) - m_sealevel*0.65;
+		ridged_octavenoise(GetFracDef(8), 0.58, p), p) - m_seaFraction*0.65;
 	// if there are no continents on an area, we want it to be sea level
 	if (continents < 0) return 0;
-	double n = continents - (GetFracDef(0).amplitude*m_sealevel*0.5);
+	double n = continents - (GetFracDef(0).amplitude*m_seaFraction*0.5);
 	// we save the height n now as a constant h
 	const double h = n;
 	//We don't want to apply noise to sea level n=0

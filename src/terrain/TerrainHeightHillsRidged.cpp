@@ -29,7 +29,7 @@ TerrainHeightFractal<TerrainHeightHillsRidged>::TerrainHeightFractal(const Syste
 template <>
 double TerrainHeightFractal<TerrainHeightHillsRidged>::GetHeight(const vector3d &p)
 {
-	double continents = ridged_octavenoise(GetFracDef(3), 0.65, p) * (1.0-m_sealevel) - (m_sealevel*0.1);
+	double continents = ridged_octavenoise(GetFracDef(3), 0.65, p) * (1.0-m_seaFraction) - (m_seaFraction*0.1);
 	if (continents < 0) return 0;
 	double n = continents;
 	double distrib = river_octavenoise(GetFracDef(4), 0.5, p);
