@@ -408,7 +408,7 @@ Terrain::Terrain(const SystemBody *body) : m_body(body), m_rand(body->seed), m_h
 
 	// later on this can be set in height or colour class constructors
 	if (m_body->heightMapFractal == 0) // Earth
-		m_seaLevelInMeters = 1000.0;
+		m_seaLevelInMeters = 0.0;
 	else
 		m_seaLevelInMeters = 0.0;
 
