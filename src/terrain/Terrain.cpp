@@ -404,12 +404,21 @@ Terrain::Terrain(const SystemBody *body) : m_body(body), m_rand(body->seed), m_h
 		default:
 		case 4: m_fracmult = 0.1;break;
 	}
+	const double rad = m_body->GetRadius();
 
-	m_sealevel = Clamp(m_body->m_volatileLiquid.ToDouble(), 0.0, 1.0);
+	// later on this can be set in height or colour class constructors
+	if (m_body->heightMapFractal == 0) // Earth
+		m_seaLevelInMeters = 1000.0;
+	else
+		m_seaLevelInMeters = 0.0;
+
+	m_seaLevel = m_seaLevelInMeters/rad; // in radii
+
+	// seaFraction is used to scale continental fractals
+	m_seaFraction = Clamp(m_body->m_volatileLiquid.ToDouble(), 0.0, 1.0);
 	m_icyness = Clamp(m_body->m_volatileIces.ToDouble(), 0.0, 1.0);
 	m_volcanic = Clamp(m_body->m_volcanicity.ToDouble(), 0.0, 1.0); // height scales with volcanicity as well
 
-	const double rad = m_body->GetRadius();
 	
 	// calculate max height	
 	if ((m_body->heightMapFilename) && m_body->heightMapFractal > 1){ // if scaled heightmap 	

@@ -38,7 +38,10 @@ public:
 	virtual const char *GetHeightFractalName() const = 0;
 	virtual const char *GetColorFractalName() const = 0;
 
-	double GetMaxHeight() const { return m_maxHeight; }
+	double GetMaxHeight() const { return m_maxHeight; } // in radii
+
+	double GetSeaLevel() const { return m_seaLevel; } // in radii
+	double GetSeaLevelInMeters() const { return m_seaLevelInMeters; }
 
 private:
 	template <typename HeightFractal, typename ColorFractal>
@@ -59,7 +62,9 @@ protected:
 	Uint32 m_seed;
 	MTRand m_rand;
 
-	double m_sealevel; // 0 - no water, 1 - 100% coverage
+	double m_seaFraction; // 0 - no water, 1 - 100% coverage
+	double m_seaLevel; // in radii
+	double m_seaLevelInMeters;
 	double m_icyness; // 0 - 1 (0% to 100% cover)
 	double m_volcanic;
 
