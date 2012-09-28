@@ -76,7 +76,7 @@ vector3d TerrainColorFractal<TerrainColorEarthLike>::GetColor(const vector3d &p,
 		if (m_heightMap) {
 			continents = 0;
 		} else {
-			continents = ridged_octavenoise(GetFracDef(3-m_fracnum), 0.55, p) * (1.0-m_sealevel) - ((m_sealevel*0.1)-0.1);
+			continents = ridged_octavenoise(GetFracDef(3-m_fracnum), 0.55, p) * (1.0-m_seaFraction) - ((m_seaFraction*0.1)-0.1);
 		}
 	// water
 	if (n <= 0) {
@@ -88,7 +88,7 @@ vector3d TerrainColorFractal<TerrainColorEarthLike>::GetColor(const vector3d &p,
 			}
 		} else {
 		// Oooh, pretty coastal regions with shading based on underwater depth.
-			n += continents;// - (GetFracDef(3).amplitude*m_sealevel*0.49);
+			n += continents;// - (GetFracDef(3).amplitude*m_seaFraction*0.49);
 			n *= n*10.0;
 			//n = (n>0.3 ? 0.3-(n*n*n-0.027) : n);
 		}

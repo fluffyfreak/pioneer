@@ -31,7 +31,7 @@ TerrainHeightFractal<TerrainHeightMountainsRidged>::TerrainHeightFractal(const S
 template <>
 double TerrainHeightFractal<TerrainHeightMountainsRidged>::GetHeight(const vector3d &p)
 {
-	double continents = octavenoise(GetFracDef(0), 0.5, p) - m_sealevel;
+	double continents = octavenoise(GetFracDef(0), 0.5, p) - m_seaFraction;
 	if (continents < 0) return 0;
 	// unused variable \\ double mountain_distrib = octavenoise(GetFracDef(1), 0.5, p);
 	double mountains = octavenoise(GetFracDef(2), 0.5, p);
@@ -45,7 +45,7 @@ double TerrainHeightFractal<TerrainHeightMountainsRidged>::GetHeight(const vecto
 	double hills3 = hill2_distrib * GetFracDef(8).amplitude * ridged_octavenoise(GetFracDef(8), 0.5, p);
 	double hills4 = hill2_distrib * GetFracDef(9).amplitude * ridged_octavenoise(GetFracDef(9), 0.5, p);
 
-	double n = continents - (GetFracDef(0).amplitude*m_sealevel);
+	double n = continents - (GetFracDef(0).amplitude*m_seaFraction);
 
 	if (n > 0.0) {
 		// smooth in hills at shore edges

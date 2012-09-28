@@ -29,7 +29,7 @@ vector3d TerrainColorFractal<TerrainColorTFGood>::GetColor(const vector3d &p, do
 			1.0*(2.0-m_icyness)*(1.0-p.y*p.y);
 	// This is for fake ocean depth by the coast.
 	double continents = octavenoise(GetFracDef(0), 0.7*
-				ridged_octavenoise(GetFracDef(8), 0.58, p), p) - m_sealevel*0.6;
+				ridged_octavenoise(GetFracDef(8), 0.58, p), p) - m_seaFraction*0.6;
 
 	vector3d col;
 	//we don't want water on the poles if there are ice-caps
@@ -41,7 +41,7 @@ vector3d TerrainColorFractal<TerrainColorTFGood>::GetColor(const vector3d &p, do
 	// water
 	if (n <= 0) {
 			// Oooh, pretty coastal regions with shading based on underwater depth.
-		n += continents - (GetFracDef(0).amplitude*m_sealevel*0.49);
+		n += continents - (GetFracDef(0).amplitude*m_seaFraction*0.49);
 		n *= 10.0;
 		n = (n>0.3 ? 0.3-(n*n*n-0.027) : n);
 		col = interpolate_color(equatorial_desert, vector3d(0,0,0.15), vector3d(0,0,0.25));
