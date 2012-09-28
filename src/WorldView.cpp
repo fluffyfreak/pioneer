@@ -605,24 +605,30 @@ void WorldView::RefreshButtonStateAndVisibility()
 		else
 			Pi::cpan->SetOverlayText(ShipCpanel::OVERLAY_TOP_RIGHT, "");
 
-		// altitude
+		// altitude (above sea surface for planets with seasd)
 		if (Pi::player->GetFrame()->m_astroBody) {
 			Body *astro = Pi::player->GetFrame()->m_astroBody;
 			//(GetFrame()->m_sbody->GetSuperType() == SUPERTYPE_ROCKY_PLANET)) {
-			double radius;
+			double radius; 
+			double seaLevel = 0.0;
 			vector3d surface_pos = Pi::player->GetPosition().Normalized();
 			if (astro->IsType(Object::TERRAINBODY)) {
-				radius = static_cast<TerrainBody*>(astro)->GetTerrainHeight(surface_pos);
+				TerrainBody* tb = static_cast<TerrainBody*>(astro);
+				seaLevel = tb->GetGeoSphere()->GetTerrain()->GetSeaLevelInMeters(); // sea level is zero for bodies without seas
+				radius = tb->GetTerrainHeight(surface_pos);
 			} else {
 				// XXX this is an improper use of GetBoundingRadius
-				// since it is not a surface radius
+				// since it is not a surface radius and may result in negative altitudes
+				// while above the surface
 				radius = Pi::player->GetFrame()->m_astroBody->GetBoundingRadius();
 			}
-			double altitude = Pi::player->GetPosition().Length() - radius;
+			double altitude = Pi::player->GetPosition().Length() - radius - seaLevel;
 			if (altitude > 9999999.0 || astro->IsType(Object::SPACESTATION))
 				Pi::cpan->SetOverlayText(ShipCpanel::OVERLAY_BOTTOM_RIGHT, "");
 			else {
-				if (altitude < 0) altitude = 0;
+				// clamp altitudes below sea surface levels as they imply invalid 
+				// negative get height results for planets, and are invalid for other bodies (where sea level = 0.0)
+				if (altitude < -seaLevel) altitude = -seaLevel; 
 				Pi::cpan->SetOverlayText(ShipCpanel::OVERLAY_BOTTOM_RIGHT, stringf(Lang::ALT_IN_METRES, formatarg("altitude", altitude)));
 			}
 
