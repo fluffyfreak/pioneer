@@ -1197,6 +1197,9 @@ GeoSphere::GeoSphere(const SystemBody *body)
 	m_terrain = Terrain::InstanceTerrain(body);
 	print_info(body, m_terrain);
 
+	m_atmosphereParameters = body->CalcAtmosphereParams();
+	m_atmosphereParameters.seaLevelInRadii = float(m_terrain->GetSeaLevel()+1.0);
+
 	m_vbosToDestroyLock = SDL_CreateMutex();
 	m_sbody = body;
 	memset(m_patches, 0, 6*sizeof(GeoPatch*));
@@ -1372,8 +1375,6 @@ void GeoSphere::Render(Graphics::Renderer *renderer, vector3d campos, const floa
 		glGetDoublev (GL_MODELVIEW_MATRIX, &modelMatrix[0]);
 
 		//Update material parameters
-		//XXX no need to calculate AP every frame
-		m_atmosphereParameters = m_sbody->CalcAtmosphereParams();
 		m_atmosphereParameters.center = modelMatrix * vector3d(0.0, 0.0, 0.0);
 		m_atmosphereParameters.planetRadius = radius;
 		m_atmosphereParameters.scale = scale;

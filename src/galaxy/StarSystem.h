@@ -169,6 +169,7 @@ public:
 		float atmosDensity;
 		float planetRadius;
 		Color atmosCol;
+		float seaLevelInRadii;
 		vector3d center;
 		float scale;
 	};

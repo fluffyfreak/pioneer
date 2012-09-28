@@ -21,6 +21,7 @@ namespace Graphics {
 			Uniform geosphereAtmosFogDensity;
 			Uniform geosphereAtmosInvScaleHeight;
 			Uniform geosphereAtmosTopRad; // in planet radii
+			Uniform geosphereSeaLevelInRadii; // in planet radii
 			Uniform geosphereCenter;
 			Uniform geosphereScale;
 			Uniform geosphereScaledRadius; // (planet radius) / scale

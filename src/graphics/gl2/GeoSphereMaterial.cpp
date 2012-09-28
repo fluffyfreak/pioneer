@@ -26,6 +26,7 @@ void GeoSphereProgram::InitUniforms()
 	geosphereAtmosFogDensity.Init("geosphereAtmosFogDensity", m_program);
 	geosphereAtmosInvScaleHeight.Init("geosphereAtmosInvScaleHeight", m_program);
 	geosphereAtmosTopRad.Init("geosphereAtmosTopRad", m_program);
+	geosphereSeaLevelInRadii.Init("geosphereSeaLevelInRadii", m_program);
 	geosphereCenter.Init("geosphereCenter", m_program);
 	geosphereScale.Init("geosphereScale", m_program);
 	geosphereScaledRadius.Init("geosphereScaledRadius", m_program);
@@ -62,6 +63,7 @@ void GeoSphereSurfaceMaterial::SetGSUniforms()
 	p->geosphereAtmosFogDensity.Set(ap.atmosDensity);
 	p->geosphereAtmosInvScaleHeight.Set(ap.atmosInvScaleHeight);
 	p->geosphereAtmosTopRad.Set(ap.atmosRadius);
+	p->geosphereSeaLevelInRadii.Set(ap.seaLevelInRadii);
 	p->geosphereCenter.Set(ap.center);
 	p->geosphereScaledRadius.Set(ap.planetRadius / ap.scale);
 	p->geosphereScale.Set(ap.scale);
