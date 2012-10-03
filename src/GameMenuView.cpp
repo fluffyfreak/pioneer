@@ -31,7 +31,7 @@ private:
 	void OnClickChange() {
 		if (m_infoTooltip) return;
 		std::string msg = Lang::PRESS_BUTTON_WANTED_FOR + m_function;
-		Gui::ToolTip *t = new Gui::ToolTip(msg);
+		Gui::ToolTip *t = new Gui::ToolTip(this, msg);
 		Gui::Screen::AddBaseWidget(t, 300, 300);
 		t->Show();
 		t->GrabFocus();
@@ -108,7 +108,7 @@ private:
 	void OnClickChange() {
 		if (m_infoTooltip) return;
 		std::string msg = Lang::MOVE_AXIS_WANTED_FOR + m_function;
-		Gui::ToolTip *t = new Gui::ToolTip(msg);
+		Gui::ToolTip *t = new Gui::ToolTip(this, msg);
 		Gui::Screen::AddBaseWidget(t, 300, 300);
 		t->Show();
 		t->GrabFocus();
@@ -194,7 +194,6 @@ GameMenuView::GameMenuView(): View()
 		m_loadButton->SetShortcut(SDLK_l, KMOD_NONE);
 		hbox->PackEnd(m_loadButton);
 		m_exitButton = new Gui::LabelButton(new Gui::Label(Lang::EXIT_THIS_GAME));
-		m_exitButton->onClick.connect(sigc::mem_fun(this, &GameMenuView::HideAll));
 		m_exitButton->onClick.connect(sigc::ptr_fun(&Pi::EndGame));
 		hbox->PackEnd(m_exitButton);
 
@@ -629,21 +628,12 @@ void GameMenuView::OnToggleNavTunnel(Gui::ToggleButton *b, bool state) {
 	Pi::SetNavTunnelDisplayed(state);
 }
 
-void GameMenuView::HideAll()
-{
-	if (m_changedDetailLevel) {
-		Pi::OnChangeDetailLevel();
-	}
-	View::HideAll();
-}
-
 void GameMenuView::OpenSaveDialog()
 {
 	if (Pi::game->IsHyperspace()) {
 		Pi::cpan->MsgLog()->Message("", Lang::CANT_SAVE_IN_HYPERSPACE);
 		return;
 	}
-
 	GameSaver saver(Pi::game);
 	saver.DialogMainLoop();
 	const std::string filename = saver.GetFilename();
@@ -694,4 +684,10 @@ void GameMenuView::OnSwitchTo() {
 	m_toggleJoystick->SetPressed(Pi::IsJoystickEnabled());
 	m_toggleMouseYInvert->SetPressed(Pi::IsMouseYInvert());
 	m_toggleNavTunnel->SetPressed(Pi::IsNavTunnelDisplayed());
+}
+
+void GameMenuView::OnSwitchFrom() {
+	if (m_changedDetailLevel) {
+		Pi::OnChangeDetailLevel();
+	}
 }

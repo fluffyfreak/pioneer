@@ -57,8 +57,7 @@ public:
 	// get the frustum. use for projection
 	const Graphics::Frustum &GetFrustum() const { return m_frustum; }
 
-protected:
-	bool m_showCameraBody;
+	void SetBodyVisible(bool v) { m_showCameraBody = v; }
 
 private:
 	void OnBodyDeleted();
@@ -111,6 +110,8 @@ private:
 			return a.camDist > b.camDist;
 		}
 	};
+
+	bool m_showCameraBody;
 	
 	std::list<BodyAttrs> m_sortedBodies;
 	std::vector<LightSource> m_lightSources;
