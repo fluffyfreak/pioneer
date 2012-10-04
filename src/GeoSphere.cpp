@@ -999,27 +999,26 @@ public:
 			return;
 
 		bool canSplit = true;
-		for (int i=0; i<4; i++) {
-			if (!edgeFriend[i]) { canSplit = false; break; }
-			if (edgeFriend[i] && (edgeFriend[i]->m_depth < m_depth)) {
+		// always split at first level
+		if (parent)	{
+			for (int i=0; i<4; i++) {
+				if (!edgeFriend[i]) { canSplit = false; break; }
+				if (edgeFriend[i] && (edgeFriend[i]->m_depth < m_depth)) {
+					canSplit = false;
+					break;
+				}
+			}
+			const bool bInsideRoughLen = ((campos - centroid).Length() < m_roughLength);
+			if (!(canSplit && (m_depth < GEOPATCH_MAX_DEPTH) && bInsideRoughLen)) {
 				canSplit = false;
-				break;
+			}
+			// can't split if we're not visible
+			// 2.0 == magic number :(
+			if (canSplit && !frustum.TestPoint(clipCentroid, clipRadius*2.0)) {
+				canSplit = false;
 			}
 		}
-		const bool bInsideRoughLen = ((campos - centroid).Length() < m_roughLength);
-		if (!(canSplit && (m_depth < GEOPATCH_MAX_DEPTH) && bInsideRoughLen)) {
-			canSplit = false;
-		}
-		// can't split if we're not visible
-		// 2.0 == magic number :(
-		if (canSplit && !frustum.TestPoint(clipCentroid, clipRadius*2.0)) {
-			canSplit = false;
-		}
-		// always split at first level
-		if (!parent) canSplit = true;
 		//printf(campos.Length());
-
-		bool canMerge = true;
 
 		if (canSplit) {
 			if (!kids[0]) {
@@ -1066,7 +1065,7 @@ public:
 			}
 			for (int i=0; i<4; i++) kids[i]->LODUpdate(campos,frustum);
 		} else {
-			if (canMerge && kids[0]) {
+			if (kids[0]) {
 				PiVerify(SDL_mutexP(m_kidsLock)==0);
 				for (int i=0; i<4; i++) { delete kids[i]; kids[i] = 0; }
 				PiVerify(SDL_mutexV(m_kidsLock)!=-1);
