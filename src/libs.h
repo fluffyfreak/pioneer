@@ -60,7 +60,7 @@ inline int isfinite(double x) { return _finite(x); }
 #include "RefCounted.h"
 
 #ifdef NDEBUG
-#define PiDbgOnlyAssert(x) (void)
+#define PiDbgOnlyAssert(x)
 #define	PiVerify(x) ((void)(x))
 #else
 #define PiDbgOnlyAssert(x) assert(x)
