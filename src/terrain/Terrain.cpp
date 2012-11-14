@@ -339,7 +339,9 @@ static size_t bufread_or_die(void *ptr, size_t size, size_t nmemb, ByteRange &bu
 	return read_count;
 }
 
-Terrain::Terrain(const SystemBody *body) : m_body(body), m_seed(body->seed), m_rand(body->seed), m_heightMap(0), m_heightMapScaled(0), m_heightScaling(0), m_minh(0) {
+Terrain::Terrain(const SystemBody *body) : m_body(body), m_seed(body->seed), m_rand(body->seed), 
+	m_heightMap(NULL), m_heightScaling(0), m_minh(0) 
+{
 
 	// load the heightmap
 	if (m_body->heightMapFilename) {
@@ -360,8 +362,16 @@ Terrain::Terrain(const SystemBody *body) : m_body(body), m_seed(body->seed), m_r
 				bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeX = v;
 				bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeY = v;
 
-				m_heightMap = new Sint16[m_heightMapSizeX * m_heightMapSizeY];
-				bufread_or_die(m_heightMap, sizeof(Sint16), m_heightMapSizeX * m_heightMapSizeY, databuf);
+				const int heightMapSize = (m_heightMapSizeX * m_heightMapSizeY);
+				Sint16 *data = new Sint16[heightMapSize];
+				bufread_or_die(data, sizeof(Sint16), heightMapSize, databuf);
+
+				m_heightMap = new double[heightMapSize];
+				for(int i=0; i<heightMapSize; i++) {
+					m_heightMap[i] = data[i];
+				}
+
+				delete [] data;
 				break;
 			}
 
@@ -377,8 +387,16 @@ Terrain::Terrain(const SystemBody *body) : m_body(body), m_seed(body->seed), m_r
 				bufread_or_die(&te, 8, 1, databuf);
 				m_minh = te;
 
-				m_heightMapScaled = new Uint16[m_heightMapSizeX * m_heightMapSizeY];
-				bufread_or_die(m_heightMapScaled, sizeof(Uint16), m_heightMapSizeX * m_heightMapSizeY, databuf);
+				const int heightMapSize = (m_heightMapSizeX * m_heightMapSizeY);
+				Uint16 *data = new Uint16[heightMapSize];
+				bufread_or_die(data, sizeof(Uint16), heightMapSize, databuf);
+
+				m_heightMap = new double[heightMapSize];
+				for(int i=0; i<heightMapSize; i++) {
+					m_heightMap[i] = data[i];
+				}
+
+				delete [] data;
 
 				break;
 			}
@@ -554,8 +572,6 @@ Terrain::~Terrain()
 {
 	if (m_heightMap)
 		delete [] m_heightMap;
-	if (m_heightMapScaled)
-		delete [] m_heightMapScaled;
 }
 
 

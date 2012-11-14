@@ -41,7 +41,7 @@ double TerrainHeightFractal<TerrainHeightMapped2>::GetHeight(const vector3d &p)
 	double map[4][4];
 	for (int x=-1; x<3; x++) {
 		for (int y=-1; y<3; y++) {
-			map[x+1][y+1] = m_heightMapScaled[Clamp(iy+y, 0, m_heightMapSizeY-1)*m_heightMapSizeX + Clamp(ix+x, 0, m_heightMapSizeX-1)];
+			map[x+1][y+1] = m_heightMap[Clamp(iy+y, 0, m_heightMapSizeY-1)*m_heightMapSizeX + Clamp(ix+x, 0, m_heightMapSizeX-1)];
 		}
 	}
 

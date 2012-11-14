@@ -64,12 +64,8 @@ protected:
 	double m_volcanic;
 
 	// heightmap stuff
-	// XXX unify heightmap types
-	// for the earth heightmap
-	Sint16 *m_heightMap;
-	// For the moon and other bodies (with height scaling)
-	Uint16 *m_heightMapScaled;
 	double m_heightScaling, m_minh;
+	double *m_heightMap;
 
 	int m_heightMapSizeX;
 	int m_heightMapSizeY;
