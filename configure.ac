@@ -8,7 +8,7 @@ dnl Setup
 dnl ###########################################################################
 AC_PREREQ(2.59)
 
-AC_INIT([pioneer], [alpha-28-dev], [pioneer-dev@pioneerspacesim.net])
+AC_INIT([pioneer], [alpha-29-dev], [pioneer-dev@pioneerspacesim.net])
 dnl AC_CONFIG_HEADERS([config.h])
 
 AC_DEFUN([MXE_SETUP], [
@@ -294,11 +294,13 @@ AC_CONFIG_FILES([
 	data/Makefile
 	src/Makefile
 	src/collider/Makefile
+	src/gameui/Makefile
 	src/gui/Makefile
 	src/graphics/Makefile
 	src/galaxy/Makefile
 	src/terrain/Makefile
 	src/text/Makefile
+	src/ui/Makefile
 	src/win32/Makefile
 	src/posix/Makefile
 	contrib/Makefile
