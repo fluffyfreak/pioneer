@@ -15,7 +15,7 @@ namespace GL2 {
 static const char *s_glslVersion = "#version 110\n";
 
 // Check and warn about compile & link errors
-static bool check_glsl_errors(const char *filename, GLuint obj)
+static bool check_glsl_errors(const char *filenamevert, const char *filenamefrag, GLuint obj)
 {
 	//check if shader or program
 	bool isShader = (glIsShader(obj) == GL_TRUE);
@@ -36,12 +36,12 @@ static bool check_glsl_errors(const char *filename, GLuint obj)
 
 	if (status == GL_FALSE) {
 #ifndef NDEBUG
-		OS::Error("Error compiling shader: %s:\n%sOpenGL vendor: %s\nOpenGL renderer string: %s",
-			filename, infoLog, glGetString(GL_VENDOR), glGetString(GL_RENDERER));
+		OS::Error("Error compiling shader: %s & %s:\n%sOpenGL vendor: %s\nOpenGL renderer string: %s",
+			filenamevert, filenamefrag, infoLog, glGetString(GL_VENDOR), glGetString(GL_RENDERER));
 #else
-		OS::Warning("Error compiling shader: %s:\n%sOpenGL vendor: %s\nOpenGL renderer string: %s\n\nS"
+		OS::Warning("Error compiling shader: %s & %s:\n%sOpenGL vendor: %s\nOpenGL renderer string: %s\n\nS"
 			"Pioneer will not work as intended. Try disabling shaders in the options or the config file.\n",
-			filename, infoLog, glGetString(GL_VENDOR), glGetString(GL_RENDERER));
+			filenamevert, filenamefrag, infoLog, glGetString(GL_VENDOR), glGetString(GL_RENDERER));
 #endif
 		shadersAvailable = false;
 		shadersEnabled = false;
@@ -59,6 +59,11 @@ static bool check_glsl_errors(const char *filename, GLuint obj)
 #endif
 
 	return true;
+}
+
+static bool check_glsl_errors(const char *filename, GLuint obj)
+{
+	check_glsl_errors(filename, filename, obj);
 }
 
 struct Shader {
@@ -163,11 +168,17 @@ void Program::Unuse()
 //load, compile and link
 void Program::LoadShaders(const std::string &name, const std::string &defines)
 {
-	const std::string filename = std::string("shaders/gl2/") + name;
+	LoadShaders(name, name, defines);
+}
+
+void Program::LoadShaders(const std::string& vertName, const std::string& fragName, const std::string &defines)
+{
+	const std::string filenamevert = std::string("shaders/gl2/") + vertName;
+	const std::string filenamefrag = std::string("shaders/gl2/") + vertName;
 
 	//load, create and compile shaders
-	Shader vs(GL_VERTEX_SHADER, filename + ".vert", defines);
-	Shader fs(GL_FRAGMENT_SHADER, filename + ".frag", defines);
+	Shader vs(GL_VERTEX_SHADER, filenamevert + ".vert", defines);
+	Shader fs(GL_FRAGMENT_SHADER, filenamefrag + ".frag", defines);
 
 	//create program, attach shaders and link
 	m_program = glCreateProgram();
@@ -175,7 +186,7 @@ void Program::LoadShaders(const std::string &name, const std::string &defines)
 	glAttachShader(m_program, fs.shader);
 	glLinkProgram(m_program);
 
-	check_glsl_errors(name.c_str(), m_program);
+	check_glsl_errors(vertName.c_str(), fragName.c_str(), m_program);
 
 	//shaders may now be deleted by Shader destructor
 }

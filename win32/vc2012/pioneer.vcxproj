@@ -133,6 +133,10 @@
     <ClCompile Include="..\..\src\GameConfig.cpp" />
     <ClCompile Include="..\..\src\GameLoaderSaver.cpp" />
     <ClCompile Include="..\..\src\GameMenuView.cpp" />
+    <ClCompile Include="..\..\src\GeoContext.cpp" />
+    <ClCompile Include="..\..\src\GeoMesh.cpp" />
+    <ClCompile Include="..\..\src\GeoPatch.cpp" />
+    <ClCompile Include="..\..\src\GeoPatchID.cpp" />
     <ClCompile Include="..\..\src\GeoSphere.cpp" />
     <ClCompile Include="..\..\src\HyperspaceCloud.cpp" />
     <ClCompile Include="..\..\src\InfoView.cpp" />
@@ -290,6 +294,10 @@
     <ClInclude Include="..\..\src\gameconsts.h" />
     <ClInclude Include="..\..\src\GameLoaderSaver.h" />
     <ClInclude Include="..\..\src\GameMenuView.h" />
+    <ClInclude Include="..\..\src\GeoContext.h" />
+    <ClInclude Include="..\..\src\GeoMesh.h" />
+    <ClInclude Include="..\..\src\GeoPatch.h" />
+    <ClInclude Include="..\..\src\GeoPatchID.h" />
     <ClInclude Include="..\..\src\GeoSphere.h" />
     <ClInclude Include="..\..\src\HyperspaceCloud.h" />
     <ClInclude Include="..\..\src\InfoView.h" />
