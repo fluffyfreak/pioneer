@@ -264,6 +264,7 @@ GeoPatchContext::GeoPatchContext(const uint32_t edgeLen) :
 		"terrains/TerrainHeightWaterSolidCanyons.glsl",
 		""
 	};
+
 	vecBindings noiseyBinding;
 	noiseyBinding.push_back( ShaderBindPair("noise_lib.glsl",eFragShader) );
 	noiseyBinding.push_back( ShaderBindPair("noise_feature_lib.glsl",eFragShader) );
@@ -414,16 +415,14 @@ void GeoPatchContext::renderHeightmap(
 void GeoPatchContext::UsePatchShader(const matrix4x4f &ViewMatrix, const matrix4x4f &ModelMatrix, const matrix4x4f &MVP) const {
 	assert(patch_prog!=UINT_MAX);
 	glUseProgram(patch_prog);
-	//checkGLError();
 
 	// Send our transformation to the currently bound shader, 
 	// in the "MVP" uniform
-	glUniformMatrix4fv(patch_MatrixID,		1, GL_FALSE, &MVP[0][0]);
-	glUniformMatrix4fv(patch_ModelMatrixID, 1, GL_FALSE, &ModelMatrix[0][0]);
-	glUniformMatrix4fv(patch_ViewMatrixID,	1, GL_FALSE, &ViewMatrix[0][0]);
+	glUniformMatrix4fv(patch_MatrixID,		1, GL_FALSE, &MVP[0]);
+	glUniformMatrix4fv(patch_ModelMatrixID, 1, GL_FALSE, &ModelMatrix[0]);
+	glUniformMatrix4fv(patch_ViewMatrixID,	1, GL_FALSE, &ViewMatrix[0]);
 
 	const float fracStep = textureLerpStep();
 	glUniform1f(patch_fracStep, fracStep);
 	glUniform1f(patch_radius, 25.0f);
-	//checkGLError();
 }
