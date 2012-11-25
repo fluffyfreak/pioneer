@@ -42,6 +42,39 @@ namespace Graphics {
 			virtual Program *CreateProgram(const MaterialDescriptor &);
 			virtual void Apply();
 		};
+
+		class GeoPatchGenProgram : public Program {
+		public:
+			GeoPatchGenProgram(const std::string &filename, const std::string& defines);
+
+			Uniform v0;
+			Uniform v1;
+			Uniform v2;
+			Uniform v3;
+			Uniform fracStep;
+			
+			Uniform maxHeight;
+			Uniform seaLevel;
+			Uniform fracnum;
+			
+			Uniform octaves;
+			Uniform amplitude;
+			Uniform lacunarity;
+			Uniform frequency;
+			
+			Uniform heightmap;
+			bool usesHeightmap;
+		protected:
+			virtual void InitUniforms();
+		};
+
+		class GeoPatchGenMaterial : public Material {
+			virtual Program *CreateProgram(const MaterialDescriptor &);
+			virtual void Apply();
+
+		protected:
+			void SetGSUniforms();
+		};
 	}
 }
 #endif

@@ -80,7 +80,7 @@ public:
 
 	inline uint32_t fboWidth() const		{ return mFBO.Width(); }
 
-private:
+protected:
 	struct SHeightmapGen{
 		GLuint prog;
 		GLint v0;
@@ -104,6 +104,26 @@ private:
 	std::vector<SHeightmapGen> mHeightmapProgs;
 	size_t mCurrentHeightmapProg;
 public:
+	struct PatchGenData{
+		vector3f v0;
+		vector3f v1;
+		vector3f v2;
+		vector3f v3;
+		float fracStep;
+
+		float maxHeight;
+		float seaLevel;
+		int fracnum;
+
+		int octaves[10];
+		float amplitude[10];
+		float lacunarity[10];
+		float frequency[10];
+
+		bool usesHeightmap;
+		GLint heightmap;
+	};
+
 	const SHeightmapGen& GetHeightmapGenData()	const { return mHeightmapProgs[mCurrentHeightmapProg]; }
 	void renderHeightmap(const vector3f &v0, const vector3f &v1, const vector3f &v2, const vector3f &v3, const uint32_t targetTex) const;
 

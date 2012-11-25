@@ -137,9 +137,13 @@ Material *RendererGL2::CreateMaterial(const MaterialDescriptor &d)
 	case EFFECT_GEOSPHERE_SKY:
 		mat = new GL2::GeoSphereSkyMaterial();
 		break;
+	case EFFECT_GEOPATCH_GEN:
+		mat = new GL2::GeoPatchGenMaterial();
+		break;
 	default:
 		mat = new GL2::MultiMaterial();
 		mat->twoSided = desc.twoSided; //other mats don't care about this
+		break;
 	}
 
 	mat->m_renderer = this;

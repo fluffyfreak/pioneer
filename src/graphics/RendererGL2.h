@@ -46,6 +46,7 @@ public:
 	virtual bool ReloadShaders();
 
 private:
+	friend class GL2::GeoPatchGenMaterial;
 	friend class GL2::GeoSphereSurfaceMaterial;
 	friend class GL2::GeoSphereSkyMaterial;
 	friend class GL2::MultiMaterial;

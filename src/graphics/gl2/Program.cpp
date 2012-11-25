@@ -63,7 +63,7 @@ static bool check_glsl_errors(const char *filenamevert, const char *filenamefrag
 
 static bool check_glsl_errors(const char *filename, GLuint obj)
 {
-	check_glsl_errors(filename, filename, obj);
+	return check_glsl_errors(filename, filename, obj);
 }
 
 struct Shader {

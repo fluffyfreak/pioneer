@@ -22,10 +22,22 @@ void Uniform::Set(int i)
 		glUniform1i(m_location, i);
 }
 
+void Uniform::Set(const int *i, const GLsizei count)
+{
+	if (m_location != -1)
+		glUniform1iv(m_location, count, i);
+}
+
 void Uniform::Set(float f)
 {
 	if (m_location != -1)
 		glUniform1f(m_location, f);
+}
+
+void Uniform::Set(const float *f, const GLsizei count)
+{
+	if (m_location != -1)
+		glUniform1fv(m_location, count, f);
 }
 
 void Uniform::Set(const vector3f &v)
