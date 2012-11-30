@@ -374,6 +374,8 @@ void GeoPatchContext::renderHeightmap(
 	// setup to render to the fbo
 	glViewport(0, 0, mFBO.Width(), mFBO.Height());
 
+	mFBO.SetTexture(targetTex);
+
 	// Clear the fbo
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -405,7 +407,8 @@ void GeoPatchContext::renderHeightmap(
 	// rendering our quad now should fill the render texture with the heightmap shaders output
 	mQuad.Render();
 
-	mFBO.CopyTexture(targetTex);
+	//mFBO.CopyTexture(targetTex);
+	mFBO.SetTexture(0);
 
 	// the framebuffer is NOT automatically released
 	mFBO.Release();
