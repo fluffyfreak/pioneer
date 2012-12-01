@@ -5,6 +5,8 @@
 #include "utils.h"
 #include "GeoContext.h"
 
+#include "graphics/gl2/GeoPatchGenMaterial.h"
+
 #include "vcacheopt/vcacheopt.h"
 
 int GeoPatchContext::getIndices(std::vector<unsigned short> &pl, const unsigned int edge_hi_flags,
@@ -259,53 +261,41 @@ GeoPatchContext::GeoPatchContext(const uint32_t edgeLen) :
 		"terrains/TerrainHeightMountainsVolcano.glsl",
 		"terrains/TerrainHeightRuggedDesert.glsl",
 		"terrains/TerrainHeightRuggedLava.glsl",
-		"terrains/TerrainHeightShaderFun.glsl",
 		"terrains/TerrainHeightWaterSolid.glsl",
 		"terrains/TerrainHeightWaterSolidCanyons.glsl",
+		"terrains/TerrainHeightShaderFun.glsl",
 		""
 	};
 
-	vecBindings noiseyBinding;
-	noiseyBinding.push_back( ShaderBindPair("noise_lib.glsl",eFragShader) );
-	noiseyBinding.push_back( ShaderBindPair("noise_feature_lib.glsl",eFragShader) );
-	int shdFnameIdx=0;
-	mCurrentHeightmapProg = 0;//mHeightmapProgs.size()-1;
-	while(shaderFilenames[shdFnameIdx][0] != '\0')
+	Graphics::GL2::vecBindings noiseyBinding;
+	noiseyBinding.push_back( Graphics::GL2::ShaderBindPair("noise_lib.glsl", Graphics::GL2::eFragShader) );
+	noiseyBinding.push_back( Graphics::GL2::ShaderBindPair("noise_feature_lib.glsl", Graphics::GL2::eFragShader) );
+	
+	//mCurrentHeightmapProg = 0;
+	for(int shdFnameIdx=0; shaderFilenames[shdFnameIdx][0] != '\0'; shdFnameIdx++)
 	{
-		noiseyBinding.push_back( ShaderBindPair(shaderFilenames[shdFnameIdx],eFragShader) );
-		SHeightmapGen hProg;
-		const bool success = LoadShader(hProg.prog, "heightmap_gen.vert", "heightmap_gen.frag", noiseyBinding);
-		if(success) {
-			mCurrentHeightmapProg = shdFnameIdx;
-		}
-		hProg.v0			= glGetUniformLocation(hProg.prog, "v0");
-		hProg.v1			= glGetUniformLocation(hProg.prog, "v1");
-		hProg.v2			= glGetUniformLocation(hProg.prog, "v2");
-		hProg.v3			= glGetUniformLocation(hProg.prog, "v3");
-		hProg.fracStep		= glGetUniformLocation(hProg.prog, "fracStep");
+		Graphics::GL2::Program *p = NULL;
+		Graphics::GL2::GeoPatchGenMaterial *mat = new Graphics::GL2::GeoPatchGenMaterial();
+		assert(NULL!=mat);
 
-		hProg.maxHeight		= glGetUniformLocation(hProg.prog, "maxHeight");
-		hProg.seaLevel		= glGetUniformLocation(hProg.prog, "seaLevel");
-		hProg.fracnum		= glGetUniformLocation(hProg.prog, "fracnum");
+		// add the terrain type specific lib
+		noiseyBinding.push_back( Graphics::GL2::ShaderBindPair(shaderFilenames[shdFnameIdx], Graphics::GL2::eFragShader) );
 
-		hProg.octaves		= glGetUniformLocation(hProg.prog, "octaves");
-		hProg.amplitude		= glGetUniformLocation(hProg.prog, "amplitude");
-		hProg.lacunarity	= glGetUniformLocation(hProg.prog, "lacunarity");
-		hProg.frequency		= glGetUniformLocation(hProg.prog, "frequency");
+		// create it with our two generating shaders
+		p = mat->CreateProgram("heightmap_gen.vert", "heightmap_gen.frag", noiseyBinding);
+		assert(NULL!=p);
 
-		hProg.heightmap		= glGetUniformLocation(hProg.prog, "texHeightmap");
-		hProg.usesHeightmap = ((-1)!=hProg.heightmap);
+		// make note of it (store the link)
+		m_terrainMaterials.push_back(std::make_pair(shaderFilenames[shdFnameIdx], mat));
 
-		//checkGLError();
-		mHeightmapProgs.push_back(hProg);
+		// pop off the terrain specific lib again
 		noiseyBinding.pop_back();
-		shdFnameIdx++;
 	}
 	
 
 	////////////////////////////////////////////////////////////////
 	// load the patch terrain shader
-	LoadShader(patch_prog, "patch.vert", "patch.frag");
+	/*LoadShader(patch_prog, "patch.vert", "patch.frag");
 	// Get a handle for our "MVP" uniform(s)
 	patch_MatrixID		= glGetUniformLocation(patch_prog, "MVP");
 	patch_ViewMatrixID	= glGetUniformLocation(patch_prog, "V");
@@ -317,7 +307,7 @@ GeoPatchContext::GeoPatchContext(const uint32_t edgeLen) :
 	patch_v3			= glGetUniformLocation(patch_prog, "v3");
 	patch_fracStep		= glGetUniformLocation(patch_prog, "fracStep");
 	patch_colour		= glGetUniformLocation(patch_prog, "in_colour");
-	patch_texHeightmap	= glGetUniformLocation(patch_prog, "texHeightmap");
+	patch_texHeightmap	= glGetUniformLocation(patch_prog, "texHeightmap");*/
 
 	////////////////////////////////////////////////////////////////
 	// create a dummy set of verts, the UVs are the only important part
@@ -351,23 +341,8 @@ GeoPatchContext::~GeoPatchContext() {
 }
 
 // render the heightmap to a framebuffer
-void GeoPatchContext::renderHeightmap(
-	const vector3f &v0, const vector3f &v1, const vector3f &v2, const vector3f &v3, 
-	const uint32_t targetTex) const
+void GeoPatchContext::renderHeightmap(const uint32_t terrainType, const PatchGenData* genData, const uint32_t targetTex) const
 {
-#if USE_CPP_HEIGHTMAP_SHADER
-	const float fracStep = textureLerpStep();
-	NCppHeightmapShader::setUniforms(v0, v1, v2, v3, fracStep);
-
-	for (uint32_t y=0; y<mEdgeLen; y++) {
-		for (uint32_t x=0; x<mEdgeLen; x++) {
-			const float xfrac = float(x) * fracStep;
-			const float yfrac = float(y) * fracStep;
-			const float blah = NCppHeightmapShader::shader_heightmap_frag(vec2(float(x)+0.5f, float(y)+0.5f));
-			mpHeightmapData[x + (y * mEdgeLen)] = blah;
-		}
-	}
-#else
 	// bind the framebuffer
 	mFBO.Bind();
 
@@ -379,30 +354,10 @@ void GeoPatchContext::renderHeightmap(
 	// Clear the fbo
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	const SHeightmapGen& rHGD = GetHeightmapGenData();
-		
-	// Use our fbo shader
-	glUseProgram(rHGD.prog);
+	Graphics::Material *pMat = m_terrainMaterials[terrainType].second;
+	pMat->specialParameter0 = (void*)genData;
 
-	glUniform3fv(rHGD.v0,		1, &v0[0]);
-	glUniform3fv(rHGD.v1,		1, &v1[0]);
-	glUniform3fv(rHGD.v2,		1, &v2[0]);
-	glUniform3fv(rHGD.v3,		1, &v3[0]);
-	const float reciprocalFBOWidth = textureLerpStep();
-	glUniform1f(rHGD.fracStep, reciprocalFBOWidth);
-
-	glUniform1f(rHGD.maxHeight,	2.0f);
-	glUniform1f(rHGD.seaLevel,	0.01f);
-	glUniform1i(rHGD.fracnum,	3);
-	
-	int octaves[10] = {3};
-	float amplitude[10] = {3.0f};
-	float lacunarity[10] = {3.0f};
-	float frequency[10] = {3.0f};
-	glUniform1iv(rHGD.octaves,		10,		&octaves[0]);
-	glUniform1fv(rHGD.amplitude,	10,		&amplitude[0]);
-	glUniform1fv(rHGD.lacunarity,	10,		&lacunarity[0]);
-	glUniform1fv(rHGD.frequency,	10,		&frequency[0]);
+	pMat->Apply();
 
 	// rendering our quad now should fill the render texture with the heightmap shaders output
 	mQuad.Render();
@@ -412,10 +367,11 @@ void GeoPatchContext::renderHeightmap(
 
 	// the framebuffer is NOT automatically released
 	mFBO.Release();
-#endif
+
+	pMat->Unapply();
 }
 
-void GeoPatchContext::UsePatchShader(const matrix4x4f &ViewMatrix, const matrix4x4f &ModelMatrix, const matrix4x4f &MVP) const {
+/*void GeoPatchContext::UsePatchShader(const matrix4x4f &ViewMatrix, const matrix4x4f &ModelMatrix, const matrix4x4f &MVP) const {
 	assert(patch_prog!=UINT_MAX);
 	glUseProgram(patch_prog);
 
@@ -428,4 +384,4 @@ void GeoPatchContext::UsePatchShader(const matrix4x4f &ViewMatrix, const matrix4
 	const float fracStep = textureLerpStep();
 	glUniform1f(patch_fracStep, fracStep);
 	glUniform1f(patch_radius, 25.0f);
-}
+}*/

@@ -137,8 +137,8 @@ Material *RendererGL2::CreateMaterial(const MaterialDescriptor &d)
 	case EFFECT_GEOSPHERE_SKY:
 		mat = new GL2::GeoSphereSkyMaterial();
 		break;
-	case EFFECT_GEOPATCH_GEN:
-		mat = new GL2::GeoPatchGenMaterial();
+	case EFFECT_GEOSPHERE_HEIGHTMAPTERRAIN:
+		mat = new GL2::GeoSphereHeightmapMaterial();
 		break;
 	default:
 		mat = new GL2::MultiMaterial();

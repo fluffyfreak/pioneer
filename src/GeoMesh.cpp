@@ -5,7 +5,7 @@
 #include "utils.h"
 #include "GeoMesh.h"
 
-#include "GeoContext.h"
+
 #include "GeoPatch.h"
 
 #include "perlin.h"
@@ -26,12 +26,36 @@ static const int detail_edgeLen[5] = {
 
 GeoMesh::GeoMesh(const SystemBody *body) : mSystemBody(body)
 {
+	// what terrain type are we?
 	mTerrain = Terrain::InstanceTerrain(body);
 
+	// extract the data i need for generating the terrain patches in shader
+	mPatchGenData = new GeoPatchContext::PatchGenData;
+	const float reciprocalFBOWidth = sPatchContext->textureLerpStep();
+	mPatchGenData->fracStep = reciprocalFBOWidth;
+	mPatchGenData->maxHeight = mTerrain->GetMaxHeight();
+	mPatchGenData->seaLevel = mTerrain->GetSealevel();
+	mPatchGenData->fracnum = mTerrain->GetFracNum();
+
+	// ???
+	mPatchGenData->usesHeightmap = false;
+	mPatchGenData->heightmap = 0;
+
+	for(int i=0;i<10;i++)
+	{
+		const fracdef_t &def = mTerrain->GetFracDef(i);
+		mPatchGenData->octaves[i] = def.octaves;
+		mPatchGenData->amplitude[i] = def.amplitude;
+		mPatchGenData->lacunarity[i] = def.lacunarity;
+		mPatchGenData->frequency[i] = def.frequency;
+	}
+
+	// make sure these are clear
 	for (int i=0; i<NUM_PATCHES; i++) {
 		mGeoPatches[i] = nullptr;
 	}
 
+	// make the wider world aware of this one
 	s_allGeospheres.push_back(this);
 }
 
@@ -47,6 +71,7 @@ GeoMesh::~GeoMesh()
 	}
 
 	delete mTerrain;
+	delete mPatchGenData;
 }
 
 void GeoMesh::Update(const vector3f &campos)
@@ -68,7 +93,7 @@ void GeoMesh::Render(const matrix4x4f &ViewMatrix, const matrix4x4f &ModelMatrix
 {
 	// setup the basics for the patch shader,
 	// individual patches will change settings to match their own parameters
-	sPatchContext->UsePatchShader(ViewMatrix, ModelMatrix, MVP);
+	//sPatchContext->UsePatchShader(ViewMatrix, ModelMatrix, MVP);
 
 	Render(renderer, campos, radius, scale);
 }
@@ -219,7 +244,7 @@ void GeoMesh::SetUpMaterials()
 	// Request material for this star or planet, with or without
 	// atmosphere. Separate material for surface and sky.
 	Graphics::MaterialDescriptor surfDesc;
-	surfDesc.effect = Graphics::EFFECT_GEOSPHERE_TERRAIN;
+	surfDesc.effect = Graphics::EFFECT_GEOSPHERE_HEIGHTMAPTERRAIN;
 	if ((mSystemBody->type == SystemBody::TYPE_BROWN_DWARF) ||
 		(mSystemBody->type == SystemBody::TYPE_STAR_M)) {
 		//dim star (emits and receives light)
@@ -305,7 +330,12 @@ void GeoMesh::ProcessSplitRequests()
 			//checkGLError();
 
 			// render the heightmap to a framebuffer.
-			sPatchContext->renderHeightmap(vecs[i][0], vecs[i][1], vecs[i][2], vecs[i][3], texID);
+			mPatchGenData->v0 = vecs[i][0];
+			mPatchGenData->v1 = vecs[i][1];
+			mPatchGenData->v2 = vecs[i][2];
+			mPatchGenData->v3 = vecs[i][3];
+
+			sPatchContext->renderHeightmap(0, mPatchGenData, texID);
 
 			sr->addResult(texID, vecs[i][0], vecs[i][1], vecs[i][2], vecs[i][3], srd->patchID.NextPatchID(srd->depth+1, i));
 		}

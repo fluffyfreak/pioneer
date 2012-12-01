@@ -17,6 +17,8 @@
 namespace Graphics {
 
 namespace GL2 {
+	class GeoPatchGenMaterial;
+	class GeoSphereHeightmapMaterial;
 	class GeoSphereSurfaceMaterial;
 	class GeoSphereSkyMaterial;
 	class MultiMaterial;
@@ -47,6 +49,7 @@ public:
 
 private:
 	friend class GL2::GeoPatchGenMaterial;
+	friend class GL2::GeoSphereHeightmapMaterial;
 	friend class GL2::GeoSphereSurfaceMaterial;
 	friend class GL2::GeoSphereSkyMaterial;
 	friend class GL2::MultiMaterial;

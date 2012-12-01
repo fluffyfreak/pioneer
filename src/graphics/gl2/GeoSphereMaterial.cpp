@@ -84,7 +84,7 @@ void GeoSphereSkyMaterial::Apply()
 	SetGSUniforms();
 }
 
-GeoPatchGenProgram::GeoPatchGenProgram(const std::string &filename, const std::string& defines)
+GeoSphereHeightmapProgram::GeoSphereHeightmapProgram(const std::string &filename, const std::string &defines)
 {
 	m_name = filename;
 	m_defines = defines;
@@ -92,40 +92,30 @@ GeoPatchGenProgram::GeoPatchGenProgram(const std::string &filename, const std::s
 	InitUniforms();
 }
 
-//virtual 
-void GeoPatchGenProgram::InitUniforms()
+void GeoSphereHeightmapProgram::InitUniforms()
 {
-	v0.Init("v0", m_program);
-	v1.Init("v1", m_program);
-	v2.Init("v2", m_program);
-	v3.Init("v3", m_program);
-	fracStep.Init("fracStep", m_program);
-
-	maxHeight.Init("maxHeight", m_program);
-	seaLevel.Init("seaLevel", m_program);
-	fracnum.Init("fracnum", m_program);
-
-	octaves.Init("octaves", m_program);
-	amplitude.Init("amplitude", m_program);
-	lacunarity.Init("lacunarity", m_program);
-	frequency.Init("frequency", m_program);
-
-	heightmap.Init("texHeightmap", m_program);
-	usesHeightmap = ((-1)!=heightmap.m_location);
+	Program::InitUniforms();
+	AtmosColor.Init("atmosColor", m_program);
+	AtmosFogDensity.Init("geosphereAtmosFogDensity", m_program);
+	AtmosInvScaleHeight.Init("geosphereAtmosInvScaleHeight", m_program);
+	AtmosTopRad.Init("geosphereAtmosTopRad", m_program);
+	Center.Init("geosphereCenter", m_program);
+	Scale.Init("geosphereScale", m_program);
+	ScaledRadius.Init("geosphereScaledRadius", m_program);
 }
 
-Program *GeoPatchGenMaterial::CreateProgram(const MaterialDescriptor &desc)
+Program *GeoSphereHeightmapMaterial::CreateProgram(const MaterialDescriptor &desc)
 {
-	assert(desc.effect == EFFECT_GEOPATCH_GEN);
+	assert(desc.effect == EFFECT_GEOSPHERE_HEIGHTMAPTERRAIN);
 	assert(desc.dirLights < 5);
 	std::stringstream ss;
 	ss << stringf("#define NUM_LIGHTS %0{u}\n", desc.dirLights);
 	if (desc.atmosphere)
 		ss << "#define ATMOSPHERE\n";
-	return new Graphics::GL2::GeoSphereProgram("geosphere_terrain", ss.str());
+	return new Graphics::GL2::GeoSphereProgram("geosphere_heightmapterrain", ss.str());
 }
 
-void GeoPatchGenMaterial::Apply()
+void GeoSphereHeightmapMaterial::Apply()
 {
 	//XXX replace with actual material parameter
 	glMaterialfv (GL_FRONT, GL_EMISSION, &emissive[0]);
@@ -133,35 +123,21 @@ void GeoPatchGenMaterial::Apply()
 	SetGSUniforms();
 }
 
-void GeoPatchGenMaterial::SetGSUniforms()
+void GeoSphereHeightmapMaterial::SetGSUniforms()
 {
-	GeoPatchGenProgram *p = static_cast<GeoPatchGenProgram*>(m_program);
-	const GeoPatchContext::PatchGenData& hg = *static_cast<GeoPatchContext::PatchGenData*>(this->specialParameter0);
+	GeoSphereHeightmapProgram *p = static_cast<GeoSphereHeightmapProgram*>(m_program);
+	const SystemBody::AtmosphereParameters ap = *static_cast<SystemBody::AtmosphereParameters*>(this->specialParameter0);
 
 	p->Use();
 	p->invLogZfarPlus1.Set(m_renderer->m_invLogZfarPlus1);
 	p->sceneAmbient.Set(m_renderer->GetAmbientColor());
-
-	p->v0.Set(hg.v0);
-	p->v1.Set(hg.v1);
-	p->v2.Set(hg.v2);
-	p->v3.Set(hg.v3);
-	p->fracStep.Set(hg.fracStep);
-
-	p->maxHeight.Set(hg.maxHeight);
-	p->seaLevel.Set(hg.seaLevel);
-	p->fracnum.Set(hg.fracnum);
-
-	p->octaves.Set(hg.octaves, 10);
-	p->amplitude.Set(hg.amplitude, 10);
-	p->lacunarity.Set(hg.lacunarity, 10);
-	p->frequency.Set(hg.frequency, 10);
-
-	// hg.heightmap ???
-	/*if (texture0) {
-		static_cast<TextureGL*>(texture0)->Bind();
-		p->texture0.Set(0);
-	}*/
+	p->AtmosColor.Set(ap.atmosCol);
+	p->AtmosFogDensity.Set(ap.atmosDensity);
+	p->AtmosInvScaleHeight.Set(ap.atmosInvScaleHeight);
+	p->AtmosTopRad.Set(ap.atmosRadius);
+	p->Center.Set(ap.center);
+	p->ScaledRadius.Set(ap.planetRadius / ap.scale);
+	p->Scale.Set(ap.scale);
 }
 
 }

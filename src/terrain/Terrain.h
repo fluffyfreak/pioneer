@@ -30,7 +30,7 @@ public:
 	virtual ~Terrain();
 
 	void SetFracDef(unsigned int index, double featureHeightMeters, double featureWidthMeters, double smallestOctaveMeters = 20.0);
-	inline const fracdef_t &GetFracDef(unsigned int index) { return m_fracdef[index]; }
+	inline const fracdef_t &GetFracDef(unsigned int index) const { return m_fracdef[index]; }
 
 	virtual double GetHeight(const vector3d &p) = 0;
 	virtual vector3d GetColor(const vector3d &p, double height, const vector3d &norm) = 0;
@@ -38,7 +38,11 @@ public:
 	virtual const char *GetHeightFractalName() const = 0;
 	virtual const char *GetColorFractalName() const = 0;
 
-	double GetMaxHeight() const { return m_maxHeight; }
+	int	   GetFracNum()		const { return m_fracnum; }
+	double GetMaxHeight()	const { return m_maxHeight; }
+	double GetSealevel()	const { return m_sealevel; } // 0 - no water, 1 - 100% coverage
+	double GetIcyness()		const { return m_icyness;  } // 0 - 1 (0% to 100% cover)
+	double GetColcanic()	const { return m_volcanic; }
 
 private:
 	template <typename HeightFractal, typename ColorFractal>

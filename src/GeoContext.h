@@ -10,6 +10,12 @@
 #define GEOPATCH_SUBDIVIDE_AT_CAMDIST	2.0f	//1.5f
 #define GEOPATCH_MAX_DEPTH  10
 
+namespace Graphics {
+	namespace GL2 {
+		class GeoPatchGenMaterial;
+	};
+};
+
 class GeoPatchContext : public RefCounted
 {
 private:
@@ -81,7 +87,7 @@ public:
 	inline uint32_t fboWidth() const		{ return mFBO.Width(); }
 
 protected:
-	struct SHeightmapGen{
+	/*struct SHeightmapGen{
 		GLuint prog;
 		GLint v0;
 		GLint v1;
@@ -102,8 +108,11 @@ protected:
 		GLint heightmap;
 	};
 	std::vector<SHeightmapGen> mHeightmapProgs;
-	size_t mCurrentHeightmapProg;
+	size_t mCurrentHeightmapProg;*/
+	std::vector<std::pair<std::string, Graphics::GL2::GeoPatchGenMaterial*> > m_terrainMaterials;
 public:
+	// This is data used by the terrain generator itself for it's noise functions.
+	// Varies on a per-planet basis
 	struct PatchGenData{
 		vector3f v0;
 		vector3f v1;
@@ -124,10 +133,10 @@ public:
 		GLint heightmap;
 	};
 
-	const SHeightmapGen& GetHeightmapGenData()	const { return mHeightmapProgs[mCurrentHeightmapProg]; }
-	void renderHeightmap(const vector3f &v0, const vector3f &v1, const vector3f &v2, const vector3f &v3, const uint32_t targetTex) const;
+	//const SHeightmapGen& GetHeightmapGenData()	const { return mHeightmapProgs[mCurrentHeightmapProg]; }
+	void renderHeightmap(const uint32_t terrainType, const PatchGenData* genData, const uint32_t targetTex) const;
 
-private:
+/*private:
 	GLuint patch_prog;
 	GLuint patch_MatrixID;
 	GLuint patch_ViewMatrixID;
@@ -148,7 +157,7 @@ public:
 	GLuint patchColourID()			const { return patch_colour; }
 	GLuint patchTexHeightmapID()	const { return patch_texHeightmap; }
 
-	void UsePatchShader(const matrix4x4f &ViewMatrix, const matrix4x4f &ModelMatrix, const matrix4x4f &MVP) const;
+	void UsePatchShader(const matrix4x4f &ViewMatrix, const matrix4x4f &ModelMatrix, const matrix4x4f &MVP) const;*/
 };
 
 #endif //__GEOCONTEXT_H__

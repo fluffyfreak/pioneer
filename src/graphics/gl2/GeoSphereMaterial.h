@@ -43,32 +43,23 @@ namespace Graphics {
 			virtual void Apply();
 		};
 
-		class GeoPatchGenProgram : public Program {
+		class GeoSphereHeightmapProgram : public Program {
 		public:
-			GeoPatchGenProgram(const std::string &filename, const std::string& defines);
+			GeoSphereHeightmapProgram(const std::string &filename, const std::string &defines);
 
-			Uniform v0;
-			Uniform v1;
-			Uniform v2;
-			Uniform v3;
-			Uniform fracStep;
-			
-			Uniform maxHeight;
-			Uniform seaLevel;
-			Uniform fracnum;
-			
-			Uniform octaves;
-			Uniform amplitude;
-			Uniform lacunarity;
-			Uniform frequency;
-			
-			Uniform heightmap;
-			bool usesHeightmap;
+			Uniform AtmosColor;
+			Uniform AtmosFogDensity;
+			Uniform AtmosInvScaleHeight;
+			Uniform AtmosTopRad; // in planet radii
+			Uniform Center;
+			Uniform Scale;
+			Uniform ScaledRadius; // (planet radius) / scale
+
 		protected:
 			virtual void InitUniforms();
 		};
 
-		class GeoPatchGenMaterial : public Material {
+		class GeoSphereHeightmapMaterial : public Material {
 			virtual Program *CreateProgram(const MaterialDescriptor &);
 			virtual void Apply();
 

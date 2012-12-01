@@ -4,6 +4,7 @@
 #ifndef __GEOMESH_H__
 #define __GEOMESH_H__
 
+#include "GeoContext.h"
 #include "GeoPatchID.h"
 
 #include "vector3.h"
@@ -17,12 +18,11 @@
 
 static const uint32_t NUM_SIDES = 6;
 
-namespace Graphics { class Renderer; }
-
-class SystemBody;
 // fwd decl'
 class GeoPatch;
-class GeoPatchContext;
+class SystemBody;
+namespace Graphics { class Renderer; }
+
 
 struct SSplitRequestDescription {
 	SSplitRequestDescription(const vector3f &v0_,
@@ -87,6 +87,7 @@ private:
 
 	/* all variables for GetHeight(), GetColor() */
 	const Terrain *mTerrain;
+	GeoPatchContext::PatchGenData *mPatchGenData;
 
 	static const uint32_t MAX_SPLIT_REQUESTS = 128;
 	std::deque<SSplitRequestDescription*> mSplitRequestDescriptions;
