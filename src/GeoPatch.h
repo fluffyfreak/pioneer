@@ -23,7 +23,7 @@ private:
 	GeoPatch *kids[NUM_KIDS];
 
 	const GeoPatchContext &mContext;
-	GeoMesh *mpGeoSphere;
+	GeoSphere *mpGeoSphere;
 	const vector3f mV0, mV1, mV2, mV3;	// corner vertices for the patch
 	const vector3f mClipCentroid;
 	vector3f mCentroid;
@@ -32,9 +32,10 @@ private:
 	float mRoughLength;
 	const GeoPatchID mPatchID;
 
-	Graphics::VertexBuffer *mVBO;
+	Graphics::GLvbo *mVBO;
 	GLuint mHeightmap;
 	bool mHasSplitRequest;
+	GeoPatchParameters mGeoPatchParameters;
 
 public:
 	////////////////////////////////////////////////////////////////
@@ -45,7 +46,7 @@ public:
 	// public methods
 
 	// constructor
-	GeoPatch(const GeoPatchContext &context_, GeoMesh *pGeoSphere_, 
+	GeoPatch(const GeoPatchContext &context_, GeoSphere *pGeoSphere_, 
 		const vector3f &v0_, const vector3f &v1_, const vector3f &v2_, const vector3f &v3_, 
 		const uint32_t depth_, const GeoPatchID &ID_);
 

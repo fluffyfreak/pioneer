@@ -12,7 +12,7 @@ namespace Graphics {
 class CGLquad
 {
 private:
-	VertexBuffer mVBO;
+	GLvbo mVBO;
 
 public:
 	CGLquad(const bool bNormals_, const bool bUVs_);

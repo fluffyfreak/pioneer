@@ -1,10 +1,11 @@
-// Copyright Â© 2008-2012 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2012 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
-#ifndef _GEOSPHERE_H
-#define _GEOSPHERE_H
+#ifndef __GEOMESH_H__
+#define __GEOMESH_H__
 
-#include <SDL_stdinc.h>
+#include "GeoContext.h"
+#include "GeoPatchID.h"
 
 #include "vector3.h"
 #include "mtrand.h"
@@ -13,73 +14,107 @@
 #include "graphics/Material.h"
 #include "terrain/Terrain.h"
 
-namespace Graphics { class Renderer; }
-class SystemBody;
-class GeoPatch;
-class GeoPatchContext;
-class GeoSphere {
-public:
-	GeoSphere(const SystemBody *body);
-	~GeoSphere();
-	void Render(Graphics::Renderer *r, const vector3d& campos, const float radius, const float scale);
-	inline double GetHeight(const vector3d& p) const {
-		const double h = m_terrain->GetHeight(p);
-		s_vtxGenCount++;
-#ifdef DEBUG
-		// XXX don't remove this. Fix your fractals instead
-		// Fractals absolutely MUST return heights >= 0.0 (one planet radius)
-		// otherwise atmosphere and other things break.
-		assert(h >= 0.0);
-#endif /* DEBUG */
-		return h;
-	}
-	friend class GeoPatch;
-	static void Init();
-	static void Uninit();
-	static void OnChangeDetailLevel();
-	// in sbody radii
-	double GetMaxFeatureHeight() const { return m_terrain->GetMaxHeight(); }
-	static int GetVtxGenCount() { return s_vtxGenCount; }
-	static void ClearVtxGenCount() { s_vtxGenCount = 0; }
+#include <deque>
 
+static const uint32_t NUM_SIDES = 6;
+
+// fwd decl'
+class GeoPatch;
+class SystemBody;
+namespace Graphics { class Renderer; }
+
+
+struct SSplitRequestDescription {
+	SSplitRequestDescription(const vector3f &v0_,
+							const vector3f &v1_,
+							const vector3f &v2_,
+							const vector3f &v3_,
+							const vector3f &cn,
+							const uint32_t depth_,
+							const GeoPatchID &patchID_)
+							: v0(v0_), v1(v1_), v2(v2_), v3(v3_), centroid(cn), depth(depth_), patchID(patchID_)
+	{
+	}
+
+	const vector3f v0;
+	const vector3f v1;
+	const vector3f v2;
+	const vector3f v3;
+	const vector3f centroid;
+	const uint32_t depth;
+	const GeoPatchID patchID;
+};
+
+struct SSplitResult {
+	struct SSplitResultData {
+		SSplitResultData(const GLuint texID_, const vector3f &v0_, const vector3f &v1_, const vector3f &v2_, const vector3f &v3_, const GeoPatchID &patchID_) :
+			texID(texID_), v0(v0_), v1(v1_), v2(v2_), v3(v3_), patchID(patchID_)
+		{
+		}
+		const GLuint texID;
+		const vector3f v0;
+		const vector3f v1;
+		const vector3f v2;
+		const vector3f v3;
+		const GeoPatchID patchID;
+	};
+
+	SSplitResult(const int32_t face_, const uint32_t depth_) : face(face_), depth(depth_)
+	{
+	}
+
+	void addResult(const GLuint tex, const vector3f &v0_, const vector3f &v1_, const vector3f &v2_, const vector3f &v3_, const GeoPatchID &patchID_)
+	{
+		data.push_back(SSplitResultData(tex, v0_, v1_, v2_, v3_, patchID_));
+		assert(data.size()<=4);
+	}
+
+	const int32_t face;
+	const uint32_t depth;
+	std::deque<SSplitResultData> data;
+};
+
+class GeoSphere
+{
 private:
 	void BuildFirstPatches();
-	GeoPatch *m_patches[6];
-	const SystemBody *m_sbody;
+	void Render(Graphics::Renderer *renderer, const vector3f& campos, const float radius, const float scale);
+
+	static RefCountedPtr<GeoPatchContext> sPatchContext;
+	static const uint32_t NUM_PATCHES = 6;
+	GeoPatch*			mGeoPatches[NUM_PATCHES];
+	const SystemBody*	mSystemBody;
 
 	/* all variables for GetHeight(), GetColor() */
-	Terrain *m_terrain;
+	const Terrain *mTerrain;
+	GeoPatchContext::PatchGenData *mPatchGenData;
 
-	///////////////////////////
-	// threading rubbbbbish
-	// update thread can't do it since only 1 thread can molest opengl
-	static int UpdateLODThread(void *data);
-	std::list<GLuint> m_vbosToDestroy;
-	SDL_mutex *m_vbosToDestroyLock;
-	void AddVBOToDestroy(GLuint vbo);
-	void DestroyVBOs();
-
-	vector3d m_tempCampos;
-	Graphics::Frustum m_tempFrustum;
-
-	SDL_mutex *m_updateLock;
-	SDL_mutex *m_abortLock;
-	bool m_abort;
-	//////////////////////////////
-
-	inline vector3d GetColor(const vector3d &p, const double height, const vector3d &norm) const {
-		return m_terrain->GetColor(p, height, norm);
-	}
-
-	static int s_vtxGenCount;
-
-	static RefCountedPtr<GeoPatchContext> s_patchContext;
+	static const uint32_t MAX_SPLIT_REQUESTS = 128;
+	std::deque<SSplitRequestDescription*> mSplitRequestDescriptions;
+	std::deque<SSplitResult*> mSplitResult;
 
 	void SetUpMaterials();
 	ScopedPtr<Graphics::Material> m_surfaceMaterial;
 	ScopedPtr<Graphics::Material> m_atmosphereMaterial;
 	//special parameters for shaders
 	SystemBody::AtmosphereParameters m_atmosphereParameters;
+
+public:
+	GeoSphere(const SystemBody *body);
+	~GeoSphere();
+
+	static void Init();
+	static void Uninit();
+	static void OnChangeDetailLevel();
+
+	void Update(const vector3f &campos);
+	void Render(const matrix4x4f &ViewMatrix, const matrix4x4f &ModelMatrix, const matrix4x4f &MVP, Graphics::Renderer *renderer, const vector3f& campos, const float radius, const float scale);
+
+	bool AddSplitRequest(SSplitRequestDescription *desc);
+	void ProcessSplitRequests();
+	void ProcessSplitResults();
+
+	Graphics::Material* SurfaceMaterial() const { return m_surfaceMaterial.Get(); }
 };
 
-#endif /* _GEOSPHERE_H */
+#endif //__GEOMESH_H__

@@ -409,9 +409,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\UIView.cpp" />
-    <ClCompile Include="..\..\src\GeoMesh.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\GeoPatch.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -872,9 +869,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src\PngWriter.h" />
     <ClInclude Include="..\..\src\UIView.h" />
-    <ClInclude Include="..\..\src\GeoMesh.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\GeoPatch.h">
       <Filter>src</Filter>
     </ClInclude>

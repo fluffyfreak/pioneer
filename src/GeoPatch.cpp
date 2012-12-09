@@ -3,13 +3,15 @@
 
 #include <cassert>
 #include "utils.h"
-#include "GeoMesh.h"
+#include "GeoSphere.h"
 #include "GeoPatch.h"
 #include "GeoContext.h"
 #include "Pi.h"
 
+#include "graphics\TextureGL.h"
+
 // constructor
-GeoPatch::GeoPatch(const GeoPatchContext &context_, GeoMesh *pGeoSphere_, 
+GeoPatch::GeoPatch(const GeoPatchContext &context_, GeoSphere *pGeoSphere_, 
 	const vector3f &v0_, const vector3f &v1_, const vector3f &v2_, const vector3f &v3_, 
 	const uint32_t depth_, const GeoPatchID &ID_)
 	: mContext(context_), mpGeoSphere(pGeoSphere_), mV0(v0_), mV1(v1_), mV2(v2_), mV3(v3_), 
@@ -82,7 +84,7 @@ void GeoPatch::GenerateMesh() {
 
 	// now create the VBO
 	assert(nullptr==mVBO);
-	mVBO = new Graphics::VertexBuffer( mContext.NUM_MESH_VERTS(), &mContext.vertexs()[0], nullptr, mContext.uvs() );
+	mVBO = new Graphics::GLvbo( mContext.NUM_MESH_VERTS(), &mContext.vertexs()[0], nullptr, mContext.uvs() );
 }
 
 void GeoPatch::ReceiveHeightmaps(const SSplitResult *psr)
@@ -159,19 +161,16 @@ void GeoPatch::Render(const vector3f &campos, const Graphics::Frustum &frustum)
 
 		Pi::statSceneTris += 2*(mContext.edgeLen()-1)*(mContext.edgeLen()-1);
 
-		float patchColour[4] = {
-			float(mDepth+1) * (1.0f/float(GEOPATCH_MAX_DEPTH)), 
-			0.0f, 
-			float(GEOPATCH_MAX_DEPTH-mDepth) * (1.0f/float(GEOPATCH_MAX_DEPTH)), 
-			1.0f
-		};
-		//glm::vec4 patchColour(1.0f, 1.0f, 1.0f, 1.0f);
-		glUniform4fv(mContext.patchColourID(), 1, &patchColour[0]);
-		glUniform3fv(mContext.patchV0ID(), 1, &mV0[0]);
-		glUniform3fv(mContext.patchV1ID(), 1, &mV1[0]);
-		glUniform3fv(mContext.patchV2ID(), 1, &mV2[0]);
-		glUniform3fv(mContext.patchV3ID(), 1, &mV3[0]);
-		glUniform1i(mContext.patchTexHeightmapID(), 0); //Texture unit 0 is for base images.
+		mGeoPatchParameters.mV0 = mV0;
+		mGeoPatchParameters.mV1 = mV1;
+		mGeoPatchParameters.mV2 = mV2;
+		mGeoPatchParameters.mV3 = mV3;
+		
+		//glUniform1i(mContext.patchTexHeightmapID(), 0); //Texture unit 0 is for base images.
+		mpGeoSphere->SurfaceMaterial()->specialParameter1 = &mGeoPatchParameters;
+		//mpGeoSphere->m_surfaceMaterial->texture0
+
+		mpGeoSphere->SurfaceMaterial()->Apply();
 
 		// bind the heightmap texture
 		glActiveTexture(GL_TEXTURE0);
@@ -193,6 +192,8 @@ void GeoPatch::Render(const vector3f &campos, const Graphics::Frustum &frustum)
 		);
 
 		(*mVBO).Release();
+
+		mpGeoSphere->SurfaceMaterial()->Unapply();
 	}
 }
 

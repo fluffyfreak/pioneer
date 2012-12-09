@@ -29,7 +29,7 @@ public:
 	virtual const SystemBody *GetSystemBody() const { return m_sbody; }
 	GeoSphere *GetGeoSphere() const { return m_geosphere; }
 	double GetMaxFeatureRadius() const { // returns value in metres
-		return (m_geosphere->GetMaxFeatureHeight() + 1.0) * m_sbody->GetRadius();
+		return 1.0f;//(m_geosphere->GetMaxFeatureHeight() + 1.0) * m_sbody->GetRadius();
 	}
 
 protected:

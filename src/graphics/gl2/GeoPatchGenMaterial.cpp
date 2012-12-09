@@ -45,7 +45,7 @@ void GeoPatchGenProgram::InitUniforms()
 
 Program *GeoPatchGenMaterial::CreateProgram(const MaterialDescriptor &desc)
 {
-	assert(desc.effect == EFFECT_GEOPATCH_GEN);
+	//assert(desc.effect == EFFECT_GEOPATCH_GEN);
 	assert(desc.dirLights < 5);
 	std::stringstream ss;
 	ss << stringf("#define NUM_LIGHTS %0{u}\n", desc.dirLights);

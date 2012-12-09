@@ -16,6 +16,14 @@ namespace Graphics {
 	};
 };
 
+struct GeoPatchParameters {
+	vector3f mV0;
+	vector3f mV1;
+	vector3f mV2;
+	vector3f mV3;
+	//glBindTexture(GL_TEXTURE_2D, mHeightmap);
+};
+
 class GeoPatchContext : public RefCounted
 {
 private:
@@ -28,7 +36,7 @@ private:
 	const uint32_t mHalfEdgeLen;
 
 	Graphics::CGLquad	mQuad;
-	//Graphics::VertexBuffer *mVBO;
+	//Graphics::GLvbo *mVBO;
 	Graphics::FrameBuffer	mFBO;
 	
 	vector3f * mVertexs;

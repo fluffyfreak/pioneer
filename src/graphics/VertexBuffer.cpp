@@ -7,7 +7,7 @@
 
 namespace Graphics {
 
-VertexBuffer::VertexBuffer(const int nElements, const void *pVertexBuf, const void *pNormalBuf, const void *pUVBuf, GLenum nUsage)
+GLvbo::GLvbo(const int nElements, const void *pVertexBuf, const void *pNormalBuf, const void *pUVBuf, GLenum nUsage)
 {
 	assert(nullptr!=pVertexBuf);
 	assert(0<nElements);
@@ -20,13 +20,13 @@ VertexBuffer::VertexBuffer(const int nElements, const void *pVertexBuf, const vo
 
 	Init(nElements, pVertexBuf, pNormalBuf, pUVBuf, nUsage);
 }
-VertexBuffer::~VertexBuffer()
+GLvbo::~GLvbo()
 {
 	Cleanup();
 }
 
 // private
-void VertexBuffer::Init(const int nElements, const void *pVertexBuf, const void *pNormalBuf, const void *pUVBuf, GLenum nUsage)
+void GLvbo::Init(const int nElements, const void *pVertexBuf, const void *pNormalBuf, const void *pUVBuf, GLenum nUsage)
 {
 	assert(nullptr!=pVertexBuf);
 	assert(0<nElements);
@@ -57,7 +57,7 @@ void VertexBuffer::Init(const int nElements, const void *pVertexBuf, const void 
 	// LOG_GLERROR();
 }
 
-void VertexBuffer::Cleanup()
+void GLvbo::Cleanup()
 {
 	if(mVertObjId != UINT_MAX)
 	{
@@ -93,7 +93,7 @@ void VertexBuffer::Cleanup()
 	}
 }
 
-void VertexBuffer::Bind() const
+void GLvbo::Bind() const
 {
 	glBindVertexArray(mVAO);
 
@@ -146,7 +146,7 @@ void VertexBuffer::Bind() const
 	}
 }
 
-void VertexBuffer::Release() const
+void GLvbo::Release() const
 {
 	GLuint attributeIndex = 0;
 	if(mVertObjId != UINT_MAX) {

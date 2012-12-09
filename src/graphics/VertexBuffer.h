@@ -9,7 +9,7 @@
 
 namespace Graphics {
 
-class VertexBuffer
+class GLvbo
 {
 private:
 	void Init(const int nElements, const void *pVertexBuf, const void *pNormalBuf=nullptr, const void *pUVBuf=nullptr, GLenum nUsage=GL_STATIC_DRAW);	// Or GL_DYNAMIC_DRAW
@@ -22,8 +22,8 @@ protected:
 	GLuint mUVObjId;
 
 public:
-	VertexBuffer(const int nElements, const void *pVertexBuf, const void *pNormalBuf=nullptr, const void *pUVBuf=nullptr, GLenum nUsage=GL_STATIC_DRAW);	// Or GL_DYNAMIC_DRAW
-	~VertexBuffer();
+	GLvbo(const int nElements, const void *pVertexBuf, const void *pNormalBuf=nullptr, const void *pUVBuf=nullptr, GLenum nUsage=GL_STATIC_DRAW);	// Or GL_DYNAMIC_DRAW
+	~GLvbo();
 
 	void Bind() const;
 	void Release() const;

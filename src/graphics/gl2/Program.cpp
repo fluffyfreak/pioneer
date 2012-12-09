@@ -54,7 +54,7 @@ static bool check_glsl_errors(const char *filenamevert, const char *filenamefrag
 #ifndef NDEBUG
 	if (infologLength > 0) {
 		if (pi_strcasestr("infoLog", "warning"))
-			fprintf(stderr, "%s: %s", filename, infoLog);
+			fprintf(stderr, "%s/%s: %s", filenamevert, filenamefrag, infoLog);
 	}
 #endif
 

@@ -54,6 +54,7 @@ public:
 	bool twoSided;
 
 	void *specialParameter0; //this can be whatever. Bit of a hack.
+	void *specialParameter1; //this can be whatever. Bit of a hack.
 };
 
 // Renderer creates a material that best matches these requirements.

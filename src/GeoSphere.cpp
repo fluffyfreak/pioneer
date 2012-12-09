@@ -1,8 +1,12 @@
-// Copyright © 2008-2012 Pioneer Developers. See AUTHORS.txt for details
+// Copyright � 2008-2012 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
-#include "libs.h"
+#include <cassert>
+#include "utils.h"
 #include "GeoSphere.h"
+
+#include "GeoPatch.h"
+
 #include "perlin.h"
 #include "Pi.h"
 #include "RefCounted.h"
@@ -12,1348 +16,104 @@
 #include "graphics/Graphics.h"
 #include "graphics/VertexArray.h"
 #include "graphics/gl2/GeoSphereMaterial.h"
-#include "vcacheopt/vcacheopt.h"
-#include <deque>
-#include <algorithm>
 
-// tri edge lengths
-#define GEOPATCH_SUBDIVIDE_AT_CAMDIST	5.0
-#define GEOPATCH_MAX_DEPTH  15 + (2*Pi::detail.fracmult) //15
-#define GEOSPHERE_USE_THREADING
-
-static const int GEOPATCH_MAX_EDGELEN = 55;
-int GeoSphere::s_vtxGenCount = 0;
-RefCountedPtr<GeoPatchContext> GeoSphere::s_patchContext;
-
+//static 
+RefCountedPtr<GeoPatchContext> GeoSphere::sPatchContext;
+static std::vector<GeoSphere*> s_allGeospheres;
 // must be odd numbers
 static const int detail_edgeLen[5] = {
-	7, 15, 25, 35, 55
+	29, 61, 125, 253, 509
 };
 
-#define PRINT_VECTOR(_v) printf("%f,%f,%f\n", (_v).x, (_v).y, (_v).z);
-
-#pragma pack(4)
-struct VBOVertex
+GeoSphere::GeoSphere(const SystemBody *body) : mSystemBody(body)
 {
-	float x,y,z;
-	float nx,ny,nz;
-	unsigned char col[4];
-	float padding;
-};
-#pragma pack()
+	// what terrain type are we?
+	mTerrain = Terrain::InstanceTerrain(body);
 
-// hold the 16 possible terrain edge connections
-const int NUM_INDEX_LISTS = 16;
+	// extract the data i need for generating the terrain patches in shader
+	mPatchGenData = new GeoPatchContext::PatchGenData;
+	const float reciprocalFBOWidth = sPatchContext->textureLerpStep();
+	mPatchGenData->fracStep = reciprocalFBOWidth;
+	mPatchGenData->maxHeight = mTerrain->GetMaxHeight();
+	mPatchGenData->seaLevel = mTerrain->GetSealevel();
+	mPatchGenData->fracnum = mTerrain->GetFracNum();
 
-class GeoPatchContext : public RefCounted {
-public:
-	const int edgeLen;
-	const int halfEdgeLen;
+	// ???
+	mPatchGenData->usesHeightmap = false;
+	mPatchGenData->heightmap = 0;
 
-	inline int VBO_COUNT_LO_EDGE() const { return 3*(halfEdgeLen); }
-	inline int VBO_COUNT_HI_EDGE() const { return 3*(edgeLen-1); }
-	inline int VBO_COUNT_MID_IDX() const { return (4*3*(edgeLen-3))    + 2*(edgeLen-3)*(edgeLen-3)*3; }
-	//                                            ^^ serrated teeth bit  ^^^ square inner bit
-
-	inline int IDX_VBO_LO_OFFSET(int i) const { return i*sizeof(unsigned short)*3*(halfEdgeLen); }
-	inline int IDX_VBO_HI_OFFSET(int i) const { return (i*sizeof(unsigned short)*VBO_COUNT_HI_EDGE())+IDX_VBO_LO_OFFSET(4); }
-	inline int IDX_VBO_MAIN_OFFSET()    const { return IDX_VBO_HI_OFFSET(4); }
-	inline int IDX_VBO_COUNT_ALL_IDX()	const { return ((edgeLen-1)*(edgeLen-1))*2*3; }
-
-	inline int NUMVERTICES() const { return edgeLen*edgeLen; }
-
-	double frac;
-
-	ScopedArray<unsigned short> midIndices;
-	ScopedArray<unsigned short> loEdgeIndices[4];
-	ScopedArray<unsigned short> hiEdgeIndices[4];
-	GLuint indices_vbo;
-	GLuint indices_list[NUM_INDEX_LISTS];
-	GLuint indices_tri_count;
-	GLuint indices_tri_counts[NUM_INDEX_LISTS];
-	VBOVertex *vbotemp;
-
-	GeoPatchContext(const int _edgeLen) : edgeLen(_edgeLen), halfEdgeLen(_edgeLen>>1) {
-		Init();
-	}
-
-	~GeoPatchContext() {
-		Cleanup();
-	}
-
-	void Refresh() {
-		Cleanup();
-		Init();
-	}
-
-	void Cleanup() {
-		midIndices.Reset();
-		for (int i=0; i<4; i++) {
-			loEdgeIndices[i].Reset();
-			hiEdgeIndices[i].Reset();
-		}
-		if (indices_vbo) {
-			indices_vbo = 0;
-		}
-		for (int i=0; i<NUM_INDEX_LISTS; i++) {
-			if (indices_list[i]) {
-				glDeleteBuffersARB(1, &indices_list[i]);
-			}
-		}
-		delete [] vbotemp;
-	}
-
-	void updateIndexBufferId(const GLuint edge_hi_flags) {
-		assert(edge_hi_flags < GLuint(NUM_INDEX_LISTS));
-		indices_vbo = indices_list[edge_hi_flags];
-		indices_tri_count = indices_tri_counts[edge_hi_flags];
-	}
-
-	int getIndices(std::vector<unsigned short> &pl, const unsigned int edge_hi_flags)
+	for(int i=0;i<10;i++)
 	{
-		// calculate how many tri's there are
-		int tri_count = (VBO_COUNT_MID_IDX() / 3); 
-		for( int i=0; i<4; ++i ) {
-			if( edge_hi_flags & (1 << i) ) {
-				tri_count += (VBO_COUNT_HI_EDGE() / 3);
-			} else {
-				tri_count += (VBO_COUNT_LO_EDGE() / 3);
-			}
-		}
-
-		// pre-allocate enough space
-		pl.reserve(tri_count);
-
-		// add all of the middle indices
-		for(int i=0; i<VBO_COUNT_MID_IDX(); ++i) {
-			pl.push_back(midIndices[i]);
-		}
-		// selectively add the HI or LO detail indices
-		for (int i=0; i<4; i++) {
-			if( edge_hi_flags & (1 << i) ) {
-				for(int j=0; j<VBO_COUNT_HI_EDGE(); ++j) {
-					pl.push_back(hiEdgeIndices[i][j]);
-				}
-			} else {
-				for(int j=0; j<VBO_COUNT_LO_EDGE(); ++j) {
-					pl.push_back(loEdgeIndices[i][j]);
-				}
-			}
-		}
-
-		return tri_count;
+		const fracdef_t &def = mTerrain->GetFracDef(i);
+		mPatchGenData->octaves[i] = def.octaves;
+		mPatchGenData->amplitude[i] = def.amplitude;
+		mPatchGenData->lacunarity[i] = def.lacunarity;
+		mPatchGenData->frequency[i] = def.frequency;
 	}
 
-	void Init() {
-		frac = 1.0 / double(edgeLen-1);
-
-		vbotemp = new VBOVertex[NUMVERTICES()];
-
-		unsigned short *idx;
-		midIndices.Reset(new unsigned short[VBO_COUNT_MID_IDX()]);
-		for (int i=0; i<4; i++) {
-			loEdgeIndices[i].Reset(new unsigned short[VBO_COUNT_LO_EDGE()]);
-			hiEdgeIndices[i].Reset(new unsigned short[VBO_COUNT_HI_EDGE()]);
-		}
-		/* also want vtx indices for tris not touching edge of patch */
-		idx = midIndices.Get();
-		for (int x=1; x<edgeLen-2; x++) {
-			for (int y=1; y<edgeLen-2; y++) {
-				idx[0] = x + edgeLen*y;
-				idx[1] = x+1 + edgeLen*y;
-				idx[2] = x + edgeLen*(y+1);
-				idx+=3;
-
-				idx[0] = x+1 + edgeLen*y;
-				idx[1] = x+1 + edgeLen*(y+1);
-				idx[2] = x + edgeLen*(y+1);
-				idx+=3;
-			}
-		}
-		{
-			for (int x=1; x<edgeLen-3; x+=2) {
-				// razor teeth near edge 0
-				idx[0] = x + edgeLen;
-				idx[1] = x+1;
-				idx[2] = x+1 + edgeLen;
-				idx+=3;
-				idx[0] = x+1;
-				idx[1] = x+2 + edgeLen;
-				idx[2] = x+1 + edgeLen;
-				idx+=3;
-			}
-			for (int x=1; x<edgeLen-3; x+=2) {
-				// near edge 2
-				idx[0] = x + edgeLen*(edgeLen-2);
-				idx[1] = x+1 + edgeLen*(edgeLen-2);
-				idx[2] = x+1 + edgeLen*(edgeLen-1);
-				idx+=3;
-				idx[0] = x+1 + edgeLen*(edgeLen-2);
-				idx[1] = x+2 + edgeLen*(edgeLen-2);
-				idx[2] = x+1 + edgeLen*(edgeLen-1);
-				idx+=3;
-			}
-			for (int y=1; y<edgeLen-3; y+=2) {
-				// near edge 1
-				idx[0] = edgeLen-2 + y*edgeLen;
-				idx[1] = edgeLen-1 + (y+1)*edgeLen;
-				idx[2] = edgeLen-2 + (y+1)*edgeLen;
-				idx+=3;
-				idx[0] = edgeLen-2 + (y+1)*edgeLen;
-				idx[1] = edgeLen-1 + (y+1)*edgeLen;
-				idx[2] = edgeLen-2 + (y+2)*edgeLen;
-				idx+=3;
-			}
-			for (int y=1; y<edgeLen-3; y+=2) {
-				// near edge 3
-				idx[0] = 1 + y*edgeLen;
-				idx[1] = 1 + (y+1)*edgeLen;
-				idx[2] = (y+1)*edgeLen;
-				idx+=3;
-				idx[0] = 1 + (y+1)*edgeLen;
-				idx[1] = 1 + (y+2)*edgeLen;
-				idx[2] = (y+1)*edgeLen;
-				idx+=3;
-			}
-		}
-		// full detail edge triangles
-		{
-			idx = hiEdgeIndices[0].Get();
-			for (int x=0; x<edgeLen-1; x+=2) {
-				idx[0] = x; idx[1] = x+1; idx[2] = x+1 + edgeLen;
-				idx+=3;
-				idx[0] = x+1; idx[1] = x+2; idx[2] = x+1 + edgeLen;
-				idx+=3;
-			}
-			idx = hiEdgeIndices[1].Get();
-			for (int y=0; y<edgeLen-1; y+=2) {
-				idx[0] = edgeLen-1 + y*edgeLen;
-				idx[1] = edgeLen-1 + (y+1)*edgeLen;
-				idx[2] = edgeLen-2 + (y+1)*edgeLen;
-				idx+=3;
-				idx[0] = edgeLen-1 + (y+1)*edgeLen;
-				idx[1] = edgeLen-1 + (y+2)*edgeLen;
-				idx[2] = edgeLen-2 + (y+1)*edgeLen;
-				idx+=3;
-			}
-			idx = hiEdgeIndices[2].Get();
-			for (int x=0; x<edgeLen-1; x+=2) {
-				idx[0] = x + (edgeLen-1)*edgeLen;
-				idx[1] = x+1 + (edgeLen-2)*edgeLen;
-				idx[2] = x+1 + (edgeLen-1)*edgeLen;
-				idx+=3;
-				idx[0] = x+1 + (edgeLen-2)*edgeLen;
-				idx[1] = x+2 + (edgeLen-1)*edgeLen;
-				idx[2] = x+1 + (edgeLen-1)*edgeLen;
-				idx+=3;
-			}
-			idx = hiEdgeIndices[3].Get();
-			for (int y=0; y<edgeLen-1; y+=2) {
-				idx[0] = y*edgeLen;
-				idx[1] = 1 + (y+1)*edgeLen;
-				idx[2] = (y+1)*edgeLen;
-				idx+=3;
-				idx[0] = (y+1)*edgeLen;
-				idx[1] = 1 + (y+1)*edgeLen;
-				idx[2] = (y+2)*edgeLen;
-				idx+=3;
-			}
-		}
-		// these edge indices are for patches with no
-		// neighbour of equal or greater detail -- they reduce
-		// their edge complexity by 1 division
-		{
-			idx = loEdgeIndices[0].Get();
-			for (int x=0; x<edgeLen-2; x+=2) {
-				idx[0] = x;
-				idx[1] = x+2;
-				idx[2] = x+1+edgeLen;
-				idx += 3;
-			}
-			idx = loEdgeIndices[1].Get();
-			for (int y=0; y<edgeLen-2; y+=2) {
-				idx[0] = (edgeLen-1) + y*edgeLen;
-				idx[1] = (edgeLen-1) + (y+2)*edgeLen;
-				idx[2] = (edgeLen-2) + (y+1)*edgeLen;
-				idx += 3;
-			}
-			idx = loEdgeIndices[2].Get();
-			for (int x=0; x<edgeLen-2; x+=2) {
-				idx[0] = x+edgeLen*(edgeLen-1);
-				idx[2] = x+2+edgeLen*(edgeLen-1);
-				idx[1] = x+1+edgeLen*(edgeLen-2);
-				idx += 3;
-			}
-			idx = loEdgeIndices[3].Get();
-			for (int y=0; y<edgeLen-2; y+=2) {
-				idx[0] = y*edgeLen;
-				idx[2] = (y+2)*edgeLen;
-				idx[1] = 1 + (y+1)*edgeLen;
-				idx += 3;
-			}
-		}
-
-		// these will hold the optimised indices
-		std::vector<unsigned short> pl_short[NUM_INDEX_LISTS];
-		// populate the N indices lists from the arrays built during InitTerrainIndices()
-		for( int i=0; i<NUM_INDEX_LISTS; ++i ) {
-			const unsigned int edge_hi_flags = i;
-			indices_tri_counts[i] = getIndices(pl_short[i], edge_hi_flags);
-		}
-
-		// iterate over each index list and optimize it
-		for( int i=0; i<NUM_INDEX_LISTS; ++i ) {
-			int tri_count = indices_tri_counts[i];
-			VertexCacheOptimizerUShort vco;
-			VertexCacheOptimizerUShort::Result res = vco.Optimize(&pl_short[i][0], tri_count);
-			assert(0 == res);
-		}
-
-		// everything should be hunky-dory for setting up as OpenGL index buffers now.
-		for( int i=0; i<NUM_INDEX_LISTS; ++i ) {
-			glGenBuffersARB(1, &indices_list[i]);
-			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, indices_list[i]);
-			glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned short)*indices_tri_counts[i]*3, &(pl_short[i][0]), GL_STATIC_DRAW);
-			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, 0);
-		}
-
-		// default it to the last entry which uses the hi-res borders
-		indices_vbo			= indices_list[NUM_INDEX_LISTS-1];
-		indices_tri_count	= indices_tri_counts[NUM_INDEX_LISTS-1];
-
-		if (midIndices) {
-			midIndices.Reset();
-			for (int i=0; i<4; i++) {
-				loEdgeIndices[i].Reset();
-				hiEdgeIndices[i].Reset();
-			}
-		}
+	// make sure these are clear
+	for (int i=0; i<NUM_PATCHES; i++) {
+		mGeoPatches[i] = nullptr;
 	}
 
-	void GetEdge(const vector3d * __restrict const array, const int edge, vector3d * __restrict ev) const {
-		if (edge == 0) {
-			for (int x=0; x<edgeLen; x++) ev[x] = array[x];
-		} else if (edge == 1) {
-			const int x = edgeLen-1;
-			for (int y=0; y<edgeLen; y++) ev[y] = array[x + y*edgeLen];
-		} else if (edge == 2) {
-			const int y = edgeLen-1;
-			for (int x=0; x<edgeLen; x++) ev[x] = array[(edgeLen-1)-x + y*edgeLen];
-		} else {
-			for (int y=0; y<edgeLen; y++) ev[y] = array[0 + ((edgeLen-1)-y)*edgeLen];
-		}
-	}
-
-	void SetEdge(vector3d * __restrict array, const int edge, const vector3d * __restrict const ev) const {
-		if (edge == 0) {
-			for (int x=0; x<edgeLen; x++) array[x] = ev[x];
-		} else if (edge == 1) {
-			const int x = edgeLen-1;
-			for (int y=0; y<edgeLen; y++) array[x + y*edgeLen] = ev[y];
-		} else if (edge == 2) {
-			const int y = edgeLen-1;
-			for (int x=0; x<edgeLen; x++) array[(edgeLen-1)-x + y*edgeLen] = ev[x];
-		} else {
-			for (int y=0; y<edgeLen; y++) array[0 + ((edgeLen-1)-y)*edgeLen] = ev[y];
-		}
-	}
-};
-
-struct TGeoPatchID {
-	TGeoPatchID(uint64_t i) : patchID64(i) {}
-	const uint64_t patchID64;
-
-	inline TGeoPatchID nextPatchID(const int depth, const int idx) const
-	{
-		PiDbgOnlyAssert(idx>=0 && idx<4);
-		PiDbgOnlyAssert(depth<=GEOPATCH_MAX_DEPTH);
-		const uint64_t idx64 = idx;
-		const uint64_t shiftDepth64 = depth*2ULL;
-		PiDbgOnlyAssert((patchID64 & (3i64<<shiftDepth64))==0);
-		return TGeoPatchID( patchID64 | (idx64<<shiftDepth64) );
-	}
-
-	inline int getPatchIdx(const int depth) const
-	{
-		PiDbgOnlyAssert(depth<=GEOPATCH_MAX_DEPTH);
-		const uint64_t shiftDepth64 = depth*2ULL;
-		const uint64_t idx64 = (patchID64 & (3i64<<shiftDepth64)) >> shiftDepth64;
-		PiDbgOnlyAssert(idx64<=UINT_MAX);
-		return int(idx64);
-	}
-};
-
-
-
-class GeoPatch {
-public:
-	const RefCountedPtr<GeoPatchContext> ctx;
-	vector3d v[4];
-	vector3d *vertices;
-	vector3d *normals;
-	vector3d *colors;
-	GLuint m_vbo;
-	GeoPatch *kids[4];
-	GeoPatch *parent;
-	GeoPatch *edgeFriend[4]; // [0]=v01, [1]=v12, [2]=v20
-	GeoSphere * const geosphere;
-	double m_roughLength;
-	vector3d clipCentroid, centroid;
-	double clipRadius;
-	const int m_depth;
-	SDL_mutex *m_kidsLock;
-	bool m_needUpdateVBOs;
-	double m_distMult;
-	const TGeoPatchID m_patchID;	// unique indentifier for each GeoPatch
-
-	static unsigned int s_uiCurrNumGeoPatches;
-	static unsigned int s_uiMaxNumGeoPatches;
-
-	GeoPatch(const RefCountedPtr<GeoPatchContext> &_ctx, GeoSphere *gs, 
-		const vector3d& v0, const vector3d& v1, const vector3d& v2, const vector3d& v3, const int depth, const TGeoPatchID& patchID) 
-		: ctx(_ctx), m_vbo(0), parent(NULL), geosphere(gs), m_depth(depth), m_patchID(patchID)
-	{
-		assert(m_patchID.getPatchIdx(depth)>=0 && m_patchID.getPatchIdx(depth)<4);
-		// statics
-		++s_uiCurrNumGeoPatches;
-		s_uiMaxNumGeoPatches = std::max(s_uiMaxNumGeoPatches, s_uiCurrNumGeoPatches);
-
-		m_kidsLock = SDL_CreateMutex();
-		v[0] = v0; v[1] = v1; v[2] = v2; v[3] = v3;
-
-		kids[0] = kids[1] = kids[2] = kids[3] = NULL;
-		edgeFriend[0] = edgeFriend[1] = edgeFriend[2] = edgeFriend[3] = NULL;
-
-		clipCentroid = (v0+v1+v2+v3) * 0.25;
-		clipRadius = 0;
-		for (int i=0; i<4; i++) {
-			clipRadius = std::max(clipRadius, (v[i]-clipCentroid).Length());
-		}
-		if (geosphere->m_sbody->type < SystemBody::TYPE_PLANET_ASTEROID) {
- 			m_distMult = 10 / Clamp(depth, 1, 10);
- 		} else {
- 			m_distMult = 5 / Clamp(depth, 1, 5);
- 		}
-		m_roughLength = GEOPATCH_SUBDIVIDE_AT_CAMDIST / pow(2.0, depth) * m_distMult;
-		m_needUpdateVBOs = false;
-		normals = new vector3d[ctx->NUMVERTICES()];
-		vertices = new vector3d[ctx->NUMVERTICES()];
-		colors = new vector3d[ctx->NUMVERTICES()];
-	}
-
-	~GeoPatch() {
-		SDL_DestroyMutex(m_kidsLock);
-		for (int i=0; i<4; i++) {
-			if (edgeFriend[i]) edgeFriend[i]->NotifyEdgeFriendDeleted(this);
-		}
-		for (int i=0; i<4; i++) if (kids[i]) delete kids[i];
-		delete[] vertices;
-		delete[] normals;
-		delete[] colors;
-		geosphere->AddVBOToDestroy(m_vbo);
-
-		// statics
-		--s_uiCurrNumGeoPatches;
-	}
-
-	void UpdateVBOs() {
-		m_needUpdateVBOs = true;
-	}
-
-	void _UpdateVBOs() {
-		if (m_needUpdateVBOs) {
-			if (!m_vbo) glGenBuffersARB(1, &m_vbo);
-			m_needUpdateVBOs = false;
-			glBindBufferARB(GL_ARRAY_BUFFER, m_vbo);
-			glBufferDataARB(GL_ARRAY_BUFFER, sizeof(VBOVertex)*ctx->NUMVERTICES(), 0, GL_DYNAMIC_DRAW);
-			for (int i=0; i<ctx->NUMVERTICES(); i++)
-			{
-				clipRadius = std::max(clipRadius, (vertices[i]-clipCentroid).Length());
-				VBOVertex *pData = ctx->vbotemp + i;
-				pData->x = float(vertices[i].x - clipCentroid.x);
-				pData->y = float(vertices[i].y - clipCentroid.y);
-				pData->z = float(vertices[i].z - clipCentroid.z);
-				pData->nx = float(normals[i].x);
-				pData->ny = float(normals[i].y);
-				pData->nz = float(normals[i].z);
-				pData->col[0] = static_cast<unsigned char>(Clamp(colors[i].x*255.0, 0.0, 255.0));
-				pData->col[1] = static_cast<unsigned char>(Clamp(colors[i].y*255.0, 0.0, 255.0));
-				pData->col[2] = static_cast<unsigned char>(Clamp(colors[i].z*255.0, 0.0, 255.0));
-				pData->col[3] = 255;
-			}
-			glBufferDataARB(GL_ARRAY_BUFFER, sizeof(VBOVertex)*ctx->NUMVERTICES(), ctx->vbotemp, GL_DYNAMIC_DRAW);
-			glBindBufferARB(GL_ARRAY_BUFFER, 0);
-		}
-	}
-	/* not quite edge, since we share edge vertices so that would be
-	 * fucking pointless. one position inwards. used to make edge normals
-	 * for adjacent tiles */
-	void GetEdgeMinusOneVerticesFlipped(const int edge, vector3d *ev) const {
-		if (edge == 0) {
-			for (int x=0; x<ctx->edgeLen; x++) ev[ctx->edgeLen-1-x] = vertices[x + ctx->edgeLen];
-		} else if (edge == 1) {
-			const int x = ctx->edgeLen-2;
-			for (int y=0; y<ctx->edgeLen; y++) ev[ctx->edgeLen-1-y] = vertices[x + y*ctx->edgeLen];
-		} else if (edge == 2) {
-			const int y = ctx->edgeLen-2;
-			for (int x=0; x<ctx->edgeLen; x++) ev[ctx->edgeLen-1-x] = vertices[(ctx->edgeLen-1)-x + y*ctx->edgeLen];
-		} else {
-			for (int y=0; y<ctx->edgeLen; y++) ev[ctx->edgeLen-1-y] = vertices[1 + ((ctx->edgeLen-1)-y)*ctx->edgeLen];
-		}
-	}
-	int GetEdgeIdxOf(const GeoPatch *e) const {
-		for (int i=0; i<4; i++) {
-			if (edgeFriend[i] == e) return i;
-		}
-		abort();
-		return -1;
-	}
-
-
-	void FixEdgeNormals(const int edge, const vector3d *ev) const {
-		int x, y;
-		switch (edge) {
-		case 0:
-			for (x=1; x<ctx->edgeLen-1; x++) {
-				const vector3d x1 = vertices[x-1];
-				const vector3d x2 = vertices[x+1];
-				const vector3d y1 = ev[x];
-				const vector3d y2 = vertices[x + ctx->edgeLen];
-				const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
-				normals[x] = norm;
-				// make color
-				const vector3d p = GetSpherePoint(x*ctx->frac, 0);
-				const double height = colors[x].x;
-				colors[x] = geosphere->GetColor(p, height, norm);
-			}
-			break;
-		case 1:
-			x = ctx->edgeLen-1;
-			for (y=1; y<ctx->edgeLen-1; y++) {
-				const vector3d x1 = vertices[(x-1) + y*ctx->edgeLen];
-				const vector3d x2 = ev[y];
-				const vector3d y1 = vertices[x + (y-1)*ctx->edgeLen];
-				const vector3d y2 = vertices[x + (y+1)*ctx->edgeLen];
-				const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
-				normals[x + y*ctx->edgeLen] = norm;
-				// make color
-				const vector3d p = GetSpherePoint(x*ctx->frac, y*ctx->frac);
-				const double height = colors[x + y*ctx->edgeLen].x;
-				colors[x + y*ctx->edgeLen] = geosphere->GetColor(p, height, norm);
-	//			colors[x+y*ctx->edgeLen] = vector3d(1,0,0);
-			}
-			break;
-		case 2:
-			y = ctx->edgeLen-1;
-			for (x=1; x<ctx->edgeLen-1; x++) {
-				const vector3d x1 = vertices[x-1 + y*ctx->edgeLen];
-				const vector3d x2 = vertices[x+1 + y*ctx->edgeLen];
-				const vector3d y1 = vertices[x + (y-1)*ctx->edgeLen];
-				const vector3d y2 = ev[ctx->edgeLen-1-x];
-				const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
-				normals[x + y*ctx->edgeLen] = norm;
-				// make color
-				const vector3d p = GetSpherePoint(x*ctx->frac, y*ctx->frac);
-				const double height = colors[x + y*ctx->edgeLen].x;
-				colors[x + y*ctx->edgeLen] = geosphere->GetColor(p, height, norm);
-			}
-			break;
-		case 3:
-			for (y=1; y<ctx->edgeLen-1; y++) {
-				const vector3d x1 = ev[ctx->edgeLen-1-y];
-				const vector3d x2 = vertices[1 + y*ctx->edgeLen];
-				const vector3d y1 = vertices[(y-1)*ctx->edgeLen];
-				const vector3d y2 = vertices[(y+1)*ctx->edgeLen];
-				const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
-				normals[y*ctx->edgeLen] = norm;
-				// make color
-				const vector3d p = GetSpherePoint(0, y*ctx->frac);
-				const double height = colors[y*ctx->edgeLen].x;
-				colors[y*ctx->edgeLen] = geosphere->GetColor(p, height, norm);
-	//			colors[y*ctx->edgeLen] = vector3d(0,1,0);
-			}
-			break;
-		}
-	}
-
-	int GetChildIdx(const GeoPatch *child) const {
-		for (int i=0; i<4; i++) {
-			if (kids[i] == child) return i;
-		}
-		abort();
-		return -1;
-	}
-
-	void FixEdgeFromParentInterpolated(const int edge) {
-		// noticeable artefacts from not doing so...
-		vector3d ev[GEOPATCH_MAX_EDGELEN];
-		vector3d en[GEOPATCH_MAX_EDGELEN];
-		vector3d ec[GEOPATCH_MAX_EDGELEN];
-		vector3d ev2[GEOPATCH_MAX_EDGELEN];
-		vector3d en2[GEOPATCH_MAX_EDGELEN];
-		vector3d ec2[GEOPATCH_MAX_EDGELEN];
-		ctx->GetEdge(parent->vertices, edge, ev);
-		ctx->GetEdge(parent->normals, edge, en);
-		ctx->GetEdge(parent->colors, edge, ec);
-
-		int kid_idx = parent->GetChildIdx(this);
-		if (edge == kid_idx) {
-			// use first half of edge
-			for (int i=0; i<=ctx->halfEdgeLen; i++) {
-				ev2[i<<1] = ev[i];
-				en2[i<<1] = en[i];
-				ec2[i<<1] = ec[i];
-			}
-		} else {
-			// use 2nd half of edge
-			for (int i=ctx->halfEdgeLen; i<ctx->edgeLen; i++) {
-				ev2[(i-(ctx->halfEdgeLen))<<1] = ev[i];
-				en2[(i-(ctx->halfEdgeLen))<<1] = en[i];
-				ec2[(i-(ctx->halfEdgeLen))<<1] = ec[i];
-			}
-		}
-		// interpolate!!
-		for (int i=1; i<ctx->edgeLen; i+=2) {
-			ev2[i] = (ev2[i-1]+ev2[i+1]) * 0.5;
-			en2[i] = (en2[i-1]+en2[i+1]).Normalized();
-			ec2[i] = (ec2[i-1]+ec2[i+1]) * 0.5;
-		}
-		ctx->SetEdge(this->vertices, edge, ev2);
-		ctx->SetEdge(this->normals, edge, en2);
-		ctx->SetEdge(this->colors, edge, ec2);
-	}
-
-	template <int corner>
-	void MakeCornerNormal(vector3d * __restrict ev, vector3d * __restrict ev2) {
-		int p;
-		vector3d x1,x2,y1,y2;
-		switch (corner) {
-		case 0: {
-			x1 = ev[ctx->edgeLen-1];
-			x2 = vertices[1];
-			y1 = ev2[0];
-			y2 = vertices[ctx->edgeLen];
-			const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
-			normals[0] = norm;
-			// make color
-			const vector3d pt = GetSpherePoint(0, 0);
-		//	const double height = colors[0].x;
-			const double height = geosphere->GetHeight(pt);
-			colors[0] = geosphere->GetColor(pt, height, norm);
-			}
-			break;
-		case 1: {
-			p = ctx->edgeLen-1;
-			x1 = vertices[p-1];
-			x2 = ev2[0];
-			y1 = ev[ctx->edgeLen-1];
-			y2 = vertices[p + ctx->edgeLen];
-			const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
-			normals[p] = norm;
-			// make color
-			const vector3d pt = GetSpherePoint(p*ctx->frac, 0);
-		//	const double height = colors[p].x;
-			const double height = geosphere->GetHeight(pt);
-			colors[p] = geosphere->GetColor(pt, height, norm);
-			}
-			break;
-		case 2: {
-			p = ctx->edgeLen-1;
-			x1 = vertices[(p-1) + p*ctx->edgeLen];
-			x2 = ev[ctx->edgeLen-1];
-			y1 = vertices[p + (p-1)*ctx->edgeLen];
-			y2 = ev2[0];
-			const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
-			normals[p + p*ctx->edgeLen] = norm;
-			// make color
-			const vector3d pt = GetSpherePoint(p*ctx->frac, p*ctx->frac);
-		//	const double height = colors[p + p*ctx->edgeLen].x;
-			const double height = geosphere->GetHeight(pt);
-			colors[p + p*ctx->edgeLen] = geosphere->GetColor(pt, height, norm);
-			}
-			break;
-		case 3: {
-			p = ctx->edgeLen-1;
-			x1 = ev2[0];
-			x2 = vertices[1 + p*ctx->edgeLen];
-			y1 = vertices[(p-1)*ctx->edgeLen];
-			y2 = ev[ctx->edgeLen-1];
-			const vector3d norm = (x2-x1).Cross(y2-y1).Normalized();
-			normals[p*ctx->edgeLen] = norm;
-			// make color
-			const vector3d pt = GetSpherePoint(0, p*ctx->frac);
-		//	const double height = colors[p*ctx->edgeLen].x;
-			const double height = geosphere->GetHeight(pt);
-			colors[p*ctx->edgeLen] = geosphere->GetColor(pt, height, norm);
-			}
-			break;
-		}
-	}
-
-	void FixCornerNormalsByEdge(const int edge, vector3d *ev) {
-		vector3d ev2[GEOPATCH_MAX_EDGELEN];
-		vector3d x1, x2, y1, y2;
-		/* XXX All these 'if's have an unfinished else, when a neighbour
-		 * of our size doesn't exist and instead we must look at a bigger tile.
-		 * But let's just leave it for the mo because it is a pain.
-		 * See comment in OnEdgeFriendChanged() */
-		switch (edge) {
-		case 0:
-			if (edgeFriend[3]) {
-				int we_are = edgeFriend[3]->GetEdgeIdxOf(this);
-				edgeFriend[3]->GetEdgeMinusOneVerticesFlipped(we_are, ev2);
-				MakeCornerNormal<0>(ev2, ev);
-			}
-			if (edgeFriend[1]) {
-				int we_are = edgeFriend[1]->GetEdgeIdxOf(this);
-				edgeFriend[1]->GetEdgeMinusOneVerticesFlipped(we_are, ev2);
-				MakeCornerNormal<1>(ev, ev2);
-			}
-			break;
-		case 1:
-			if (edgeFriend[0]) {
-				int we_are = edgeFriend[0]->GetEdgeIdxOf(this);
-				edgeFriend[0]->GetEdgeMinusOneVerticesFlipped(we_are, ev2);
-				MakeCornerNormal<1>(ev2, ev);
-			}
-			if (edgeFriend[2]) {
-				int we_are = edgeFriend[2]->GetEdgeIdxOf(this);
-				edgeFriend[2]->GetEdgeMinusOneVerticesFlipped(we_are, ev2);
-				MakeCornerNormal<2>(ev, ev2);
-			}
-			break;
-		case 2:
-			if (edgeFriend[1]) {
-				int we_are = edgeFriend[1]->GetEdgeIdxOf(this);
-				edgeFriend[1]->GetEdgeMinusOneVerticesFlipped(we_are, ev2);
-				MakeCornerNormal<2>(ev2, ev);
-			}
-			if (edgeFriend[3]) {
-				int we_are = edgeFriend[3]->GetEdgeIdxOf(this);
-				edgeFriend[3]->GetEdgeMinusOneVerticesFlipped(we_are, ev2);
-				MakeCornerNormal<3>(ev, ev2);
-			}
-			break;
-		case 3:
-			if (edgeFriend[2]) {
-				int we_are = edgeFriend[2]->GetEdgeIdxOf(this);
-				edgeFriend[2]->GetEdgeMinusOneVerticesFlipped(we_are, ev2);
-				MakeCornerNormal<3>(ev2, ev);
-			}
-			if (edgeFriend[0]) {
-				int we_are = edgeFriend[0]->GetEdgeIdxOf(this);
-				edgeFriend[0]->GetEdgeMinusOneVerticesFlipped(we_are, ev2);
-				MakeCornerNormal<0>(ev, ev2);
-			}
-			break;
-		}
-
-	}
-
-	void GenerateEdgeNormalsAndColors() {
-		vector3d ev[4][GEOPATCH_MAX_EDGELEN];
-		bool doneEdge[4];
-		memset(doneEdge, 0, sizeof(doneEdge));
-		for (int i=0; i<4; i++) {
-			GeoPatch *e = edgeFriend[i];
-			if (e) {
-				int we_are = e->GetEdgeIdxOf(this);
-				e->GetEdgeMinusOneVerticesFlipped(we_are, ev[i]);
-			} else {
-				assert(parent->edgeFriend[i]);
-				doneEdge[i] = true;
-				// parent has valid edge, so take our
-				// bit of that, interpolated.
-				FixEdgeFromParentInterpolated(i);
-				// XXX needed for corners... probably not
-				// correct
-				ctx->GetEdge(vertices, i, ev[i]);
-			}
-		}
-
-		MakeCornerNormal<0>(ev[3], ev[0]);
-		MakeCornerNormal<1>(ev[0], ev[1]);
-		MakeCornerNormal<2>(ev[1], ev[2]);
-		MakeCornerNormal<3>(ev[2], ev[3]);
-
-		for (int i=0; i<4; i++) if(!doneEdge[i]) FixEdgeNormals(i, ev[i]);
-	}
-
-	/* in patch surface coords, [0,1] */
-	vector3d GetSpherePoint(const double x, const double y) const {
-		return (v[0] + x*(1.0-y)*(v[1]-v[0]) +
-			    x*y*(v[2]-v[0]) +
-			    (1.0-x)*y*(v[3]-v[0])).Normalized();
-	}
-
-	/** Generates full-detail vertices, and also non-edge normals and
-	 * colors */
-	void GenerateMesh() {
-		centroid = clipCentroid.Normalized();
-		centroid = (1.0 + geosphere->GetHeight(centroid)) * centroid;
-		vector3d *vts = vertices;
-		vector3d *col = colors;
-		double xfrac;
-		double yfrac = 0;
-		for (int y=0; y<ctx->edgeLen; y++) {
-			xfrac = 0;
-			for (int x=0; x<ctx->edgeLen; x++) {
-				const vector3d p = GetSpherePoint(xfrac, yfrac);
-				const double height = geosphere->GetHeight(p);
-				*(vts++) = p * (height + 1.0);
-				// remember this -- we will need it later
-				(col++)->x = height;
-				xfrac += ctx->frac;
-			}
-			yfrac += ctx->frac;
-		}
-		assert(vts == &vertices[ctx->NUMVERTICES()]);
-		// Generate normals & colors for non-edge vertices since they never change
-		for (int y=1; y<ctx->edgeLen-1; y++) {
-			for (int x=1; x<ctx->edgeLen-1; x++) {
-				// normal
-				const vector3d x1 = vertices[x-1 + y*ctx->edgeLen];
-				const vector3d x2 = vertices[x+1 + y*ctx->edgeLen];
-				const vector3d y1 = vertices[x + (y-1)*ctx->edgeLen];
-				const vector3d y2 = vertices[x + (y+1)*ctx->edgeLen];
-
-				const vector3d n = (x2-x1).Cross(y2-y1);
-				normals[x + y*ctx->edgeLen] = n.Normalized();
-				// color
-				const vector3d p = GetSpherePoint(x*ctx->frac, y*ctx->frac);
-				vector3d &col_r = colors[x + y*ctx->edgeLen];
-				const double height = col_r.x;
-				const vector3d &norm = normals[x + y*ctx->edgeLen];
-				col_r = geosphere->GetColor(p, height, norm);
-			}
-		}
-
-	}
-	void OnEdgeFriendChanged(const int edge, GeoPatch *e) {
-		edgeFriend[edge] = e;
-		vector3d ev[GEOPATCH_MAX_EDGELEN];
-		int we_are = e->GetEdgeIdxOf(this);
-		e->GetEdgeMinusOneVerticesFlipped(we_are, ev);
-		/* now we have a valid edge, fix the edge vertices */
-		if (edge == 0) {
-			for (int x=0; x<ctx->edgeLen; x++) {
-				vector3d p = GetSpherePoint(x * ctx->frac, 0);
-				double height = geosphere->GetHeight(p);
-				vertices[x] = p * (height + 1.0);
-				// XXX These bounds checks in each edge case are
-				// only necessary while the "All these 'if's"
-				// comment in FixCOrnerNormalsByEdge stands
-				if ((x>0) && (x<ctx->edgeLen-1)) {
-					colors[x].x = height;
-				}
-			}
-		} else if (edge == 1) {
-			for (int y=0; y<ctx->edgeLen; y++) {
-				vector3d p = GetSpherePoint(1.0, y * ctx->frac);
-				double height = geosphere->GetHeight(p);
-				int pos = (ctx->edgeLen-1) + y*ctx->edgeLen;
-				vertices[pos] = p * (height + 1.0);
-				if ((y>0) && (y<ctx->edgeLen-1)) {
-					colors[pos].x = height;
-				}
-			}
-		} else if (edge == 2) {
-			for (int x=0; x<ctx->edgeLen; x++) {
-				vector3d p = GetSpherePoint(x * ctx->frac, 1.0);
-				double height = geosphere->GetHeight(p);
-				int pos = x + (ctx->edgeLen-1)*ctx->edgeLen;
-				vertices[pos] = p * (height + 1.0);
-				if ((x>0) && (x<ctx->edgeLen-1)) {
-					colors[pos].x = height;
-				}
-			}
-		} else {
-			for (int y=0; y<ctx->edgeLen; y++) {
-				vector3d p = GetSpherePoint(0, y * ctx->frac);
-				double height = geosphere->GetHeight(p);
-				int pos = y * ctx->edgeLen;
-				vertices[pos] = p * (height + 1.0);
-				if ((y>0) && (y<ctx->edgeLen-1)) {
-					colors[pos].x = height;
-				}
-			}
-		}
-
-		FixEdgeNormals(edge, ev);
-		FixCornerNormalsByEdge(edge, ev);
-		UpdateVBOs();
-
-		if (kids[0]) {
-			if (edge == 0) {
-				kids[0]->FixEdgeFromParentInterpolated(0);
-				kids[0]->UpdateVBOs();
-				kids[1]->FixEdgeFromParentInterpolated(0);
-				kids[1]->UpdateVBOs();
-			} else if (edge == 1) {
-				kids[1]->FixEdgeFromParentInterpolated(1);
-				kids[1]->UpdateVBOs();
-				kids[2]->FixEdgeFromParentInterpolated(1);
-				kids[2]->UpdateVBOs();
-			} else if (edge == 2) {
-				kids[2]->FixEdgeFromParentInterpolated(2);
-				kids[2]->UpdateVBOs();
-				kids[3]->FixEdgeFromParentInterpolated(2);
-				kids[3]->UpdateVBOs();
-			} else {
-				kids[3]->FixEdgeFromParentInterpolated(3);
-				kids[3]->UpdateVBOs();
-				kids[0]->FixEdgeFromParentInterpolated(3);
-				kids[0]->UpdateVBOs();
-			}
-		}
-	}
-	void NotifyEdgeFriendSplit(GeoPatch *e) {
-		int idx = GetEdgeIdxOf(e);
-		int we_are = e->GetEdgeIdxOf(this);
-		if (!kids[0]) return;
-		// match e's new kids to our own... :/
-		kids[idx]->OnEdgeFriendChanged(idx, e->kids[(we_are+1)%4]);
-		kids[(idx+1)%4]->OnEdgeFriendChanged(idx, e->kids[we_are]);
-	}
-
-	void NotifyEdgeFriendDeleted(GeoPatch *e) {
-		int idx = GetEdgeIdxOf(e);
-		edgeFriend[idx] = 0;
-		if (!parent) return;
-		if (parent->edgeFriend[idx]) {
-			FixEdgeFromParentInterpolated(idx);
-			UpdateVBOs();
-		} else {
-			// XXX TODO XXX
-			// Bad. not fixing up edges in this case!!!
-		}
-	}
-
-	GeoPatch *GetEdgeFriendForKid(const int kid, const int edge) const {
-		GeoPatch *e = edgeFriend[edge];
-		if (!e) return 0;
-		//assert (e);// && (e->m_depth >= m_depth));
-		const int we_are = e->GetEdgeIdxOf(this);
-		// neighbour patch has not split yet (is at depth of this patch), so kids of this patch do
-		// not have same detail level neighbours yet
-		if (edge == kid) return e->kids[(we_are+1)%4];
-		else return e->kids[we_are];
-	}
-
-	GLuint determineIndexbuffer() const {
-		return // index buffers are ordered by edge resolution flags
-			(edgeFriend[0] ? 1u : 0u) |
-			(edgeFriend[1] ? 2u : 0u) |
-			(edgeFriend[2] ? 4u : 0u) |
-			(edgeFriend[3] ? 8u : 0u);
-	}
-
-	void Render(const vector3d &campos, const Graphics::Frustum &frustum) {
-		PiVerify(SDL_mutexP(m_kidsLock)==0);
-		if (kids[0]) {
-			for (int i=0; i<4; i++) kids[i]->Render(campos, frustum);
-			SDL_mutexV(m_kidsLock);
-		} else {
-			SDL_mutexV(m_kidsLock);
-			_UpdateVBOs();
-
-			if (!frustum.TestPoint(clipCentroid, clipRadius))
-				return;
-
-			vector3d relpos = clipCentroid - campos;
-			glPushMatrix();
-			glTranslated(relpos.x, relpos.y, relpos.z);
-
-			Pi::statSceneTris += 2*(ctx->edgeLen-1)*(ctx->edgeLen-1);
-			glEnableClientState(GL_VERTEX_ARRAY);
-			glEnableClientState(GL_NORMAL_ARRAY);
-			glEnableClientState(GL_COLOR_ARRAY);
-
-			// update the indices used for rendering
-			ctx->updateIndexBufferId(determineIndexbuffer());
-
-			glBindBufferARB(GL_ARRAY_BUFFER, m_vbo);
-			glVertexPointer(3, GL_FLOAT, sizeof(VBOVertex), 0);
-			glNormalPointer(GL_FLOAT, sizeof(VBOVertex), reinterpret_cast<void *>(3*sizeof(float)));
-			glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(VBOVertex), reinterpret_cast<void *>(6*sizeof(float)));
-			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, ctx->indices_vbo);
-			glDrawElements(GL_TRIANGLES, ctx->indices_tri_count*3, GL_UNSIGNED_SHORT, 0);
-			glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-			glDisableClientState(GL_VERTEX_ARRAY);
-			glDisableClientState(GL_NORMAL_ARRAY);
-			glDisableClientState(GL_COLOR_ARRAY);
-			glPopMatrix();
-		}
-	}
-
-	void LODUpdate(const vector3d &campos, const Graphics::Frustum &frustum) {
-		// if we've been asked to abort then get out as quickly as possible
-		// this function is recursive so we might be very deep. this is about
-		// as fast as we can go
-		SDL_mutexP(geosphere->m_abortLock);
-		bool abort = geosphere->m_abort;
-		SDL_mutexV(geosphere->m_abortLock);
-		if (abort)
-			return;
-
-		bool canSplit = true;
-		// always split at first level
-		if (parent)	{
-			for (int i=0; i<4; i++) {
-				if (!edgeFriend[i]) { canSplit = false; break; }
-				if (edgeFriend[i] && (edgeFriend[i]->m_depth < m_depth)) {
-					canSplit = false;
-					break;
-				}
-			}
-			const bool bInsideRoughLen = ((campos - centroid).Length() < m_roughLength);
-			if (!(canSplit && (m_depth < GEOPATCH_MAX_DEPTH) && bInsideRoughLen)) {
-				canSplit = false;
-			}
-			// can't split if we're not visible
-			// 2.0 == magic number :(
-			if (canSplit && !frustum.TestPoint(clipCentroid, clipRadius*2.0)) {
-				canSplit = false;
-			}
-		}
-		//printf(campos.Length());
-
-		if (canSplit) {
-			if (!kids[0]) {
-				vector3d v01, v12, v23, v30, cn;
-				cn = centroid.Normalized();
-				v01 = (v[0]+v[1]).Normalized();
-				v12 = (v[1]+v[2]).Normalized();
-				v23 = (v[2]+v[3]).Normalized();
-				v30 = (v[3]+v[0]).Normalized();
-				GeoPatch *_kids[4];
-				const int newDepth = m_depth+1;
-				_kids[0] = new GeoPatch(ctx, geosphere, v[0], v01, cn, v30, newDepth, m_patchID.nextPatchID(newDepth,0));
-				_kids[1] = new GeoPatch(ctx, geosphere, v01, v[1], v12, cn, newDepth, m_patchID.nextPatchID(newDepth,1));
-				_kids[2] = new GeoPatch(ctx, geosphere, cn, v12, v[2], v23, newDepth, m_patchID.nextPatchID(newDepth,2));
-				_kids[3] = new GeoPatch(ctx, geosphere, v30, cn, v23, v[3], newDepth, m_patchID.nextPatchID(newDepth,3));
-				// hm.. edges. Not right to pass this
-				// edgeFriend...
-				_kids[0]->edgeFriend[0] = GetEdgeFriendForKid(0, 0);
-				_kids[0]->edgeFriend[1] = _kids[1];
-				_kids[0]->edgeFriend[2] = _kids[3];
-				_kids[0]->edgeFriend[3] = GetEdgeFriendForKid(0, 3);
-				_kids[1]->edgeFriend[0] = GetEdgeFriendForKid(1, 0);
-				_kids[1]->edgeFriend[1] = GetEdgeFriendForKid(1, 1);
-				_kids[1]->edgeFriend[2] = _kids[2];
-				_kids[1]->edgeFriend[3] = _kids[0];
-				_kids[2]->edgeFriend[0] = _kids[1];
-				_kids[2]->edgeFriend[1] = GetEdgeFriendForKid(2, 1);
-				_kids[2]->edgeFriend[2] = GetEdgeFriendForKid(2, 2);
-				_kids[2]->edgeFriend[3] = _kids[3];
-				_kids[3]->edgeFriend[0] = _kids[0];
-				_kids[3]->edgeFriend[1] = _kids[2];
-				_kids[3]->edgeFriend[2] = GetEdgeFriendForKid(3, 2);
-				_kids[3]->edgeFriend[3] = GetEdgeFriendForKid(3, 3);
-				_kids[0]->parent = _kids[1]->parent = _kids[2]->parent = _kids[3]->parent = this;
-				for (int i=0; i<4; i++) _kids[i]->GenerateMesh();
-				PiVerify(SDL_mutexP(m_kidsLock)==0);
-				for (int i=0; i<4; i++) kids[i] = _kids[i];
-				for (int i=0; i<4; i++) edgeFriend[i]->NotifyEdgeFriendSplit(this);
-				for (int i=0; i<4; i++) {
-					kids[i]->GenerateEdgeNormalsAndColors();
-					kids[i]->UpdateVBOs();
-				}
-				PiVerify(SDL_mutexV(m_kidsLock)!=-1);
-			}
-			for (int i=0; i<4; i++) kids[i]->LODUpdate(campos,frustum);
-		} else {
-			if (kids[0]) {
-				PiVerify(SDL_mutexP(m_kidsLock)==0);
-				for (int i=0; i<4; i++) { delete kids[i]; kids[i] = 0; }
-				PiVerify(SDL_mutexV(m_kidsLock)!=-1);
-			}
-		}
-	}
-};
-//statics for GeoPatch
-unsigned int GeoPatch::s_uiCurrNumGeoPatches = 0;
-unsigned int GeoPatch::s_uiMaxNumGeoPatches = 0;
-
-static const int geo_sphere_edge_friends[6][4] = {
-	{ 3, 4, 1, 2 },
-	{ 0, 4, 5, 2 },
-	{ 0, 1, 5, 3 },
-	{ 0, 2, 5, 4 },
-	{ 0, 3, 5, 1 },
-	{ 1, 4, 3, 2 }
-};
-
-static std::vector<GeoSphere*> s_allGeospheres;
-static std::deque<GeoSphere*> s_geosphereUpdateQueue;
-static GeoSphere* s_currentlyUpdatingGeoSphere = 0;
-static SDL_mutex *s_geosphereUpdateQueueLock = 0;
-static SDL_cond *s_geosphereUpdateQueueCondition = 0;		///< Condition variable for s_geosphereUpdateQueue and s_exitFlag. Allows waking up the thread when useful.
-static SDL_Thread *s_updateThread = 0;
-
-static bool s_exitFlag = false;
-
-/* Thread that updates geosphere level of detail thingies */
-int GeoSphere::UpdateLODThread(void *data)
-{
-	SDL_mutexP(s_geosphereUpdateQueueLock);
-
-	while (true) {
-
-		// check for exit. doing it here to avoid needing another lock
-		if (s_exitFlag)
-			break;
-
-		assert(s_currentlyUpdatingGeoSphere == 0);
-
-		if (! s_geosphereUpdateQueue.empty()) {
-			// pull the next GeoSphere off the queue
-			s_currentlyUpdatingGeoSphere = s_geosphereUpdateQueue.front();
-			s_geosphereUpdateQueue.pop_front();
-
-			assert(s_currentlyUpdatingGeoSphere);
-
-			GeoSphere *gs = s_currentlyUpdatingGeoSphere;
-			// overlap locks to ensure gs doesn't die before we've locked it
-			SDL_mutexP(gs->m_updateLock);
-			SDL_mutexV(s_geosphereUpdateQueueLock);
-
-			// update the patches
-			for (int n=0; n<6; n++)
-				gs->m_patches[n]->LODUpdate(gs->m_tempCampos, gs->m_tempFrustum);
-
-			// overlap locks again
-			SDL_mutexP(s_geosphereUpdateQueueLock);
-			assert(s_currentlyUpdatingGeoSphere == gs);
-			s_currentlyUpdatingGeoSphere = 0;
-
-			SDL_mutexV(gs->m_updateLock);
-		} else {
-			// queue is empty; wait to be signalled
-			// note: SDL_CondWait unlocks the mutex while it's blocked
-			SDL_CondWait(s_geosphereUpdateQueueCondition, s_geosphereUpdateQueueLock);
-		}
-	}
-
-	SDL_mutexV(s_geosphereUpdateQueueLock);
-	return 0;
-}
-
-void GeoSphere::Init()
-{
-	s_geosphereUpdateQueueLock = SDL_CreateMutex();
-	s_geosphereUpdateQueueCondition = SDL_CreateCond();
-
-	s_patchContext.Reset(new GeoPatchContext(detail_edgeLen[Pi::detail.planets > 4 ? 4 : Pi::detail.planets]));
-	assert(s_patchContext->edgeLen <= GEOPATCH_MAX_EDGELEN);
-
-#ifdef GEOSPHERE_USE_THREADING
-	s_updateThread = SDL_CreateThread(&GeoSphere::UpdateLODThread, 0);
-#endif /* GEOSPHERE_USE_THREADING */
-}
-
-void GeoSphere::Uninit()
-{
-#ifdef GEOSPHERE_USE_THREADING
-	// instruct the thread to exit
-	assert(s_geosphereUpdateQueue.empty());
-	SDL_mutexP(s_geosphereUpdateQueueLock);
-	s_exitFlag = true;
-	SDL_mutexV(s_geosphereUpdateQueueLock);
-	SDL_CondBroadcast(s_geosphereUpdateQueueCondition);
-
-	SDL_WaitThread(s_updateThread, 0);
-#endif /* GEOSPHERE_USE_THREADING */
-
-	assert (s_patchContext.Unique());
-	s_patchContext.Reset();
-
-	SDL_DestroyCond(s_geosphereUpdateQueueCondition);
-	SDL_DestroyMutex(s_geosphereUpdateQueueLock);
-}
-
-static void print_info(const SystemBody *sbody, const Terrain *terrain)
-{
-	printf(
-		"%s:\n"
-		"    height fractal: %s\n"
-		"    colour fractal: %s\n"
-		"    seed: %u\n",
-		sbody->name.c_str(), terrain->GetHeightFractalName(), terrain->GetColorFractalName(), sbody->seed);
-}
-
-void GeoSphere::OnChangeDetailLevel()
-{
-	s_patchContext.Reset(new GeoPatchContext(detail_edgeLen[Pi::detail.planets > 4 ? 4 : Pi::detail.planets]));
-	assert(s_patchContext->edgeLen <= GEOPATCH_MAX_EDGELEN);
-
-	// cancel all queued updates
-	SDL_mutexP(s_geosphereUpdateQueueLock);
-	s_geosphereUpdateQueue.clear();
-	GeoSphere *gs = s_currentlyUpdatingGeoSphere;
-	SDL_mutexV(s_geosphereUpdateQueueLock);
-
-	// if a terrain is currently being updated, then abort the update
-	if (gs) {
-		SDL_mutexP(gs->m_abortLock);
-		gs->m_abort = true;
-		SDL_mutexV(gs->m_abortLock);
-	}
-
-	// reinit the geosphere terrain data
-	for(std::vector<GeoSphere*>::iterator i = s_allGeospheres.begin();
-			i != s_allGeospheres.end(); ++i) {
-
-		// we need the update lock so we don't delete working data out from
-		// under the thread. it should finish very quickly since we told it to
-		// abort quickly
-		SDL_mutexP((*i)->m_updateLock);
-
-		for (int p=0; p<6; p++) {
-			// delete patches
-			if ((*i)->m_patches[p]) {
-				delete (*i)->m_patches[p];
-				(*i)->m_patches[p] = 0;
-			}
-		}
-
-		// reinit the terrain with the new settings
-		delete (*i)->m_terrain;
-		(*i)->m_terrain = Terrain::InstanceTerrain((*i)->m_sbody);
-		print_info((*i)->m_sbody, (*i)->m_terrain);
-
-		// clear the abort for the next run (with the new settings)
-		(*i)->m_abort = false;
-
-		// finished update
-		SDL_mutexV((*i)->m_updateLock);
-	}
-}
-
-#define GEOSPHERE_TYPE	(m_sbody->type)
-
-GeoSphere::GeoSphere(const SystemBody *body) : m_tempFrustum(Graphics::Frustum::FromGLState())
-{
-	m_terrain = Terrain::InstanceTerrain(body);
-	print_info(body, m_terrain);
-
-	m_vbosToDestroyLock = SDL_CreateMutex();
-	m_sbody = body;
-	memset(m_patches, 0, 6*sizeof(GeoPatch*));
-
-	m_updateLock = SDL_CreateMutex();
-	m_abortLock = SDL_CreateMutex();
-	m_abort = false;
-
+	// make the wider world aware of this one
 	s_allGeospheres.push_back(this);
-
-	//SetUpMaterials is not called until first Render since light count is zero :)
 }
 
 GeoSphere::~GeoSphere()
 {
-	// tell the thread to finish up with this geosphere
-	SDL_mutexP(m_abortLock);
-	m_abort = true;
-	SDL_mutexV(m_abortLock);
-
-	SDL_mutexP(s_geosphereUpdateQueueLock);
-	assert(std::count(s_allGeospheres.begin(), s_allGeospheres.end(), this) <= 1);
-	s_geosphereUpdateQueue.erase(
-		std::remove(s_geosphereUpdateQueue.begin(), s_geosphereUpdateQueue.end(), this),
-		s_geosphereUpdateQueue.end());
-	SDL_mutexV(s_geosphereUpdateQueueLock);
-
-	// wait until it completes update
-	SDL_mutexP(m_updateLock);
-	SDL_mutexV(m_updateLock);
-
 	// update thread should not be able to access us now, so we can safely continue to delete
 	assert(std::count(s_allGeospheres.begin(), s_allGeospheres.end(), this) == 1);
 	s_allGeospheres.erase(std::find(s_allGeospheres.begin(), s_allGeospheres.end(), this));
 
-	SDL_DestroyMutex(m_abortLock);
-	SDL_DestroyMutex(m_updateLock);
-
-	for (int i=0; i<6; i++) if (m_patches[i]) delete m_patches[i];
-	DestroyVBOs();
-	SDL_DestroyMutex(m_vbosToDestroyLock);
-
-	delete m_terrain;
-}
-
-void GeoSphere::AddVBOToDestroy(GLuint vbo)
-{
-	SDL_mutexP(m_vbosToDestroyLock);
-	m_vbosToDestroy.push_back(vbo);
-	SDL_mutexV(m_vbosToDestroyLock);
-}
-
-void GeoSphere::DestroyVBOs()
-{
-	SDL_mutexP(m_vbosToDestroyLock);
-	for (std::list<GLuint>::iterator i = m_vbosToDestroy.begin();
-			i != m_vbosToDestroy.end(); ++i) {
-		glDeleteBuffersARB(1, &(*i));
+	for (int i=0; i<NUM_PATCHES; i++) {
+		delete mGeoPatches[i];
+		mGeoPatches[i] = nullptr;
 	}
-	m_vbosToDestroy.clear();
-	SDL_mutexV(m_vbosToDestroyLock);
+
+	delete mTerrain;
+	delete mPatchGenData;
 }
 
-void GeoSphere::BuildFirstPatches()
+void GeoSphere::Update(const vector3f &campos)
 {
-	// generate initial wank
-	vector3d p1(1,1,1);
-	vector3d p2(-1,1,1);
-	vector3d p3(-1,-1,1);
-	vector3d p4(1,-1,1);
-	vector3d p5(1,1,-1);
-	vector3d p6(-1,1,-1);
-	vector3d p7(-1,-1,-1);
-	vector3d p8(1,-1,-1);
-	p1 = p1.Normalized();
-	p2 = p2.Normalized();
-	p3 = p3.Normalized();
-	p4 = p4.Normalized();
-	p5 = p5.Normalized();
-	p6 = p6.Normalized();
-	p7 = p7.Normalized();
-	p8 = p8.Normalized();
-
-	const uint64_t maxShiftDepth = (GEOPATCH_MAX_DEPTH)*2;
-	m_patches[0] = new GeoPatch(s_patchContext, this, p1, p2, p3, p4, 0, (0i64 << maxShiftDepth));
-	m_patches[1] = new GeoPatch(s_patchContext, this, p4, p3, p7, p8, 0, (1i64 << maxShiftDepth));
-	m_patches[2] = new GeoPatch(s_patchContext, this, p1, p4, p8, p5, 0, (2i64 << maxShiftDepth));
-	m_patches[3] = new GeoPatch(s_patchContext, this, p2, p1, p5, p6, 0, (3i64 << maxShiftDepth));
-	m_patches[4] = new GeoPatch(s_patchContext, this, p3, p2, p6, p7, 0, (4i64 << maxShiftDepth));
-	m_patches[5] = new GeoPatch(s_patchContext, this, p8, p7, p6, p5, 0, (5i64 << maxShiftDepth));
-	for (int i=0; i<6; i++) {
-		for (int j=0; j<4; j++) {
-			m_patches[i]->edgeFriend[j] = m_patches[geo_sphere_edge_friends[i][j]];
+	if(nullptr==mGeoPatches[0]) {
+		BuildFirstPatches();
+	} else if(mSplitRequestDescriptions.empty()) {
+		ProcessSplitResults();
+		for (int i=0; i<NUM_PATCHES; i++) {
+			mGeoPatches[i]->LODUpdate(campos);
 		}
+	} else {
+		ProcessSplitRequests();
 	}
-	for (int i=0; i<6; i++) m_patches[i]->GenerateMesh();
-	for (int i=0; i<6; i++) m_patches[i]->GenerateEdgeNormalsAndColors();
-	for (int i=0; i<6; i++) m_patches[i]->UpdateVBOs();
+}
+
+void GeoSphere::Render(const matrix4x4f &ViewMatrix, const matrix4x4f &ModelMatrix, const matrix4x4f &MVP, 
+					   Graphics::Renderer *renderer, const vector3f& campos, const float radius, const float scale)
+{
+	// setup the basics for the patch shader,
+	// individual patches will change settings to match their own parameters
+	//sPatchContext->UsePatchShader(ViewMatrix, ModelMatrix, MVP);
+
+	Render(renderer, campos, radius, scale);
 }
 
 static const float g_ambient[4] = { 0, 0, 0, 1.0 };
 
 static void DrawAtmosphereSurface(Graphics::Renderer *renderer,
-	const vector3d &campos, float rad, Graphics::Material *mat)
+	const vector3f &campos, const float rad, Graphics::Material *mat)
 {
 	const int LAT_SEGS = 20;
 	const int LONG_SEGS = 20;
-	vector3d yaxis = campos.Normalized();
-	vector3d zaxis = vector3d(1.0,0.0,0.0).Cross(yaxis).Normalized();
-	vector3d xaxis = yaxis.Cross(zaxis);
-	const matrix4x4d m = matrix4x4d::MakeRotMatrix(xaxis, yaxis, zaxis).InverseOf();
+	vector3f yaxis = campos.Normalized();
+	vector3f zaxis = vector3f(1.0,0.0,0.0).Cross(yaxis).Normalized();
+	vector3f xaxis = yaxis.Cross(zaxis);
+	const matrix4x4f m = matrix4x4f::MakeRotMatrix(xaxis, yaxis, zaxis).InverseOf();
 
 	glPushMatrix();
 	glScalef(rad, rad, rad);
-	glMultMatrixd(&m[0]);
+	glMultMatrixf(&m[0]);
 
 	// what is this? Well, angle to the horizon is:
 	// acos(planetRadius/viewerDistFromSphereCentre)
@@ -1398,7 +158,8 @@ static void DrawAtmosphereSurface(Graphics::Renderer *renderer,
 	glPopMatrix();
 }
 
-void GeoSphere::Render(Graphics::Renderer *renderer, const vector3d& campos, const float radius, const float scale) {
+void GeoSphere::Render(Graphics::Renderer *renderer, const vector3f& campos, const float radius, const float scale)
+{
 	glPushMatrix();
 	glTranslated(-campos.x, -campos.y, -campos.z);
 	Graphics::Frustum frustum = Graphics::Frustum::FromGLState();
@@ -1416,7 +177,7 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const vector3d& campos, con
 
 		//Update material parameters
 		//XXX no need to calculate AP every frame
-		m_atmosphereParameters = m_sbody->CalcAtmosphereParams();
+		m_atmosphereParameters = mSystemBody->CalcAtmosphereParams();
 		m_atmosphereParameters.center = modelMatrix * vector3d(0.0, 0.0, 0.0);
 		m_atmosphereParameters.planetRadius = radius;
 		m_atmosphereParameters.scale = scale;
@@ -1438,25 +199,24 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const vector3d& campos, con
 	}
 	glPopMatrix();
 
-	if (!m_patches[0]) BuildFirstPatches();
-
 	Color ambient;
 	Color &emission = m_surfaceMaterial->emissive;
 
 	// save old global ambient
 	const Color oldAmbient = renderer->GetAmbientColor();
 
-	if ((m_sbody->GetSuperType() == SystemBody::SUPERTYPE_STAR) || (m_sbody->type == SystemBody::TYPE_BROWN_DWARF)) {
+	if ((mSystemBody->GetSuperType() == SystemBody::SUPERTYPE_STAR) || (mSystemBody->type == SystemBody::TYPE_BROWN_DWARF)) 
+	{
 		// stars should emit light and terrain should be visible from distance
 		ambient.r = ambient.g = ambient.b = 0.2f;
 		ambient.a = 1.0f;
-		emission.r = StarSystem::starRealColors[m_sbody->type][0];
-		emission.g = StarSystem::starRealColors[m_sbody->type][1];
-		emission.b = StarSystem::starRealColors[m_sbody->type][2];
+		emission.r = StarSystem::starRealColors[mSystemBody->type][0];
+		emission.g = StarSystem::starRealColors[mSystemBody->type][1];
+		emission.b = StarSystem::starRealColors[mSystemBody->type][2];
 		emission.a = 1.f;
 	}
-
-	else {
+	else 
+	{
 		// give planet some ambient lighting if the viewer is close to it
 		double camdist = campos.Length();
 		camdist = 0.1 / (camdist*camdist);
@@ -1473,40 +233,12 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const vector3d& campos, con
 	m_surfaceMaterial->Apply();
 
 	for (int i=0; i<6; i++) {
-		m_patches[i]->Render(campos, frustum);
+		mGeoPatches[i]->Render(campos, frustum);
 	}
 
 	m_surfaceMaterial->Unapply();
 
 	renderer->SetAmbientColor(oldAmbient);
-
-	// if the update thread has deleted any geopatches, destroy the vbos
-	// associated with them
-	DestroyVBOs();
-		/*this->m_tempCampos = campos;
-		UpdateLODThread(this);
-		return;*/
-
-	bool added(false);		// Tells if something has been queued.
-	SDL_mutexP(s_geosphereUpdateQueueLock);
-	bool onQueue =
-		(std::find(s_geosphereUpdateQueue.begin(), s_geosphereUpdateQueue.end(), this)
-			!= s_geosphereUpdateQueue.end());
-	// put ourselves on the update queue, unless we're already there or already being updated
-	if (!onQueue && (s_currentlyUpdatingGeoSphere != this)) {
-		this->m_tempCampos = campos;
-		this->m_tempFrustum = frustum;
-		s_geosphereUpdateQueue.push_back(this);
-		added = true;
-	}
-	SDL_mutexV(s_geosphereUpdateQueueLock);
-	if (added) SDL_CondBroadcast(s_geosphereUpdateQueueCondition);
-
-#ifndef GEOSPHERE_USE_THREADING
-	m_tempCampos = campos;
-	m_tempFrustum = frustum;
-	_UpdateLODs();
-#endif /* !GEOSPHERE_USE_THREADING */
 }
 
 void GeoSphere::SetUpMaterials()
@@ -1514,20 +246,20 @@ void GeoSphere::SetUpMaterials()
 	// Request material for this star or planet, with or without
 	// atmosphere. Separate material for surface and sky.
 	Graphics::MaterialDescriptor surfDesc;
-	surfDesc.effect = Graphics::EFFECT_GEOSPHERE_TERRAIN;
-	if ((m_sbody->type == SystemBody::TYPE_BROWN_DWARF) ||
-		(m_sbody->type == SystemBody::TYPE_STAR_M)) {
+	surfDesc.effect = Graphics::EFFECT_GEOSPHERE_HEIGHTMAPTERRAIN;
+	if ((mSystemBody->type == SystemBody::TYPE_BROWN_DWARF) ||
+		(mSystemBody->type == SystemBody::TYPE_STAR_M)) {
 		//dim star (emits and receives light)
 		surfDesc.lighting = true;
 		surfDesc.atmosphere = false;
 	}
-	else if (m_sbody->GetSuperType() == SystemBody::SUPERTYPE_STAR) {
+	else if (mSystemBody->GetSuperType() == SystemBody::SUPERTYPE_STAR) {
 		//normal star
 		surfDesc.lighting = false;
 		surfDesc.atmosphere = false;
 	} else {
 		//planetoid with or without atmosphere
-		const SystemBody::AtmosphereParameters ap(m_sbody->CalcAtmosphereParams());
+		const SystemBody::AtmosphereParameters ap(mSystemBody->CalcAtmosphereParams());
 		surfDesc.lighting = true;
 		surfDesc.atmosphere = (ap.atmosDensity > 0.0);
 	}
@@ -1539,5 +271,177 @@ void GeoSphere::SetUpMaterials()
 		skyDesc.effect = Graphics::EFFECT_GEOSPHERE_SKY;
 		skyDesc.lighting = true;
 		m_atmosphereMaterial.Reset(Pi::renderer->CreateMaterial(skyDesc));
+	}
+}
+
+
+bool GeoSphere::AddSplitRequest(SSplitRequestDescription *desc)
+{
+	if(mSplitRequestDescriptions.size()<MAX_SPLIT_REQUESTS) {
+		mSplitRequestDescriptions.push_back(desc);
+		return true;
+	}
+	return false;
+}
+
+void GeoSphere::ProcessSplitRequests()
+{
+	std::deque<SSplitRequestDescription*>::const_iterator iter = mSplitRequestDescriptions.begin();
+	while (iter!=mSplitRequestDescriptions.end())
+	{
+		const SSplitRequestDescription* srd = (*iter);
+
+		const vector3f v01	= (srd->v0+srd->v1).Normalized();
+		const vector3f v12	= (srd->v1+srd->v2).Normalized();
+		const vector3f v23	= (srd->v2+srd->v3).Normalized();
+		const vector3f v30	= (srd->v3+srd->v0).Normalized();
+		const vector3f cn	= (srd->centroid).Normalized();
+
+		// 
+		const vector3f vecs[4][4] = {
+			{srd->v0,	v01,		cn,			v30},
+			{v01,		srd->v1,	v12,		cn},
+			{cn,		v12,		srd->v2,	v23},
+			{v30,		cn,			v23,		srd->v3}
+		};
+
+		SSplitResult *sr = new SSplitResult(srd->patchID.GetPatchFaceIdx(), srd->depth);
+		for (int i=0; i<4; i++)
+		{
+			// Now we need to create the texture which will contain the heightmap. 
+			GLuint texID;
+			glGenTextures(1, &texID);
+			//checkGLError();
+ 
+			// Bind the newly created texture : all future texture functions will modify this texture
+			glBindTexture(GL_TEXTURE_2D, texID);
+			//checkGLError();
+ 
+			// Create the texture itself without any data
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 
+				sPatchContext->fboWidth(), sPatchContext->fboWidth(), 
+				0, GL_LUMINANCE, GL_FLOAT, nullptr);
+			//checkGLError();
+		
+			// Bad filtering needed
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			//checkGLError();
+
+			// render the heightmap to a framebuffer.
+			mPatchGenData->v0 = vecs[i][0];
+			mPatchGenData->v1 = vecs[i][1];
+			mPatchGenData->v2 = vecs[i][2];
+			mPatchGenData->v3 = vecs[i][3];
+
+			sPatchContext->renderHeightmap(0, mPatchGenData, texID);
+
+			sr->addResult(texID, vecs[i][0], vecs[i][1], vecs[i][2], vecs[i][3], srd->patchID.NextPatchID(srd->depth+1, i));
+		}
+
+		// store result
+		mSplitResult.push_back( sr );
+
+		// cleanup after ourselves
+		delete srd;
+
+		// next!
+		++iter;
+	}
+	mSplitRequestDescriptions.clear();
+}
+
+void GeoSphere::ProcessSplitResults()
+{
+	std::deque<SSplitResult*>::const_iterator iter = mSplitResult.begin();
+	while(iter!=mSplitResult.end())
+	{
+		// finally pass SplitResults
+		const SSplitResult *psr = (*iter);
+
+		const int32_t faceIdx = psr->face;
+		mGeoPatches[faceIdx]->ReceiveHeightmaps(psr);
+
+		// tidyup
+		delete psr;
+
+		// Next!
+		++iter;
+	}
+	mSplitResult.clear();
+}
+
+
+static const int geo_sphere_edge_friends[6][4] = {
+	{ 3, 4, 1, 2 },
+	{ 0, 4, 5, 2 },
+	{ 0, 1, 5, 3 },
+	{ 0, 2, 5, 4 },
+	{ 0, 3, 5, 1 },
+	{ 1, 4, 3, 2 }
+};
+
+void GeoSphere::BuildFirstPatches()
+{
+	// generate root face patches of the cube/sphere
+	static const vector3f p1 = (vector3f( 1, 1, 1)).Normalized();
+	static const vector3f p2 = (vector3f(-1, 1, 1)).Normalized();
+	static const vector3f p3 = (vector3f(-1,-1, 1)).Normalized();
+	static const vector3f p4 = (vector3f( 1,-1, 1)).Normalized();
+	static const vector3f p5 = (vector3f( 1, 1,-1)).Normalized();
+	static const vector3f p6 = (vector3f(-1, 1,-1)).Normalized();
+	static const vector3f p7 = (vector3f(-1,-1,-1)).Normalized();
+	static const vector3f p8 = (vector3f( 1,-1,-1)).Normalized();
+
+	const uint64_t maxShiftDepth = GeoPatchID::MAX_SHIFT_DEPTH;
+
+	mGeoPatches[0] = new GeoPatch(*sPatchContext, this, p1, p2, p3, p4, 0, (0i64 << maxShiftDepth));
+	mGeoPatches[1] = new GeoPatch(*sPatchContext, this, p4, p3, p7, p8, 0, (1i64 << maxShiftDepth));
+	mGeoPatches[2] = new GeoPatch(*sPatchContext, this, p1, p4, p8, p5, 0, (2i64 << maxShiftDepth));
+	mGeoPatches[3] = new GeoPatch(*sPatchContext, this, p2, p1, p5, p6, 0, (3i64 << maxShiftDepth));
+	mGeoPatches[4] = new GeoPatch(*sPatchContext, this, p3, p2, p6, p7, 0, (4i64 << maxShiftDepth));
+	mGeoPatches[5] = new GeoPatch(*sPatchContext, this, p8, p7, p6, p5, 0, (5i64 << maxShiftDepth));
+
+	for (int i=0; i<NUM_PATCHES; i++) {
+		for (int j=0; j<4; j++) {
+			mGeoPatches[i]->OnEdgeFriendChanged(j, mGeoPatches[geo_sphere_edge_friends[i][j]]);
+		}
+	}
+}
+
+void GeoSphere::Init()
+{
+	sPatchContext.Reset(new GeoPatchContext(detail_edgeLen[Pi::detail.planets > 4 ? 4 : Pi::detail.planets]));
+	//assert(sPatchContext->edgeLen() <= GEOPATCH_MAX_EDGELEN);
+}
+
+void GeoSphere::Uninit()
+{
+	assert (sPatchContext.Unique());
+	sPatchContext.Reset();
+}
+
+void GeoSphere::OnChangeDetailLevel()
+{
+	sPatchContext.Reset(new GeoPatchContext(detail_edgeLen[Pi::detail.planets > 4 ? 4 : Pi::detail.planets]));
+	//assert(sPatchContext->edgeLen() <= GEOPATCH_MAX_EDGELEN);
+
+	// reinit the geosphere terrain data
+	for(std::vector<GeoSphere*>::iterator i = s_allGeospheres.begin(); i != s_allGeospheres.end(); ++i) 
+	{
+		for (int p=0; p<6; p++) {
+			// delete patches
+			if ((*i)->mGeoPatches[p]) {
+				delete (*i)->mGeoPatches[p];
+				(*i)->mGeoPatches[p] = NULL;
+			}
+		}
+
+		// reinit the terrain with the new settings
+		delete (*i)->mTerrain;
+		(*i)->mTerrain = Terrain::InstanceTerrain((*i)->mSystemBody);
 	}
 }
