@@ -89,7 +89,7 @@ void GeoSphere::Update(const vector3f &campos)
 	}
 }
 
-void GeoSphere::Render(const matrix4x4f &ViewMatrix, const matrix4x4f &ModelMatrix, const matrix4x4f &MVP, 
+/*void GeoSphere::Render(const matrix4x4f &ViewMatrix, const matrix4x4f &ModelMatrix, const matrix4x4f &MVP, 
 					   Graphics::Renderer *renderer, const vector3f& campos, const float radius, const float scale)
 {
 	// setup the basics for the patch shader,
@@ -97,7 +97,7 @@ void GeoSphere::Render(const matrix4x4f &ViewMatrix, const matrix4x4f &ModelMatr
 	//sPatchContext->UsePatchShader(ViewMatrix, ModelMatrix, MVP);
 
 	Render(renderer, campos, radius, scale);
-}
+}*/
 
 static const float g_ambient[4] = { 0, 0, 0, 1.0 };
 

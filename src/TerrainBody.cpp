@@ -107,8 +107,10 @@ void TerrainBody::Render(Graphics::Renderer *renderer, const Camera *camera, con
 		glScaled(rad, rad, rad);			// rad = real_rad / scale
 		campos = campos * (1.0/rad);		// position of camera relative to planet "model"
 
+		const vector3f camposf = vector3f(campos);
+
 		// translation not applied until patch render to fix jitter
-		m_geosphere->Render(renderer, -campos, m_sbody->GetRadius(), scale);
+		m_geosphere->Render(renderer, -camposf, m_sbody->GetRadius(), scale);
 		glTranslated(campos.x, campos.y, campos.z);
 
 		SubRender(renderer, camera, campos);
@@ -137,7 +139,7 @@ double TerrainBody::GetTerrainHeight(const vector3d &pos_) const
 {
 	double radius = m_sbody->GetRadius();
 	if (m_geosphere) {
-		return radius * (1.0 + m_geosphere->GetHeight(pos_));
+		return radius;// * (1.0 + m_geosphere->GetHeight(pos_));
 	} else {
 		assert(0);
 		return radius;

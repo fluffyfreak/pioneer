@@ -78,7 +78,7 @@ class GeoSphere
 {
 private:
 	void BuildFirstPatches();
-	void Render(Graphics::Renderer *renderer, const vector3f& campos, const float radius, const float scale);
+	
 
 	static RefCountedPtr<GeoPatchContext> sPatchContext;
 	static const uint32_t NUM_PATCHES = 6;
@@ -108,13 +108,19 @@ public:
 	static void OnChangeDetailLevel();
 
 	void Update(const vector3f &campos);
-	void Render(const matrix4x4f &ViewMatrix, const matrix4x4f &ModelMatrix, const matrix4x4f &MVP, Graphics::Renderer *renderer, const vector3f& campos, const float radius, const float scale);
+	//void Render(const matrix4x4f &ViewMatrix, const matrix4x4f &ModelMatrix, const matrix4x4f &MVP, Graphics::Renderer *renderer, const vector3f& campos, const float radius, const float scale);
+	void Render(Graphics::Renderer *renderer, const vector3f& campos, const float radius, const float scale);
 
 	bool AddSplitRequest(SSplitRequestDescription *desc);
 	void ProcessSplitRequests();
 	void ProcessSplitResults();
 
 	Graphics::Material* SurfaceMaterial() const { return m_surfaceMaterial.Get(); }
+
+	double GetMaxFeatureHeight() const { return 1.0; }
+
+	static int GetVtxGenCount() { return 0; }
+	static void ClearVtxGenCount() { /* fill in later */ }
 };
 
 #endif //__GEOMESH_H__
