@@ -19,9 +19,11 @@ namespace Graphics {
 namespace GL2 {
 	class GeoPatchGenMaterial;
 	class GeoSphereHeightmapMaterial;
-	class GeoSphereSurfaceMaterial;
 	class GeoSphereSkyMaterial;
+	class GeoSphereSurfaceMaterial;
+	class Material;
 	class MultiMaterial;
+	class LitMultiMaterial;
 	class Program;
 	class RingMaterial;
 }
@@ -48,11 +50,13 @@ public:
 	virtual bool ReloadShaders();
 
 private:
+	GL2::Program* GetOrCreateProgram(GL2::Material*);
 	friend class GL2::GeoPatchGenMaterial;
 	friend class GL2::GeoSphereHeightmapMaterial;
 	friend class GL2::GeoSphereSurfaceMaterial;
 	friend class GL2::GeoSphereSkyMaterial;
 	friend class GL2::MultiMaterial;
+	friend class GL2::LitMultiMaterial;
 	friend class GL2::RingMaterial;
 	std::vector<std::pair<MaterialDescriptor, GL2::Program*> > m_programs;
 	float m_invLogZfarPlus1;

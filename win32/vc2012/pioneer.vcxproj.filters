@@ -408,7 +408,15 @@
     <ClCompile Include="..\..\src\PngWriter.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\UIView.cpp" />
+    <ClCompile Include="..\..\src\ModelCache.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\UIView.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ModelViewer.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\GeoPatch.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -867,8 +875,21 @@
     <ClInclude Include="..\..\src\LuaFaction.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\PngWriter.h" />
-    <ClInclude Include="..\..\src\UIView.h" />
+    <ClInclude Include="..\..\src\PngWriter.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\UIView.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\PngWriter.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ModelCache.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ModelViewer.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\GeoPatch.h">
       <Filter>src</Filter>
     </ClInclude>
