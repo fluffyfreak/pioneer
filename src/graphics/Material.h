@@ -80,7 +80,6 @@ public:
 
 	void *specialParameter0; //this can be whatever. Bit of a hack.
 	void *specialParameter1; //this can be whatever. Bit of a hack.
-};
 
 	//XXX may not be necessary. Used by newmodel to check if a material uses patterns
 	const MaterialDescriptor &GetDescriptor() const { return m_descriptor; }
