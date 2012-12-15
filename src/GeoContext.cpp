@@ -282,7 +282,7 @@ GeoPatchContext::GeoPatchContext(const uint32_t edgeLen) :
 		noiseyBinding.push_back( Graphics::GL2::ShaderBindPair(shaderFilenames[shdFnameIdx], Graphics::GL2::eFragShader) );
 
 		// create it with our two generating shaders
-		p = mat->CreateProgram("heightmap_gen.vert", "heightmap_gen.frag", noiseyBinding);
+		p = mat->CreateProgram("heightmap_gen", "heightmap_gen", noiseyBinding);
 		assert(NULL!=p);
 
 		// make note of it (store the link)

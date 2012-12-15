@@ -5,6 +5,7 @@
 #include "GeoSphere.h"
 #include "GeoContext.h"
 #include "StringF.h"
+#include "FileSystem.h"
 #include "graphics/Graphics.h"
 #include "graphics/TextureGL.h"
 #include "graphics/RendererGL2.h"
@@ -45,21 +46,38 @@ void GeoPatchGenProgram::InitUniforms()
 
 Program *GeoPatchGenMaterial::CreateProgram(const MaterialDescriptor &desc)
 {
-	//assert(desc.effect == EFFECT_GEOPATCH_GEN);
-	assert(desc.dirLights < 5);
-	std::stringstream ss;
-	ss << stringf("#define NUM_LIGHTS %0{u}\n", desc.dirLights);
-	if (desc.atmosphere)
-		ss << "#define ATMOSPHERE\n";
-	return new Graphics::GL2::GeoPatchGenProgram("geopatchgen", ss.str());
+	assert(false);
+	return NULL;
 }
 
 Program *GeoPatchGenMaterial::CreateProgram( const std::string &vertstr, const std::string &fragstr, const vecBindings &includePaths /*= s_nullBindings*/)
 {
-	const MaterialDescriptor desc;
-	std::stringstream ss;
-	ss << stringf("#define NUM_LIGHTS 0\n");
-	m_program = new Graphics::GL2::GeoPatchGenProgram("geopatchgen", ss.str());
+	std::string ss;
+	vecBindings::const_iterator iter = includePaths.begin();
+	while (iter!=includePaths.end())
+	{
+		const std::string libpath( "shaders/gl2/" + (*iter).first );
+		RefCountedPtr<FileSystem::FileData> libCode = FileSystem::gameDataFiles.ReadFile(libpath);
+		assert(libCode);
+		const std::string lib = libCode.Get()->AsStringRange().ToString();
+		switch ((*iter).second)
+		{
+		case eBothShaders:
+			ss += lib;
+			break;
+		case eVertShader:
+			ss += lib;
+			break;
+		case eFragShader:
+			ss += lib;
+			break;
+		}
+		// Next!
+		++iter;
+	}
+
+	ss += stringf("#define NUM_LIGHTS 0\n");
+	m_program = new Graphics::GL2::GeoPatchGenProgram(vertstr, ss);
 	return m_program;
 }
 
