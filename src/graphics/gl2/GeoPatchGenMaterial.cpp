@@ -14,11 +14,12 @@
 namespace Graphics {
 namespace GL2 {
 
-GeoPatchGenProgram::GeoPatchGenProgram(const std::string &filename, const std::string& defines)
+GeoPatchGenProgram::GeoPatchGenProgram(const std::string &filename, const std::string& vsdefines, const std::string& fsdefines)
 {
 	m_name = filename;
-	m_defines = defines;
-	LoadShaders(filename, defines);
+	m_defines = vsdefines;
+	m_frag_defines = fsdefines;
+	LoadShaders(filename, vsdefines, fsdefines);
 	InitUniforms();
 }
 
@@ -50,9 +51,11 @@ Program *GeoPatchGenMaterial::CreateProgram(const MaterialDescriptor &desc)
 	return NULL;
 }
 
+#pragma optimize( "", off )
 Program *GeoPatchGenMaterial::CreateProgram( const std::string &vertstr, const std::string &fragstr, const vecBindings &includePaths /*= s_nullBindings*/)
 {
-	std::string ss;
+	std::string vs;
+	std::string fs;
 	vecBindings::const_iterator iter = includePaths.begin();
 	while (iter!=includePaths.end())
 	{
@@ -63,21 +66,23 @@ Program *GeoPatchGenMaterial::CreateProgram( const std::string &vertstr, const s
 		switch ((*iter).second)
 		{
 		case eBothShaders:
-			ss += lib;
+			vs += lib;
+			fs += lib;
 			break;
 		case eVertShader:
-			ss += lib;
+			vs += lib;
 			break;
 		case eFragShader:
-			ss += lib;
+			fs += lib;
 			break;
 		}
 		// Next!
 		++iter;
 	}
 
-	ss += stringf("#define NUM_LIGHTS 0\n");
-	m_program = new Graphics::GL2::GeoPatchGenProgram(vertstr, ss);
+	vs += stringf("#define NUM_LIGHTS 0\n");
+	fs += stringf("#define NUM_LIGHTS 0\n");
+	m_program = new Graphics::GL2::GeoPatchGenProgram(vertstr, vs, fs);
 	return m_program;
 }
 

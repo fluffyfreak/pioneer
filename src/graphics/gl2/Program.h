@@ -42,6 +42,7 @@ namespace Graphics {
 
 		protected:
 			void LoadShaders(const std::string&, const std::string &defines);
+			void LoadShaders(const std::string&, const std::string &vsdefines, const std::string &fsdefines);
 			virtual void InitUniforms();
 			std::string m_name;
 			std::string m_defines;

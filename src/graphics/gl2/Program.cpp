@@ -163,12 +163,17 @@ void Program::Unuse()
 //load, compile and link
 void Program::LoadShaders(const std::string &name, const std::string &defines)
 {
+	LoadShaders(name, defines, defines);
+}
+
+void Program::LoadShaders(const std::string &name, const std::string &vsdefines, const std::string &fsdefines)
+{
 	const std::string filenamevert = std::string("shaders/gl2/") + name;
 	const std::string filenamefrag = std::string("shaders/gl2/") + name;
 
 	//load, create and compile shaders
-	Shader vs(GL_VERTEX_SHADER, filenamevert + ".vert", defines);
-	Shader fs(GL_FRAGMENT_SHADER, filenamefrag + ".frag", defines);
+	Shader vs(GL_VERTEX_SHADER, filenamevert + ".vert", vsdefines);
+	Shader fs(GL_FRAGMENT_SHADER, filenamefrag + ".frag", fsdefines);
 
 	//create program, attach shaders and link
 	m_program = glCreateProgram();

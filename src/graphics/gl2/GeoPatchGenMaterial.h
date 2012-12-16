@@ -15,7 +15,7 @@ namespace Graphics {
 	namespace GL2 {
 		class GeoPatchGenProgram : public Program {
 		public:
-			GeoPatchGenProgram(const std::string &filename, const std::string& defines);
+			GeoPatchGenProgram(const std::string &filename, const std::string& vsdefines, const std::string& fsdefines);
 
 			Uniform v0;
 			Uniform v1;
@@ -36,6 +36,7 @@ namespace Graphics {
 			bool usesHeightmap;
 		protected:
 			virtual void InitUniforms();
+			std::string m_frag_defines;
 		};
 
 		enum EShaderBinding {
