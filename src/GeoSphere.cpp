@@ -20,10 +20,18 @@
 //static 
 RefCountedPtr<GeoPatchContext> GeoSphere::sPatchContext;
 static std::vector<GeoSphere*> s_allGeospheres;
-// must be odd numbers
-static const int detail_edgeLen[5] = {
-	29, 61, 125, 253, 509
+
+// must be equal to ((2^N) - 3) so that they're odd, fit within a single power-of-2 texture
+// must also have an even half-resolution as described below.
+// 29-1 / 2 = 14
+// 61-1 / 2 = 30
+// 125-1 / 2 = 62
+// etc
+// This is so that edges will match up correctly between high->low patches.
+static const int detail_edgeLen[] = {
+	29, 61, 125, 253, 509, 1021
 };
+static const int detail_edgelen_size = sizeof(detail_edgeLen) / sizeof(detail_edgeLen[0]);
 
 GeoSphere::GeoSphere(const SystemBody *body) : mSystemBody(body)
 {
@@ -414,7 +422,7 @@ void GeoSphere::BuildFirstPatches()
 
 void GeoSphere::Init()
 {
-	sPatchContext.Reset(new GeoPatchContext(detail_edgeLen[Pi::detail.planets > 4 ? 4 : Pi::detail.planets]));
+	sPatchContext.Reset(new GeoPatchContext(detail_edgeLen[Clamp(Pi::detail.planets, 0, detail_edgelen_size-1)]));
 	//assert(sPatchContext->edgeLen() <= GEOPATCH_MAX_EDGELEN);
 }
 
@@ -426,7 +434,7 @@ void GeoSphere::Uninit()
 
 void GeoSphere::OnChangeDetailLevel()
 {
-	sPatchContext.Reset(new GeoPatchContext(detail_edgeLen[Pi::detail.planets > 4 ? 4 : Pi::detail.planets]));
+	sPatchContext.Reset(new GeoPatchContext(detail_edgeLen[Clamp(Pi::detail.planets, 0, detail_edgelen_size-1)]));
 	//assert(sPatchContext->edgeLen() <= GEOPATCH_MAX_EDGELEN);
 
 	// reinit the geosphere terrain data
