@@ -96,6 +96,7 @@
     <ClCompile Include="..\..\..\src\graphics\Frustum.cpp" />
     <ClCompile Include="..\..\..\src\graphics\gl2\GeoPatchGenMaterial.cpp" />
     <ClCompile Include="..\..\..\src\graphics\gl2\GeoSphereMaterial.cpp" />
+    <ClCompile Include="..\..\..\src\graphics\gl2\GL2Debug.cpp" />
     <ClCompile Include="..\..\..\src\graphics\gl2\GL2Material.cpp" />
     <ClCompile Include="..\..\..\src\graphics\gl2\MultiMaterial.cpp" />
     <ClCompile Include="..\..\..\src\graphics\gl2\Program.cpp" />
@@ -127,6 +128,7 @@
     <ClInclude Include="..\..\..\src\graphics\Frustum.h" />
     <ClInclude Include="..\..\..\src\graphics\gl2\GeoPatchGenMaterial.h" />
     <ClInclude Include="..\..\..\src\graphics\gl2\GeoSphereMaterial.h" />
+    <ClInclude Include="..\..\..\src\graphics\gl2\GL2Debug.h" />
     <ClInclude Include="..\..\..\src\graphics\gl2\GL2Material.h" />
     <ClInclude Include="..\..\..\src\graphics\gl2\MultiMaterial.h" />
     <ClInclude Include="..\..\..\src\graphics\gl2\Program.h" />

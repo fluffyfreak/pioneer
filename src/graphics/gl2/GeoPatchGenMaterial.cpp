@@ -9,6 +9,7 @@
 #include "graphics/Graphics.h"
 #include "graphics/TextureGL.h"
 #include "graphics/RendererGL2.h"
+#include "graphics/GL2/GL2Debug.h"
 #include <sstream>
 
 namespace Graphics {
@@ -21,6 +22,7 @@ GeoPatchGenProgram::GeoPatchGenProgram(const std::string &filename, const std::s
 	m_frag_defines = fsdefines;
 	LoadShaders(filename, vsdefines, fsdefines);
 	InitUniforms();
+	Graphics::GL2::CheckGLError();
 }
 
 //virtual 
@@ -43,6 +45,7 @@ void GeoPatchGenProgram::InitUniforms()
 
 	heightmap.Init("texHeightmap", m_program);
 	usesHeightmap = ((-1)!=heightmap.m_location);
+	Graphics::GL2::CheckGLError();
 }
 
 Program *GeoPatchGenMaterial::CreateProgram(const MaterialDescriptor &desc)
@@ -83,6 +86,7 @@ Program *GeoPatchGenMaterial::CreateProgram( const std::string &vertstr, const s
 	vs += stringf("#define NUM_LIGHTS 0\n");
 	fs += stringf("#define NUM_LIGHTS 0\n");
 	m_program = new Graphics::GL2::GeoPatchGenProgram(vertstr, vs, fs);
+	Graphics::GL2::CheckGLError();
 	return m_program;
 }
 

@@ -8,6 +8,7 @@
 #include "graphics/Graphics.h"
 #include "graphics/TextureGL.h"
 #include "graphics/RendererGL2.h"
+#include "graphics/GL2/GL2Debug.h"
 #include <sstream>
 
 namespace Graphics {
@@ -19,6 +20,7 @@ GeoSphereProgram::GeoSphereProgram(const std::string &filename, const std::strin
 	m_defines = defines;
 	LoadShaders(filename, defines);
 	InitUniforms();
+	Graphics::GL2::CheckGLError();
 }
 
 void GeoSphereProgram::InitUniforms()
@@ -88,6 +90,7 @@ GeoSphereHeightmapProgram::GeoSphereHeightmapProgram(const std::string &filename
 	m_defines = defines;
 	LoadShaders(filename, defines);
 	InitUniforms();
+	Graphics::GL2::CheckGLError();
 }
 
 void GeoSphereHeightmapProgram::InitUniforms()

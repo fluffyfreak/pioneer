@@ -44,6 +44,9 @@
     <ClCompile Include="..\..\..\src\graphics\gl2\GeoPatchGenMaterial.cpp">
       <Filter>gl2</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\graphics\gl2\GL2Debug.cpp">
+      <Filter>gl2</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\graphics\Drawables.h" />
@@ -90,6 +93,9 @@
     <ClInclude Include="..\..\..\src\graphics\VertexBuffer.h" />
     <ClInclude Include="..\..\..\src\graphics\FrameBuffer.h" />
     <ClInclude Include="..\..\..\src\graphics\gl2\GeoPatchGenMaterial.h">
+      <Filter>gl2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\graphics\gl2\GL2Debug.h">
       <Filter>gl2</Filter>
     </ClInclude>
   </ItemGroup>

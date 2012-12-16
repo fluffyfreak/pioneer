@@ -3,6 +3,7 @@
 
 #include "FrameBuffer.h"
 #include <GL/glew.h>
+#include "graphics/GL2/GL2Debug.h"
 #include <cassert>
 
 namespace Graphics {
@@ -48,6 +49,7 @@ FrameBuffer::FrameBuffer(const uint32_t width, const uint32_t height)
 	assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 
 	Release();
+	Graphics::GL2::CheckGLError();
 }
 
 FrameBuffer::~FrameBuffer() {
