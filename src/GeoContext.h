@@ -28,6 +28,25 @@ class GeoPatchContext : public RefCounted
 {
 private:
 	////////////////////////////////////////////////////////////////
+	// private classes
+	class CQuad
+	{
+	private:
+		void Init(const int nElements, const vector3f *pVertexBuf, const vector2f *pUVBuf);
+
+	protected:
+		ScopedPtr<Graphics::VertexArray> v;
+
+	public:
+		CQuad();
+		~CQuad();
+
+		void Bind() const;
+		void Release() const;
+		void Draw() const;
+	};
+
+	////////////////////////////////////////////////////////////////
 	// class static private members
 
 	////////////////////////////////////////////////////////////////
@@ -35,7 +54,7 @@ private:
 	const uint32_t mEdgeLen;
 	const uint32_t mHalfEdgeLen;
 
-	Graphics::Drawables::Quad	mQuad;
+	CQuad						mQuad;
 	//Graphics::GLvbo *mVBO;
 	Graphics::FrameBuffer		mFBO;
 	

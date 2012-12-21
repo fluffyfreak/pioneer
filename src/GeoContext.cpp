@@ -9,6 +9,72 @@
 
 #include "vcacheopt/vcacheopt.h"
 
+////////////////////////////////////////////////////////////////
+// CGLquad related data and definitions
+namespace QuadData {
+	static const vector3f s_vertex_buffer_data[6] = { 
+		// triangle 1
+		vector3f(-1.0f,-1.0f, 0.0f), // v1
+		vector3f( 1.0f, 1.0f, 0.0f), // v3
+		vector3f(-1.0f, 1.0f, 0.0f), // v2
+		// triangle 2
+		vector3f( 1.0f, 1.0f, 0.0f), // v1
+		vector3f(-1.0f,-1.0f, 0.0f), // v3
+		vector3f( 1.0f,-1.0f, 0.0f)  // v2
+	};
+	static const vector2f s_uv_buffer_data[6] = { 
+		// triangle 1
+		vector2f(0.0f, 0.0f), // v1
+		vector2f(1.0f, 1.0f), // v3
+		vector2f(0.0f, 1.0f), // v2
+		// triangle 2
+		vector2f(1.0f, 1.0f), // v1
+		vector2f(0.0f, 0.0f), // v3
+		vector2f(1.0f, 0.0f)  // v2
+	};
+}; // namespace QuadData
+
+GeoPatchContext::CQuad::CQuad()
+{
+	Init(6, QuadData::s_vertex_buffer_data, QuadData::s_uv_buffer_data);
+}
+
+GeoPatchContext::CQuad::~CQuad()
+{
+}
+
+// private
+void GeoPatchContext::CQuad::Init(const int nElements, const vector3f *pVertexBuf, const vector2f *pUVBuf)
+{
+	assert(NULL!=pVertexBuf);
+	assert(0<nElements);
+
+	v.Reset(new Graphics::VertexArray(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_UV0));
+	for (int i=0; i<nElements; i++) {
+		v->Add(pVertexBuf[i], pUVBuf[i]);
+	}
+}
+
+void GeoPatchContext::CQuad::Bind() const
+{
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glVertexPointer(3, GL_FLOAT, 0, reinterpret_cast<const GLvoid *>(&v->position[0]));
+
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glTexCoordPointer(2, GL_FLOAT, 0, reinterpret_cast<const GLvoid *>(&v->uv0[0]));
+}
+
+void GeoPatchContext::CQuad::Release() const
+{
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+}
+
+void GeoPatchContext::CQuad::Draw() const
+{
+	glDrawArrays(GL_TRIANGLES, 0, v->GetNumVerts());
+}
+
 int GeoPatchContext::getIndices(std::vector<unsigned short> &pl, const unsigned int edge_hi_flags,
 	unsigned short *midIndices, unsigned short *loEdgeIndices[4], unsigned short *hiEdgeIndices[4]) const
 {
@@ -360,7 +426,7 @@ void GeoPatchContext::renderHeightmap(const uint32_t terrainType, const PatchGen
 	pMat->Apply();
 
 	// rendering our quad now should fill the render texture with the heightmap shaders output
-	//mQuad.Draw();
+	mQuad.Draw();
 
 	//mFBO.CopyTexture(targetTex);
 	mFBO.SetTexture(0);
