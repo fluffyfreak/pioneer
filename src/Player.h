@@ -15,11 +15,11 @@
 
 namespace Graphics { class Renderer; }
 
-class EVAModel : public DynamicBody {
+class EVAModel : public Ship {
 public:
 	EVAModel();
 
-	void Render(const vector3d&, const matrix4x4d&);
+	//void Render(const vector3d&, const matrix4x4d&);
 	void StaticUpdate(const float timeStep);
 	void TimeStepUpdate(const float timeStep);
 

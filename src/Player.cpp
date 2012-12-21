@@ -224,7 +224,7 @@ Sint64 Player::GetPrice(Equip::Type t) const
 	}
 }
 
-EVAModel::EVAModel() : DynamicBody(), eyeHeight(5), active(false) {
+EVAModel::EVAModel() : Ship(), eyeHeight(5), active(false) {
 	SetMass(1000); // weighs a fricking tonne
 }
 
@@ -271,8 +271,8 @@ void EVAModel::StaticUpdate(const float timeStep) {
 	if (KeyBindings::rollLeft.IsActive()) wantAngVel.z += 1.0;
 	if (KeyBindings::rollRight.IsActive()) wantAngVel.z -= 1.0;
 
-	if (KeyBindings::fastRotate.IsActive())
-		wantAngVel *= 3.0;
+	//if (KeyBindings::fastRotate.IsActive())
+	//	wantAngVel *= 3.0;
 
 	DynamicBody::StaticUpdate(timeStep);
 }
@@ -381,9 +381,9 @@ void EVAModel::TimeStepUpdate(const float timeStep) {
 	DynamicBody::TimeStepUpdate(timeStep);
 }
 
-void EVAModel::Render(const vector3d &viewCoords, const matrix4x4d &viewTransform) {
-	ModelBody::RenderLmrModel(viewCoords, viewTransform);
-}
+//void EVAModel::Render(const vector3d &viewCoords, const matrix4x4d &viewTransform) {
+//	ModelBody::RenderLmrModel(viewCoords, viewTransform);
+//}
 
 //XXX ui stuff
 void Player::OnEnterHyperspace()
