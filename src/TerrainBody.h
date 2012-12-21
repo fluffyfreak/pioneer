@@ -19,6 +19,7 @@ public:
 	virtual void SetPosition(const vector3d &pos) { m_pos = pos; }
 	virtual vector3d GetPosition() const { return m_pos; }
 	virtual double GetBoundingRadius() const;
+	virtual void StaticUpdate(const float timeStep);
 	virtual void Render(Graphics::Renderer *r, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform);
 	virtual void SubRender(Graphics::Renderer *r, const Camera *camera, const vector3d &camPos) {}
 	virtual void SetFrame(Frame *f);

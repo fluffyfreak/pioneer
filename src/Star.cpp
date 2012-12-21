@@ -58,7 +58,7 @@ void Star::Render(Graphics::Renderer *renderer, const Camera *camera, const vect
 
 	const float *col = StarSystem::starRealColors[GetSystemBody()->type];
 
-	MTRand(rand);
+	MTRand rand;
 
 	renderer->SetBlendMode(BLEND_ALPHA);
 

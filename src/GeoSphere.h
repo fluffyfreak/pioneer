@@ -99,6 +99,8 @@ private:
 	//special parameters for shaders
 	SystemBody::AtmosphereParameters m_atmosphereParameters;
 
+	vector3f mTempCampos;
+
 public:
 	GeoSphere(const SystemBody *body);
 	~GeoSphere();
@@ -107,7 +109,7 @@ public:
 	static void Uninit();
 	static void OnChangeDetailLevel();
 
-	void Update(const vector3f &campos);
+	void Update();
 	//void Render(const matrix4x4f &ViewMatrix, const matrix4x4f &ModelMatrix, const matrix4x4f &MVP, Graphics::Renderer *renderer, const vector3f& campos, const float radius, const float scale);
 	void Render(Graphics::Renderer *renderer, const vector3f& campos, const float radius, const float scale);
 
