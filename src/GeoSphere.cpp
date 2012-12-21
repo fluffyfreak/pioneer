@@ -85,7 +85,7 @@ GeoSphere::~GeoSphere()
 
 void GeoSphere::Update(const vector3f &campos)
 {
-	if(nullptr==mGeoPatches[0]) {
+	if(NULL==mGeoPatches[0]) {
 		BuildFirstPatches();
 	} else if(mSplitRequestDescriptions.empty()) {
 		ProcessSplitResults();
@@ -168,6 +168,10 @@ static void DrawAtmosphereSurface(Graphics::Renderer *renderer,
 
 void GeoSphere::Render(Graphics::Renderer *renderer, const vector3f& campos, const float radius, const float scale)
 {
+	if(NULL==mGeoPatches[0]) {
+		return;
+	}
+
 	glPushMatrix();
 	glTranslated(-campos.x, -campos.y, -campos.z);
 	Graphics::Frustum frustum = Graphics::Frustum::FromGLState();
@@ -236,15 +240,17 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const vector3f& campos, con
 	}
 
 	renderer->SetAmbientColor(ambient);
+
+	// NB: old comment - this is currently done per-patch!!!
 	// this is pretty much the only place where a non-renderer is allowed to call Apply()
 	// to be removed when someone rewrites terrain
-	m_surfaceMaterial->Apply();
+	//m_surfaceMaterial->Apply();
 
 	for (int i=0; i<6; i++) {
 		mGeoPatches[i]->Render(campos, frustum);
 	}
 
-	m_surfaceMaterial->Unapply();
+	//m_surfaceMaterial->Unapply();
 
 	renderer->SetAmbientColor(oldAmbient);
 }
@@ -419,6 +425,52 @@ void GeoSphere::BuildFirstPatches()
 		}
 	}
 }
+
+/* Thread that updates geosphere level of detail thingies */
+/*int GeoSphere::UpdateLODThread(void *data)
+{
+	SDL_mutexP(s_geosphereUpdateQueueLock);
+
+	while (true) {
+
+		// check for exit. doing it here to avoid needing another lock
+		if (s_exitFlag)
+			break;
+
+		assert(s_currentlyUpdatingGeoSphere == 0);
+
+		if (! s_geosphereUpdateQueue.empty()) {
+			// pull the next GeoSphere off the queue
+			s_currentlyUpdatingGeoSphere = s_geosphereUpdateQueue.front();
+			s_geosphereUpdateQueue.pop_front();
+
+			assert(s_currentlyUpdatingGeoSphere);
+
+			GeoSphere *gs = s_currentlyUpdatingGeoSphere;
+			// overlap locks to ensure gs doesn't die before we've locked it
+			SDL_mutexP(gs->m_updateLock);
+			SDL_mutexV(s_geosphereUpdateQueueLock);
+
+			// update the patches
+			for (int n=0; n<6; n++)
+				gs->m_patches[n]->LODUpdate(gs->m_tempCampos);
+
+			// overlap locks again
+			SDL_mutexP(s_geosphereUpdateQueueLock);
+			assert(s_currentlyUpdatingGeoSphere == gs);
+			s_currentlyUpdatingGeoSphere = 0;
+
+			SDL_mutexV(gs->m_updateLock);
+		} else {
+			// queue is empty; wait to be signalled
+			// note: SDL_CondWait unlocks the mutex while it's blocked
+			SDL_CondWait(s_geosphereUpdateQueueCondition, s_geosphereUpdateQueueLock);
+		}
+	}
+
+	SDL_mutexV(s_geosphereUpdateQueueLock);
+	return 0;
+}*/
 
 void GeoSphere::Init()
 {
