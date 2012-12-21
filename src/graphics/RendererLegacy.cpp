@@ -8,6 +8,7 @@
 #include "MaterialLegacy.h"
 #include "OS.h"
 #include "RendererGLBuffers.h"
+#include "graphics/gl2/GL2Debug.h"
 #include "StaticMesh.h"
 #include "StringF.h"
 #include "Surface.h"
@@ -19,10 +20,6 @@
 #include <sstream>
 #include <iterator>
 
-#define GREMDEYEXT
-#ifdef GREMDEYEXT
-static bool s_bUseGRemdeyExt = false;
-#endif
 
 namespace Graphics {
 
@@ -75,10 +72,6 @@ RendererLegacy::RendererLegacy(const Graphics::Settings &vs)
 
 	SetClearColor(Color(0.f));
 	SetViewport(0, 0, m_width, m_height);
-
-#ifdef GREMDEYEXT
-	s_bUseGRemdeyExt = glewIsExtensionSupported("GL_GREMEDY_string_marker");
-#endif
 }
 
 RendererLegacy::~RendererLegacy()
@@ -146,8 +139,9 @@ bool RendererLegacy::SwapBuffers()
 	}
 #endif
 
-#ifdef GREMDEYEXT
-	if(s_bUseGRemdeyExt)
+#if 1
+	static const bool bUseGRemdeyExt = glewIsExtensionSupported("GL_GREMEDY_string_marker");
+	if(bUseGRemdeyExt)
 	{
 		static const std::string msg("RendererLegacy::SwapBuffers");
 		glStringMarkerGREMEDY(msg.length(), msg.c_str());

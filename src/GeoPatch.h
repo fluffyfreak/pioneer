@@ -6,14 +6,27 @@
 
 #include "GeoPatchID.h"
 
-// fwd decl's
-namespace Graphics {
-	class VertexBuffer;
-};
-
 class GeoPatch
 {
 private:
+	////////////////////////////////////////////////////////////////
+	// private classes
+	class PatchVBO
+	{
+	private:
+		void Init(const int nElements, const vector3f *pVertexBuf, const vector2f *pUVBuf);	// Or GL_DYNAMIC_DRAW
+
+	protected:
+		ScopedPtr<Graphics::VertexArray> v;
+
+	public:
+		PatchVBO(const int nElements, const vector3f *pVertexBuf, const vector2f *pUVBuf);	// Or GL_DYNAMIC_DRAW
+		~PatchVBO();
+
+		void Bind() const;
+		void Release() const;
+	};
+
 	////////////////////////////////////////////////////////////////
 	// private members
 	static const uint32_t NUM_EDGES = 4;
@@ -32,7 +45,7 @@ private:
 	float mRoughLength;
 	const GeoPatchID mPatchID;
 
-	Graphics::GLvbo *mVBO;
+	PatchVBO *mVBO;
 	GLuint mHeightmap;
 	bool mHasSplitRequest;
 	GeoPatchParameters mGeoPatchParameters;

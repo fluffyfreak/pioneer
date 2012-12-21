@@ -48,11 +48,11 @@ int GeoPatchContext::getIndices(std::vector<unsigned short> &pl, const unsigned 
 // constructor
 GeoPatchContext::GeoPatchContext(const uint32_t edgeLen) : 
 	mEdgeLen(edgeLen), mHalfEdgeLen(edgeLen>>1), 
-	mQuad(false, true), mFBO(edgeLen,edgeLen)//, mVBO(nullptr)
+	mFBO(edgeLen,edgeLen)//, mVBO(nullptr)
 {
 	mVertexs = new vector3f[NUM_MESH_VERTS()];
 	mNormals = new vector3f[NUM_MESH_VERTS()];
-	mUVs	 = new GLfloat[NUM_MESH_VERTS()*2];
+	mUVs	 = new vector2f[NUM_MESH_VERTS()];
 
 	unsigned short *idx;
 	unsigned short *midIndices = new unsigned short[VBO_COUNT_MID_IDX()];
@@ -360,7 +360,7 @@ void GeoPatchContext::renderHeightmap(const uint32_t terrainType, const PatchGen
 	pMat->Apply();
 
 	// rendering our quad now should fill the render texture with the heightmap shaders output
-	mQuad.Render();
+	//mQuad.Draw();
 
 	//mFBO.CopyTexture(targetTex);
 	mFBO.SetTexture(0);

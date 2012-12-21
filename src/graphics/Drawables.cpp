@@ -32,6 +32,60 @@ void Disk::SetColor(const Color4f &c)
 	m_material->diffuse = c;
 }
 
+////////////////////////////////////////////////////////////////
+// CGLquad related data and definitions
+namespace QuadData {
+	static const GLfloat s_vertex_buffer_data[18] = { 
+		// triangle 1
+		-1.0f,-1.0f, 0.0f, // v1
+		 1.0f, 1.0f, 0.0f, // v3
+		-1.0f, 1.0f, 0.0f, // v2
+		// triangle 2
+		 1.0f, 1.0f, 0.0f, // v1
+		-1.0f,-1.0f, 0.0f, // v3
+		 1.0f,-1.0f, 0.0f  // v2
+	};
+	static const GLfloat s_normal_buffer_data[18] = { 
+		// triangle 1
+		 0.0f, 0.0f, 1.0f, // v1
+		 0.0f, 0.0f, 1.0f, // v3
+		 0.0f, 0.0f, 1.0f, // v2
+		// triangle 2
+		 0.0f, 0.0f, 1.0f, // v1
+		 0.0f, 0.0f, 1.0f, // v3
+		 0.0f, 0.0f, 1.0f  // v2
+	};
+	static const GLfloat s_uv_buffer_data[12] = { 
+		// triangle 1
+		0.0f, 0.0f, // v1
+		1.0f, 1.0f, // v3
+		0.0f, 1.0f, // v2
+		// triangle 2
+		1.0f, 1.0f, // v1
+		0.0f, 0.0f, // v3
+		1.0f, 0.0f  // v2
+	};
+}; // namespace QuadData
+
+Quad::Quad() 
+{
+	m_vertices.Reset(new VertexArray(ATTRIB_POSITION | ATTRIB_UV0));
+	
+	using namespace QuadData;
+	m_vertices->Add(vector3f(s_vertex_buffer_data[0], s_vertex_buffer_data[1], s_vertex_buffer_data[2]), vector2f(s_uv_buffer_data[0], s_uv_buffer_data[1]));
+	m_vertices->Add(vector3f(s_vertex_buffer_data[3], s_vertex_buffer_data[4], s_vertex_buffer_data[5]), vector2f(s_uv_buffer_data[2], s_uv_buffer_data[3]));
+	m_vertices->Add(vector3f(s_vertex_buffer_data[6], s_vertex_buffer_data[7], s_vertex_buffer_data[8]), vector2f(s_uv_buffer_data[4], s_uv_buffer_data[5]));
+
+	m_vertices->Add(vector3f(s_vertex_buffer_data[9], s_vertex_buffer_data[10], s_vertex_buffer_data[11]), vector2f(s_uv_buffer_data[6], s_uv_buffer_data[7]));
+	m_vertices->Add(vector3f(s_vertex_buffer_data[12], s_vertex_buffer_data[13], s_vertex_buffer_data[14]), vector2f(s_uv_buffer_data[8], s_uv_buffer_data[9]));
+	m_vertices->Add(vector3f(s_vertex_buffer_data[15], s_vertex_buffer_data[16], s_vertex_buffer_data[17]), vector2f(s_uv_buffer_data[10], s_uv_buffer_data[11]));
+}
+
+void Quad::Draw(Graphics::Renderer *r, Graphics::Material *m)
+{
+	r->DrawTriangles(m_vertices.Get(), m, TRIANGLES);
+}
+
 Line3D::Line3D()
 {
 	m_points[0] = vector3f(0.f);

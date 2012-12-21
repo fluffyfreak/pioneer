@@ -5,7 +5,7 @@
 #define __GEOCONTEXT_H__
 
 #include "graphics/FrameBuffer.h"
-#include "graphics/Primitives.h"
+#include "graphics/Drawables.h"
 
 #define GEOPATCH_SUBDIVIDE_AT_CAMDIST	2.0f	//1.5f
 #define GEOPATCH_MAX_DEPTH  10
@@ -35,13 +35,13 @@ private:
 	const uint32_t mEdgeLen;
 	const uint32_t mHalfEdgeLen;
 
-	Graphics::CGLquad	mQuad;
+	Graphics::Drawables::Quad	mQuad;
 	//Graphics::GLvbo *mVBO;
-	Graphics::FrameBuffer	mFBO;
+	Graphics::FrameBuffer		mFBO;
 	
 	vector3f * mVertexs;
 	vector3f * mNormals;
-	GLfloat * mUVs;
+	vector2f * mUVs;
 
 	static const uint32_t NUM_INDEX_LISTS = 16;
 	GLuint mElementBuffers[NUM_INDEX_LISTS];
@@ -52,7 +52,7 @@ private:
 	inline int VBO_COUNT_MID_IDX() const { return (4*3*(mEdgeLen-3)) + 2*(mEdgeLen-3)*(mEdgeLen-3)*3; }
 
 	// private copy ctor, done to prevent copying/cloning of GeoPatchContext.
-	GeoPatchContext(const GeoPatchContext &ref) : mEdgeLen(ref.mEdgeLen), mHalfEdgeLen(ref.mHalfEdgeLen), mQuad(false, true), mFBO(mEdgeLen,mEdgeLen) {};
+	GeoPatchContext(const GeoPatchContext &ref) : mEdgeLen(ref.mEdgeLen), mHalfEdgeLen(ref.mHalfEdgeLen), mFBO(mEdgeLen,mEdgeLen) {};
 
 public:
 	////////////////////////////////////////////////////////////////
@@ -75,7 +75,7 @@ public:
 
 	vector3f * vertexs()	const { return mVertexs; }
 	vector3f * normals()	const { return mNormals; }
-	GLfloat * uvs()			const { return mUVs; }
+	vector2f * uvs()		const { return mUVs; }
 
 	inline GLuint elementBuffers(const GLuint iBufIndex) const { 
 		assert(iBufIndex>=0 && iBufIndex<NUM_INDEX_LISTS); 

@@ -61,6 +61,18 @@ private:
 	RefCountedPtr<Material> m_material;
 };
 
+// A 3D quad
+class Quad : public Drawable {
+public:
+	Quad();
+	virtual ~Quad() {};
+	virtual void Draw(Graphics::Renderer *r) {assert(false);}
+	virtual void Draw(Graphics::Renderer *r, Graphics::Material *m);
+
+private:
+	ScopedPtr<Graphics::VertexArray> m_vertices;
+};
+
 //A three dimensional line between two points
 class Line3D : public Drawable {
 public:

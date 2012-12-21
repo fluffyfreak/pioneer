@@ -38,8 +38,6 @@
     <ClCompile Include="..\..\..\src\graphics\gl2\GL2Material.cpp">
       <Filter>gl2</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\graphics\Primitives.cpp" />
-    <ClCompile Include="..\..\..\src\graphics\VertexBuffer.cpp" />
     <ClCompile Include="..\..\..\src\graphics\FrameBuffer.cpp" />
     <ClCompile Include="..\..\..\src\graphics\gl2\GeoPatchGenMaterial.cpp">
       <Filter>gl2</Filter>
@@ -89,8 +87,6 @@
     <ClInclude Include="..\..\..\src\graphics\gl2\StarfieldMaterial.h">
       <Filter>gl2</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\graphics\Primitives.h" />
-    <ClInclude Include="..\..\..\src\graphics\VertexBuffer.h" />
     <ClInclude Include="..\..\..\src\graphics\FrameBuffer.h" />
     <ClInclude Include="..\..\..\src\graphics\gl2\GeoPatchGenMaterial.h">
       <Filter>gl2</Filter>

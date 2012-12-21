@@ -10,6 +10,44 @@
 
 #include "graphics\TextureGL.h"
 
+GeoPatch::PatchVBO::PatchVBO(const int nElements, const vector3f *pVertexBuf, const vector2f *pUVBuf)
+{
+	assert(NULL!=pVertexBuf);
+	assert(0<nElements);
+
+	Init(nElements, pVertexBuf, pUVBuf);
+}
+GeoPatch::PatchVBO::~PatchVBO()
+{
+}
+
+// private
+void GeoPatch::PatchVBO::Init(const int nElements, const vector3f *pVertexBuf, const vector2f *pUVBuf)
+{
+	assert(NULL!=pVertexBuf);
+	assert(0<nElements);
+
+	v.Reset(new Graphics::VertexArray(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_UV0));
+	for (int i=0; i<nElements; i++) {
+		v->Add(pVertexBuf[i], pUVBuf[i]);
+	}
+}
+
+void GeoPatch::PatchVBO::Bind() const
+{
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glVertexPointer(3, GL_FLOAT, 0, reinterpret_cast<const GLvoid *>(&v->position[0]));
+
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glTexCoordPointer(2, GL_FLOAT, 0, reinterpret_cast<const GLvoid *>(&v->uv0[0]));
+}
+
+void GeoPatch::PatchVBO::Release() const
+{
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+}
+
 // constructor
 GeoPatch::GeoPatch(const GeoPatchContext &context_, GeoSphere *pGeoSphere_, 
 	const vector3f &v0_, const vector3f &v1_, const vector3f &v2_, const vector3f &v3_, 
@@ -51,7 +89,6 @@ GeoPatch::~GeoPatch()
 
 	if(glIsTexture(mHeightmap)==GL_TRUE) {
 		glDeleteTextures(1, &mHeightmap);
-		//checkGLError();
 	}
 	if( mVBO ) {
 		delete mVBO;
@@ -64,7 +101,7 @@ void GeoPatch::GenerateMesh() {
 	////////////////////////////////////////////////////////////////
 	// Create the base mesh that the heightmap will modify
 	vector3f *vts = mContext.vertexs();
-	GLfloat *pUV = mContext.uvs();
+	vector2f *pUV = mContext.uvs();
 	assert(nullptr!=vts);
 	const float fracStep = mContext.meshLerpStep();
 	for (uint32_t y=0; y<mContext.edgeLen(); y++) {
@@ -72,11 +109,8 @@ void GeoPatch::GenerateMesh() {
 			const float xfrac = float(x) * fracStep;
 			const float yfrac = float(y) * fracStep;
 			assert(xfrac<=1.0 && yfrac<=1.0);
-			const vector3f p = GetSpherePoint(xfrac, yfrac);
-			*(vts++) = p;
-
-			*(pUV++) = xfrac;
-			*(pUV++) = yfrac;
+			*(vts++) = GetSpherePoint(xfrac, yfrac);
+			*(pUV++) = vector2f(xfrac, yfrac);
 		}
 	}
 	assert(vts == &mContext.vertexs()[mContext.NUM_MESH_VERTS()]);
@@ -84,7 +118,7 @@ void GeoPatch::GenerateMesh() {
 
 	// now create the VBO
 	assert(nullptr==mVBO);
-	mVBO = new Graphics::GLvbo( mContext.NUM_MESH_VERTS(), &mContext.vertexs()[0], nullptr, mContext.uvs() );
+	mVBO = new PatchVBO( mContext.NUM_MESH_VERTS(), &mContext.vertexs()[0], mContext.uvs() );
 }
 
 void GeoPatch::ReceiveHeightmaps(const SSplitResult *psr)

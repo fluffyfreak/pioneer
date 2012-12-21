@@ -106,7 +106,6 @@
     <ClCompile Include="..\..\..\src\graphics\Light.cpp" />
     <ClCompile Include="..\..\..\src\graphics\Material.cpp" />
     <ClCompile Include="..\..\..\src\graphics\MaterialLegacy.cpp" />
-    <ClCompile Include="..\..\..\src\graphics\Primitives.cpp" />
     <ClCompile Include="..\..\..\src\graphics\Renderer.cpp" />
     <ClCompile Include="..\..\..\src\graphics\RendererGL2.cpp" />
     <ClCompile Include="..\..\..\src\graphics\RendererLegacy.cpp" />
@@ -114,7 +113,6 @@
     <ClCompile Include="..\..\..\src\graphics\TextureBuilder.cpp" />
     <ClCompile Include="..\..\..\src\graphics\TextureGL.cpp" />
     <ClCompile Include="..\..\..\src\graphics\VertexArray.cpp" />
-    <ClCompile Include="..\..\..\src\graphics\VertexBuffer.cpp" />
     <ClCompile Include="..\..\..\src\win32\OSWin32.cpp" />
     <ClCompile Include="..\..\..\src\win32\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -139,7 +137,6 @@
     <ClInclude Include="..\..\..\src\graphics\Light.h" />
     <ClInclude Include="..\..\..\src\graphics\Material.h" />
     <ClInclude Include="..\..\..\src\graphics\MaterialLegacy.h" />
-    <ClInclude Include="..\..\..\src\graphics\Primitives.h" />
     <ClInclude Include="..\..\..\src\graphics\Renderer.h" />
     <ClInclude Include="..\..\..\src\graphics\RendererGL2.h" />
     <ClInclude Include="..\..\..\src\graphics\RendererGLBuffers.h" />
@@ -150,7 +147,6 @@
     <ClInclude Include="..\..\..\src\graphics\TextureBuilder.h" />
     <ClInclude Include="..\..\..\src\graphics\TextureGL.h" />
     <ClInclude Include="..\..\..\src\graphics\VertexArray.h" />
-    <ClInclude Include="..\..\..\src\graphics\VertexBuffer.h" />
     <ClInclude Include="..\..\..\src\win32\pch.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
