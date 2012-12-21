@@ -15,6 +15,27 @@
 
 namespace Graphics { class Renderer; }
 
+class EVAModel : public DynamicBody {
+public:
+	EVAModel();
+
+	void Render(const vector3d&, const matrix4x4d&);
+	void StaticUpdate(const float timeStep);
+	void TimeStepUpdate(const float timeStep);
+
+	void Activate(Frame* frame, vector3d pos, const matrix4x4d& rot);
+	void DeActivate();
+
+private:
+	void PutOnSurfaceAt(const vector3d&);
+
+	double eyeHeight;
+
+	bool active;
+
+	vector3d wantVel, wantAngVel;
+};
+
 struct Mission : RefItem<Mission> {
 	enum MissionState { // <enum scope='Mission' name=MissionStatus>
 		ACTIVE,
@@ -40,6 +61,11 @@ public:
 	virtual void OnHaveKilled(Body *guyWeKilled);
 	int GetKillCount() const { return m_knownKillCount; }
 	virtual bool SetWheelState(bool down); // returns success of state change, NOT state itself
+
+	bool ToggleEVA();
+	bool EVA;
+	EVAModel* EVABody;
+
 	virtual bool FireMissile(int idx, Ship *target);
 	virtual void SetAlertState(Ship::AlertState as);
 	virtual void NotifyRemoved(const Body* const removedBody);

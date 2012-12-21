@@ -1,4 +1,4 @@
-// Copyright Â© 2008-2012 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2012 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _WORLDVIEW_H
@@ -151,6 +151,7 @@ private:
 	InternalCamera *m_internalCamera;
 	ExternalCamera *m_externalCamera;
 	SiderealCamera *m_siderealCamera;
+	ExternalCamera *m_evaCamera;
 	WorldViewCamera *m_activeCamera; //one of the above
 
 	Indicator m_velIndicator;

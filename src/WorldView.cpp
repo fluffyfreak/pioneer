@@ -1,4 +1,4 @@
-// Copyright Â© 2008-2012 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2012 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "WorldView.h"
@@ -200,6 +200,7 @@ void WorldView::InitObject()
 	// XXX m_renderer not set yet
 	Graphics::TextureBuilder b = Graphics::TextureBuilder::UI("icons/indicator_mousedir.png");
 	m_indicatorMousedir.Reset(new Gui::TexturedQuad(b.GetOrCreateTexture(Gui::Screen::GetRenderer(), "ui")));
+	m_evaCamera = new Camera(Pi::player->EVABody, Pi::GetScrWidth(), Pi::GetScrHeight());
 
 	const Graphics::TextureDescriptor &descriptor = b.GetDescriptor();
 	m_indicatorMousedirSize = vector2f(descriptor.dataSize.x*descriptor.texSize.x,descriptor.dataSize.y*descriptor.texSize.y);
@@ -235,6 +236,7 @@ WorldView::~WorldView()
 {
 	delete m_internalCamera;
 	delete m_externalCamera;
+	delete m_evaCamera;
 	delete m_siderealCamera;
 
 	m_onHyperspaceTargetChangedCon.disconnect();
