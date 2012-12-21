@@ -104,8 +104,6 @@ void GeoPatchGenMaterial::SetGSUniforms()
 	const GeoPatchContext::PatchGenData& hg = *static_cast<GeoPatchContext::PatchGenData*>(this->specialParameter0);
 
 	p->Use();
-	p->invLogZfarPlus1.Set(m_renderer->m_invLogZfarPlus1);
-	p->sceneAmbient.Set(m_renderer->GetAmbientColor());
 
 	p->v0.Set(hg.v0);
 	p->v1.Set(hg.v1);

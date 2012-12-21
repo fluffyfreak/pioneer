@@ -116,7 +116,7 @@ int GeoPatchContext::getIndices(std::vector<unsigned short> &pl, const unsigned 
 // constructor
 GeoPatchContext::GeoPatchContext(const uint32_t edgeLen) : 
 	mEdgeLen(edgeLen), mHalfEdgeLen(edgeLen>>1), 
-	mFBO(edgeLen,edgeLen)//, mVBO(nullptr)
+	mFBO(edgeLen,edgeLen)//, mVBO(NULL)
 {
 	mVertexs = new vector3f[NUM_MESH_VERTS()];
 	mNormals = new vector3f[NUM_MESH_VERTS()];
@@ -124,8 +124,8 @@ GeoPatchContext::GeoPatchContext(const uint32_t edgeLen) :
 
 	unsigned short *idx;
 	unsigned short *midIndices = new unsigned short[VBO_COUNT_MID_IDX()];
-	unsigned short *loEdgeIndices[4] = {nullptr};
-	unsigned short *hiEdgeIndices[4] = {nullptr};
+	unsigned short *loEdgeIndices[4] = {NULL};
+	unsigned short *hiEdgeIndices[4] = {NULL};
 	for (int i=0; i<4; i++) {
 		loEdgeIndices[i] = new unsigned short[VBO_COUNT_LO_EDGE()];
 		hiEdgeIndices[i] = new unsigned short[VBO_COUNT_HI_EDGE()];
@@ -381,7 +381,7 @@ GeoPatchContext::GeoPatchContext(const uint32_t edgeLen) :
 	// create a dummy set of verts, the UVs are the only important part
 	//vector3f *vts = vertexs();
 	//GLfloat *pUV = uvs();
-	//assert(nullptr!=vts);
+	//assert(NULL!=vts);
 	//float xfrac = 0.0f;
 	//float yfrac = 0.0f;
 	//for (uint32_t y=0; y<mEdgeLen; y++) {
@@ -397,8 +397,8 @@ GeoPatchContext::GeoPatchContext(const uint32_t edgeLen) :
 	//assert(vts == &vertexs()[NUM_MESH_VERTS()]);
 
 	//// now create the VBO
-	//assert(nullptr==mVBO);
-	//mVBO = new CGLvbo( NUM_MESH_VERTS(), &vertexs()[0], nullptr, uvs() );
+	//assert(NULL==mVBO);
+	//mVBO = new CGLvbo( NUM_MESH_VERTS(), &vertexs()[0], NULL, uvs() );
 }
 
 // destructor

@@ -61,7 +61,7 @@ GeoSphere::GeoSphere(const SystemBody *body) : mSystemBody(body)
 
 	// make sure these are clear
 	for (int i=0; i<NUM_PATCHES; i++) {
-		mGeoPatches[i] = nullptr;
+		mGeoPatches[i] = NULL;
 	}
 
 	// make the wider world aware of this one
@@ -76,7 +76,7 @@ GeoSphere::~GeoSphere()
 
 	for (int i=0; i<NUM_PATCHES; i++) {
 		delete mGeoPatches[i];
-		mGeoPatches[i] = nullptr;
+		mGeoPatches[i] = NULL;
 	}
 
 	delete mTerrain;
@@ -338,7 +338,7 @@ void GeoSphere::ProcessSplitRequests()
 			// Create the texture itself without any data
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 
 				sPatchContext->fboWidth(), sPatchContext->fboWidth(), 
-				0, GL_LUMINANCE, GL_FLOAT, nullptr);
+				0, GL_LUMINANCE, GL_FLOAT, NULL);
 			//checkGLError();
 		
 			// Bad filtering needed

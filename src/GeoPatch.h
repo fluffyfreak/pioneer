@@ -95,7 +95,7 @@ public:
 	inline void NotifyEdgeFriendDeleted(const GeoPatch *e) {
 		const int idx = GetEdgeIdxOf(e);
 		assert(idx>=0 && idx<4);
-		edgeFriend[idx] = nullptr;
+		edgeFriend[idx] = NULL;
 	}
 
 	inline int GetEdgeIdxOf(const GeoPatch *e) const {
@@ -111,7 +111,7 @@ public:
 	inline GeoPatch *GetEdgeFriendForKid(const int kid, const int edge) const {
 		const GeoPatch *e = edgeFriend[edge];
 		if (!e) {
-			return nullptr;
+			return NULL;
 		}
 		const int we_are = e->GetEdgeIdxOf(this);
 		assert(we_are>=0 && we_are<4);

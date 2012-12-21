@@ -54,11 +54,11 @@ GeoPatch::GeoPatch(const GeoPatchContext &context_, GeoSphere *pGeoSphere_,
 	const uint32_t depth_, const GeoPatchID &ID_)
 	: mContext(context_), mpGeoSphere(pGeoSphere_), mV0(v0_), mV1(v1_), mV2(v2_), mV3(v3_), 
 	mClipCentroid((v0_+v1_+v2_+v3_) * 0.25f), mCentroid(mClipCentroid.Normalized()), mDepth(depth_), mClipRadius(0.0f), mRoughLength(0.0f), 
-	mPatchID(ID_), mHeightmap(0), mVBO(nullptr), mHasSplitRequest(false), parent(nullptr)
+	mPatchID(ID_), mHeightmap(0), mVBO(NULL), mHasSplitRequest(false), parent(NULL)
 {
 	for (int i=0; i<NUM_KIDS; i++) {
-		edgeFriend[i]	= nullptr;
-		kids[i]			= nullptr;
+		edgeFriend[i]	= NULL;
+		kids[i]			= NULL;
 	}
 
 	mClipRadius = std::max(mClipRadius, (mV0-mClipCentroid).Length());
@@ -80,10 +80,10 @@ GeoPatch::~GeoPatch()
 		}
 	}
 	for (int i=0; i<NUM_KIDS; i++) {
-		edgeFriend[i] = nullptr;
+		edgeFriend[i] = NULL;
 		if(kids[i]) {
 			delete kids[i];
-			kids[i] = nullptr;
+			kids[i] = NULL;
 		}
 	}
 
@@ -92,7 +92,7 @@ GeoPatch::~GeoPatch()
 	}
 	if( mVBO ) {
 		delete mVBO;
-		mVBO = nullptr;
+		mVBO = NULL;
 	}
 }
 
@@ -102,7 +102,7 @@ void GeoPatch::GenerateMesh() {
 	// Create the base mesh that the heightmap will modify
 	vector3f *vts = mContext.vertexs();
 	vector2f *pUV = mContext.uvs();
-	assert(nullptr!=vts);
+	assert(NULL!=vts);
 	const float fracStep = mContext.meshLerpStep();
 	for (uint32_t y=0; y<mContext.edgeLen(); y++) {
 		for (uint32_t x=0; x<mContext.edgeLen(); x++) {
@@ -114,10 +114,10 @@ void GeoPatch::GenerateMesh() {
 		}
 	}
 	assert(vts == &mContext.vertexs()[mContext.NUM_MESH_VERTS()]);
-	assert(pUV == &mContext.uvs()[mContext.NUM_MESH_VERTS()*2]);
+	assert(pUV == &mContext.uvs()[mContext.NUM_MESH_VERTS()]);
 
 	// now create the VBO
-	assert(nullptr==mVBO);
+	assert(NULL==mVBO);
 	mVBO = new PatchVBO( mContext.NUM_MESH_VERTS(), &mContext.vertexs()[0], mContext.uvs() );
 }
 
@@ -210,7 +210,7 @@ void GeoPatch::Render(const vector3f &campos, const Graphics::Frustum &frustum)
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, mHeightmap);
 
-		assert(nullptr != mVBO);
+		assert(NULL != mVBO);
 		(*mVBO).Bind();
 			
 		// Index buffer
@@ -222,7 +222,7 @@ void GeoPatch::Render(const vector3f &campos, const Graphics::Frustum &frustum)
 			GL_TRIANGLES,									// mode
 			mContext.elementBuffersIndexCount(iBufIndex),	// count
 			GL_UNSIGNED_SHORT,								// type
-			nullptr											// element array buffer offset
+			NULL											// element array buffer offset
 		);
 
 		(*mVBO).Release();
@@ -271,7 +271,7 @@ void GeoPatch::LODUpdate(const vector3f &campos) {
 	} else if (canMerge) {
 		for (int i=0; i<4; i++) { 
 			delete kids[i]; 
-			kids[i] = nullptr; 
+			kids[i] = NULL; 
 		}
 	}
 }
