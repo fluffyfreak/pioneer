@@ -72,7 +72,9 @@ void GeoPatchContext::CQuad::Release() const
 
 void GeoPatchContext::CQuad::Draw() const
 {
+	Bind();
 	glDrawArrays(GL_TRIANGLES, 0, v->GetNumVerts());
+	Release();
 }
 
 int GeoPatchContext::getIndices(std::vector<unsigned short> &pl, const unsigned int edge_hi_flags,
