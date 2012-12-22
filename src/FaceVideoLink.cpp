@@ -50,7 +50,7 @@ static void _blit_image(const SDLSurfacePtr &s, const char *filename, int xoff, 
 }
 
 FaceVideoLink::FaceVideoLink(float w, float h, Uint32 flags, Uint32 seed,
-	const std::string &name, const std::string &title) : VideoLink(w, h)
+	const std::string &name, const std::string &title) : VideoLink(w, h), m_plainQuad(Pi::renderer, Color4f(0.0f), 0.0f, 0.0f, w, h)
 {
 	m_created = SDL_GetTicks();
 	m_message = new Gui::ToolTip(0, Lang::VID_LINK_ESTABLISHED);
@@ -148,13 +148,8 @@ void FaceVideoLink::Draw() {
 	Uint32 now = SDL_GetTicks();
 
 	if (now - m_created < 1500) {
-		glBegin(GL_QUADS);
-			glColor3f(0,0,0);
-			glVertex2f(0,0);
-			glVertex2f(0,size[1]);
-			glVertex2f(size[0],size[1]);
-			glVertex2f(size[0],0);
-		glEnd();
+		m_plainQuad.Resize(0.0f, 0.0f, size[0],size[1]);
+		m_plainQuad.Draw(Gui::Screen::GetRenderer());
 
 		m_message->SetText(Lang::VID_CONNECTING);
 		DrawMessage();

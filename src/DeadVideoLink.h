@@ -6,6 +6,7 @@
 
 #include "VideoLink.h"
 #include "graphics/Texture.h"
+#include "graphics/Drawables.h"
 #include "gui/GuiTexturedQuad.h"
 #include "RefCounted.h"
 #include "SmartPtr.h"
@@ -26,6 +27,7 @@ private:
 
 	RefCountedPtr<Graphics::Texture> m_texture;
 	ScopedPtr<Gui::TexturedQuad> m_quad;
+	Graphics::Drawables::Quad2D m_plainQuad;
 };
 
 #endif

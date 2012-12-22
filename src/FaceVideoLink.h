@@ -5,6 +5,7 @@
 #define _FACEVIDEOLINK
 
 #include "VideoLink.h"
+#include "graphics/Drawables.h"
 
 class CharacterInfoText : public Gui::Fixed {
 public:
@@ -61,6 +62,7 @@ private:
 	ScopedPtr<Gui::TexturedQuad> m_quad;
 	Gui::ToolTip *m_message;
 	CharacterInfoText *m_characterInfo;
+	Graphics::Drawables::Quad2D m_plainQuad;
 };
 
 #endif

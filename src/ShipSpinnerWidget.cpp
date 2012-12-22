@@ -10,7 +10,8 @@
 
 ShipSpinnerWidget::ShipSpinnerWidget(const ShipFlavour &flavour, float width, float height) :
 	m_width(width),
-	m_height(height)
+	m_height(height),
+	m_quad(Pi::renderer, Color4f(0.0f), 0.0f, 0.0f, width, height)
 {
 	m_model = Pi::FindModel(ShipType::types[flavour.id].lmrModelName.c_str());
 
@@ -51,13 +52,7 @@ void ShipSpinnerWidget::Draw()
 		rot2 += Pi::GetFrameTime();
 	}
 
-	glColor3f(0,0,0);
-	glBegin(GL_QUADS);
-		glVertex2f(0.0f, 0.0f);
-		glVertex2f(0.0f, m_height);
-		glVertex2f(m_width, m_height);
-		glVertex2f(m_width, 0.0f);
-	glEnd();
+	m_quad.Draw(Pi::renderer);
 
 	Graphics::Renderer::StateTicket ticket(Pi::renderer);
 

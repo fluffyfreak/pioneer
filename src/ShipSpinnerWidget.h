@@ -6,6 +6,7 @@
 
 #include "gui/Gui.h"
 #include "graphics/Light.h"
+#include "graphics/Drawables.h"
 #include "ShipFlavour.h"
 #include "LmrModel.h"
 #include "ShipType.h"
@@ -21,6 +22,7 @@ public:
 private:
 	float m_width;
 	float m_height;
+	Graphics::Drawables::Quad2D m_quad;
 
 	ModelBase *m_model;
 	LmrObjParams m_params;

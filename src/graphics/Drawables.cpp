@@ -34,6 +34,55 @@ void Disk::SetColor(const Color4f &c)
 
 ////////////////////////////////////////////////////////////////
 // CGLquad related data and definitions
+namespace Quad2DData {
+	static const vector2f s_vertex_data[6] = { 
+		// triangle 1
+		vector2f(0.0f, 0.0f), // v1
+		vector2f(1.0f, 1.0f), // v3
+		vector2f(0.0f, 1.0f), // v2
+		// triangle 2
+		vector2f(1.0f, 1.0f), // v1
+		vector2f(0.0f, 0.0f), // v3
+		vector2f(1.0f, 0.0f)  // v2
+	};
+}; // namespace QuadData
+
+// A 2D filled quad
+Quad2D::Quad2D(Graphics::Renderer *r, const Color4f &c, const float x, const float y, const float width, const float height)
+	: mX(x), mY(y), mWidth(width), mHeight(height)
+{
+	using namespace Quad2DData;
+	m_vertices.Reset(new Graphics::VertexArray(Graphics::ATTRIB_POSITION));
+	m_material.Reset(r->CreateMaterial(MaterialDescriptor()));
+	m_material->diffuse = c;
+
+	for (int i=0; i<6; i++) {
+		vector3f pos(x + (s_vertex_data[i].x * width), y + (s_vertex_data[i].y * height), 0.0f);
+		m_vertices->Add(pos);
+	}
+}
+
+void Quad2D::Draw(Graphics::Renderer *r)
+{
+	r->DrawTriangles(m_vertices.Get(), m_material.Get(), TRIANGLES);
+}
+
+void Quad2D::Resize(const float x, const float y, const float width, const float height)
+{
+	if (mX != x && mY != y && mWidth != width && mHeight != height)
+	{
+		using namespace Quad2DData;
+		m_vertices->Clear();
+		for (int i=0; i<6; i++) {
+			vector3f pos(x + (s_vertex_data[i].x * width), y + (s_vertex_data[i].y * height), 0.0f);
+			m_vertices->Add(pos);
+		}
+		mX = x; mY = y; mWidth = width; mHeight = height;
+	}
+}
+
+////////////////////////////////////////////////////////////////
+// CGLquad related data and definitions
 namespace QuadData {
 	static const GLfloat s_vertex_buffer_data[18] = { 
 		// triangle 1

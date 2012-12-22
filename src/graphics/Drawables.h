@@ -61,6 +61,25 @@ private:
 	RefCountedPtr<Material> m_material;
 };
 
+// A 2D filled quad
+class Quad2D : public Drawable {
+public:
+	Quad2D(Graphics::Renderer *r, const Color4f &c, const float x, const float y, const float width, const float height);
+	virtual ~Quad2D() {};
+	virtual void Draw(Graphics::Renderer *r);
+
+	void Resize(const float x, const float y, const float width, const float height);
+
+private:
+	ScopedPtr<Graphics::VertexArray> m_vertices;
+	RefCountedPtr<Material> m_material;
+
+	float mX;
+	float mY;
+	float mWidth;
+	float mHeight;
+};
+
 // A 3D quad
 class Quad : public Drawable {
 public:
