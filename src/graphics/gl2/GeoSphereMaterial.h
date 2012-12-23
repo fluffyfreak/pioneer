@@ -55,6 +55,7 @@ namespace Graphics {
 			Uniform Scale;
 			Uniform ScaledRadius; // (planet radius) / scale
 
+			Uniform Radius;
 			Uniform V0;
 			Uniform V1;
 			Uniform V2;

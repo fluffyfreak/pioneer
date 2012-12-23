@@ -104,6 +104,7 @@ void GeoSphereHeightmapProgram::InitUniforms()
 	Scale.Init("geosphereScale", m_program);
 	ScaledRadius.Init("geosphereScaledRadius", m_program);
 
+	Radius.Init("radius", m_program);
 	V0.Init("v0", m_program);
 	V1.Init("v1", m_program);
 	V2.Init("v2", m_program);
@@ -147,10 +148,12 @@ void GeoSphereHeightmapMaterial::SetGSUniforms()
 	p->Scale.Set(ap.scale);
 
 	const GeoPatchParameters gpp = *static_cast<GeoPatchParameters*>(this->specialParameter1);
+	p->Radius.Set(ap.planetRadius);
 	p->V0.Set(gpp.mV0);
 	p->V1.Set(gpp.mV1);
 	p->V2.Set(gpp.mV2);
 	p->V3.Set(gpp.mV3);
+	p->FracStep.Set(1.0f);
 }
 
 }

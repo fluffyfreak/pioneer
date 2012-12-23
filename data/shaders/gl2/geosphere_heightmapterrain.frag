@@ -10,6 +10,8 @@ uniform float geosphereAtmosInvScaleHeight;
 
 uniform Scene scene;
 
+uniform sampler2D texture0; //heightmap
+
 varying vec3 varyingEyepos;
 varying vec3 varyingNormal;
 varying vec4 vertexColor;
