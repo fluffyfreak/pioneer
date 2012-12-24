@@ -33,6 +33,8 @@ public:
 	virtual void UpdateInterpolatedTransform(double alpha);
 	virtual void PostLoadFixup(Space *space);
 
+	static void FreeModel();
+
 protected:
 	virtual void Save(Serializer::Writer &wr, Space *space);
 	virtual void Load(Serializer::Reader &rd, Space *space);
