@@ -120,7 +120,7 @@ Program *GeoSphereHeightmapMaterial::CreateProgram(const MaterialDescriptor &des
 	ss << stringf("#define NUM_LIGHTS %0{u}\n", desc.dirLights);
 	if (desc.atmosphere)
 		ss << "#define ATMOSPHERE\n";
-	return new Graphics::GL2::GeoSphereProgram("geosphere_heightmapterrain", ss.str());
+	return new Graphics::GL2::GeoSphereHeightmapProgram("geosphere_heightmapterrain", ss.str());
 }
 
 void GeoSphereHeightmapMaterial::Apply()

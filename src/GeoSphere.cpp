@@ -86,7 +86,7 @@ GeoSphere::~GeoSphere()
 #pragma optimize( "", off )
 void GeoSphere::Update()
 {
-	if(NULL==mGeoPatches[0]) {
+	if(NULL==mGeoPatches[0] && mSplitResult.empty()) {
 		BuildFirstPatches();
 	} else if(mSplitRequestDescriptions.empty()) {
 		ProcessSplitResults();

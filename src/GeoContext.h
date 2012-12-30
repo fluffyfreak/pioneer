@@ -8,7 +8,7 @@
 #include "graphics/Drawables.h"
 
 #define GEOPATCH_SUBDIVIDE_AT_CAMDIST	2.0f	//1.5f
-#define GEOPATCH_MAX_DEPTH  10
+#define GEOPATCH_MAX_DEPTH  5 //10
 
 namespace Graphics {
 	namespace GL2 {

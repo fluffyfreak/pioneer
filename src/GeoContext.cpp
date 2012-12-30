@@ -433,10 +433,10 @@ void GeoPatchContext::renderHeightmap(const uint32_t terrainType, const PatchGen
 	//mFBO.CopyTexture(targetTex);
 	mFBO.SetTexture(0);
 
+	pMat->Unapply();
+
 	// the framebuffer is NOT automatically released
 	mFBO.Release();
-
-	pMat->Unapply();
 }
 
 /*void GeoPatchContext::UsePatchShader(const matrix4x4f &ViewMatrix, const matrix4x4f &ModelMatrix, const matrix4x4f &MVP) const {
