@@ -1,4 +1,4 @@
--- Copyright © 2008-2012 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 -- Get the translator function
@@ -41,6 +41,7 @@ local onChat = function (form, ref, option)
 			sectorx  = ad.location.sectorX,
 			sectory  = ad.location.sectorY,
 			sectorz  = ad.location.sectorZ,
+			dist     = string.format("%.2f", ad.dist),
 		})
 
 		form:SetMessage(introtext)
@@ -101,7 +102,7 @@ end
 
 local nearbysystems
 local makeAdvert = function (station)
-	local reward, due, location, nearbysystem
+	local reward, due, location, nearbysystem, dist
 	local delivery_flavours = Translate:GetFlavours('DeliverPackage')
 	local client = Character.New()
 	local flavour = Engine.rand:Integer(1,#delivery_flavours)
@@ -114,7 +115,7 @@ local makeAdvert = function (station)
 		location = nearbystations[Engine.rand:Integer(1,#nearbystations)]
 		if location ==  station.path then return end
 		local locdist = Space.GetBody(location.bodyIndex)
-		local dist = station:DistanceTo(locdist)
+		dist = station:DistanceTo(locdist)
 		if dist < 1000 then return end
 		reward = 25 + (math.sqrt(dist) / 15000) * (1+urgency)
 		due = Game.time + ((4*24*60*60) * (Engine.rand:Number(1.5,3.5) - urgency))
@@ -124,7 +125,7 @@ local makeAdvert = function (station)
 		end
 		if #nearbysystems == 0 then return end
 		nearbysystem = nearbysystems[Engine.rand:Integer(1,#nearbysystems)]
-		local dist = nearbysystem:DistanceTo(Game.system)
+		dist = nearbysystem:DistanceTo(Game.system)
 		local nearbystations = nearbysystem:GetStationPaths()
 		location = nearbystations[Engine.rand:Integer(1,#nearbystations)]
 		reward = ((dist / max_delivery_dist) * typical_reward * (1+risk) * (1.5+urgency) * Engine.rand:Number(0.8,1.2))
@@ -136,6 +137,7 @@ local makeAdvert = function (station)
 		flavour		= flavour,
 		client		= client,
 		location	= location,
+		dist            = dist,
 		due		= due,
 		risk		= risk,
 		urgency		= urgency,
@@ -341,6 +343,6 @@ Event.Register("onShipDocked", onShipDocked)
 Event.Register("onGameStart", onGameStart)
 Event.Register("onGameEnd", onGameEnd)
 
-Mission.RegisterClick('Delivery',onClick)
+Mission.RegisterType('Delivery','Delivery',onClick)
 
 Serializer:Register("DeliverPackage", serialize, unserialize)

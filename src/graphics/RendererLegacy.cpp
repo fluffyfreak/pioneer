@@ -1,4 +1,4 @@
-// Copyright © 2008-2012 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "RendererLegacy.h"
@@ -463,7 +463,6 @@ bool RendererLegacy::DrawPointSprites(int count, const vector3f *positions, Mate
 {
 	if (count < 1 || !material || !material->texture0) return false;
 
-	SetBlendMode(BLEND_ALPHA_ONE);
 	SetDepthWrite(false);
 	VertexArray va(ATTRIB_POSITION | ATTRIB_UV0, count * 6);
 
@@ -667,6 +666,8 @@ Material *RendererLegacy::CreateMaterial(const MaterialDescriptor &desc)
 		m = new StarfieldMaterialLegacy();
 		break;
 	case EFFECT_GEOSPHERE_TERRAIN:
+	case EFFECT_GEOSPHERE_TERRAIN_WITH_LAVA:
+	case EFFECT_GEOSPHERE_TERRAIN_WITH_WATER:
 		m = new GeoSphereSurfaceMaterialLegacy();
 		break;
 	default:
@@ -694,7 +695,7 @@ void RendererLegacy::PushState()
 	glPushMatrix();
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-	glPushAttrib(GL_ALL_ATTRIB_BITS);
+	glPushAttrib(GL_ALL_ATTRIB_BITS & (~GL_POINT_BIT));
 }
 
 void RendererLegacy::PopState()

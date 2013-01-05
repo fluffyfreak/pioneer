@@ -295,6 +295,7 @@ void GeoSphere::SetUpMaterials()
 
 bool GeoSphere::AddSplitRequest(SSplitRequestDescription *desc)
 {
+	assert(mSplitRequestDescriptions.size()<MAX_SPLIT_REQUESTS);
 	if(mSplitRequestDescriptions.size()<MAX_SPLIT_REQUESTS) {
 		mSplitRequestDescriptions.push_back(desc);
 		return true;

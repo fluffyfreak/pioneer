@@ -1,4 +1,4 @@
-// Copyright © 2008-2012 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -510,6 +510,7 @@ public:
 
 				s_billboardMaterial->texture0 = op.billboards.texture;
 				s_billboardMaterial->diffuse = Color(op.billboards.col[0], op.billboards.col[1], op.billboards.col[2], op.billboards.col[3]);
+				s_renderer->SetBlendMode(Graphics::BLEND_ALPHA_ONE);
 				s_renderer->DrawPointSprites(op.billboards.count, &verts[0], s_billboardMaterial, op.billboards.size);
 				BindBuffers();
 				break;
@@ -1620,7 +1621,6 @@ LmrCollMesh::LmrCollMesh(LmrModel *m, const LmrObjParams *params)
 	, pFlag(0)
 {
 	m->GetCollMeshGeometry(this, matrix4x4f::Identity(), params);
-	m_radius = m_aabb.GetBoundingRadius();
 	m_geomTree = new GeomTree(nv, m_numTris, pVertex, pIndex, pFlag);
 }
 

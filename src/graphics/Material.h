@@ -1,4 +1,4 @@
-// Copyright © 2008-2012 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _MATERIAL_H
@@ -29,6 +29,8 @@ enum EffectType {
 	EFFECT_STARFIELD,
 	EFFECT_PLANETRING,
 	EFFECT_GEOSPHERE_TERRAIN,
+	EFFECT_GEOSPHERE_TERRAIN_WITH_LAVA,
+	EFFECT_GEOSPHERE_TERRAIN_WITH_WATER,
 	EFFECT_GEOSPHERE_SKY,
 	EFFECT_GEOSPHERE_HEIGHTMAPTERRAIN
 };

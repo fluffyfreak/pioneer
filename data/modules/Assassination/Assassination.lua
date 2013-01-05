@@ -1,4 +1,4 @@
--- Copyright © 2008-2012 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 -- Get the translator function
@@ -41,13 +41,14 @@ local onChat = function (form, ref, option)
 		local sys = ad.location:GetStarSystem()
 		local sbody = ad.location:GetSystemBody()
 
-		form:SetMessage(string.interp(t("{target} will be leaving {spaceport} in the {system} system ({sectorX}, {sectorY}, {sectorZ}) at {date}. The ship is {shipname} and has registration id {shipregid}."), {
+		form:SetMessage(string.interp(t("{target} will be leaving {spaceport} in the {system} system ({sectorX}, {sectorY}, {sectorZ}), distance {dist} ly, at {date}. The ship is {shipname} and has registration id {shipregid}."), {
 		  target    = ad.target,
 		  spaceport = sbody.name,
 		  system    = sys.name,
 		  sectorX   = ad.location.sectorX,
 		  sectorY   = ad.location.sectorY,
 		  sectorZ   = ad.location.sectorZ,
+		  dist      = string.format("%.2f", ad.dist),
 		  date      = Format.Date(ad.due),
 		  shipname  = ad.shipname,
 		  shipregid = ad.shipregid,
@@ -124,6 +125,7 @@ local makeAdvert = function (station)
 	local nearbysystem = nearbysystems[Engine.rand:Integer(1,#nearbysystems)]
 	local nearbystations = nearbysystem:GetStationPaths()
 	local location = nearbystations[Engine.rand:Integer(1,#nearbystations)]
+	local dist = location:DistanceTo(Game.system)
 	local time = Engine.rand:Number(0.3, 3)
 	local due = Game.time + Engine.rand:Number(7*60*60*24, time * 31*60*60*24)
 	local danger = Engine.rand:Integer(1,4)
@@ -141,6 +143,7 @@ local makeAdvert = function (station)
 		flavour = flavour,
 		isfemale = isfemale,
 		location = location,
+		dist = dist,
 		reward = reward,
 		shipid = shipid,
 		shipname = shipname,
@@ -459,6 +462,6 @@ Event.Register("onShipHit", onShipHit)
 Event.Register("onUpdateBB", onUpdateBB)
 Event.Register("onGameEnd", onGameEnd)
 
-Mission.RegisterClick('Assassination',onClick)
+Mission.RegisterType('Assassination','Assassination',onClick)
 
 Serializer:Register("Assassination", serialize, unserialize)

@@ -1,4 +1,4 @@
-// Copyright © 2008-2012 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "ShipCpanelMultiFuncDisplays.h"
@@ -170,7 +170,7 @@ void ScannerWidget::Draw()
 
 	SetScissor(true);
 
-	float rangediff = abs(m_lastRange-m_currentRange);
+	float rangediff = fabs(m_lastRange-m_currentRange);
 	if (rangediff > 200.0 || rangediff / m_currentRange > 0.01) {
 		GenerateRingsAndSpokes();
 		m_lastRange = m_currentRange;
@@ -391,10 +391,7 @@ void ScannerWidget::DrawBlobs(bool below)
 			pointSize = 4.f;
 		}
 
-		matrix4x4d rot;
-		Pi::player->GetRotMatrix(rot);
-		vector3d pos = rot.InverseOf() * i->pos;
-
+		vector3d pos = i->pos * Pi::player->GetOrient();
 		if ((pos.y > 0) && (below)) continue;
 		if ((pos.y < 0) && (!below)) continue;
 

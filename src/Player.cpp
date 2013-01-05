@@ -1,4 +1,4 @@
-// Copyright © 2008-2012 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Player.h"
@@ -14,6 +14,7 @@
 #include "SpaceStation.h"
 #include "SpaceStationView.h"
 #include "WorldView.h"
+#include "StringF.h"
 
 //Some player specific sounds
 static Sound::Event s_soundUndercarriage;

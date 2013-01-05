@@ -1,4 +1,4 @@
-// Copyright © 2008-2012 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _TERRAIN_H
@@ -25,6 +25,14 @@ template <typename,typename> class TerrainGenerator;
 
 class Terrain {
 public:
+	// location and intensity of effects are controlled by the colour fractals;
+	// it's possible for a Terrain to have a flag set but not actually to exhibit any of that effect
+	enum SurfaceEffectFlags {
+		EFFECT_LAVA  = 1 << 0,
+		EFFECT_WATER = 2
+		// can add other effect flags here (e.g., water, snow, ice)
+	};
+
 	static Terrain *InstanceTerrain(const SystemBody *body);
 
 	virtual ~Terrain();
@@ -43,6 +51,8 @@ public:
 	double GetSealevel()	const { return m_sealevel; } // 0 - no water, 1 - 100% coverage
 	double GetIcyness()		const { return m_icyness;  } // 0 - 1 (0% to 100% cover)
 	double GetColcanic()	const { return m_volcanic; }
+
+	Uint32 GetSurfaceEffects() const { return m_surfaceEffects; }
 
 private:
 	template <typename HeightFractal, typename ColorFractal>
@@ -66,6 +76,8 @@ protected:
 	double m_sealevel; // 0 - no water, 1 - 100% coverage
 	double m_icyness; // 0 - 1 (0% to 100% cover)
 	double m_volcanic;
+
+	Uint32 m_surfaceEffects;
 
 	// heightmap stuff
 	double m_heightScaling, m_minh;
