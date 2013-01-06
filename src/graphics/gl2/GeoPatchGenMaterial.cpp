@@ -43,8 +43,6 @@ void GeoPatchGenProgram::InitUniforms()
 	lacunarity.Init("lacunarity", m_program);
 	frequency.Init("frequency", m_program);
 
-	heightmap.Init("texHeightmap", m_program);
-	usesHeightmap = ((-1)!=heightmap.m_location);
 	Graphics::GL2::CheckGLError();
 }
 
@@ -120,11 +118,10 @@ void GeoPatchGenMaterial::SetGSUniforms()
 	p->lacunarity.Set(hg.lacunarity, 10);
 	p->frequency.Set(hg.frequency, 10);
 
-	// hg.heightmap ???
-	/*if (texture0) {
-		static_cast<TextureGL*>(texture0)->Bind();
-		p->texture0.Set(0);
-	}*/
+	if (hg.usesHeightmap) {
+		//hg.heightmap;
+		p->texture0.Set(this->texture0, 0);
+	}
 }
 
 }

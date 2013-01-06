@@ -68,5 +68,5 @@ void DeadVideoLink::UpdateWhiteNoise()
 		Uint8 b = Pi::rng.Int32() & 0xff;
 		noise[i] = b<<24|b<<16|b<<8|b;
 	}
-	m_texture->Update(noise, vector2f(textureSize), Graphics::IMAGE_RGB, Graphics::IMAGE_UNSIGNED_BYTE);
+	m_texture->Update(noise, vector2f(textureSize), Graphics::IMAGE_RGB, Graphics::IMAGE_TYPE_UNSIGNED_BYTE);
 }

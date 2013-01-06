@@ -144,7 +144,7 @@ void TextureBuilder::LoadSurface()
 
 void TextureBuilder::UpdateTexture(Texture *texture)
 {
-	texture->Update(m_surface->pixels, vector2f(m_surface->w,m_surface->h), m_descriptor.format == TEXTURE_RGBA ? IMAGE_RGBA : IMAGE_RGB, IMAGE_UNSIGNED_BYTE);
+	texture->Update(m_surface->pixels, vector2f(m_surface->w,m_surface->h), m_descriptor.format == TEXTURE_RGBA ? IMAGE_RGBA : IMAGE_RGB, IMAGE_TYPE_UNSIGNED_BYTE);
 }
 
 }

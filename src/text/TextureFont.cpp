@@ -572,7 +572,7 @@ TextureFont::TextureFont(const FontDescriptor &descriptor, Graphics::Renderer *r
 	//upload atlas
 	const Graphics::ImageFormat image_format = (tex_format == Graphics::TEXTURE_LUMINANCE_ALPHA
 		 ? Graphics::IMAGE_LUMINANCE_ALPHA : Graphics::IMAGE_INTENSITY);
-	m_texture->Update(&pixBuf[0], tex_size, image_format, Graphics::IMAGE_UNSIGNED_BYTE);
+	m_texture->Update(&pixBuf[0], tex_size, image_format, Graphics::IMAGE_TYPE_UNSIGNED_BYTE);
 
 	if (outline)
 		FT_Stroker_Done(stroker);

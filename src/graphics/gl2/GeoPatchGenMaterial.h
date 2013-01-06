@@ -32,8 +32,6 @@ namespace Graphics {
 			Uniform lacunarity;
 			Uniform frequency;
 			
-			Uniform heightmap;
-			bool usesHeightmap;
 		protected:
 			virtual void InitUniforms();
 			std::string m_frag_defines;

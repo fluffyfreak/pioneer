@@ -10,7 +10,7 @@ uniform float amplitude[10];
 uniform float lacunarity[10];
 uniform float frequency[10];
 
-uniform sampler2D texHeightmap;
+uniform sampler2D texture0;
 uniform float planetRadius;
 uniform float icyness;
 
@@ -70,22 +70,22 @@ float GetHeight(in vec3 p)
 	int limix = iclamp(ix+0, 0, 2048-1);
 	for (int y=0; y<4; y++) {
 		vec2 hmuv = vec2(float(limix), float(limiy[y]));
-		map0[y] = texture2D(texHeightmap, hmuv).x;
+		map0[y] = texture2D(texture0, hmuv).x;
 	}
 	limix = iclamp(ix+1, 0, 2048-1);
 	for (int y=0; y<4; y++) {
 		vec2 hmuv = vec2(float(limix), float(limiy[y]));
-		map1[y] = texture2D(texHeightmap, hmuv).x;
+		map1[y] = texture2D(texture0, hmuv).x;
 	}
 	limix = iclamp(ix+2, 0, 2048-1);
 	for (int y=0; y<4; y++) {
 		vec2 hmuv = vec2(float(limix), float(limiy[y]));
-		map2[y] = texture2D(texHeightmap, hmuv).x;
+		map2[y] = texture2D(texture0, hmuv).x;
 	}
 	limix = iclamp(ix+3, 0, 2048-1);
 	for (int y=0; y<4; y++) {
 		vec2 hmuv = vec2(float(limix), float(limiy[y]));
-		map3[y] = texture2D(texHeightmap, hmuv).x;
+		map3[y] = texture2D(texture0, hmuv).x;
 	}
 
 	float c[4];

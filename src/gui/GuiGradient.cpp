@@ -19,7 +19,7 @@ Gradient::Gradient(float width, float height, const Color &beginColor, const Col
 
 	vector2f size = direction == HORIZONTAL ? vector2f(2.0f,1.0f) : vector2f(1.0f,2.0f);
 	Graphics::Texture *texture = Gui::Screen::GetRenderer()->CreateTexture(Graphics::TextureDescriptor(Graphics::TEXTURE_RGBA, size));
-	texture->Update(data, size, Graphics::IMAGE_RGBA, Graphics::IMAGE_UNSIGNED_BYTE);
+	texture->Update(data, size, Graphics::IMAGE_RGBA, Graphics::IMAGE_TYPE_UNSIGNED_BYTE);
 	m_quad.Reset(new TexturedQuad(texture));
 }
 

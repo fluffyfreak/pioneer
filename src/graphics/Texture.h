@@ -14,7 +14,8 @@ enum TextureFormat {
 	TEXTURE_RGB,
 	TEXTURE_LUMINANCE_ALPHA, // luminance value put into R,G,B components; separate alpha value
 	TEXTURE_INTENSITY,
-	TEXTURE_ALPHA
+	TEXTURE_ALPHA,
+	TEXTURE_FLOAT
 };
 
 enum ImageFormat {
@@ -22,11 +23,13 @@ enum ImageFormat {
 	IMAGE_RGB,
 	IMAGE_LUMINANCE_ALPHA,
 	IMAGE_INTENSITY,
-	IMAGE_ALPHA
+	IMAGE_ALPHA,
+	IMAGE_FLOAT
 };
 
 enum ImageType {
-	IMAGE_UNSIGNED_BYTE,
+	IMAGE_TYPE_UNSIGNED_BYTE,
+	IMAGE_TYPE_FLOAT
 };
 
 enum TextureSampleMode {
