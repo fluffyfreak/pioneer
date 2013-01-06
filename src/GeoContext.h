@@ -157,7 +157,7 @@ public:
 		float frequency[10];
 
 		bool usesHeightmap;
-		GLint heightmap;
+		Graphics::Texture *pTex;
 	};
 
 	//const SHeightmapGen& GetHeightmapGenData()	const { return mHeightmapProgs[mCurrentHeightmapProg]; }

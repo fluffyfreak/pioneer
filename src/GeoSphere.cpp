@@ -15,6 +15,8 @@
 #include "graphics/Frustum.h"
 #include "graphics/Graphics.h"
 #include "graphics/VertexArray.h"
+#include "graphics/TextureBuilder.h"
+#include "graphics/TextureGL.h"
 #include "graphics/gl2/GeoSphereMaterial.h"
 
 //static 
@@ -48,7 +50,7 @@ GeoSphere::GeoSphere(const SystemBody *body) : mSystemBody(body)
 
 	// ???
 	mPatchGenData->usesHeightmap = false;
-	mPatchGenData->heightmap = 0;
+	mPatchGenData->pTex = NULL;
 
 	for(int i=0;i<10;i++)
 	{
@@ -327,8 +329,12 @@ void GeoSphere::ProcessSplitRequests()
 		SSplitResult *sr = new SSplitResult(srd->patchID.GetPatchFaceIdx(), srd->depth);
 		for (int i=0; i<4; i++)
 		{
+			//Graphics::Texture *pTex = Graphics::TextureBuilder::TerrainGen("TerrainGen").CreateTexture(Pi::renderer);
+			Graphics::TextureDescriptor td(Graphics::TEXTURE_FLOAT, vector2f(sPatchContext->fboWidth(), sPatchContext->fboWidth()), Graphics::NEAREST_CLAMP, false, false);
+			Graphics::Texture *pTex = Pi::renderer->CreateTexture(td);
+
 			// Now we need to create the texture which will contain the heightmap. 
-			GLuint texID;
+			/*GLuint texID;
 			glGenTextures(1, &texID);
 			//checkGLError();
  
@@ -347,7 +353,7 @@ void GeoSphere::ProcessSplitRequests()
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);*/
 			//checkGLError();
 
 			// render the heightmap to a framebuffer.
@@ -356,9 +362,13 @@ void GeoSphere::ProcessSplitRequests()
 			mPatchGenData->v2 = vecs[i][2];
 			mPatchGenData->v3 = vecs[i][3];
 
-			sPatchContext->renderHeightmap(0, mPatchGenData, texID);
+			//mPatchGenData->usesHeightmap
+			//mPatchGenData->pTex;
 
-			sr->addResult(texID, vecs[i][0], vecs[i][1], vecs[i][2], vecs[i][3], srd->patchID.NextPatchID(srd->depth+1, i));
+			Graphics::TextureGL* pTexGL = static_cast<Graphics::TextureGL*>(pTex);
+			sPatchContext->renderHeightmap(0, mPatchGenData, pTexGL->GetTextureNum());
+
+			sr->addResult(pTex, vecs[i][0], vecs[i][1], vecs[i][2], vecs[i][3], srd->patchID.NextPatchID(srd->depth+1, i));
 		}
 
 		// store result

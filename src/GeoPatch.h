@@ -46,7 +46,7 @@ private:
 	const GeoPatchID mPatchID;
 
 	PatchVBO *mVBO;
-	GLuint mHeightmap;
+	ScopedPtr<Graphics::Texture> mpHeightmap;
 	bool mHasSplitRequest;
 	GeoPatchParameters mGeoPatchParameters;
 
@@ -75,7 +75,7 @@ public:
 	void GenerateMesh();
 
 	void ReceiveHeightmaps(const SSplitResult *psr);
-	void ReceiveHeightmapTex(const GLuint tex);
+	void ReceiveHeightmapTex(Graphics::Texture *pTex);
 
 	inline void OnEdgeFriendChanged(const int edge, GeoPatch *e) {
 		edgeFriend[edge] = e;

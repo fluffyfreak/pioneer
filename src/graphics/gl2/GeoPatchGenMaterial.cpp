@@ -119,8 +119,7 @@ void GeoPatchGenMaterial::SetGSUniforms()
 	p->frequency.Set(hg.frequency, 10);
 
 	if (hg.usesHeightmap) {
-		//hg.heightmap;
-		p->texture0.Set(this->texture0, 0);
+		p->texture0.Set(hg.pTex, 0);
 	}
 }
 

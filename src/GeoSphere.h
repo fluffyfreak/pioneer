@@ -47,11 +47,11 @@ struct SSplitRequestDescription {
 
 struct SSplitResult {
 	struct SSplitResultData {
-		SSplitResultData(const GLuint texID_, const vector3f &v0_, const vector3f &v1_, const vector3f &v2_, const vector3f &v3_, const GeoPatchID &patchID_) :
-			texID(texID_), v0(v0_), v1(v1_), v2(v2_), v3(v3_), patchID(patchID_)
+		SSplitResultData(Graphics::Texture *pTex_, const vector3f &v0_, const vector3f &v1_, const vector3f &v2_, const vector3f &v3_, const GeoPatchID &patchID_) :
+			pTex(pTex_), v0(v0_), v1(v1_), v2(v2_), v3(v3_), patchID(patchID_)
 		{
 		}
-		const GLuint texID;
+		Graphics::Texture *pTex;
 		const vector3f v0;
 		const vector3f v1;
 		const vector3f v2;
@@ -63,9 +63,9 @@ struct SSplitResult {
 	{
 	}
 
-	void addResult(const GLuint tex, const vector3f &v0_, const vector3f &v1_, const vector3f &v2_, const vector3f &v3_, const GeoPatchID &patchID_)
+	void addResult(Graphics::Texture *pTex, const vector3f &v0_, const vector3f &v1_, const vector3f &v2_, const vector3f &v3_, const GeoPatchID &patchID_)
 	{
-		data.push_back(SSplitResultData(tex, v0_, v1_, v2_, v3_, patchID_));
+		data.push_back(SSplitResultData(pTex, v0_, v1_, v2_, v3_, patchID_));
 		assert(data.size()<=4);
 	}
 

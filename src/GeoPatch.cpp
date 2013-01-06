@@ -54,7 +54,7 @@ GeoPatch::GeoPatch(const GeoPatchContext &context_, GeoSphere *pGeoSphere_,
 	const uint32_t depth_, const GeoPatchID &ID_)
 	: mContext(context_), mpGeoSphere(pGeoSphere_), mV0(v0_), mV1(v1_), mV2(v2_), mV3(v3_), 
 	mClipCentroid((v0_+v1_+v2_+v3_) * 0.25f), mCentroid(mClipCentroid.Normalized()), mDepth(depth_), mClipRadius(0.0f), mRoughLength(0.0f), 
-	mPatchID(ID_), mHeightmap(0), mVBO(NULL), mHasSplitRequest(false), parent(NULL)
+	mPatchID(ID_), mpHeightmap(NULL), mVBO(NULL), mHasSplitRequest(false), parent(NULL)
 {
 	for (int i=0; i<NUM_KIDS; i++) {
 		edgeFriend[i]	= NULL;
@@ -87,9 +87,6 @@ GeoPatch::~GeoPatch()
 		}
 	}
 
-	if(glIsTexture(mHeightmap)==GL_TRUE) {
-		glDeleteTextures(1, &mHeightmap);
-	}
 	if( mVBO ) {
 		delete mVBO;
 		mVBO = NULL;
@@ -138,7 +135,7 @@ void GeoPatch::ReceiveHeightmaps(const SSplitResult *psr)
 
 		for (int i=0; i<4; i++)
 		{
-			kids[i]->ReceiveHeightmapTex(psr->data[i].texID);
+			kids[i]->ReceiveHeightmapTex(psr->data[i].pTex);
 		}
 
 		// hm.. edges. Not right to pass this
@@ -172,9 +169,9 @@ void GeoPatch::ReceiveHeightmaps(const SSplitResult *psr)
 	}
 }
 
-void GeoPatch::ReceiveHeightmapTex(const GLuint tex)
+void GeoPatch::ReceiveHeightmapTex(Graphics::Texture *pTex)
 {
-	mHeightmap = tex;
+	mpHeightmap.Reset(pTex);
 }
 
 void GeoPatch::Render(const vector3f &campos, const Graphics::Frustum &frustum)
@@ -207,9 +204,9 @@ void GeoPatch::Render(const vector3f &campos, const Graphics::Frustum &frustum)
 		mpGeoSphere->SurfaceMaterial()->Apply();
 
 		// bind the heightmap texture
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, mHeightmap);
-
+		if (mpHeightmap)
+			static_cast<Graphics::TextureGL*>(mpHeightmap.Get())->Bind();
+		
 		assert(NULL != mVBO);
 		(*mVBO).Bind();
 			
@@ -226,6 +223,9 @@ void GeoPatch::Render(const vector3f &campos, const Graphics::Frustum &frustum)
 		);
 
 		(*mVBO).Release();
+
+		if (mpHeightmap)
+			static_cast<Graphics::TextureGL*>(mpHeightmap.Get())->Unbind();
 
 		mpGeoSphere->SurfaceMaterial()->Unapply();
 	}
