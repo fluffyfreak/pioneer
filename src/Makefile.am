@@ -24,6 +24,7 @@ noinst_HEADERS = \
 	BufferObject.h \
 	ByteRange.h \
 	Camera.h \
+	CameraController.h \
 	CargoBody.h \
 	ChatForm.h \
 	CityOnPlanet.h \
@@ -146,6 +147,7 @@ noinst_HEADERS = \
 	SoundMusic.h \
 	Space.h \
 	SpaceStation.h \
+	SpaceStationType.h \
 	SpaceStationView.h \
 	Star.h \
 	SystemInfoView.h \
@@ -156,7 +158,6 @@ noinst_HEADERS = \
 	VideoLink.h \
 	View.h \
 	WorldView.h \
-	WorldViewCamera.h \
 	SmartPtr.h \
 	buildopts.h \
 	fixed.h \
@@ -175,6 +176,7 @@ pioneer_SOURCES	= \
 	Background.cpp \
 	Body.cpp \
 	Camera.cpp \
+	CameraController.cpp \
 	CargoBody.cpp \
 	Color.cpp \
 	ChatForm.cpp \
@@ -284,6 +286,7 @@ pioneer_SOURCES	= \
 	SoundMusic.cpp \
 	Space.cpp \
 	SpaceStation.cpp \
+	SpaceStationType.cpp \
 	SpaceStationView.cpp \
 	Star.cpp \
 	SystemInfoView.cpp \
@@ -293,7 +296,6 @@ pioneer_SOURCES	= \
 	UIView.cpp \
 	View.cpp \
 	WorldView.cpp \
-	WorldViewCamera.cpp \
 	main.cpp \
 	mtrand.cpp \
 	perlin.cpp \

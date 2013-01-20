@@ -9,7 +9,8 @@ local ui = Engine.ui
 -- don't produce missions for further than this many light years away
 local max_taxi_dist = 40
 -- typical time for travel to a system max_taxi_dist away
-local typical_travel_time = 1.2 * max_taxi_dist * 24 * 60 * 60
+--	Irigi: ~ 4 days for in-system travel, the rest is FTL travel time
+local typical_travel_time = (2.0 * max_taxi_dist + 4) * 24 * 60 * 60
 -- typical reward for taxi service to a system max_taxi_dist away
 local typical_reward = 75 * max_taxi_dist
 -- max number of passengers per trip
@@ -331,6 +332,7 @@ end
 
 local onClick = function (mission)
 	local taxi_flavours = Translate:GetFlavours('Taxi')
+	local dist = Game.system:DistanceTo(mission.location)
 	return ui:Grid(2,1)
 		:SetColumn(0,{ui:VBox(10):PackEnd({ui:MultiLineText((taxi_flavours[mission.flavour].introtext):interp({
 														name   = mission.client.name,
@@ -338,7 +340,8 @@ local onClick = function (mission)
 														sectorx = mission.location.sectorX,
 														sectory = mission.location.sectorY,
 														sectorz = mission.location.sectorZ,
-														cash   = Format.Money(mission.reward)})
+														cash   = Format.Money(mission.reward),
+														dist  = string.format("%.2f", dist)})
 										),
 										ui:Grid(2,1)
 											:SetColumn(0, {
@@ -352,7 +355,7 @@ local onClick = function (mission)
 													ui:Label(taxi_flavours[mission.flavour].danger),
 													ui:Label(Format.Date(mission.due)),
 													ui:Margin(10),
-													ui:Label(math.ceil(Game.system:DistanceTo(mission.location)).." "..t("ly"))
+													ui:Label(math.ceil(dist).." "..t("ly"))
 												})
 											})
 		})})
