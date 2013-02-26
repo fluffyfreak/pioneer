@@ -7,20 +7,16 @@
 #include "Ship.h"
 #include "graphics/Graphics.h"
 #include "graphics/Renderer.h"
+#include "scenegraph/SceneGraph.h"
 
-ShipSpinnerWidget::ShipSpinnerWidget(const ShipFlavour &flavour, float width, float height) :
+ShipSpinnerWidget::ShipSpinnerWidget(SceneGraph::Model *model, const SceneGraph::ModelSkin &skin, float width, float height) :
 	m_width(width),
 	m_height(height),
+	m_skin(skin),
 	m_quad(Pi::renderer, Color4f(0.0f), 0.0f, 0.0f, width, height)
 {
-	m_model = Pi::FindModel(ShipType::types[flavour.id].lmrModelName.c_str());
-
-	memset(&m_params, 0, sizeof(LmrObjParams));
-	m_params.animationNamespace = "ShipAnimation";
-	m_params.equipment = &m_equipment;
-	flavour.ApplyTo(&m_params);
-	m_params.animValues[Ship::ANIM_WHEEL_STATE] = 1.0;
-	m_params.flightState = Ship::FLYING;
+	m_model.Reset(model->MakeInstance());
+	m_skin.Apply(m_model.Get());
 
 	Color lc(1.f);
 	m_light.SetDiffuse(lc);
@@ -33,8 +29,6 @@ void ShipSpinnerWidget::Draw()
 {
 	float pos[2];
 	GetAbsolutePosition(pos);
-
-	m_params.time = Pi::game->GetTime();
 
 	float guiscale[2];
 	Gui::Screen::GetCoords2Pixels(guiscale);
@@ -72,5 +66,5 @@ void ShipSpinnerWidget::Draw()
 	rot.RotateY(rot2);
 	rot[14] = -1.5f * m_model->GetDrawClipRadius();
 
-	m_model->Render(Pi::renderer, rot, &m_params);
+	m_model->Render(rot);
 }

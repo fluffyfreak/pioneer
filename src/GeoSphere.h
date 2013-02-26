@@ -8,7 +8,7 @@
 #include "GeoPatchID.h"
 
 #include "vector3.h"
-#include "mtrand.h"
+#include "Random.h"
 #include "galaxy/StarSystem.h"
 #include "graphics/Frustum.h"
 #include "graphics/Material.h"

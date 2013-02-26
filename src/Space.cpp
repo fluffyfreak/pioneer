@@ -25,12 +25,44 @@
 #include "MathUtil.h"
 #include "LuaEvent.h"
 
+void Space::BodyNearFinder::Prepare()
+{
+	m_bodyDist.clear();
+
+	for (Space::BodyIterator i = m_space->BodiesBegin(); i != m_space->BodiesEnd(); ++i)
+		m_bodyDist.push_back(BodyDist((*i), (*i)->GetPositionRelTo(m_space->GetRootFrame()).Length()));
+
+	std::sort(m_bodyDist.begin(), m_bodyDist.end());
+}
+
+void Space::BodyNearFinder::GetBodiesMaybeNear(const Body *b, double dist, BodyNearList &bodies) const
+{
+	GetBodiesMaybeNear(b->GetPositionRelTo(m_space->GetRootFrame()), dist, bodies);
+}
+
+void Space::BodyNearFinder::GetBodiesMaybeNear(const vector3d &pos, double dist, BodyNearList &bodies) const
+{
+	if (m_bodyDist.empty()) return;
+
+	const double len = pos.Length();
+
+	std::vector<BodyDist>::const_iterator min = std::lower_bound(m_bodyDist.begin(), m_bodyDist.end(), len-dist);
+	std::vector<BodyDist>::const_iterator max = std::upper_bound(min, m_bodyDist.end(), len+dist);
+
+	while (min != max) {
+		bodies.push_back((*min).body);
+		++min;
+	}
+}
+
+
 Space::Space(Game *game)
 	: m_game(game)
 	, m_frameIndexValid(false)
 	, m_bodyIndexValid(false)
 	, m_sbodyIndexValid(false)
 	, m_background(Pi::renderer, UNIVERSE_SEED)
+	, m_bodyNearFinder(this)
 #ifndef NDEBUG
 	, m_processingFinalizationQueue(false)
 #endif
@@ -45,6 +77,7 @@ Space::Space(Game *game, const SystemPath &path)
 	, m_bodyIndexValid(false)
 	, m_sbodyIndexValid(false)
 	, m_background(Pi::renderer)
+	, m_bodyNearFinder(this)
 #ifndef NDEBUG
 	, m_processingFinalizationQueue(false)
 #endif
@@ -56,7 +89,7 @@ Space::Space(Game *game, const SystemPath &path)
 	m_rootFrame.Reset(new Frame(0, Lang::SYSTEM));
 	m_rootFrame->SetRadius(FLT_MAX);
 
-	GenBody(m_starSystem->rootBody, m_rootFrame.Get());
+	GenBody(m_starSystem->rootBody.Get(), m_rootFrame.Get());
 	m_rootFrame->UpdateOrbitRails(m_game->GetTime(), m_game->GetTimeStep());
 
 	//DebugDumpFrames();
@@ -68,6 +101,7 @@ Space::Space(Game *game, Serializer::Reader &rd)
 	, m_bodyIndexValid(false)
 	, m_sbodyIndexValid(false)
 	, m_background(Pi::renderer)
+	, m_bodyNearFinder(this)
 #ifndef NDEBUG
 	, m_processingFinalizationQueue(false)
 #endif
@@ -215,7 +249,7 @@ void Space::RebuildSystemBodyIndex()
 	m_sbodyIndex.push_back(0);
 
 	if (m_starSystem)
-		AddSystemBodyToIndex(m_starSystem->rootBody);
+		AddSystemBodyToIndex(m_starSystem->rootBody.Get());
 
 	m_sbodyIndexValid = true;
 }
@@ -372,7 +406,7 @@ static void RelocateStarportIfUnderwaterOrBuried(SystemBody *sbody, Frame *frame
 	bool isInitiallyUnderwater = false;
 	bool initialVariationTooHigh = false;
 
-	MTRand r(sbody->seed);
+	Random r(sbody->seed);
 
 	for (int tries = 0; tries < 200; tries++) {
 		variationWithinLimits = true;
@@ -691,7 +725,7 @@ static void CollideWithTerrain(Body *body)
 
 	double terrHeight = terrain->GetTerrainHeight(body->GetPosition().Normalized());
 	if (altitude >= terrHeight) return;
-	
+
 	CollisionContact c;
 	c.pos = body->GetPosition();
 	c.normal = c.pos.Normalized();
@@ -741,6 +775,8 @@ void Space::TimeStep(float step)
 	}
 
 	UpdateBodies();
+
+	m_bodyNearFinder.Prepare();
 }
 
 void Space::UpdateBodies()

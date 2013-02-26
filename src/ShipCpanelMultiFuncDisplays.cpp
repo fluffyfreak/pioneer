@@ -8,6 +8,8 @@
 #include "KeyBindings.h"
 #include "Lang.h"
 #include "libs.h"
+#include "LuaConstants.h"
+#include "LuaTable.h"
 #include "Missile.h"
 #include "Pi.h"
 #include "Player.h"
@@ -222,11 +224,12 @@ void ScannerWidget::Update()
 	float combat_dist = 0, far_ship_dist = 0, nav_dist = 0, far_other_dist = 0;
 
 	// collect the bodies to be displayed, and if AUTO, distances
-	for (Space::BodyIterator i = Pi::game->GetSpace()->BodiesBegin(); i != Pi::game->GetSpace()->BodiesEnd(); ++i) {
+	Space::BodyNearList nearby;
+	Pi::game->GetSpace()->GetBodiesMaybeNear(Pi::player, SCANNER_RANGE_MAX, nearby);
+	for (Space::BodyNearIterator i = nearby.begin(); i != nearby.end(); ++i) {
 		if ((*i) == Pi::player) continue;
 
 		float dist = float((*i)->GetPositionRelTo(Pi::player).Length());
-		if (dist > SCANNER_RANGE_MAX) continue;
 
 		Contact c;
 		c.type = (*i)->GetType();
@@ -237,7 +240,7 @@ void ScannerWidget::Update()
 
 			case Object::MISSILE:
 				// player's own missiles are ignored for range calc but still shown
-				if (static_cast<Missile*>(*i)->GetOwner() == Pi::player) {
+				if (static_cast<const Missile*>(*i)->GetOwner() == Pi::player) {
 					c.isSpecial = true;
 					break;
 				}
@@ -245,7 +248,7 @@ void ScannerWidget::Update()
 				// else fall through
 
 			case Object::SHIP: {
-				Ship *s = static_cast<Ship*>(*i);
+				const Ship *s = static_cast<const Ship*>(*i);
 				if (s->GetFlightState() != Ship::FLYING && s->GetFlightState() != Ship::LANDED)
 					continue;
 
@@ -405,8 +408,8 @@ void ScannerWidget::DrawBlobs(bool below)
 		glVertex2f(x, y_blob);
 		glEnd();
 
-		vector2f blob(x, y_blob);
-		m_renderer->DrawPoints2D(1, &blob, color, pointSize);
+		vector3f blob(x, y_blob, 0.f);
+		m_renderer->DrawPoints(1, &blob, color, pointSize);
 	}
 }
 
@@ -535,19 +538,38 @@ void UseEquipWidget::FireMissile(int idx)
 		return;
 	}
 
-	Pi::player->FireMissile(idx, static_cast<Ship*>(Pi::player->GetCombatTarget()));
+	lua_State *l = Lua::manager->GetLuaState();
+	int pristine_stack = lua_gettop(l);
+	LuaObject<Ship>::PushToLua(Pi::player);
+	lua_pushstring(l, "FireMissileAt");
+	lua_gettable(l, -2);
+	lua_pushvalue(l, -2);
+	lua_pushinteger(l, idx+1);
+	LuaObject<Ship>::PushToLua(static_cast<Ship*>(Pi::player->GetCombatTarget()));
+	lua_call(l, 3, 1);
+	lua_settop(l, pristine_stack);
 }
 
 void UseEquipWidget::UpdateEquip()
 {
 	DeleteAllChildren();
-	int numSlots = Pi::player->m_equipment.GetSlotSize(Equip::SLOT_MISSILE);
+	lua_State *l = Lua::manager->GetLuaState();
+	int pristine_stack = lua_gettop(l);
+	LuaObject<Ship>::PushToLua(Pi::player);
+	lua_pushstring(l, "GetEquip");
+	lua_gettable(l, -2);
+	lua_pushvalue(l, -2);
+	lua_pushstring(l, "MISSILE");
+	lua_call(l, 2, 1);
+	std::vector<std::string> missiles = LuaTable(l, -1).GetVector<std::string>();
+	lua_settop(l, pristine_stack);
+	int numSlots = missiles.size();
 
 	if (numSlots) {
 		float spacing = 380.0f / numSlots;
 
 		for (int i = 0; i < numSlots; ++i) {
-			const Equip::Type t = Pi::player->m_equipment.Get(Equip::SLOT_MISSILE, i);
+			const Equip::Type t = static_cast<Equip::Type>(LuaConstants::GetConstant(l, "EquipType", missiles[i].c_str()));
 			if (t == Equip::NONE) continue;
 
 			Gui::ImageButton *b;
