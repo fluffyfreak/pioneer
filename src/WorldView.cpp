@@ -360,14 +360,22 @@ void WorldView::OnClickBlastoff()
 
 void WorldView::OnClickHyperspace()
 {
-	if (Pi::player->IsHyperspaceActive()) {
-		// Hyperspace countdown in effect.. abort!
-		Pi::player->ResetHyperspaceCountdown();
-		Pi::cpan->MsgLog()->Message("", Lang::HYPERSPACE_JUMP_ABORTED);
+	if (Pi::player->CanHyperspaceTo(Pi::sectorView->GetHyperspaceTarget())) {
+		if (Pi::player->IsHyperspaceActive()) {
+			// Hyperspace countdown in effect.. abort!
+			Pi::player->ResetHyperspaceCountdown();
+			Pi::cpan->MsgLog()->Message("", Lang::HYPERSPACE_JUMP_ABORTED);
+		} else {
+			// Initiate hyperspace drive
+			SystemPath path = Pi::sectorView->GetHyperspaceTarget();
+			Pi::player->StartHyperspaceCountdown(path);
+		}
 	} else {
-		// Initiate hyperspace drive
-		SystemPath path = Pi::sectorView->GetHyperspaceTarget();
-		Pi::player->StartHyperspaceCountdown(path);
+		if( Pi::player->UsingLDSDrive() ) {
+			Pi::player->DisengageLDSDrive();
+		} else {
+			Pi::player->EngageLDSDrive();
+		}
 	}
 }
 
@@ -407,8 +415,8 @@ static Color get_color_for_warning_meter_bar(float v) {
 void WorldView::RefreshHyperspaceButton() {
 	if (Pi::player->CanHyperspaceTo(Pi::sectorView->GetHyperspaceTarget()))
 		m_hyperspaceButton->Show();
-	else
-		m_hyperspaceButton->Hide();
+	//else
+		//m_hyperspaceButton->Hide();
 }
 
 void WorldView::RefreshButtonStateAndVisibility()

@@ -45,6 +45,10 @@ public:
 	virtual Ship::HyperjumpStatus StartHyperspaceCountdown(const SystemPath &dest);
 	virtual void ResetHyperspaceCountdown();
 
+	bool UsingLDSDrive() const { return m_usingLDSDrive; }
+	void EngageLDSDrive();
+	void DisengageLDSDrive();
+
 protected:
 	virtual void Save(Serializer::Writer &wr, Space *space);
 	virtual void Load(Serializer::Reader &rd, Space *space);
@@ -55,6 +59,9 @@ protected:
 	/* MarketAgent stuff */
 	void Bought(Equip::Type t);
 	void Sold(Equip::Type t);
+
+	bool m_usingLDSDrive;
+	vector3d m_preLDSVel;
 };
 
 #endif /* _PLAYER_H */

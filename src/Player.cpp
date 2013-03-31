@@ -20,7 +20,7 @@
 static Sound::Event s_soundUndercarriage;
 static Sound::Event s_soundHyperdrive;
 
-Player::Player(ShipType::Id shipId): Ship(shipId)
+Player::Player(ShipType::Id shipId): Ship(shipId), m_usingLDSDrive(false)
 {
 	SetController(new PlayerShipController());
 }
@@ -238,4 +238,23 @@ void Player::ResetHyperspaceCountdown()
 {
 	s_soundHyperdrive.Play("Hyperdrive_Abort");
 	Ship::ResetHyperspaceCountdown();
+}
+
+void Player::EngageLDSDrive()
+{
+	if( !m_usingLDSDrive ) {
+		m_usingLDSDrive = true;
+		m_preLDSVel = GetVelocity();
+		vector3d vel = m_preLDSVel.Normalized();
+		vel *= 299792458.0;
+		SetVelocity(vel);
+	}
+}
+
+void Player::DisengageLDSDrive()
+{
+	if( m_usingLDSDrive ) {
+		m_usingLDSDrive = false;
+		SetVelocity(m_preLDSVel);
+	}
 }
