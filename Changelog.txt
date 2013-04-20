@@ -1,3 +1,13 @@
+Alpha 34
+
+   * New features
+     * New combat music track (#2209)
+
+   * Internal changes
+     * SpaceStationTypes now loads data using the LuaTable wrapper (#2170)
+     * ShipType now loads data using the LuaTable wrapper (#2215)
+     * Reduced allocations and improved data locality in the eclipse code (#2200)
+
 Alpha 33
 
    * New features
@@ -20,9 +30,11 @@ Alpha 33
 
    * Fixes
      * Fix hoop station unreliable docking detection (#2153, #2125)
+     * Fix ground and "big_crappy" station docking detection (#2197)
      * Fix redscreen from TradeShips module when entering a system with
        only surface ports (#2172, #2171)
      * Fix object viewer crash (#2187)
+     * Fix Lua console to allow continuation of incomplete commands (#2198)
 
    * Internal changes
      * Converted some remaining GL code to use the renderer interface (#2184)
@@ -378,7 +390,7 @@ Alpha 27
      * Application icon for Windows builds (#1537, #1166)
 
    * Fixes
-     * Avoid icons in some ternary systems overlapping each other (#1510, #1511) 
+     * Avoid icons in some ternary systems overlapping each other (#1510, #1511)
      * Fix overlapping text for long system descriptions (#1494, #1498)
      * Fix crash in SystemInfoView from leaking widget references (#1526,  #1493)
      * Clamp some newer terrain heights to non-negative values (#1534, #1530)

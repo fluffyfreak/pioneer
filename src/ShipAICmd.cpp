@@ -701,13 +701,14 @@ AICmdFlyTo::AICmdFlyTo(Ship *ship, Frame *targframe, const vector3d &posoff, dou
 bool AICmdFlyTo::TimeStepUpdate()
 {
 	if (m_targframe && m_ship){
-		double setspeed = std::min((double)m_ship->GetPositionRelTo(m_targframe).Length()/1.0,99999999999.0);
+		double cspeed = m_ship->GetVelocity().Length();
+		double setspeed = std::min((double)m_ship->GetPositionRelTo(m_targframe).Length()/1.0,std::min(cspeed*1.1,99999999999.0));
 		double target_radii = m_targframe->GetParent()->GetBody()->GetPhysRadius()*2.0; //15000000.0;//std::max(m_frame->GetBody()->GetPhysRadius()*1.5,15000.0);
 		//if (m_frame->GetBody()) target_radii=std::max(m_frame->GetBody()->GetPhysRadius()*1.5,15000.0);
 
 		if (
 			m_ship->GetPositionRelTo(m_targframe).Length()>target_radii &&
-			m_ship->GetVelocity().Length()>50000 && 
+			m_ship->GetVelocity().Length()>150000 && 
 			m_ship->GetFlightState() == Ship::FLYING
 			)
 		{
@@ -718,7 +719,7 @@ bool AICmdFlyTo::TimeStepUpdate()
 		else if (
 			m_ship->GetPositionRelTo(m_targframe).Length()<=target_radii &&
 			m_ship->GetFlightState() == Ship::FLYING && 
-			m_ship->GetVelocity().Length()> setspeed/2.0
+			m_ship->GetVelocity().Length()>m_ship->GetPositionRelTo(m_targframe).Length()/2.0
 			)
 		{
 			m_ship->SetVelocity(m_ship->GetOrient()*vector3d(0, 0, -49000));
@@ -735,7 +736,7 @@ bool AICmdFlyTo::TimeStepUpdate()
 
 		if (
 			m_ship->GetPositionRelTo(m_target->GetFrame()).Length()>target_radii &&
-			m_ship->GetVelocity().Length()>50000 && 
+			m_ship->GetVelocity().Length()>150000 && 
 			m_ship->GetFlightState() == Ship::FLYING
 			)
 		{
@@ -1069,7 +1070,7 @@ double AICmdFlyAround::MaxVel(double targdist, double targalt)
 	double vmaxprox = m_ship->GetAccelMin()*t;			// limit by target proximity
 	double vmaxstep = std::max(m_alt*0.05, m_alt-targalt);
 	vmaxstep /= Pi::game->GetTimeStep();			// limit by distance covered per timestep
-	return std::min(m_vel, std::min(vmaxprox, vmaxstep))*3.0;    //fkl
+	return std::min(m_vel, std::min(vmaxprox, vmaxstep));    //fkl
 }
 
 bool AICmdFlyAround::TimeStepUpdate()
