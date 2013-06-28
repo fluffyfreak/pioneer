@@ -14,8 +14,14 @@ define_ship {
 	camera_offset = v(0,.6,-13),
 	gun_mounts =
 	{
-		{ v(0,-0.5,-10.7), v(0,0,-1), 5, 'HORIZONTAL' },
-		{ v(0,-0.5,0), v(0,0,1), 5, 'HORIZONTAL' },
+		{ v(0,-0.5,-10.7), v(0,0,-1), 5, 'Rear Pew Pew' },
+		{ v(0,-0.5,0), v(0,0,1), 5, 'Front Zap Kapow!' },
+	},
+	turrets = 
+	{
+		--position, direction, size(unused), name, extent, accel, maxspeed
+		{ v(0,5,0), v(0,1,0), 5, 'Dorsal', math.pi/2, math.pi/2, math.pi/2 },
+		{ v(0,-6,0), v(0,-1,0), 5, 'Ventral', math.pi/2, math.pi/2, math.pi/2 },
 	},
 	max_cargo = 30,
 	max_laser = 2,

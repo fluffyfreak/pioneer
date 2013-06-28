@@ -26,6 +26,7 @@ PlayerShipController::PlayerShipController() :
 	m_setSpeedTarget(0),
 	m_controlsLocked(false),
 	m_invertMouse(false),
+	m_turretControl(-1),
 	m_mouseActive(false),
 	m_rotationDamping(true),
 	m_mouseX(0.0),
@@ -161,8 +162,9 @@ void PlayerShipController::PollControls(const float timeStep, const bool force_r
 	// if flying
 	{
 		m_ship->ClearThrusterState();
-		m_ship->SetGunState(0,0);
-		m_ship->SetGunState(1,0);
+		m_ship->SetFiring(true, false);
+		m_ship->SetFiring(false, false);
+		if (m_turretControl != -1) m_ship->GetTurret(m_turretControl)->SetFiring(false);
 
 		vector3d wantAngVel(0.0);
 		double angThrustSoftness = 10.0;
@@ -174,7 +176,10 @@ void PlayerShipController::PollControls(const float timeStep, const bool force_r
 		SDL_GetRelativeMouseState (mouseMotion+0, mouseMotion+1);	// call to flush
 		if (Pi::MouseButtonState(SDL_BUTTON_RIGHT))
 		{
-			const matrix3x3d &rot = m_ship->GetOrient();
+			matrix3x3d rot; 
+			if (m_turretControl == -1) rot = m_ship->GetOrient();
+			else rot = m_ship->GetTurret(m_turretControl)->GetOrient();
+
 			if (!m_mouseActive) {
 				m_mouseDir = -rot.VectorZ();	// in world space
 				m_mouseX = m_mouseY = 0;
@@ -182,6 +187,7 @@ void PlayerShipController::PollControls(const float timeStep, const bool force_r
 			}
 			vector3d objDir = m_mouseDir * rot;
 
+			// XXX seriously wtf
 			const double radiansPerPixel = 0.00002 * m_fovY;
 			const int maxMotion = std::max(abs(mouseMotion[0]), abs(mouseMotion[1]));
 			const double accel = Clamp(maxMotion / 4.0, 0.0, 90.0 / m_fovY);
@@ -234,8 +240,11 @@ void PlayerShipController::PollControls(const float timeStep, const bool force_r
 		if (KeyBindings::thrustRight.IsActive()) m_ship->SetThrusterState(0, linearThrustPower);
 
 		if (KeyBindings::fireLaser.IsActive() || (Pi::MouseButtonState(SDL_BUTTON_LEFT) && Pi::MouseButtonState(SDL_BUTTON_RIGHT))) {
-				//XXX worldview? madness, ask from ship instead
-				m_ship->SetGunState(Pi::worldView->GetActiveWeapon(), 1);
+			if (m_turretControl != -1) {
+				m_ship->GetTurret(m_turretControl)->SetFiring(true);
+			} else {
+				m_ship->SetFiring(!m_invertMouse, true);    // should really rename m_invertMouse
+			}
 		}
 
 		if (KeyBindings::yawLeft.IsActive()) wantAngVel.y += 1.0;
@@ -260,15 +269,26 @@ void PlayerShipController::PollControls(const float timeStep, const bool force_r
 		changeVec *= 2.0;
 		wantAngVel += changeVec;
 
-		double invTimeAccelRate = 1.0 / Pi::game->GetTimeAccelRate();
-		if(wantAngVel.Length() >= 0.001 || force_rotation_damping || m_rotationDamping) {
-			for (int axis=0; axis<3; axis++)
-				wantAngVel[axis] = Clamp(wantAngVel[axis], -invTimeAccelRate, invTimeAccelRate);
-
-			m_ship->AIModelCoordsMatchAngVel(wantAngVel, angThrustSoftness);
+		const double invTimeAccelRate = 1.0 / Pi::game->GetTimeAccelRate();
+		// XXX clean up this garbage
+		if (m_turretControl != -1) {
+		  if (m_mouseActive)
+		    m_mouseDir = m_ship->GetTurret(m_turretControl)->FaceDirection(m_mouseDir);
+		  else { 
+		    for (int axis=0; axis<3; axis++) {
+		      wantAngVel[axis] = Clamp(wantAngVel[axis], -invTimeAccelRate, invTimeAccelRate);
+			}
+		    m_ship->GetTurret(m_turretControl)->MatchAngVel(wantAngVel);
+		  }
+		} else {
+		  if(wantAngVel.Length() >= 0.001 || force_rotation_damping || m_rotationDamping) {
+		    for (int axis=0; axis<3; axis++) {
+		      wantAngVel[axis] = Clamp(wantAngVel[axis], -invTimeAccelRate, invTimeAccelRate);
+			}
+		    m_ship->AIModelCoordsMatchAngVel(wantAngVel, angThrustSoftness);
+		  }
+		  if (m_mouseActive) m_ship->AIFaceDirection(m_mouseDir);
 		}
-		if (m_mouseActive) m_ship->AIFaceDirection(m_mouseDir);
-
 	}
 }
 

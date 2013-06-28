@@ -203,7 +203,7 @@ bool AICmdKamikaze::TimeStepUpdate()
 	if (m_ship->GetFlightState() == Ship::FLYING) m_ship->SetWheelState(false);
 	else { LaunchShip(m_ship); return false; }
 
-	m_ship->SetGunState(0,0);
+	m_ship->SetFiring(true, false);
 
 	const vector3d targetPos = m_target->GetPositionRelTo(m_ship);
 	const vector3d targetDir = targetPos.NormalizedSafe();
@@ -249,7 +249,8 @@ bool AICmdKill::TimeStepUpdate()
 	// Accel will be wrong for a frame on timestep changes, but it doesn't matter
 	vector3d targaccel = (m_target->GetVelocity() - m_lastVel) / Pi::game->GetTimeStep();
 	m_lastVel = m_target->GetVelocity();		// may need next frame
-	vector3d leaddir = m_ship->AIGetLeadDir(m_target, targaccel, 0);
+	Equip::Type lasertype = m_ship->m_equipment.Get(Equip::SLOT_LASER, 0);
+	vector3d leaddir = m_ship->AIGetLeadDir(m_target, targaccel, lasertype);
 
 	if (targpos.Length() >= VICINITY_MIN+1000.0) {	// if really far from target, intercept
 //		printf("%s started AUTOPILOT\n", m_ship->GetLabel().c_str());
@@ -278,9 +279,9 @@ bool AICmdKill::TimeStepUpdate()
 
 		double vissize = 1.3 * m_ship->GetPhysRadius() / targpos.Length();
 		vissize += (0.05 + 0.5*leaddiff)*Pi::rng.Double()*skillShoot;
-		if (vissize > headdiff) m_ship->SetGunState(0,1);
-		else m_ship->SetGunState(0,0);
-		if (targpos.LengthSqr() > 4000*4000) m_ship->SetGunState(0,0);		// temp
+		if (vissize > headdiff) m_ship->SetFiring(true, true);
+		else m_ship->SetFiring(true, false);
+		if (targpos.LengthSqr() > 4000*4000) m_ship->SetFiring(true, false);    // temp
 	}
 	m_leadOffset += m_leadDrift * Pi::game->GetTimeStep();
 	double leadAV = (leaddir-targdir).Dot((leaddir-heading).NormalizedSafe());	// leaddir angvel

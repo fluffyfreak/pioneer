@@ -740,6 +740,10 @@ CAMERA_RIGHT_VIEW
 	Right camera
 CAMERA_BOTTOM_VIEW
 	Bottom camera
+CAMERA_NEXT_TURRET
+	Next turret
+CAMERA_PREV_TURRET
+	Previous turret
 INTERNAL_VIEW
     Internal view	
 EXTERNAL_VIEW

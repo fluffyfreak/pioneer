@@ -10,9 +10,6 @@
 #include "utils.h"
 #include "Lang.h"
 
-const char *ShipType::gunmountNames[GUNMOUNT_MAX] = {
-	Lang::FRONT, Lang::REAR };
-
 std::map<ShipType::Id, ShipType> ShipType::types;
 
 std::vector<ShipType::Id> ShipType::player_ships;
@@ -66,7 +63,7 @@ int _define_ship(lua_State *L, ShipType::Tag tag, std::vector<ShipType::Id> *lis
 	for (int i=0; i<Equip::SLOT_MAX; i++) s.equipSlotCapacity[i] = 0;
 	s.equipSlotCapacity[Equip::SLOT_CARGO] = t.Get("max_cargo", 0);
 	s.equipSlotCapacity[Equip::SLOT_ENGINE] = t.Get("max_engine", 1);
-	s.equipSlotCapacity[Equip::SLOT_LASER] = t.Get("max_laser", 1);
+	// lasers and turrets set from table size - Equip::SLOT_LASER
 	s.equipSlotCapacity[Equip::SLOT_MISSILE] = t.Get("max_missile", 0);
 	s.equipSlotCapacity[Equip::SLOT_ECM] = t.Get("max_ecm", 1);
 	s.equipSlotCapacity[Equip::SLOT_SCANNER] = t.Get("max_scanner", 1);
@@ -120,36 +117,97 @@ int _define_ship(lua_State *L, ShipType::Tag tag, std::vector<ShipType::Id> *lis
 		}
 	}
 
+	bool ok = true;
 	lua_pushstring(L, "gun_mounts");
 	lua_gettable(L, -2);
 	if (lua_istable(L, -1)) {
-		for (unsigned int i=0; i<lua_rawlen(L,-1); i++) {
+		unsigned int numLasers = lua_rawlen(L,-1);
+		s.equipSlotCapacity[Equip::SLOT_LASER] = numLasers;
+		s.gunMount.resize(numLasers);
+		for (unsigned int i=0; i<numLasers; i++) {
 			lua_pushinteger(L, i+1);
 			lua_gettable(L, -2);
 			if (lua_istable(L, -1) && lua_rawlen(L,-1) == 4)	{
 				lua_pushinteger(L, 1);
 				lua_gettable(L, -2);
-				s.gunMount[i].pos = LuaVector::CheckFromLuaF(L, -1);
+				s.gunMount[i].pos = *LuaVector::CheckFromLua(L, -1);
 				lua_pop(L, 1);
 				lua_pushinteger(L, 2);
 				lua_gettable(L, -2);
-				s.gunMount[i].dir = LuaVector::CheckFromLuaF(L, -1);
+				s.gunMount[i].dir = *LuaVector::CheckFromLua(L, -1);
 				lua_pop(L, 1);
 				lua_pushinteger(L, 3);
 				lua_gettable(L, -2);
-				s.gunMount[i].sep = lua_tonumber(L,-1);
+				s.gunMount[i].size = int(lua_tonumber(L,-1));
 				lua_pop(L, 1);
 				lua_pushinteger(L, 4);
 				lua_gettable(L, -2);
-				s.gunMount[i].orient = static_cast<ShipType::DualLaserOrientation>(
-						LuaConstants::GetConstantFromArg(L, "DualLaserOrientation", -1));
+				s.gunMount[i].name = lua_tostring(L,-1);
 				lua_pop(L, 1);
+			} else {
+				ok = false;
+			}
+			lua_pop(L, 1);
+		}
+	}
+	else 
+	{
+		s.equipSlotCapacity[Equip::SLOT_LASER] = 0;
+	}
+	lua_pop(L, 1);
+	if (!ok) 
+		return luaL_error(L, "Ship has malformed gun mount description");
+
+	lua_pushstring(L, "turrets");
+	lua_gettable(L, -2);
+	if (lua_istable(L, -1)) {
+		unsigned int numTurrets = lua_rawlen(L,-1);
+		s.equipSlotCapacity[Equip::SLOT_LASER] += numTurrets;
+		s.turret.resize(numTurrets);
+		for (unsigned int i=0; i<numTurrets; i++) {
+			lua_pushinteger(L, i+1);
+			lua_gettable(L, -2);
+			if (lua_istable(L, -1) && lua_rawlen(L,-1) == 7)  {
+				lua_pushinteger(L, 1);
+				lua_gettable(L, -2);
+				s.turret[i].pos = *LuaVector::CheckFromLua(L, -1);
+				lua_pop(L, 1);
+				lua_pushinteger(L, 2);
+				lua_gettable(L, -2);
+				s.turret[i].dir = *LuaVector::CheckFromLua(L, -1);
+				lua_pop(L, 1);
+				lua_pushinteger(L, 3);
+				lua_gettable(L, -2);
+				s.turret[i].size = int(lua_tonumber(L,-1));
+				lua_pop(L, 1);
+				lua_pushinteger(L, 4);
+				lua_gettable(L, -2);
+				s.turret[i].name = lua_tostring(L,-1);
+				lua_pop(L, 1);
+				lua_pushinteger(L, 5);
+				lua_gettable(L, -2);
+				s.turret[i].extent = lua_tonumber(L,-1);
+				lua_pop(L, 1);
+				lua_pushinteger(L, 6);
+				lua_gettable(L, -2);
+				s.turret[i].accel = lua_tonumber(L,-1);
+				lua_pop(L, 1);
+				lua_pushinteger(L, 7);
+				lua_gettable(L, -2);
+				s.turret[i].maxspeed = lua_tonumber(L,-1);
+				lua_pop(L, 1);
+			}
+			else
+			{
+				ok = false;
 			}
 			lua_pop(L, 1);
 		}
 	}
 	lua_pop(L, 1);
 	LUA_DEBUG_END(L, 0);
+	if (!ok) 
+		return luaL_error(L, "Ship has malformed turret description");
 
 	//sanity check
 	if (s.name.empty())

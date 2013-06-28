@@ -3,9 +3,12 @@
 
 #include "CameraController.h"
 #include "Ship.h"
+#include "GunMount.h"
 #include "AnimationCurves.h"
 #include "Pi.h"
 #include "Game.h"
+
+static const char defaultTurretName[] = "";
 
 CameraController::CameraController(Camera *camera, const Ship *ship) :
 	m_camera(camera),
@@ -29,6 +32,7 @@ void CameraController::Update()
 InternalCameraController::InternalCameraController(Camera *camera, const Ship *ship) :
 	CameraController(camera, ship)
 {
+	m_turret = 0;
 	SetMode(MODE_FRONT);
 }
 
@@ -60,17 +64,44 @@ void InternalCameraController::SetMode(Mode m)
 			m_name = Lang::CAMERA_BOTTOM_VIEW;
 			SetOrient(matrix3x3d::RotateX(M_PI/2));
 			break;
+		case MODE_TURRET:
+			m_name = defaultTurretName;    // might be used on deserialization...
+			break;
 	}
 }
 
 void InternalCameraController::Save(Serializer::Writer &wr)
 {
 	wr.Int32(m_mode);
+	wr.Int32(m_turret);
 }
 
 void InternalCameraController::Load(Serializer::Reader &rd)
 {
 	SetMode(static_cast<Mode>(rd.Int32()));
+	m_turret = rd.Int32();
+}
+
+void InternalCameraController::SetTurret(const Ship *s, int turret)
+{
+	assert(m_mode == MODE_TURRET);
+
+	const ShipType &stype = *s->GetShipType();
+	if (!stype.turret.size()) return;    // no turrets
+
+	m_turret = turret % stype.turret.size();
+	m_name = stype.turret[m_turret].name.c_str();
+}
+
+void InternalCameraController::UpdateTurretData(const Ship *s)
+{
+	if(m_mode != MODE_TURRET) return;
+
+	const ShipType &stype = *s->GetShipType();
+	assert(stype.turret.size());      // shouldn't set turret view unless turrets exist
+
+	SetPosition(stype.turret[m_turret].pos);
+	SetOrient(s->GetTurret(m_turret)->GetOrient());
 }
 
 void InternalCameraController::Update()

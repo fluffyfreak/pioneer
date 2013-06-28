@@ -76,6 +76,8 @@ KEY_BINDING(leftCamera, "BindLeftCamera", Lang::CAMERA_LEFT_VIEW, SDLK_KP4)
 KEY_BINDING(rightCamera, "BindRightCamera", Lang::CAMERA_RIGHT_VIEW, SDLK_KP6)
 KEY_BINDING(topCamera, "BindTopCamera", Lang::CAMERA_TOP_VIEW, SDLK_KP9)
 KEY_BINDING(bottomCamera, "BindBottomCamera", Lang::CAMERA_BOTTOM_VIEW, SDLK_KP3)
+KEY_BINDING(turretCameraNext, "BindTurretCameraNext", Lang::CAMERA_NEXT_TURRET, SDLK_KP7)
+KEY_BINDING(turretCameraPrev, "BindTurretCameraPrev", Lang::CAMERA_PREV_TURRET, SDLK_KP1)
 
 BINDING_GROUP(Lang::EXTERNAL_VIEW)
 KEY_BINDING(cameraRollLeft, "BindCameraRollLeft", Lang::ROLL_LEFT, SDLK_KP1)

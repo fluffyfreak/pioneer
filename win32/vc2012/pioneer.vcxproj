@@ -162,6 +162,7 @@
     <ClCompile Include="..\..\src\GeoPatchID.cpp" />
     <ClCompile Include="..\..\src\GeoPatchJobs.cpp" />
     <ClCompile Include="..\..\src\GeoSphere.cpp" />
+    <ClCompile Include="..\..\src\GunMount.cpp" />
     <ClCompile Include="..\..\src\HyperspaceCloud.cpp" />
     <ClCompile Include="..\..\src\IniConfig.cpp" />
     <ClCompile Include="..\..\src\Intro.cpp" />
@@ -328,6 +329,7 @@
     <ClInclude Include="..\..\src\GeoPatchID.h" />
     <ClInclude Include="..\..\src\GeoPatchJobs.h" />
     <ClInclude Include="..\..\src\GeoSphere.h" />
+    <ClInclude Include="..\..\src\GunMount.h" />
     <ClInclude Include="..\..\src\HyperspaceCloud.h" />
     <ClInclude Include="..\..\src\IniConfig.h" />
     <ClInclude Include="..\..\src\Intro.h" />
@@ -336,7 +338,6 @@
     <ClInclude Include="..\..\src\libs.h" />
     <ClInclude Include="..\..\src\Lua.h" />
     <ClInclude Include="..\..\src\LuaEquipDef.h" />
-    <ClInclude Include="..\..\src\LuaCargoBody.h" />
     <ClInclude Include="..\..\src\LuaChatForm.h" />
     <ClInclude Include="..\..\src\LuaComms.h" />
     <ClInclude Include="..\..\src\LuaConsole.h" />
@@ -391,7 +392,6 @@
     <ClInclude Include="..\..\src\Quaternion.h" />
     <ClInclude Include="..\..\src\Random.h" />
     <ClInclude Include="..\..\src\RefCounted.h" />
-    <ClInclude Include="..\..\src\RefList.h" />
     <ClInclude Include="..\..\src\SDLWrappers.h" />
     <ClInclude Include="..\..\src\SectorView.h" />
     <ClInclude Include="..\..\src\Serializer.h" />
@@ -437,9 +437,6 @@
     <ClInclude Include="..\..\src\win32\TextUtils.h" />
     <ClInclude Include="..\..\src\win32\WinMath.h" />
     <ClInclude Include="..\..\src\WorldView.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\src\Makefile.am" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src\win32\pioneer.rc" />

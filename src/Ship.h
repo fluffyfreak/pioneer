@@ -14,6 +14,7 @@
 #include "ShipType.h"
 #include "scenegraph/SceneGraph.h"
 #include "scenegraph/ModelSkin.h"
+#include "GunMount.h"
 #include <list>
 
 class SpaceStation;
@@ -171,7 +172,7 @@ public:
 	void AIMatchAngVelObjSpace(const vector3d &angvel);
 	double AIFaceUpdir(const vector3d &updir, double av=0);
 	double AIFaceDirection(const vector3d &dir, double av=0);
-	vector3d AIGetLeadDir(const Body *target, const vector3d& targaccel, int gunindex=0);
+	vector3d AIGetLeadDir(const Body *target, const vector3d& targaccel, Equip::Type type);
 	double AITravelTime(const vector3d &reldir, double targdist, const vector3d &relvel, double endspeed, double maxdecel);
 
 	// old stuff, deprecated
@@ -217,7 +218,16 @@ public:
 	float GetPercentShields() const;
 	float GetPercentHull() const;
 	void SetPercentHull(float);
-	float GetGunTemperature(int idx) const { return m_gunTemperature[idx]; }
+	
+	int GetNumGunMounts() const { return int(m_gunMount.size()); }
+	GunMount *GetGunMount(int idx) { return &m_gunMount[idx]; }
+	const GunMount *GetGunMount(int idx) const { return &m_gunMount[idx]; }
+	const GunMount *GetPrimaryMount(bool front);  // get first occupied mount
+	void SetFiring(bool front, bool firing);    // set firing state of fixed mounts
+	
+	int GetNumTurrets() const { return int(m_turret.size()); }
+	Turret *GetTurret(int idx) { return &m_turret[idx]; }
+	const Turret *GetTurret(int idx) const { return &m_turret[idx]; }
 
 	enum FuelState { // <enum scope='Ship' name=ShipFuelStatus prefix=FUEL_ public>
 		FUEL_OK,
@@ -261,9 +271,6 @@ protected:
 
 	SpaceStation *m_dockedWith;
 	int m_dockedWithPort;
-	Uint32 m_gunState[ShipType::GUNMOUNT_MAX];
-	float m_gunRecharge[ShipType::GUNMOUNT_MAX];
-	float m_gunTemperature[ShipType::GUNMOUNT_MAX];
 	float m_ecmRecharge;
 
 	ShipController *m_controller;
@@ -271,9 +278,9 @@ protected:
 private:
 	float GetECMRechargeTime();
 	void DoThrusterSounds() const;
-	void FireWeapon(int num);
 	void Init();
-	bool IsFiringLasers();
+	void InitGunMounts();
+	bool IsFiringLasers() const;
 	void TestLanded();
 	void UpdateAlertState();
 	void UpdateFuel(float timeStep, const vector3d &thrust);
@@ -293,6 +300,9 @@ private:
 
 	vector3d m_thrusters;
 	vector3d m_angThrusters;
+
+	std::vector<GunMount> m_gunMount;
+	std::vector<Turret> m_turret;
 
 	AlertState m_alertState;
 	double m_lastFiringAlert;
