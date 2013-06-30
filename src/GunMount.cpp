@@ -1,8 +1,13 @@
 #include <math.h>
 #include "GunMount.h"
+#include "Game.h"
+#include "Pi.h"
+#include "Ship.h"
+#include "ShipType.h"
 #include "Body.h"
 #include "EquipType.h"
 #include "Projectile.h"
+#include "Polit.h"
 #include "Sound.h"
 
 GunMount::GunMount(Ship *parent, const GunMountData &mount) :

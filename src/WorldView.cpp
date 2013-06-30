@@ -403,7 +403,8 @@ void WorldView::Draw3D()
 	assert(Pi::game);
 	assert(Pi::player);
 	assert(!Pi::player->IsDead());
-	m_camera->Draw(m_renderer, GetCamType() == CAM_INTERNAL ? Pi::player : 0);
+	const Body* pBody = (GetCamType()==CAM_INTERNAL && m_internalCameraController->GetMode()!=InternalCameraController::MODE_TURRET) ? Pi::player : NULL;
+	m_camera->Draw(m_renderer, pBody);
 }
 
 void WorldView::OnToggleLabels()
@@ -677,11 +678,11 @@ void WorldView::RefreshButtonStateAndVisibility()
 	if (GetCamType() == CAM_INTERNAL) {
 		switch (m_internalCameraController->GetMode()) {
 			case InternalCameraController::MODE_FRONT:
-			gunMount = Pi::player->GetPrimaryMount(true); break;
+				gunMount = Pi::player->GetPrimaryMount(true); break;
 			case InternalCameraController::MODE_REAR:
-			gunMount = Pi::player->GetPrimaryMount(false); break;
+				gunMount = Pi::player->GetPrimaryMount(false); break;
 			case InternalCameraController::MODE_TURRET:
-			gunMount = Pi::player->GetTurret(m_internalCameraController->GetTurret()); break;
+				gunMount = Pi::player->GetTurret(m_internalCameraController->GetTurret()); break;
 			default: break;
 		}
 	}
