@@ -186,6 +186,13 @@ void WorldView::InitObject()
 	m_bodyLabels = new Gui::LabelSet();
 	m_bodyLabels->SetLabelColor(Color(1.0f, 1.0f, 1.0f, 0.9f));
 	Add(m_bodyLabels, 0, 0);
+
+	{
+		m_pauseText = new Gui::Label(std::string("#f7f") + Lang::PAUSED);
+		float w, h;
+		Gui::Screen::MeasureString(Lang::PAUSED, w, h);
+		Add(m_pauseText, 0.5f * (Gui::Screen::GetWidth() - w), 100);
+	}
 	Gui::Screen::PopFont();
 
 	m_navTargetIndicator.label = (new Gui::Label(""))->Color(0.0f, 1.0f, 0.0f);
@@ -427,7 +434,6 @@ void WorldView::ShowAll()
 	RefreshButtonStateAndVisibility();
 }
 
-
 static Color get_color_for_warning_meter_bar(float v) {
 	Color c;
 	if (v < 50.0f)
@@ -453,6 +459,11 @@ void WorldView::RefreshButtonStateAndVisibility()
 	assert(!Pi::player->IsDead());
 
 	Pi::cpan->ClearOverlay();
+
+	if (Pi::game->IsPaused())
+		m_pauseText->Show();
+	else
+		m_pauseText->Hide();
 
 	if (Pi::player->GetFlightState() != Ship::HYPERSPACE) {
 		Pi::cpan->SetOverlayToolTip(ShipCpanel::OVERLAY_TOP_LEFT,     Lang::SHIP_VELOCITY_BY_REFERENCE_OBJECT);

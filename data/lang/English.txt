@@ -745,7 +745,7 @@ CAMERA_NEXT_TURRET
 CAMERA_PREV_TURRET
 	Previous turret
 INTERNAL_VIEW
-    Internal view	
+    Internal view
 EXTERNAL_VIEW
     External view
 SIDEREAL_VIEW
@@ -755,7 +755,7 @@ ROTATE_UP
 ROTATE_DOWN
 	Rotate Down
 ROTATE_LEFT
-    Rotate Left	
+    Rotate Left
 ROTATE_RIGHT
     Rotate Right
 RESET
@@ -1248,3 +1248,6 @@ MONTH_DEC
     Dec
 MISCELLANEOUS
     Miscellaneous
+PAUSED
+    PAUSED
+
