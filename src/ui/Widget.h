@@ -9,6 +9,7 @@
 #include "Event.h"
 #include "RefCounted.h"
 #include "WidgetSet.h"
+#include "PropertiedObject.h"
 #include <climits>
 #include <set>
 
@@ -145,6 +146,11 @@ public:
 		return (point.x >= pos.x && point.y >= pos.y && point.x < pos.x+m_activeArea.x && point.y < pos.y+m_activeArea.y);
 	}
 
+	// calculate layout contribution based on preferred size and flags
+	Point CalcLayoutContribution();
+	// calculate size based on available space, preferred size and flags
+	Point CalcSize(const Point &avail);
+
 	// fast way to determine if the widget is a container
 	virtual bool IsContainer() const { return false; }
 
@@ -196,6 +202,9 @@ public:
 	// widget id. used for queries/searches
 	const std::string &GetId() const { return m_id; }
 	Widget *SetId(const std::string &id) { m_id = id; return this; }
+
+	// bind an object property to a widget bind point
+	void Bind(const std::string &bindName, PropertiedObject *object, const std::string &propertyName);
 
 
 	// this sigc accumulator calls all the handlers for an event. if any of
@@ -301,6 +310,7 @@ protected:
 	virtual void HandleSelect() {}
 	virtual void HandleDeselect() {}
 
+	void RegisterBindPoint(const std::string &bindName, sigc::slot<void,PropertyMap &,const std::string &> method);
 
 private:
 
@@ -389,6 +399,9 @@ private:
 	std::set<KeySym> m_shortcuts;
 
 	std::string m_id;
+
+	std::map< std::string,sigc::slot<void,PropertyMap &,const std::string &> > m_bindPoints;
+	std::map< std::string,sigc::connection > m_binds;
 };
 
 }

@@ -44,54 +44,34 @@ local shipInfo = function (args)
 	return
 		ui:Grid(2,1)
 			:SetColumn(0, {
-				ui:VBox():PackEnd({
-					ui:Grid(2,1)
-						:SetColumn(0, {
-							ui:VBox():PackEnd({
-								ui:Label(t("HYPERDRIVE")..":"),
-								ui:Label(t("HYPERSPACE_RANGE")..":"),
-								ui:Margin(10),
-								ui:Label(t("Weight empty:")),								
-								ui:Label(t("CAPACITY_USED")..":"),
-								ui:Label(t("FUEL_WEIGHT")..":"),
-								ui:Label(t("TOTAL_WEIGHT")..":"),
-								ui:Margin(10),
-								ui:Label(t("FRONT_WEAPON")..":"),
-								ui:Label(t("REAR_WEAPON")..":"),
-								ui:Label(t("FUEL")..":"),
-								ui:Margin(10),
-								ui:Label(t("Minimum crew")..":"),
-								ui:Label(t("Crew cabins")..":"),
-							})
-						})
-						:SetColumn(1, {
-							ui:VBox():PackEnd({
-								ui:Label(EquipDef[hyperdrive].name),
-								ui:Label(string.interp(
-									t("{range} light years ({maxRange} max)"), {
-										range    = string.format("%.1f",stats.hyperspaceRange),
-										maxRange = string.format("%.1f",stats.maxHyperspaceRange)
-									}
-								)),
-								ui:Margin(10),
-								ui:Label(string.format("%dt", stats.totalMass - stats.usedCapacity)),								
-								ui:Label(string.format("%dt (%dt "..t("free")..")", stats.usedCapacity,  stats.freeCapacity)),
-								ui:Label(string.format("%dt (%dt "..t("max")..")", math.floor(Game.player.fuel/100*stats.maxFuelTankMass + 0.5), stats.maxFuelTankMass )),
-								ui:Label(string.format("%dt", math.floor(stats.totalMass+Game.player.fuel/100*stats.maxFuelTankMass + 0.5) )),
-								ui:Margin(10),
-								ui:Label(EquipDef[frontWeapon].name),
-								ui:Label(EquipDef[rearWeapon].name),
-								ui:Label(string.format("%d%%", Game.player.fuel)),
-								ui:Margin(10),
-								ui:Label(ShipType.GetShipType(Game.player.shipId).minCrew),
-								ui:Label(ShipType.GetShipType(Game.player.shipId).maxCrew),
-							})
-						}),
-					ui:Margin(10),
+				ui:Table():AddRows({
+					ui:Table():SetColumnSpacing(10):AddRows({
+						{ t("HYPERDRIVE")..":", EquipDef[hyperdrive].name },
+						{
+							t("HYPERSPACE_RANGE")..":",
+							string.interp(
+								t("{range} light years ({maxRange} max)"), {
+									range    = string.format("%.1f",stats.hyperspaceRange),
+									maxRange = string.format("%.1f",stats.maxHyperspaceRange)
+								}
+							),
+						},
+						"",
+						{ t("Weight empty:"),      string.format("%dt", stats.totalMass - stats.usedCapacity) },
+						{ t("CAPACITY_USED")..":", string.format("%dt (%dt "..t("free")..")", stats.usedCapacity,  stats.freeCapacity) },
+						{ t("FUEL_WEIGHT")..":",   string.format("%dt (%dt "..t("max")..")", math.floor(Game.player.fuel/100*stats.maxFuelTankMass + 0.5), stats.maxFuelTankMass ) },
+						{ t("TOTAL_WEIGHT")..":",  string.format("%dt", math.floor(stats.totalMass+Game.player.fuel/100*stats.maxFuelTankMass + 0.5) ) },
+						"",
+						{ t("FRONT_WEAPON")..":", EquipDef[frontWeapon].name },
+						{ t("REAR_WEAPON")..":",  EquipDef[rearWeapon].name },
+						{ t("FUEL")..":",         string.format("%d%%", Game.player.fuel) },
+						"",
+						{ t("Minimum crew")..":", ShipType.GetShipType(Game.player.shipId).minCrew },
+						{ t("Crew cabins")..":",  ShipType.GetShipType(Game.player.shipId).maxCrew },
+					}),
+					"",
 					ui:Label(t("Equipment")):SetFont("HEADING_LARGE"),
-					ui:Expand():SetInnerWidget(ui:Scroller():SetInnerWidget(
-						ui:VBox():PackEnd(equipItems)
-					))
+					ui:Table():AddRows(equipItems),
 				})
 			})
 			:SetColumn(1, {
@@ -113,7 +93,7 @@ local orbitalAnalysis = function ()
 	else
 		orbitalBody = frameBody
 	end
-	
+
 	local distance = Game.player:DistanceTo(orbitalBody)
 	local mass = orbitalBody.path:GetSystemBody().mass
 	local radius = orbitalBody.path:GetSystemBody().radius
@@ -127,27 +107,17 @@ local orbitalAnalysis = function ()
 
 	return ui:Expand():SetInnerWidget(
 		ui:VBox(20):PackEnd({
-			ui:Label((t('Located {distance}km from the centre of {name}:')):interp({
+            (t('Located {distance}km from the centre of {name}:')):interp({
 														-- convert to kilometres
 														distance = string.format('%6.2f',distance/1000),
 														name = name
-													})),
-			ui:Grid(2,1)
-				:SetColumn(0, {
-					ui:VBox():PackEnd({
-						ui:Label(t('Circular orbit speed:')),
-						ui:Label(t('Escape speed:')),
-						ui:Label(t('Descent-to-ground speed:')),
-					})
-				})
-				:SetColumn(1, {
-					ui:VBox():PackEnd({
-						-- convert to kilometres per second
-						ui:Label(string.format('%6.2fkm/s',vCircular/1000)),
-						ui:Label(string.format('%6.2fkm/s',vEscape/1000)),
-						ui:Label(string.format('%6.2fkm/s',vDescent/1000)),
-					})
-				}),
+													}),
+			ui:Table():SetColumnSpacing(10):AddRows({
+				-- convert to kilometres per second
+				{ t('Circular orbit speed:'),    string.format('%6.2fkm/s',vCircular/1000) },
+				{ t('Escape speed:'),            string.format('%6.2fkm/s',vEscape/1000)   },
+				{ t('Descent-to-ground speed:'), string.format('%6.2fkm/s',vDescent/1000)  },
+			}),
 			ui:MultiLineText((t('ORBITAL_ANALYSIS_NOTES')):interp({name = name}))
 		})
 	)
@@ -186,35 +156,18 @@ local personalInfo = function ()
 	return
 		ui:Grid(2,1)
 			:SetColumn(0, {
-				ui:VBox(20):PackEnd({
+				ui:Table():AddRows({
 					ui:Label(t("Combat")):SetFont("HEADING_LARGE"),
-					ui:Grid(2,1)
-						:SetColumn(0, {
-							ui:VBox():PackEnd({
-								ui:Label(t("Rating:")),
-								ui:Label(t("Kills:")),
-							})
-						})
-						:SetColumn(1, {
-							ui:VBox():PackEnd({
-								ui:Label(t(player:GetCombatRating())),
-								ui:Label(string.format('%d',player.killcount)),
-							})
-						}),
+					ui:Table():SetColumnSpacing(10):AddRows({
+						{ t("Rating:"), t(player:GetCombatRating()) },
+						{ t("Kills:"),  string.format('%d',player.killcount) },
+					}),
+					"",
 					ui:Label(t("Military")):SetFont("HEADING_LARGE"),
-					ui:Grid(2,1)
-						:SetColumn(0, {
-							ui:VBox():PackEnd({
-								ui:Label(t("ALLEGIANCE")),
-								ui:Label(t("Rank:")),
-							})
-						})
-						:SetColumn(1, {
-							ui:VBox():PackEnd({
-								ui:Label(t('NONE')), -- XXX
-								ui:Label(t('NONE')), -- XXX
-							})
-						})
+					ui:Table():SetColumnSpacing(10):AddRows({
+						{ t("ALLEGIANCE"), t('NONE') }, -- XXX
+						{ t("Rank:"),      t('NONE') }, -- XXX
+					})
 				})
 			})
 			:SetColumn(1, {
@@ -237,9 +190,6 @@ local econTrade = function ()
 	local cash = Game.player:GetMoney()
 
 	local stats = Game.player:GetStats()
-
-	local usedCargo = stats.usedCargo
-	local totalCargo = stats.freeCapacity
 
 	local usedCabins = Game.player:GetEquipCount("CABIN", "PASSENGER_CABIN")
 	local totalCabins = Game.player:GetEquipCount("CABIN", "UNOCCUPIED_CABIN") + usedCabins
@@ -296,14 +246,29 @@ local econTrade = function ()
 
 	cargoListWidget:SetInnerWidget(updateCargoListWidget())
 
-	local totalCargoWidget = ui:Label(t("Total: ")..totalCargo.."t")
-	local usedCargoWidget = ui:Label(t("USED")..": "..usedCargo.."t")
+	local cargoGauge = UI.InfoGauge.New({
+		formatter = function (v)
+			local stats = Game.player:GetStats()
+			return string.format("%d/%dt", stats.usedCargo, stats.freeCapacity)
+		end
+	})
+	cargoGauge:SetValue(stats.usedCargo/stats.freeCapacity)
+
+	local fuelGauge = UI.InfoGauge.New({
+		label          = ui:NumberLabel("PERCENT"),
+		warningLevel   = 0.1,
+		criticalLevel  = 0.05,
+		levelAscending = false,
+	})
+	fuelGauge.label:Bind("valuePercent", Game.player, "fuel")
+	fuelGauge.gauge:Bind("valuePercent", Game.player, "fuel")
 
 	-- Define the refuel button
 	local refuelButton = UI.SmallLabeledButton.New(t('REFUEL'))
 
 	local refuelButtonRefresh = function ()
 		if Game.player.fuel == 100 or Game.player:GetEquipCount('CARGO', 'WATER') == 0 then refuelButton.widget:Disable() end
+		fuelGauge:SetValue(Game.player.fuel/100)
 	end
 	refuelButtonRefresh()
 
@@ -312,10 +277,9 @@ local econTrade = function ()
 		Game.player:Refuel(1)
 		-- ...then we update the cargo list widget...
 		cargoListWidget:SetInnerWidget(updateCargoListWidget())
-		-- ...and the totals.
+		-- ...and the gauge.
 		stats = Game.player:GetStats()
-		totalCargoWidget:SetText(t("Total: ")..stats.freeCapacity.."t")
-		usedCargoWidget:SetText(t("USED")..": "..stats.usedCargo.."t")
+		cargoGauge:SetValue(stats.usedCargo/stats.freeCapacity)
 
 		refuelButtonRefresh()
 	end
@@ -325,27 +289,38 @@ local econTrade = function ()
 	return ui:Expand():SetInnerWidget(
 		ui:Grid(2,1)
 			:SetColumn(0, {
-				ui:VBox(20):PackEnd({
-					ui:Grid(2,1)
-						:SetColumn(0, {
-							ui:VBox():PackEnd({
-								ui:Label(t("CASH")..":"),
-								ui:Margin(10),
-								ui:Label(t("CARGO_SPACE")..":"),
-								ui:Label(t("CABINS")..":"),
-								ui:Margin(10),
+				ui:Margin(5, "HORIZONTAL",
+					ui:VBox(20):PackEnd({
+						ui:Grid(2,1)
+							:SetColumn(0, {
+								ui:VBox():PackEnd({
+									ui:Label(t("CASH")..":"),
+									ui:Margin(10),
+									ui:Label(t("CARGO_SPACE")..":"),
+									ui:Label(t("CABINS")..":"),
+									ui:Margin(10),
+								})
+							})
+							:SetColumn(1, {
+								ui:VBox():PackEnd({
+									ui:Label(string.format("$%.2f", cash)),
+									ui:Margin(10),
+									cargoGauge.widget,
+									ui:Grid(2,1):SetRow(0, { ui:Label(t("Total: ")..totalCabins), ui:Label(t("USED")..": "..usedCabins) }),
+									ui:Margin(10),
+								})
+							}),
+						ui:Grid({50,10,40},1)
+							:SetRow(0, {
+								ui:HBox(5):PackEnd({
+									ui:Label("Fuel:"),
+									fuelGauge,
+								}),
+								nil,
 								refuelButton.widget,
 							})
-						})
-						:SetColumn(1, {
-							ui:VBox():PackEnd({
-								ui:Label(string.format("$%.2f", cash)),
-								ui:Margin(10),
-								ui:Grid(2,1):SetRow(0, { totalCargoWidget, usedCargoWidget }),
-								ui:Grid(2,1):SetRow(0, { ui:Label(t("Total: ")..totalCabins), ui:Label(t("USED")..": "..usedCabins) }),
-							})
-						}),
-				})
+					})
+				)
 			})
 			:SetColumn(1, {
 				cargoListWidget
