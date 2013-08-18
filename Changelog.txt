@@ -1,13 +1,24 @@
+August 2013
+
+   * New features
+     * The Sector View now displays a sphere to show the hyperspace reach (#2378)
+     * New start point: Barnard's Star (#2240, #2402)
+
+   * Build system
+     * Early support for VS 2013 (#2391)
+
 July 2013
 
    * New features
      * New ship "Pumpkinseed" (#2352)
      * New ship "Mola Mola" (#2355)
+     * New ship "Venturestar" (#2388)
      * Enable patterns/colors on buildings (#2342)
      * New wind sounds (#2365)
 
    * Fixes
      * Fix damage particle rendering (#2353)
+     * Fix joystick handling under timeaccel (#2390)
      * Lua: onCargoUnload should return planet landed on (#2360)
 
    * Minor changes and tweaks
