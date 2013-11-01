@@ -118,7 +118,7 @@ void ModelBody::SetColliding(bool colliding)
 	if(colliding) m_geom->Enable();
 	else m_geom->Disable();
 }
-
+#pragma optimize("",off)
 void ModelBody::RebuildCollisionMesh()
 {
 	if (m_geom) {
@@ -152,7 +152,7 @@ void ModelBody::RebuildCollisionMesh()
 
 	if (GetFrame()) AddGeomsToFrame(GetFrame());
 }
-
+#pragma optimize("",off)
 void ModelBody::SetModel(const char *modelName)
 {
 	//remove old instance

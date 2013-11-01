@@ -16,6 +16,7 @@
 #include "graphics/Surface.h"
 #include "text/DistanceFieldFont.h"
 #include <assimp/types.h>
+#include "JobQueue.h"
 
 struct aiNode;
 struct aiMesh;
@@ -27,6 +28,28 @@ namespace Graphics { class Renderer; }
 namespace SceneGraph {
 
 class StaticGeometry;
+
+// ********************************************************************************
+// Overloaded PureJob class to handle generating the cllision mesh
+// ********************************************************************************
+class CreateCollisionJob : public Job
+{
+public:
+	CreateCollisionJob(Model *modelIn) : m_model(modelIn) {}
+	virtual ~CreateCollisionJob() {}
+
+	#pragma optimize("",off)
+	virtual void OnRun() {    // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
+		// Run CollisionVisitor to create the initial CM and its GeomTree.
+		// If no collision mesh is defined, a simple bounding box will be generated
+		m_model->CreateCollisionMesh();
+    }
+	virtual void OnFinish() {}  // runs in primary thread of the context
+	virtual void OnCancel() {}   // runs in primary thread of the context
+
+protected:
+	Model *m_model;
+};
 
 class Loader {
 public:

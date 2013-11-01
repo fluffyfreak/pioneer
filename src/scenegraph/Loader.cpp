@@ -6,6 +6,7 @@
 #include "FileSystem.h"
 #include "LOD.h"
 #include "Parser.h"
+#include "Pi.h"
 #include "SceneGraph.h"
 #include "StaticGeometry.h"
 #include "StringF.h"
@@ -321,7 +322,8 @@ Model *Loader::CreateModel(ModelDefinition &def)
 
 	// Run CollisionVisitor to create the initial CM and its GeomTree.
 	// If no collision mesh is defined, a simple bounding box will be generated
-	m_model->CreateCollisionMesh();
+	// m_model->CreateCollisionMesh();
+	Pi::Jobs()->Queue(new CreateCollisionJob(m_model));
 
 	//find usable pattern textures from the model directory
 	if (patternsUsed) {

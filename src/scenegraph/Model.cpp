@@ -120,7 +120,7 @@ void Model::Render(const matrix4x4f &trans, const RenderData *rd)
 		m_root->Render(trans, &params);
 	}
 }
-
+#pragma optimize("",off)
 RefCountedPtr<CollMesh> Model::CreateCollisionMesh()
 {
 	CollisionVisitor cv;

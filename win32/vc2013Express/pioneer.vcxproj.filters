@@ -602,9 +602,6 @@
     <ClInclude Include="..\..\src\RefCounted.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\RefList.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\SectorView.h">
       <Filter>src</Filter>
     </ClInclude>
