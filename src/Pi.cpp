@@ -659,6 +659,16 @@ void Pi::HandleEvents()
 								Pi::player->SetMoney(Pi::player->GetMoney() + 10000000);
 							}
 							break;
+						case SDLK_f:
+							// don't try and jump-to-lightspeed if sat on a landing pad... It's very messy.
+							if (!Pi::player->GetDockedWith() && !Pi::player->IsHyperspaceActive()) {
+								if( Pi::player->UsingSliceDrive() ) {
+								  Pi::player->DisengageSliceDrive();
+								} else {
+								  Pi::player->EngageSliceDrive();
+								}
+							}
+							break;
 						case SDLK_F12:
 						{
 							if(Pi::game) {

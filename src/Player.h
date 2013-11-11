@@ -43,6 +43,10 @@ public:
 
 	virtual Ship::HyperjumpStatus StartHyperspaceCountdown(const SystemPath &dest);
 	virtual void ResetHyperspaceCountdown();
+	
+	bool UsingSliceDrive() const { return m_usingSliceDrive; }
+	void EngageSliceDrive();
+	void DisengageSliceDrive();
 
 protected:
 	virtual void Save(Serializer::Writer &wr, Space *space);
@@ -54,6 +58,9 @@ protected:
 	/* MarketAgent stuff */
 	void Bought(Equip::Type t);
 	void Sold(Equip::Type t);
+	
+	bool m_usingSliceDrive;
+	vector3d m_preSliceVel;
 };
 
 #endif /* _PLAYER_H */

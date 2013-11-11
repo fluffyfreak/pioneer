@@ -20,7 +20,7 @@
 static Sound::Event s_soundUndercarriage;
 static Sound::Event s_soundHyperdrive;
 
-Player::Player(ShipType::Id shipId): Ship(shipId)
+Player::Player(ShipType::Id shipId) : Ship(shipId), m_usingSliceDrive(false)
 {
 	SetController(new PlayerShipController());
 }
@@ -29,6 +29,8 @@ void Player::Save(Serializer::Writer &wr, Space *space)
 {
 	Ship::Save(wr, space);
 	MarketAgent::Save(wr);
+	wr.Bool( m_usingSliceDrive );
+	wr.Vector3d( m_preSliceVel );
 }
 
 void Player::Load(Serializer::Reader &rd, Space *space)
@@ -36,6 +38,8 @@ void Player::Load(Serializer::Reader &rd, Space *space)
 	Pi::player = this;
 	Ship::Load(rd, space);
 	MarketAgent::Load(rd);
+	m_usingSliceDrive = rd.Bool();
+	m_preSliceVel = rd.Vector3d();
 }
 
 //XXX perhaps remove this, the sound is very annoying
@@ -231,6 +235,9 @@ Ship::HyperjumpStatus Player::StartHyperspaceCountdown(const SystemPath &dest)
 	if (status == HYPERJUMP_OK)
 		s_soundHyperdrive.Play("Hyperdrive_Charge");
 
+	// Can't do both.
+	DisengageSliceDrive();
+
 	return status;
 }
 
@@ -238,4 +245,23 @@ void Player::ResetHyperspaceCountdown()
 {
 	s_soundHyperdrive.Play("Hyperdrive_Abort");
 	Ship::ResetHyperspaceCountdown();
+}
+
+void Player::EngageSliceDrive()
+{
+	if( !m_usingSliceDrive ) {
+		m_usingSliceDrive = true;
+		m_preSliceVel = GetVelocity();
+		vector3d vel = m_preSliceVel.Normalized();
+		vel *= 299792458.0;
+		SetVelocity(vel);
+	}
+}
+
+void Player::DisengageSliceDrive()
+{
+	if( m_usingSliceDrive ) {
+		m_usingSliceDrive = false;
+		SetVelocity(m_preSliceVel);
+	}
 }
