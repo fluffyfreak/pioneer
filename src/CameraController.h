@@ -59,7 +59,8 @@ public:
 		MODE_LEFT,
 		MODE_RIGHT,
 		MODE_TOP,
-		MODE_BOTTOM
+		MODE_BOTTOM,
+		MODE_TURRET
 	};
 
 	InternalCameraController(Camera *camera, const Ship *ship);
@@ -69,11 +70,17 @@ public:
 	const char *GetName() const { return m_name; }
 	void SetMode(Mode m);
 	Mode GetMode() const { return m_mode; }
+	void SetTurret(const Ship *s, const int turret);
+	int GetTurret() const { return m_turret; } 
+	void UpdateTurretData(const Ship *s);
 	void Save(Serializer::Writer &wr);
 	void Load(Serializer::Reader &rd);
 
+	virtual void Update();
+
 private:
 	Mode m_mode;
+	int m_turret;
 	const char *m_name;
 
 	vector3d m_frontPos;  matrix3x3d m_frontOrient;

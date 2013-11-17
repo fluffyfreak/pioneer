@@ -222,6 +222,11 @@ public:
 	float GetPercentShields() const;
 	float GetPercentHull() const;
 	void SetPercentHull(float);
+	
+	int GetNumTurrets() const { return int(m_turrets.size()); }
+	Turret *GetTurret(int idx) { return &m_turrets[idx]; }
+	const Turret *GetTurret(int idx) const { return &m_turrets[idx]; }
+
 	float GetGunTemperature(int idx) const { return m_gun[idx].temperature; }
 
 	enum FuelState { // <enum scope='Ship' name=ShipFuelStatus prefix=FUEL_ public>

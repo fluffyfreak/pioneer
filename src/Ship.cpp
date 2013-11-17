@@ -1074,6 +1074,10 @@ void Ship::StaticUpdate(const float timeStep)
 		FireWeapon(i);
 	}
 
+	for (unsigned int i=0; i<m_turrets.size(); i++) {
+		m_turrets[i].Update(timeStep);
+	}
+
 	if (m_ecmRecharge > 0.0f) {
 		m_ecmRecharge = std::max(0.0f, m_ecmRecharge - timeStep);
 	}

@@ -61,6 +61,7 @@ public:
 	FlightControlState GetFlightControlState() const { return m_flightControlState; }
 	vector3d GetMouseDir() const { return m_mouseDir; }
 	void SetMouseForRearView(bool enable) { m_invertMouse = enable; }
+	void SetTurretControl(const int turret) { m_turretControl = turret; }
 	void SetFlightControlState(FlightControlState s);
 	float GetLowThrustPower() const { return m_lowThrustPower; }
 	void SetLowThrustPower(float power);
@@ -90,6 +91,7 @@ private:
 	Body* m_setSpeedTarget;
 	bool m_controlsLocked;
 	bool m_invertMouse; // used for rear view, *not* for invert Y-axis option (which is Pi::IsMouseYInvert)
+	int m_turretControl;  // turret index, or -1 for ship control
 	bool m_mouseActive;
 	bool m_rotationDamping;
 	double m_mouseX;

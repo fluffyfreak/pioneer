@@ -36,7 +36,9 @@ class GunMount
 	Equip::Type GetWeapon() const { return m_weapontype; }
 
 	float GetTemperature() const { return m_temperature; }
+	virtual const vector3d &GetPos() const { return m_mount->pos; }
 	virtual const vector3d &GetDir() const { return m_mount->dir; }
+	const std::string& GetName() const { return m_mount->name; }
 
 	virtual void Save(Serializer::Writer &wr);
 	virtual void Load(Serializer::Reader &rd);

@@ -240,6 +240,8 @@ void WorldView::InitObject()
 
 	Pi::player->GetPlayerController()->SetMouseForRearView(GetCamType() == CAM_INTERNAL && m_internalCameraController->GetMode() == InternalCameraController::MODE_REAR);
 	KeyBindings::toggleHudMode.onPress.connect(sigc::mem_fun(this, &WorldView::OnToggleLabels));
+	m_onTurretCameraNext = KeyBindings::turretCameraNext.onPress.connect(sigc::bind(sigc::mem_fun(this, &WorldView::CycleTurrets), false));
+	m_onTurretCameraPrev = KeyBindings::turretCameraPrev.onPress.connect(sigc::bind(sigc::mem_fun(this, &WorldView::CycleTurrets), true));
 }
 
 WorldView::~WorldView()
@@ -248,6 +250,8 @@ WorldView::~WorldView()
 	m_onPlayerChangeTargetCon.disconnect();
 	m_onChangeFlightControlStateCon.disconnect();
 	m_onMouseWheelCon.disconnect();
+	m_onTurretCameraNext.disconnect();
+	m_onTurretCameraPrev.disconnect();
 }
 
 void WorldView::Save(Serializer::Writer &wr)
@@ -290,6 +294,23 @@ void WorldView::SetCamType(enum CamType c)
 	UpdateCameraName();
 }
 
+void WorldView::CycleTurrets(bool reverse)
+{
+	if (Pi::IsConsoleActive()) return;
+
+	if (m_internalCameraController->GetMode() != InternalCameraController::MODE_TURRET) {
+		if (0==Pi::player->GetNumTurrets()) return;
+		ChangeInternalCameraMode(InternalCameraController::MODE_TURRET);
+		m_internalCameraController->SetTurret(Pi::player, m_internalCameraController->GetTurret());
+	} else {
+		int newturret = m_internalCameraController->GetTurret() + (reverse ? -1 : 1);
+		m_internalCameraController->SetTurret(Pi::player, newturret);
+		Pi::BoinkNoise();
+	}
+	UpdateCameraName();
+	Pi::player->GetPlayerController()->SetTurretControl(m_internalCameraController->GetTurret());
+}
+
 void WorldView::ChangeInternalCameraMode(InternalCameraController::Mode m)
 {
 	if (m_internalCameraController->GetMode() == m) return;
@@ -297,7 +318,9 @@ void WorldView::ChangeInternalCameraMode(InternalCameraController::Mode m)
 	Pi::BoinkNoise();
 	m_internalCameraController->SetMode(m);
 	Pi::player->GetPlayerController()->SetMouseForRearView(m_camType == CAM_INTERNAL && m_internalCameraController->GetMode() == InternalCameraController::MODE_REAR);
-	UpdateCameraName();
+	Pi::player->GetPlayerController()->SetTurretControl(-1);
+	if (m != InternalCameraController::MODE_TURRET) 
+		UpdateCameraName();
 }
 
 void WorldView::UpdateCameraName()
@@ -858,6 +881,10 @@ void WorldView::Update()
 		targetObject = KeyBindings::targetObject.IsActive();
 	}
 
+	// Update turret camera position & name
+	if (GetCamType() == CAM_INTERNAL) 
+		m_internalCameraController->UpdateTurretData(Pi::player);
+
 	if (m_showCameraNameTimeout) {
 		if (SDL_GetTicks() - m_showCameraNameTimeout > 20000) {
 			m_showCameraName->Hide();
@@ -1268,11 +1295,19 @@ void WorldView::UpdateProjectedObjects()
 	// orientation according to mouse
 	if (Pi::player->GetPlayerController()->IsMouseActive()) {
 		vector3d mouseDir = Pi::player->GetPlayerController()->GetMouseDir() * cam_rot;
-		if (GetCamType() == CAM_INTERNAL && m_internalCameraController->GetMode() == InternalCameraController::MODE_REAR)
-			mouseDir = -mouseDir;
+		if (GetCamType() == CAM_INTERNAL)
+		{
+			if(m_internalCameraController->GetMode() == InternalCameraController::MODE_REAR) {
+				mouseDir = -mouseDir;
+			} else if (m_internalCameraController->GetMode() == InternalCameraController::MODE_TURRET) {
+				const matrix3x3d &rot = Pi::player->GetOrient();
+				mouseDir = (rot * Pi::player->GetPlayerController()->GetMouseDir()) * cam_rot;
+			}
+		}
 		UpdateIndicator(m_mouseDirIndicator, (Pi::player->GetPhysRadius() * 1.5) * mouseDir);
-	} else
+	} else {
 		HideIndicator(m_mouseDirIndicator);
+	}
 
 	// navtarget info
 	if (Body *navtarget = Pi::player->GetNavTarget()) {
@@ -1603,6 +1638,7 @@ void WorldView::Draw()
 	if (GetCamType() == CAM_INTERNAL) {
 		switch (m_internalCameraController->GetMode()) {
 			case InternalCameraController::MODE_FRONT:
+			case InternalCameraController::MODE_TURRET:
 				DrawCrosshair(Gui::Screen::GetWidth()/2.0f, Gui::Screen::GetHeight()/2.0f, HUD_CROSSHAIR_SIZE, white);
 				break;
 			case InternalCameraController::MODE_REAR:
