@@ -10,6 +10,11 @@
 #include <vector>
 #include <map>
 
+#define USE_OLD_LUA_TURRET_DEFINE
+#ifdef USE_OLD_LUA_TURRET_DEFINE
+	#define OLD_LUA_TURRET_DEFINE_MAX 4
+#endif
+
 struct ShipType {
 	enum Thruster { // <enum scope='ShipType' name=ShipTypeThruster prefix=THRUSTER_ public>
 		THRUSTER_REVERSE,
@@ -51,6 +56,14 @@ struct ShipType {
 		double sep;
 		DualLaserOrientation orient;
 	} gunMount[GUNMOUNT_MAX];
+#ifdef USE_OLD_LUA_TURRET_DEFINE
+	struct TurretMount {
+		vector3f pos;
+		vector3f dir;
+		double sep;
+		DualLaserOrientation orient;
+	} turretMount[OLD_LUA_TURRET_DEFINE_MAX];
+#endif
 	int equipSlotCapacity[Equip::SLOT_MAX];
 	int capacity; // tonnes
 	int hullMass;

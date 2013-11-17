@@ -17,6 +17,12 @@ define_ship {
 		{ v(0,-0.5,-10.7), v(0,0,-1), 5, 'HORIZONTAL' },
 		{ v(0,-0.5,0), v(0,0,1), 5, 'HORIZONTAL' },
 	},
+	turret_mounts = 
+	{
+		--position, direction, size(unused), name
+		{ v(0,5,0), v(0,1,0), 5, 'HORIZONTAL' },
+		{ v(0,-6,0), v(0,-1,0), 5, 'HORIZONTAL' },
+	},
 	max_cargo = 30,
 	max_laser = 2,
 	max_missile = 4,

@@ -47,7 +47,7 @@ static bool ShipIsUnbuyable(const ShipType::Id &id)
 }
 
 static std::string s_currentShipFile;
-
+#pragma optimize("",off)
 int _define_ship(lua_State *L, ShipType::Tag tag, std::vector<ShipType::Id> *list)
 {
 	if (s_currentShipFile.empty())
@@ -177,6 +177,45 @@ int _define_ship(lua_State *L, ShipType::Tag tag, std::vector<ShipType::Id> *lis
 		}
 	}
 	lua_pop(L, 1);
+
+#ifdef USE_OLD_LUA_TURRET_DEFINE
+	for (int i = 0; i < OLD_LUA_TURRET_DEFINE_MAX; i++) {
+		s.turretMount[i].pos = vector3f(0,0,0);
+		s.turretMount[i].dir = vector3f(0,0,1);
+		s.turretMount[i].sep = 5;
+		s.turretMount[i].orient = ShipType::DUAL_LASERS_HORIZONTAL;
+	}
+
+	lua_pushstring(L, "turret_mounts");
+	lua_gettable(L, -2);
+	if (lua_istable(L, -1)) {
+		fprintf(stderr, "ship definition for '%s' has deprecated 'turret_mounts' field\n", s.id.c_str());
+		for (unsigned int i=0; i<lua_rawlen(L,-1); i++) {
+			lua_pushinteger(L, i+1);
+			lua_gettable(L, -2);
+			if (lua_istable(L, -1) && lua_rawlen(L,-1) == 4)	{
+				lua_pushinteger(L, 1);
+				lua_gettable(L, -2);
+				s.turretMount[i].pos = LuaVector::CheckFromLuaF(L, -1);
+				lua_pop(L, 1);
+				lua_pushinteger(L, 2);
+				lua_gettable(L, -2);
+				s.turretMount[i].dir = LuaVector::CheckFromLuaF(L, -1);
+				lua_pop(L, 1);
+				lua_pushinteger(L, 3);
+				lua_gettable(L, -2);
+				s.turretMount[i].sep = lua_tonumber(L,-1);
+				lua_pop(L, 1);
+				lua_pushinteger(L, 4);
+				lua_gettable(L, -2);
+				s.turretMount[i].orient = static_cast<ShipType::DualLaserOrientation>(LuaConstants::GetConstantFromArg(L, "DualLaserOrientation", -1));
+				lua_pop(L, 1);
+			}
+			lua_pop(L, 1);
+		}
+	}
+	lua_pop(L, 1);
+#endif
 	LUA_DEBUG_END(L, 0);
 
 	//sanity check

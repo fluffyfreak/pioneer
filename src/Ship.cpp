@@ -156,7 +156,7 @@ void Ship::Load(Serializer::Reader &rd, Space *space)
 
 	m_equipment.onChange.connect(sigc::mem_fun(this, &Ship::OnEquipmentChange));
 }
-
+#pragma optimize("",off)
 void Ship::InitGun(const char *tag, int num)
 {
 	const SceneGraph::MatrixTransform *mt = GetModel()->FindTagByName(tag);
@@ -171,7 +171,37 @@ void Ship::InitGun(const char *tag, int num)
 		m_gun[num].dir = m_type->gunMount[num].dir;
 	}
 }
-
+#pragma optimize("",off)
+bool Ship::InitTurret(const char *tag)
+{
+	bool foundTurret = false;
+	const SceneGraph::MatrixTransform *mt = GetModel()->FindTagByName(tag);
+	if (mt) {
+		const matrix4x4f &trans = mt->GetTransform();
+		TurretData td;
+		td.pos = vector3d(trans.GetTranslate());
+		td.dir = vector3d(trans.GetOrient().VectorZ());
+		td.name = tag;
+		m_turrets.push_back( Turret(this, td) );
+		foundTurret = true;
+	}
+#ifdef USE_OLD_LUA_TURRET_DEFINE
+	else {
+		const Sint32 num = m_turrets.size();
+		if( m_type->turretMount[num].sep != 5 )
+		{
+			TurretData td;
+			td.pos = vector3d(m_type->turretMount[num].pos);
+			td.dir = vector3d(m_type->turretMount[num].dir);
+			td.name = tag;
+			m_turrets.push_back( Turret(this, td) );
+			foundTurret = true;
+		}
+	}
+#endif
+	return foundTurret;
+}
+#pragma optimize("",off)
 void Ship::Init()
 {
 	m_navLights.reset(new NavLights(GetModel()));
@@ -188,6 +218,13 @@ void Ship::Init()
 
 	InitGun("tag_gunmount_0", 0);
 	InitGun("tag_gunmount_1", 1);
+
+	char turretName[32];
+	Sint32 turretIdx = 0;
+	snprintf(turretName, 32, "tag_turret_%d", turretIdx++);
+	while(InitTurret(turretName)) {
+		snprintf(turretName, 32, "tag_turret_%d", turretIdx++);
+	}
 }
 
 void Ship::PostLoadFixup(Space *space)

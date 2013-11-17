@@ -9,6 +9,7 @@
 #include "DynamicBody.h"
 #include "EquipSet.h"
 #include "galaxy/SystemPath.h"
+#include "GunMount.h"
 #include "NavLights.h"
 #include "Planet.h"
 #include "Serializer.h"
@@ -273,6 +274,7 @@ protected:
 		float temperature;
 	};
 	Gun m_gun[ShipType::GUNMOUNT_MAX];
+	std::vector<Turret> m_turrets;
 
 	float m_ecmRecharge;
 
@@ -291,6 +293,7 @@ private:
 	void OnEquipmentChange(Equip::Type e);
 	void EnterHyperspace();
 	void InitGun(const char *tag, int num);
+	bool InitTurret(const char *tag);
 
 	shipstats_t m_stats;
 	const ShipType *m_type;
