@@ -8,7 +8,7 @@
 #include "Pi.h"
 #include "Game.h"
 
-static const char defaultTurretName[] = "";
+static const char defaultTurretName[] = "Turret";
 
 CameraController::CameraController(Camera *camera, const Ship *ship) :
 	m_camera(camera),
@@ -144,7 +144,7 @@ void InternalCameraController::Load(Serializer::Reader &rd)
 	SetMode(static_cast<Mode>(rd.Int32()));
 	m_turret = rd.Int32();
 }
-
+#pragma optimize("",off)
 void InternalCameraController::SetTurret(const Ship *s, int turret)
 {
 	assert(m_mode == MODE_TURRET);
@@ -154,15 +154,40 @@ void InternalCameraController::SetTurret(const Ship *s, int turret)
 	m_turret = turret % s->GetNumTurrets();
 	m_name = s->GetTurret(m_turret)->GetName().c_str();
 }
-
+#pragma optimize("",off)
 void InternalCameraController::UpdateTurretData(const Ship *s)
 {
 	if(m_mode != MODE_TURRET) return;
 
 	assert(s->GetNumTurrets()>0);      // shouldn't set turret view unless turrets exist
 
-	SetPosition(s->GetTurret(m_turret)->GetPos());
-	SetOrient(s->GetTurret(m_turret)->GetOrient());
+	//SetPosition(s->GetTurret(m_turret)->GetPos());
+	//SetOrient(s->GetTurret(m_turret)->GetOrient());
+
+	{
+		const SceneGraph::Model *m = GetShip()->GetModel();
+
+		matrix4x4f fallbackTransform = matrix4x4f::Translation(vector3f(0.0));
+		const SceneGraph::MatrixTransform *fallback = m->FindTagByName("tag_camera");
+		if(fallback) {
+			fallbackTransform = fallback->GetTransform() * matrix4x4f::RotateYMatrix(M_PI);
+		} else {
+			fallbackTransform = matrix4x4f::Translation(vector3f(GetShip()->GetShipType()->cameraOffset)); // XXX deprecated
+		}
+
+		char turretName[32];
+		snprintf(turretName, 32, "tag_turret_%d", m_turret);
+
+		vector3d pos = s->GetTurret(m_turret)->GetPos();
+		matrix3x3d orient = s->GetTurret(m_turret)->GetOrient();
+
+		FillCameraPosOrient(m, turretName, pos, orient, fallbackTransform, matrix3x3d::Identity());
+
+		SetPosition( pos );
+		SetOrient( orient );
+	}
+
+	
 }
 
 void InternalCameraController::Update()

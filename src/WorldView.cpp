@@ -293,7 +293,7 @@ void WorldView::SetCamType(enum CamType c)
 
 	UpdateCameraName();
 }
-
+#pragma optimize("",off)
 void WorldView::CycleTurrets(bool reverse)
 {
 	if (Pi::IsConsoleActive()) return;
@@ -411,7 +411,9 @@ void WorldView::Draw3D()
 	assert(Pi::game);
 	assert(Pi::player);
 	assert(!Pi::player->IsDead());
-	m_camera->Draw(m_renderer, GetCamType() == CAM_INTERNAL ? Pi::player : 0);
+	//m_camera->Draw(m_renderer, GetCamType() == CAM_INTERNAL ? Pi::player : 0);
+	const Body* pBody = (GetCamType()==CAM_INTERNAL && m_internalCameraController->GetMode()!=InternalCameraController::MODE_TURRET) ? Pi::player : NULL;
+	m_camera->Draw(m_renderer, pBody);
 }
 
 void WorldView::OnToggleLabels()

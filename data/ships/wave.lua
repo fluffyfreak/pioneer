@@ -20,8 +20,8 @@ define_ship {
 	turret_mounts = 
 	{
 		--position, direction, size(unused), name
-		{ v(0,5,0), v(0,1,0), 5, 'HORIZONTAL' },
-		{ v(0,-6,0), v(0,-1,0), 5, 'HORIZONTAL' },
+		{ v(0,5,0), v(0,1,0), 1, 'HORIZONTAL' },
+		{ v(0,-6,0), v(0,-1,0), 1, 'HORIZONTAL' },
 	},
 	max_cargo = 30,
 	max_laser = 2,

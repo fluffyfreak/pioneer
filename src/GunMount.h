@@ -36,15 +36,15 @@ class GunMount
 	Equip::Type GetWeapon() const { return m_weapontype; }
 
 	float GetTemperature() const { return m_temperature; }
-	virtual const vector3d &GetPos() const { return m_mount->pos; }
-	virtual const vector3d &GetDir() const { return m_mount->dir; }
-	const std::string& GetName() const { return m_mount->name; }
+	virtual const vector3d &GetPos() const { return m_mount.pos; }
+	virtual const vector3d &GetDir() const { return m_mount.dir; }
+	const std::string& GetName() const { return m_mount.name; }
 
 	virtual void Save(Serializer::Writer &wr);
 	virtual void Load(Serializer::Reader &rd);
 
   protected:
-	const GunMountData *m_mount;
+	GunMountData m_mount;
 	Equip::Type m_weapontype;
 	float m_coolrate;
 
@@ -81,7 +81,7 @@ class Turret : public GunMount
 	void MatchAngVelInternal(const vector3d &av);
 	void AutoTarget(float timeStep);
 
-	const TurretData *m_turret;
+	TurretData m_turret;
 	double m_dotextent;
 	vector3d m_curdir;
 	vector3d m_curvel;

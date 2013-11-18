@@ -35,7 +35,7 @@ void Star::InitStar()
 	const float wf = (sbody->type < SystemBody::TYPE_STAR_S_BH && sbody->type > SystemBody::TYPE_STAR_O_HYPER_GIANT) ? 100.0f : 1.0f;
 	SetClipRadius(sbody->GetRadius() * 8 * wf);
 }
-
+#pragma optimize("",off)
 void Star::Render(Graphics::Renderer *renderer, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform)
 {
 	renderer->SetDepthTest(false);

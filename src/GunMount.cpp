@@ -12,7 +12,7 @@
 #pragma optimize("",off)
 GunMount::GunMount(Ship *parent, const GunMountData &mount) :
 	m_parent(parent),
-	m_mount(&mount),
+	m_mount(mount),
 	m_weapontype(Equip::NONE),
 	m_coolrate(0.01f),
 	m_firing(false),
@@ -37,7 +37,7 @@ void GunMount::Load(Serializer::Reader &rd)
 #pragma optimize("",off)
 Turret::Turret(Ship *parent, const TurretData &turret) :
 	GunMount(parent, turret),
-	m_turret(&turret),
+	m_turret(turret),
 	m_curvel(0.0, 0.0, 0.0),
 	m_curdir(turret.dir),
 	m_skill(0.5f),
@@ -83,7 +83,7 @@ void GunMount::Update(float timeStep)
 
 	const matrix3x3d &rot = m_parent->GetOrient();
 	const vector3d dir = rot * GetDir();
-	const vector3d pos = rot * m_mount->pos + m_parent->GetPosition();
+	const vector3d pos = rot * m_mount.pos + m_parent->GetPosition();
 
 	const LaserType &lt = Equip::lasers[Equip::types[m_weapontype].tableIndex];
 	m_temperature += 0.01f;			// XXX should be weapon dependent?
@@ -125,7 +125,7 @@ extern double calc_ivel(double dist, double vel, double acc);
 // av is in object space
 void Turret::MatchAngVelInternal(const vector3d &av)
 {
-	double frameAccel = m_turret->accel * Pi::game->GetTimeStep();
+	double frameAccel = m_turret.accel * Pi::game->GetTimeStep();
 	vector3d diffvel = (av - m_curvel);
 	if (diffvel.Length() > frameAccel) diffvel *= frameAccel / diffvel.Length();
 	m_curvel += diffvel;
@@ -137,8 +137,8 @@ void Turret::FaceDirectionInternal(const vector3d &dir, double leadAV)
 	double dp = dir.Dot(m_curdir);
 	if (dp < 0.999999) {
 		double ang = acos(Clamp(dp, -1.0, 1.0));
-		double iangspeed = leadAV + calc_ivel(ang, 0.0, m_turret->accel);
-		iangspeed = std::min(iangspeed, m_turret->maxspeed);
+		double iangspeed = leadAV + calc_ivel(ang, 0.0, m_turret.accel);
+		iangspeed = std::min(iangspeed, m_turret.maxspeed);
 		dav = iangspeed * m_curdir.Cross(dir).Normalized();
 	}
 	MatchAngVelInternal(dav);
@@ -149,11 +149,11 @@ void Turret::FaceDirectionInternal(const vector3d &dir, double leadAV)
 vector3d Turret::FaceDirection(const vector3d &dir)
 {
 	vector3d clampdir =	dir;
-	if (clampdir.Dot(m_turret->dir) < m_dotextent)			// clamp to extent
+	if (clampdir.Dot(m_turret.dir) < m_dotextent)			// clamp to extent
 	{
-		vector3d raxis = m_turret->dir.Cross(clampdir);
-		clampdir = m_turret->dir;
-		clampdir.ArbRotate(raxis, m_turret->extent);
+		vector3d raxis = m_turret.dir.Cross(clampdir);
+		clampdir = m_turret.dir;
+		clampdir.ArbRotate(raxis, m_turret.extent);
 	}
 	m_manual = true;
 	FaceDirectionInternal(clampdir, 0.0);
@@ -220,12 +220,12 @@ void Turret::Update(float timeStep)
 	if (ang > 1e-16) m_curdir.ArbRotate(m_curvel / ang, ang);
 
 	// clamp to turret extent
-	if (m_curdir.Dot(m_turret->dir) < m_dotextent)
+	if (m_curdir.Dot(m_turret.dir) < m_dotextent)
 	{
-		vector3d raxis = m_turret->dir.Cross(m_curdir);
-		m_curdir = m_turret->dir;
-		m_curdir.ArbRotate(raxis, m_turret->extent);
-		m_curvel -= m_turret->dir * m_curvel.Dot(m_turret->dir);
+		vector3d raxis = m_turret.dir.Cross(m_curdir);
+		m_curdir = m_turret.dir;
+		m_curdir.ArbRotate(raxis, m_turret.extent);
+		m_curvel -= m_turret.dir * m_curvel.Dot(m_turret.dir);
 	}
 	m_manual = false;			// clear for next timestep
 
@@ -234,15 +234,15 @@ void Turret::Update(float timeStep)
 
 matrix3x3d Turret::GetOrient() const
 {
-	vector3d zaxis = -m_turret->dir;
+	vector3d zaxis = -m_turret.dir;
 	vector3d yaxis = zaxis.Cross(vector3d(0.0,1.0,0.0)).Cross(zaxis).NormalizedSafe();
 	vector3d xaxis = yaxis.Cross(zaxis);
 	matrix3x3d base = matrix3x3d::FromVectors(xaxis, yaxis, zaxis);
 
-	double dp = m_curdir.Dot(m_turret->dir);
+	double dp = m_curdir.Dot(m_turret.dir);
 	if (dp < 0.999999) {
 		double ang = acos(Clamp(dp, -1.0, 1.0));
-		vector3d axis = m_turret->dir.Cross(m_curdir).Normalized();
+		vector3d axis = m_turret.dir.Cross(m_curdir).Normalized();
 		base = matrix3x3d::Rotate(ang, axis) * base;
 	}
 	return base;

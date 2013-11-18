@@ -55,7 +55,7 @@ void TerrainBody::Load(Serializer::Reader &rd, Space *space)
 	SystemBody *sbody = space->GetSystemBodyByIndex(rd.Int32());
 	InitTerrainBody(sbody);
 }
-
+#pragma optimize("",off)
 void TerrainBody::Render(Graphics::Renderer *renderer, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform)
 {
 	matrix4x4d ftran = viewTransform;
