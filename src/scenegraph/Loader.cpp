@@ -477,6 +477,132 @@ void Loader::CheckAnimationConflicts(const Animation* anim, const std::vector<An
 	}
 }
 
+// Stores an edge by its vertices and force an order between them
+struct Edge
+{
+    Edge(const Uint32 _a, const Uint32 _b)
+    {
+        assert(_a != _b);
+        
+        if (_a < _b)
+        {
+            a = _a;
+            b = _b;                   
+        }
+        else
+        {
+            a = _b;
+            b = _a;
+        }
+    }
+    
+    Uint32 a;
+    Uint32 b;
+};
+
+struct Neighbors
+{
+    Uint32 n1;
+    Uint32 n2;
+    
+    Neighbors()
+    {
+        n1 = n2 = (Uint32)-1;
+    }
+    
+    void AddNeigbor(const Uint32 n)
+    {
+        if (n1 == -1) {
+            n1 = n;
+        }
+        else if (n2 == -1) {
+            n2 = n;
+        }
+        else {
+            assert(0);
+        }
+    }
+    
+    Uint32 GetOther(const Uint32 me) const
+    {
+        if (n1 == me) {
+            return n2;
+        } else if (n2 == me) {
+            return n1;
+        } 
+		assert(0);
+        return 0;
+    }
+};
+
+struct CompareEdges
+{
+    bool operator()(const Edge& Edge1, const Edge& Edge2)
+    {
+        if (Edge1.a < Edge2.a) {
+            return true;
+        }
+        else if (Edge1.a == Edge2.a) {
+            return (Edge1.b < Edge2.b);
+        }        
+        else {
+            return false;
+        }            
+    }
+};
+
+static Uint32 GetOppositeIndex(const aiFace& Face, const Edge& e)
+{
+    for (Uint32 i = 0 ; i < 3 ; i++) {
+        const Uint32 Index = Face.mIndices[i];
+        if (Index != e.a && Index != e.b) {
+            return Index;
+        }
+    }
+       
+    assert(false);      
+    return 0;
+}
+
+static void FindAdjacencies(const aiMesh* paiMesh, std::vector<unsigned int>& Indices)
+{
+	std::map<Edge, Neighbors, CompareEdges> m_indexMap;
+
+    // Step 1 - find the two triangles that share every edge
+    for (Uint32 i = 0 ; i < paiMesh->mNumFaces ; i++) {
+        const aiFace& Face = paiMesh->mFaces[i];
+
+        Edge e1(Face.mIndices[0], Face.mIndices[1]);
+        Edge e2(Face.mIndices[1], Face.mIndices[2]);
+        Edge e3(Face.mIndices[2], Face.mIndices[0]);
+        
+        m_indexMap[e1].AddNeigbor(i);
+        m_indexMap[e2].AddNeigbor(i);
+        m_indexMap[e3].AddNeigbor(i);
+    }   
+
+    // Step 2 - build the index buffer with the adjacency info
+    for (Uint32 i = 0 ; i < paiMesh->mNumFaces ; i++) {        
+        const aiFace& Face = paiMesh->mFaces[i];
+        
+        for (Uint32 j = 0 ; j < 3 ; j++) {            
+            Edge e(Face.mIndices[j], Face.mIndices[(j + 1) % 3]);
+            assert(m_indexMap.find(e) != m_indexMap.end());
+            Neighbors n = m_indexMap[e];
+            Uint32 OtherTri = n.GetOther(i);
+            
+            if (OtherTri == -1)
+                OtherTri = 0;
+            
+            const aiFace& OtherFace = paiMesh->mFaces[OtherTri];
+            Uint32 OppositeIndex = GetOppositeIndex(OtherFace, e);
+         
+            Indices.push_back(Face.mIndices[j]);
+            Indices.push_back(OppositeIndex);            
+        }
+    }    
+}
+
 void Loader::ConvertAiMeshes(std::vector<RefCountedPtr<StaticGeometry> > &geoms, const aiScene *scene)
 {
 	//XXX sigh, workaround for obj loader
@@ -488,6 +614,9 @@ void Loader::ConvertAiMeshes(std::vector<RefCountedPtr<StaticGeometry> > &geoms,
 	for (unsigned int i=0; i<scene->mNumMeshes; i++) {
 		const aiMesh *mesh = scene->mMeshes[i];
 		assert(mesh->HasNormals());
+
+		std::vector<unsigned int> Indices;
+		FindAdjacencies(mesh, Indices);
 
 		RefCountedPtr<StaticGeometry> geom(new StaticGeometry(m_renderer));
 		geom->SetName(stringf("sgMesh%0{u}", i));
