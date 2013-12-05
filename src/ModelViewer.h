@@ -29,6 +29,7 @@ private:
 	bool OnToggleCollMesh(UI::CheckBox*);
 	bool OnToggleGrid(UI::Widget*);
 	bool OnToggleGuns(UI::CheckBox*);
+	bool OnToggleTurrets(UI::CheckBox*);
 	void AddLog(const std::string &line);
 	void ChangeCameraPreset(SDL_Keycode, SDL_Keymod);
 	void ClearLog();
@@ -65,6 +66,7 @@ private:
 	//toggleable options
 	struct Options {
 		bool attachGuns;
+		bool attachTurrets;
 		bool showTags;
 		bool showDockingLocators;
 		bool showCollMesh;
@@ -90,6 +92,7 @@ private:
 	Options m_options;
 	std::unique_ptr<NavLights> m_navLights;
 	std::unique_ptr<SceneGraph::Model> m_gunModel;
+	std::unique_ptr<SceneGraph::Model> m_turretModel;
 	std::unique_ptr<SceneGraph::Model> m_scaleModel;
 	std::string m_modelName;
 	RefCountedPtr<UI::Context> m_ui;
