@@ -1,0 +1,7 @@
+material malabar-material
+tex_diff malabar_diff.png
+emissive 0.0 0.0 0.0
+specular 0.5 0.5 0.5
+shininess 200
+
+mesh simple_turret.dae
