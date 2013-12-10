@@ -14,6 +14,27 @@
 #include "StringF.h"
 #include <algorithm>
 
+namespace
+{
+	static const vector3f pos(0.0f, 0.0f, 0.0f);
+	static const vector3f target[6] = {
+		vector3f(  1.0f,  0.0f,  0.0f ),
+		vector3f( -1.0f,  0.0f,  0.0f ),
+		vector3f(  0.0f,  1.0f,  0.0f ),
+		vector3f(  0.0f, -1.0f,  0.0f ),
+		vector3f(  0.0f,  0.0f,  1.0f ),
+		vector3f(  0.0f,  0.0f, -1.0f )
+	};
+	static const vector3f upDir[6] = {
+		vector3f(  0.0f,  1.0f,  0.0f ),
+		vector3f(  0.0f,  1.0f,  0.0f ),
+		vector3f(  0.0f,  0.0f, -1.0f ),
+		vector3f(  0.0f,  0.0f,  1.0f ),
+		vector3f(  0.0f,  1.0f,  0.0f ),
+		vector3f(  0.0f,  1.0f,  0.0f )
+	};
+};
+
 BackgroundGen::BackgroundGen(Graphics::Renderer *r, int width, int height)
 : m_width(width)
 , m_height(height)
@@ -66,7 +87,7 @@ static void EndRenderTarget(Graphics::Renderer *r) {
 }
 
 typedef std::pair<Graphics::RenderTarget*, Graphics::Texture*> RTTexPair;
-#pragma optimize("",off)
+
 void BackgroundGen::Draw()
 {
 	// setup render targets
@@ -106,37 +127,9 @@ void BackgroundGen::Draw()
 
 	const Color oldSceneAmbientColor = m_renderer->GetAmbientColor();
 	m_renderer->SetAmbientColor(Color(0.f));
-
-	/*struct TextureCubeData {
-		void* posX;
-		void* negX;
-		void* posY;
-		void* negY;
-		void* posZ;
-		void* negZ;
-	};*/
-
-	//Graphics::TextureCubeData tcd;
-
-	const vector3f pos(0.0f, 0.0f, 0.0f);
-	const vector3f target[6] = {
-		vector3f(  1.0f,  0.0f,  0.0f ),
-		vector3f( -1.0f,  0.0f,  0.0f ),
-		vector3f(  0.0f,  1.0f,  0.0f ),
-		vector3f(  0.0f, -1.0f,  0.0f ),
-		vector3f(  0.0f,  0.0f,  1.0f ),
-		vector3f(  0.0f,  0.0f, -1.0f )
-	};
-	const vector3f upDir[6] = {
-		vector3f(  0.0f,  1.0f,  0.0f ),
-		vector3f(  0.0f,  1.0f,  0.0f ),
-		vector3f(  0.0f,  0.0f,  1.0f ),
-		vector3f(  0.0f,  0.0f,  1.0f ),
-		vector3f(  1.0f,  0.0f,  0.0f ),
-		vector3f(  1.0f,  0.0f,  0.0f )
-	};
-    matrix4x4f matOut;
 	
+    matrix4x4f matOut;
+	Graphics::TextureCubeData tcd;
 
 	int i=0;
 	for (auto it = RTtargets.begin(), itEnd = RTtargets.end(); it != itEnd; ++it)
@@ -154,6 +147,21 @@ void BackgroundGen::Draw()
 		}
 		EndRenderTarget(m_renderer);
 
+		Graphics::Texture* pGL = (*it).first->GetColorTexture();
+
+		switch (i)
+		{
+		case 0: tcd.posX = pGL; break;
+		case 1: tcd.negX = pGL; break;
+		case 2: tcd.posY = pGL; break;
+		case 3: tcd.negY = pGL; break;
+		case 4: tcd.posZ = pGL; break;
+		case 5: tcd.negZ = pGL; break;
+		default:
+			assert(false);
+			break;
+		}
+#if 0
 		Graphics::TextureGL* pGL = static_cast<Graphics::TextureGL*>((*it).first->GetColorTexture());
 		// pad rows to 4 bytes, which is the default row alignment for OpenGL
 		const int stride = (3*m_width + 3) & ~3;
@@ -166,13 +174,15 @@ void BackgroundGen::Draw()
 
 		const std::string dir = "cubemaps";
 		FileSystem::userFiles.MakeDirectory(dir);
-		const std::string destFile = stringf("cube_face_%0{d}.png", i++);
+		const std::string destFile = stringf("cube_face_%0{d}.png", i);
 		const std::string fname = FileSystem::JoinPathBelow(dir, destFile);
 
 		write_png(FileSystem::userFiles, fname, &pixel_data[0], m_width, m_height, stride, 3);
 
 		printf("cubemap %s saved\n", fname.c_str());
+#endif
 		glPopMatrix();
+		++i;
 	}
 
 	m_renderer->SetAmbientColor(oldSceneAmbientColor);
