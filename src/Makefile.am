@@ -19,6 +19,7 @@ noinst_HEADERS = \
 	AmbientSounds.h \
 	AnimationCurves.h \
 	Background.h \
+	BackgroundGen.h \
 	Body.h \
 	ByteRange.h \
 	Camera.h \
@@ -164,6 +165,7 @@ noinst_HEADERS = \
 pioneer_SOURCES	= \
 	AmbientSounds.cpp \
 	Background.cpp \
+	BackgroundGen.cpp \
 	Body.cpp \
 	Camera.cpp \
 	CameraController.cpp \
