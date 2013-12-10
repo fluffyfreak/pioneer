@@ -85,13 +85,11 @@ static void BeginRenderTarget(Graphics::Renderer *r, Graphics::RenderTarget* pTa
 static void EndRenderTarget(Graphics::Renderer *r) {
 	r->SetRenderTarget(NULL);
 }
-
-typedef std::pair<Graphics::RenderTarget*, Graphics::Texture*> RTTexPair;
-
+//#pragma optimize("",off)
 void BackgroundGen::Draw()
 {
 	// setup render targets
-	std::vector<RTTexPair> RTtargets;
+	std::vector<Graphics::RenderTarget*> RTtargets;
 	for( int i=0; i<6; i++ )
 	{
 		Graphics::TextureDescriptor texDesc(
@@ -113,7 +111,7 @@ void BackgroundGen::Draw()
 
 		pRTarget->SetColorTexture(pTexture);
 
-		RTtargets.push_back(std::make_pair(pRTarget, pTexture));
+		RTtargets.push_back(pRTarget);
 	}
 
 	m_renderer->SetViewport(0, 0, m_width, m_height);
@@ -130,6 +128,7 @@ void BackgroundGen::Draw()
 	
     matrix4x4f matOut;
 	Graphics::TextureCubeData tcd;
+	memset(&tcd, 0, sizeof(Graphics::TextureCubeData));
 
 	int i=0;
 	for (auto it = RTtargets.begin(), itEnd = RTtargets.end(); it != itEnd; ++it)
@@ -140,29 +139,29 @@ void BackgroundGen::Draw()
 		matrix4x4ftod(matOut, transform);
 		
 		// render each face of the cubemap
-		BeginRenderTarget(m_renderer, (*it).first);
+		BeginRenderTarget(m_renderer, (*it));
 		{
 			m_background->SetDrawFlags( Background::Container::DRAW_STARS | Background::Container::DRAW_MILKY );
 			m_background->Draw(m_renderer, transform);
 		}
 		EndRenderTarget(m_renderer);
 
-		Graphics::Texture* pGL = (*it).first->GetColorTexture();
+		Graphics::Texture* pTex = (*it)->GetColorTexture();
 
 		switch (i)
 		{
-		case 0: tcd.posX = pGL; break;
-		case 1: tcd.negX = pGL; break;
-		case 2: tcd.posY = pGL; break;
-		case 3: tcd.negY = pGL; break;
-		case 4: tcd.posZ = pGL; break;
-		case 5: tcd.negZ = pGL; break;
+		case 0: tcd.posX = pTex; break;
+		case 1: tcd.negX = pTex; break;
+		case 2: tcd.posY = pTex; break;
+		case 3: tcd.negY = pTex; break;
+		case 4: tcd.posZ = pTex; break;
+		case 5: tcd.negZ = pTex; break;
 		default:
 			assert(false);
 			break;
 		}
 #if 0
-		Graphics::TextureGL* pGL = static_cast<Graphics::TextureGL*>((*it).first->GetColorTexture());
+		Graphics::TextureGL* pGL = static_cast<Graphics::TextureGL*>((*it)->GetColorTexture());
 		// pad rows to 4 bytes, which is the default row alignment for OpenGL
 		const int stride = (3*m_width + 3) & ~3;
 
