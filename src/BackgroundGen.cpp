@@ -23,6 +23,34 @@ BackgroundGen::~BackgroundGen()
 {
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// compute transform axis from object position, target and up direction
+///////////////////////////////////////////////////////////////////////////////
+void lookAtToAxes(const vector3f& pos, const vector3f& target, const vector3f& upDir,
+                  vector3f& left, vector3f& up, vector3f& forward)
+{
+    // compute the forward vector
+    forward = (target - pos).Normalized();
+
+    // compute the left vector
+    left = upDir.Cross(forward).Normalized();  // cross product
+
+    // compute the orthonormal up vector
+    up = forward.Cross(left).Normalized();     // cross product
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// compute transform axis from object position, target and up direction
+///////////////////////////////////////////////////////////////////////////////
+void lookAtMatrix(const vector3f& pos, const vector3f& target, const vector3f& upDir,
+                  matrix4x4f& matOut)
+{
+    vector3f forward, left, up;
+	lookAtToAxes(pos, target, upDir, left, up, forward);
+
+	matOut.LoadFrom3x3Matrix( &matrix3x3f::FromVectors(left, up, forward)[0] );
+}
+
 static void BeginRenderTarget(Graphics::Renderer *r, Graphics::RenderTarget* pTarget) {
 	assert(pTarget);
 	const bool bTargetSet = r->SetRenderTarget(pTarget);
@@ -75,6 +103,23 @@ void BackgroundGen::Draw(float _time)
 	const Color oldSceneAmbientColor = m_renderer->GetAmbientColor();
 	m_renderer->SetAmbientColor(Color(0.f));
 
+	/*struct TextureCubeData {
+		void* posX;
+		void* negX;
+		void* posY;
+		void* negY;
+		void* posZ;
+		void* negZ;
+	};*/
+
+	Graphics::TextureCubeData tcd;
+
+	const vector3f pos(0.0f, 0.0f, 0.0f);
+	const vector3f target(1.0f, 0.0f, 0.0f);
+	const vector3f upDir(0.0f, 1.0f, 0.0f);
+    matrix4x4f matOut;
+	lookAtMatrix(pos, target, upDir, matOut);
+
 	for (auto it = RTtargets.begin(), itEnd = RTtargets.end(); it != itEnd; ++it)
 	{
 		// render each face of the cubemap
@@ -85,6 +130,8 @@ void BackgroundGen::Draw(float _time)
 			m_background->Draw(m_renderer, brot);
 		}
 		EndRenderTarget(m_renderer);
+
+		(*it).first->GetColorTexture();
 	}
 
 	m_renderer->SetAmbientColor(oldSceneAmbientColor);
