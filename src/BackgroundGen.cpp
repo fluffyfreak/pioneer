@@ -4,10 +4,14 @@
 #include "BackgroundGen.h"
 #include "Pi.h"
 #include "Easing.h"
+#include "FileSystem.h"
+#include "PngWriter.h"
 #include "graphics/Renderer.h"
 #include "graphics/RenderTarget.h"
 #include "graphics/TextureBuilder.h"
+#include "graphics/TextureGL.h"
 #include "graphics/Graphics.h"
+#include "StringF.h"
 #include <algorithm>
 
 BackgroundGen::BackgroundGen(Graphics::Renderer *r, int width, int height)
@@ -62,8 +66,8 @@ static void EndRenderTarget(Graphics::Renderer *r) {
 }
 
 typedef std::pair<Graphics::RenderTarget*, Graphics::Texture*> RTTexPair;
-
-void BackgroundGen::Draw(float _time)
+#pragma optimize("",off)
+void BackgroundGen::Draw()
 {
 	// setup render targets
 	std::vector<RTTexPair> RTtargets;
@@ -112,26 +116,63 @@ void BackgroundGen::Draw(float _time)
 		void* negZ;
 	};*/
 
-	Graphics::TextureCubeData tcd;
+	//Graphics::TextureCubeData tcd;
 
 	const vector3f pos(0.0f, 0.0f, 0.0f);
-	const vector3f target(1.0f, 0.0f, 0.0f);
-	const vector3f upDir(0.0f, 1.0f, 0.0f);
+	const vector3f target[6] = {
+		vector3f(  1.0f,  0.0f,  0.0f ),
+		vector3f( -1.0f,  0.0f,  0.0f ),
+		vector3f(  0.0f,  1.0f,  0.0f ),
+		vector3f(  0.0f, -1.0f,  0.0f ),
+		vector3f(  0.0f,  0.0f,  1.0f ),
+		vector3f(  0.0f,  0.0f, -1.0f )
+	};
+	const vector3f upDir[6] = {
+		vector3f(  0.0f,  1.0f,  0.0f ),
+		vector3f(  0.0f,  1.0f,  0.0f ),
+		vector3f(  0.0f,  0.0f,  1.0f ),
+		vector3f(  0.0f,  0.0f,  1.0f ),
+		vector3f(  1.0f,  0.0f,  0.0f ),
+		vector3f(  1.0f,  0.0f,  0.0f )
+	};
     matrix4x4f matOut;
-	lookAtMatrix(pos, target, upDir, matOut);
+	
 
+	int i=0;
 	for (auto it = RTtargets.begin(), itEnd = RTtargets.end(); it != itEnd; ++it)
 	{
+		glPushMatrix();
+		lookAtMatrix(pos, target[i], upDir[i], matOut);
+		matrix4x4d transform;
+		matrix4x4ftod(matOut, transform);
+		
 		// render each face of the cubemap
 		BeginRenderTarget(m_renderer, (*it).first);
 		{
-			matrix4x4d brot = matrix4x4d::RotateXMatrix(-0.25*_time) * matrix4x4d::RotateZMatrix(0.6);
 			m_background->SetDrawFlags( Background::Container::DRAW_STARS | Background::Container::DRAW_MILKY );
-			m_background->Draw(m_renderer, brot);
+			m_background->Draw(m_renderer, transform);
 		}
 		EndRenderTarget(m_renderer);
 
-		(*it).first->GetColorTexture();
+		Graphics::TextureGL* pGL = static_cast<Graphics::TextureGL*>((*it).first->GetColorTexture());
+		// pad rows to 4 bytes, which is the default row alignment for OpenGL
+		const int stride = (3*m_width + 3) & ~3;
+
+		std::vector<Uint8> pixel_data(stride * m_height);
+		pGL->Bind();
+		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, &pixel_data[0]);
+		pGL->Unbind();
+		glFinish();
+
+		const std::string dir = "cubemaps";
+		FileSystem::userFiles.MakeDirectory(dir);
+		const std::string destFile = stringf("cube_face_%0{d}.png", i++);
+		const std::string fname = FileSystem::JoinPathBelow(dir, destFile);
+
+		write_png(FileSystem::userFiles, fname, &pixel_data[0], m_width, m_height, stride, 3);
+
+		printf("cubemap %s saved\n", fname.c_str());
+		glPopMatrix();
 	}
 
 	m_renderer->SetAmbientColor(oldSceneAmbientColor);

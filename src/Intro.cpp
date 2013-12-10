@@ -12,6 +12,10 @@
 #include "scenegraph/ModelSkin.h"
 #include <algorithm>
 
+#include "BackgroundGen.h"
+static std::unique_ptr<BackgroundGen> s_backgroundGen;
+static bool s_bDumpBackground = true;
+
 struct PiRngWrapper {
 	unsigned int operator()(unsigned int n) {
 		return Pi::rng.Int32(n);
@@ -48,6 +52,8 @@ Intro::Intro(Graphics::Renderer *r, int width, int height)
 
 	m_state = STATE_SELECT;
 	m_modelIndex = 0;
+
+	s_backgroundGen.reset( new BackgroundGen(r, 512, 512) );
 }
 
 Intro::~Intro()
@@ -58,6 +64,8 @@ Intro::~Intro()
 
 void Intro::Draw(float _time)
 {
+	m_renderer->SetViewport(0, 0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
+
 	switch (m_state) {
 		case STATE_SELECT:
 			m_model = m_models[m_modelIndex++];
@@ -128,4 +136,9 @@ void Intro::Draw(float _time)
 	m_renderer->SetViewport(0, 0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
 
 	glPopAttrib();
+
+	if( s_bDumpBackground && s_backgroundGen.get() ) {
+		s_backgroundGen->Draw();
+		s_bDumpBackground = false;
+	}
 }

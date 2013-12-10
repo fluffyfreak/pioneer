@@ -10,7 +10,7 @@ class BackgroundGen {
 public:
 	BackgroundGen(Graphics::Renderer *r, int width, int height);
 	~BackgroundGen();
-	virtual void Draw(float time);
+	void Draw();
 
 private:
 	int m_width, m_height;
