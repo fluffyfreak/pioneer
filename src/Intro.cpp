@@ -53,7 +53,7 @@ Intro::Intro(Graphics::Renderer *r, int width, int height)
 	m_state = STATE_SELECT;
 	m_modelIndex = 0;
 
-	s_backgroundGen.reset( new BackgroundGen(r, 512, 512) );
+	s_backgroundGen.reset( new BackgroundGen(r, 2048, 2048) );
 }
 
 Intro::~Intro()
