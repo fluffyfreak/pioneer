@@ -333,3 +333,10 @@ bool Sector::Contains(const SystemPath sysPath) const
 	if (sz != sysPath.sectorZ) return false;
 	return true;
 }
+
+void Sector::GetSectorLoc(int &xOut, int &yOut, int &zOut) const
+{
+	xOut = sx;
+	yOut = sy;
+	zOut = sz;
+}

@@ -49,6 +49,27 @@ namespace Background
 		Uint32 m_numCubemaps;
 	};
 
+	class RealStarField : public BackgroundElement
+	{
+	public:
+		RealStarField(Graphics::Renderer *r);
+		~RealStarField();
+		void Draw(Graphics::Renderer *r);
+		//create or recreate the starfield
+		void Rebuild();
+
+	private:
+		void Init(Graphics::Renderer *);
+		static const int BG_STAR_MAX = 10000;
+		Graphics::StaticMesh *m_model;
+
+		//hyperspace animation vertex data
+		//allocated when animation starts and thrown away
+		//when starfield is destroyed (on exiting hyperspace)
+		vector3f *m_hyperVtx;
+		Color *m_hyperCol;
+	};
+
 	class Starfield : public BackgroundElement
 	{
 	public:

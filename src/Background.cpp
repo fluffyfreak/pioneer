@@ -9,6 +9,7 @@
 #include "Pi.h"
 #include "Player.h"
 #include "Space.h"
+#include "galaxy/Sector.h"
 #include "galaxy/StarSystem.h"
 #include "graphics/Graphics.h"
 #include "graphics/Material.h"
@@ -154,6 +155,132 @@ void UniverseBox::LoadCubeMap(Graphics::Renderer *r, Random* randomizer)
 		TextureBuilder texture_builder = TextureBuilder::Cube("textures/cube/default.dds");
 		m_cubemap = texture_builder.CreateTexture(r);
 		m_material->texture0 = m_cubemap;
+	}
+}
+
+RealStarField::RealStarField(Graphics::Renderer *r)
+{
+	Init(r);
+	//starfield is not filled without a seed
+}
+
+RealStarField::~RealStarField()
+{
+	delete m_model;
+	delete[] m_hyperVtx;
+	delete[] m_hyperCol;
+}
+
+void RealStarField::Init(Graphics::Renderer *r)
+{
+	// reserve some space for positions, colours
+	VertexArray *stars = new VertexArray(ATTRIB_POSITION | ATTRIB_DIFFUSE, BG_STAR_MAX);
+	m_model = new StaticMesh(POINTS);
+	Graphics::MaterialDescriptor desc;
+	desc.effect = Graphics::EFFECT_STARFIELD;
+	desc.vertexColors = true;
+	m_material.Reset(r->CreateMaterial(desc));
+	m_material->emissive = Color::WHITE;
+	m_model->AddSurface(RefCountedPtr<Surface>(new Surface(POINTS, stars, m_material)));
+
+	m_hyperVtx = 0;
+	m_hyperCol = 0;
+}
+
+float DistanceBetween(const Sector *a, int sysIdxA, const Sector *b, int sysIdxB)
+{
+	PROFILE_SCOPED()
+	vector3f dv = a->m_systems[sysIdxA].p - b->m_systems[sysIdxB].p;
+
+	int axOut, ayOut, azOut;
+	int bxOut, byOut, bzOut;
+	a->GetSectorLoc(axOut, ayOut, azOut);
+	b->GetSectorLoc(bxOut, byOut, bzOut);
+	dv += Sector::SIZE*vector3f(float(axOut - bxOut), float(ayOut - byOut), float(azOut - bzOut));
+	return dv.Length();
+}
+
+void RealStarField::Rebuild()
+{
+	VertexArray *va = m_model->GetSurface(0)->GetVertices();
+	va->Clear(); // clear if previously filled
+	// Slight colour variation to stars based on seed
+	Random rand(0);
+
+	//fill the array
+	for (int i=0; i<BG_STAR_MAX; i++) {
+		float col = float(rand.Double(0.2,0.7));
+
+		// this is proper random distribution on a sphere's surface
+		const float theta = float(rand.Double(0.0, 2.0*M_PI));
+		const float u = float(rand.Double(-1.0, 1.0));
+
+		va->Add(vector3f(
+				1000.0f * sqrt(1.0f - u*u) * cos(theta),
+				1000.0f * u,
+				1000.0f * sqrt(1.0f - u*u) * sin(theta)
+			), Color(col, col, col,	1.f)
+		);
+	}
+
+	SystemPath here;// = s->GetPath();
+
+	int here_x = here.sectorX;
+	int here_y = here.sectorY;
+	int here_z = here.sectorZ;
+	Uint32 here_idx = here.systemIndex;
+	Sector here_sec(here_x, here_y, here_z);
+
+	const int diff_sec = 2;
+
+	for (int x = here_x-diff_sec; x <= here_x+diff_sec; x++) {
+		for (int y = here_y-diff_sec; y <= here_y+diff_sec; y++) {
+			for (int z = here_z-diff_sec; z <= here_z+diff_sec; z++) {
+				Sector sec(x, y, z);
+
+				for (unsigned int idx = 0; idx < sec.m_systems.size(); idx++) {
+					if (x == here_x && y == here_y && z == here_z && idx == here_idx)
+						continue;
+
+					RefCountedPtr<StarSystem> sys = StarSystem::GetCached(SystemPath(x, y, z, idx));
+				}
+			}
+		}
+	}
+}
+
+void RealStarField::Draw(Graphics::Renderer *renderer)
+{
+	// XXX would be nice to get rid of the Pi:: stuff here
+	if (!Pi::game || Pi::player->GetFlightState() != Ship::HYPERSPACE) {
+		renderer->DrawStaticMesh(m_model);
+	} else {
+		// roughly, the multiplier gets smaller as the duration gets larger.
+		// the time-looking bits in this are completely arbitrary - I figured
+		// it out by tweaking the numbers until it looked sort of right
+		double mult = 0.0015 / (Pi::player->GetHyperspaceDuration() / (60.0*60.0*24.0*7.0));
+
+		double hyperspaceProgress = Pi::game->GetHyperspaceProgress();
+
+		//XXX this is a lot of lines
+		if (m_hyperVtx == 0) {
+			m_hyperVtx = new vector3f[BG_STAR_MAX * 2];
+			m_hyperCol = new Color[BG_STAR_MAX * 2];
+		}
+		VertexArray *va = m_model->GetSurface(0)->GetVertices();
+		vector3d pz = Pi::player->GetOrient().VectorZ();	//back vector
+		for (int i=0; i<BG_STAR_MAX; i++) {
+
+			vector3f v(va->position[i]);
+			v += vector3f(pz*hyperspaceProgress*mult);
+
+			m_hyperVtx[i*2] = va->position[i] + v;
+			m_hyperCol[i*2] = va->diffuse[i];
+
+			m_hyperVtx[i*2+1] = v;
+			m_hyperCol[i*2+1] = va->diffuse[i];
+		}
+		renderer->DrawLines(BG_STAR_MAX*2, m_hyperVtx, m_hyperCol);
 	}
 }
 
@@ -355,7 +482,6 @@ void Container::Refresh(Uint32 seed)
 void Container::Draw(Graphics::Renderer *renderer, const matrix4x4d &transform)
 {
 	PROFILE_SCOPED()
-	//XXX not really const - renderer can modify the buffers
 	if(m_bLoadNewCubemap) {
 		m_bLoadNewCubemap = false;
 		if(Pi::player == nullptr || Pi::player->GetFlightState() != Ship::HYPERSPACE) {

@@ -28,6 +28,9 @@ public:
 	// sets appropriate factions for all systems in the sector
 	void AssignFactions();
 
+	// handy for external use
+	void GetSectorLoc(int &xOut, int &yOut, int &zOut) const;
+
 	class System {
 	public:
 		System(int x, int y, int z, Uint32 si): customSys(0), population(-1), sx(x), sy(y), sz(z), idx(si) {};
