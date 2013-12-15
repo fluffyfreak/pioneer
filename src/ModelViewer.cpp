@@ -264,7 +264,10 @@ bool ModelViewer::OnToggleTurrets(UI::CheckBox*)
 	
 	if (m_options.attachTurrets) {
 		for(auto& item: turretTags) {
-			(*item).AddChild(new SceneGraph::ModelNode(m_turretModel.get()));
+			// DO NOT COMMIT - just me hacking things to make them face the correct direction.
+			SceneGraph::MatrixTransform *pMatTrans = new SceneGraph::MatrixTransform(nullptr, matrix4x4f::RotateYMatrix(DEG2RAD(180.0f)));
+			pMatTrans->AddChild( new SceneGraph::ModelNode(m_turretModel.get()) );
+			(*item).AddChild( pMatTrans );
 		}
 	} else { //detach
 		//we know there's nothing else
