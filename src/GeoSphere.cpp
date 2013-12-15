@@ -65,6 +65,7 @@ static void print_info(const SystemBody *sbody, const Terrain *terrain)
 // static
 void GeoSphere::UpdateAllGeoSpheres()
 {
+	PROFILE_SCOPED()
 	for(std::vector<GeoSphere*>::iterator i = s_allGeospheres.begin(); i != s_allGeospheres.end(); ++i)
 	{
 		(*i)->Update();
@@ -433,7 +434,11 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView
 	matrix4x4d trans = modelView;
 	trans.Translate(-campos.x, -campos.y, -campos.z);
 	renderer->SetTransform(trans); //need to set this for the following line to work
-	Graphics::Frustum frustum = Graphics::Frustum::FromGLState();
+	matrix4x4d modv;
+	matrix4x4d proj;
+	matrix4x4ftod(renderer->GetCurrentModelView(), modv);
+	matrix4x4ftod(renderer->GetCurrentProjection(), proj);
+	Graphics::Frustum frustum( modv, proj );
 
 	// no frustum test of entire geosphere, since Space::Render does this
 	// for each body using its GetBoundingRadius() value
@@ -442,7 +447,7 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView
 	if (!m_surfaceMaterial)
 		SetUpMaterials();
 
-	if (Graphics::AreShadersEnabled()) {
+	{
 		//Update material parameters
 		//XXX no need to calculate AP every frame
 		m_materialParameters.atmosphere = m_sbody->CalcAtmosphereParams();
@@ -570,7 +575,7 @@ void GeoSphere::SetUpMaterials()
 	m_surfaceMaterial.reset(Pi::renderer->CreateMaterial(surfDesc));
 
 	//Shader-less atmosphere is drawn in Planet
-	if (Graphics::AreShadersEnabled()) {
+	{
 		Graphics::MaterialDescriptor skyDesc;
 		skyDesc.effect = Graphics::EFFECT_GEOSPHERE_SKY;
 		skyDesc.lighting = true;

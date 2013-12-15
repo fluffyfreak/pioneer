@@ -117,7 +117,12 @@ Game *Pi::game;
 Random Pi::rng;
 float Pi::frameTime;
 #if WITH_DEVKEYS
-bool Pi::showDebugInfo;
+bool Pi::showDebugInfo = false;
+#endif
+#if PIONEER_PROFILER
+std::string Pi::profilerPath;
+bool Pi::doProfileSlow = false;
+bool Pi::doProfileOne = false;
 #endif
 int Pi::statSceneTris;
 GameConfig *Pi::config;
@@ -126,6 +131,7 @@ bool Pi::joystickEnabled;
 bool Pi::mouseYInvert;
 std::map<SDL_JoystickID,Pi::JoystickState> Pi::joysticks;
 bool Pi::navTunnelDisplayed;
+bool Pi::speedLinesDisplayed = false;
 Gui::Fixed *Pi::menu;
 bool Pi::DrawGUI = true;
 Graphics::Renderer *Pi::renderer;
@@ -249,10 +255,18 @@ std::string Pi::GetSaveDir()
 
 void Pi::Init()
 {
+#ifdef PIONEER_PROFILER
+	Profiler::reset();
+#endif
+
 	OS::NotifyLoadBegin();
 
 	FileSystem::Init();
 	FileSystem::userFiles.MakeDirectory(""); // ensure the config directory exists
+#ifdef PIONEER_PROFILER
+	FileSystem::userFiles.MakeDirectory("profiler");
+	profilerPath = FileSystem::JoinPathBelow(FileSystem::userFiles.GetRoot(), "profiler");
+#endif
 
 	Pi::config = new GameConfig();
 	KeyBindings::InitBindings();
@@ -284,7 +298,6 @@ void Pi::Init()
 	videoSettings.width = config->Int("ScrWidth");
 	videoSettings.height = config->Int("ScrHeight");
 	videoSettings.fullscreen = (config->Int("StartFullscreen") != 0);
-	videoSettings.shaders = (config->Int("DisableShaders") == 0);
 	videoSettings.requestedSamples = config->Int("AntiAliasingMode");
 	videoSettings.vsync = (config->Int("VSync") != 0);
 	videoSettings.useTextureCompression = (config->Int("UseTextureCompression") != 0);
@@ -313,6 +326,7 @@ void Pi::Init()
 	mouseYInvert = (config->Int("InvertMouseY")) ? true : false;
 
 	navTunnelDisplayed = (config->Int("DisplayNavTunnel")) ? true : false;
+	speedLinesDisplayed = (config->Int("SpeedLines")) ? true : false;
 
 	EnumStrings::Init();
 
@@ -592,6 +606,7 @@ void Pi::OnChangeDetailLevel()
 
 void Pi::HandleEvents()
 {
+	PROFILE_SCOPED()
 	SDL_Event event;
 
 	Pi::mouseMotion[0] = Pi::mouseMotion[1] = 0;
@@ -652,6 +667,18 @@ void Pi::HandleEvents()
 						case SDLK_i: // Toggle Debug info
 							Pi::showDebugInfo = !Pi::showDebugInfo;
 							break;
+
+#ifdef PIONEER_PROFILER
+						case SDLK_p: // alert it that we want to profile
+							if (KeyState(SDLK_LSHIFT) || KeyState(SDLK_RSHIFT))
+								Pi::doProfileOne = true;
+							else {
+								Pi::doProfileSlow = !Pi::doProfileSlow;
+								printf("slow frame profiling %s\n", Pi::doProfileSlow ? "enabled" : "disabled");
+							}
+							break;
+#endif
+
 						case SDLK_m:  // Gimme money!
 							if(Pi::game) {
 								Pi::player->SetMoney(Pi::player->GetMoney() + 10000000);
@@ -674,16 +701,17 @@ void Pi::HandleEvents()
 								} else if (KeyState(SDLK_LSHIFT)) {
 									SpaceStation *s = static_cast<SpaceStation*>(Pi::player->GetNavTarget());
 									if (s) {
-										int port = s->GetFreeDockingPort();
+										Ship *ship = new Ship(ShipType::POLICE);
+										int port = s->GetFreeDockingPort(ship);
 										if (port != -1) {
 											printf("Putting ship into station\n");
 											// Make police ship intent on killing the player
-											Ship *ship = new Ship(ShipType::POLICE);
 											ship->AIKill(Pi::player);
 											ship->SetFrame(Pi::player->GetFrame());
 											ship->SetDockedWith(s, port);
 											game->GetSpace()->AddBody(ship);
 										} else {
+											delete ship;
 											printf("No docking ports free dude\n");
 										}
 									} else {
@@ -970,7 +998,14 @@ void Pi::MainLoop()
 	Pi::gameTickAlpha = 0;
 
 	while (Pi::game) {
-		double newTime = 0.001 * double(SDL_GetTicks());
+		PROFILE_SCOPED()
+
+#ifdef PIONEER_PROFILER
+		Profiler::reset();
+#endif
+
+		const Uint32 newTicks = SDL_GetTicks();
+		double newTime = 0.001 * double(newTicks);
 		Pi::frameTime = newTime - currentTime;
 		if (Pi::frameTime > 0.25) Pi::frameTime = 0.25;
 		currentTime = newTime;
@@ -978,6 +1013,7 @@ void Pi::MainLoop()
 
 		const float step = Pi::game->GetTimeStep();
 		if (step > 0.0f) {
+			PROFILE_SCOPED_RAW("unpaused")
 			int phys_ticks = 0;
 			while (accumulator >= step) {
 				if (++phys_ticks >= MAX_PHYSICS_TICKS) {
@@ -999,6 +1035,7 @@ void Pi::MainLoop()
 #endif
 		} else {
 			// paused
+			PROFILE_SCOPED_RAW("paused")
 			GeoSphere::UpdateAllGeoSpheres();
 		}
 		frame_stat++;
@@ -1115,6 +1152,16 @@ void Pi::MainLoop()
 			else last_stats += 1000;
 		}
 		Pi::statSceneTris = 0;
+
+#ifdef PIONEER_PROFILER
+		const Uint32 profTicks = SDL_GetTicks();
+		if (Pi::doProfileOne || (Pi::doProfileSlow && (profTicks-newTicks) > 100)) { // slow: < ~10fps
+			printf("dumping profile data\n");
+			Profiler::dumphtml(profilerPath.c_str());
+			Pi::doProfileOne = false;
+		}
+#endif
+
 #endif
 
 #ifdef MAKING_VIDEO

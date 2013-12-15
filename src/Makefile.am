@@ -139,6 +139,7 @@ noinst_HEADERS = \
 	SpaceStation.h \
 	SpaceStationType.h \
 	SpaceStationView.h \
+	SpeedLines.h \
 	Star.h \
 	SystemInfoView.h \
 	SystemView.h \
@@ -284,6 +285,7 @@ pioneer_SOURCES	= \
 	SpaceStation.cpp \
 	SpaceStationType.cpp \
 	SpaceStationView.cpp \
+	SpeedLines.cpp \
 	Star.cpp \
 	SystemInfoView.cpp \
 	SystemView.cpp \
@@ -310,7 +312,8 @@ pioneer_LDADD = \
 	../contrib/PicoDDS/libpicodds.a \
 	../contrib/jenkins/libjenkins.a \
 	../contrib/json/libjson.a \
-	../contrib/glew/libglew.a
+	../contrib/glew/libglew.a \
+	../contrib/profiler/libprofiler.a
 
 pioneer_LDADD += \
 	$(FREETYPE_LIBS) $(GL_LIBS) \
@@ -386,6 +389,7 @@ uitest_LDADD = \
 	posix/libposix.a \
 	../contrib/jenkins/libjenkins.a \
 	../contrib/PicoDDS/libpicodds.a \
+	../contrib/json/libjson.a \
 	../contrib/glew/libglew.a
 
 uitest_LDADD += \

@@ -91,6 +91,7 @@ void Planet::InitParams(const SystemBody *sbody)
  */
 void Planet::GetAtmosphericState(double dist, double *outPressure, double *outDensity) const
 {
+	PROFILE_SCOPED()
 #if 0
 	static bool atmosphereTableShown = false;
 	if (!atmosphereTableShown) {
@@ -243,6 +244,7 @@ void Planet::DrawGasGiantRings(Renderer *renderer, const matrix4x4d &modelView)
 
 void Planet::DrawAtmosphere(Renderer *renderer, const matrix4x4d &modelView, const vector3d &camPos)
 {
+	PROFILE_SCOPED()
 	//this is the non-shadered atmosphere rendering
 	Color col;
 	double density;
@@ -327,5 +329,4 @@ void Planet::DrawAtmosphere(Renderer *renderer, const matrix4x4d &modelView, con
 void Planet::SubRender(Renderer *r, const matrix4x4d &viewTran, const vector3d &camPos)
 {
 	if (GetSystemBody()->HasRings()) { DrawGasGiantRings(r, viewTran); }
-	if (!AreShadersEnabled()) DrawAtmosphere(r, viewTran, camPos);
 }

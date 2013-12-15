@@ -32,6 +32,7 @@ private:
 	bool OnToggleTurrets(UI::CheckBox*);
 	void AddLog(const std::string &line);
 	void ChangeCameraPreset(SDL_Keycode, SDL_Keymod);
+	void ToggleViewControlMode();
 	void ClearLog();
 	void ClearModel();
 	void CreateTestResources();
@@ -74,6 +75,7 @@ private:
 		bool showLandingPad;
 		bool showUI;
 		bool wireframe;
+		bool mouselookEnabled;
 		float gridInterval;
 		int lightPreset;
 
@@ -84,6 +86,8 @@ private:
 	double m_frameTime;
 	Graphics::Renderer *m_renderer;
 	Graphics::Texture *m_decalTexture;
+	vector3f m_viewPos;
+	matrix3x3f m_viewRot;
 	float m_rotX, m_rotY, m_zoom;
 	float m_baseDistance;
 	Random m_rng;
