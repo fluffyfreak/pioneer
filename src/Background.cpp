@@ -18,7 +18,9 @@
 #include "graphics/Surface.h"
 #include "graphics/VertexArray.h"
 #include "graphics/TextureBuilder.h"
+#include "StringF.h"
 
+#include <SDL_stdinc.h>
 #include <sstream>
 #include <iostream>
 
@@ -26,15 +28,16 @@ using namespace Graphics;
 
 namespace
 {
+	static std::unique_ptr<Graphics::Texture> s_defaultCubeMap;
+	
 	static Uint32 GetNumSkyboxes()
 	{
 		char filename[1024];
-		snprintf(filename, sizeof(filename), "textures/cube");
+		snprintf(filename, sizeof(filename), "textures/skybox");
 		std::vector<FileSystem::FileInfo> fileList;
 		FileSystem::gameDataFiles.ReadDirectory(filename, fileList);
 
-		char itemMask[256];
-		snprintf(itemMask, sizeof(itemMask), "ub");
+		const char *itemMask = "ub";
 
 		Uint32 num_matching = 0;
 		for (std::vector<FileSystem::FileInfo>::const_iterator it = fileList.begin(), itEnd = fileList.end(); it!=itEnd; ++it) {
@@ -51,7 +54,7 @@ namespace Background
 
 void BackgroundElement::SetIntensity(float intensity)
 {
-	m_material->emissive = Color(intensity);
+	m_material->emissive = Color(intensity*255);
 }
 
 UniverseBox::UniverseBox(Graphics::Renderer *r)
@@ -61,15 +64,13 @@ UniverseBox::UniverseBox(Graphics::Renderer *r)
 
 UniverseBox::~UniverseBox()
 {
-	delete m_cubemap;
-	delete m_model;
 }
 
 void UniverseBox::Init(Graphics::Renderer *r)
 {
-	// Load cubemap
-	TextureBuilder texture_builder = TextureBuilder::Cube("textures/cube/default.dds");
-	m_cubemap = texture_builder.CreateTexture(r);
+	// Load default cubemap
+	TextureBuilder texture_builder = TextureBuilder::Cube("textures/skybox/default.dds");
+	s_defaultCubeMap.reset( texture_builder.CreateTexture(r) );
 
 	// Create skybox geometry
 	VertexArray *box = new VertexArray(ATTRIB_POSITION | ATTRIB_UV0, 36);
@@ -116,11 +117,15 @@ void UniverseBox::Init(Graphics::Renderer *r)
 	box->Add(vector3f(-vp,  vp, -vp), vector2f(1.0f, 0.0f));
 	box->Add(vector3f(-vp, -vp,  vp), vector2f(0.0f, 1.0f));
 	box->Add(vector3f(-vp, -vp, -vp), vector2f(1.0f, 1.0f));
-	m_model = new StaticMesh(TRIANGLES);
+	m_model.reset( new StaticMesh(TRIANGLES) );
 	Graphics::MaterialDescriptor desc;
 	desc.effect = EFFECT_SKYBOX;
 	m_material.Reset(r->CreateMaterial(desc));
-	m_material->texture0 = m_cubemap;
+	m_material->texture0 = nullptr;
+
+	// safe to load the default cube map now
+	LoadCubeMap(r);
+
 	m_model->AddSurface(RefCountedPtr<Surface>(new Surface(TRIANGLES, box, m_material)));
 	SetIntensity(1.0f);
 
@@ -129,32 +134,26 @@ void UniverseBox::Init(Graphics::Renderer *r)
 
 void UniverseBox::Draw(Graphics::Renderer *r)
 {
-	if(m_cubemap) {
-		r->DrawStaticMesh(m_model);
+	if(m_material->texture0) {
+		r->DrawStaticMesh(m_model.get());
 	}
 }
 
 void UniverseBox::LoadCubeMap(Graphics::Renderer *r, Random* randomizer)
 {
-	// Clean old texture
-	delete m_cubemap;
-	m_cubemap = nullptr;
-	
 	if(randomizer && m_numCubemaps>0) {
 		const int new_ubox_index = randomizer->Int32(1, m_numCubemaps);
 		if(new_ubox_index > 0) {
 			// Load new one
-			std::ostringstream os;
-			os << "textures/cube/ub" << (new_ubox_index - 1) << ".dds";
-			TextureBuilder texture_builder = TextureBuilder::Cube(os.str().c_str());
-			m_cubemap = texture_builder.CreateTexture(r);
-			m_material->texture0 = m_cubemap;
+			const std::string os = stringf("textures/skybox/ub%0{d}.dds", (new_ubox_index - 1));
+			TextureBuilder texture_builder = TextureBuilder::Cube(os.c_str());
+			m_cubemap.reset( texture_builder.CreateTexture(r) );
+			m_material->texture0 = m_cubemap.get();
 		}
 	} else {
-		// Load cubemap
-		TextureBuilder texture_builder = TextureBuilder::Cube("textures/cube/default.dds");
-		m_cubemap = texture_builder.CreateTexture(r);
-		m_material->texture0 = m_cubemap;
+		// use default cubemap
+		m_cubemap.reset();
+		m_material->texture0 = s_defaultCubeMap.get();
 	}
 }
 
@@ -315,8 +314,8 @@ void Starfield::Init(Graphics::Renderer *r)
 	m_material->emissive = Color::WHITE;
 	m_model->AddSurface(RefCountedPtr<Surface>(new Surface(POINTS, stars, m_material)));
 
-	m_hyperVtx = 0;
-	m_hyperCol = 0;
+	m_hyperVtx = new vector3f[BG_STAR_MAX * 2];
+	m_hyperCol = new Color[BG_STAR_MAX * 2];
 }
 
 void Starfield::Fill(Uint32 seed)
@@ -328,7 +327,7 @@ void Starfield::Fill(Uint32 seed)
 
 	//fill the array
 	for (int i=0; i<BG_STAR_MAX; i++) {
-		float col = float(rand.Double(0.2,0.7));
+		Uint8 col = rand.Double(0.2,0.7)*255;
 
 		// this is proper random distribution on a sphere's surface
 		const float theta = float(rand.Double(0.0, 2.0*M_PI));
@@ -338,7 +337,7 @@ void Starfield::Fill(Uint32 seed)
 				1000.0f * sqrt(1.0f - u*u) * cos(theta),
 				1000.0f * u,
 				1000.0f * sqrt(1.0f - u*u) * sin(theta)
-			), Color(col, col, col,	1.f)
+			), Color(col, col, col,	255)
 		);
 	}
 }
@@ -356,15 +355,10 @@ void Starfield::Draw(Graphics::Renderer *renderer)
 
 		double hyperspaceProgress = Pi::game->GetHyperspaceProgress();
 
-		//XXX this is a lot of lines
-		if (m_hyperVtx == 0) {
-			m_hyperVtx = new vector3f[BG_STAR_MAX * 2];
-			m_hyperCol = new Color[BG_STAR_MAX * 2];
-		}
+		assert(m_hyperVtx);
 		VertexArray *va = m_model->GetSurface(0)->GetVertices();
-		vector3d pz = Pi::player->GetOrient().VectorZ();	//back vector
+		const vector3d pz = Pi::player->GetOrient().VectorZ();	//back vector
 		for (int i=0; i<BG_STAR_MAX; i++) {
-
 			vector3f v(va->position[i]);
 			v += vector3f(pz*hyperspaceProgress*mult);
 
@@ -390,8 +384,8 @@ MilkyWay::MilkyWay(Graphics::Renderer *r)
 	VertexArray *bottom = new VertexArray(ATTRIB_POSITION | ATTRIB_DIFFUSE);
 	VertexArray *top = new VertexArray(ATTRIB_POSITION | ATTRIB_DIFFUSE);
 
-	const Color dark(0.f);
-	const Color bright(0.05f, 0.05f, 0.05f, 0.05f);
+	const Color dark(0);
+	const Color bright(13, 13, 13, 13);
 
 	//bottom
 	float theta;
@@ -452,9 +446,9 @@ Container::Container(Graphics::Renderer *r)
 : m_milkyWay(r)
 , m_starField(r)
 , m_universeBox(r)
-, m_bLoadNewCubemap(true)
-, m_uSeed(0)
-, m_drawFlags( DRAW_SKYBX )
+, m_seed(0)
+, m_drawFlags( DRAW_SKYBOX )
+, m_loadCubeMap(true)
 {
 }
 
@@ -462,9 +456,9 @@ Container::Container(Graphics::Renderer *r, Uint32 seed)
 : m_milkyWay(r)
 , m_starField(r)
 , m_universeBox(r)
-, m_bLoadNewCubemap(true)
-, m_uSeed(seed)
-, m_drawFlags( DRAW_SKYBX )
+, m_seed(seed)
+, m_drawFlags( DRAW_SKYBOX )
+, m_loadCubeMap(true)
 {
 	Refresh(seed);
 };
@@ -473,17 +467,18 @@ void Container::Refresh(Uint32 seed)
 {
 	// redo starfield, milkyway stays normal for now
 	m_starField.Fill(seed);
-	if(m_uSeed != seed) {
-		m_bLoadNewCubemap = true;
+	if(m_seed != seed) {
+		m_loadCubeMap = true;
 	}
-	m_uSeed = seed;
+	m_seed = seed;
 }
 
 void Container::Draw(Graphics::Renderer *renderer, const matrix4x4d &transform)
 {
 	PROFILE_SCOPED()
-	if(m_bLoadNewCubemap) {
-		m_bLoadNewCubemap = false;
+	if( m_loadCubeMap )
+	{
+		m_loadCubeMap = false;
 		if(Pi::player == nullptr || Pi::player->GetFlightState() != Ship::HYPERSPACE) {
 			if(Pi::player && Pi::game->GetSpace()->GetStarSystem()) {
 				Uint32 seeds [5];
@@ -496,7 +491,7 @@ void Container::Draw(Graphics::Renderer *renderer, const matrix4x4d &transform)
 				Random rand(seeds, 5);
 				m_universeBox.LoadCubeMap(renderer, &rand);
 			} else {
-				Random rand(m_uSeed);
+				Random rand(m_seed);
 				m_universeBox.LoadCubeMap(renderer, &rand);
 			}
 		} else {
@@ -506,7 +501,7 @@ void Container::Draw(Graphics::Renderer *renderer, const matrix4x4d &transform)
 	renderer->SetBlendMode(BLEND_SOLID);
 	renderer->SetDepthTest(false);
 	renderer->SetTransform(transform);
-	if( DRAW_SKYBX & m_drawFlags ) {
+	if( DRAW_SKYBOX & m_drawFlags ) {
 		m_universeBox.Draw(renderer);
 	}
 	if( DRAW_MILKY & m_drawFlags ) {

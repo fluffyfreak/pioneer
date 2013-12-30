@@ -43,8 +43,8 @@ namespace Background
 		Random createRandom(Uint32 seed);
 		Random createRandom(const SystemPath& system_path);
 
-		Graphics::StaticMesh *m_model;
-		Graphics::Texture* m_cubemap;
+		std::unique_ptr<Graphics::StaticMesh> m_model;
+		std::unique_ptr<Graphics::Texture> m_cubemap;
 
 		Uint32 m_numCubemaps;
 	};
@@ -114,7 +114,7 @@ namespace Background
 		{
 			DRAW_STARS = 1<<0,
 			DRAW_MILKY = 1<<1,
-			DRAW_SKYBX = 1<<2
+			DRAW_SKYBOX = 1<<2
 		};
 
 		// default constructor, needs Refresh with proper seed to show starfield
@@ -130,9 +130,9 @@ namespace Background
 		MilkyWay m_milkyWay;
 		Starfield m_starField;
 		UniverseBox m_universeBox;
-		bool m_bLoadNewCubemap;
-		Uint32 m_uSeed;
+		Uint32 m_seed;
 		Uint32 m_drawFlags;
+		bool m_loadCubeMap;
 	};
 
 } //namespace Background
