@@ -161,9 +161,17 @@ void ShipCockpit::Update(float timeStep)
 
 void ShipCockpit::RenderCockpit(Graphics::Renderer* renderer, const Camera* camera, Frame* frame)
 {
+	matrix3x3d finalorientation = matrix3x3d::Identity();
+	// take into account the Oculus rift orientation if we're using it.
+	if( OculusRiftInterface::HasHMD() )	{
+		float yaw, pitch, roll;
+		OculusRiftInterface::GetYawPitchRoll(yaw, pitch, roll);
+		finalorientation = matrix3x3d::RotateY(yaw) * matrix3x3d::RotateX(pitch) * matrix3x3d::RotateZ(roll);
+	}
+
 	renderer->ClearDepthBuffer();
 	SetFrame(frame);
-	Render(renderer, camera, m_translate, m_transform);
+	Render(renderer, camera, m_translate, finalorientation * m_transform);
 	SetFrame(nullptr);
 }
 
