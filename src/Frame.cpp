@@ -98,11 +98,9 @@ Frame::~Frame()
 		delete (*it);
 }
 
-void Frame::RemoveChild(Frame *f)
+void Frame::RemoveChild(const Frame *f)
 {
-	PROFILE_SCOPED()
-	const std::vector<Frame*>::iterator it
-		= std::find(m_children.begin(), m_children.end(), f);
+	const std::vector<Frame*>::iterator it = std::find(m_children.begin(), m_children.end(), f);
 	if (it != m_children.end())
 		m_children.erase(it);
 }

@@ -374,7 +374,7 @@ void SectorView::OnSearchBoxKeyPress(const SDL_Keysym *keysym)
 
 #define FFRAC(_x)	((_x)-floor(_x))
 
-void SectorView::Draw3D()
+void SectorView::Draw3D(const ViewEye eye /*= ViewEye_Centre*/)
 {
 	PROFILE_SCOPED()
 
@@ -1089,7 +1089,7 @@ void SectorView::OnKeyPressed(SDL_Keysym *keysym)
 	}
 }
 
-void SectorView::Update()
+void SectorView::Update(const ViewEye eye /*= ViewEye_Centre*/)
 {
 	PROFILE_SCOPED()
 	SystemPath last_current = m_current;

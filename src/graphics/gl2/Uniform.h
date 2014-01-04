@@ -18,12 +18,15 @@ namespace Graphics {
 			void Init(const char *name, GLuint program);
 			void Set(int);
 			void Set(float);
+			void Set(float, float);
+			void Set(float, float, float, float);
 			void Set(const vector3f&);
 			void Set(const vector3d&);
 			void Set(const Color&);
 			void Set(const int v[3]);
 			void Set(const float m[9]);
 			void Set(Texture *t, unsigned int unit);
+			void Set(const matrix4x4f&, const bool bTranspose = false);
 
 		//private:
 			GLint m_location;

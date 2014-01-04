@@ -4,11 +4,13 @@
 #include "SDLWrappers.h"
 #include "OS.h"
 
+#include "OculusRift.h"
+
 namespace Graphics {
 
-bool WindowSDL::CreateWindowAndContext(const char *name, int w, int h, bool fullscreen, int samples, int depth_bits) {
+bool WindowSDL::CreateWindowAndContext(const char *name, int w, int h, bool fullscreen, int samples, int depth_bits, bool useOVR) {
 	Uint32 winFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
-	if (fullscreen) winFlags |= SDL_WINDOW_FULLSCREEN;
+	if (fullscreen && !useOVR) winFlags |= SDL_WINDOW_FULLSCREEN;
 
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, depth_bits);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -33,6 +35,17 @@ bool WindowSDL::CreateWindowAndContext(const char *name, int w, int h, bool full
 		return false;
 	}
 
+	if(useOVR)
+	{
+		// set window bounds into oculus display.
+		const OculusRiftInterface::ScreenInfo si = OculusRiftInterface::GetScreenInfo();
+		SDL_SetWindowPosition(m_window, si.DesktopX, si.DesktopY);
+		SDL_SetWindowSize(m_window, si.HResolution, si.VResolution);
+		if (fullscreen) {
+			//SDL_SetWindowFullscreen(m_window, SDL_WINDOW_FULLSCREEN);
+		}
+	}
+
 	return true;
 }
 
@@ -42,26 +55,26 @@ WindowSDL::WindowSDL(const Graphics::Settings &vs, const std::string &name)
 
 	// attempt sequence is:
 	// 1- requested mode
-	ok = CreateWindowAndContext(name.c_str(), vs.width, vs.height, vs.fullscreen, vs.requestedSamples, 24);
+	ok = CreateWindowAndContext(name.c_str(), vs.width, vs.height, vs.fullscreen, vs.requestedSamples, 24, vs.useOVR);
 
 	// 2- requested mode with no anti-aliasing (skipped if no AA was requested anyway)
 	//    (skipped if no AA was requested anyway)
 	if (!ok && vs.requestedSamples) {
 		fprintf(stderr, "Failed to set video mode. (%s). Re-trying without multisampling.\n", SDL_GetError());
-		ok = CreateWindowAndContext(name.c_str(), vs.width, vs.height, vs.fullscreen, 0, 24);
+		ok = CreateWindowAndContext(name.c_str(), vs.width, vs.height, vs.fullscreen, 0, 24, vs.useOVR);
 	}
 
 	// 3- requested mode with 16 bit depth buffer
 	if (!ok) {
 		fprintf(stderr, "Failed to set video mode. (%s). Re-trying with 16-bit depth buffer\n", SDL_GetError());
-		ok = CreateWindowAndContext(name.c_str(), vs.width, vs.height, vs.fullscreen, vs.requestedSamples, 16);
+		ok = CreateWindowAndContext(name.c_str(), vs.width, vs.height, vs.fullscreen, vs.requestedSamples, 16, vs.useOVR);
 	}
 
 	// 4- requested mode with 16-bit depth buffer and no anti-aliasing
 	//    (skipped if no AA was requested anyway)
 	if (!ok && vs.requestedSamples) {
 		fprintf(stderr, "Failed to set video mode. (%s). Re-trying with 16-bit depth buffer and no multisampling\n", SDL_GetError());
-		ok = CreateWindowAndContext(name.c_str(), vs.width, vs.height, vs.fullscreen, 0, 16);
+		ok = CreateWindowAndContext(name.c_str(), vs.width, vs.height, vs.fullscreen, 0, 16, vs.useOVR);
 	}
 
 	// 5- abort!

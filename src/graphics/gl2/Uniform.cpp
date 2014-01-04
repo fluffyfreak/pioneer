@@ -29,6 +29,18 @@ void Uniform::Set(float f)
 		glUniform1f(m_location, f);
 }
 
+void Uniform::Set(float f1, float f2)
+{
+	if (m_location != -1)
+		glUniform2f(m_location, f1, f2);
+}
+
+void Uniform::Set(float f1, float f2, float f3, float f4)
+{
+	if (m_location != -1)
+		glUniform4f(m_location, f1, f2, f3, f4);
+}
+
 void Uniform::Set(const vector3f &v)
 {
 	if (m_location != -1)
@@ -67,6 +79,12 @@ void Uniform::Set(Texture *tex, unsigned int unit)
 		static_cast<TextureGL*>(tex)->Bind();
 		glUniform1i(m_location, unit);
 	}
+}
+
+void Uniform::Set(const matrix4x4f &mat, const bool bTranspose /*= false*/)
+{
+	if (m_location != -1)
+		glUniformMatrix4fv(m_location, 1, bTranspose, mat.Data());
 }
 
 }

@@ -6,12 +6,12 @@
 #include "ui/Context.h"
 #include "gameui/Panel.h"
 
-void UIView::Update()
+void UIView::Update(const ViewEye eye /*= ViewEye_Centre*/)
 {
 	Pi::ui->Update();
 }
 
-void UIView::Draw3D()
+void UIView::Draw3D(const ViewEye eye /*= ViewEye_Centre*/)
 {
 	PROFILE_SCOPED()
 	Pi::ui->Draw();

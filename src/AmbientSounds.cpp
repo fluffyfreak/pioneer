@@ -264,8 +264,8 @@ void AmbientSounds::Update()
 
 void AmbientSounds::UpdateForCamType()
 {
-	const WorldView::CamType cam = Pi::worldView->GetCamType();
-	float v_env = (cam == WorldView::CAM_EXTERNAL ? 1.0f : 0.5f) * Sound::GetSfxVolume();
+	const CameraController::Type cam = Pi::worldView->GetCamType();
+	float v_env = (cam == CameraController::EXTERNAL ? 1.0f : 0.5f) * Sound::GetSfxVolume();
 
 	if (s_stationNoise.IsPlaying())
 		s_stationNoise.SetVolume(0.3f*v_env, 0.3f*v_env);

@@ -90,6 +90,13 @@ class matrix3x3 {
 		m[6] = 0; m[7] = 0; m[8] = 1.0;
 		return m;
 	}
+	static matrix3x3 LookAt (const vector3<T> &eye, const vector3<T> &target, const vector3<T> &up) {
+		const vector3<T> viewDir  = (target - eye).Normalized();
+		const vector3<T> viewUp   = (up - up.Dot(viewDir) * viewDir).Normalized();
+		const vector3<T> viewSide = viewDir.Cross(viewUp);
+
+		return matrix3x3::FromVectors(viewSide, viewUp, -viewDir);
+	}
 
 	friend matrix3x3 operator* (const matrix3x3 &a, const matrix3x3 &b) {
 		matrix3x3 m;

@@ -21,9 +21,9 @@ public:
 	SectorView(Serializer::Reader &rd);
 	virtual ~SectorView();
 
-	virtual void Update();
+	virtual void Update(const ViewEye eye = ViewEye_Centre);
 	virtual void ShowAll();
-	virtual void Draw3D();
+	virtual void Draw3D(const ViewEye eye = ViewEye_Centre);
 	vector3f GetPosition() const { return m_pos; }
 	SystemPath GetSelectedSystem() const { return m_selected; }
 	SystemPath GetHyperspaceTarget() const { return m_hyperspaceTarget; }

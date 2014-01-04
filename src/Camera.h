@@ -10,6 +10,7 @@
 #include "matrix4x4.h"
 #include "Background.h"
 #include "Body.h"
+#include "OculusRift.h"
 
 class Frame;
 class ShipCockpit;
@@ -22,7 +23,8 @@ public:
 	virtual ~Camera();
 
 	void Update();
-	void Draw(Graphics::Renderer *r, const Body *excludeBody = nullptr, ShipCockpit* cockpit = nullptr);
+	void Draw(Graphics::Renderer *r, const Body *excludeBody = nullptr, ShipCockpit* cockpit = nullptr, const ViewEye eye = ViewEye_Centre);
+
 
 	// frame to position the camera relative to
 	void SetFrame(Frame *frame) { m_frame = frame; }
@@ -124,6 +126,7 @@ private:
 
 	std::list<BodyAttrs> m_sortedBodies;
 	std::vector<LightSource> m_lightSources;
+	std::vector<Graphics::Light> m_rendererLights;
 
 	Graphics::Renderer *m_renderer;
 };

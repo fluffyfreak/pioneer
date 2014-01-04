@@ -21,6 +21,7 @@
 #include "gl2/Program.h"
 #include "gl2/RingMaterial.h"
 #include "gl2/StarfieldMaterial.h"
+#include "gl2/HMDWarpMaterial.h"
 #include "gl2/FresnelColourMaterial.h"
 #include <stddef.h> //for offsetof
 #include <ostream>
@@ -231,16 +232,25 @@ bool RendererGL2::SetTransform(const matrix4x4d &m)
 	matrix4x4f mf;
 	matrix4x4dtof(m, mf);
 	return SetTransform(mf);
-	return true;
 }
 
 bool RendererGL2::SetTransform(const matrix4x4f &m)
 {
 	PROFILE_SCOPED()
 	//same as above
-	m_modelViewStack.top() = m;
 	SetMatrixMode(MatrixMode::MODELVIEW);
 	LoadMatrix(&m[0]);
+	return true;
+}
+
+bool RendererGL2::SetPerspectiveProjection(float fov, float far, const matrix4x4f &m)
+{
+	// update values for log-z hack
+	m_invLogZfarPlus1 = 1.0f / (log(far+1.0f)/log(2.0f));
+
+	Graphics::SetFov(fov);
+
+	SetProjection(m);
 	return true;
 }
 
@@ -275,7 +285,6 @@ bool RendererGL2::SetProjection(const matrix4x4f &m)
 {
 	PROFILE_SCOPED()
 	//same as above
-	m_projectionStack.top() = m;
 	SetMatrixMode(MatrixMode::PROJECTION);
 	LoadMatrix(&m[0]);
 	return true;
@@ -754,6 +763,9 @@ Material *RendererGL2::CreateMaterial(const MaterialDescriptor &d)
 		break;
 	case EFFECT_FRESNEL_SPHERE:
 		mat = new GL2::FresnelColourMaterial();
+		break;
+	case EFFECT_HMDWARP:
+		mat = new GL2::HMDWarpMaterial();
 		break;
 	default:
 		if (desc.lighting)

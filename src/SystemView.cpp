@@ -314,7 +314,7 @@ void SystemView::GetTransformTo(const SystemBody *b, vector3d &pos)
 	}
 }
 
-void SystemView::Draw3D()
+void SystemView::Draw3D(const ViewEye eye /*= ViewEye_Centre*/)
 {
 	PROFILE_SCOPED()
 	m_renderer->SetPerspectiveProjection(50.f, m_renderer->GetDisplayAspect(), 1.f, 1000.f);
@@ -373,7 +373,7 @@ void SystemView::Draw3D()
 	glDisable(GL_FOG);
 }
 
-void SystemView::Update()
+void SystemView::Update(const ViewEye eye /*= ViewEye_Centre*/)
 {
 	const float ft = Pi::GetFrameTime();
 	// XXX ugly hack checking for console here

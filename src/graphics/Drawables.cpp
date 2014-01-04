@@ -187,6 +187,22 @@ TexturedQuad::TexturedQuad(Graphics::Renderer *r, Graphics::Texture *texture, co
 	m_vertices->Add(vector3f(pos.x+size.x, pos.y+size.y, 0.0f), vector2f(texPos.x+texSize.x, texPos.y));
 }
 
+TexturedQuad::TexturedQuad(Graphics::Renderer *r, Graphics::Texture *texture, Graphics::Material *material, const vector2f &pos, const vector2f &size)
+	 : m_texture(RefCountedPtr<Graphics::Texture>(texture)), m_material(material)
+{
+	m_vertices.reset(new VertexArray(ATTRIB_POSITION | ATTRIB_UV0));
+	m_material->texture0 = m_texture.Get();
+
+	// these might need to be reversed
+	const vector2f texPos = vector2f(0.0f);
+	const vector2f texSize = m_texture->GetDescriptor().texSize;
+
+	m_vertices->Add(vector3f(pos.x,        pos.y,        0.0f), vector2f(texPos.x,           texPos.y+texSize.y));
+	m_vertices->Add(vector3f(pos.x,        pos.y+size.y, 0.0f), vector2f(texPos.x,           texPos.y));
+	m_vertices->Add(vector3f(pos.x+size.x, pos.y,        0.0f), vector2f(texPos.x+texSize.x, texPos.y+texSize.y));
+	m_vertices->Add(vector3f(pos.x+size.x, pos.y+size.y, 0.0f), vector2f(texPos.x+texSize.x, texPos.y));
+}
+
 }
 
 }

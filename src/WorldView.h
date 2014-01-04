@@ -27,27 +27,24 @@ public:
 	WorldView();
 	WorldView(Serializer::Reader &reader);
 	virtual ~WorldView();
-	virtual void ShowAll();
-	virtual void Update();
-	virtual void Draw3D();
-	virtual void Draw();
-	static const double PICK_OBJECT_RECT_SIZE;
-	virtual void Save(Serializer::Writer &wr);
-	enum CamType {
-		CAM_INTERNAL,
-		CAM_EXTERNAL,
-		CAM_SIDEREAL
-	};
-	void SetCamType(enum CamType);
-	enum CamType GetCamType() const { return m_camType; }
 	CameraController *GetCameraController() const { return m_activeCameraController; }
-	void ToggleTargetActions();
-	void ShowTargetActions();
-	void HideTargetActions();
+	enum CameraController::Type GetCamType() const { return m_camType; }
 	int GetActiveWeapon() const;
+	virtual void Draw();
+	virtual void Draw3D(const ViewEye eye = ViewEye_Centre);
+	virtual void Save(Serializer::Writer &wr);
+	virtual void ShowAll();
+	virtual void Update(const ViewEye eye = ViewEye_Centre);
+	void HideTargetActions();
 	void OnClickBlastoff();
+	void ReportHit(const Body *b);
+	void SetCamType(enum CameraController::Type);
+	void ShowTargetActions();
+	void ToggleTargetActions();
 
 	sigc::signal<void> onChangeCamType;
+
+	static const double PICK_OBJECT_RECT_SIZE;
 
 protected:
 	virtual void OnSwitchTo();
@@ -79,7 +76,8 @@ private:
 		Indicator(): pos(0.0f, 0.0f), realpos(0.0f, 0.0f), side(INDICATOR_HIDDEN), label(0) {}
 	};
 
-	void UpdateProjectedObjects();
+	const Frame* GetCurrentCamFrame(const ViewEye eye = ViewEye_Centre);
+	void UpdateProjectedObjects(const ViewEye eye = ViewEye_Centre);
 	void UpdateIndicator(Indicator &indicator, const vector3d &direction);
 	void HideIndicator(Indicator &indicator);
 	void SeparateLabels(Gui::Label *a, Gui::Label *b);
@@ -130,7 +128,7 @@ private:
 	Gui::MultiStateImageButton *m_wheelsButton;
 	Gui::MultiStateImageButton *m_flightControlButton;
 	bool m_labelsOn;
-	enum CamType m_camType;
+	enum CameraController::Type m_camType;
 	Uint32 m_showTargetActionsTimeout;
 	Uint32 m_showLowThrustPowerTimeout;
 	Uint32 m_showCameraNameTimeout;
@@ -152,7 +150,7 @@ private:
 	Gui::LabelSet *m_bodyLabels;
 	std::map<Body*,vector3d> m_projectedPos;
 
-	std::unique_ptr<Camera> m_camera;
+	std::vector<Camera*> m_cameras;
 	std::unique_ptr<InternalCameraController> m_internalCameraController;
 	std::unique_ptr<ExternalCameraController> m_externalCameraController;
 	std::unique_ptr<SiderealCameraController> m_siderealCameraController;

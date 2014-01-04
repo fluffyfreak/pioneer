@@ -107,7 +107,7 @@ public:
 	static SceneGraph::Model *FindModel(const std::string&, bool allowPlaceholder = true);
 
 	static void CreateRenderTarget(const Uint16 width, const Uint16 height);
-	static void DrawRenderTarget();
+	static void DrawRenderTarget(const bool bAllowHMD = false);
 	static void BeginRenderTarget();
 	static void EndRenderTarget();
 
@@ -158,7 +158,7 @@ public:
 	static LuaConsole *luaConsole;
 	static ShipCpanel *cpan;
 	static Sound::MusicPlayer &GetMusicPlayer() { return musicPlayer; }
-	static Graphics::Renderer *renderer; // blargh
+	static Graphics::Renderer *renderer;
 	static ModelCache *modelCache;
 	static Intro *intro;
 	static SDLGraphics *sdl;
@@ -222,7 +222,13 @@ private:
 
 	static Graphics::RenderTarget *renderTarget;
 	static RefCountedPtr<Graphics::Texture> renderTexture;
-	static std::unique_ptr<Graphics::Drawables::TexturedQuad> renderQuad;
+	enum EViewports {
+		eVPCentre=0,
+		eVPLeft,
+		eVPRight,
+		eVP_MAX
+	};
+	static std::unique_ptr<Graphics::Drawables::TexturedQuad> renderQuads[eVP_MAX];
 };
 
 #endif /* _PI_H */

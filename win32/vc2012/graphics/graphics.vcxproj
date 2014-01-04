@@ -100,6 +100,7 @@
     <ClCompile Include="..\..\..\src\graphics\gl2\GeoSphereMaterial.cpp" />
     <ClCompile Include="..\..\..\src\graphics\gl2\GL2Material.cpp" />
     <ClCompile Include="..\..\..\src\graphics\gl2\GL2RenderTarget.cpp" />
+    <ClCompile Include="..\..\..\src\graphics\gl2\HMDWarpMaterial.cpp" />
     <ClCompile Include="..\..\..\src\graphics\gl2\MultiMaterial.cpp" />
     <ClCompile Include="..\..\..\src\graphics\gl2\Program.cpp" />
     <ClCompile Include="..\..\..\src\graphics\gl2\RingMaterial.cpp" />
@@ -128,12 +129,14 @@
     <ClInclude Include="..\..\..\src\graphics\gl2\GeoSphereMaterial.h" />
     <ClInclude Include="..\..\..\src\graphics\gl2\GL2Material.h" />
     <ClInclude Include="..\..\..\src\graphics\gl2\GL2RenderTarget.h" />
+    <ClInclude Include="..\..\..\src\graphics\gl2\HMDWarpMaterial.h" />
     <ClInclude Include="..\..\..\src\graphics\gl2\MultiMaterial.h" />
     <ClInclude Include="..\..\..\src\graphics\gl2\Program.h" />
     <ClInclude Include="..\..\..\src\graphics\gl2\RingMaterial.h" />
     <ClInclude Include="..\..\..\src\graphics\gl2\StarfieldMaterial.h" />
     <ClInclude Include="..\..\..\src\graphics\gl2\Uniform.h" />
     <ClInclude Include="..\..\..\src\graphics\Graphics.h" />
+    <ClInclude Include="..\..\..\src\graphics\GraphicsTypes.h" />
     <ClInclude Include="..\..\..\src\graphics\Light.h" />
     <ClInclude Include="..\..\..\src\graphics\Material.h" />
     <ClInclude Include="..\..\..\src\graphics\Renderer.h" />

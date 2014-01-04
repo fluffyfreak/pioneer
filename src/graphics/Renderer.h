@@ -6,7 +6,7 @@
 
 #include "WindowSDL.h"
 #include "libs.h"
-#include <map>
+#include "GraphicsTypes.h"
 #include <memory>
 
 namespace Graphics {
@@ -44,31 +44,6 @@ class Texture;
 class TextureDescriptor;
 class VertexArray;
 struct RenderTargetDesc;
-
-// first some enums
-enum LineType {
-	LINE_SINGLE = GL_LINES, //draw one line per two vertices
-	LINE_STRIP = GL_LINE_STRIP,  //connect vertices
-	LINE_LOOP = GL_LINE_LOOP    //connect vertices,  connect start & end
-};
-
-//how to treat vertices
-enum PrimitiveType {
-	TRIANGLES = GL_TRIANGLES,
-	TRIANGLE_STRIP = GL_TRIANGLE_STRIP,
-	TRIANGLE_FAN = GL_TRIANGLE_FAN,
-	POINTS = GL_POINTS
-};
-
-enum BlendMode {
-	BLEND_SOLID,
-	BLEND_ADDITIVE,
-	BLEND_ALPHA,
-	BLEND_ALPHA_ONE, //"additive alpha"
-	BLEND_ALPHA_PREMULT,
-	BLEND_SET_ALPHA, // copy alpha channel
-	BLEND_DEST_ALPHA // XXX maybe crappy name
-};
 
 enum class MatrixMode {
 	MODELVIEW,
@@ -112,6 +87,7 @@ public:
 	virtual bool SetTransform(const matrix4x4d &m) { return false; }
 	virtual bool SetTransform(const matrix4x4f &m) { return false; }
 	//set projection matrix
+	virtual bool SetPerspectiveProjection(float fov, float far, const matrix4x4f &m) { return false; }
 	virtual bool SetPerspectiveProjection(float fov, float aspect, float near, float far) { return false; }
 	virtual bool SetOrthographicProjection(float xmin, float xmax, float ymin, float ymax, float zmin, float zmax) { return false; }
 	virtual bool SetProjection(const matrix4x4f &m) { return false; }

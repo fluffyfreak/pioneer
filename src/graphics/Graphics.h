@@ -21,6 +21,7 @@ namespace Graphics {
 		bool fullscreen;
 		bool useTextureCompression;
 		bool enableDebugMessages;
+		bool useOVR;
 		int vsync;
 		int requestedSamples;
 		int height;

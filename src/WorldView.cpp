@@ -42,13 +42,13 @@ static const Uint8 HUD_ALPHA          = 87;
 
 WorldView::WorldView(): View()
 {
-	m_camType = CAM_INTERNAL;
+	m_camType = CameraController::INTERNAL;
 	InitObject();
 }
 
 WorldView::WorldView(Serializer::Reader &rd): View()
 {
-	m_camType = CamType(rd.Int32());
+	m_camType = CameraController::Type(rd.Int32());
 	InitObject();
 	m_internalCameraController->Load(rd);
 	m_externalCameraController->Load(rd);
@@ -226,10 +226,24 @@ void WorldView::InitObject()
 
 	const float fovY = Pi::config->Float("FOVVertical");
 
-	m_camera.reset(new Camera(Graphics::GetScreenWidth(), Graphics::GetScreenHeight(), fovY, znear, zfar));
-	m_internalCameraController.reset(new InternalCameraController(m_camera.get(), Pi::player));
-	m_externalCameraController.reset(new ExternalCameraController(m_camera.get(), Pi::player));
-	m_siderealCameraController.reset(new SiderealCameraController(m_camera.get(), Pi::player));
+	if(OculusRiftInterface::HasHMD()) {
+		// HMD found - add two cameras
+		const int halfWidth = Graphics::GetScreenWidth() / 2;
+		// left
+		Camera *pCam = new Camera(halfWidth, Graphics::GetScreenHeight(), fovY, znear, zfar);
+		m_cameras.push_back(pCam);
+
+		// right
+		pCam = new Camera(halfWidth, Graphics::GetScreenHeight(), fovY, znear, zfar);
+		m_cameras.push_back(pCam);
+	} else {
+		// no HMD found
+		Camera *pCam = new Camera(Graphics::GetScreenWidth(), Graphics::GetScreenHeight(), fovY, znear, zfar);
+		m_cameras.push_back(pCam);
+	}
+	m_internalCameraController.reset(new InternalCameraController(m_cameras, Pi::player));
+	m_externalCameraController.reset(new ExternalCameraController(m_cameras, Pi::player));
+	m_siderealCameraController.reset(new SiderealCameraController(m_cameras, Pi::player));
 	SetCamType(m_camType); //set the active camera
 
 	m_onHyperspaceTargetChangedCon =
@@ -242,7 +256,7 @@ void WorldView::InitObject()
 	m_onMouseWheelCon =
 		Pi::onMouseWheel.connect(sigc::mem_fun(this, &WorldView::MouseWheel));
 
-	Pi::player->GetPlayerController()->SetMouseForRearView(GetCamType() == CAM_INTERNAL && m_internalCameraController->GetMode() == InternalCameraController::MODE_REAR);
+	Pi::player->GetPlayerController()->SetMouseForRearView(GetCamType() == CameraController::INTERNAL && m_internalCameraController->GetMode() == InternalCameraController::MODE_REAR);
 	KeyBindings::toggleHudMode.onPress.connect(sigc::mem_fun(this, &WorldView::OnToggleLabels));
 }
 
@@ -252,6 +266,9 @@ WorldView::~WorldView()
 	m_onPlayerChangeTargetCon.disconnect();
 	m_onChangeFlightControlStateCon.disconnect();
 	m_onMouseWheelCon.disconnect();
+	for(std::vector<Camera*>::iterator it = m_cameras.begin(), itEnd = m_cameras.end(); it!=itEnd; ++it)
+		delete (*it);
+	m_cameras.clear();
 }
 
 void WorldView::Save(Serializer::Writer &wr)
@@ -262,31 +279,31 @@ void WorldView::Save(Serializer::Writer &wr)
 	m_siderealCameraController->Save(wr);
 }
 
-void WorldView::SetCamType(enum CamType c)
+void WorldView::SetCamType(enum CameraController::Type c)
 {
 	Pi::BoinkNoise();
 
 	// don't allow external cameras when docked inside space stations.
 	// they would clip through the station model
 	if (Pi::player->GetFlightState() == Ship::DOCKED && !Pi::player->GetDockedWith()->IsGroundStation())
-		c = CAM_INTERNAL;
+		c = CameraController::INTERNAL;
 
 	m_camType = c;
 
 	switch(m_camType) {
-		case CAM_INTERNAL:
+		case CameraController::INTERNAL:
 			m_activeCameraController = m_internalCameraController.get();
 			Pi::player->OnCockpitActivated();
 			break;
-		case CAM_EXTERNAL:
+		case CameraController::EXTERNAL:
 			m_activeCameraController = m_externalCameraController.get();
 			break;
-		case CAM_SIDEREAL:
+		case CameraController::SIDEREAL:
 			m_activeCameraController = m_siderealCameraController.get();
 			break;
 	}
 
-	Pi::player->GetPlayerController()->SetMouseForRearView(m_camType == CAM_INTERNAL && m_internalCameraController->GetMode() == InternalCameraController::MODE_REAR);
+	Pi::player->GetPlayerController()->SetMouseForRearView(m_camType == CameraController::INTERNAL && m_internalCameraController->GetMode() == InternalCameraController::MODE_REAR);
 
 	m_activeCameraController->Reset();
 
@@ -301,7 +318,7 @@ void WorldView::ChangeInternalCameraMode(InternalCameraController::Mode m)
 
 	Pi::BoinkNoise();
 	m_internalCameraController->SetMode(m);
-	Pi::player->GetPlayerController()->SetMouseForRearView(m_camType == CAM_INTERNAL && m_internalCameraController->GetMode() == InternalCameraController::MODE_REAR);
+	Pi::player->GetPlayerController()->SetMouseForRearView(m_camType == CameraController::INTERNAL && m_internalCameraController->GetMode() == InternalCameraController::MODE_REAR);
 	UpdateCameraName();
 }
 
@@ -388,21 +405,39 @@ void WorldView::OnClickHyperspace()
 	}
 }
 
-void WorldView::Draw3D()
+void WorldView::Draw3D(const ViewEye eye /*= ViewEye_Centre*/)
 {
 	PROFILE_SCOPED()
 	assert(Pi::game);
 	assert(Pi::player);
 	assert(!Pi::player->IsDead());
+	
 
 	Body* excludeBody = nullptr;
 	ShipCockpit* cockpit = nullptr;
-	if(GetCamType() == CAM_INTERNAL) {
+	if(GetCamType() == CameraController::INTERNAL) {
 		excludeBody = Pi::player;
 		if (m_internalCameraController->GetMode() == InternalCameraController::MODE_FRONT)
 			cockpit = Pi::player->GetCockpit();
 	}
-	m_camera->Draw(m_renderer, excludeBody, cockpit);
+	
+	const int screenW = Graphics::GetScreenWidth();
+	const int halfScreenW = screenW>>1;
+	const Body *pExcluded = GetCamType() == CameraController::INTERNAL ? Pi::player : nullptr;
+	switch(eye) {
+	case ViewEye_Centre:	
+		m_renderer->SetViewport(0, 0, screenW, Graphics::GetScreenHeight());
+		m_cameras[0]->Draw(m_renderer, pExcluded, cockpit, eye);
+		break;
+	case ViewEye_Left:		
+		m_renderer->SetViewport(0, 0, halfScreenW, Graphics::GetScreenHeight());
+		m_cameras[0]->Draw(m_renderer, pExcluded, cockpit, eye);
+		break;
+	case ViewEye_Right:		
+		m_renderer->SetViewport(halfScreenW,0, halfScreenW, Graphics::GetScreenHeight());
+		m_cameras[1]->Draw(m_renderer, pExcluded, cockpit, eye);
+		break;
+	}
 
 	// Draw 3D HUD
 	// Speed lines
@@ -829,7 +864,7 @@ void WorldView::RefreshButtonStateAndVisibility()
 	}
 }
 
-void WorldView::Update()
+void WorldView::Update(const ViewEye eye /*= ViewEye_Centre*/)
 {
 	PROFILE_SCOPED()
 	assert(Pi::game);
@@ -853,15 +888,14 @@ void WorldView::Update()
 
 	// XXX ugly hack checking for console here
 	if (!Pi::IsConsoleActive()) {
-		if (GetCamType() == CAM_INTERNAL) {
+		if (GetCamType() == CameraController::INTERNAL) {
 			if      (KeyBindings::frontCamera.IsActive())  ChangeInternalCameraMode(InternalCameraController::MODE_FRONT);
 			else if (KeyBindings::rearCamera.IsActive())   ChangeInternalCameraMode(InternalCameraController::MODE_REAR);
 			else if (KeyBindings::leftCamera.IsActive())   ChangeInternalCameraMode(InternalCameraController::MODE_LEFT);
 			else if (KeyBindings::rightCamera.IsActive())  ChangeInternalCameraMode(InternalCameraController::MODE_RIGHT);
 			else if (KeyBindings::topCamera.IsActive())    ChangeInternalCameraMode(InternalCameraController::MODE_TOP);
 			else if (KeyBindings::bottomCamera.IsActive()) ChangeInternalCameraMode(InternalCameraController::MODE_BOTTOM);
-		}
-		else {
+		} else {
 			MoveableCameraController *cam = static_cast<MoveableCameraController*>(m_activeCameraController);
 			if (KeyBindings::cameraRotateUp.IsActive()) cam->RotateUp(frameTime);
 			if (KeyBindings::cameraRotateDown.IsActive()) cam->RotateDown(frameTime);
@@ -888,22 +922,44 @@ void WorldView::Update()
 		}
 	}
 
+	if( OculusRiftInterface::HasHMD() ) {
+		float yaw, pitch, roll;
+		OculusRiftInterface::GetYawPitchRoll(yaw, pitch, roll);
+		matrix3x3d finalorientation = matrix3x3d::RotateY(-yaw) * matrix3x3d::RotateX(-pitch) * matrix3x3d::RotateZ(-roll);
+		m_activeCameraController->SetOrient(finalorientation);
+	}
 	m_activeCameraController->Update();
-	m_camera->Update();
+	switch (eye)
+	{
+	case ViewEye_Centre:
+	case ViewEye_Left:
+		m_cameras[0]->Update();
+		break;
+	case ViewEye_Right:
+		m_cameras[1]->Update();
+		break;
+	default:
+		m_cameras[0]->Update();
+		break;
+	}
 
-	UpdateProjectedObjects();
+	UpdateProjectedObjects(eye);
 
 	//speedlines need cam_frame for transform, so they
 	//must be updated here (or don't delete cam_frame so early...)
 	if (Pi::AreSpeedLinesDisplayed()) {
 		m_speedLines->Update(Pi::game->GetTimeStep());
-		const Frame *cam_frame = m_camera->GetCamFrame();
+		const Frame *cam_frame = GetCurrentCamFrame(eye);
 		matrix4x4d trans;
 		Frame::GetFrameRenderTransform(Pi::player->GetFrame(), cam_frame, trans);
 
-		trans[12] = trans[13] = trans[14] = 0.0;
-		trans[15] = 1.0;
-		m_speedLines->SetTransform(trans);
+		if ( m_speedLines.get() && Pi::AreSpeedLinesDisplayed() ) {
+			m_speedLines->Update(Pi::game->GetTimeStep());
+
+			trans[12] = trans[13] = trans[14] = 0.0;
+			trans[15] = 1.0;
+			m_speedLines->SetTransform(trans);
+		}
 	}
 
 	// target object under the crosshairs. must be done after
@@ -1255,11 +1311,11 @@ Body* WorldView::PickBody(const double screenX, const double screenY) const
 int WorldView::GetActiveWeapon() const
 {
 	switch (GetCamType()) {
-		case CAM_INTERNAL:
+		case CameraController::INTERNAL:
 			return m_internalCameraController->GetMode() == InternalCameraController::MODE_REAR ? 1 : 0;
 
-		case CAM_EXTERNAL:
-		case CAM_SIDEREAL:
+		case CameraController::EXTERNAL:
+		case CameraController::SIDEREAL:
 		default:
 			return 0;
 	}
@@ -1272,14 +1328,32 @@ static inline bool project_to_screen(const vector3d &in, vector3d &out, const Gr
 	out.y = Gui::Screen::GetHeight() - out.y * guiSize[1];
 	return true;
 }
+#pragma optimize("",off)
+const Frame* WorldView::GetCurrentCamFrame(const ViewEye eye /*= ViewEye_Centre*/) 
+{
+	const Frame *cam_frame = nullptr;
+	switch (eye)
+	{
+	case ViewEye_Right:
+		cam_frame = m_cameras[1]->GetCamFrame();
+		break;
+	case ViewEye_Centre:
+	case ViewEye_Left:
+	default:
+		cam_frame = m_cameras[0]->GetCamFrame();
+		break;
+	}
+	assert(cam_frame!=nullptr);
+	return cam_frame;
+}
 
-void WorldView::UpdateProjectedObjects()
+void WorldView::UpdateProjectedObjects(const ViewEye eye /*= ViewEye_Centre*/)
 {
 	const int guiSize[2] = { Gui::Screen::GetWidth(), Gui::Screen::GetHeight() };
-	const Graphics::Frustum frustum = m_camera->GetFrustum();
+	const Graphics::Frustum frustum = m_cameras[0]->GetFrustum();
 
-	const Frame *cam_frame = m_camera->GetCamFrame();
-	matrix3x3d cam_rot = cam_frame->GetOrient();
+	const Frame *cam_frame = GetCurrentCamFrame(eye);
+	const matrix3x3d cam_rot = cam_frame->GetOrient();
 
 	// determine projected positions and update labels
 	m_bodyLabels->Clear();
@@ -1288,7 +1362,7 @@ void WorldView::UpdateProjectedObjects()
 		Body *b = *i;
 
 		// don't show the player label on internal camera
-		if (b->IsType(Object::PLAYER) && GetCamType() == CAM_INTERNAL)
+		if (b->IsType(Object::PLAYER) && GetCamType() == CameraController::INTERNAL)
 			continue;
 
 		vector3d pos = b->GetInterpPositionRelTo(cam_frame);
@@ -1312,7 +1386,7 @@ void WorldView::UpdateProjectedObjects()
 	// orientation according to mouse
 	if (Pi::player->GetPlayerController()->IsMouseActive()) {
 		vector3d mouseDir = Pi::player->GetPlayerController()->GetMouseDir() * cam_rot;
-		if (GetCamType() == CAM_INTERNAL && m_internalCameraController->GetMode() == InternalCameraController::MODE_REAR)
+		if (GetCamType() == CameraController::INTERNAL && m_internalCameraController->GetMode() == InternalCameraController::MODE_REAR)
 			mouseDir = -mouseDir;
 		UpdateIndicator(m_mouseDirIndicator, (Pi::player->GetPhysRadius() * 1.5) * mouseDir);
 	} else
@@ -1374,7 +1448,7 @@ void WorldView::UpdateProjectedObjects()
 
 		// calculate firing solution and relative velocity along our z axis
 		int laser = -1;
-		if (GetCamType() == CAM_INTERNAL) {
+		if (GetCamType() == CameraController::INTERNAL) {
 			switch (m_internalCameraController->GetMode()) {
 				case InternalCameraController::MODE_FRONT: laser = 0; break;
 				case InternalCameraController::MODE_REAR:  laser = 1; break;
@@ -1431,7 +1505,7 @@ void WorldView::UpdateProjectedObjects()
 void WorldView::UpdateIndicator(Indicator &indicator, const vector3d &cameraSpacePos)
 {
 	const int guiSize[2] = { Gui::Screen::GetWidth(), Gui::Screen::GetHeight() };
-	const Graphics::Frustum frustum = m_camera->GetFrustum();
+	const Graphics::Frustum frustum = m_cameras[0]->GetFrustum();
 
 	const float BORDER = 10.0;
 	const float BORDER_BOTTOM = 90.0;
@@ -1645,7 +1719,7 @@ void WorldView::Draw()
 	glLineWidth(1.0f);
 
 	// normal crosshairs
-	if (GetCamType() == CAM_INTERNAL) {
+	if (GetCamType() == CameraController::INTERNAL) {
 		switch (m_internalCameraController->GetMode()) {
 			case InternalCameraController::MODE_FRONT:
 				DrawCrosshair(Gui::Screen::GetWidth()/2.0f, Gui::Screen::GetHeight()/2.0f, HUD_CROSSHAIR_SIZE, white);

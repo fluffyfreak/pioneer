@@ -37,7 +37,7 @@ void DeathView::OnSwitchTo()
 	Pi::cpan->HideAll();
 }
 
-void DeathView::Update()
+void DeathView::Update(const ViewEye eye /*= ViewEye_Centre*/)
 {
 	assert(Pi::player->IsDead());
 
@@ -46,8 +46,8 @@ void DeathView::Update()
 	m_cam->Update();
 }
 
-void DeathView::Draw3D()
+void DeathView::Draw3D(const ViewEye eye /*= ViewEye_Centre*/)
 {
 	PROFILE_SCOPED()
-	m_cam->Draw(m_renderer);
+	m_cam->Draw(m_renderer, nullptr, nullptr, eye);
 }

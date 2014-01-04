@@ -57,7 +57,7 @@ public:
 	Body *GetBody() const { return m_astroBody; }
 
 	void AddChild(Frame *f) { m_children.push_back(f); }
-	void RemoveChild(Frame *f);
+	void RemoveChild(const Frame *f);
 
 	typedef std::vector<Frame*>::const_iterator ChildIterator;
 	ChildIterator BeginChildren() const { return m_children.begin(); }

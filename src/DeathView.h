@@ -15,8 +15,8 @@ public:
 
 	void Init();
 
-	virtual void Update();
-	virtual void Draw3D();
+	virtual void Update(const ViewEye eye = ViewEye_Centre);
+	virtual void Draw3D(const ViewEye eye = ViewEye_Centre);
 
 protected:
 	virtual void OnSwitchTo();

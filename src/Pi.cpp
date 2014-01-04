@@ -77,6 +77,7 @@
 #include "ui/Lua.h"
 #include <algorithm>
 #include <sstream>
+#include "OculusRift.h"
 
 float Pi::gameTickAlpha;
 sigc::signal<void, SDL_Keysym*> Pi::onKeyPress;
@@ -139,7 +140,7 @@ Intro *Pi::intro;
 SDLGraphics *Pi::sdl;
 Graphics::RenderTarget *Pi::renderTarget;
 RefCountedPtr<Graphics::Texture> Pi::renderTexture;
-std::unique_ptr<Graphics::Drawables::TexturedQuad> Pi::renderQuad;
+std::unique_ptr<Graphics::Drawables::TexturedQuad> Pi::renderQuads[eVP_MAX];
 
 #if WITH_OBJECTVIEWER
 ObjectViewerView *Pi::objectViewerView;
@@ -164,10 +165,24 @@ void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 		vector2f(width, height),
 		Graphics::LINEAR_CLAMP, false, false, 0);
 	Pi::renderTexture.Reset(Pi::renderer->CreateTexture(texDesc));
-	Pi::renderQuad.reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, Pi::renderTexture.Get(), vector2f(0.0f,0.0f), vector2f(float(Graphics::GetScreenWidth()), float(Graphics::GetScreenHeight()))));
+	Pi::renderQuads[eVPCentre].reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, renderTexture.Get(), vector2f(0.0f,0.0f), vector2f(800.0f, 600.0f)));
+	if( OculusRiftInterface::HasHMD() ) {
+		Graphics::MaterialDescriptor desc;
+		desc.effect = Graphics::EFFECT_HMDWARP;
+		desc.textures = 1;
 
-	// Complete the RT description so we can request a buffer.
-	// NB: we don't want it to create use a texture because we share it with the textured quad created above.
+		// create first (left) viewport material and quad
+		Graphics::Material* hmdMat = Pi::renderer->CreateMaterial(desc);
+		hmdMat->specialParameter0 = new OculusRiftInterface::Viewport(0,0,640,800);
+		Pi::renderQuads[eVPLeft].reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, renderTexture.Get(), hmdMat, vector2f(0.0f,0.0f), vector2f(400.0f, 600.0f)));
+
+		// create second (right) viewport material and quad
+		hmdMat = Pi::renderer->CreateMaterial(desc);
+		hmdMat->specialParameter0 = new OculusRiftInterface::Viewport(640,0,640,800);
+		Pi::renderQuads[eVPRight].reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, renderTexture.Get(), hmdMat, vector2f(400.0f,0.0f), vector2f(400.0f, 600.0f)));
+	} 
+
+	// Oculus Rift is 1280×800 (640×800 per eye)
 	Graphics::RenderTargetDesc rtDesc(
 		width,
 		height,
@@ -177,10 +192,12 @@ void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 	Pi::renderTarget = Pi::renderer->CreateRenderTarget(rtDesc);
 
 	Pi::renderTarget->SetColorTexture(Pi::renderTexture.Get());
+
+	Pi::renderer->SetRenderTarget(NULL);
 }
 
 //static
-void Pi::DrawRenderTarget() {
+void Pi::DrawRenderTarget(const bool bAllowHMD /*= false*/) {
 	Pi::renderer->BeginFrame();
 	Pi::renderer->SetViewport(0, 0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());	
 	Pi::renderer->SetTransform(matrix4x4f::Identity());
@@ -192,13 +209,18 @@ void Pi::DrawRenderTarget() {
 		Pi::renderer->SetBlendMode(Graphics::BLEND_ALPHA);
 		Pi::renderer->SetMatrixMode(Graphics::MatrixMode::PROJECTION);
 		Pi::renderer->PushMatrix();
-		Pi::renderer->SetOrthographicProjection(0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight(), 0, -1, 1);
+		Pi::renderer->SetOrthographicProjection(0, 800, 600, 0, -1, 1);
 		Pi::renderer->SetMatrixMode(Graphics::MatrixMode::MODELVIEW);
 		Pi::renderer->PushMatrix();
 		Pi::renderer->LoadIdentity();
 	}
 	
-	Pi::renderQuad->Draw( Pi::renderer );
+	if( OculusRiftInterface::HasHMD() && bAllowHMD ) {
+		Pi::renderQuads[eVPLeft]->Draw( Pi::renderer );
+		Pi::renderQuads[eVPRight]->Draw( Pi::renderer );
+	} else {
+		Pi::renderQuads[eVPCentre]->Draw( Pi::renderer );
+	}
 
 	//Gui::Screen::LeaveOrtho();
 	{
@@ -366,17 +388,30 @@ void Pi::Init()
 		OS::Error("SDL initialization failed: %s\n", SDL_GetError());
 	}
 
+	OculusRiftInterface::Init();
+
 	// Do rest of SDL video initialization and create Renderer
 	Graphics::Settings videoSettings = {};
 	videoSettings.width = config->Int("ScrWidth");
 	videoSettings.height = config->Int("ScrHeight");
 	videoSettings.fullscreen = (config->Int("StartFullscreen") != 0);
+	videoSettings.useOVR = (config->Int("UseOVR") != 0) && OculusRiftInterface::HasHMD();
 	videoSettings.requestedSamples = config->Int("AntiAliasingMode");
 	videoSettings.vsync = (config->Int("VSync") != 0);
 	videoSettings.useTextureCompression = (config->Int("UseTextureCompression") != 0);
 	videoSettings.enableDebugMessages = (config->Int("EnableGLDebug") != 0);
 	videoSettings.iconFile = OS::GetIconFilename();
 	videoSettings.title = "Pioneer";
+
+	
+	if( videoSettings.useOVR )
+	{
+		// override some setting if we're forcing it onto the Oculus
+		const OculusRiftInterface::ScreenInfo si = OculusRiftInterface::GetScreenInfo();
+		videoSettings.width = si.HResolution;
+		videoSettings.height = si.VResolution;
+		videoSettings.fullscreen = true;
+	}
 
 	Pi::renderer = Graphics::Init(videoSettings);
 	{
@@ -788,7 +823,10 @@ void Pi::HandleEvents()
 									}
 								} else {
 									Ship *ship = new Ship(ShipType::POLICE);
-									ship->AIKill(Pi::player);
+									if( KeyState(SDLK_LCTRL) )
+										ship->AIFlyTo(Pi::player);	// a less lethal option
+									else
+										ship->AIKill(Pi::player);	// a really lethal option!
 									ship->m_equipment.Set(Equip::SLOT_LASER, 0, Equip::PULSECANNON_DUAL_1MW);
 									ship->m_equipment.Add(Equip::LASER_COOLING_BOOSTER);
 									ship->m_equipment.Add(Equip::ATMOSPHERIC_SHIELDING);
@@ -1000,6 +1038,8 @@ void Pi::Start()
 				while (SDL_PollEvent(&event)) {}
 		}
 
+		OculusRiftInterface::Update();
+
 		Pi::BeginRenderTarget();
 		Pi::renderer->BeginFrame();
 		intro->Draw(_time);
@@ -1062,7 +1102,7 @@ void Pi::MainLoop()
 	Uint32 last_stats = SDL_GetTicks();
 	int frame_stat = 0;
 	int phys_stat = 0;
-	char fps_readout[256];
+	char fps_readout[1024];
 	memset(fps_readout, 0, sizeof(fps_readout));
 #endif
 
@@ -1136,6 +1176,8 @@ void Pi::MainLoop()
 			}
 		}
 
+		OculusRiftInterface::Update();
+
 		Pi::BeginRenderTarget();
 
 		Pi::renderer->BeginFrame();
@@ -1148,8 +1190,19 @@ void Pi::MainLoop()
 		}
 		game->GetSpace()->GetRootFrame()->UpdateInterpTransform(Pi::GetGameTickAlpha());
 
-		currentView->Update();
-		currentView->Draw3D();
+		Pi::renderer->ClearScreen();
+		if( !OculusRiftInterface::HasHMD() ) {
+			// no HMD
+			currentView->Update(ViewEye_Centre);
+			currentView->Draw3D(ViewEye_Centre);
+		} else {
+			// has HMD - render both views
+			currentView->Update(ViewEye_Left);
+			currentView->Draw3D(ViewEye_Left);
+
+			currentView->Update(ViewEye_Right);
+			currentView->Draw3D(ViewEye_Right);
+		}
 		// XXX HandleEvents at the moment must be after view->Draw3D and before
 		// Gui::Draw so that labels drawn to screen can have mouse events correctly
 		// detected. Gui::Draw wipes memory of label positions.
@@ -1191,7 +1244,7 @@ void Pi::MainLoop()
 #endif
 
 		Pi::EndRenderTarget();
-		Pi::DrawRenderTarget();
+		Pi::DrawRenderTarget(true);
 		Pi::renderer->SwapBuffers();
 
 		// game exit will have cleared Pi::game. we can't continue.
@@ -1214,6 +1267,9 @@ void Pi::MainLoop()
 
 #if WITH_DEVKEYS
 		if (Pi::showDebugInfo && SDL_GetTicks() - last_stats > 1000) {
+			float yaw, pitch, roll;
+			OculusRiftInterface::GetYawPitchRoll(yaw, pitch, roll);
+
 			size_t lua_mem = Lua::manager->GetMemoryUsage();
 			int lua_memB = int(lua_mem & ((1u << 10) - 1));
 			int lua_memKB = int(lua_mem >> 10) % 1024;
@@ -1222,10 +1278,10 @@ void Pi::MainLoop()
 			snprintf(
 				fps_readout, sizeof(fps_readout),
 				"%d fps (%.1f ms/f), %d phys updates, %d triangles, %.3f M tris/sec, %d terrain vtx/sec, %d glyphs/sec\n"
-				"Lua mem usage: %d MB + %d KB + %d bytes",
+				"Lua mem usage: %d MB + %d KB + %d bytes\n\n Oculus Yaw: %.3f, Pitch: %.3f, Roll %.3f",
 				frame_stat, (1000.0/frame_stat), phys_stat, Pi::statSceneTris, Pi::statSceneTris*frame_stat*1e-6,
 				GeoSphere::GetVtxGenCount(), Text::TextureFont::GetGlyphCount(),
-				lua_memMB, lua_memKB, lua_memB
+				lua_memMB, lua_memKB, lua_memB, yaw, pitch, roll
 			);
 			frame_stat = 0;
 			phys_stat = 0;

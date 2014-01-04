@@ -7,6 +7,7 @@
 #include "libs.h"
 #include "Serializer.h"
 #include "gui/Gui.h"
+#include "OculusRift.h"
 
 namespace Graphics { class Renderer; }
 
@@ -22,9 +23,9 @@ public:
 	View();
 	virtual ~View();
 	// called before Gui::Draw will call widget ::Draw methods.
-	virtual void Draw3D() = 0;
+	virtual void Draw3D(const ViewEye eye = ViewEye_Centre) = 0;
 	// for checking key states, mouse crud
-	virtual void Update() = 0;
+	virtual void Update(const ViewEye eye = ViewEye_Centre) = 0;
 	virtual void Save(Serializer::Writer &wr) {}
 	virtual void Load(Serializer::Reader &rd) {}
 

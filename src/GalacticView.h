@@ -15,8 +15,8 @@ class GalacticView: public View {
 public:
 	GalacticView();
 	virtual ~GalacticView();
-	virtual void Update();
-	virtual void Draw3D();
+	virtual void Update(const ViewEye eye = ViewEye_Centre);
+	virtual void Draw3D(const ViewEye eye = ViewEye_Centre);
 	virtual void Save(Serializer::Writer &wr);
 	virtual void Load(Serializer::Reader &rd);
 protected:

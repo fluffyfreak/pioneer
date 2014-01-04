@@ -85,7 +85,7 @@ ObjectViewerView::ObjectViewerView(): View()
 	m_vbox->PackEnd(hbox);
 }
 
-void ObjectViewerView::Draw3D()
+void ObjectViewerView::Draw3D(const ViewEye eye /*= ViewEye_Centre*/)
 {
 	PROFILE_SCOPED()
 	m_renderer->ClearScreen();
@@ -122,7 +122,7 @@ void ObjectViewerView::OnSwitchTo()
 	m_camRot = matrix4x4d::Identity();
 }
 
-void ObjectViewerView::Update()
+void ObjectViewerView::Update(const ViewEye eye /*= ViewEye_Centre*/)
 {
 	if (Pi::KeyState(SDLK_EQUALS)) viewingDist *= 0.99f;
 	if (Pi::KeyState(SDLK_MINUS)) viewingDist *= 1.01f;
