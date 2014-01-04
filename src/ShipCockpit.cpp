@@ -163,10 +163,10 @@ void ShipCockpit::RenderCockpit(Graphics::Renderer* renderer, const Camera* came
 {
 	matrix3x3d finalorientation = matrix3x3d::Identity();
 	// take into account the Oculus rift orientation if we're using it.
-	if( OculusRiftInterface::HasHMD() )	{
+	if( (Pi::config->Int("EnableOVR") != 0) && OculusRiftInterface::HasHMD() )	{
 		float yaw, pitch, roll;
 		OculusRiftInterface::GetYawPitchRoll(yaw, pitch, roll);
-		finalorientation = matrix3x3d::RotateY(yaw) * matrix3x3d::RotateX(pitch) * matrix3x3d::RotateZ(roll);
+		finalorientation = matrix3x3d::RotateZ(roll) * matrix3x3d::RotateX(pitch) * matrix3x3d::RotateY(yaw);
 	}
 
 	renderer->ClearDepthBuffer();
