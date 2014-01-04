@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "GameConfig.h"
@@ -10,7 +10,6 @@ GameConfig::GameConfig()
 	// set defaults
 	std::map<std::string, std::string> &map = m_map[""];
 	map["Lang"] = "en";
-	map["DisableShaders"] = "0";
 	map["DisableEclipse"] = "0";
 	map["DisableSound"] = "0";
 	map["StartFullscreen"] = "0";
@@ -37,9 +36,9 @@ GameConfig::GameConfig()
 	map["DefaultLowThrustPower"] = "0.25";
 	map["VSync"] = "0";
 	map["UseTextureCompression"] = "0";
-	map["CockpitCamera"] = "1";
 	map["WorkerThreads"] = "0";
 	map["SpeedLines"] = "0";
+	map["EnableCockpit"] = "0";
 
 #ifdef _WIN32
 	map["RedirectStdio"] = "1";

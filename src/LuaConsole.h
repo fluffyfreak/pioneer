@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _LUACONSOLE_H
@@ -30,6 +30,7 @@ private:
 	void OnTextChanged();
 	void UpdateCompletion(const std::string & statement);
 	void ExecOrContinue();
+	void RunAutoexec();
 
 	std::deque<std::string> m_statementHistory;
 	std::string m_stashedStatement;

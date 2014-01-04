@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _FACTIONS_H
@@ -21,8 +21,8 @@ public:
 
 	// XXX this is not as const-safe as it should be
 	static Faction *GetFaction       (const Uint32 index);
-	static Faction *GetFaction       (const std::string factionName);
-	static Faction *GetNearestFaction(const Sector sec, Uint32 sysIndex);
+	static Faction *GetFaction       (const std::string& factionName);
+	static Faction *GetNearestFaction(const Sector& sec, Uint32 sysIndex);
 	static bool     IsHomeSystem     (const SystemPath& sysPath);
 
 	static const Uint32 GetNumFactions();
@@ -77,7 +77,7 @@ private:
 	static const double FACTION_CURRENT_YEAR;	// used to calculate faction radius
 
 	Sector* m_homesector;						// cache of home sector to use in distance calculations
-	const bool IsCloserAndContains(double& closestFactionDist, const Sector sec, Uint32 sysIndex);
+	const bool IsCloserAndContains(double& closestFactionDist, const Sector& sec, Uint32 sysIndex);
 };
 
 /* One day it might grow up to become a full tree, on the  other hand it might be
@@ -88,7 +88,7 @@ private:
 class FactionOctsapling {
 public:
 	void Add(Faction* faction);
-	std::vector<Faction*> CandidateFactions(const Sector sec, Uint32 sysIndex);
+	const std::vector<Faction*>& CandidateFactions(const Sector& sec, Uint32 sysIndex);
 
 private:
 	std::vector<Faction*> octbox[2][2][2];

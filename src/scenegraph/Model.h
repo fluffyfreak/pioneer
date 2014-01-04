@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _SCENEGRAPH_MODEL_H
@@ -114,7 +114,7 @@ public:
 	const PatternContainer &GetPatterns() const { return m_patterns; }
 	unsigned int GetNumPatterns() const { return m_patterns.size(); }
 	void SetPattern(unsigned int index);
-	void SetColors(const std::vector<Color4ub> &colors);
+	void SetColors(const std::vector<Color> &colors);
 	void SetDecalTexture(Graphics::Texture *t, unsigned int index = 0);
 	void ClearDecal(unsigned int index = 0);
 	void ClearDecals();

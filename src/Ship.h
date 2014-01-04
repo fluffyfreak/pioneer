@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _SHIP_H
@@ -26,7 +26,6 @@ class Missile;
 namespace Graphics { class Renderer; }
 
 struct shipstats_t {
-	int max_capacity;
 	int used_capacity;
 	int used_cargo;
 	int free_capacity;
@@ -36,9 +35,7 @@ struct shipstats_t {
 	float hyperspace_range_max;
 	float shield_mass;
 	float shield_mass_left;
-	float fuel_tank_mass; //thruster, not hyperspace fuel
 	float fuel_tank_mass_left;
-	float fuel_use; // percentage (ie, 0--100) of tank used per second at full thrust
 };
 
 class SerializableEquipSet: public EquipSet {
@@ -216,7 +213,6 @@ public:
 	void SetSkin(const SceneGraph::ModelSkin &skin);
 
 	void SetLabel(const std::string &label);
-	static std::string MakeRandomLabel(); // XXX doesn't really belong here
 
 	float GetPercentShields() const;
 	float GetPercentHull() const;
@@ -249,6 +245,9 @@ public:
 	// mutable because asking to know when state changes is not the same as
 	// actually changing state
 	mutable sigc::signal<void> onFlavourChanged;
+
+	bool IsInvulnerable() const { return m_invulnerable; }
+	void SetInvulnerable(bool b) { m_invulnerable = b; }
 
 protected:
 	virtual void Save(Serializer::Writer &wr, Space *space);
@@ -291,6 +290,8 @@ private:
 	void OnEquipmentChange(Equip::Type e);
 	void EnterHyperspace();
 	void InitGun(const char *tag, int num);
+
+	bool m_invulnerable;
 
 	shipstats_t m_stats;
 	const ShipType *m_type;

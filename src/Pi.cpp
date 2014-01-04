@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Pi.h"
@@ -16,7 +16,6 @@
 #include "GeoSphere.h"
 #include "Intro.h"
 #include "Lang.h"
-#include "LuaChatForm.h"
 #include "LuaComms.h"
 #include "LuaConsole.h"
 #include "LuaConstants.h"
@@ -55,7 +54,6 @@
 #include "SoundMusic.h"
 #include "Space.h"
 #include "SpaceStation.h"
-#include "SpaceStationView.h"
 #include "Star.h"
 #include "StringF.h"
 #include "SystemInfoView.h"
@@ -104,7 +102,7 @@ Player *Pi::player;
 View *Pi::currentView;
 WorldView *Pi::worldView;
 DeathView *Pi::deathView;
-SpaceStationView *Pi::spaceStationView;
+UIView *Pi::spaceStationView;
 UIView *Pi::infoView;
 SectorView *Pi::sectorView;
 GalacticView *Pi::galacticView;
@@ -117,7 +115,12 @@ Game *Pi::game;
 Random Pi::rng;
 float Pi::frameTime;
 #if WITH_DEVKEYS
-bool Pi::showDebugInfo;
+bool Pi::showDebugInfo = false;
+#endif
+#if PIONEER_PROFILER
+std::string Pi::profilerPath;
+bool Pi::doProfileSlow = false;
+bool Pi::doProfileOne = false;
 #endif
 int Pi::statSceneTris;
 GameConfig *Pi::config;
@@ -134,6 +137,9 @@ RefCountedPtr<UI::Context> Pi::ui;
 ModelCache *Pi::modelCache;
 Intro *Pi::intro;
 SDLGraphics *Pi::sdl;
+Graphics::RenderTarget *Pi::renderTarget;
+RefCountedPtr<Graphics::Texture> Pi::renderTexture;
+std::unique_ptr<Graphics::Drawables::TexturedQuad> Pi::renderQuad;
 
 #if WITH_OBJECTVIEWER
 ObjectViewerView *Pi::objectViewerView;
@@ -142,13 +148,87 @@ ObjectViewerView *Pi::objectViewerView;
 Sound::MusicPlayer Pi::musicPlayer;
 std::unique_ptr<JobQueue> Pi::jobQueue;
 
+//static
+void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
+	/*	@fluffyfreak here's a rendertarget implementation you can use for oculusing and other things. It's pretty simple:
+		 - fill out a RenderTargetDesc struct and call Renderer::CreateRenderTarget
+		 - pass target to Renderer::SetRenderTarget to start rendering to texture
+		 - set up viewport, clear etc, then draw as usual
+		 - SetRenderTarget(0) to resume render to screen
+		 - you can access the attached texture with GetColorTexture to use it with a material
+		You can reuse the same target with multiple textures.
+		In that case, leave the color format to NONE so the initial texture is not created, then use SetColorTexture to attach your own.
+	*/
+	Graphics::TextureDescriptor texDesc(
+		Graphics::TEXTURE_RGB_888,
+		vector2f(width, height),
+		Graphics::LINEAR_CLAMP, false, false, 0);
+	Pi::renderTexture.Reset(Pi::renderer->CreateTexture(texDesc));
+	Pi::renderQuad.reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, Pi::renderTexture.Get(), vector2f(0.0f,0.0f), vector2f(float(Graphics::GetScreenWidth()), float(Graphics::GetScreenHeight()))));
+
+	// Complete the RT description so we can request a buffer.
+	// NB: we don't want it to create use a texture because we share it with the textured quad created above.
+	Graphics::RenderTargetDesc rtDesc(
+		width,
+		height,
+		Graphics::TEXTURE_NONE,		// don't create a texture
+		Graphics::TEXTURE_DEPTH,
+		false);
+	Pi::renderTarget = Pi::renderer->CreateRenderTarget(rtDesc);
+
+	Pi::renderTarget->SetColorTexture(Pi::renderTexture.Get());
+}
+
+//static
+void Pi::DrawRenderTarget() {
+	Pi::renderer->BeginFrame();
+	Pi::renderer->SetViewport(0, 0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());	
+	Pi::renderer->SetTransform(matrix4x4f::Identity());
+
+	//Gui::Screen::EnterOrtho();
+	{
+		Pi::renderer->SetDepthTest(false);
+		Pi::renderer->SetLightsEnabled(false);
+		Pi::renderer->SetBlendMode(Graphics::BLEND_ALPHA);
+		Pi::renderer->SetMatrixMode(Graphics::MatrixMode::PROJECTION);
+		Pi::renderer->PushMatrix();
+		Pi::renderer->SetOrthographicProjection(0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight(), 0, -1, 1);
+		Pi::renderer->SetMatrixMode(Graphics::MatrixMode::MODELVIEW);
+		Pi::renderer->PushMatrix();
+		Pi::renderer->LoadIdentity();
+	}
+	
+	Pi::renderQuad->Draw( Pi::renderer );
+
+	//Gui::Screen::LeaveOrtho();
+	{
+		Pi::renderer->SetMatrixMode(Graphics::MatrixMode::PROJECTION);
+		Pi::renderer->PopMatrix();
+		Pi::renderer->SetMatrixMode(Graphics::MatrixMode::MODELVIEW);
+		Pi::renderer->PopMatrix();
+		Pi::renderer->SetLightsEnabled(true);
+		Pi::renderer->SetDepthTest(true);
+	}
+
+	Pi::renderer->EndFrame();
+}
+
+//static
+void Pi::BeginRenderTarget() {
+	Pi::renderer->SetRenderTarget(Pi::renderTarget);
+}
+
+//static
+void Pi::EndRenderTarget() {
+	Pi::renderer->SetRenderTarget(nullptr);
+}
+
 static void draw_progress(UI::Gauge *gauge, UI::Label *label, float progress)
 {
 	gauge->SetValue(progress);
 	label->SetText(stringf(Lang::SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS, formatarg("age", progress * 13.7f)));
 
-	Pi::renderer->BeginFrame();
-	Pi::renderer->EndFrame();
+	Pi::renderer->ClearScreen();
 	Pi::ui->Update();
 	Pi::ui->Draw();
 	Pi::renderer->SwapBuffers();
@@ -172,8 +252,6 @@ static void LuaInit()
 	LuaObject<SystemBody>::RegisterClass();
 	LuaObject<Random>::RegisterClass();
 	LuaObject<Faction>::RegisterClass();
-
-	LuaObject<LuaChatForm>::RegisterClass();
 
 	Pi::luaSerializer = new LuaSerializer();
 	Pi::luaTimer = new LuaTimer();
@@ -250,10 +328,18 @@ std::string Pi::GetSaveDir()
 
 void Pi::Init()
 {
+#ifdef PIONEER_PROFILER
+	Profiler::reset();
+#endif
+
 	OS::NotifyLoadBegin();
 
 	FileSystem::Init();
 	FileSystem::userFiles.MakeDirectory(""); // ensure the config directory exists
+#ifdef PIONEER_PROFILER
+	FileSystem::userFiles.MakeDirectory("profiler");
+	profilerPath = FileSystem::JoinPathBelow(FileSystem::userFiles.GetRoot(), "profiler");
+#endif
 
 	Pi::config = new GameConfig();
 	KeyBindings::InitBindings();
@@ -285,7 +371,6 @@ void Pi::Init()
 	videoSettings.width = config->Int("ScrWidth");
 	videoSettings.height = config->Int("ScrHeight");
 	videoSettings.fullscreen = (config->Int("StartFullscreen") != 0);
-	videoSettings.shaders = (config->Int("DisableShaders") == 0);
 	videoSettings.requestedSamples = config->Int("AntiAliasingMode");
 	videoSettings.vsync = (config->Int("VSync") != 0);
 	videoSettings.useTextureCompression = (config->Int("UseTextureCompression") != 0);
@@ -306,6 +391,7 @@ void Pi::Init()
 		fclose(f);
 	}
 
+	Pi::CreateRenderTarget(videoSettings.width, videoSettings.height);
 	Pi::rng.IncRefCount(); // so nothing tries to free it
 	Pi::rng.seed(time(0));
 
@@ -594,6 +680,7 @@ void Pi::OnChangeDetailLevel()
 
 void Pi::HandleEvents()
 {
+	PROFILE_SCOPED()
 	SDL_Event event;
 
 	Pi::mouseMotion[0] = Pi::mouseMotion[1] = 0;
@@ -654,11 +741,18 @@ void Pi::HandleEvents()
 						case SDLK_i: // Toggle Debug info
 							Pi::showDebugInfo = !Pi::showDebugInfo;
 							break;
-						case SDLK_m:  // Gimme money!
-							if(Pi::game) {
-								Pi::player->SetMoney(Pi::player->GetMoney() + 10000000);
+
+#ifdef PIONEER_PROFILER
+						case SDLK_p: // alert it that we want to profile
+							if (KeyState(SDLK_LSHIFT) || KeyState(SDLK_RSHIFT))
+								Pi::doProfileOne = true;
+							else {
+								Pi::doProfileSlow = !Pi::doProfileSlow;
+								printf("slow frame profiling %s\n", Pi::doProfileSlow ? "enabled" : "disabled");
 							}
 							break;
+#endif
+
 						case SDLK_f:
 							// don't try and jump-to-lightspeed if sat on a landing pad... It's very messy.
 							if (!Pi::player->GetDockedWith() && !Pi::player->IsHyperspaceActive()) {
@@ -686,16 +780,17 @@ void Pi::HandleEvents()
 								} else if (KeyState(SDLK_LSHIFT)) {
 									SpaceStation *s = static_cast<SpaceStation*>(Pi::player->GetNavTarget());
 									if (s) {
-										int port = s->GetFreeDockingPort();
+										Ship *ship = new Ship(ShipType::POLICE);
+										int port = s->GetFreeDockingPort(ship);
 										if (port != -1) {
 											printf("Putting ship into station\n");
 											// Make police ship intent on killing the player
-											Ship *ship = new Ship(ShipType::POLICE);
 											ship->AIKill(Pi::player);
 											ship->SetFrame(Pi::player->GetFrame());
 											ship->SetDockedWith(s, port);
 											game->GetSpace()->AddBody(ship);
 										} else {
+											delete ship;
 											printf("No docking ports free dude\n");
 										}
 									} else {
@@ -817,10 +912,16 @@ void Pi::TombStoneLoop()
 	do {
 		Pi::HandleEvents();
 		Pi::renderer->GetWindow()->SetGrab(false);
+
+		// render the scene
+		Pi::BeginRenderTarget();
 		Pi::renderer->BeginFrame();
 		tombstone->Draw(_time);
 		Pi::renderer->EndFrame();
 		Gui::Draw();
+		Pi::EndRenderTarget();
+
+		Pi::DrawRenderTarget();
 		Pi::renderer->SwapBuffers();
 
 		Pi::frameTime = 0.001f*(SDL_GetTicks() - last_time);
@@ -887,7 +988,7 @@ void Pi::Start()
 
 	//XXX global ambient colour hack to make explicit the old default ambient colour dependency
 	// for some models
-	Pi::renderer->SetAmbientColor(Color(0.2f, 0.2f, 0.2f, 1.f));
+	Pi::renderer->SetAmbientColor(Color(51, 51, 51, 255));
 
 	ui->Layout();
 
@@ -909,13 +1010,17 @@ void Pi::Start()
 				while (SDL_PollEvent(&event)) {}
 		}
 
+		Pi::BeginRenderTarget();
 		Pi::renderer->BeginFrame();
 		intro->Draw(_time);
 		Pi::renderer->EndFrame();
 
 		ui->Update();
 		ui->Draw();
+		Pi::EndRenderTarget();
 
+		// render the rendertarget texture
+		Pi::DrawRenderTarget();
 		Pi::renderer->SwapBuffers();
 
 		Pi::frameTime = 0.001f*(SDL_GetTicks() - last_time);
@@ -982,7 +1087,14 @@ void Pi::MainLoop()
 	Pi::gameTickAlpha = 0;
 
 	while (Pi::game) {
-		double newTime = 0.001 * double(SDL_GetTicks());
+		PROFILE_SCOPED()
+
+#ifdef PIONEER_PROFILER
+		Profiler::reset();
+#endif
+
+		const Uint32 newTicks = SDL_GetTicks();
+		double newTime = 0.001 * double(newTicks);
 		Pi::frameTime = newTime - currentTime;
 		if (Pi::frameTime > 0.25) Pi::frameTime = 0.25;
 		currentTime = newTime;
@@ -990,6 +1102,7 @@ void Pi::MainLoop()
 
 		const float step = Pi::game->GetTimeStep();
 		if (step > 0.0f) {
+			PROFILE_SCOPED_RAW("unpaused")
 			int phys_ticks = 0;
 			while (accumulator >= step) {
 				if (++phys_ticks >= MAX_PHYSICS_TICKS) {
@@ -1011,6 +1124,7 @@ void Pi::MainLoop()
 #endif
 		} else {
 			// paused
+			PROFILE_SCOPED_RAW("paused")
 			GeoSphere::UpdateAllGeoSpheres();
 		}
 		frame_stat++;
@@ -1031,6 +1145,8 @@ void Pi::MainLoop()
 				time_player_died = Pi::game->GetTime();
 			}
 		}
+
+		Pi::BeginRenderTarget();
 
 		Pi::renderer->BeginFrame();
 		Pi::renderer->SetTransform(matrix4x4f::Identity());
@@ -1084,6 +1200,8 @@ void Pi::MainLoop()
 		}
 #endif
 
+		Pi::EndRenderTarget();
+		Pi::DrawRenderTarget();
 		Pi::renderer->SwapBuffers();
 
 		// game exit will have cleared Pi::game. we can't continue.
@@ -1127,6 +1245,16 @@ void Pi::MainLoop()
 			else last_stats += 1000;
 		}
 		Pi::statSceneTris = 0;
+
+#ifdef PIONEER_PROFILER
+		const Uint32 profTicks = SDL_GetTicks();
+		if (Pi::doProfileOne || (Pi::doProfileSlow && (profTicks-newTicks) > 100)) { // slow: < ~10fps
+			printf("dumping profile data\n");
+			Profiler::dumphtml(profilerPath.c_str());
+			Pi::doProfileOne = false;
+		}
+#endif
+
 #endif
 
 #ifdef MAKING_VIDEO

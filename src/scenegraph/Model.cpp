@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Model.h"
@@ -50,10 +50,10 @@ Model::Model(const Model &model)
 	//create unique color texture, if used
 	//patterns are shared
 	if (SupportsPatterns()) {
-		std::vector<Color4ub> colors;
-		colors.push_back(Color4ub::RED);
-		colors.push_back(Color4ub::GREEN);
-		colors.push_back(Color4ub::BLUE);
+		std::vector<Color> colors;
+		colors.push_back(Color::RED);
+		colors.push_back(Color::GREEN);
+		colors.push_back(Color::BLUE);
 		SetColors(colors);
 		SetPattern(0);
 	}
@@ -194,7 +194,7 @@ void Model::SetPattern(unsigned int index)
 	m_curPattern = pat.texture.Get();
 }
 
-void Model::SetColors(const std::vector<Color4ub> &colors)
+void Model::SetColors(const std::vector<Color> &colors)
 {
 	assert(colors.size() == 3); //primary, seconday, trim
 	m_colorMap.Generate(GetRenderer(), colors.at(0), colors.at(1), colors.at(2));

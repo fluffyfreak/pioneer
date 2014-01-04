@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "JobQueue.h"
@@ -209,6 +209,7 @@ void JobQueue::Finish(Job *job, const uint8_t threadIdx)
 // call OnFinish methods for completed jobs, and clean up
 Uint32 JobQueue::FinishJobs()
 {
+	PROFILE_SCOPED()
 	Uint32 finished = 0;
 
 	const uint32_t numRunners = m_runners.size();

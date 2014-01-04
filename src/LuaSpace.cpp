@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaObject.h"
@@ -275,12 +275,14 @@ static int l_space_spawn_ship_docked(lua_State *l)
 
 	SpaceStation *station = LuaObject<SpaceStation>::CheckFromLua(2);
 
-	int port = station->GetFreeDockingPort();
-	if (port < 0)
-		return 0;
-
 	Ship *ship = new Ship(type);
 	assert(ship);
+
+	int port = station->GetFreeDockingPort(ship);	// pass in the ship to get a port we fit into
+	if(port < 0) {
+		delete ship;
+		return 0;
+	}
 
 	ship->SetFrame(station->GetFrame());
 	Pi::game->GetSpace()->AddBody(ship);

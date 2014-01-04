@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _RENDERER_H
@@ -37,7 +37,6 @@ namespace Graphics {
 class Light;
 class Material;
 class MaterialDescriptor;
-class RendererLegacy;
 class RenderTarget;
 class StaticMesh;
 class Surface;
@@ -70,6 +69,12 @@ enum BlendMode {
 	BLEND_SET_ALPHA, // copy alpha channel
 	BLEND_DEST_ALPHA // XXX maybe crappy name
 };
+
+enum class MatrixMode {
+	MODELVIEW,
+	PROJECTION
+};
+
 
 // Renderer base, functions return false if
 // failed/unsupported
@@ -109,6 +114,7 @@ public:
 	//set projection matrix
 	virtual bool SetPerspectiveProjection(float fov, float aspect, float near, float far) { return false; }
 	virtual bool SetOrthographicProjection(float xmin, float xmax, float ymin, float ymax, float zmin, float zmax) { return false; }
+	virtual bool SetProjection(const matrix4x4f &m) { return false; }
 
 	//render state functions
 	virtual bool SetBlendMode(BlendMode type) { return false; }
@@ -117,6 +123,7 @@ public:
 	virtual bool SetDepthWrite(bool enabled) { return false; }
 	virtual bool SetWireFrameMode(bool enabled) { return false; }
 
+	virtual bool SetLightsEnabled(const bool enabled) { return false; }
 	virtual bool SetLights(int numlights, const Light *l) { return false; }
 	virtual bool SetAmbientColor(const Color &c) { return false; }
 	const Color &GetAmbientColor() const { return m_ambient; }
@@ -156,8 +163,24 @@ public:
 
 	virtual bool ReloadShaders() { return false; }
 
+	// our own matrix stack
+	// XXX state must die
+	virtual const matrix4x4f& GetCurrentModelView() const  = 0;
+	virtual const matrix4x4f& GetCurrentProjection() const  = 0;
+	virtual void GetCurrentViewport(Sint32 *vp) const  = 0;
+
+	// XXX all quite GL specific. state must die!
+	virtual void SetMatrixMode(MatrixMode mm) = 0;
+	virtual void PushMatrix() = 0;
+	virtual void PopMatrix() = 0;
+	virtual void LoadIdentity() = 0;
+	virtual void LoadMatrix(const matrix4x4f &m) = 0;
+	virtual void Translate( const float x, const float y, const float z ) = 0;
+	virtual void Scale( const float x, const float y, const float z ) = 0;
+
 	// take a ticket representing the current renderer state. when the ticket
 	// is deleted, the renderer state is restored
+	// XXX state must die
 	class StateTicket {
 	public:
 		StateTicket(Renderer *r) : m_renderer(r) { m_renderer->PushState(); }
@@ -166,6 +189,26 @@ public:
 		StateTicket(const StateTicket&);
 		StateTicket &operator=(const StateTicket&);
 		Renderer *m_renderer;
+	};
+
+	// take a ticket representing a single state matrix. when the ticket is
+	// deleted, the previous matrix state is restored
+	// XXX state must die
+	class MatrixTicket {
+	public:
+		MatrixTicket(Renderer *r, MatrixMode m) : m_renderer(r), m_matrixMode(m) {
+			m_renderer->SetMatrixMode(m_matrixMode);
+			m_renderer->PushMatrix();
+		}
+		virtual ~MatrixTicket() {
+			m_renderer->SetMatrixMode(m_matrixMode);
+			m_renderer->PopMatrix();
+		}
+	private:
+		MatrixTicket(const MatrixTicket&);
+		MatrixTicket &operator=(const MatrixTicket&);
+		Renderer *m_renderer;
+		MatrixMode m_matrixMode;
 	};
 
 protected:
@@ -185,7 +228,7 @@ private:
 };
 
 // subclass this to store renderer specific information
-// See top of RendererLegacy.cpp
+// See top of RendererGL2.cpp
 struct RenderInfo {
 	RenderInfo() { }
 	virtual ~RenderInfo() { }

@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -70,6 +70,7 @@ void ScrollBar::OnRawMouseMotion(MouseMotionEvent *e)
 
 void ScrollBar::Draw()
 {
+	PROFILE_SCOPED()
 	float size[2]; GetSize(size);
 	Theme::DrawIndent(size);
 	float pos = m_adjustment->GetValue();
@@ -106,6 +107,7 @@ void ScrollBar::GetMinimumSize(float size[2])
 
 void HScale::Draw()
 {
+	PROFILE_SCOPED()
 	float size[2]; GetSize(size);
 	float pos = m_adjustment->GetValue();
 

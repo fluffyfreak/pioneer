@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _MATERIAL_H
@@ -18,7 +18,6 @@
 namespace Graphics {
 
 class Texture;
-class RendererLegacy;
 class RendererGL2;
 
 // Shorthand for unique effects
@@ -89,7 +88,6 @@ protected:
 	MaterialDescriptor m_descriptor;
 
 private:
-	friend class RendererLegacy;
 	friend class RendererGL2;
 };
 

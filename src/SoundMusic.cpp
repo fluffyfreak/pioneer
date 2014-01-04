@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "SoundMusic.h"
@@ -94,6 +94,7 @@ void MusicPlayer::FadeOut(const float fadeDelta)
 
 void MusicPlayer::Update()
 {
+	PROFILE_SCOPED()
 	if (m_playing) { //expecting report
 		if ((m_eventOnePlaying && !m_eventOne.IsPlaying()) || (!m_eventOnePlaying && !m_eventTwo.IsPlaying())) {
 			m_playing = false;

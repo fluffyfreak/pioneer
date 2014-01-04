@@ -1,10 +1,11 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _GRAPHICS_H
 #define _GRAPHICS_H
 
 #include "libs.h"
+#include "RenderTarget.h"
 
 /*
  * bunch of reused 3d drawy routines.
@@ -18,7 +19,6 @@ namespace Graphics {
 	// requested video settings
 	struct Settings {
 		bool fullscreen;
-		bool shaders;
 		bool useTextureCompression;
 		bool enableDebugMessages;
 		int vsync;
@@ -38,8 +38,6 @@ namespace Graphics {
 		int height;
 	};
 
-	extern bool shadersAvailable;
-	extern bool shadersEnabled;
 	extern Material *vtxColorMaterial;
 
 	int GetScreenWidth();
@@ -52,7 +50,6 @@ namespace Graphics {
 	// does SDL video init, constructs appropriate Renderer
 	Renderer* Init(Settings);
 	void Uninit();
-	bool AreShadersEnabled();
 	std::vector<VideoMode> GetAvailableVideoModes();
 }
 

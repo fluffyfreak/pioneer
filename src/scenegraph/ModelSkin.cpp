@@ -1,10 +1,11 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "ModelSkin.h"
 #include "Model.h"
 #include "StringF.h"
 #include "graphics/TextureBuilder.h"
+#include <SDL_stdinc.h>
 
 namespace SceneGraph {
 
@@ -32,23 +33,23 @@ void ModelSkin::SetPattern(unsigned int index)
 	m_patternIndex = index;
 }
 
-void ModelSkin::SetColors(const std::vector<Color4ub> &colors)
+void ModelSkin::SetColors(const std::vector<Color> &colors)
 {
 	assert(colors.size() == 3);
 	m_colors = colors;
 }
 
-void ModelSkin::SetPrimaryColor(const Color4ub &color)
+void ModelSkin::SetPrimaryColor(const Color &color)
 {
 	m_colors[0] = color;
 }
 
-void ModelSkin::SetSecondaryColor(const Color4ub &color)
+void ModelSkin::SetSecondaryColor(const Color &color)
 {
 	m_colors[1] = color;
 }
 
-void ModelSkin::SetTrimColor(const Color4ub &color)
+void ModelSkin::SetTrimColor(const Color &color)
 {
 	m_colors[2] = color;
 }
@@ -56,16 +57,16 @@ void ModelSkin::SetTrimColor(const Color4ub &color)
 void ModelSkin::SetRandomColors(Random &rand)
 {
 	// primary colour is random, but try to avoid ridiculous extremes
-	m_colors[0] = Color4ub(rand.Int32(192)+32, rand.Int32(192)+32, rand.Int32(192)+32);
+	m_colors[0] = Color(rand.Int32(192)+32, rand.Int32(192)+32, rand.Int32(192)+32);
 
 	// secondary is the inverse of the primary, so has identical hue
-	m_colors[1] = Color4ub(256-m_colors[0].r, 256-m_colors[0].g, 256-m_colors[0].b);
+	m_colors[1] = Color(256-m_colors[0].r, 256-m_colors[0].g, 256-m_colors[0].b);
 
 	// trim is a darker version of the primary
-	m_colors[2] = Color4ub(
-		std::max(m_colors[0].r,static_cast<unsigned char>(32))-32,
-		std::max(m_colors[0].g,static_cast<unsigned char>(32))-32,
-		std::max(m_colors[0].b,static_cast<unsigned char>(32))-32
+	m_colors[2] = Color(
+		std::max(m_colors[0].r,static_cast<Uint8>(32))-32,
+		std::max(m_colors[0].g,static_cast<Uint8>(32))-32,
+		std::max(m_colors[0].b,static_cast<Uint8>(32))-32
 	);
 }
 

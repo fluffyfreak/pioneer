@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -49,6 +49,7 @@ void Image::SetRenderDimensions(const float wide, const float high)
 
 void Image::Draw()
 {
+	PROFILE_SCOPED()
 	float allocSize[2];
 	GetSize(allocSize);
 

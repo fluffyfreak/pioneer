@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _GUISCREEN_H
@@ -78,8 +78,8 @@ namespace Gui {
 		static Gui::Fixed *baseContainer;
 		static Gui::Widget *focusedWidget;
 		static void OnDeleteFocusedWidget();
-		static GLdouble modelMatrix[16];
-		static GLdouble projMatrix[16];
+		static matrix4x4f modelMatrix;
+		static matrix4x4f projMatrix;
 		static GLint viewport[4];
 
 		static FontCache s_fontCache;

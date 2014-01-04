@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Loader.h"
@@ -146,7 +146,7 @@ Model *Loader::LoadModel(const std::string &shortname, const std::string &basepa
 		const std::string &fpath = info.GetPath();
 
 		//check it's the expected type
-		if (info.IsFile() && ends_with(fpath, ".model")) {
+		if (info.IsFile() && ends_with_ci(fpath, ".model")) {
 			//check it's the wanted name & load it
 			const std::string name = info.GetName();
 
@@ -224,7 +224,7 @@ Model *Loader::CreateModel(ModelDefinition &def)
 		//the node must be marked transparent when using this material
 		//and should not be mixed with opaque materials
 		if ((*it).opacity < 100)
-			mat->diffuse.a = float((*it).opacity) / 100.f;
+			mat->diffuse.a = (float((*it).opacity) / 100.f) * 255;
 
 		if (!diffTex.empty())
 			mat->texture0 = Graphics::TextureBuilder::Model(diffTex).GetOrCreateTexture(m_renderer, "model");
@@ -323,6 +323,9 @@ Model *Loader::CreateModel(ModelDefinition &def)
 	// If no collision mesh is defined, a simple bounding box will be generated
 	m_model->CreateCollisionMesh();
 
+	// Do an initial animation update to get all the animation transforms correct
+	m_model->UpdateAnimations();
+
 	//find usable pattern textures from the model directory
 	if (patternsUsed) {
 		FindPatterns(model->m_patterns);
@@ -335,10 +338,10 @@ Model *Loader::CreateModel(ModelDefinition &def)
 		}
 
 		//set up some noticeable default colors
-		std::vector<Color4ub> colors;
-		colors.push_back(Color4ub::RED);
-		colors.push_back(Color4ub::GREEN);
-		colors.push_back(Color4ub::BLUE);
+		std::vector<Color> colors;
+		colors.push_back(Color::RED);
+		colors.push_back(Color::GREEN);
+		colors.push_back(Color::BLUE);
 		model->SetColors(colors);
 		model->SetPattern(0);
 	}
@@ -352,7 +355,7 @@ void Loader::FindPatterns(PatternContainer &output)
 		const FileSystem::FileInfo &info = files.Current();
 		if (info.IsFile()) {
 			const std::string &name = info.GetName();
-			if (ends_with(name, ".png") && starts_with(name, "pattern"))
+			if (ends_with_ci(name, ".png") && starts_with(name, "pattern"))
 				output.push_back(Pattern(name, m_curPath, m_renderer));
 		}
 	}
@@ -513,7 +516,7 @@ void Loader::ConvertAiMeshes(std::vector<RefCountedPtr<StaticGeometry> > &geoms,
 
 		//turn on alpha blending and mark entire node as transparent
 		//(all importers split by material so far)
-		if (mat->diffuse.a < 0.99f) {
+		if (mat->diffuse.a < 255) {
 			geom->SetNodeMask(NODE_TRANSPARENT);
 			geom->m_blendMode = Graphics::BLEND_ALPHA;
 		}

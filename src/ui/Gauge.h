@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef UI_GAUGE_H
@@ -14,8 +14,10 @@ public:
 	virtual void Layout();
 	virtual void Draw();
 
-	float GetValue() const { return m_value; }
+	float GetValue() const { return m_value/m_mult; }
 	void SetValue(float v);
+
+	Gauge *SetUpperValue(float v);
 
 	Gauge *SetWarningLevel(float v);
 	Gauge *SetCriticalLevel(float v);
@@ -36,6 +38,8 @@ private:
 	float m_warningLevel;
 	float m_criticalLevel;
 	bool m_levelAscending;
+
+	float m_mult;
 
 	enum {
 		NORMAL,

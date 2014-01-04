@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "ShipType.h"
@@ -61,7 +61,11 @@ int _define_ship(lua_State *L, ShipType::Tag tag, std::vector<ShipType::Id> *lis
 	LuaTable t(L, -1);
 
 	s.name = t.Get("name", "");
+	s.shipClass = t.Get("ship_class", "");
+	s.manufacturer = t.Get("manufacturer", "");
 	s.modelName = t.Get("model", "");
+
+	s.cockpitName = t.Get("cockpit", "");
 	s.linThrust[ShipType::THRUSTER_REVERSE] = t.Get("reverse_thrust", 0.0f);
 	s.linThrust[ShipType::THRUSTER_FORWARD] = t.Get("forward_thrust", 0.0f);
 	s.linThrust[ShipType::THRUSTER_UP] = t.Get("up_thrust", 0.0f);
@@ -256,7 +260,7 @@ void ShipType::Init()
 	for (fs::FileEnumerator files(fs::gameDataFiles, "ships", fs::FileEnumerator::Recurse);
 			!files.Finished(); files.Next()) {
 		const fs::FileInfo &info = files.Current();
-		if (ends_with(info.GetPath(), ".lua")) {
+		if (ends_with_ci(info.GetPath(), ".lua")) {
 			const std::string name = info.GetName();
 			s_currentShipFile = name.substr(0, name.size()-4);
 			pi_lua_dofile(l, info.GetPath());

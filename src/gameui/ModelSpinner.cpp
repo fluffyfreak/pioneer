@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "ModelSpinner.h"
@@ -19,7 +19,7 @@ ModelSpinner::ModelSpinner(Context *context, SceneGraph::Model *model, const Sce
 	m_model.reset(model->MakeInstance());
 	m_skin.Apply(m_model.get());
 
-	Color lc(1.f);
+	Color lc(255);
 	m_light.SetDiffuse(lc);
 	m_light.SetSpecular(lc);
 	m_light.SetPosition(vector3f(0.f, 1.f, 1.f));

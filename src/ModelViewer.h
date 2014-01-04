@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef MODELVIEWER_H
@@ -31,6 +31,7 @@ private:
 	bool OnToggleGuns(UI::CheckBox*);
 	void AddLog(const std::string &line);
 	void ChangeCameraPreset(SDL_Keycode, SDL_Keymod);
+	void ToggleViewControlMode();
 	void ClearLog();
 	void ClearModel();
 	void CreateTestResources();
@@ -72,6 +73,7 @@ private:
 		bool showLandingPad;
 		bool showUI;
 		bool wireframe;
+		bool mouselookEnabled;
 		float gridInterval;
 		int lightPreset;
 
@@ -82,6 +84,8 @@ private:
 	double m_frameTime;
 	Graphics::Renderer *m_renderer;
 	Graphics::Texture *m_decalTexture;
+	vector3f m_viewPos;
+	matrix3x3f m_viewRot;
 	float m_rotX, m_rotY, m_zoom;
 	float m_baseDistance;
 	Random m_rng;

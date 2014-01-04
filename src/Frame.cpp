@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Frame.h"
@@ -100,6 +100,7 @@ Frame::~Frame()
 
 void Frame::RemoveChild(Frame *f)
 {
+	PROFILE_SCOPED()
 	const std::vector<Frame*>::iterator it
 		= std::find(m_children.begin(), m_children.end(), f);
 	if (it != m_children.end())
@@ -171,6 +172,7 @@ matrix3x3d Frame::GetInterpOrientRelTo(const Frame *relTo) const
 
 void Frame::UpdateInterpTransform(double alpha)
 {
+	PROFILE_SCOPED()
 	m_interpPos = alpha*m_pos + (1.0-alpha)*m_oldPos;
 
 	double len = m_oldAngDisplacement * (1.0-alpha);

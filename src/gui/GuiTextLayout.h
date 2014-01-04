@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _GUITEXTLAYOUT_H
@@ -17,11 +17,12 @@ public:
 	explicit TextLayout(const char *_str, RefCountedPtr<Text::TextureFont> font = RefCountedPtr<Text::TextureFont>(0), ColourMarkupMode markup = ColourMarkupUse);
 	void Render(float layoutWidth, const Color &color = Color::WHITE) const;
 	void MeasureSize(const float layoutWidth, float outSize[2]) const;
-	void _RenderRaw(float layoutWidth, const Color &color) const;
 	void _MeasureSizeRaw(const float layoutWidth, float outSize[2]) const;
 	~TextLayout() { free(str); }
 	void SetJustified(bool v) { m_justify = v; }
 private:
+	void _RenderRaw(float layoutWidth, const Color &color) const;
+
 	struct word_t {
 		char *word;
 		float advx;

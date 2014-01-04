@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _UTILS_H
@@ -82,6 +82,26 @@ inline bool ends_with(const std::string &s, const char *t) {
 
 inline bool ends_with(const std::string &s, const std::string &t) {
 	return ends_with(s.c_str(), s.size(), t.c_str(), t.size());
+}
+
+inline bool ends_with_ci(const char *s, size_t ns, const char *t, size_t nt) {
+	if (ns<nt) return false;
+	s += (ns-nt);
+	for (size_t i=0; i<nt; i++)
+		if(tolower(*s++)!=tolower(*t++)) return false;
+	return true;
+}
+
+inline bool ends_with_ci(const char *s, const char *t) {
+	return ends_with_ci(s, strlen(s), t, strlen(t));
+}
+
+inline bool ends_with_ci(const std::string &s, const char *t) {
+	return ends_with_ci(s.c_str(), s.size(), t, strlen(t));
+}
+
+inline bool ends_with_ci(const std::string &s, const std::string &t) {
+	return ends_with_ci(s.c_str(), s.size(), t.c_str(), t.size());
 }
 
 // add a few things that MSVC is missing

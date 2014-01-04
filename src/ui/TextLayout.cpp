@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "TextLayout.h"
@@ -78,7 +78,7 @@ Point TextLayout::ComputeSize(const Point &layoutSize)
 		// - the word does not go past the right edge of the box
 		bool wordAdded = false;
 		while (!wordAdded) {
-			if (pos.x == 0 || pos.x + wordSize.x < layoutSize.x) {
+			if (pos.x == 0 || pos.x + wordSize.x <= layoutSize.x) {
 				(*i).pos = pos;
 
 				// move to the end of the word

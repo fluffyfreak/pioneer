@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaEngine.h"
@@ -17,6 +17,7 @@
 #include "SoundMusic.h"
 #include "KeyBindings.h"
 #include "Lang.h"
+#include "Player.h"
 
 /*
  * Interface: Engine
@@ -202,22 +203,6 @@ static int l_engine_set_vsync_enabled(lua_State *l)
 	return 0;
 }
 
-static int l_engine_get_shaders_enabled(lua_State *l)
-{
-	lua_pushboolean(l, Pi::config->Int("DisableShaders") == 0);
-	return 1;
-}
-
-static int l_engine_set_shaders_enabled(lua_State *l)
-{
-	if (lua_isnone(l, 1))
-		return luaL_error(l, "SetShadersEnabled takes one boolean argument");
-	const bool enabled = lua_toboolean(l, 1);
-	Pi::config->SetInt("DisableShaders", (enabled ? 0 : 1));
-	Pi::config->Save();
-	return 0;
-}
-
 static int l_engine_get_texture_compression_enabled(lua_State *l)
 {
 	lua_pushboolean(l, Pi::config->Int("UseTextureCompression") != 0);
@@ -353,6 +338,24 @@ static int l_engine_set_display_speed_lines(lua_State *l)
 	Pi::config->SetInt("SpeedLines", (enabled ? 1 : 0));
 	Pi::config->Save();
 	Pi::SetSpeedLinesDisplayed(enabled);
+	return 0;
+}
+
+static int l_engine_get_cockpit_enabled(lua_State *l)
+{
+	lua_pushboolean(l, Pi::config->Int("EnableCockpit") != 0);
+	return 1;
+}
+
+static int l_engine_set_cockpit_enabled(lua_State *l)
+{
+	if (lua_isnone(l, 1))
+		return luaL_error(l, "SetCockpitEnabled takes one boolean argument");
+	const bool enabled = lua_toboolean(l, 1);
+	Pi::config->SetInt("EnableCockpit", (enabled ? 1 : 0));
+	Pi::config->Save();
+	Pi::player->InitCockpit();
+	if (enabled) Pi::player->OnCockpitActivated();
 	return 0;
 }
 
@@ -701,8 +704,6 @@ void LuaEngine::Register()
 		{ "SetFullscreen", l_engine_set_fullscreen },
 		{ "GetVSyncEnabled", l_engine_get_vsync_enabled },
 		{ "SetVSyncEnabled", l_engine_set_vsync_enabled },
-		{ "GetShadersEnabled", l_engine_get_shaders_enabled },
-		{ "SetShadersEnabled", l_engine_set_shaders_enabled },
 		{ "GetTextureCompressionEnabled", l_engine_get_texture_compression_enabled },
 		{ "SetTextureCompressionEnabled", l_engine_set_texture_compression_enabled },
 		{ "GetMultisampling", l_engine_get_multisampling },
@@ -722,6 +723,9 @@ void LuaEngine::Register()
 
 		{ "GetDisplaySpeedLines", l_engine_get_display_speed_lines },
 		{ "SetDisplaySpeedLines", l_engine_set_display_speed_lines },
+
+		{ "GetCockpitEnabled", l_engine_get_cockpit_enabled },
+		{ "SetCockpitEnabled", l_engine_set_cockpit_enabled },
 
 		{ "GetMasterMuted", l_engine_get_master_muted },
 		{ "SetMasterMuted", l_engine_set_master_muted },

@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef UI_CONTAINER_H
@@ -35,7 +35,7 @@ public:
 
 	virtual bool IsContainer() const { return true; }
 
-	Widget *GetWidgetAtAbsolute(const Point &pos) { return GetWidgetAt(pos - GetAbsolutePosition()); }
+	// widget at pos relative to this widget
 	virtual Widget *GetWidgetAt(const Point &pos);
 
 	virtual void Disable();

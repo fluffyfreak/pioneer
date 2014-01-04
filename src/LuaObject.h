@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _LUAOBJECT_H
@@ -128,6 +128,8 @@ protected:
     // get a pointer to the underlying object
 	virtual LuaWrappable *GetObject() const = 0;
 
+	const char *GetType() const { return m_type; }
+
 private:
 	LuaObjectBase() {}
 	LuaObjectBase(const LuaObjectBase &) {}
@@ -139,6 +141,9 @@ private:
 	// lua method to determine if the object inherits from a type. wrapper
 	// around ::Isa()
 	static int l_isa(lua_State *l);
+
+	// lua method to set a property on a propertied object
+	static int l_setprop(lua_State *l);
 
 	// the lua object "destructor" that gets called by the garbage collector.
 	static int l_gc(lua_State *l);
@@ -290,5 +295,9 @@ template <typename T> inline void LuaObject<T>::PushToLua(RefCounted *o) {
 template <typename T> inline void LuaObject<T>::PushToLua(const T &o) {
 	Register(new (LuaObjectBase::Allocate(sizeof(LuaCopyObject<T>))) LuaCopyObject<T>(o));
 }
+
+// specialise for SystemPath, which needs custom machinery to deduplicate system paths
+class SystemPath;
+template <> void LuaObject<SystemPath>::PushToLua(const SystemPath &o);
 
 #endif
