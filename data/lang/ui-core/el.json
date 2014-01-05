@@ -223,6 +223,10 @@
       "description" : "",
       "message" : "Employment"
    },
+   "ENABLE_COCKPIT" : {
+      "description" : "",
+      "message" : "Enable cockpit (EXPERIMENTAL)"
+   },
    "ENABLE_JOYSTICK" : {
       "description" : "",
       "message" : "Enable joystick"
@@ -571,8 +575,12 @@
       "description" : "",
       "message" : "Mute"
    },
-   "NAME" : {
-      "description" : "",
+   "NAME_OBJECT" : {
+      "description" : "For an item or object",
+      "message" : "Name"
+   },
+   "NAME_PERSON" : {
+      "description" : "For a person",
       "message" : "Name"
    },
    "NAVIGATION" : {
