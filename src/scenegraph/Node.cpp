@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Node.h"
@@ -43,6 +43,16 @@ Node* Node::FindNode(const std::string &name)
 		return this;
 	else
 		return 0;
+}
+
+Node* Node::GatherTransforms(const std::string &name, const matrix4x4f &accum, matrix4x4f &outMat)
+{
+	if (m_name == name) {
+		outMat = accum;
+		return this;
+	} else {
+		return 0;
+	}
 }
 
 void Node::DrawAxes()

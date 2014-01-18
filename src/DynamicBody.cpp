@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -258,7 +258,8 @@ bool DynamicBody::OnCollision(Object *o, Uint32 flags, double relVel)
 	}
 	// damage (kineticEnergy is being passed as a damage value) is measured in kilograms
 	// ignore damage less than a gram
-	if (kineticEnergy > 1e-3) OnDamage(o, float(kineticEnergy));
+	CollisionContact dummy;
+	if (kineticEnergy > 1e-3) OnDamage(o, float(kineticEnergy), dummy);
 	return true;
 }
 

@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Program.h"
@@ -75,6 +75,22 @@ struct Shader {
 		AppendSource(logzCode->AsStringRange().StripUTF8BOM());
 		AppendSource(libsCode->AsStringRange().StripUTF8BOM());
 		AppendSource(code->AsStringRange().StripUTF8BOM());
+#if 0
+		static bool s_bDumpShaderSource = true;
+		if (s_bDumpShaderSource) {
+			const char SHADER_OUT_DIR_NAME[] = "shaders";
+			const char SHADER_GL2_OUT_DIR_NAME[] = "shaders/gl2";
+			FileSystem::userFiles.MakeDirectory(SHADER_OUT_DIR_NAME);
+			FileSystem::userFiles.MakeDirectory(SHADER_GL2_OUT_DIR_NAME);
+			const std::string outFilename(FileSystem::GetUserDir() + "/" + filename);
+			FILE *tmp = fopen(outFilename.c_str(), "w+");
+			fprintf(stderr, "%s", filename);
+			for( Uint32 i=0; i<blocks.size(); i++ ) {
+				fprintf(tmp, "%.*s", block_sizes[i], blocks[i]);
+			}
+			fclose(tmp);
+		}
+#endif
 		shader = glCreateShader(type);
 		Compile(shader);
 
@@ -185,6 +201,10 @@ void Program::InitUniforms()
 	texture2.Init("texture2", m_program);
 	texture3.Init("texture3", m_program);
 	texture4.Init("texture4", m_program);
+	heatGradient.Init("heatGradient", m_program);
+	heatingMatrix.Init("heatingMatrix", m_program);
+	heatingNormal.Init("heatingNormal", m_program);
+	heatingAmount.Init("heatingAmount", m_program);
 	sceneAmbient.Init("scene.ambient", m_program);
 }
 

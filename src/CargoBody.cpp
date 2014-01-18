@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "CargoBody.h"
@@ -50,7 +50,7 @@ CargoBody::CargoBody(Equip::Type t)
 	SetMass(1.0);
 }
 
-bool CargoBody::OnDamage(Object *attacker, float kgDamage)
+bool CargoBody::OnDamage(Object *attacker, float kgDamage, const CollisionContact& contactData)
 {
 	m_hitpoints -= kgDamage*0.001f;
 	if (m_hitpoints < 0) {

@@ -114,8 +114,10 @@ noinst_HEADERS = \
 	StringF.h \
 	StringRange.h \
 	Sfx.h \
+	Shields.h \
 	Ship.h \
 	ShipAICmd.h \
+	ShipCockpit.h \
 	ShipController.h \
 	ShipCpanel.h \
 	ShipCpanelMultiFuncDisplays.h \
@@ -206,6 +208,7 @@ pioneer_SOURCES	= \
 	LuaFixed.cpp \
 	LuaManager.cpp \
 	LuaMissile.cpp \
+	LuaModelBody.cpp \
 	LuaMusic.cpp \
 	LuaNameGen.cpp \
 	LuaObject.cpp \
@@ -246,9 +249,11 @@ pioneer_SOURCES	= \
 	Serializer.cpp \
 	StringF.cpp \
 	Sfx.cpp \
+	Shields.cpp \
 	Ship-AI.cpp \
 	Ship.cpp \
 	ShipAICmd.cpp \
+	ShipCockpit.cpp \
 	ShipController.cpp \
 	ShipCpanel.cpp \
 	ShipCpanelMultiFuncDisplays.cpp \

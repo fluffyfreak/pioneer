@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -215,7 +215,7 @@ void Projectile::StaticUpdate(const float timeStep)
 		else if (o->IsType(Object::BODY)) {
 			Body *hit = static_cast<Body*>(o);
 			if (hit != m_parent) {
-				hit->OnDamage(m_parent, GetDamage());
+				hit->OnDamage(m_parent, GetDamage(), c);
 				Pi::game->GetSpace()->KillBody(this);
 				if (hit->IsType(Object::SHIP))
 					LuaEvent::Queue("onShipHit", dynamic_cast<Ship*>(hit), dynamic_cast<Body*>(m_parent));

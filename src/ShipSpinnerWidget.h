@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 // DEPRECATED due to new ui system
@@ -11,6 +11,9 @@
 #include "scenegraph/SceneGraph.h"
 #include "scenegraph/ModelSkin.h"
 #include "SmartPtr.h"
+#include "Shields.h"
+
+class Shields;
 
 class ShipSpinnerWidget : public Gui::Widget {
 public:
@@ -27,6 +30,7 @@ private:
 	SceneGraph::ModelSkin m_skin;
 
 	Graphics::Light m_light;
+	std::unique_ptr<Shields> m_shields;
 };
 
 #endif

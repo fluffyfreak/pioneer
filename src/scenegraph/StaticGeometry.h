@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _STATICGEOMETRY_H
@@ -30,6 +30,8 @@ public:
 	unsigned int GetNumMeshes() const { return m_meshes.size(); }
 	RefCountedPtr<Graphics::StaticMesh> GetMesh(unsigned int i) { return m_meshes.at(i); }
 
+	void DisableDepthWrite() { m_bDisableDepthWrite = true; }
+
 	Aabb m_boundingBox;
 	Graphics::BlendMode m_blendMode;
 
@@ -38,6 +40,7 @@ protected:
 	void DrawBoundingBox(const Aabb &bb);
 	std::vector<RefCountedPtr<Graphics::StaticMesh> > m_meshes;
 	typedef std::vector<RefCountedPtr<Graphics::StaticMesh> > MeshContainer;
+	bool m_bDisableDepthWrite;
 };
 
 }

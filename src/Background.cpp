@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Background.h"
@@ -69,8 +69,10 @@ UniverseBox::~UniverseBox()
 void UniverseBox::Init(Graphics::Renderer *r)
 {
 	// Load default cubemap
-	TextureBuilder texture_builder = TextureBuilder::Cube("textures/skybox/default.dds");
-	s_defaultCubeMap.reset( texture_builder.CreateTexture(r) );
+	if(!s_defaultCubeMap.get()) {
+		TextureBuilder texture_builder = TextureBuilder::Cube("textures/skybox/default.dds");
+		s_defaultCubeMap.reset( texture_builder.CreateTexture(r) );
+	}
 
 	// Create skybox geometry
 	VertexArray *box = new VertexArray(ATTRIB_POSITION | ATTRIB_UV0, 36);

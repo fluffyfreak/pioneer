@@ -12,8 +12,8 @@
       "message" : "Aliances:"
    },
    "ALT" : {
-      "description" : "",
-      "message" : "\"alt \""
+      "description" : "Alt key on keyboard",
+      "message" : "Alt"
    },
    "ALT_IN_KM" : {
       "description" : "",
@@ -268,8 +268,8 @@
       "message" : "\" atmosfera de monòxid de carboni\""
    },
    "CTRL" : {
-      "description" : "",
-      "message" : "\"ctrl \""
+      "description" : "Ctrl key on keyboard",
+      "message" : "Ctrl"
    },
    "CURRENT_SYSTEM" : {
       "description" : "",
@@ -334,6 +334,10 @@
    "DRAW_OUT_RANGE_LABELS" : {
       "description" : "",
       "message" : "Label out-of-range systems"
+   },
+   "DRAW_UNINHABITED_LABELS" : {
+      "description" : "",
+      "message" : "Label uninhabited systems"
    },
    "DRAW_VERTICAL_LINES" : {
       "description" : "",
@@ -812,8 +816,8 @@
       "message" : "Missatge de %sender:"
    },
    "META" : {
-      "description" : "",
-      "message" : "\"meta \""
+      "description" : "'Meta' key on keyboard",
+      "message" : "Meta"
    },
    "METAL_ALLOYS" : {
       "description" : "",
@@ -939,8 +943,12 @@
       "description" : "",
       "message" : "%speed{f.0} m/s en rel. a %frame"
    },
-   "NAME" : {
-      "description" : "",
+   "NAME_OBJECT" : {
+      "description" : "For an item or object",
+      "message" : "Nom"
+   },
+   "NAME_PERSON" : {
+      "description" : "For a person",
       "message" : "Nom"
    },
    "NARCOTICS" : {
@@ -1384,8 +1392,8 @@
       "message" : "Força de l'escut: %shields{f.2}"
    },
    "SHIFT" : {
-      "description" : "",
-      "message" : "\"maj \""
+      "description" : "Shift key on keyboard",
+      "message" : "Shift"
    },
    "SHIP" : {
       "description" : "",

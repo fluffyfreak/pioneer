@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _NODE_H
@@ -36,7 +36,7 @@ struct RenderData
 	: linthrust()
 	, angthrust()
 	, boundingRadius(0.f)
-	, nodemask(0x1) //draw solids
+	, nodemask(NODE_SOLID) //draw solids
 	{
 	}
 };
@@ -57,6 +57,7 @@ public:
 	const std::string &GetName() const { return m_name; }
 
 	virtual Node* FindNode(const std::string &);
+	virtual Node* GatherTransforms(const std::string &, const matrix4x4f &, matrix4x4f &);
 
 	unsigned int GetNodeMask() const { return m_nodeMask; }
 	void SetNodeMask(unsigned int m) { m_nodeMask = m; }
