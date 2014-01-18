@@ -121,8 +121,6 @@ void BackgroundGen::Draw()
 	m_renderer->SetDepthTest(true);
 	m_renderer->SetDepthWrite(true);
 
-	glPushAttrib(GL_ALL_ATTRIB_BITS & (~GL_POINT_BIT));
-
 	const Color oldSceneAmbientColor = m_renderer->GetAmbientColor();
 	m_renderer->SetAmbientColor(Color(0.f));
 	
@@ -133,7 +131,8 @@ void BackgroundGen::Draw()
 	int i=0;
 	for (auto it = RTtargets.begin(), itEnd = RTtargets.end(); it != itEnd; ++it)
 	{
-		glPushMatrix();
+		Graphics::Renderer::StateTicket ticket(m_renderer);
+		m_renderer->PushMatrix();
 		lookAtMatrix(pos, target[i], upDir[i], matOut);
 		matrix4x4d transform;
 		matrix4x4ftod(matOut, transform);
@@ -180,11 +179,9 @@ void BackgroundGen::Draw()
 
 		printf("cubemap %s saved\n", fname.c_str());
 #endif
-		glPopMatrix();
+		m_renderer->PopMatrix();
 		++i;
 	}
 
 	m_renderer->SetAmbientColor(oldSceneAmbientColor);
-
-	glPopAttrib();
 }
