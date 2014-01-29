@@ -48,6 +48,8 @@ noinst_HEADERS = \
 	GalacticView.h \
 	Game.h \
 	GeoSphere.h \
+	HudColors.h \
+	HudTrail.h \
 	HyperspaceCloud.h \
 	IniConfig.h \
 	Intro.h \
@@ -110,6 +112,7 @@ noinst_HEADERS = \
 	RefCounted.h \
 	SDLWrappers.h \
 	SectorView.h \
+	Sensors.h \
 	Serializer.h \
 	StringF.h \
 	StringRange.h \
@@ -181,6 +184,8 @@ pioneer_SOURCES	= \
 	GeoPatchID.cpp \
 	GeoPatchJobs.cpp \
 	GeoSphere.cpp \
+	HudColors.cpp \
+	HudTrail.cpp \
 	HyperspaceCloud.cpp \
 	IniConfig.cpp \
 	Intro.cpp \
@@ -246,6 +251,7 @@ pioneer_SOURCES	= \
 	PropertyMap.cpp \
 	SDLWrappers.cpp \
 	SectorView.cpp \
+	Sensors.cpp \
 	Serializer.cpp \
 	StringF.cpp \
 	Sfx.cpp \
@@ -408,9 +414,9 @@ if !HAVE_LUA
 textstress_LDADD += ../contrib/lua/liblua.a
 endif
 
-INCLUDES = -isystem @top_srcdir@/contrib
+AM_CPPFLAGS += -isystem @top_srcdir@/contrib
 if !HAVE_LUA
-INCLUDES += -isystem @top_srcdir@/contrib/lua
+AM_CPPFLAGS += -isystem @top_srcdir@/contrib/lua
 endif
 
 if BUILD_WIN32

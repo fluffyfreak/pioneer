@@ -4,22 +4,41 @@ January 2014
      * New ships "Malabar" and "Vatakara" (#2599)
      * Show hull heating effect in atmosphere (#2550)
      * Shield meshes with hit effects (#2491)
-     * Initial cockpit support (experimental) (#2603, #2614)
+     * Show trails behind ships (#2529)
+     * Skybox support (#2570)
+     * Initial cockpit support (experimental) (#2603, #2614, #2679)
 
    * Minor changes and tweaks
-     * Ship stat balancing (#2620)
+     * Ship stat balancing (#2620, #2673)
      * Atmospheres in gas giants are much deeper (#2609, #1395)
      * New "free software" charity on the bulletin board (#2611)
-     * Change start ship to Xylophis
+     * Change start ships and initial equipment (#2696)
      * Add delta-v data to ship market (#2616)
      * Earth start position now starts at 13:00 (Pioneer time) (#2615)
      * Misc. tweaks for the intro animation (#2649)
      * Improve the sector view map, giving more navigation info (#2640)
+     * Improve cargo and cabin use gauges, easier to understand (#2657, #2648)
+     * Key bindings of sector view are now configurable (#2542)
+     * Advert type icons in the bulletin board (#2668)
+     * Remove unnecessary colon from ship empty weight description (#2682)
+     * Show min/max crew in shipmarket (#2681)
+     * Show labels on stations and cargo models (#2680)
+     * Show decals on models (#2680)
+     * Improve error reporting (#2694)
 
    * Script and UI API changes
      * Game.StartGame now takes an optional start_time argument (#2615)
      * New method, Random:Normal gives a random number with normal
        distribution (#2651)
+     * New method, SpaceStation:SetEquipmentPrice to override equip/cargo
+       price at station (#2654)
+     * New method, ChatForm:ClearFace removes face without clearing whole form
+       (#2663)
+
+   * Model changes
+     * Modelviewer: Show bounding box when showing collision mesh (#2664)
+     * "Landing" tag-point to define where the bottom of the ship is for the
+       landing collision test (#2695, #2656)
 
    * Fixes
      * Fix label positioning in orbit and galaxy views (#2608, #2576)
@@ -33,12 +52,18 @@ January 2014
        cargo (#2634)
      * Fix ship pattern selection (#2645)
      * Fix shipyard adding ships faster than it sells them (#2653, #2650)
+     * Fix that fuel was not displayed as percentage after load (#2659, #2660)
+     * Clear chat form face when showing crew candidate list (#2663, #2647)
+     * Calculate a sane mousewheel scroll step for scrollable regions
 
    * Internal changes
      * Render screen to texture in preparation for post-processing effects (#2525)
      * Various code cleanups (#2621)
      * Serializer Reader class can now load data from any file source (#2646)
      * Expose models to Lua, move pattern methods from ModelSkin to Model (2645)
+     * Add initial model binary converter/loader (#2643)
+     * Replace GatherTransforms with a visitor (#2686)
+     * RefCounted(Ptr) with atomic counter and allowing const correctness (#2688)
 
 December 2013
 

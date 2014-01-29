@@ -202,6 +202,8 @@ void Ship::Init()
 {
 	m_invulnerable = false;
 
+	m_sensors.reset(new Sensors(this));
+
 	m_navLights.reset(new NavLights(GetModel()));
 	m_navLights->SetEnabled(true);
 
@@ -223,6 +225,14 @@ void Ship::Init()
 
 	InitGun("tag_gunmount_0", 0);
 	InitGun("tag_gunmount_1", 1);
+
+	// If we've got the tag_landing set then use it for an offset otherwise grab the AABB
+	const SceneGraph::MatrixTransform *mt = GetModel()->FindTagByName("tag_landing");
+	if( mt ) {
+		m_landingMinOffset = mt->GetTransform().GetTranslate().y;
+	} else {
+		m_landingMinOffset = GetAabb().min.y;
+	}
 
 	InitMaterials();
 }
@@ -274,6 +284,7 @@ Ship::Ship(ShipType::Id shipId): DynamicBody(),
 	SetModel(m_type->modelName.c_str());
 	SetLabel("UNLABELED_SHIP");
 	m_skin.SetRandomColors(Pi::rng);
+	m_skin.SetDecal(m_type->manufacturer);
 	m_skin.Apply(GetModel());
 	GetModel()->SetPattern(Pi::rng.Int32(0, GetModel()->GetNumPatterns()));
 
@@ -387,7 +398,7 @@ bool Ship::OnDamage(Object *attacker, float kgDamage, const CollisionContact& co
 		}
 	}
 
-	//printf("Ouch! %s took %.1f kilos of damage from %s! (%.1f t hull left)\n", GetLabel().c_str(), kgDamage, attacker->GetLabel().c_str(), m_stats.hull_mass_left);
+	//Output("Ouch! %s took %.1f kilos of damage from %s! (%.1f t hull left)\n", GetLabel().c_str(), kgDamage, attacker->GetLabel().c_str(), m_stats.hull_mass_left);
 	return true;
 }
 
@@ -531,7 +542,6 @@ void Ship::UpdateEquipStats()
 	m_stats.shield_mass = TONS_HULL_PER_SHIELD * float(m_equipment.Count(Equip::SLOT_SHIELD, Equip::SHIELD_GENERATOR));
 	p.Set("shieldMass", m_stats.shield_mass);
 
-	UpdateMass();
 	UpdateFuelStats();
 
 	Equip::Type fuelType = GetHyperdriveFuelType();
@@ -561,7 +571,6 @@ void Ship::UpdateFuelStats()
 void Ship::UpdateStats()
 {
 	UpdateEquipStats();
-	UpdateFuelStats();
 }
 
 static float distance_to_system(const SystemPath &src, const SystemPath &dest)
@@ -806,6 +815,12 @@ void Ship::SetLandedOn(Planet *p, float latitude, float longitude)
 	LuaEvent::Queue("onShipLanded", this, p);
 }
 
+void Ship::SetFrame(Frame *f)
+{
+	DynamicBody::SetFrame(f);
+	m_sensors->ResetTrails();
+}
+
 void Ship::TimeStepUpdate(const float timeStep)
 {
 	// If docked, station is responsible for updating position/orient of ship
@@ -827,6 +842,7 @@ void Ship::TimeStepUpdate(const float timeStep)
 
 	m_navLights->SetEnabled(m_wheelState > 0.01f);
 	m_navLights->Update(timeStep);
+	if (m_sensors.get()) m_sensors->Update(timeStep);
 }
 
 void Ship::DoThrusterSounds() const
@@ -870,7 +886,7 @@ void Ship::TimeAccelAdjust(const float timeStep)
 	if (!AIIsActive()) return;
 #ifdef DEBUG_AUTOPILOT
 	if (this->IsType(Object::PLAYER))
-		printf("Time accel adjustment, step = %.1f, decel = %s\n", double(timeStep),
+		Output("Time accel adjustment, step = %.1f, decel = %s\n", double(timeStep),
 			m_decelerating ? "true" : "false");
 #endif
 	vector3d vdiff = double(timeStep) * GetLastForce() * (1.0 / GetMass());
@@ -1341,6 +1357,7 @@ void Ship::SetShipType(const ShipType::Id &shipId)
 	SetShipId(shipId);
 	m_equipment.InitSlotSizes(shipId);
 	SetModel(m_type->modelName.c_str());
+	m_skin.SetDecal(m_type->manufacturer);
 	m_skin.Apply(GetModel());
 	Init();
 	onFlavourChanged.emit();
@@ -1360,4 +1377,19 @@ void Ship::SetSkin(const SceneGraph::ModelSkin &skin)
 {
 	m_skin = skin;
 	m_skin.Apply(GetModel());
+}
+
+Uint8 Ship::GetRelations(Body *other) const
+{
+	auto it = m_relationsMap.find(other);
+	if (it != m_relationsMap.end())
+		return it->second;
+
+	return 50;
+}
+
+void Ship::SetRelations(Body *other, Uint8 percent)
+{
+	m_relationsMap[other] = percent;
+	if (m_sensors.get()) m_sensors->UpdateIFF(other);
 }

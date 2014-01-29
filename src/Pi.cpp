@@ -131,6 +131,7 @@ bool Pi::mouseYInvert;
 std::map<SDL_JoystickID,Pi::JoystickState> Pi::joysticks;
 bool Pi::navTunnelDisplayed;
 bool Pi::speedLinesDisplayed = false;
+bool Pi::hudTrailsDisplayed = false;
 Gui::Fixed *Pi::menu;
 bool Pi::DrawGUI = true;
 Graphics::Renderer *Pi::renderer;
@@ -149,6 +150,8 @@ ObjectViewerView *Pi::objectViewerView;
 Sound::MusicPlayer Pi::musicPlayer;
 std::unique_ptr<JobQueue> Pi::jobQueue;
 
+#define USE_RTT 0
+
 //static
 void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 	/*	@fluffyfreak here's a rendertarget implementation you can use for oculusing and other things. It's pretty simple:
@@ -160,8 +163,9 @@ void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 		You can reuse the same target with multiple textures.
 		In that case, leave the color format to NONE so the initial texture is not created, then use SetColorTexture to attach your own.
 	*/
+#if USE_RTT
 	Graphics::TextureDescriptor texDesc(
-		Graphics::TEXTURE_RGB_888,
+		Graphics::TEXTURE_RGBA_8888,
 		vector2f(width, height),
 		Graphics::LINEAR_CLAMP, false, false, 0);
 	Pi::renderTexture.Reset(Pi::renderer->CreateTexture(texDesc));
@@ -178,10 +182,12 @@ void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 	Pi::renderTarget = Pi::renderer->CreateRenderTarget(rtDesc);
 
 	Pi::renderTarget->SetColorTexture(Pi::renderTexture.Get());
+#endif
 }
 
 //static
 void Pi::DrawRenderTarget() {
+#if USE_RTT
 	Pi::renderer->BeginFrame();
 	Pi::renderer->SetViewport(0, 0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());	
 	Pi::renderer->SetTransform(matrix4x4f::Identity());
@@ -212,16 +218,21 @@ void Pi::DrawRenderTarget() {
 	}
 
 	Pi::renderer->EndFrame();
+#endif
 }
 
 //static
 void Pi::BeginRenderTarget() {
+#if USE_RTT
 	Pi::renderer->SetRenderTarget(Pi::renderTarget);
+#endif
 }
 
 //static
 void Pi::EndRenderTarget() {
+#if USE_RTT
 	Pi::renderer->SetRenderTarget(nullptr);
+#endif
 }
 
 static void draw_progress(UI::Gauge *gauge, UI::Label *label, float progress)
@@ -308,7 +319,7 @@ SceneGraph::Model *Pi::FindModel(const std::string &name, bool allowPlaceholder)
 	try {
 		m = Pi::modelCache->FindModel(name);
 	} catch (ModelCache::ModelNotFoundException) {
-		printf("Could not find model: %s\n", name.c_str());
+		Output("Could not find model: %s\n", name.c_str());
 		if (allowPlaceholder) {
 			try {
 				m = Pi::modelCache->FindModel("error");
@@ -365,7 +376,7 @@ void Pi::Init()
 	sdlInitFlags |= SDL_INIT_NOPARACHUTE;
 #endif
 	if (SDL_Init(sdlInitFlags) < 0) {
-		OS::Error("SDL initialization failed: %s\n", SDL_GetError());
+		Error("SDL initialization failed: %s\n", SDL_GetError());
 	}
 
 	// Do rest of SDL video initialization and create Renderer
@@ -387,7 +398,7 @@ void Pi::Init()
 
 		FILE *f = FileSystem::userFiles.OpenWriteStream("opengl.txt", FileSystem::FileSourceFS::WRITE_TEXT);
 		if (!f)
-			fprintf(stderr, "Could not open 'opengl.txt'\n");
+			Output("Could not open 'opengl.txt'\n");
 		const std::string &s = buf.str();
 		fwrite(s.c_str(), 1, s.size(), f);
 		fclose(f);
@@ -403,6 +414,7 @@ void Pi::Init()
 
 	navTunnelDisplayed = (config->Int("DisplayNavTunnel")) ? true : false;
 	speedLinesDisplayed = (config->Int("SpeedLines")) ? true : false;
+	hudTrailsDisplayed = (config->Int("HudTrails")) ? true : false;
 
 	EnumStrings::Init();
 
@@ -412,7 +424,7 @@ void Pi::Init()
 	assert(numCores > 0);
 	if (numThreads == 0) numThreads = std::max(Uint32(numCores) - 1, 1U);
 	jobQueue.reset(new JobQueue(numThreads));
-	printf("started %d worker threads\n", numThreads);
+	Output("started %d worker threads\n", numThreads);
 
 	// XXX early, Lua init needs it
 	ShipType::Init();
@@ -752,7 +764,7 @@ void Pi::HandleEvents()
 								Pi::doProfileOne = true;
 							else {
 								Pi::doProfileSlow = !Pi::doProfileSlow;
-								printf("slow frame profiling %s\n", Pi::doProfileSlow ? "enabled" : "disabled");
+								Output("slow frame profiling %s\n", Pi::doProfileSlow ? "enabled" : "disabled");
 							}
 							break;
 #endif
@@ -777,7 +789,7 @@ void Pi::HandleEvents()
 										Ship *ship = new Ship(ShipType::POLICE);
 										int port = s->GetFreeDockingPort(ship);
 										if (port != -1) {
-											printf("Putting ship into station\n");
+											Output("Putting ship into station\n");
 											// Make police ship intent on killing the player
 											ship->AIKill(Pi::player);
 											ship->SetFrame(Pi::player->GetFrame());
@@ -785,14 +797,17 @@ void Pi::HandleEvents()
 											game->GetSpace()->AddBody(ship);
 										} else {
 											delete ship;
-											printf("No docking ports free dude\n");
+											Output("No docking ports free dude\n");
 										}
 									} else {
-											printf("Select a space station...\n");
+											Output("Select a space station...\n");
 									}
 								} else {
 									Ship *ship = new Ship(ShipType::POLICE);
-									ship->AIKill(Pi::player);
+									if( KeyState(SDLK_LCTRL) )
+										ship->AIFlyTo(Pi::player);	// a less lethal option
+									else
+										ship->AIKill(Pi::player);	// a really lethal option!
 									ship->m_equipment.Set(Equip::SLOT_LASER, 0, Equip::PULSECANNON_DUAL_1MW);
 									ship->m_equipment.Add(Equip::LASER_COOLING_BOOSTER);
 									ship->m_equipment.Add(Equip::ATMOSPHERIC_SHIELDING);
@@ -1243,7 +1258,7 @@ void Pi::MainLoop()
 #ifdef PIONEER_PROFILER
 		const Uint32 profTicks = SDL_GetTicks();
 		if (Pi::doProfileOne || (Pi::doProfileSlow && (profTicks-newTicks) > 100)) { // slow: < ~10fps
-			printf("dumping profile data\n");
+			Output("dumping profile data\n");
 			Profiler::dumphtml(profilerPath.c_str());
 			Pi::doProfileOne = false;
 		}
@@ -1322,7 +1337,7 @@ void Pi::InitJoysticks() {
 
 		state.joystick = SDL_JoystickOpen(n);
 		if (!state.joystick) {
-			fprintf(stderr, "SDL_JoystickOpen(%i): %s\n", n, SDL_GetError());
+			Output("SDL_JoystickOpen(%i): %s\n", n, SDL_GetError());
 			continue;
 		}
 		state.axes.resize(SDL_JoystickNumAxes(state.joystick));

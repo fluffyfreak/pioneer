@@ -41,7 +41,7 @@ BackgroundGen::BackgroundGen(Graphics::Renderer *r, int width, int height)
 , m_aspectRatio(float(width)/float(height))
 , m_renderer(r)
 {
-	m_background.reset(new Background::Container(r, UNIVERSE_SEED));
+	m_background.reset(new Background::Container(r, Pi::rng));
 }
 
 BackgroundGen::~BackgroundGen()
@@ -141,7 +141,7 @@ void BackgroundGen::Draw()
 		BeginRenderTarget(m_renderer, (*it));
 		{
 			m_background->SetDrawFlags( Background::Container::DRAW_STARS | Background::Container::DRAW_MILKY );
-			m_background->Draw(m_renderer, transform);
+			m_background->Draw(transform);
 		}
 		EndRenderTarget(m_renderer);
 
