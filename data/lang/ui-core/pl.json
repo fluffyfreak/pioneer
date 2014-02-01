@@ -55,6 +55,14 @@
       "description" : "",
       "message" : "Kabiny"
    },
+   "CABIN_FREE" : {
+      "description" : "",
+      "message" : "{amount} wolne"
+   },
+   "CABIN_USED" : {
+      "description" : "",
+      "message" : "{amount} użyte"
+   },
    "CANCEL" : {
       "description" : "",
       "message" : "Cofnij"
@@ -74,6 +82,14 @@
    "CARGO_SPACE" : {
       "description" : "",
       "message" : "Miejsce w ładowni"
+   },
+   "CARGO_T_FREE" : {
+      "description" : "",
+      "message" : "{amount}t wolne"
+   },
+   "CARGO_T_USED" : {
+      "description" : "",
+      "message" : "{amount}t użyte"
    },
    "CASH" : {
       "description" : "",
@@ -175,6 +191,18 @@
       "description" : "",
       "message" : "Delta-v"
    },
+   "DELTA_V_EMPTY" : {
+      "description" : "Delta-v capacity of a ship with no cargo or upgrades",
+      "message" : "Delta-v (pusty)"
+   },
+   "DELTA_V_FULL" : {
+      "description" : "Delta-v capacity of a ship with maximum cargo",
+      "message" : "Delta-v (pełny)"
+   },
+   "DELTA_V_MAX" : {
+      "description" : "Delta-v capacity of a ship with cargo bay fully loaded with propellant",
+      "message" : "Delta-v (maks.)"
+   },
    "DESCENT_TO_GROUND_SPEED" : {
       "description" : "",
       "message" : "Prędkość graniczna:"
@@ -186,6 +214,10 @@
    "DISMISS" : {
       "description" : "",
       "message" : "Zwolnij"
+   },
+   "DISPLAY_HUD_TRAILS" : {
+      "description" : "",
+      "message" : "Wyświetl ścieżki HUD"
    },
    "DISPLAY_NAV_TUNNELS" : {
       "description" : "",
@@ -502,6 +534,10 @@
    "MAX" : {
       "description" : "",
       "message" : "maks."
+   },
+   "MAXIMUM_CREW" : {
+      "description" : "",
+      "message" : "Maksymalna ilość załogi"
    },
    "MEDIUM" : {
       "description" : "",
@@ -897,7 +933,7 @@
    },
    "WEIGHT_EMPTY" : {
       "description" : "",
-      "message" : "Masa minimalna:"
+      "message" : "Masa własna"
    },
    "WEIGHT_FULLY_LOADED" : {
       "description" : "",

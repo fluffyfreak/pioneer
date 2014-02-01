@@ -23,12 +23,12 @@
 #include "FileSystem.h"
 #include "graphics/Renderer.h"
 
-static const int  s_saveVersion   = 69;
+static const int  s_saveVersion   = 71;
 static const char s_saveStart[]   = "PIONEER";
 static const char s_saveEnd[]     = "END";
 
-Game::Game(const SystemPath &path) :
-	m_time(0),
+Game::Game(const SystemPath &path, double time) :
+	m_time(time),
 	m_state(STATE_NORMAL),
 	m_wantHyperspace(false),
 	m_timeAccel(TIMEACCEL_1X),
@@ -51,8 +51,8 @@ Game::Game(const SystemPath &path) :
 	CreateViews();
 }
 
-Game::Game(const SystemPath &path, const vector3d &pos) :
-	m_time(0),
+Game::Game(const SystemPath &path, const vector3d &pos, double time) :
+	m_time(time),
 	m_state(STATE_NORMAL),
 	m_wantHyperspace(false),
 	m_timeAccel(TIMEACCEL_1X),
@@ -113,9 +113,9 @@ Game::Game(Serializer::Reader &rd) :
 
 	// version check
 	rd.SetStreamVersion(rd.Int32());
-	fprintf(stderr, "savefile version: %d\n", rd.StreamVersion());
+	Output("savefile version: %d\n", rd.StreamVersion());
 	if (rd.StreamVersion() != s_saveVersion) {
-		fprintf(stderr, "can't load savefile, expected version: %d\n", s_saveVersion);
+		Output("can't load savefile, expected version: %d\n", s_saveVersion);
 		throw SavedGameWrongVersionException();
 	}
 
@@ -395,13 +395,15 @@ void Game::SwitchToHyperspace()
 		m_hyperspaceClouds.push_back(cloud);
 	}
 
-	printf(SIZET_FMT " clouds brought over\n", m_hyperspaceClouds.size());
+	Output(SIZET_FMT " clouds brought over\n", m_hyperspaceClouds.size());
 
 	// remove the player from space
 	m_space->RemoveBody(m_player.get());
 
 	// create hyperspace :)
 	m_space.reset(new Space(this));
+
+	m_space->GetBackground()->SetDrawFlags( Background::Container::DRAW_STARS );
 
 	// put the player in it
 	m_player->SetFrame(m_space->GetRootFrame());
@@ -421,7 +423,7 @@ void Game::SwitchToHyperspace()
 	m_state = STATE_HYPERSPACE;
 	m_wantHyperspace = false;
 
-	printf("Started hyperspacing...\n");
+	Output("Started hyperspacing...\n");
 }
 
 void Game::SwitchToNormalSpace()
@@ -538,6 +540,8 @@ void Game::SwitchToNormalSpace()
 		}
 	}
 	m_hyperspaceClouds.clear();
+
+	m_space->GetBackground()->SetDrawFlags( Background::Container::DRAW_SKYBOX );
 
 	m_state = STATE_NORMAL;
 }
@@ -706,12 +710,12 @@ void Game::DestroyViews()
 
 Game *Game::LoadGame(const std::string &filename)
 {
-	printf("Game::LoadGame('%s')\n", filename.c_str());
-	FILE *f = FileSystem::userFiles.OpenReadStream(FileSystem::JoinPathBelow(Pi::SAVE_DIR_NAME, filename));
-	if (!f) throw CouldNotOpenFileException();
-	Serializer::Reader rd(f);
-	fclose(f);
+	Output("Game::LoadGame('%s')\n", filename.c_str());
+	auto file = FileSystem::userFiles.ReadFile(FileSystem::JoinPathBelow(Pi::SAVE_DIR_NAME, filename));
+	if (!file) throw CouldNotOpenFileException();
+	Serializer::Reader rd(file->AsByteRange());
 	return new Game(rd);
+	// file data is freed here
 }
 
 void Game::SaveGame(const std::string &filename, Game *game)

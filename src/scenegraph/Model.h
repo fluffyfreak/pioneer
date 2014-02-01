@@ -68,12 +68,16 @@
 #include "CollMesh.h"
 #include "graphics/Material.h"
 #include "Serializer.h"
+#include "DeleteEmitter.h"
 #include <stdexcept>
 
 namespace Graphics { class Renderer; }
 
 namespace SceneGraph
 {
+class BaseLoader;
+class ModelBinarizer;
+class BinaryConverter;
 
 struct LoadingError : public std::runtime_error {
 	LoadingError(const std::string &str) : std::runtime_error(str.c_str()) { }
@@ -83,10 +87,13 @@ typedef std::vector<std::pair<std::string, RefCountedPtr<Graphics::Material> > >
 typedef std::vector<Animation*> AnimationContainer;
 typedef std::vector<MatrixTransform *> TagContainer;
 
-class Model
+class Model : public DeleteEmitter
 {
 public:
+	friend class BaseLoader;
 	friend class Loader;
+	friend class ModelBinarizer;
+	friend class BinaryConverter;
 	Model(Graphics::Renderer *r, const std::string &name);
 	~Model();
 
@@ -114,6 +121,7 @@ public:
 	const PatternContainer &GetPatterns() const { return m_patterns; }
 	unsigned int GetNumPatterns() const { return m_patterns.size(); }
 	void SetPattern(unsigned int index);
+	unsigned int GetPattern() const { return m_curPatternIndex; }
 	void SetColors(const std::vector<Color> &colors);
 	void SetDecalTexture(Graphics::Texture *t, unsigned int index = 0);
 	void ClearDecal(unsigned int index = 0);
@@ -136,6 +144,9 @@ public:
 	void Save(Serializer::Writer &wr) const;
 	void Load(Serializer::Reader &rd);
 
+	//serialization aid
+	std::string GetNameForMaterial(Graphics::Material*) const;
+
 private:
 	Model(const Model&);
 
@@ -154,6 +165,7 @@ private:
 	RenderData m_renderData;
 
 	//per-instance flavour data
+	unsigned int m_curPatternIndex;
 	Graphics::Texture *m_curPattern;
 	Graphics::Texture *m_curDecals[MAX_DECAL_MATERIALS];
 };

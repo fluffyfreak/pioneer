@@ -62,7 +62,7 @@ public:
 	const BodyIterator BodiesBegin() const { return m_bodies.begin(); }
 	const BodyIterator BodiesEnd() const { return m_bodies.end(); }
 
-	Background::Container& GetBackground() { return m_background; }
+	Background::Container *GetBackground() { return m_background.get(); }
 
 	// body finder delegates
 	typedef std::vector<Body*> BodyNearList;
@@ -76,7 +76,7 @@ public:
 
 
 private:
-	void GenBody(SystemBody *b, Frame *f);
+	void GenBody(double at_time, SystemBody *b, Frame *f);
 	// make sure SystemBody* is in Pi::currentSystem
 	Frame *GetFrameWithSystemBody(const SystemBody *b) const;
 
@@ -111,7 +111,7 @@ private:
 
 	//background (elements that are infinitely far away,
 	//e.g. starfield and milky way)
-	Background::Container m_background;
+	std::unique_ptr<Background::Container> m_background;
 
 	class BodyNearFinder {
 	public:

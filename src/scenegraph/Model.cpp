@@ -6,6 +6,7 @@
 #include "NodeCopyCache.h"
 #include "graphics/Renderer.h"
 #include "graphics/TextureBuilder.h"
+#include "StringF.h"
 
 namespace SceneGraph {
 
@@ -22,6 +23,7 @@ Model::Model(Graphics::Renderer *r, const std::string &name)
 : m_boundingRadius(10.f)
 , m_renderer(r)
 , m_name(name)
+, m_curPatternIndex(0)
 , m_curPattern(0)
 {
 	m_root.Reset(new Group(m_renderer));
@@ -36,6 +38,7 @@ Model::Model(const Model &model)
 , m_collMesh(model.m_collMesh) //might have to make this per-instance at some point
 , m_renderer(model.m_renderer)
 , m_name(model.m_name)
+, m_curPatternIndex(model.m_curPatternIndex)
 , m_curPattern(model.m_curPattern)
 {
 	//selective copying of node structure
@@ -182,6 +185,7 @@ void Model::AddTag(const std::string &name, MatrixTransform *node)
 {
 	if (FindTagByName(name)) return;
 	node->SetName(name);
+	node->SetNodeFlags(node->GetNodeFlags() | NODE_TAG);
 	m_root->AddChild(node);
 	m_tags.push_back(node);
 }
@@ -191,6 +195,7 @@ void Model::SetPattern(unsigned int index)
 	if (m_patterns.empty() || index > m_patterns.size() - 1) return;
 	const Pattern &pat = m_patterns.at(index);
 	m_colorMap.SetSmooth(pat.smoothColor);
+	m_curPatternIndex = index;
 	m_curPattern = pat.texture.Get();
 }
 
@@ -231,7 +236,7 @@ void Model::ClearDecal(unsigned int index)
 bool Model::SupportsDecals()
 {
 	for (unsigned int i=0; i<MAX_DECAL_MATERIALS; i++)
-		if (m_decalMaterials[i]) return true;
+		if (m_decalMaterials[i].Valid()) return true;
 
 	return false;
 }
@@ -297,6 +302,8 @@ void Model::Save(Serializer::Writer &wr) const
 
 	for (AnimationContainer::const_iterator i = m_animations.begin(); i != m_animations.end(); ++i)
 		wr.Double((*i)->GetProgress());
+
+	wr.Int32(m_curPatternIndex);
 }
 
 class LoadVisitor : public NodeVisitor {
@@ -322,6 +329,24 @@ void Model::Load(Serializer::Reader &rd)
 	for (AnimationContainer::const_iterator i = m_animations.begin(); i != m_animations.end(); ++i)
 		(*i)->SetProgress(rd.Double());
 	UpdateAnimations();
+
+	SetPattern(rd.Int32());
+}
+
+std::string Model::GetNameForMaterial(Graphics::Material *mat) const
+{
+	for (auto it : m_materials) {
+		Graphics::Material* modelMat = it.second.Get();
+		if (modelMat == mat) return it.first;
+	}
+
+	//check decal materials
+	for (Uint32 i = 0; i < MAX_DECAL_MATERIALS; i++) {
+		if (m_decalMaterials[i].Valid() && m_decalMaterials[i].Get() == mat)
+			return stringf("decal_%0{u}", i + 1);
+	}
+
+	return "unknown";
 }
 
 }

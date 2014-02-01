@@ -55,6 +55,14 @@
       "description" : "",
       "message" : "Utaskabin"
    },
+   "CABIN_FREE" : {
+      "description" : "",
+      "message" : "{amount} szabad"
+   },
+   "CABIN_USED" : {
+      "description" : "",
+      "message" : "{amount} foglalt"
+   },
    "CANCEL" : {
       "description" : "",
       "message" : "Mégse"
@@ -74,6 +82,14 @@
    "CARGO_SPACE" : {
       "description" : "",
       "message" : "Raktér kapacitás"
+   },
+   "CARGO_T_FREE" : {
+      "description" : "",
+      "message" : "{amount}t szabad"
+   },
+   "CARGO_T_USED" : {
+      "description" : "",
+      "message" : "{amount}t foglalt"
    },
    "CASH" : {
       "description" : "",
@@ -175,6 +191,18 @@
       "description" : "",
       "message" : "Delta-V"
    },
+   "DELTA_V_EMPTY" : {
+      "description" : "Delta-v capacity of a ship with no cargo or upgrades",
+      "message" : "Delta-v (üres)"
+   },
+   "DELTA_V_FULL" : {
+      "description" : "Delta-v capacity of a ship with maximum cargo",
+      "message" : "Delta-v (tele)"
+   },
+   "DELTA_V_MAX" : {
+      "description" : "Delta-v capacity of a ship with cargo bay fully loaded with propellant",
+      "message" : "Delta-v (max)"
+   },
    "DESCENT_TO_GROUND_SPEED" : {
       "description" : "",
       "message" : "Sebesség ereszkedéshez:"
@@ -186,6 +214,10 @@
    "DISMISS" : {
       "description" : "",
       "message" : "Elbocsájt"
+   },
+   "DISPLAY_HUD_TRAILS" : {
+      "description" : "",
+      "message" : "HUD nyomvonalak"
    },
    "DISPLAY_NAV_TUNNELS" : {
       "description" : "",
@@ -233,7 +265,7 @@
    },
    "ENGINEERING" : {
       "description" : "",
-      "message" : "Gépészet"
+      "message" : "Gépészet:"
    },
    "EQUIPMENT" : {
       "description" : "",
@@ -502,6 +534,10 @@
    "MAX" : {
       "description" : "",
       "message" : "max"
+   },
+   "MAXIMUM_CREW" : {
+      "description" : "",
+      "message" : "Maximum legénység"
    },
    "MEDIUM" : {
       "description" : "",
@@ -897,7 +933,7 @@
    },
    "WEIGHT_EMPTY" : {
       "description" : "",
-      "message" : "Üres tömeg:"
+      "message" : "Üres súly"
    },
    "WEIGHT_FULLY_LOADED" : {
       "description" : "",

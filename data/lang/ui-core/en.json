@@ -55,6 +55,14 @@
       "description" : "",
       "message" : "Cabins"
    },
+   "CABIN_FREE" : {
+      "description" : "",
+      "message" : "{amount} free"
+   },
+   "CABIN_USED" : {
+      "description" : "",
+      "message" : "{amount} used"
+   },
    "CANCEL" : {
       "description" : "",
       "message" : "Cancel"
@@ -74,6 +82,14 @@
    "CARGO_SPACE" : {
       "description" : "",
       "message" : "Cargo space"
+   },
+   "CARGO_T_FREE" : {
+      "description" : "",
+      "message" : "{amount}t free"
+   },
+   "CARGO_T_USED" : {
+      "description" : "",
+      "message" : "{amount}t used"
    },
    "CASH" : {
       "description" : "",
@@ -175,6 +191,18 @@
       "description" : "",
       "message" : "Delta-v"
    },
+   "DELTA_V_EMPTY" : {
+      "description" : "Delta-v capacity of a ship with no cargo or upgrades",
+      "message" : "Delta-v (empty)"
+   },
+   "DELTA_V_FULL" : {
+      "description" : "Delta-v capacity of a ship with maximum cargo",
+      "message" : "Delta-v (full)"
+   },
+   "DELTA_V_MAX" : {
+      "description" : "Delta-v capacity of a ship with cargo bay fully loaded with propellant",
+      "message" : "Delta-v (max)"
+   },
    "DESCENT_TO_GROUND_SPEED" : {
       "description" : "",
       "message" : "Descent-to-ground speed:"
@@ -194,6 +222,10 @@
    "DISPLAY_SPEED_LINES" : {
       "description" : "",
       "message" : "Display speed lines"
+   },
+   "DISPLAY_HUD_TRAILS" : {
+      "description" : "",
+      "message" : "Display HUD trails"
    },
    "DOCK_AT_CURRENT_TARGET" : {
       "description" : "",
@@ -233,7 +265,7 @@
    },
    "ENGINEERING" : {
       "description" : "",
-      "message" : "Engineering"
+      "message" : "Engineering:"
    },
    "EQUIPMENT" : {
       "description" : "",
@@ -502,6 +534,10 @@
    "MAX" : {
       "description" : "",
       "message" : "max"
+   },
+   "MAXIMUM_CREW" : {
+      "description" : "",
+      "message" : "Maximum crew"
    },
    "MEDIUM" : {
       "description" : "",
@@ -897,7 +933,7 @@
    },
    "WEIGHT_EMPTY" : {
       "description" : "",
-      "message" : "Weight empty:"
+      "message" : "Weight empty"
    },
    "WEIGHT_FULLY_LOADED" : {
       "description" : "",

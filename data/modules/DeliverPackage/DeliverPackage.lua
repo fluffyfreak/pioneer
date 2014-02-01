@@ -225,7 +225,11 @@ local makeAdvert = function (station)
 		starport = sbody.name,
 	})
 
-	local ref = station:AddAdvert(ad.desc, onChat, onDelete)
+	local ref = station:AddAdvert({
+		description = ad.desc, 
+		icon        = ad.urgency >=  0.8 and "delivery_urgent" or "delivery",
+		onChat      = onChat, 
+		onDelete    = onDelete})
 	ads[ref] = ad
 end
 
@@ -257,7 +261,7 @@ local onEnterSystem = function (player)
 	local syspath = Game.system.path
 
 	for ref,mission in pairs(missions) do
-		if not mission.status and mission.location:IsSameSystem(syspath) then
+		if mission.status == "ACTIVE" and mission.location:IsSameSystem(syspath) then
 			local risk = flavours[mission.flavour].risk
 			local ships = 0
 
@@ -305,7 +309,7 @@ local onEnterSystem = function (player)
 			end
 		end
 
-		if not mission.status and Game.time > mission.due then
+		if mission.status == "ACTIVE" and Game.time > mission.due then
 			mission.status = 'FAILED'
 		end
 	end
@@ -334,7 +338,7 @@ local onShipDocked = function (player, station)
 			mission:Remove()
 			missions[ref] = nil
 
-		elseif not mission.status and Game.time > mission.due then
+		elseif mission.status == "ACTIVE" and Game.time > mission.due then
 			mission.status = 'FAILED'
 		end
 
@@ -350,7 +354,11 @@ local onGameStart = function ()
 	if not loaded_data then return end
 
 	for k,ad in pairs(loaded_data.ads) do
-		local ref = ad.station:AddAdvert(ad.desc, onChat, onDelete)
+		local ref = ad.station:AddAdvert({
+			description = ad.desc, 
+            icon        = ad.urgency >=  0.8 and "delivery_urgent" or "delivery",
+			onChat      = onChat, 
+			onDelete    = onDelete})
 		ads[ref] = ad
 	end
 

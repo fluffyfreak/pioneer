@@ -55,6 +55,14 @@
       "description" : "",
       "message" : "Alloggi"
    },
+   "CABIN_FREE" : {
+      "description" : "",
+      "message" : "{amount} liberi"
+   },
+   "CABIN_USED" : {
+      "description" : "",
+      "message" : "{amount} occupati"
+   },
    "CANCEL" : {
       "description" : "",
       "message" : "Annulla"
@@ -74,6 +82,14 @@
    "CARGO_SPACE" : {
       "description" : "",
       "message" : "Capacità di carico"
+   },
+   "CARGO_T_FREE" : {
+      "description" : "",
+      "message" : "{amount}t disponibili"
+   },
+   "CARGO_T_USED" : {
+      "description" : "",
+      "message" : "{amount}t occupate"
    },
    "CASH" : {
       "description" : "",
@@ -175,6 +191,18 @@
       "description" : "",
       "message" : "Delta-V"
    },
+   "DELTA_V_EMPTY" : {
+      "description" : "Delta-v capacity of a ship with no cargo or upgrades",
+      "message" : "Delta-v (vuoto)"
+   },
+   "DELTA_V_FULL" : {
+      "description" : "Delta-v capacity of a ship with maximum cargo",
+      "message" : "Delta-v (pieno)"
+   },
+   "DELTA_V_MAX" : {
+      "description" : "Delta-v capacity of a ship with cargo bay fully loaded with propellant",
+      "message" : "Delta-v (max)"
+   },
    "DESCENT_TO_GROUND_SPEED" : {
       "description" : "",
       "message" : "Velocità di discesa-a-terra:"
@@ -186,6 +214,10 @@
    "DISMISS" : {
       "description" : "",
       "message" : "Licenzia"
+   },
+   "DISPLAY_HUD_TRAILS" : {
+      "description" : "",
+      "message" : "Mostra scie nel HUD"
    },
    "DISPLAY_NAV_TUNNELS" : {
       "description" : "",
@@ -233,7 +265,7 @@
    },
    "ENGINEERING" : {
       "description" : "",
-      "message" : "Ingegneria"
+      "message" : "Ingegneria:"
    },
    "EQUIPMENT" : {
       "description" : "",
@@ -502,6 +534,10 @@
    "MAX" : {
       "description" : "",
       "message" : "massimo"
+   },
+   "MAXIMUM_CREW" : {
+      "description" : "",
+      "message" : "Equipaggio massimo"
    },
    "MEDIUM" : {
       "description" : "",
@@ -897,7 +933,7 @@
    },
    "WEIGHT_EMPTY" : {
       "description" : "",
-      "message" : "Peso a vuoto:"
+      "message" : "Peso a vuoto"
    },
    "WEIGHT_FULLY_LOADED" : {
       "description" : "",

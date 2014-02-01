@@ -23,6 +23,9 @@
 #include "gl2/StarfieldMaterial.h"
 #include "gl2/HMDWarpMaterial.h"
 #include "gl2/FresnelColourMaterial.h"
+#include "gl2/ShieldMaterial.h"
+#include "gl2/SkyboxMaterial.h"
+
 #include <stddef.h> //for offsetof
 #include <ostream>
 #include <sstream>
@@ -173,7 +176,7 @@ bool RendererGL2::SwapBuffers()
 			ss << glerr_to_string(err) << '\n';
 			err = glGetError();
 		}
-		OS::Error("%s", ss.str().c_str());
+		Error("%s", ss.str().c_str());
 	}
 #endif
 
@@ -653,7 +656,7 @@ bool RendererGL2::BufferStaticMesh(StaticMesh *mesh)
 	bool background = false;
 	bool model = false;
 	//XXX does this really have to support every case. I don't know.
-	if (set == (ATTRIB_POSITION | ATTRIB_NORMAL | ATTRIB_UV0))
+	if ((set & ~ATTRIB_NORMAL) == (ATTRIB_POSITION | ATTRIB_UV0))
 		model = true;
 	else if (set == (ATTRIB_POSITION | ATTRIB_DIFFUSE))
 		background = true;
@@ -679,8 +682,12 @@ bool RendererGL2::BufferStaticMesh(StaticMesh *mesh)
 			std::unique_ptr<ModelVertex[]> vts(new ModelVertex[numsverts]);
 			for(int j=0; j<numsverts; j++) {
 				vts[j].position = va->position[j];
+				if(set & ATTRIB_NORMAL) {
 				vts[j].normal = va->normal[j];
+				}
+				if(set & ATTRIB_UV0) {
 				vts[j].uv = va->uv0[j];
+			}
 			}
 
 			if (!buf)
@@ -764,6 +771,12 @@ Material *RendererGL2::CreateMaterial(const MaterialDescriptor &d)
 	case EFFECT_FRESNEL_SPHERE:
 		mat = new GL2::FresnelColourMaterial();
 		break;
+	case EFFECT_SHIELD:
+		mat = new GL2::ShieldMaterial();
+		break;
+	case EFFECT_SKYBOX:
+		mat = new GL2::SkyboxMaterial();
+		break;
 	case EFFECT_HMDWARP:
 		mat = new GL2::HMDWarpMaterial();
 		break;
@@ -786,11 +799,11 @@ Material *RendererGL2::CreateMaterial(const MaterialDescriptor &d)
 
 bool RendererGL2::ReloadShaders()
 {
-	printf("Reloading " SIZET_FMT " programs...\n", m_programs.size());
+	Output("Reloading " SIZET_FMT " programs...\n", m_programs.size());
 	for (ProgramIterator it = m_programs.begin(); it != m_programs.end(); ++it) {
 		it->second->Reload();
 	}
-	printf("Done.\n");
+	Output("Done.\n");
 
 	return true;
 }

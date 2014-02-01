@@ -62,12 +62,13 @@ Space::Space(Game *game)
 	, m_frameIndexValid(false)
 	, m_bodyIndexValid(false)
 	, m_sbodyIndexValid(false)
-	, m_background(Pi::renderer, UNIVERSE_SEED)
 	, m_bodyNearFinder(this)
 #ifndef NDEBUG
 	, m_processingFinalizationQueue(false)
 #endif
 {
+	m_background.reset(new Background::Container(Pi::renderer, Pi::rng));
+
 	m_rootFrame.reset(new Frame(0, Lang::SYSTEM));
 	m_rootFrame->SetRadius(FLT_MAX);
 }
@@ -77,14 +78,16 @@ Space::Space(Game *game, const SystemPath &path)
 	, m_frameIndexValid(false)
 	, m_bodyIndexValid(false)
 	, m_sbodyIndexValid(false)
-	, m_background(Pi::renderer)
 	, m_bodyNearFinder(this)
 #ifndef NDEBUG
 	, m_processingFinalizationQueue(false)
 #endif
 {
 	m_starSystem = StarSystem::GetCached(path);
-	m_background.Refresh(m_starSystem->GetSeed());
+
+	Uint32 _init[5] = { path.systemIndex, Uint32(path.sectorX), Uint32(path.sectorY), Uint32(path.sectorZ), UNIVERSE_SEED };
+	Random rand(_init, 5);
+	m_background.reset(new Background::Container(Pi::renderer, rand));
 
 	CityOnPlanet::SetCityModelPatterns(m_starSystem->GetPath());
 
@@ -92,7 +95,7 @@ Space::Space(Game *game, const SystemPath &path)
 	m_rootFrame.reset(new Frame(0, Lang::SYSTEM));
 	m_rootFrame->SetRadius(FLT_MAX);
 
-	GenBody(m_starSystem->rootBody.Get(), m_rootFrame.get());
+	GenBody(m_game->GetTime(), m_starSystem->rootBody.Get(), m_rootFrame.get());
 	m_rootFrame->UpdateOrbitRails(m_game->GetTime(), m_game->GetTimeStep());
 
 	//DebugDumpFrames();
@@ -103,14 +106,18 @@ Space::Space(Game *game, Serializer::Reader &rd)
 	, m_frameIndexValid(false)
 	, m_bodyIndexValid(false)
 	, m_sbodyIndexValid(false)
-	, m_background(Pi::renderer)
 	, m_bodyNearFinder(this)
 #ifndef NDEBUG
 	, m_processingFinalizationQueue(false)
 #endif
 {
 	m_starSystem = StarSystem::Unserialize(rd);
-	m_background.Refresh(m_starSystem->GetSeed());
+
+	const SystemPath &path = m_starSystem->GetPath();
+	Uint32 _init[5] = { path.systemIndex, Uint32(path.sectorX), Uint32(path.sectorY), Uint32(path.sectorZ), UNIVERSE_SEED };
+	Random rand(_init, 5);
+	m_background.reset(new Background::Container(Pi::renderer, rand));
+
 	RebuildSystemBodyIndex();
 
 	CityOnPlanet::SetCityModelPatterns(m_starSystem->GetPath());
@@ -390,7 +397,7 @@ static void RelocateStarportIfUnderwaterOrBuried(SystemBody *sbody, Frame *frame
 	const double heightVariationCheckThreshold = 0.008; // max variation to radius radius ratio to check for local slope, ganymede is around 0.01
 	const double terrainHeightVariation = planet->GetGeoSphere()->GetMaxFeatureHeight(); //in radii
 
-	//printf("%s: terrain height variation %f\n", sbody->name.c_str(), terrainHeightVariation);
+	//Output("%s: terrain height variation %f\n", sbody->name.c_str(), terrainHeightVariation);
 
 	// 6 points are sampled around the starport center by adding/subtracting delta to to coords
 	// points must stay within max height variation to be accepted
@@ -439,7 +446,7 @@ static void RelocateStarportIfUnderwaterOrBuried(SystemBody *sbody, Frame *frame
 		// check if underwater
 		const bool starportUnderwater = (height <= 0.0);
 
-		//printf("%s: try no: %i, Match found: %i, best variation in previous results %f, variationMax this try: %f, maxHeightVariation: %f, Starport is underwater: %i\n",
+		//Output("%s: try no: %i, Match found: %i, best variation in previous results %f, variationMax this try: %f, maxHeightVariation: %f, Starport is underwater: %i\n",
 		//	sbody->name.c_str(), tries, (variationWithinLimits && !starportUnderwater), bestVariation, variationMax, maxHeightVariation, starportUnderwater);
 
 		if  (tries == 0) {
@@ -472,21 +479,21 @@ static void RelocateStarportIfUnderwaterOrBuried(SystemBody *sbody, Frame *frame
 		SystemPath &p = sbody->path;
 		if (initialVariationTooHigh) {
 			if (isRelocatableIfBuried) {
-				printf("Warning: Lua custom Systems definition: Surface starport has been automatically relocated. This is in order to place it on flatter ground to reduce the chance of landing pads being buried. This is not an error as such and you may attempt to move the starport to another location by changing latitude and longitude fields.\n      Surface starport name: %s, Body name: %s, In sector: x = %i, y = %i, z = %i.\n",
+				Output("Warning: Lua custom Systems definition: Surface starport has been automatically relocated. This is in order to place it on flatter ground to reduce the chance of landing pads being buried. This is not an error as such and you may attempt to move the starport to another location by changing latitude and longitude fields.\n      Surface starport name: %s, Body name: %s, In sector: x = %i, y = %i, z = %i.\n",
 					sbody->name.c_str(), sbody->parent->name.c_str(), p.sectorX, p.sectorY, p.sectorZ);
 			} else {
-				printf("Warning: Lua custom Systems definition: Surface starport may have landing pads buried. The surface starport has not been automatically relocated as the planet appears smooth enough to manually relocate easily. This is not an error as such and you may attempt to move the starport to another location by changing latitude and longitude fields.\n      Surface starport name: %s, Body name: %s, In sector: x = %i, y = %i, z = %i.\n",
+				Output("Warning: Lua custom Systems definition: Surface starport may have landing pads buried. The surface starport has not been automatically relocated as the planet appears smooth enough to manually relocate easily. This is not an error as such and you may attempt to move the starport to another location by changing latitude and longitude fields.\n      Surface starport name: %s, Body name: %s, In sector: x = %i, y = %i, z = %i.\n",
 					sbody->name.c_str(), sbody->parent->name.c_str(), p.sectorX, p.sectorY, p.sectorZ);
 			}
 		}
 		if (isInitiallyUnderwater) {
-			fprintf(stderr, "Error: Lua custom Systems definition: Surface starport is underwater (height not greater than 0.0) and has been automatically relocated. Please move the starport to another location by changing latitude and longitude fields.\n      Surface starport name: %s, Body name: %s, In sector: x = %i, y = %i, z = %i.\n",
+			Output("Error: Lua custom Systems definition: Surface starport is underwater (height not greater than 0.0) and has been automatically relocated. Please move the starport to another location by changing latitude and longitude fields.\n      Surface starport name: %s, Body name: %s, In sector: x = %i, y = %i, z = %i.\n",
 				sbody->name.c_str(), sbody->parent->name.c_str(), p.sectorX, p.sectorY, p.sectorZ);
 		}
 	}
 }
 
-static Frame *MakeFrameFor(SystemBody *sbody, Body *b, Frame *f)
+static Frame *MakeFrameFor(double at_time, SystemBody *sbody, Body *b, Frame *f)
 {
 	if (!sbody->parent) {
 		if (b) b->SetFrame(f);
@@ -511,7 +518,7 @@ static Frame *MakeFrameFor(SystemBody *sbody, Body *b, Frame *f)
 		Frame *orbFrame = new Frame(f, sbody->name.c_str(), Frame::FLAG_HAS_ROT);
 		orbFrame->SetBodies(sbody, b);
 		orbFrame->SetRadius(frameRadius);
-		//printf("\t\t\t%s has frame size %.0fkm, body radius %.0fkm\n", sbody->name.c_str(),
+		//Output("\t\t\t%s has frame size %.0fkm, body radius %.0fkm\n", sbody->name.c_str(),
 		//	(frameRadius ? frameRadius : 10*sbody->GetRadius())*0.001f,
 		//	sbody->GetRadius()*0.001f);
 
@@ -528,7 +535,7 @@ static Frame *MakeFrameFor(SystemBody *sbody, Body *b, Frame *f)
 
 		if (sbody->rotationalPhaseAtStart != fixed(0))
 			rotMatrix = rotMatrix * matrix3x3d::RotateY(sbody->rotationalPhaseAtStart.ToDouble());
-		rotFrame->SetOrient(rotMatrix);
+		rotFrame->SetInitialOrient(rotMatrix, at_time);
 
 		b->SetFrame(rotFrame);
 		return orbFrame;
@@ -587,7 +594,7 @@ static Frame *MakeFrameFor(SystemBody *sbody, Body *b, Frame *f)
 	return 0;
 }
 
-void Space::GenBody(SystemBody *sbody, Frame *f)
+void Space::GenBody(double at_time, SystemBody *sbody, Frame *f)
 {
 	Body *b = 0;
 
@@ -607,10 +614,10 @@ void Space::GenBody(SystemBody *sbody, Frame *f)
 		b->SetPosition(vector3d(0,0,0));
 		AddBody(b);
 	}
-	f = MakeFrameFor(sbody, b, f);
+	f = MakeFrameFor(at_time, sbody, b, f);
 
 	for (std::vector<SystemBody*>::iterator i = sbody->children.begin(); i != sbody->children.end(); ++i) {
-		GenBody(*i, f);
+		GenBody(at_time, *i, f);
 	}
 }
 
@@ -630,7 +637,7 @@ static bool OnCollision(Object *o1, Object *o2, CollisionContact *c, double rela
 
 static void hitCallback(CollisionContact *c)
 {
-	//printf("OUCH! %x (depth %f)\n", SDL_GetTicks(), c->depth);
+	//Output("OUCH! %x (depth %f)\n", SDL_GetTicks(), c->depth);
 
 	Object *po1 = static_cast<Object*>(c->userData1);
 	Object *po2 = static_cast<Object*>(c->userData2);
@@ -821,15 +828,15 @@ static char space[256];
 
 static void DebugDumpFrame(Frame *f, unsigned int indent)
 {
-	printf("%.*s%p (%s)", indent, space, f, f->GetLabel().c_str());
+	Output("%.*s%p (%s)", indent, space, f, f->GetLabel().c_str());
 	if (f->GetParent())
-		printf(" parent %p (%s)", f->GetParent(), f->GetParent()->GetLabel().c_str());
+		Output(" parent %p (%s)", f->GetParent(), f->GetParent()->GetLabel().c_str());
 	if (f->GetBody())
-		printf(" body %p (%s)", f->GetBody(), f->GetBody()->GetLabel().c_str());
+		Output(" body %p (%s)", f->GetBody(), f->GetBody()->GetLabel().c_str());
 	if (Body *b = f->GetBody())
-		printf(" bodyFor %p (%s)", b, b->GetLabel().c_str());
-	printf(" distance %f radius %f", f->GetPosition().Length(), f->GetRadius());
-	printf("%s\n", f->IsRotFrame() ? " [rotating]" : "");
+		Output(" bodyFor %p (%s)", b, b->GetLabel().c_str());
+	Output(" distance %f radius %f", f->GetPosition().Length(), f->GetRadius());
+	Output("%s\n", f->IsRotFrame() ? " [rotating]" : "");
 
 	for (Frame::ChildIterator it = f->BeginChildren(); it != f->EndChildren(); ++it)
 		DebugDumpFrame(*it, indent+2);
@@ -839,6 +846,6 @@ void Space::DebugDumpFrames()
 {
 	memset(space, ' ', sizeof(space));
 
-	printf("Frame structure for '%s':\n", m_starSystem->GetName().c_str());
+	Output("Frame structure for '%s':\n", m_starSystem->GetName().c_str());
 	DebugDumpFrame(m_rootFrame.get(), 2);
 }
