@@ -18,7 +18,6 @@
 
 namespace Graphics { class Renderer; class Frustum; }
 class SystemBody;
-class GeoPatch;
 class GeoPatchContext;
 class GeoSphere;
 class BasePatchJob;
@@ -35,6 +34,8 @@ public:
 	std::unique_ptr<double[]> heights;
 	std::unique_ptr<vector3f[]> normals;
 	std::unique_ptr<Color3ub[]> colors;
+	std::unique_ptr<vector3f[]> instances;
+	Uint32 m_numInstances;
 	GLuint m_vbo;
 	std::unique_ptr<GeoPatch> kids[NUM_KIDS];
 	GeoPatch *parent;
