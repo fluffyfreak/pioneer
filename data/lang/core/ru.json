@@ -109,11 +109,11 @@
    },
    "BODIES" : {
       "description" : "",
-      "message" : "тел"
+      "message" : "объектами"
    },
    "BODY" : {
       "description" : "",
-      "message" : "тело"
+      "message" : "объектом"
    },
    "BROWN_DWARF" : {
       "description" : "",
@@ -205,11 +205,11 @@
    },
    "CLEARANCE_DENIED_NO_BAYS" : {
       "description" : "",
-      "message" : "Посадка запрещена. Нет свободных стыковочных площадок."
+      "message" : "Посадка запрещена. Нет свободных парковочных площадок."
    },
    "CLEARANCE_GRANTED_BAY_N" : {
       "description" : "",
-      "message" : "Разрешение на посадку предоставлено. Стыковочная площадка номер %bay."
+      "message" : "Разрешение на посадку предоставлено. Парковочная площадка номер %bay."
    },
    "CO2_ATMOSPHERE" : {
       "description" : "",
@@ -261,7 +261,7 @@
    },
    "COUNT_STARPORTS" : {
       "description" : "",
-      "message" : "космопорт(ов)"
+      "message" : "космопортом(-ами)"
    },
    "CO_ATMOSPHERE" : {
       "description" : "",
@@ -317,11 +317,11 @@
    },
    "DOCKED" : {
       "description" : "",
-      "message" : "Состыкован"
+      "message" : "Парковка"
    },
    "DOCKING" : {
       "description" : "",
-      "message" : "Стыковочная зона"
+      "message" : "Парковочная зона"
    },
    "DOCKING_CLEARANCE_EXPIRED" : {
       "description" : "",
@@ -649,7 +649,7 @@
    },
    "HYPERSPACING_IN_N_SECONDS" : {
       "description" : "",
-      "message" : "Обратный отсчёт до прыжка: %countdown{f.0} сек."
+      "message" : "Гиперпрыжок через %countdown{f.0} сек."
    },
    "H_ATMOSPHERE" : {
       "description" : "",
@@ -717,7 +717,7 @@
    },
    "KM_S_RELATIVE_TO" : {
       "description" : "",
-      "message" : "Скорость %speed{f.2} км/с относительно %frame"
+      "message" : "%speed{f.2} км/с относительно %frame"
    },
    "LANDED" : {
       "description" : "",
@@ -753,7 +753,7 @@
    },
    "LAUNCH_PERMISSION_DENIED_BUSY" : {
       "description" : "",
-      "message" : "Разрешение на взлёт запрещён: стыковочная зона занята."
+      "message" : "Разрешение на взлёт запрещён: парковочная зона занята."
    },
    "LIBERAL_DEMOCRACY" : {
       "description" : "",
@@ -1025,7 +1025,7 @@
    },
    "NAVIGATION_STAR_MAPS" : {
       "description" : "",
-      "message" : "Навигационные и звёздные карты"
+      "message" : "Навигация и звёздные карты"
    },
    "NAVIGATION_TARGETS_IN_THIS_SYSTEM" : {
       "description" : "",
@@ -1073,7 +1073,7 @@
    },
    "NO_TARGET_SELECTED" : {
       "description" : "",
-      "message" : "Компьютер корабля: цель не выбрана"
+      "message" : "Бортовой компьютер: цель не выбрана"
    },
    "NUMBER_DAYS" : {
       "description" : "",
@@ -1537,7 +1537,7 @@
    },
    "SMALL_SCALE_PROSPECTING_NO_SETTLEMENTS" : {
       "description" : "",
-      "message" : "Ограниченные разведочные работы. Нет зарегистрированных  поселений."
+      "message" : "Слабо исследована. Нет зарегистрированных  поселений."
    },
    "SOCIAL_DEMOCRACY" : {
       "description" : "",
@@ -1561,7 +1561,7 @@
    },
    "STABLE_SYSTEM_WITH_N_MAJOR_BODIES_STARPORTS" : {
       "description" : "",
-      "message" : "Стабильная система с %bodycount основным %{body(s)} и %portcount %{starport(s)}"
+      "message" : "Стабильная планетная система с %bodycount космическими %{body(s)} и %portcount %{starport(s)}"
    },
    "STARPORT" : {
       "description" : "",

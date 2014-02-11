@@ -1,19 +1,19 @@
 {
    "ASSASSINATION" : {
       "description" : "",
-      "message" : "Assassination"
+      "message" : "Suikast"
    },
    "COULD_YOU_REPEAT_THE_ORIGINAL_REQUEST" : {
       "description" : "",
-      "message" : "Could you repeat the original request?"
+      "message" : "İlk isteğinizi tekrarlar mısınız?"
    },
    "DISTANCE" : {
       "description" : "",
-      "message" : "Distance:"
+      "message" : "Uzaklık:"
    },
    "EXCELLENT" : {
       "description" : "",
-      "message" : "Excellent."
+      "message" : "Mükemmel."
    },
    "FLAVOUR_0_ADTEXT" : {
       "description" : "",
@@ -29,7 +29,7 @@
    },
    "FLAVOUR_0_INTROTEXT" : {
       "description" : "",
-      "message" : "Hi, I'm {name}. I'll pay you {cash} to get rid of {target}."
+      "message" : "Merhaba, ben {name}.  Sana {target}dan kurtulman için {cash} ödeyecegim."
    },
    "FLAVOUR_0_SUCCESSMSG" : {
       "description" : "",
@@ -81,11 +81,11 @@
    },
    "FLAVOUR_3_FAILUREMSG" : {
       "description" : "",
-      "message" : "You will pay for not eliminating {target}!"
+      "message" : "{target}'ı yok etmemenin bedelini ödeyeceksin!"
    },
    "FLAVOUR_3_FAILUREMSG2" : {
       "description" : "",
-      "message" : "Are you asking money for job done by someone else? Get lost."
+      "message" : "Başka biri tarafından yapılan bir iş için mi para istiyorsun? Kaybol."
    },
    "FLAVOUR_3_INTROTEXT" : {
       "description" : "",
@@ -93,11 +93,11 @@
    },
    "FLAVOUR_3_SUCCESSMSG" : {
       "description" : "",
-      "message" : "{target} is dead. Here is your award."
+      "message" : "{target} öldü. Ödülünüzü buyrun."
    },
    "FLAVOUR_4_ADTEXT" : {
       "description" : "",
-      "message" : "RETIREMENT: Someone to retire {target}."
+      "message" : "EMEKLİLİK: {target} için emekliye ayıracak birisi."
    },
    "FLAVOUR_4_FAILUREMSG" : {
       "description" : "",
@@ -113,11 +113,11 @@
    },
    "FLAVOUR_4_SUCCESSMSG" : {
       "description" : "",
-      "message" : "News of {target}'s retirement delightfully obtained. Here is your money."
+      "message" : "{target} hakkında çıkan emeklilik haberi zevkle alındı. Buyrun paranız."
    },
    "FLAVOUR_5_ADTEXT" : {
       "description" : "",
-      "message" : "BIOGRAPHICAL: Some admirers wish {target} dead."
+      "message" : "BİYOGRAFİK: Bazı hayranları {target}ın ölü olmasını diliyor. "
    },
    "FLAVOUR_5_FAILUREMSG" : {
       "description" : "",
@@ -125,7 +125,7 @@
    },
    "FLAVOUR_5_FAILUREMSG2" : {
       "description" : "",
-      "message" : "{target} was neutralized by someone else."
+      "message" : "{target} başka birisi tarafından etkisiz hale getirildi"
    },
    "FLAVOUR_5_INTROTEXT" : {
       "description" : "",
@@ -137,15 +137,15 @@
    },
    "HANG_UP" : {
       "description" : "",
-      "message" : "Hang up."
+      "message" : "Bekle."
    },
    "HOW_SOON_MUST_IT_BE_DONE" : {
       "description" : "",
-      "message" : "How soon must it be done?"
+      "message" : "En yakın ne zaman yapılması gerekiyor?"
    },
    "HOW_WILL_I_BE_PAID" : {
       "description" : "",
-      "message" : "How will I be paid?"
+      "message" : "Bana nasıl ödeme yapılacak?"
    },
    "IT_MUST_BE_DONE_AFTER" : {
       "description" : "",
@@ -157,7 +157,7 @@
    },
    "OK_AGREED" : {
       "description" : "",
-      "message" : "Ok, agreed."
+      "message" : "Tamam, anlaştık."
    },
    "RETURN_HERE_ON_THE_COMPLETION_OF_THE_CONTRACT_AND_YOU_WILL_BE_PAID" : {
       "description" : "",
@@ -165,39 +165,39 @@
    },
    "SHIP" : {
       "description" : "",
-      "message" : "Ship:"
+      "message" : "Gemi:"
    },
    "SHIP_ID" : {
       "description" : "",
-      "message" : "Ship ID:"
+      "message" : "Gemi No:"
    },
    "SPACEPORT" : {
       "description" : "",
-      "message" : "Spaceport:"
+      "message" : "Yıldız Limanı:"
    },
    "SYSTEM" : {
       "description" : "",
-      "message" : "System:"
+      "message" : "Sistem:"
    },
    "TARGET_NAME" : {
       "description" : "",
-      "message" : "Target name:"
+      "message" : "Hedef ismi"
    },
    "TARGET_WILL_BE_LEAVING_SPACEPORT_AT" : {
       "description" : "",
-      "message" : "Target will be leaving spaceport at:"
+      "message" : "Hedef şu tarihte yıldız limanını terkedecek:"
    },
    "TITLE_0" : {
       "description" : "",
-      "message" : "Admiral"
+      "message" : "Amiral"
    },
    "TITLE_1" : {
       "description" : "",
-      "message" : "Ambassador"
+      "message" : "Büyük elçi"
    },
    "TITLE_10" : {
       "description" : "",
-      "message" : "Ensign"
+      "message" : "Asteğmen"
    },
    "TITLE_11" : {
       "description" : "",
@@ -205,91 +205,91 @@
    },
    "TITLE_12" : {
       "description" : "",
-      "message" : "Judge"
+      "message" : "Hakim"
    },
    "TITLE_13" : {
       "description" : "",
-      "message" : "Lawyer"
+      "message" : "Avukat"
    },
    "TITLE_14" : {
       "description" : "",
-      "message" : "Lieutenant"
+      "message" : "Teğmen"
    },
    "TITLE_15" : {
       "description" : "",
-      "message" : "Marshal"
+      "message" : "Mareşal"
    },
    "TITLE_16" : {
       "description" : "",
-      "message" : "Merchant"
+      "message" : "Tüccar"
    },
    "TITLE_17" : {
       "description" : "",
-      "message" : "Officer"
+      "message" : "Subay"
    },
    "TITLE_18" : {
       "description" : "",
-      "message" : "Private"
+      "message" : "Er"
    },
    "TITLE_19" : {
       "description" : "",
-      "message" : "Professor"
+      "message" : "Profesör"
    },
    "TITLE_2" : {
       "description" : "",
-      "message" : "Brigadier"
+      "message" : "Tuğgeneral"
    },
    "TITLE_20" : {
       "description" : "",
-      "message" : "Prosecutor"
+      "message" : "Savcı"
    },
    "TITLE_21" : {
       "description" : "",
-      "message" : "Provost"
+      "message" : "Subay"
    },
    "TITLE_22" : {
       "description" : "",
-      "message" : "Seaman"
+      "message" : "Denizci"
    },
    "TITLE_23" : {
       "description" : "",
-      "message" : "Senator"
+      "message" : "Senatör"
    },
    "TITLE_24" : {
       "description" : "",
-      "message" : "Sergeant"
+      "message" : "Çavuş"
    },
    "TITLE_3" : {
       "description" : "",
-      "message" : "Cadet"
+      "message" : "Askeri öğrenci"
    },
    "TITLE_4" : {
       "description" : "",
-      "message" : "Captain"
+      "message" : "Yüzbaşı"
    },
    "TITLE_5" : {
       "description" : "",
-      "message" : "Cardinal"
+      "message" : "Kardinal"
    },
    "TITLE_6" : {
       "description" : "",
-      "message" : "Colonel"
+      "message" : "Albay"
    },
    "TITLE_7" : {
       "description" : "",
-      "message" : "Commandant"
+      "message" : "Kumandan"
    },
    "TITLE_8" : {
       "description" : "",
-      "message" : "Commodore"
+      "message" : "Komodor"
    },
    "TITLE_9" : {
       "description" : "",
-      "message" : "Corporal"
+      "message" : "Onbaşı"
    },
    "WHERE_CAN_I_FIND_X" : {
       "description" : "",
-      "message" : "Where can I find {target}?"
+      "message" : "{target} nerede bulunabilir?"
    },
    "X_WILL_BE_LEAVING" : {
       "description" : "",
