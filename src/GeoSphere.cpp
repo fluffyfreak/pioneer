@@ -176,13 +176,22 @@ void GeoSphere::Reset()
 }
 
 #define GEOSPHERE_TYPE	(m_sbody->type)
-
+#pragma optimize("",off)
 GeoSphere::GeoSphere(const SystemBody *body) : m_sbody(body), m_terrain(Terrain::InstanceTerrain(body)),
-	m_hasTempCampos(false), m_tempCampos(0.0), mCurrentNumPatches(0), mCurrentMemAllocatedToPatches(0), m_initStage(eBuildFirstPatches)
+	m_hasTempCampos(false), m_tempCampos(0.0), m_maxDepth(0), mCurrentNumPatches(0), mCurrentMemAllocatedToPatches(0), m_initStage(eBuildFirstPatches)
 {
 	print_info(body, m_terrain.Get());
 
 	s_allGeospheres.push_back(this);
+
+	const double circumference = 2.0 * M_PI * m_sbody->GetRadius();
+	// calculate length of each edge segment (quad)
+	double edgeMetres = circumference / double(s_patchContext->edgeLen);
+	// find out what depth we reach the 1m resolution
+	while (edgeMetres>2.0 && m_maxDepth<20) {
+		edgeMetres *= 0.5;
+		++m_maxDepth;
+	}
 
 	//SetUpMaterials is not called until first Render since light count is zero :)
 }

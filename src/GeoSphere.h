@@ -89,6 +89,8 @@ private:
 	bool m_hasTempCampos;
 	vector3d m_tempCampos;
 
+	Uint32 m_maxDepth;
+
 	uint32_t mCurrentNumPatches;
 	uint64_t mCurrentMemAllocatedToPatches;
 
