@@ -3,9 +3,6 @@
 
 #ifndef MODELVIEWER_H
 #define MODELVIEWER_H
-
-// viewer for sgmodels
-
 #include "libs.h"
 #include "LuaManager.h"
 #include "NavLights.h"
@@ -41,10 +38,6 @@ private:
 	void ClearModel();
 	void CreateTestResources();
 	void DrawBackground();
-	void DrawTags();
-	void DrawDockingLocators();
-	void DrawCollisionMesh();
-	void DrawAabb();
 	void DrawGrid(const matrix4x4f &trans, float radius);
 	void DrawLog();
 	void DrawModel();
@@ -57,10 +50,12 @@ private:
 	void OnPatternChanged(unsigned int, const std::string&);
 	void OnThrustChanged(float);
 	void PollEvents();
+	void PopulateFilePicker();
 	void ResetCamera();
 	void ResetThrusters();
 	void Screenshot();
-	void SetModel(const std::string& name, bool resetCamera = true);
+	void SaveModelToBinary();
+	void SetModel(const std::string& name);
 	void SetupFilePicker();
 	void SetupUI();
 	void UpdateAnimList();
@@ -109,6 +104,7 @@ private:
 	std::unique_ptr<SceneGraph::Model> m_scaleModel;
 	std::string m_modelName;
 	RefCountedPtr<UI::Context> m_ui;
+	Graphics::RenderState *m_bgState;
 
 	//undecided on this input stuff
 	//updating the states of all inputs during PollEvents
@@ -121,6 +117,7 @@ private:
 	UI::MultiLineText *m_log;
 	RefCountedPtr<UI::Scroller> m_logScroller;
 
+	UI::List *m_fileList;
 	UI::DropDown *animSelector;
 	UI::DropDown *patternSelector;
 	UI::DropDown *decalSelector;
@@ -131,9 +128,6 @@ private:
 	UI::Slider *thrustSliders[2*3]; //thruster sliders 2*xyz (linear & angular)
 
 	sigc::signal<void> onModelChanged;
-
-	std::vector<Graphics::Drawables::Line3D> m_dockingPoints;
-	std::vector<Graphics::Drawables::Line3D> m_tagPoints;
 };
 
 #endif

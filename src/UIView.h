@@ -11,9 +11,10 @@
 class UIView : public View {
 public:
 	UIView(const char *templateName) : m_templateName(templateName) {}
+	UIView() : m_templateName(0) {}
 
-	virtual void Update(const ViewEye eye = ViewEye_Centre);
-	virtual void Draw3D(const ViewEye eye = ViewEye_Centre);
+	virtual void Update(const ViewEye eye = ViewEye_Centre) {};
+	virtual void Draw3D(const ViewEye eye = ViewEye_Centre) {};
 
 protected:
 	virtual void OnSwitchTo();

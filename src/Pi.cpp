@@ -143,6 +143,7 @@ SDLGraphics *Pi::sdl;
 Graphics::RenderTarget *Pi::renderTarget;
 RefCountedPtr<Graphics::Texture> Pi::renderTexture;
 std::unique_ptr<Graphics::Drawables::TexturedQuad> Pi::renderQuads[eVP_MAX];
+Graphics::RenderState *Pi::s_quadsRenderState = nullptr;
 
 #if WITH_OBJECTVIEWER
 ObjectViewerView *Pi::objectViewerView;
@@ -165,6 +166,13 @@ void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 		In that case, leave the color format to NONE so the initial texture is not created, then use SetColorTexture to attach your own.
 	*/
 #if USE_RTT
+
+	Graphics::RenderStateDesc rsd;
+	rsd.depthTest  = false;
+	rsd.depthWrite = false;
+	rsd.blendMode = Graphics::BLEND_ALPHA;
+	s_quadsRenderState = Pi::renderer->CreateRenderState(rsd);
+
 	Graphics::TextureDescriptor texDesc(
 		Graphics::TEXTURE_RGBA_8888,
 		vector2f(width, height),
@@ -179,12 +187,12 @@ void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 		// create first (left) viewport material and quad
 		Graphics::Material* hmdMat = Pi::renderer->CreateMaterial(desc);
 		hmdMat->specialParameter0 = new OculusRiftInterface::Viewport(0,0,640,800);
-		Pi::renderQuads[eVPLeft].reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, renderTexture.Get(), hmdMat, vector2f(0.0f,0.0f), vector2f(400.0f, 600.0f)));
+		Pi::renderQuads[eVPLeft].reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, renderTexture.Get(), hmdMat, vector2f(0.0f,0.0f), vector2f(400.0f, 600.0f), s_quadsRenderState));
 
 		// create second (right) viewport material and quad
 		hmdMat = Pi::renderer->CreateMaterial(desc);
 		hmdMat->specialParameter0 = new OculusRiftInterface::Viewport(640,0,640,800);
-		Pi::renderQuads[eVPRight].reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, renderTexture.Get(), hmdMat, vector2f(400.0f,0.0f), vector2f(400.0f, 600.0f)));
+		Pi::renderQuads[eVPRight].reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, renderTexture.Get(), hmdMat, vector2f(400.0f,0.0f), vector2f(400.0f, 600.0f), s_quadsRenderState));
 	} 
 
 	// Oculus Rift is 1280×800 (640×800 per eye)
@@ -209,11 +217,8 @@ void Pi::DrawRenderTarget(const bool bAllowHMD /*= false*/) {
 	Pi::renderer->SetViewport(0, 0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());	
 	Pi::renderer->SetTransform(matrix4x4f::Identity());
 
-	//Gui::Screen::EnterOrtho();
 	{
-		Pi::renderer->SetDepthTest(false);
-		Pi::renderer->SetLightsEnabled(false);
-		Pi::renderer->SetBlendMode(Graphics::BLEND_ALPHA);
+		//Pi::renderer->SetLightsEnabled(false);
 		Pi::renderer->SetMatrixMode(Graphics::MatrixMode::PROJECTION);
 		Pi::renderer->PushMatrix();
 		Pi::renderer->SetOrthographicProjection(0, 800, 600, 0, -1, 1);
@@ -229,14 +234,11 @@ void Pi::DrawRenderTarget(const bool bAllowHMD /*= false*/) {
 		Pi::renderQuads[eVPCentre]->Draw( Pi::renderer );
 	}
 
-	//Gui::Screen::LeaveOrtho();
 	{
 		Pi::renderer->SetMatrixMode(Graphics::MatrixMode::PROJECTION);
 		Pi::renderer->PopMatrix();
 		Pi::renderer->SetMatrixMode(Graphics::MatrixMode::MODELVIEW);
 		Pi::renderer->PopMatrix();
-		Pi::renderer->SetLightsEnabled(true);
-		Pi::renderer->SetDepthTest(true);
 	}
 
 	Pi::renderer->EndFrame();
@@ -507,6 +509,11 @@ void Pi::Init()
 	CustomSystem::Init();
 	draw_progress(gauge, label, 0.4f);
 
+	// Reload home sector, they might have changed, due to custom systems
+	// Sectors might be changed in game, so have to re-create them again once we have a Game.
+	Faction::SetHomeSectors();
+	draw_progress(gauge, label, 0.45f);
+
 	modelCache = new ModelCache(Pi::renderer);
 	Shields::Init(Pi::renderer);
 	draw_progress(gauge, label, 0.5f);
@@ -656,30 +663,13 @@ void Pi::Init()
 	}
 #endif
 
-	luaConsole = new LuaConsole(10);
-	KeyBindings::toggleLuaConsole.onPress.connect(sigc::ptr_fun(&Pi::ToggleLuaConsole));
+	luaConsole = new LuaConsole();
+	KeyBindings::toggleLuaConsole.onPress.connect(sigc::mem_fun(Pi::luaConsole, &LuaConsole::Toggle));
 }
 
 bool Pi::IsConsoleActive()
 {
 	return luaConsole && luaConsole->IsActive();
-}
-
-void Pi::ToggleLuaConsole()
-{
-	if (luaConsole->IsVisible()) {
-		luaConsole->Hide();
-		if (luaConsole->GetTextEntryField()->IsFocused())
-			Gui::Screen::ClearFocus();
-		Gui::Screen::RemoveBaseWidget(luaConsole);
-	} else {
-		// luaConsole is added and removed from the base widget set
-		// (rather than just using Show()/Hide())
-		// so that it's forced in front of any other base widgets when it opens
-		Gui::Screen::AddBaseWidget(luaConsole, 0, 0);
-		luaConsole->Show();
-		luaConsole->GetTextEntryField()->Show();
-	}
 }
 
 void Pi::Quit()
@@ -705,11 +695,19 @@ void Pi::Quit()
 	delete Pi::modelCache;
 	delete Pi::renderer;
 	delete Pi::config;
-	StarSystem::ShrinkCache();
+	StarSystemCache::ShrinkCache(SystemPath(), true);
 	SDL_Quit();
 	FileSystem::Uninit();
 	jobQueue.reset();
 	exit(0);
+}
+
+void Pi::FlushCaches()
+{
+	StarSystemCache::ShrinkCache(SystemPath(), true);
+	Sector::cache.ClearCache();
+	// XXX Ideally the cache would now be empty, but we still have Faction::m_homesector :(
+	// assert(Sector::cache.IsEmpty());
 }
 
 void Pi::BoinkNoise()
@@ -734,6 +732,16 @@ void Pi::HandleEvents()
 	PROFILE_SCOPED()
 	SDL_Event event;
 
+	// XXX for most keypresses SDL will generate KEYUP/KEYDOWN and TEXTINPUT
+	// events. keybindings run off KEYUP/KEYDOWN. the console is opened/closed
+	// via keybinding. the console TextInput widget uses TEXTINPUT events. thus
+	// after switching the console, the stray TEXTINPUT event causes the
+	// console key (backtick) to appear in the text entry field. we hack around
+	// this by setting this flag if the console was switched. if its set, we
+	// swallow the TEXTINPUT event this hack must remain until we have a
+	// unified input system
+	bool skipTextInput = false;
+
 	Pi::mouseMotion[0] = Pi::mouseMotion[1] = 0;
 	while (SDL_PollEvent(&event)) {
 		if (event.type == SDL_QUIT) {
@@ -741,14 +749,28 @@ void Pi::HandleEvents()
 				Pi::EndGame();
 			Pi::Quit();
 		}
-		else if (ui->DispatchSDLEvent(event))
+
+		if (skipTextInput && event.type == SDL_TEXTINPUT) {
+			skipTextInput = false;
+			continue;
+		}
+		if (ui->DispatchSDLEvent(event))
 			continue;
 
-		Gui::HandleSDLEvent(&event);
-		if (!Pi::IsConsoleActive())
+		bool consoleActive = Pi::IsConsoleActive();
+		if (!consoleActive)
 			KeyBindings::DispatchSDLEvent(&event);
 		else
 			KeyBindings::toggleLuaConsole.CheckSDLEventAndDispatch(&event);
+		if (consoleActive != Pi::IsConsoleActive()) {
+			skipTextInput = true;
+			continue;
+		}
+
+		if (Pi::IsConsoleActive())
+			continue;
+
+		Gui::HandleSDLEvent(&event);
 
 		switch (event.type) {
 			case SDL_KEYDOWN:
@@ -1086,6 +1108,8 @@ void Pi::Start()
 
 void Pi::EndGame()
 {
+	Pi::SetMouseGrab(false);
+
 	Pi::musicPlayer.Stop();
 	Sound::DestroyAllEvents();
 
@@ -1103,7 +1127,8 @@ void Pi::EndGame()
 	game = 0;
 	player = 0;
 
-	StarSystem::ShrinkCache();
+	FlushCaches();
+	//Faction::SetHomeSectors(); // We might need them to start a new game
 }
 
 void Pi::MainLoop()
@@ -1125,8 +1150,6 @@ void Pi::MainLoop()
 	int MAX_PHYSICS_TICKS = Pi::config->Int("MaxPhysicsCyclesPerRender");
 	if (MAX_PHYSICS_TICKS <= 0)
 		MAX_PHYSICS_TICKS = 4;
-
-	ui->DropAllLayers();
 
 	double currentTime = 0.001 * double(SDL_GetTicks());
 	double accumulator = Pi::game->GetTimeStep();
@@ -1249,6 +1272,9 @@ void Pi::MainLoop()
 			}
 		}
 
+		Pi::ui->Update();
+		Pi::ui->Draw();
+
 #if WITH_DEVKEYS
 		if (Pi::showDebugInfo) {
 			Gui::Screen::EnterOrtho();
@@ -1274,7 +1300,9 @@ void Pi::MainLoop()
 			// XXX should this really be limited to while the player is alive?
 			// this is something we need not do every turn...
 			if (!config->Int("DisableSound")) AmbientSounds::Update();
-			StarSystem::ShrinkCache();
+			if( !Pi::game->IsHyperspace() ) {
+				StarSystemCache::ShrinkCache( Pi::game->GetSpace()->GetStarSystem()->GetPath() );
+			}
 		}
 		cpan->Update();
 		musicPlayer.Update();

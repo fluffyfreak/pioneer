@@ -8,9 +8,9 @@
 #include "matrix4x4.h"
 #include "Lang.h"
 #include "Serializer.h"
+#include "Camera.h"
 
 class Ship;
-class Camera;
 
 class CameraController
 {
@@ -21,7 +21,7 @@ public:
 		SIDEREAL
 	};
 
-	CameraController(std::vector<Camera*> &cameras, const Ship *ship);
+	CameraController(std::vector<RefCountedPtr<CameraContext>> &cameras, const Ship *ship);
 	virtual ~CameraController() {}
 
 	virtual void Reset();
@@ -45,7 +45,7 @@ public:
 	const Ship *GetShip() const { return m_ship; }
 
 protected:
-	std::vector<Camera*> m_cameras;
+	std::vector<RefCountedPtr<CameraContext>> m_cameras;
 
 private:
 	const Ship *m_ship;
@@ -65,7 +65,7 @@ public:
 		MODE_BOTTOM
 	};
 
-	InternalCameraController(std::vector<Camera*> &cameras, const Ship *ship);
+	InternalCameraController(std::vector<RefCountedPtr<CameraContext>> &cameras, const Ship *ship);
 	virtual void Reset();
 
 	Type GetType() const { return INTERNAL; }
@@ -91,7 +91,7 @@ private:
 
 class MoveableCameraController : public CameraController {
 public:
-	MoveableCameraController(std::vector<Camera*> &cameras, const Ship *ship) :
+	MoveableCameraController(std::vector<RefCountedPtr<CameraContext>> &cameras, const Ship *ship) :
 		CameraController(cameras, ship) {}
 	virtual void Reset() { }
 
@@ -116,7 +116,7 @@ public:
 // Zoomable, rotatable orbit camera, always looks at the ship
 class ExternalCameraController : public MoveableCameraController {
 public:
-	ExternalCameraController(std::vector<Camera*> &cameras, const Ship *ship);
+	ExternalCameraController(std::vector<RefCountedPtr<CameraContext>> &cameras, const Ship *ship);
 
 	Type GetType() const { return EXTERNAL; }
 	const char *GetName() const { return Lang::EXTERNAL_VIEW; }
@@ -152,7 +152,7 @@ private:
 // Much like external camera, but does not turn when the ship turns
 class SiderealCameraController : public MoveableCameraController {
 public:
-	SiderealCameraController(std::vector<Camera*> &cameras, const Ship *ship);
+	SiderealCameraController(std::vector<RefCountedPtr<CameraContext>> &cameras, const Ship *ship);
 
 	Type GetType() const { return SIDEREAL; }
 	const char *GetName() const { return Lang::SIDEREAL_VIEW; }

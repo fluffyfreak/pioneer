@@ -7,7 +7,7 @@
 #include "Pi.h"
 #include "Game.h"
 
-CameraController::CameraController(std::vector<Camera*> &cameras, const Ship *ship) :
+CameraController::CameraController(std::vector<RefCountedPtr<CameraContext>> &cameras, const Ship *ship) :
 	m_cameras(cameras),
 	m_ship(ship),
 	m_pos(0.0),
@@ -30,7 +30,7 @@ void CameraController::Update()
 	const matrix3x3d finalorient = (m * m_orient);
 	if( m_cameras.size()!=2 )
 	{
-		for(std::vector<Camera*>::iterator it=m_cameras.begin(), itEnd=m_cameras.end(); it!=itEnd; ++it)
+		for(std::vector<RefCountedPtr<CameraContext>>::iterator it=m_cameras.begin(), itEnd=m_cameras.end(); it!=itEnd; ++it)
 		{
 			(*it)->SetFrame(pShipFrame);
 
@@ -66,7 +66,7 @@ void CameraController::Update()
 	}
 }
 
-InternalCameraController::InternalCameraController(std::vector<Camera*> &cameras, const Ship *ship) :
+InternalCameraController::InternalCameraController(std::vector<RefCountedPtr<CameraContext>> &cameras, const Ship *ship) :
 	CameraController(cameras, ship),
 	m_mode(MODE_FRONT)
 {
@@ -178,7 +178,7 @@ void InternalCameraController::Update()
 	CameraController::Update();
 }
 
-ExternalCameraController::ExternalCameraController(std::vector<Camera*> &cameras, const Ship *ship) :
+ExternalCameraController::ExternalCameraController(std::vector<RefCountedPtr<CameraContext>> &cameras, const Ship *ship) :
 	MoveableCameraController(cameras, ship),
 	m_dist(200), m_distTo(m_dist),
 	m_rotX(0),
@@ -276,7 +276,8 @@ void ExternalCameraController::Load(Serializer::Reader &rd)
 	m_distTo = m_dist;
 }
 
-SiderealCameraController::SiderealCameraController(std::vector<Camera*> &cameras, const Ship *ship) :
+
+SiderealCameraController::SiderealCameraController(std::vector<RefCountedPtr<CameraContext>> &cameras, const Ship *ship) :
 	MoveableCameraController(cameras, ship),
 	m_dist(200), m_distTo(m_dist),
 	m_sidOrient(matrix3x3d::Identity())
