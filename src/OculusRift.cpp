@@ -113,15 +113,18 @@ public:
 
 		//if (!setupWindow())
 		//	return 1;
+
     
 		if (pSensor)
 		{
+			pSFusion = new SensorFusion();
+			assert(pSFusion);
 			// We need to attach sensor to SensorFusion object for it to receive 
-			// body frame messages and update orientation. SFusion.GetOrientation() 
+			// body frame messages and update orientation. pSFusion->GetOrientation() 
 			// is used in OnIdle() to orient the view.
-			SFusion.AttachToSensor(pSensor);
-			SFusion.SetDelegateMessageHandler(this);
-			SFusion.SetPredictionEnabled(true);
+			pSFusion->AttachToSensor(pSensor);
+			pSFusion->SetDelegateMessageHandler(this);
+			pSFusion->SetPredictionEnabled(true);
 		}
 
     	// *** Configure Stereo settings.
@@ -155,21 +158,12 @@ public:
 		if(System::IsInitialized())
 		{
 			RemoveHandlerFromDevices();
-			if(nullptr!=pSensor)
-			{
-				pSensor->Release();
-				//delete pSensor; pSensor = nullptr;
-			}
-			if(nullptr!=pHMD)
-			{
-				pHMD->Release();
-				//delete pHMD; pHMD = nullptr;
-			}
-			if(nullptr!=pManager)
-			{
-				pManager->Release();
-				//delete pManager; pManager = nullptr;
-			}
+			pSensor.Clear();
+			pHMD.Clear();
+			pManager.Clear();
+			
+			delete pSFusion; 
+			
 			System::Destroy();
 		}
 	}
@@ -181,7 +175,7 @@ public:
 		// to allow "additional" yaw manipulation with mouse/controller.
 		if(pSensor)
 		{
-			Quatf    hmdOrient = SFusion.GetPredictedOrientation();
+			Quatf    hmdOrient = pSFusion->GetPredictedOrientation();
 
 			hmdOrient.GetEulerAngles<Axis_Y, Axis_X, Axis_Z>(&m_yaw, &m_pitch, &m_roll);
 
@@ -192,7 +186,7 @@ public:
 			// Matrix4f hmdMat(hmdOrient);
 
 			// Test logic - assign quaternion result directly to view:
-			// Quatf hmdOrient = SFusion.GetOrientation();
+			// Quatf hmdOrient = pSFusion->GetOrientation();
 			// View = Matrix4f(hmdOrient.Inverted()) * Matrix4f::Translation(-EyePos);
 		}
 	}
@@ -257,11 +251,11 @@ private:
 	}
 
 	// *** Oculus HMD Variables
-    DeviceManager	*pManager;
-    SensorDevice	*pSensor;
-    HMDDevice		*pHMD;
-    SensorFusion				SFusion;
-    OVR::HMDInfo				HMDInfo;
+    Ptr<DeviceManager>	pManager;
+    Ptr<SensorDevice>	pSensor;
+    Ptr<HMDDevice>		pHMD;
+    SensorFusion		*pSFusion;
+    OVR::HMDInfo		HMDInfo;
 
 	// Stereo view parameters.
     StereoConfig        SConfig;
