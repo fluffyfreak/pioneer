@@ -7,9 +7,20 @@ Authors     :   Lee Cooper
 
 Copyright   :   Copyright 2013 Oculus VR, Inc. All Rights reserved.
 
-Use of this software is subject to the terms of the Oculus license
-agreement provided at the time of installation or download, or which
+Licensed under the Oculus VR SDK License Version 2.0 (the "License"); 
+you may not use the Oculus VR SDK except in compliance with the License, 
+which is provided at the time of installation or download, or which 
 otherwise accompanies this software in either electronic or hard copy form.
+
+You may obtain a copy of the License at
+
+http://www.oculusvr.com/licenses/LICENSE-2.0 
+
+Unless required by applicable law or agreed to in writing, the Oculus VR SDK 
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 
 *************************************************************************************/
 
@@ -18,6 +29,7 @@ otherwise accompanies this software in either electronic or hard copy form.
 
 //#include "OVR_Device.h"
 #include "OVR_DeviceImpl.h"
+#include "OVR_HIDDeviceImpl.h"
 
 namespace OVR {
 
@@ -45,7 +57,7 @@ class HIDDeviceImpl : public DeviceImpl<B>, public HIDDevice::HIDHandler
 {
 public:
     HIDDeviceImpl(HIDDeviceCreateDesc* createDesc, DeviceBase* parent)
-     :  DeviceImpl<B>(createDesc, parent)        
+     :  DeviceImpl<B>(createDesc, parent)
     {
     }
 
@@ -82,11 +94,11 @@ public:
             case Message_DeviceAdded:
                 manager->CallOnDeviceAdded(this->pCreateDesc);
                 break;
-                
+
             case Message_DeviceRemoved:
                 manager->CallOnDeviceRemoved(this->pCreateDesc);
                 break;
-                
+
             default:;
         }
     }
@@ -114,7 +126,7 @@ public:
     }
 
     virtual void Shutdown()
-    {   
+    {
         InternalDevice->SetHandler(NULL);
 
         // Remove the handler, if any.
@@ -148,7 +160,7 @@ public:
     };
 
     bool SetFeatureReport(UByte* data, UInt32 length)
-    { 
+    {
         WriteData writeData(data, length);
 
         // Push call with wait.
@@ -167,7 +179,7 @@ public:
     }
 
     bool GetFeatureReport(UByte* data, UInt32 length)
-    { 
+    {
         bool result = false;
 
 		ThreadCommandQueue* pQueue = this->GetManagerImpl()->GetThreadQueue();

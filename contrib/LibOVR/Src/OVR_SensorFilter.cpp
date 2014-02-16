@@ -4,13 +4,24 @@ PublicHeader:   OVR.h
 Filename    :   OVR_SensorFilter.cpp
 Content     :   Basic filtering of sensor data
 Created     :   March 7, 2013
-Authors     :   Steve LaValle, Anna Yershova
+Authors     :   Steve LaValle, Anna Yershova, Max Katsev
 
-Copyright   :   Copyright 2012 Oculus VR, Inc. All Rights reserved.
+Copyright   :   Copyright 2013 Oculus VR, Inc. All Rights reserved.
 
-Use of this software is subject to the terms of the Oculus license
-agreement provided at the time of installation or download, or which
+Licensed under the Oculus VR SDK License Version 2.0 (the "License"); 
+you may not use the Oculus VR SDK except in compliance with the License, 
+which is provided at the time of installation or download, or which 
 otherwise accompanies this software in either electronic or hard copy form.
+
+You may obtain a copy of the License at
+
+http://www.oculusvr.com/licenses/LICENSE-2.0 
+
+Unless required by applicable law or agreed to in writing, the Oculus VR SDK 
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 
 *************************************************************************************/
 
@@ -18,35 +29,15 @@ otherwise accompanies this software in either electronic or hard copy form.
 
 namespace OVR {
 
-Vector3f SensorFilter::Total() const
-{
-    Vector3f total = Vector3f(0.0f, 0.0f, 0.0f);
-    for (int i = 0; i < Size; i++)
-        total += Elements[i];
-    return total;
-}
-
-Vector3f SensorFilter::Mean() const
-{
-    Vector3f total = Vector3f(0.0f, 0.0f, 0.0f);
-    for (int i = 0; i < Size; i++)
-        total += Elements[i];
-    return total / (float) Size;
-}
-
 Vector3f SensorFilter::Median() const
 {
-    int half_window = (int) Size / 2;
-    float sortx[MaxFilterSize];
-    float resultx = 0.0f;
+    int half_window = Count / 2;
+    float* sortx = (float*) OVR_ALLOC(Count * sizeof(float));
+    float* sorty = (float*) OVR_ALLOC(Count * sizeof(float));
+    float* sortz = (float*) OVR_ALLOC(Count * sizeof(float));
+    float resultx = 0.0f, resulty = 0.0f, resultz = 0.0f;
 
-    float sorty[MaxFilterSize];
-    float resulty = 0.0f;
-
-    float sortz[MaxFilterSize];
-    float resultz = 0.0f;
-
-    for (int i = 0; i < Size; i++) 
+    for (int i = 0; i < Count; i++) 
     {
         sortx[i] = Elements[i].x;
         sorty[i] = Elements[i].y;
@@ -57,7 +48,7 @@ Vector3f SensorFilter::Median() const
         int minx = j;
         int miny = j;
         int minz = j;
-        for (int k = j + 1; k < Size; k++) 
+        for (int k = j + 1; k < Count; k++) 
         {
             if (sortx[k] < sortx[minx]) minx = k;
             if (sorty[k] < sorty[miny]) miny = k;
@@ -79,6 +70,10 @@ Vector3f SensorFilter::Median() const
     resulty = sorty[half_window];
     resultz = sortz[half_window];
 
+    OVR_FREE(sortx);
+    OVR_FREE(sorty);
+    OVR_FREE(sortz);
+
     return Vector3f(resultx, resulty, resultz);
 }
 
@@ -87,13 +82,13 @@ Vector3f SensorFilter::Variance() const
 {
     Vector3f mean = Mean();
     Vector3f total = Vector3f(0.0f, 0.0f, 0.0f);
-    for (int i = 0; i < Size; i++) 
+    for (int i = 0; i < Count; i++) 
     {
         total.x += (Elements[i].x - mean.x) * (Elements[i].x - mean.x);
         total.y += (Elements[i].y - mean.y) * (Elements[i].y - mean.y);
         total.z += (Elements[i].z - mean.z) * (Elements[i].z - mean.z);
     }
-    return total / (float) Size;
+    return total / (float) Count;
 }
 
 // Should be a 3x3 matrix returned, but OVR_math.h doesn't have one
@@ -101,7 +96,7 @@ Matrix4f SensorFilter::Covariance() const
 {
     Vector3f mean = Mean();
     Matrix4f total = Matrix4f(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0);
-    for (int i = 0; i < Size; i++) 
+    for (int i = 0; i < Count; i++) 
     {
         total.M[0][0] += (Elements[i].x - mean.x) * (Elements[i].x - mean.x);
         total.M[1][0] += (Elements[i].y - mean.y) * (Elements[i].x - mean.x);
@@ -115,7 +110,7 @@ Matrix4f SensorFilter::Covariance() const
     total.M[1][2] = total.M[2][1];
     for (int i = 0; i < 3; i++)
         for (int j = 0; j < 3; j++)
-            total.M[i][j] *= 1.0f / Size;
+            total.M[i][j] *= 1.0f / Count;
     return total;
 }
 
@@ -129,73 +124,5 @@ Vector3f SensorFilter::PearsonCoefficient() const
 
     return pearson;
 }
-
-
-Vector3f SensorFilter::SavitzkyGolaySmooth8() const
-{
-    OVR_ASSERT(Size >= 8);
-    return GetPrev(0)*0.41667f +
-            GetPrev(1)*0.33333f +
-            GetPrev(2)*0.25f +
-            GetPrev(3)*0.16667f +
-            GetPrev(4)*0.08333f -
-            GetPrev(6)*0.08333f -
-            GetPrev(7)*0.16667f;
-}
-
-
-Vector3f SensorFilter::SavitzkyGolayDerivative4() const
-{
-    OVR_ASSERT(Size >= 4);
-    return GetPrev(0)*0.3f +
-            GetPrev(1)*0.1f -
-            GetPrev(2)*0.1f -
-            GetPrev(3)*0.3f;
-}
-
-Vector3f SensorFilter::SavitzkyGolayDerivative5() const
-{
-    OVR_ASSERT(Size >= 5);
-    return GetPrev(0)*0.2f +
-            GetPrev(1)*0.1f -
-            GetPrev(3)*0.1f -
-            GetPrev(4)*0.2f;
-}
-
-Vector3f SensorFilter::SavitzkyGolayDerivative12() const
-{
-    OVR_ASSERT(Size >= 12);
-    return GetPrev(0)*0.03846f +
-            GetPrev(1)*0.03147f +
-            GetPrev(2)*0.02448f +
-            GetPrev(3)*0.01748f +
-            GetPrev(4)*0.01049f +
-            GetPrev(5)*0.0035f -
-            GetPrev(6)*0.0035f -
-            GetPrev(7)*0.01049f -
-            GetPrev(8)*0.01748f -
-            GetPrev(9)*0.02448f -
-            GetPrev(10)*0.03147f -
-            GetPrev(11)*0.03846f;
-}
-
-Vector3f SensorFilter::SavitzkyGolayDerivativeN(int n) const
-{    
-    OVR_ASSERT(Size >= n);
-    int m = (n-1)/2;
-    Vector3f result = Vector3f();
-    for (int k = 1; k <= m; k++) 
-    {
-        int ind1 = m - k;
-        int ind2 = n - m + k - 1;
-        result += (GetPrev(ind1) - GetPrev(ind2)) * (float) k;
-    }
-    float coef = 3.0f/(m*(m+1.0f)*(2.0f*m+1.0f));
-    result = result*coef;
-    return result;
-}
-
-
-
 
 } //namespace OVR

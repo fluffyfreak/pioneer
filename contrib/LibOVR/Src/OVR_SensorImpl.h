@@ -7,9 +7,20 @@ Authors     :   Lee Cooper
 
 Copyright   :   Copyright 2013 Oculus VR, Inc. All Rights reserved.
 
-Use of this software is subject to the terms of the Oculus license
-agreement provided at the time of installation or download, or which
+Licensed under the Oculus VR SDK License Version 2.0 (the "License"); 
+you may not use the Oculus VR SDK except in compliance with the License, 
+which is provided at the time of installation or download, or which 
 otherwise accompanies this software in either electronic or hard copy form.
+
+You may obtain a copy of the License at
+
+http://www.oculusvr.com/licenses/LICENSE-2.0 
+
+Unless required by applicable law or agreed to in writing, the Oculus VR SDK 
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 
 *************************************************************************************/
 
@@ -19,7 +30,7 @@ otherwise accompanies this software in either electronic or hard copy form.
 #include "OVR_HIDDeviceImpl.h"
 
 namespace OVR {
-    
+
 struct TrackerMessage;
 class ExternalVisitor;
 
@@ -36,7 +47,7 @@ public:
     virtual bool MatchVendorProduct(UInt16 vendorId, UInt16 productId) const;
     virtual bool DetectHIDDevice(DeviceManager* pdevMgr, const HIDDeviceDesc& desc);
 protected:
-    DeviceManager* getManager() const { return (DeviceManager*) pManager; }   
+    DeviceManager* getManager() const { return (DeviceManager*) pManager; }
 };
 
 
@@ -46,7 +57,7 @@ class SensorDeviceCreateDesc : public HIDDeviceCreateDesc
 public:
     SensorDeviceCreateDesc(DeviceFactory* factory, const HIDDeviceDesc& hidDesc)
         : HIDDeviceCreateDesc(factory, Device_Sensor, hidDesc) { }
-    
+
     virtual DeviceCreateDesc* Clone() const
     {
         return new SensorDeviceCreateDesc(*this);
@@ -70,10 +81,56 @@ public:
     {
         // should paths comparison be case insensitive?
         return ((HIDDesc.Path.CompareNoCase(hidDesc.Path) == 0) &&
-                (HIDDesc.SerialNumber == hidDesc.SerialNumber));
+                (HIDDesc.SerialNumber == hidDesc.SerialNumber) &&
+                (HIDDesc.VersionNumber == hidDesc.VersionNumber));
     }
 
     virtual bool        GetDeviceInfo(DeviceInfo* info) const;
+};
+
+// A simple stub for notification of a sensor in Boot Loader mode
+// This descriptor does not support the creation of a device, only the detection
+// of its existence to warn apps that the sensor device needs firmware.
+// The Boot Loader descriptor reuses and is created by the Sensor device factory
+// but in the future may use a dedicated factory
+class BootLoaderDeviceCreateDesc : public HIDDeviceCreateDesc
+{
+public:
+    BootLoaderDeviceCreateDesc(DeviceFactory* factory, const HIDDeviceDesc& hidDesc)
+        : HIDDeviceCreateDesc(factory, Device_BootLoader, hidDesc) { }
+    
+    virtual DeviceCreateDesc* Clone() const
+    {
+        return new BootLoaderDeviceCreateDesc(*this);
+    }
+
+    // Boot Loader device creation is not allowed
+    virtual DeviceBase* NewDeviceInstance() { return NULL; };
+
+    virtual MatchResult MatchDevice(const DeviceCreateDesc& other,
+                                    DeviceCreateDesc**) const
+    {
+        if ((other.Type == Device_BootLoader) && (pFactory == other.pFactory))
+        {
+            const BootLoaderDeviceCreateDesc& s2 = (const BootLoaderDeviceCreateDesc&) other;
+            if (MatchHIDDevice(s2.HIDDesc))
+                return Match_Found;
+        }
+        return Match_None;
+    }
+
+    virtual bool MatchHIDDevice(const HIDDeviceDesc& hidDesc) const
+    {
+        // should paths comparison be case insensitive?
+        return ((HIDDesc.Path.CompareNoCase(hidDesc.Path) == 0) &&
+                (HIDDesc.SerialNumber == hidDesc.SerialNumber));
+    }
+
+    virtual bool        GetDeviceInfo(DeviceInfo* info) const 
+    {
+        OVR_UNUSED(info);
+        return false; 
+    }
 };
 
 
@@ -93,13 +150,13 @@ struct SensorDisplayInfoImpl
     {
         Mask_BaseFmt    = 0x0f,
         Mask_OptionFmts = 0xf0,
-        Base_None       = 0,
-        Base_ScreenOnly = 1,
-        Base_Distortion = 2,
+        Base_None       = 0x00,
+        Base_Screen     = 0x01,
+        Base_Distortion = 0x02,
     };
 
     UInt16  CommandId;
-    UByte   DistortionType;    
+    UByte   DistortionType;
     UInt16  HResolution, VResolution;
     float   HScreenSize, VScreenSize;
     float   VCenter;
@@ -128,24 +185,24 @@ public:
     // DeviceCommaon interface
     virtual bool Initialize(DeviceBase* parent);
     virtual void Shutdown();
-    
+
     virtual void SetMessageHandler(MessageHandler* handler);
 
     // HIDDevice::Notifier interface.
-    virtual void OnInputReport(UByte* pData, UInt32 length);
+    virtual void OnInputReport(const UByte* pData, UInt32 length);
     virtual UInt64 OnTicks(UInt64 ticksMks);
 
     // HMD-Mounted sensor has a different coordinate frame.
-    virtual void SetCoordinateFrame(CoordinateFrame coordframe);    
-    virtual CoordinateFrame GetCoordinateFrame() const;    
+    virtual void SetCoordinateFrame(CoordinateFrame coordframe);
+    virtual CoordinateFrame GetCoordinateFrame() const;
 
     // SensorDevice interface
     virtual bool SetRange(const SensorRange& range, bool waitFlag);
     virtual void GetRange(SensorRange* range) const;
 
-    // Sets report rate (in Hz) of MessageBodyFrame messages (delivered through MessageHandler::OnMessage call). 
-    // Currently supported maximum rate is 1000Hz. If the rate is set to 500 or 333 Hz then OnMessage will be 
-    // called twice or thrice at the same 'tick'. 
+    // Sets report rate (in Hz) of MessageBodyFrame messages (delivered through MessageHandler::OnMessage call).
+    // Currently supported maximum rate is 1000Hz. If the rate is set to 500 or 333 Hz then OnMessage will be
+    // called twice or thrice at the same 'tick'.
     // If the rate is  < 333 then the OnMessage / MessageBodyFrame will be called three
     // times for each 'tick': the first call will contain averaged values, the second
     // and third calls will provide with most recent two recorded samples.
@@ -156,7 +213,7 @@ public:
     virtual unsigned    GetReportRate() const;
 
     // Hack to create HMD device from sensor display info.
-    static void EnumerateHMDFromSensorDisplayInfo(const SensorDisplayInfoImpl& displayInfo, 
+    static void EnumerateHMDFromSensorDisplayInfo(const SensorDisplayInfoImpl& displayInfo,
                                                   DeviceFactory::EnumerateVisitor& visitor);
 protected:
 
@@ -177,7 +234,7 @@ protected:
     { return (SensorDeviceCreateDesc*)pCreateDesc.GetPtr(); }
 
     HIDDeviceDesc* getHIDDesc() const
-    { return &getCreateDesc()->HIDDesc; }    
+    { return &getCreateDesc()->HIDDesc; }
 */
 
     // Set if the sensor is located on the HMD.
@@ -195,10 +252,10 @@ protected:
     Vector3f    LastRotationRate;
     Vector3f    LastMagneticField;
 
-    // Current sensor range obtained from device. 
+    // Current sensor range obtained from device.
     SensorRange MaxValidRange;
     SensorRange CurrentRange;
-    
+
     UInt16      OldCommandId;
 };
 
