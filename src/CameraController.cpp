@@ -25,19 +25,21 @@ void CameraController::Reset()
 void CameraController::Update()
 {
 	Frame *pShipFrame = m_ship->GetFrame();
+	for(auto &it : m_cameras)
+	{
+		it->SetFrame(pShipFrame);
+	}
 	const matrix3x3d &m = m_ship->GetInterpOrient();
 	const vector3d shipInterpPosition = m_ship->GetInterpPosition();
 	const matrix3x3d finalorient = (m * m_orient);
 	if( m_cameras.size()!=2 )
 	{
-		for(std::vector<RefCountedPtr<CameraContext>>::iterator it=m_cameras.begin(), itEnd=m_cameras.end(); it!=itEnd; ++it)
+		for(auto &it : m_cameras)
 		{
-			(*it)->SetFrame(pShipFrame);
-
 			// interpolate between last physics tick position and current one,
 			// to remove temporal aliasing
-			(*it)->SetOrient(finalorient);
-			(*it)->SetPosition(m * m_pos + shipInterpPosition);
+			it->SetOrient(finalorient);
+			it->SetPosition(m * m_pos + shipInterpPosition);
 		}
 	}
 	else
@@ -45,8 +47,6 @@ void CameraController::Update()
 		const vector3d offsetAxis = eye_offset_scale * m_orient.VectorX().Normalized();
 		assert(m_cameras.size()==2);
 		{
-			m_cameras[0]->SetFrame(pShipFrame);
-			
 			// interpolate between last physics tick position and current one,
 			// to remove temporal aliasing
 			m_cameras[0]->SetOrient(finalorient);
@@ -55,8 +55,6 @@ void CameraController::Update()
 		}
 
 		{
-			m_cameras[1]->SetFrame(pShipFrame);
-			
 			// interpolate between last physics tick position and current one,
 			// to remove temporal aliasing
 			m_cameras[1]->SetOrient(finalorient);

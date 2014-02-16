@@ -966,6 +966,8 @@ void WorldView::Update(const ViewEye eye /*= ViewEye_Centre*/)
 		m_activeCameraController->SetOrient(finalorientation);
 	}
 	m_activeCameraController->Update();
+
+	GetCurrentCamContext(eye)->BeginFrame();
 	switch (eye)
 	{
 	case ViewEye_Centre:
@@ -979,8 +981,6 @@ void WorldView::Update(const ViewEye eye /*= ViewEye_Centre*/)
 		m_cameras[0]->Update();
 		break;
 	}
-
-	GetCurrentCamContext(eye)->BeginFrame();
 
 	UpdateProjectedObjects(eye);
 

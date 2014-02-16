@@ -86,7 +86,7 @@ public:
 			else if (HMDInfo.DisplayDeviceName[0] == '\0')
 				detectionMessage = "Oculus Sensor detected; HMD display EDID not detected.";
 			else
-				detectionMessage = 0;
+				detectionMessage = nullptr;
 
 			if (detectionMessage)
 			{

@@ -178,7 +178,7 @@ void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 		vector2f(width, height),
 		Graphics::LINEAR_CLAMP, false, false, 0);
 	Pi::renderTexture.Reset(Pi::renderer->CreateTexture(texDesc));
-	Pi::renderQuads[eVPCentre].reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, renderTexture.Get(), vector2f(0.0f,0.0f), vector2f(800.0f, 600.0f)));
+	Pi::renderQuads[eVPCentre].reset(new Graphics::Drawables::TexturedQuad(Pi::renderer, renderTexture.Get(), vector2f(0.0f,0.0f), vector2f(800.0f, 600.0f), s_quadsRenderState));
 	if( OculusRiftInterface::HasHMD() ) {
 		Graphics::MaterialDescriptor desc;
 		desc.effect = Graphics::EFFECT_HMDWARP;
