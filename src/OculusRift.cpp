@@ -17,7 +17,7 @@ using namespace OVR::Util::Render;
 // Purpose is to isolate the LibOVR from Pioneer and allow for changes to the API & SDK without affecting Pioneer.
 class OculusRiftImplemetation : public MessageHandler {
 public:
-	OculusRiftImplemetation() : pManager(nullptr), pSensor(nullptr), pHMD(nullptr)
+	OculusRiftImplemetation() : pManager(nullptr), pSensor(nullptr), pHMD(nullptr), pSFusion(nullptr)
 	{
 		Width  = 1280;
 		Height = 800;
@@ -162,7 +162,7 @@ public:
 			pHMD.Clear();
 			pManager.Clear();
 			
-			delete pSFusion; 
+			if(pSFusion) delete pSFusion; 
 			
 			System::Destroy();
 		}
