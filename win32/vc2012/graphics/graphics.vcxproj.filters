@@ -7,7 +7,6 @@
     <ClCompile Include="..\..\..\src\graphics\Material.cpp" />
     <ClCompile Include="..\..\..\src\graphics\Renderer.cpp" />
     <ClCompile Include="..\..\..\src\graphics\RendererGL2.cpp" />
-    <ClCompile Include="..\..\..\src\graphics\StaticMesh.cpp" />
     <ClCompile Include="..\..\..\src\graphics\TextureBuilder.cpp" />
     <ClCompile Include="..\..\..\src\graphics\TextureGL.cpp" />
     <ClCompile Include="..\..\..\src\graphics\VertexArray.cpp" />
@@ -52,6 +51,10 @@
     <ClCompile Include="..\..\..\src\graphics\gl2\GL2RenderState.cpp">
       <Filter>gl2</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\graphics\gl2\GL2VertexBuffer.cpp">
+      <Filter>gl2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\graphics\VertexBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\graphics\Drawables.h" />
@@ -61,7 +64,6 @@
     <ClInclude Include="..\..\..\src\graphics\Renderer.h" />
     <ClInclude Include="..\..\..\src\graphics\RendererGL2.h" />
     <ClInclude Include="..\..\..\src\graphics\RendererGLBuffers.h" />
-    <ClInclude Include="..\..\..\src\graphics\StaticMesh.h" />
     <ClInclude Include="..\..\..\src\graphics\Surface.h" />
     <ClInclude Include="..\..\..\src\graphics\Texture.h" />
     <ClInclude Include="..\..\..\src\graphics\TextureBuilder.h" />
@@ -107,7 +109,10 @@
       <Filter>gl2</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\graphics\RenderState.h" />
-    <ClInclude Include="..\..\..\src\graphics\GraphicsTypes.h" />
+    <ClInclude Include="..\..\..\src\graphics\gl2\GL2VertexBuffer.h">
+      <Filter>gl2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\graphics\VertexBuffer.h" />
     <ClInclude Include="..\..\..\src\graphics\gl2\HMDWarpMaterial.h">
       <Filter>gl2</Filter>
     </ClInclude>
