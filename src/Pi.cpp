@@ -171,7 +171,7 @@ void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 	rsd.depthTest  = false;
 	rsd.depthWrite = false;
 	rsd.blendMode = Graphics::BLEND_ALPHA;
-	quadRenderState = Pi::renderer->CreateRenderState(rsd);
+	s_quadsRenderState = Pi::renderer->CreateRenderState(rsd);
 
 	Graphics::TextureDescriptor texDesc(
 		Graphics::TEXTURE_RGBA_8888,
