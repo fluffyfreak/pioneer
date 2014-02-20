@@ -152,6 +152,7 @@ ObjectViewerView *Pi::objectViewerView;
 Sound::MusicPlayer Pi::musicPlayer;
 std::unique_ptr<JobQueue> Pi::jobQueue;
 
+// XXX enabling this breaks UI gauge rendering. see #2627
 #define USE_RTT 1
 
 //static
@@ -166,12 +167,11 @@ void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 		In that case, leave the color format to NONE so the initial texture is not created, then use SetColorTexture to attach your own.
 	*/
 #if USE_RTT
-
 	Graphics::RenderStateDesc rsd;
 	rsd.depthTest  = false;
 	rsd.depthWrite = false;
 	rsd.blendMode = Graphics::BLEND_ALPHA;
-	s_quadsRenderState = Pi::renderer->CreateRenderState(rsd);
+	quadRenderState = Pi::renderer->CreateRenderState(rsd);
 
 	Graphics::TextureDescriptor texDesc(
 		Graphics::TEXTURE_RGBA_8888,
@@ -218,7 +218,6 @@ void Pi::DrawRenderTarget(const bool bAllowHMD /*= false*/) {
 	Pi::renderer->SetTransform(matrix4x4f::Identity());
 
 	{
-		//Pi::renderer->SetLightsEnabled(false);
 		Pi::renderer->SetMatrixMode(Graphics::MatrixMode::PROJECTION);
 		Pi::renderer->PushMatrix();
 		Pi::renderer->SetOrthographicProjection(0, 800, 600, 0, -1, 1);
@@ -363,7 +362,7 @@ std::string Pi::GetSaveDir()
 	return FileSystem::JoinPath(FileSystem::GetUserDir(), Pi::SAVE_DIR_NAME);
 }
 
-void Pi::Init()
+void Pi::Init(const std::map<std::string,std::string> &options)
 {
 #ifdef PIONEER_PROFILER
 	Profiler::reset();
@@ -378,7 +377,7 @@ void Pi::Init()
 	profilerPath = FileSystem::JoinPathBelow(FileSystem::userFiles.GetRoot(), "profiler");
 #endif
 
-	Pi::config = new GameConfig();
+	Pi::config = new GameConfig(options);
 	KeyBindings::InitBindings();
 
 	if (config->Int("RedirectStdio"))
@@ -1062,6 +1061,8 @@ void Pi::Start()
 	ui->DropAllLayers();
 	ui->GetTopLayer()->SetInnerWidget(ui->CallTemplate("MainMenu"));
 
+	Pi::ui->SetMousePointer("icons/indicator_mousedir.png", UI::Point(25, 20));
+
 	//XXX global ambient colour hack to make explicit the old default ambient colour dependency
 	// for some models
 	Pi::renderer->SetAmbientColor(Color(51, 51, 51, 255));
@@ -1178,6 +1179,8 @@ void Pi::EndGame()
 	// final event
 	LuaEvent::Queue("onGameEnd");
 	LuaEvent::Emit();
+
+	luaTimer->RemoveAll();
 
 	Lua::manager->CollectGarbage();
 
@@ -1334,8 +1337,14 @@ void Pi::MainLoop()
 			}
 		}
 
+		// XXX don't draw the UI during death obviously a hack, and still
+		// wrong, because we shouldn't this when the HUD is disabled, but
+		// probably sure draw it if they switch to eg infoview while the HUD is
+		// disabled so we need much smarter control for all this rubbish
+		if (Pi::GetView() != Pi::deathView) {
 		Pi::ui->Update();
 		Pi::ui->Draw();
+		}
 
 #if WITH_DEVKEYS
 		if (Pi::showDebugInfo) {
@@ -1528,13 +1537,13 @@ float Pi::JoystickAxisState(int joystick, int axis) {
 void Pi::SetMouseGrab(bool on)
 {
 	if (!doingMouseGrab && on) {
-		SDL_ShowCursor(0);
 		Pi::renderer->GetWindow()->SetGrab(true);
+		Pi::ui->SetMousePointerEnabled(false);
 		doingMouseGrab = true;
 	}
 	else if(doingMouseGrab && !on) {
-		SDL_ShowCursor(1);
 		Pi::renderer->GetWindow()->SetGrab(false);
+		Pi::ui->SetMousePointerEnabled(true);
 		doingMouseGrab = false;
 	}
 }
