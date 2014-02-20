@@ -1121,7 +1121,7 @@ void Pi::Start()
 				orientation = matrix3x3f::RotateZ(roll) * matrix3x3f::RotateX(pitch) * matrix3x3f::RotateY(yaw);
 			}
 			matrix4x4f transform(matrix4x4f::Identity());
-			transform.Translate( -(UItex->GetDescriptor().dataSize.x * 0.25f), -(UItex->GetDescriptor().dataSize.y * 0.5f), -500.0f );
+			transform.Translate( -(UItex->GetDescriptor().dataSize.x * 0.333f), -(UItex->GetDescriptor().dataSize.y * 0.333f), -400.0f );
 		
 			const Uint32 halfScreenW = Uint32(Graphics::GetScreenWidth())>>1;
 		
@@ -1212,6 +1212,19 @@ void Pi::MainLoop()
 	memset(fps_readout, 0, sizeof(fps_readout));
 #endif
 
+	// xxx - Oculus variables
+	RefCountedPtr<Graphics::Texture> UItex(Pi::renderer->CreateTexture(renderTexture->GetDescriptor()));
+	std::unique_ptr<Graphics::RenderState> quadRenderState;
+	Graphics::RenderStateDesc rsd;
+	rsd.depthTest  = false;
+	rsd.depthWrite = false;
+	rsd.cullMode = Graphics::CULL_NONE;
+	rsd.blendMode = Graphics::BLEND_ALPHA;
+	quadRenderState.reset(Pi::renderer->CreateRenderState(rsd));
+	std::unique_ptr<Graphics::Drawables::TexturedQuad> Quad(
+		new Graphics::Drawables::TexturedQuad(Pi::renderer, UItex.Get(), vector2f(0.0f,0.0f), vector2f(800.0f, 600.0f), quadRenderState.get(), true));
+	// xxx - endof
+
 	int MAX_PHYSICS_TICKS = Pi::config->Int("MaxPhysicsCyclesPerRender");
 	if (MAX_PHYSICS_TICKS <= 0)
 		MAX_PHYSICS_TICKS = 4;
@@ -1281,6 +1294,10 @@ void Pi::MainLoop()
 		}
 
 		OculusRiftInterface::Update();
+		const bool bHasRift = OculusRiftInterface::HasHMD();
+
+		if( bHasRift )
+			Pi::renderTarget->SetColorTexture(renderTexture.Get());
 
 		Pi::BeginRenderTarget();
 
@@ -1295,7 +1312,7 @@ void Pi::MainLoop()
 		game->GetSpace()->GetRootFrame()->UpdateInterpTransform(Pi::GetGameTickAlpha());
 
 		Pi::renderer->ClearScreen();
-		if( !OculusRiftInterface::HasHMD() ) {
+		if( !bHasRift ) {
 			// no HMD
 			currentView->Update(ViewEye_Centre);
 			currentView->Draw3D(ViewEye_Centre);
@@ -1316,6 +1333,16 @@ void Pi::MainLoop()
 		SetMouseGrab(Pi::MouseButtonState(SDL_BUTTON_RIGHT));
 
 		Pi::renderer->EndFrame();
+
+		if( bHasRift ) {
+			// UI pass
+			// set this to be the temporary UItex that we'll blat onto a 3D quad later on
+			Pi::renderTarget->SetColorTexture(UItex.Get());
+			Pi::BeginRenderTarget();
+			Pi::renderer->BeginFrame();
+			Pi::renderer->SetViewport(0, 0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
+		}
+
 		if( DrawGUI ) {
 			Gui::Draw();
 		} else if (game && game->IsNormalSpace()) {
@@ -1342,8 +1369,8 @@ void Pi::MainLoop()
 		// probably sure draw it if they switch to eg infoview while the HUD is
 		// disabled so we need much smarter control for all this rubbish
 		if (Pi::GetView() != Pi::deathView) {
-		Pi::ui->Update();
-		Pi::ui->Draw();
+			Pi::ui->Update();
+			Pi::ui->Draw();
 		}
 
 #if WITH_DEVKEYS
@@ -1356,8 +1383,55 @@ void Pi::MainLoop()
 		}
 #endif
 
-		Pi::EndRenderTarget();
-		Pi::DrawRenderTarget(true);
+		if( bHasRift ) 
+		{
+			// end of 1st pass
+			Pi::renderer->EndFrame();
+			Pi::EndRenderTarget();
+
+			// 2nd pass
+			// use the default renderTexture now and draw the scene texture onto a quad
+			Pi::renderTarget->SetColorTexture(renderTexture.Get());
+			Pi::BeginRenderTarget();
+			//Pi::renderer->BeginFrame();
+
+			matrix3x3f orientation = matrix3x3f::Identity();
+			if( OculusRiftInterface::HasHMD() ) {
+				float yaw, pitch, roll;
+				OculusRiftInterface::GetYawPitchRoll(yaw, pitch, roll);
+				orientation = matrix3x3f::RotateZ(roll) * matrix3x3f::RotateX(pitch) * matrix3x3f::RotateY(yaw);
+			}
+			matrix4x4f transform(matrix4x4f::Identity());
+			transform.Translate( -(UItex->GetDescriptor().dataSize.x * 0.333f), -(UItex->GetDescriptor().dataSize.y * 0.333f), -400.0f );
+		
+			const Uint32 halfScreenW = Uint32(Graphics::GetScreenWidth())>>1;
+		
+			// has HMD - render both views
+			// left
+			{
+				Pi::renderer->SetViewport(0, 0, halfScreenW, Graphics::GetScreenHeight());
+				const matrix4x4f persp = OculusRiftInterface::GetPerspectiveMatrix(ViewEye_Left);
+				const float YFOV = OculusRiftInterface::GetYFOVDegrees();
+				Pi::renderer->SetPerspectiveProjection(YFOV, 10000.f, persp);
+				Pi::renderer->SetTransform(orientation * transform);
+				Quad->Draw(Pi::renderer);
+			}
+
+			// right
+			{
+				Pi::renderer->SetViewport(halfScreenW,0, halfScreenW, Graphics::GetScreenHeight());
+				const matrix4x4f persp = OculusRiftInterface::GetPerspectiveMatrix(ViewEye_Right);
+				const float YFOV = OculusRiftInterface::GetYFOVDegrees();
+				Pi::renderer->SetPerspectiveProjection(YFOV, 10000.f, persp);
+				Pi::renderer->SetTransform(orientation * transform);
+				Quad->Draw(Pi::renderer);
+			}
+
+			//Pi::renderer->EndFrame();
+			Pi::EndRenderTarget();
+		}
+
+		Pi::DrawRenderTarget(bHasRift);
 		Pi::renderer->SwapBuffers();
 
 		// game exit will have cleared Pi::game. we can't continue.
