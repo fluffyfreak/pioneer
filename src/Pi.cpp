@@ -1056,7 +1056,7 @@ void Pi::Start()
 	rsd.blendMode = Graphics::BLEND_ALPHA;
 	quadRenderState.reset(Pi::renderer->CreateRenderState(rsd));
 	std::unique_ptr<Graphics::Drawables::TexturedQuad> Quad(
-		new Graphics::Drawables::TexturedQuad(Pi::renderer, UItex.Get(), vector2f(0.0f,0.0f), vector2f(800.0f, 600.0f), quadRenderState.get(), true));
+		new Graphics::Drawables::TexturedQuad(Pi::renderer, UItex.Get(), vector2f(-400.0f,-300.0f), vector2f(800.0f, 600.0f), quadRenderState.get(), true));
 
 	ui->DropAllLayers();
 	ui->GetTopLayer()->SetInnerWidget(ui->CallTemplate("MainMenu"));
@@ -1121,7 +1121,7 @@ void Pi::Start()
 				orientation = matrix3x3f::RotateZ(roll) * matrix3x3f::RotateX(pitch) * matrix3x3f::RotateY(yaw);
 			}
 			matrix4x4f transform(matrix4x4f::Identity());
-			transform.Translate( -(UItex->GetDescriptor().dataSize.x * 0.333f), -(UItex->GetDescriptor().dataSize.y * 0.333f), -400.0f );
+			transform.Translate( 0, 0, -400.0f );
 		
 			const Uint32 halfScreenW = Uint32(Graphics::GetScreenWidth())>>1;
 		
@@ -1222,7 +1222,7 @@ void Pi::MainLoop()
 	rsd.blendMode = Graphics::BLEND_ALPHA;
 	quadRenderState.reset(Pi::renderer->CreateRenderState(rsd));
 	std::unique_ptr<Graphics::Drawables::TexturedQuad> Quad(
-		new Graphics::Drawables::TexturedQuad(Pi::renderer, UItex.Get(), vector2f(0.0f,0.0f), vector2f(800.0f, 600.0f), quadRenderState.get(), true));
+		new Graphics::Drawables::TexturedQuad(Pi::renderer, UItex.Get(), vector2f(-400.0f,-300.0f), vector2f(800.0f, 600.0f), quadRenderState.get(), true));
 	// xxx - endof
 
 	int MAX_PHYSICS_TICKS = Pi::config->Int("MaxPhysicsCyclesPerRender");
@@ -1402,7 +1402,7 @@ void Pi::MainLoop()
 				orientation = matrix3x3f::RotateZ(roll) * matrix3x3f::RotateX(pitch) * matrix3x3f::RotateY(yaw);
 			}
 			matrix4x4f transform(matrix4x4f::Identity());
-			transform.Translate( -(UItex->GetDescriptor().dataSize.x * 0.333f), -(UItex->GetDescriptor().dataSize.y * 0.333f), -400.0f );
+			transform.Translate( 0, 0, -400.0f );
 		
 			const Uint32 halfScreenW = Uint32(Graphics::GetScreenWidth())>>1;
 		
