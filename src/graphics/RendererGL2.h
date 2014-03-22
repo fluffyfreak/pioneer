@@ -22,6 +22,7 @@ struct Settings;
 
 namespace GL2 {
 	class GasGiantSurfaceMaterial;
+	class GenGasGiantColourMaterial;
 	class GeoSphereSkyMaterial;
 	class GeoSphereSurfaceMaterial;
 	class Material;
@@ -128,6 +129,7 @@ protected:
 	GL2::Program* GetOrCreateProgram(GL2::Material*);
 	friend class GL2::Material;
 	friend class GL2::GasGiantSurfaceMaterial;
+	friend class GL2::GenGasGiantColourMaterial;
 	friend class GL2::GeoSphereSurfaceMaterial;
 	friend class GL2::GeoSphereSkyMaterial;
 	friend class GL2::MultiMaterial;

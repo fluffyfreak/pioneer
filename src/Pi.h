@@ -14,6 +14,7 @@
 #include "CargoBody.h"
 #include "Space.h"
 #include "JobQueue.h"
+#include "GPUJobQueue.h"
 #include <map>
 #include <string>
 #include <vector>
@@ -183,6 +184,7 @@ private:
 	static void InitJoysticks();
 
 	static std::unique_ptr<JobQueue> jobQueue;
+	static std::unique_ptr<GPUJobQueue> gpuJobQueue;
 
 	static bool menuDone;
 

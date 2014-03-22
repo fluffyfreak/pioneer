@@ -115,6 +115,8 @@ public:
 	}
 
 	const Graphics::Texture* GetTexture() const { return m_texture.Get(); }
+	void SetMaterial(Graphics::Material *mat) { assert(mat); m_material.reset(mat); }
+	Graphics::Material* GetMaterial() const { return m_material.get(); }
 private:
 	RefCountedPtr<Graphics::Texture> m_texture;
 	std::unique_ptr<Graphics::Material> m_material;

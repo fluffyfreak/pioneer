@@ -14,6 +14,7 @@
 #include "terrain/Terrain.h"
 #include "BaseSphere.h"
 #include "JobQueue.h"
+#include "GPUJobQueue.h"
 
 #include <deque>
 
@@ -22,7 +23,10 @@ class SystemBody;
 class GasGiant;
 class GasPatch;
 class GasPatchContext;
-namespace { class STextureFaceResult; }
+namespace { 
+	class STextureFaceResult; 
+	class STextureFaceGPUResult;
+}
 
 #define NUM_PATCHES 6
 
@@ -42,14 +46,28 @@ public:
 	virtual void Reset() {};
 
 	static bool OnAddTextureFaceResult(const SystemPath &path, STextureFaceResult *res);
+	static bool OnAddTextureFaceResult(const SystemPath &path, STextureFaceGPUResult *res);
+	static void Init();
+	static void Uninit();
 	static void UpdateAllGasGiants();
 
 private:
 	void BuildFirstPatches();
 	void GenerateTexture();
 	bool AddTextureFaceResult(STextureFaceResult *res);
+	bool AddTextureFaceResult(STextureFaceGPUResult *res);
+
+	static void CreateRenderTarget(const Uint16 width, const Uint16 height);
+	static void DrawRenderTarget();
+	static void BeginRenderTarget();
+	static void EndRenderTarget();
 
 	static RefCountedPtr<GasPatchContext> s_patchContext;
+
+	static Graphics::RenderTarget *s_renderTarget;
+	static RefCountedPtr<Graphics::Texture> s_renderTexture;
+	static std::unique_ptr<Graphics::Drawables::TexturedQuad> s_renderQuad;
+	static Graphics::RenderState *s_quadRenderState;
 
 	//std::unique_ptr<Graphics::Drawables::Sphere3D> m_baseCloudSurface;
 	std::unique_ptr<GasPatch> m_patches[NUM_PATCHES];
@@ -60,6 +78,7 @@ private:
 	virtual void SetUpMaterials();
 	RefCountedPtr<Graphics::Texture> m_surfaceTextureSmall;
 	RefCountedPtr<Graphics::Texture> m_surfaceTexture;
+	std::unique_ptr<Graphics::Material> m_rttMaterial;
 	
 	std::unique_ptr<Color[]> m_jobColorBuffers[NUM_PATCHES];
 	JobHandle m_job[NUM_PATCHES];

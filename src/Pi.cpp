@@ -150,6 +150,7 @@ ObjectViewerView *Pi::objectViewerView;
 
 Sound::MusicPlayer Pi::musicPlayer;
 std::unique_ptr<JobQueue> Pi::jobQueue;
+std::unique_ptr<GPUJobQueue> Pi::gpuJobQueue;
 
 // XXX enabling this breaks UI gauge rendering. see #2627
 #define USE_RTT 0
@@ -431,6 +432,8 @@ void Pi::Init(const std::map<std::string,std::string> &options)
 	if (numThreads == 0) numThreads = std::max(Uint32(numCores) - 1, 1U);
 	jobQueue.reset(new JobQueue(numThreads));
 	Output("started %d worker threads\n", numThreads);
+	gpuJobQueue.reset(new GPUJobQueue());
+	Output("Started GPU Job Queue\n");
 
 	// XXX early, Lua init needs it
 	ShipType::Init();
@@ -668,6 +671,7 @@ void Pi::Quit()
 	SDL_Quit();
 	FileSystem::Uninit();
 	jobQueue.reset();
+	gpuJobQueue.reset();
 	exit(0);
 }
 
@@ -1270,6 +1274,7 @@ void Pi::MainLoop()
 		musicPlayer.Update();
 
 		jobQueue->FinishJobs();
+		gpuJobQueue->ProcessGPUJobs();
 
 #if WITH_DEVKEYS
 		if (Pi::showDebugInfo && SDL_GetTicks() - last_stats > 1000) {

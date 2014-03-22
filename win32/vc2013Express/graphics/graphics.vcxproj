@@ -127,6 +127,7 @@
     <ClCompile Include="..\..\..\src\graphics\Frustum.cpp" />
     <ClCompile Include="..\..\..\src\graphics\gl2\FresnelColourMaterial.cpp" />
     <ClCompile Include="..\..\..\src\graphics\gl2\GasGiantMaterial.cpp" />
+    <ClCompile Include="..\..\..\src\graphics\gl2\GenGasGiantColourMaterial.cpp" />
     <ClCompile Include="..\..\..\src\graphics\gl2\GeoSphereMaterial.cpp" />
     <ClCompile Include="..\..\..\src\graphics\gl2\GL2Material.cpp" />
     <ClCompile Include="..\..\..\src\graphics\gl2\GL2RenderState.cpp" />
@@ -160,6 +161,7 @@
     <ClInclude Include="..\..\..\src\graphics\Frustum.h" />
     <ClInclude Include="..\..\..\src\graphics\gl2\FresnelColourMaterial.h" />
     <ClInclude Include="..\..\..\src\graphics\gl2\GasGiantMaterial.h" />
+    <ClInclude Include="..\..\..\src\graphics\gl2\GenGasGiantColourMaterial.h" />
     <ClInclude Include="..\..\..\src\graphics\gl2\GeoSphereMaterial.h" />
     <ClInclude Include="..\..\..\src\graphics\gl2\GL2Material.h" />
     <ClInclude Include="..\..\..\src\graphics\gl2\GL2RenderState.h" />
