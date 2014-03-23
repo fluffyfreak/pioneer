@@ -36,6 +36,7 @@ public:
 	~RenderTarget();
 	virtual Texture *GetColorTexture() const;
 	virtual Texture *GetDepthTexture() const;
+	virtual void SetCubeFaceTexture(const Uint32 face, Texture* t);
 	virtual void SetColorTexture(Texture*);
 	virtual void SetDepthTexture(Texture*);
 

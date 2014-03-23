@@ -68,6 +68,11 @@ enum FaceCullMode {
 	CULL_NONE
 };
 
+struct GenGasGiantColourMaterialParameters {
+	const vector3d *v;
+	float fracStep;
+};
+
 }
 
 #endif // GRAPHICS_TYPES_H

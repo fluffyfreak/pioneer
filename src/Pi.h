@@ -175,7 +175,8 @@ public:
 	static struct DetailLevel detail;
 	static GameConfig *config;
 
-	static JobQueue *Jobs() { return jobQueue.get();}
+	static JobQueue *Jobs() { return jobQueue.get(); }
+	static GPUJobQueue* GpuJobs() { return gpuJobQueue.get(); }
 
 	static bool DrawGUI;
 

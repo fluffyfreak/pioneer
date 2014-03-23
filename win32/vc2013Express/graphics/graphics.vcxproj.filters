@@ -125,6 +125,7 @@
     <ClInclude Include="..\..\..\src\graphics\gl2\GenGasGiantColourMaterial.h">
       <Filter>gl2</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\src\graphics\Types.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="win32">

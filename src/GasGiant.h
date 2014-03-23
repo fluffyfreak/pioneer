@@ -51,22 +51,20 @@ public:
 	static void Uninit();
 	static void UpdateAllGasGiants();
 
+	static void CreateRenderTarget(const Uint16 width, const Uint16 height);
+	static void SetRenderTargetCubemap(const Uint32, Graphics::Texture*);
+	static void BeginRenderTarget();
+	static void EndRenderTarget();
+
 private:
 	void BuildFirstPatches();
 	void GenerateTexture();
 	bool AddTextureFaceResult(STextureFaceResult *res);
 	bool AddTextureFaceResult(STextureFaceGPUResult *res);
 
-	static void CreateRenderTarget(const Uint16 width, const Uint16 height);
-	static void DrawRenderTarget();
-	static void BeginRenderTarget();
-	static void EndRenderTarget();
-
 	static RefCountedPtr<GasPatchContext> s_patchContext;
 
 	static Graphics::RenderTarget *s_renderTarget;
-	static RefCountedPtr<Graphics::Texture> s_renderTexture;
-	static std::unique_ptr<Graphics::Drawables::TexturedQuad> s_renderQuad;
 	static Graphics::RenderState *s_quadRenderState;
 
 	//std::unique_ptr<Graphics::Drawables::Sphere3D> m_baseCloudSurface;
@@ -78,11 +76,14 @@ private:
 	virtual void SetUpMaterials();
 	RefCountedPtr<Graphics::Texture> m_surfaceTextureSmall;
 	RefCountedPtr<Graphics::Texture> m_surfaceTexture;
-	std::unique_ptr<Graphics::Material> m_rttMaterial;
 	
 	std::unique_ptr<Color[]> m_jobColorBuffers[NUM_PATCHES];
 	JobHandle m_job[NUM_PATCHES];
 	bool m_hasJobRequest[NUM_PATCHES];
+
+	GPUJobHandle m_gpuJob[NUM_PATCHES];
+	bool m_hasGpuJobRequest[NUM_PATCHES];
+
 	float m_timeDelay;
 };
 

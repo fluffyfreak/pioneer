@@ -628,7 +628,10 @@ Material *RendererGL2::CreateMaterial(const MaterialDescriptor &d)
 	case EFFECT_GASSPHERE_TERRAIN:
 		mat = new GL2::GasGiantSurfaceMaterial();
 		break;
-	case EFFECT_GEN_GASSPHERE_TEXTURE:
+	case EFFECT_GEN_JUPITER_GASSPHERE_TEXTURE:
+	case EFFECT_GEN_NEPTUNE_GASSPHERE_TEXTURE:
+	case EFFECT_GEN_SATURN_GASSPHERE_TEXTURE:
+	case EFFECT_GEN_URANUS_GASSPHERE_TEXTURE:
 		mat = new GL2::GenGasGiantColourMaterial();
 		break;
 	default:

@@ -55,7 +55,7 @@ static bool check_glsl_errors(const char *filename, GLuint obj)
 }
 
 struct Shader {
-	Shader(GLenum type, const std::string &filename, const std::string &defines) {
+	Shader(GLenum type, const std::string &filename, const std::string &defines, const Uint32 libs) {
 		RefCountedPtr<FileSystem::FileData> code = FileSystem::gameDataFiles.ReadFile(filename);
 
 		if (!code)
@@ -66,6 +66,11 @@ struct Shader {
 		assert(logzCode);
 		RefCountedPtr<FileSystem::FileData> libsCode = FileSystem::gameDataFiles.ReadFile("shaders/gl2/lib.glsl");
 		assert(libsCode);
+		RefCountedPtr<FileSystem::FileData> noiseCode;
+		if(NOISE&libs) {
+			noiseCode = FileSystem::gameDataFiles.ReadFile("shaders/gl2/noise.glsl");
+			assert(noiseCode);
+		}
 
 		AppendSource(s_glslVersion);
 		AppendSource(defines.c_str());
@@ -134,13 +139,15 @@ Program::Program()
 : m_name("")
 , m_defines("")
 , m_program(0)
+, m_libs(LOGZ|LIBS)
 {
 }
 
-Program::Program(const std::string &name, const std::string &defines)
+Program::Program(const std::string &name, const std::string &defines, const Uint32 libs /*= LOGZ|LIBS*/)
 : m_name(name)
 , m_defines(defines)
 , m_program(0)
+, m_libs(libs)
 {
 	LoadShaders(name, defines);
 	InitUniforms();
@@ -178,8 +185,8 @@ void Program::LoadShaders(const std::string &name, const std::string &defines)
 	const std::string filename = std::string("shaders/gl2/") + name;
 
 	//load, create and compile shaders
-	Shader vs(GL_VERTEX_SHADER, filename + ".vert", defines);
-	Shader fs(GL_FRAGMENT_SHADER, filename + ".frag", defines);
+	Shader vs(GL_VERTEX_SHADER, filename + ".vert", defines, m_libs);
+	Shader fs(GL_FRAGMENT_SHADER, filename + ".frag", defines, m_libs);
 
 	//create program, attach shaders and link
 	m_program = glCreateProgram();
