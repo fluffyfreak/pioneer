@@ -67,7 +67,6 @@ private:
 	static Graphics::RenderTarget *s_renderTarget;
 	static Graphics::RenderState *s_quadRenderState;
 
-	//std::unique_ptr<Graphics::Drawables::Sphere3D> m_baseCloudSurface;
 	std::unique_ptr<GasPatch> m_patches[NUM_PATCHES];
 
 	bool m_hasTempCampos;

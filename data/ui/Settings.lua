@@ -113,6 +113,10 @@ ui.templates.Settings = function (args)
 		local compressionCheckBox = optionCheckBox(
 			Engine.GetTextureCompressionEnabled, Engine.SetTextureCompressionEnabled,
 			l.COMPRESS_TEXTURES)
+			
+		local gpuJobsCheckBox = optionCheckBox(
+			Engine.GetGpuJobsEnabled, Engine.SetGpuJobsEnabled,
+			l.COMPRESS_TEXTURES)
 
 		return ui:Grid({1,1}, 1)
 			:SetCell(0,0, ui:Margin(5, 'ALL', ui:VBox(5):PackEnd({
@@ -131,6 +135,7 @@ ui.templates.Settings = function (args)
 				speedLinesCheckBox,
 				hudTrailsCheckBox,
 				cockpitCheckBox,
+				gpuJobsCheckBox,
 			})))
 	end
 

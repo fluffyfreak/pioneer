@@ -68,14 +68,23 @@ void GenGasGiantColourMaterial::Apply()
 	p->Use();
 
 	const Graphics::GenGasGiantColourMaterialParameters params = *static_cast<Graphics::GenGasGiantColourMaterialParameters*>(this->specialParameter0);
+	assert(params.v);
+	p->v0.Set( params.v[0] );
+	p->v1.Set( params.v[1] );
+	p->v2.Set( params.v[2] );
+	p->v3.Set( params.v[3] );
+	p->fracStep.Set( params.fracStep );
 
 	p->diffuse.Set(this->diffuse);
 
-	p->texture0.Set(this->texture0, 0);
-	p->texture1.Set(this->texture1, 1);
-	p->texture2.Set(this->texture2, 2);
-	p->texture3.Set(this->texture3, 3);
-	p->texture4.Set(this->texture4, 4);
+	if( this->texture0 )
+	{
+		p->texture0.Set(this->texture0, 0);
+		p->texture1.Set(this->texture1, 1);
+		p->texture2.Set(this->texture2, 2);
+		p->texture3.Set(this->texture3, 3);
+		p->texture4.Set(this->texture4, 4);
+	}
 }
 
 void GenGasGiantColourMaterial::Unapply()

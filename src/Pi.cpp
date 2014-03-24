@@ -1189,7 +1189,7 @@ void Pi::MainLoop()
 		}
 
 		Pi::BeginRenderTarget();
-
+		Pi::renderer->SetViewport(0, 0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
 		Pi::renderer->BeginFrame();
 		Pi::renderer->SetTransform(matrix4x4f::Identity());
 

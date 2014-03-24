@@ -158,6 +158,7 @@ namespace
 		}
 		virtual void OnFinish() // runs in primary thread of the context
 		{
+			assert(false);
 			GasGiant::OnAddTextureFaceResult( mData->SysPath(), mpResults );
 			mpResults = nullptr;
 		}
@@ -175,6 +176,7 @@ namespace
 	// a quad with reversed winding
 	class GenFaceQuad : public Graphics::Drawables::Drawable {
 	public:
+		#pragma optimize("",off)
 		GenFaceQuad(Graphics::Renderer *r, const vector3d *v, const vector2f &pos, const vector2f &size, Graphics::RenderState *state, Graphics::EffectType effect)
 		{
 			assert(state);
@@ -214,12 +216,14 @@ namespace
 	// ********************************************************************************
 	class STextureFaceGPURequest {
 	public:
-		STextureFaceGPURequest(const vector3d *v_, const SystemPath &sysPath_, const Sint32 face_, const Sint32 uvDIMs_, 
-			Terrain *pTerrain_, GenFaceQuad* pQuad_) :
-			corners(v_), sysPath(sysPath_), face(face_), uvDIMs(uvDIMs_), pTerrain(pTerrain_), pQuad(pQuad_)
+		STextureFaceGPURequest(const vector3d *v_, const SystemPath &sysPath_, const Sint32 face_, const Sint32 uvDIMs_, Terrain *pTerrain_, GenFaceQuad* pQuad_, Graphics::Texture *pTex_) :
+			m_texture(pTex_), corners(v_), sysPath(sysPath_), face(face_), uvDIMs(uvDIMs_), pTerrain(pTerrain_), pQuad(pQuad_)
 		{
-			Graphics::TextureDescriptor texDesc(Graphics::TEXTURE_RGBA_8888, vector2f(uvDIMs, uvDIMs), Graphics::LINEAR_CLAMP, false, false, 0);
-			m_texture.Reset(Pi::renderer->CreateTexture(texDesc));
+			if( !m_texture.Get() )
+			{
+				Graphics::TextureDescriptor texDesc(Graphics::TEXTURE_RGBA_8888, vector2f(uvDIMs, uvDIMs), Graphics::LINEAR_CLAMP, false, false, 0);
+				m_texture.Reset(Pi::renderer->CreateTexture(texDesc));
+			}
 		}
 
 		Sint32 Face() const { return face; }
@@ -338,11 +342,13 @@ namespace
 			// store the result
 			mpResults = sr;
 		}
+
 		virtual void OnFinish() // runs in primary thread of the context
 		{
 			GasGiant::OnAddTextureFaceResult( mData->SysPath(), mpResults );
 			mpResults = nullptr;
 		}
+
 		virtual void OnCancel() {}
 
 	private:
@@ -683,10 +689,13 @@ static const vector3d s_patchFaces[NUM_PATCHES][4] =
 inline vector3d GetSpherePointFromCorners(const double x, const double y, const vector3d *corners) {
 	return (corners[0] + x*(1.0-y)*(corners[1]-corners[0]) + x*y*(corners[2]-corners[0]) + (1.0-x)*y*(corners[3]-corners[0])).Normalized();
 }
-
+#pragma optimize("",off)
 void GasGiant::GenerateTexture()
 {
+	const bool bEnableGPUJobs = (Pi::config->Int("EnableGPUJobs") == 1);
+
 	// create small texture
+	if( !bEnableGPUJobs )
 	{
 		const vector2f texSize(1.0f, 1.0f);
 		const vector2f dataSize(UV_DIMS_SMALL, UV_DIMS_SMALL);
@@ -733,21 +742,38 @@ void GasGiant::GenerateTexture()
 		tcd.posZ = bufs[4].get();
 		tcd.negZ = bufs[5].get();
 		m_surfaceTextureSmall->Update(tcd, dataSize, Graphics::TEXTURE_RGBA_8888);
-	}
-	
-	for(int i=0; i<NUM_PATCHES; i++) 
-	{
-		assert(!m_hasJobRequest[i]);
-		assert(!m_job[i].HasJob());
-		m_hasJobRequest[i] = true;
-		STextureFaceRequest *ssrd = new STextureFaceRequest(&s_patchFaces[i][0], GetSystemBody()->GetPath(), i, UV_DIMS, GetTerrain());
-		m_job[i] = Pi::Jobs()->Queue(new SingleTextureFaceJob(ssrd));
 
-		// use m_surfaceTexture texture?
-		GenFaceQuad *pQuad = new GenFaceQuad( Pi::renderer, &s_patchFaces[i][0], vector2f(0.0f, 0.0f), vector2f(UV_DIMS, UV_DIMS), s_quadRenderState, Graphics::EFFECT_GEN_JUPITER_GASSPHERE_TEXTURE );
-		STextureFaceGPURequest *pGPUReq = new STextureFaceGPURequest( &s_patchFaces[i][0], GetSystemBody()->GetPath(), i, UV_DIMS, GetTerrain(), pQuad );
-		m_gpuJob[i] = Pi::GpuJobs()->Queue( new SingleTextureFaceGPUJob(pGPUReq) );
-		m_hasGpuJobRequest[i] = true;
+		for(int i=0; i<NUM_PATCHES; i++) 
+		{
+			assert(!m_hasJobRequest[i]);
+			assert(!m_job[i].HasJob());
+			m_hasJobRequest[i] = true;
+			STextureFaceRequest *ssrd = new STextureFaceRequest(&s_patchFaces[i][0], GetSystemBody()->GetPath(), i, UV_DIMS, GetTerrain());
+			m_job[i] = Pi::Jobs()->Queue(new SingleTextureFaceJob(ssrd));
+		}
+	}
+	else
+	{
+		for(int i=0; i<NUM_PATCHES; i++) 
+		{
+			assert(!m_hasGpuJobRequest[i]);
+			assert(!m_gpuJob[i].HasGPUJob());
+
+			// use m_surfaceTexture texture?
+			// create texture
+			const vector2f texSize(1.0f, 1.0f);
+			const vector2f dataSize(UV_DIMS, UV_DIMS);
+			const Graphics::TextureDescriptor texDesc(
+				Graphics::TEXTURE_RGBA_8888, 
+				dataSize, texSize, Graphics::LINEAR_CLAMP, 
+				true, false, 0, Graphics::TEXTURE_CUBE_MAP);
+			m_surfaceTexture.Reset(Pi::renderer->CreateTexture(texDesc));
+
+			GenFaceQuad *pQuad = new GenFaceQuad( Pi::renderer, &s_patchFaces[i][0], vector2f(0.0f, 0.0f), vector2f(UV_DIMS, UV_DIMS), s_quadRenderState, Graphics::EFFECT_GEN_JUPITER_GASSPHERE_TEXTURE );
+			STextureFaceGPURequest *pGPUReq = new STextureFaceGPURequest( &s_patchFaces[i][0], GetSystemBody()->GetPath(), i, UV_DIMS, GetTerrain(), pQuad, m_surfaceTexture.Get() );
+			m_gpuJob[i] = Pi::GpuJobs()->Queue( new SingleTextureFaceGPUJob(pGPUReq) );
+			m_hasGpuJobRequest[i] = true;
+		}
 	}
 }
 
@@ -881,7 +907,7 @@ void GasGiant::SetUpMaterials()
 	}
 	surfDesc.textures = 1;
 	m_surfaceMaterial.reset(Pi::renderer->CreateMaterial(surfDesc));
-	assert(m_surfaceTextureSmall.Valid());
+	assert(m_surfaceTextureSmall.Valid() || m_surfaceTexture.Valid());
 	m_surfaceMaterial->texture0 = m_surfaceTexture.Valid() ? m_surfaceTexture.Get() : m_surfaceTextureSmall.Get();
 
 	{
