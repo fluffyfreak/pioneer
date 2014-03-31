@@ -1284,43 +1284,54 @@ void SystemBody::PickRings(bool forceRings)
 	m_rings.minRadius = fixed(0);
 	m_rings.maxRadius = fixed(0);
 	m_rings.baseColor = Color(255,255,255,255);
-
-	if (m_type == SystemBody::TYPE_PLANET_GAS_GIANT) {
-		Random ringRng(m_seed + 965467);
-
-		// today's forecast: 50% chance of rings
-		double rings_die = ringRng.Double();
-		if (forceRings || (rings_die < 0.5)) {
-			const unsigned char * const baseCol
-				= RANDOM_RING_COLORS[ringRng.Int32(COUNTOF(RANDOM_RING_COLORS))];
-			m_rings.baseColor.r = Clamp(baseCol[0] + ringRng.Int32(-20,20), 0, 255);
-			m_rings.baseColor.g = Clamp(baseCol[1] + ringRng.Int32(-20,20), 0, 255);
-			m_rings.baseColor.b = Clamp(baseCol[2] + ringRng.Int32(-20,10), 0, 255);
-			m_rings.baseColor.a = Clamp(baseCol[3] + ringRng.Int32(-5,5), 0, 255);
-
-			// from wikipedia: http://en.wikipedia.org/wiki/Roche_limit
-			// basic Roche limit calculation assuming a rigid satellite
-			// d = R (2 p_M / p_m)^{1/3}
-			//
-			// where R is the radius of the primary, p_M is the density of
-			// the primary and p_m is the density of the satellite
-			//
-			// I assume a satellite density of 500 kg/m^3
-			// (which Wikipedia says is an average comet density)
-			//
-			// also, I can't be bothered to think about unit conversions right now,
-			// so I'm going to ignore the real density of the primary and take it as 1100 kg/m^3
-			// (note: density of Saturn is ~687, Jupiter ~1,326, Neptune ~1,638, Uranus ~1,318)
-			//
-			// This gives: d = 1.638642 * R
-			fixed innerMin = fixed(110, 100);
-			fixed innerMax = fixed(145, 100);
-			fixed outerMin = fixed(150, 100);
-			fixed outerMax = fixed(168642, 100000);
-
-			m_rings.minRadius = innerMin + (innerMax - innerMin)*ringRng.Fixed();
-			m_rings.maxRadius = outerMin + (outerMax - outerMin)*ringRng.Fixed();
+	
+	Random ringRng(m_seed + 965467);
+	bool bHasRings = forceRings;
+	if( !bHasRings )
+	{
+		// today's forecast: 
+		if (m_type == SystemBody::TYPE_PLANET_GAS_GIANT) {
+			// 50% chance of rings
+			bHasRings = ringRng.Double() < 0.5;
+		} else if (m_type == SystemBody::TYPE_PLANET_TERRESTRIAL) { 
+			// 1:100 (1%) chance of rings
+			bHasRings = ringRng.Double() < 0.01;
+		} else if (m_type == SystemBody::TYPE_PLANET_ASTEROID) { 
+			// 1:10 (10%) chance of rings
+			bHasRings = ringRng.Double() < 0.1;
 		}
+	}
+
+	if (bHasRings) {
+		const unsigned char * const baseCol
+			= RANDOM_RING_COLORS[ringRng.Int32(COUNTOF(RANDOM_RING_COLORS))];
+		m_rings.baseColor.r = Clamp(baseCol[0] + ringRng.Int32(-20,20), 0, 255);
+		m_rings.baseColor.g = Clamp(baseCol[1] + ringRng.Int32(-20,20), 0, 255);
+		m_rings.baseColor.b = Clamp(baseCol[2] + ringRng.Int32(-20,10), 0, 255);
+		m_rings.baseColor.a = Clamp(baseCol[3] + ringRng.Int32(-5,5), 0, 255);
+
+		// from wikipedia: http://en.wikipedia.org/wiki/Roche_limit
+		// basic Roche limit calculation assuming a rigid satellite
+		// d = R (2 p_M / p_m)^{1/3}
+		//
+		// where R is the radius of the primary, p_M is the density of
+		// the primary and p_m is the density of the satellite
+		//
+		// I assume a satellite density of 500 kg/m^3
+		// (which Wikipedia says is an average comet density)
+		//
+		// also, I can't be bothered to think about unit conversions right now,
+		// so I'm going to ignore the real density of the primary and take it as 1100 kg/m^3
+		// (note: density of Saturn is ~687, Jupiter ~1,326, Neptune ~1,638, Uranus ~1,318)
+		//
+		// This gives: d = 1.638642 * R
+		fixed innerMin = fixed(110, 100);
+		fixed innerMax = fixed(145, 100);
+		fixed outerMin = fixed(150, 100);
+		fixed outerMax = fixed(168642, 100000);
+
+		m_rings.minRadius = innerMin + (innerMax - innerMin)*ringRng.Fixed();
+		m_rings.maxRadius = outerMin + (outerMax - outerMin)*ringRng.Fixed();
 	}
 }
 
