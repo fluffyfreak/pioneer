@@ -88,7 +88,6 @@ sigc::signal<void, bool> Pi::onMouseWheel;
 sigc::signal<void> Pi::onPlayerChangeTarget;
 sigc::signal<void> Pi::onPlayerChangeFlightControlState;
 sigc::signal<void> Pi::onPlayerChangeEquipment;
-sigc::signal<void, const SpaceStation*> Pi::onDockingClearanceExpired;
 LuaSerializer *Pi::luaSerializer;
 LuaTimer *Pi::luaTimer;
 LuaNameGen *Pi::luaNameGen;
@@ -346,7 +345,7 @@ std::string Pi::GetSaveDir()
 	return FileSystem::JoinPath(FileSystem::GetUserDir(), Pi::SAVE_DIR_NAME);
 }
 
-void Pi::Init(const std::map<std::string,std::string> &options)
+void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 {
 #ifdef PIONEER_PROFILER
 	Profiler::reset();
@@ -362,10 +361,21 @@ void Pi::Init(const std::map<std::string,std::string> &options)
 #endif
 
 	Pi::config = new GameConfig(options);
-	KeyBindings::InitBindings();
+	if (!no_gui) // This re-saves the config file. With no GUI we want to allow multiple instances in parallel.
+		KeyBindings::InitBindings();
 
 	if (config->Int("RedirectStdio"))
 		OS::RedirectStdio();
+
+	std::string version(PIONEER_VERSION);
+	if (strlen(PIONEER_EXTRAVERSION)) version += " (" PIONEER_EXTRAVERSION ")";
+	const char* platformName = SDL_GetPlatform();
+	if(platformName)
+		Output("ver %s on: %s\n\n", version.c_str(), platformName);
+	else
+		Output("ver %s but could not detect platform name.\n\n", version.c_str());
+
+	Output("%s\n", OS::GetOSInfoString().c_str());
 
 	ModManager::Init();
 
@@ -391,6 +401,7 @@ void Pi::Init(const std::map<std::string,std::string> &options)
 	videoSettings.width = config->Int("ScrWidth");
 	videoSettings.height = config->Int("ScrHeight");
 	videoSettings.fullscreen = (config->Int("StartFullscreen") != 0);
+	videoSettings.hidden = no_gui;
 	videoSettings.requestedSamples = config->Int("AntiAliasingMode");
 	videoSettings.vsync = (config->Int("VSync") != 0);
 	videoSettings.useTextureCompression = (config->Int("UseTextureCompression") != 0);
@@ -442,7 +453,7 @@ void Pi::Init(const std::map<std::string,std::string> &options)
 	// templates. so now we have crap everywhere :/
 	Lua::Init();
 
-	Pi::ui.Reset(new UI::Context(Lua::manager, Pi::renderer, Graphics::GetScreenWidth(), Graphics::GetScreenHeight(), Lang::GetCore().GetLangCode()));
+	Pi::ui.Reset(new UI::Context(Lua::manager, Pi::renderer, Graphics::GetScreenWidth(), Graphics::GetScreenHeight()));
 
 	LuaInit();
 
@@ -510,7 +521,7 @@ void Pi::Init(const std::map<std::string,std::string> &options)
 	Sfx::Init(Pi::renderer);
 	draw_progress(gauge, label, 0.95f);
 
-	if (!config->Int("DisableSound")) {
+	if (!no_gui && !config->Int("DisableSound")) {
 		Sound::Init();
 		Sound::SetMasterVolume(config->Float("MasterVolume"));
 		Sound::SetSfxVolume(config->Float("SfxVolume"));

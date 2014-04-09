@@ -372,10 +372,7 @@ void WorldView::OnClickBlastoff()
 {
 	Pi::BoinkNoise();
 	if (Pi::player->GetFlightState() == Ship::DOCKED) {
-		if (!Pi::player->Undock()) {
-			Pi::cpan->MsgLog()->ImportantMessage(Pi::player->GetDockedWith()->GetLabel(),
-					Lang::LAUNCH_PERMISSION_DENIED_BUSY);
-		}
+		Pi::player->Undock();
 	} else {
 		Pi::player->Blastoff();
 	}
@@ -1109,18 +1106,13 @@ static void PlayerPayFine()
 }
 */
 
+// XXX belongs in some sort of hyperspace controller
 void WorldView::OnHyperspaceTargetChanged()
 {
 	if (Pi::player->IsHyperspaceActive()) {
 		Pi::player->ResetHyperspaceCountdown();
 		Pi::cpan->MsgLog()->Message("", Lang::HYPERSPACE_JUMP_ABORTED);
 	}
-
-	const SystemPath path = Pi::sectorView->GetHyperspaceTarget();
-
-	RefCountedPtr<StarSystem> system = StarSystemCache::GetCached(path);
-	const std::string& name = path.IsBodyPath() ? system->GetBodyByPath(path)->GetName() : system->GetName() ;
-	Pi::cpan->MsgLog()->Message("", stringf(Lang::SET_HYPERSPACE_DESTINATION_TO, formatarg("system", name)));
 }
 
 void WorldView::OnPlayerChangeTarget()

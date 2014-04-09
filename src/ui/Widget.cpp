@@ -19,7 +19,10 @@ Widget::Widget(Context *context) :
 	m_font(FONT_INHERIT),
 	m_disabled(false),
 	m_mouseOver(false),
-	m_visible(false)
+	m_visible(false),
+	m_animatedOpacity(1.0f),
+	m_animatedPositionX(1.0f),
+	m_animatedPositionY(1.0f)
 {
 	assert(m_context);
 }
@@ -147,6 +150,18 @@ bool Widget::IsMouseActive() const
 bool Widget::IsSelected() const
 {
 	return (GetContext()->GetSelected() == this);
+}
+
+bool Widget::IsOnTopLayer() const
+{
+	const Layer *topLayer = GetContext()->GetTopLayer();
+	Widget *scan = GetContainer();
+	while (scan) {
+		if (scan == topLayer)
+			return true;
+        scan = scan->GetContainer();
+    }
+	return false;
 }
 
 void Widget::Disable()
