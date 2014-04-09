@@ -150,5 +150,5 @@ void main(void)
 	vec4 colour = GetColour(p);
 	
 	// success! (hopefully)
-	gl_FragColor = colour;
+	gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);//colour;
 }

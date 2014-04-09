@@ -11,6 +11,7 @@
 #include "graphics/Renderer.h"
 #include "graphics/Frustum.h"
 #include "graphics/Graphics.h"
+#include "graphics/TextureGL.h"
 #include "graphics/TextureBuilder.h"
 #include "graphics/VertexArray.h"
 #include "graphics/Types.h"
@@ -281,6 +282,14 @@ namespace
 		STextureFaceGPUData mData;
 	};
 
+	static matrix3x3f LookAt (const vector3f &eye, const vector3f &target, const vector3f &up) {
+		const vector3f viewDir  = (target - eye).Normalized();
+		const vector3f viewUp   = (up - up.Dot(viewDir) * viewDir).Normalized();
+		const vector3f viewSide = viewDir.Cross(viewUp);
+
+		return matrix3x3f::FromVectors(viewSide, viewUp, -viewDir);
+	}
+
 	// ********************************************************************************
 	// Overloaded GPUJob class to handle generating the mesh for each patch
 	// ********************************************************************************
@@ -300,9 +309,12 @@ namespace
 		virtual void OnRun() // Runs in the main thread, may trash the GPU state
 		{
 			// render the scene
+			//GasGiant::SetRenderTarget( mData->Texture() );
 			GasGiant::SetRenderTargetCubemap( mData->Face(), mData->Texture() );
 			GasGiant::BeginRenderTarget();
 			Pi::renderer->BeginFrame();
+			glClearColor(1,0,0,1);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			Pi::renderer->SetViewport( 0, 0, UV_DIMS, UV_DIMS );
 			Pi::renderer->SetTransform(matrix4x4f::Identity());
 
@@ -330,10 +342,13 @@ namespace
 			Pi::renderer->EndFrame();
 			GasGiant::EndRenderTarget();
 			GasGiant::SetRenderTargetCubemap( mData->Face(), nullptr );
+			//GasGiant::SetRenderTarget( nullptr );
+
+			glFlush();
 
 			// don't need to do this as we don't need to see the results on screen
-			//Pi::DrawRenderTarget();
-			//Pi::renderer->SwapBuffers();
+			/*Pi::DrawRenderTarget();
+			Pi::renderer->SwapBuffers();*/
 
 			// add this patches data
 			STextureFaceGPUResult *sr = new STextureFaceGPUResult( mData->Face() );
@@ -656,7 +671,27 @@ bool GasGiant::AddTextureFaceResult(STextureFaceResult *res)
 
 	return result;
 }
+#define DUMP_TO_TEXTURE 1
 
+#if DUMP_TO_TEXTURE
+#include "FileSystem.h"
+#include "PngWriter.h"
+void textureDump(const char* destFile, const int width, const int height, const Color* buf)
+{
+	const std::string dir = "generated_textures";
+	FileSystem::userFiles.MakeDirectory(dir);
+	const std::string fname = FileSystem::JoinPathBelow(dir, destFile);
+
+	// pad rows to 4 bytes, which is the default row alignment for OpenGL
+	//const int stride = (3*width + 3) & ~3;
+	const int stride = width * 4;
+
+	write_png(FileSystem::userFiles, fname, &buf[0].r, width, height, stride, 4);
+
+	printf("texture %s saved\n", fname.c_str());
+}
+#endif
+#pragma optimize("",off)
 bool GasGiant::AddTextureFaceResult(STextureFaceGPUResult *res)
 {
 	bool result = false;
@@ -666,6 +701,21 @@ bool GasGiant::AddTextureFaceResult(STextureFaceGPUResult *res)
 	m_hasGpuJobRequest[res->face()] = false;
 	const Sint32 uvDims = res->data().uvDims;
 	assert( uvDims > 0 && uvDims <= 4096 );
+	
+	Graphics::Texture* pTex = res->data().texture.Get();
+	m_jobTextureBuffers[res->face()].Reset( pTex );
+
+#if DUMP_TO_TEXTURE
+	std::unique_ptr<Color, FreeDeleter> buffer(static_cast<Color*>(malloc(uvDims*uvDims*4)));
+	Graphics::TextureGL* pGLTex = static_cast<Graphics::TextureGL*>(pTex);
+	pGLTex->Bind();
+	glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_X + res->face(), 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, buffer.get());
+	pGLTex->Unbind();
+
+	char filename[1024];
+	snprintf(filename, 1024, "%s%d.png", GetSystemBody()->GetName().c_str(), res->face());
+	textureDump(filename, uvDims, uvDims, buffer.get());
+#endif
 
 	// tidyup
 	delete res;
@@ -961,6 +1011,7 @@ void GasGiant::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 	rsd.depthTest  = false;
 	rsd.depthWrite = false;
 	rsd.blendMode = Graphics::BLEND_ALPHA;
+	rsd.cullMode = Graphics::CULL_NONE;
 	s_quadRenderState = Pi::renderer->CreateRenderState(rsd);
 
 	// Complete the RT description so we can request a buffer.
@@ -969,9 +1020,15 @@ void GasGiant::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 		width,
 		height,
 		Graphics::TEXTURE_NONE,		// don't create a texture
-		Graphics::TEXTURE_NONE,		// no depth buffer
+		Graphics::TEXTURE_DEPTH,
 		false);
 	s_renderTarget = Pi::renderer->CreateRenderTarget(rtDesc);
+}
+
+//static 
+void GasGiant::SetRenderTarget(Graphics::Texture *pTexture)
+{
+	s_renderTarget->SetColorTexture(pTexture);
 }
 
 //static 
