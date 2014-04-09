@@ -5,6 +5,8 @@
 #define GRAPHICS_TYPES_H
 #include "libs.h"
 
+class Terrain;
+
 namespace Graphics {
 
 //Vertex attribute semantic
@@ -71,6 +73,9 @@ enum FaceCullMode {
 struct GenGasGiantColourMaterialParameters {
 	const vector3d *v;
 	float fracStep;
+	float planetRadius;
+	float time;
+	Terrain *pTerrain;
 };
 
 }

@@ -9,6 +9,7 @@
 #include <sstream>
 #include "StringF.h"
 #include "Ship.h"
+#include "galaxy/StarSystem.h"
 
 namespace Graphics {
 namespace GL2 {
@@ -55,6 +56,19 @@ void GenGasGiantColourProgram::InitUniforms()
 	v2.Init("v2", m_program);
 	v3.Init("v3", m_program);
 	fracStep.Init("fracStep", m_program);
+
+	// XXX omg hacking galore
+	time.Init("time", m_program);
+	
+	octaves.Init("octaves", m_program);
+	lacunarity.Init("lacunarity", m_program);
+	frequency.Init("frequency", m_program);
+
+	ggdarkColor.Init("ggdarkColor", m_program);
+	gglightColor.Init("gglightColor", m_program);
+	entropy.Init("entropy", m_program);
+	planetEarthRadii.Init("planetEarthRadii", m_program);
+	// XXX omg hacking galore
 }
 
 Program *GenGasGiantColourMaterial::CreateProgram(const MaterialDescriptor &desc)
@@ -74,6 +88,37 @@ void GenGasGiantColourMaterial::Apply()
 	p->v2.Set( params.v[2] );
 	p->v3.Set( params.v[3] );
 	p->fracStep.Set( params.fracStep );
+
+	// XXX omg hacking galore
+	p->time.Set(params.time);
+
+	assert(params.pTerrain);
+	int octaves[10];
+	float lacunarity[10];
+	float frequency[10];
+	for(Uint32 i=0; i<10; i++) {
+		octaves[i]		= Clamp(params.pTerrain->GetFracDef(i).octaves, 1, 3);
+		lacunarity[i]	= params.pTerrain->GetFracDef(i).lacunarity;
+		frequency[i]	= params.pTerrain->GetFracDef(i).frequency;
+	}
+	p->octaves.Set(octaves, 10);
+	p->lacunarity.Set(lacunarity, 10);
+	p->frequency.Set(frequency, 10);
+
+	vector3f darkColor[8];
+	vector3f lightColor[8];
+	for(Uint32 i=0; i<8; i++) {
+		const vector3d &dc = params.pTerrain->GetColorValue(Terrain::eGGDARKCOLOR, i);
+		const vector3d &lc = params.pTerrain->GetColorValue(Terrain::eGGLIGHTCOLOR, i);
+		darkColor[i] = vector3f(dc.x, dc.y, dc.z);
+		lightColor[i] = vector3f(lc.x, lc.y, lc.z);
+	}
+		
+	p->ggdarkColor.Set(&darkColor[0], 8);
+	p->gglightColor.Set(&lightColor[0], 8);
+	p->entropy.Set(float(params.pTerrain->GetEntropy(0)));
+	p->planetEarthRadii.Set(float(params.planetRadius / EARTH_RADIUS));
+	// XXX omg hacking galore
 
 	p->diffuse.Set(this->diffuse);
 

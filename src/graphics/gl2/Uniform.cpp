@@ -23,16 +23,34 @@ void Uniform::Set(int i)
 		glUniform1i(m_location, i);
 }
 
+void Uniform::Set(const int *iv, const Uint32 size)
+{
+	if (m_location != -1)
+		glUniform1iv(m_location, size, iv);
+}
+
 void Uniform::Set(float f)
 {
 	if (m_location != -1)
 		glUniform1f(m_location, f);
 }
 
+void Uniform::Set(const float *fv, const Uint32 size)
+{
+	if (m_location != -1)
+		glUniform1fv(m_location, size, fv);
+}
+
 void Uniform::Set(const vector3f &v)
 {
 	if (m_location != -1)
 		glUniform3f(m_location, v.x, v.y, v.z);
+}
+
+void Uniform::Set(const vector3f *v, const Uint32 size)
+{
+	if (m_location != -1)
+		glUniform3fv(m_location, size, &v->x);
 }
 
 void Uniform::Set(const vector3d &v)

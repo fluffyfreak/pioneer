@@ -17,8 +17,11 @@ namespace Graphics {
 			Uniform();
 			void Init(const char *name, GLuint program);
 			void Set(int);
+			void Set(const int *iv, const Uint32 size);
 			void Set(float);
+			void Set(const float *, const Uint32);
 			void Set(const vector3f&);
+			void Set(const vector3f*, const Uint32);
 			void Set(const vector3d&);
 			void Set(const Color&);
 			void Set(const int v[3]);

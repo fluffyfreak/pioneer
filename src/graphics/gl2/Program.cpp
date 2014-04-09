@@ -80,6 +80,9 @@ struct Shader {
 			AppendSource("#define FRAGMENT_SHADER\n");
 		AppendSource(logzCode->AsStringRange().StripUTF8BOM());
 		AppendSource(libsCode->AsStringRange().StripUTF8BOM());
+		if(NOISE&libs) {
+			AppendSource(noiseCode->AsStringRange().StripUTF8BOM());
+		}
 		AppendSource(code->AsStringRange().StripUTF8BOM());
 #if 0
 		static bool s_bDumpShaderSource = true;
@@ -89,8 +92,8 @@ struct Shader {
 			FileSystem::userFiles.MakeDirectory(SHADER_OUT_DIR_NAME);
 			FileSystem::userFiles.MakeDirectory(SHADER_GL2_OUT_DIR_NAME);
 			const std::string outFilename(FileSystem::GetUserDir() + "/" + filename);
-			FILE *tmp = fopen(outFilename.c_str(), "w+");
-			Output("%s", filename);
+			FILE *tmp = fopen(outFilename.c_str(), "wb+");
+			Output("%s\n", filename);
 			for( Uint32 i=0; i<blocks.size(); i++ ) {
 				fprintf(tmp, "%.*s", block_sizes[i], blocks[i]);
 			}

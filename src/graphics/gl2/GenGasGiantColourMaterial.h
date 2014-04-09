@@ -22,6 +22,17 @@ namespace Graphics {
 			Uniform v0, v1, v2, v3;
 			Uniform fracStep;
 
+			Uniform time;
+
+			Uniform octaves;
+			Uniform lacunarity;
+			Uniform frequency;
+
+			Uniform ggdarkColor;
+			Uniform gglightColor;
+			Uniform entropy;
+			Uniform planetEarthRadii;
+
 		protected:
 			virtual void InitUniforms();
 		};

@@ -3,6 +3,7 @@
 
 #include "GPUJobQueue.h"
 #include "StringF.h"
+#include "utils.h"
 
 void GPUJob::UnlinkHandle()
 {
@@ -43,6 +44,10 @@ void GPUJobRunner::Process()
 	}
 	job = m_jobQueue->GetGPUJob();
 
+	std::unique_ptr<MsgTimer> timer;
+	if(job)
+		timer.reset(new MsgTimer);
+
 	while (job) {
 		// record the job so we can cancel it in case of premature shutdown
 		m_job = job;
@@ -65,6 +70,9 @@ void GPUJobRunner::Process()
 		}
 		job = m_jobQueue->GetGPUJob();
 	}
+
+	if(timer.get())
+		timer->Mark("GPUJobRunner::Process()");
 }
 
 void GPUJobRunner::SetQueueDestroyed()

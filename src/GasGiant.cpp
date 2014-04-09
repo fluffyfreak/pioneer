@@ -25,7 +25,7 @@ namespace
 {
 	static const Uint32 UV_DIMS_SMALL = 16;
 	static const Uint32 UV_DIMS = 512;
-	static const float s_initialDelayTime = 60.0f; // (perhaps) 60 seconds seems like a reasonable default
+	static const float s_initialDelayTime = 5.0f; // (perhaps) 60 seconds seems like a reasonable default
 	static std::vector<GasGiant*> s_allGasGiants;
 
 	// generate root face patches of the cube/sphere
@@ -177,8 +177,7 @@ namespace
 	// a quad with reversed winding
 	class GenFaceQuad : public Graphics::Drawables::Drawable {
 	public:
-		#pragma optimize("",off)
-		GenFaceQuad(Graphics::Renderer *r, const vector3d *v, const vector2f &pos, const vector2f &size, Graphics::RenderState *state, Graphics::EffectType effect)
+		GenFaceQuad(Graphics::Renderer *r, const vector3d *v, const vector2f &pos, const vector2f &size, Graphics::RenderState *state, Terrain *pTerrain, float planetRadius, Graphics::EffectType effect)
 		{
 			assert(state);
 			m_renderState = state;
@@ -199,6 +198,9 @@ namespace
 
 			m_specialParams.v = v;
 			m_specialParams.fracStep = 1.0f / float(size.x);
+			m_specialParams.planetRadius = planetRadius;
+			m_specialParams.time = 0.0f;
+			m_specialParams.pTerrain = pTerrain;
 			m_material->specialParameter0 = &m_specialParams;
 		}
 		virtual void Draw(Graphics::Renderer *r) {
@@ -657,7 +659,7 @@ bool GasGiant::AddTextureFaceResult(STextureFaceResult *res)
 
 	return result;
 }
-#define DUMP_TO_TEXTURE 0
+#define DUMP_TO_TEXTURE 1
 
 #if DUMP_TO_TEXTURE
 #include "FileSystem.h"
@@ -798,12 +800,40 @@ void GasGiant::GenerateTexture()
 			true, false, 0, Graphics::TEXTURE_CUBE_MAP);
 		m_surfaceTexture.Reset(Pi::renderer->CreateTexture(texDesc));
 
+		const std::string ColorFracName = GetTerrain()->GetColorFractalName();
+		Output("Color Fractal name: %s\n", ColorFracName.c_str());
+		static const std::string GGJupiter("GGJupiter");
+		static const std::string GGNeptune("GGNeptune");
+		static const std::string GGNeptune2("GGNeptune2");
+		static const std::string GGSaturn("GGSaturn");
+		static const std::string GGSaturn2("GGSaturn2");
+		static const std::string GGUranus("GGUranus");
+
+		Graphics::EffectType effectType = Graphics::EFFECT_GEN_JUPITER_GASSPHERE_TEXTURE;
+		if( ColorFracName == GGNeptune ) {
+			effectType = Graphics::EFFECT_GEN_NEPTUNE_GASSPHERE_TEXTURE;
+		} else if( ColorFracName == GGNeptune2 ) {
+			effectType = Graphics::EFFECT_GEN_NEPTUNE_GASSPHERE_TEXTURE;
+		} else if( ColorFracName == GGSaturn ) {
+			effectType = Graphics::EFFECT_GEN_SATURN_GASSPHERE_TEXTURE;
+		} else if( ColorFracName == GGSaturn2 ) {
+			effectType = Graphics::EFFECT_GEN_SATURN_GASSPHERE_TEXTURE;
+		} else if( ColorFracName == GGUranus ) {
+			effectType = Graphics::EFFECT_GEN_URANUS_GASSPHERE_TEXTURE;
+		}
+
 		for(int i=0; i<NUM_PATCHES; i++) 
 		{
 			assert(!m_hasGpuJobRequest[i]);
 			assert(!m_gpuJob[i].HasGPUJob());
 
-			GenFaceQuad *pQuad = new GenFaceQuad( Pi::renderer, &s_patchFaces[i][0], vector2f(0.0f, 0.0f), vector2f(UV_DIMS, UV_DIMS), s_quadRenderState, Graphics::EFFECT_GEN_JUPITER_GASSPHERE_TEXTURE );
+			GenFaceQuad *pQuad = new GenFaceQuad( 
+				Pi::renderer, 
+				&s_patchFaces[i][0], 
+				vector2f(0.0f, 0.0f), vector2f(UV_DIMS, UV_DIMS), 
+				s_quadRenderState, GetTerrain(), GetSystemBody()->GetRadius(),
+				effectType );
+			
 			STextureFaceGPURequest *pGPUReq = new STextureFaceGPURequest( &s_patchFaces[i][0], GetSystemBody()->GetPath(), i, UV_DIMS, GetTerrain(), pQuad, m_surfaceTexture.Get() );
 			m_gpuJob[i] = Pi::GpuJobs()->Queue( new SingleTextureFaceGPUJob(pGPUReq) );
 			m_hasGpuJobRequest[i] = true;

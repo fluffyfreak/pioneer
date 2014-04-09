@@ -52,6 +52,41 @@ public:
 
 	void DebugDump() const;
 
+	double GetEntropy(const Uint32 idx) const {
+		return m_entropy[Clamp(idx, 0U, 12U)];
+	}
+
+	enum {
+		eROCKCOLOR=0,
+		eDARKROCKCOLOR,
+		eGREYROCKCOLOR,
+		ePLANTCOLOR,
+		eDARKPLANTCOLOR,
+		eSANDCOLOR,
+		eDARKSANDCOLOR,
+		eDIRTCOLOR,
+		eDARKDIRTCOLOR,
+		eGGLIGHTCOLOR,
+		eGGDARKCOLOR
+	};
+
+	const vector3d& GetColorValue(const Uint32 color, const Uint32 idx) const {
+		switch(color) {
+			case eROCKCOLOR:		return m_rockColor[8];
+			case eDARKROCKCOLOR:	return m_darkrockColor[8];
+			case eGREYROCKCOLOR:	return m_greyrockColor[8];
+			case ePLANTCOLOR:		return m_plantColor[8];
+			case eDARKPLANTCOLOR:	return m_darkplantColor[8];
+			case eSANDCOLOR:		return m_sandColor[8];
+			case eDARKSANDCOLOR:	return m_darksandColor[8];
+			case eDIRTCOLOR:		return m_dirtColor[8];
+			case eDARKDIRTCOLOR:	return m_darkdirtColor[8];
+			case eGGLIGHTCOLOR:		return m_gglightColor[8];
+			case eGGDARKCOLOR:		return m_ggdarkColor[8];
+		}
+		return m_ggdarkColor[0];
+	}
+
 private:
 	template <typename HeightFractal, typename ColorFractal>
 	static Terrain *InstanceGenerator(const SystemBody *body) { return new TerrainGenerator<HeightFractal,ColorFractal>(body); }

@@ -222,3 +222,41 @@ float voronoiscam_octavenoise(in int octaves, in float roughness, in float lacun
 	return sqrt(10.0 * abs(n));
 }
 
+float megavolcano_function_1pass(in vec3 p, in float craterIn, in float height)
+{
+	float n = abs(snoise(vec4(p, 1.0)));
+	const float ejecta_outer = 0.6;
+	const float outer = 0.76;  //Radius
+	const float inner = 0.98;
+	const float midrim = 0.964;
+	float craterOut = craterIn;
+	if (n > inner) {
+		//craterOut = 0;
+	} else if (n > midrim) {
+		float hrim = inner - midrim;
+		float descent = (hrim-(n-midrim))/hrim;
+		craterOut += height * descent;
+	} else if (n > outer) {
+		float hrim = midrim - outer;
+		float ascent = (n-outer)/hrim;
+		craterOut += height * ascent * ascent;
+	} else if (n > ejecta_outer) {
+		// blow down walls of other craters too near this one,
+		// so we don't have sharp transition
+		craterOut *= (outer-n)/-(ejecta_outer-outer);
+	}
+	return craterOut;
+}
+
+float megavolcano_function(in int octaves, in float roughness, in float lacunarity, in vec3 p)
+{
+	float crater = 0.0;
+	float sz = lacunarity;
+	float max_h = roughness;
+	for (int i=0; i<octaves; i++) {
+		crater = megavolcano_function_1pass(sz*p, crater, max_h);
+		sz *= 1.0;  //frequency?
+		max_h *= 0.15; // height??
+	}
+	return 4.0 * crater;
+}
