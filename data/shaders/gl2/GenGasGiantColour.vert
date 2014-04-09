@@ -6,6 +6,7 @@ varying vec2 uv;
 
 void main(void)
 {
-	gl_Position = vec4(vertex = vec3(gl_ModelViewMatrix * gl_Vertex), 1.0);
+	gl_Position = logarithmicTransform();
+	vertex = vec3(gl_ModelViewMatrix * gl_Vertex);
 	uv = gl_MultiTexCoord0.xy;
 }

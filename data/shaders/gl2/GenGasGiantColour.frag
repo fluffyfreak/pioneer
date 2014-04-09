@@ -13,7 +13,7 @@ varying vec2 uv;
 #if defined( GEN_JUPITER_ESQUE )
 vec4 GetColour(const vec3 p)
 {
-	vec4 colour = vec4(1.0, 0.0, 0.0, 1.0);
+	vec4 colour = vec4(abs(p), 1.0);
 	return colour;
 }
 
@@ -117,19 +117,19 @@ vec4 GetColour(const vec3 p)
 #elif defined( GEN_NEPTUNE_ESQUE )
 vec4 GetColour(const vec3 p)
 {
-	vec4 colour = vec4(0.0, 1.0, 0.0, 1.0);
+	vec4 colour = vec4(p, 1.0);
 	return colour;
 }
 #elif defined( GEN_SATURN_ESQUE )
 vec4 GetColour(const vec3 p)
 {
-	vec4 colour = vec4(0.0, 0.0, 1.0, 1.0);
+	vec4 colour = vec4(p, 1.0);
 	return colour;
 }
 #elif defined( GEN_URANUS_ESQUE )
 vec4 GetColour(const vec3 p)
 {
-	vec4 colour = vec4(1.0, 0.0, 1.0, 1.0);
+	vec4 colour = vec4(p, 1.0);
 	return colour;
 }
 #endif
@@ -150,5 +150,7 @@ void main(void)
 	vec4 colour = GetColour(p);
 	
 	// success! (hopefully)
-	gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);//colour;
+	gl_FragColor = colour;
+	
+	SetFragDepth();
 }

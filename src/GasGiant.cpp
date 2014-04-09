@@ -189,7 +189,7 @@ namespace
 			
 			// these might need to be reversed
 			const vector2f texPos = vector2f(0.0f);
-			const vector2f texSize(1.0f, 1.0f);
+			const vector2f texSize(size);
 
 			m_vertices.reset(new Graphics::VertexArray(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_UV0));
 			m_vertices->Add(vector3f(pos.x,        pos.y,        0.0f), vector2f(texPos.x,           texPos.y+texSize.y));
@@ -220,11 +220,7 @@ namespace
 		STextureFaceGPURequest(const vector3d *v_, const SystemPath &sysPath_, const Sint32 face_, const Sint32 uvDIMs_, Terrain *pTerrain_, GenFaceQuad* pQuad_, Graphics::Texture *pTex_) :
 			m_texture(pTex_), corners(v_), sysPath(sysPath_), face(face_), uvDIMs(uvDIMs_), pTerrain(pTerrain_), pQuad(pQuad_)
 		{
-			if( !m_texture.Get() )
-			{
-				Graphics::TextureDescriptor texDesc(Graphics::TEXTURE_RGBA_8888, vector2f(uvDIMs, uvDIMs), Graphics::LINEAR_CLAMP, false, false, 0);
-				m_texture.Reset(Pi::renderer->CreateTexture(texDesc));
-			}
+			assert(m_texture.Valid());
 		}
 
 		Sint32 Face() const { return face; }
@@ -309,12 +305,9 @@ namespace
 		virtual void OnRun() // Runs in the main thread, may trash the GPU state
 		{
 			// render the scene
-			//GasGiant::SetRenderTarget( mData->Texture() );
 			GasGiant::SetRenderTargetCubemap( mData->Face(), mData->Texture() );
 			GasGiant::BeginRenderTarget();
 			Pi::renderer->BeginFrame();
-			glClearColor(1,0,0,1);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			Pi::renderer->SetViewport( 0, 0, UV_DIMS, UV_DIMS );
 			Pi::renderer->SetTransform(matrix4x4f::Identity());
 
@@ -342,13 +335,6 @@ namespace
 			Pi::renderer->EndFrame();
 			GasGiant::EndRenderTarget();
 			GasGiant::SetRenderTargetCubemap( mData->Face(), nullptr );
-			//GasGiant::SetRenderTarget( nullptr );
-
-			glFlush();
-
-			// don't need to do this as we don't need to see the results on screen
-			/*Pi::DrawRenderTarget();
-			Pi::renderer->SwapBuffers();*/
 
 			// add this patches data
 			STextureFaceGPUResult *sr = new STextureFaceGPUResult( mData->Face() );
@@ -671,7 +657,7 @@ bool GasGiant::AddTextureFaceResult(STextureFaceResult *res)
 
 	return result;
 }
-#define DUMP_TO_TEXTURE 1
+#define DUMP_TO_TEXTURE 0
 
 #if DUMP_TO_TEXTURE
 #include "FileSystem.h"
@@ -691,7 +677,7 @@ void textureDump(const char* destFile, const int width, const int height, const 
 	printf("texture %s saved\n", fname.c_str());
 }
 #endif
-#pragma optimize("",off)
+
 bool GasGiant::AddTextureFaceResult(STextureFaceGPUResult *res)
 {
 	bool result = false;
@@ -701,12 +687,10 @@ bool GasGiant::AddTextureFaceResult(STextureFaceGPUResult *res)
 	m_hasGpuJobRequest[res->face()] = false;
 	const Sint32 uvDims = res->data().uvDims;
 	assert( uvDims > 0 && uvDims <= 4096 );
-	
-	Graphics::Texture* pTex = res->data().texture.Get();
-	m_jobTextureBuffers[res->face()].Reset( pTex );
 
 #if DUMP_TO_TEXTURE
 	std::unique_ptr<Color, FreeDeleter> buffer(static_cast<Color*>(malloc(uvDims*uvDims*4)));
+	Graphics::Texture* pTex = res->data().texture.Get();
 	Graphics::TextureGL* pGLTex = static_cast<Graphics::TextureGL*>(pTex);
 	pGLTex->Bind();
 	glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_X + res->face(), 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, buffer.get());
@@ -739,7 +723,7 @@ static const vector3d s_patchFaces[NUM_PATCHES][4] =
 inline vector3d GetSpherePointFromCorners(const double x, const double y, const vector3d *corners) {
 	return (corners[0] + x*(1.0-y)*(corners[1]-corners[0]) + x*y*(corners[2]-corners[0]) + (1.0-x)*y*(corners[3]-corners[0])).Normalized();
 }
-#pragma optimize("",off)
+
 void GasGiant::GenerateTexture()
 {
 	const bool bEnableGPUJobs = (Pi::config->Int("EnableGPUJobs") == 1);
@@ -804,20 +788,20 @@ void GasGiant::GenerateTexture()
 	}
 	else
 	{
+		// use m_surfaceTexture texture?
+		// create texture
+		const vector2f texSize(1.0f, 1.0f);
+		const vector2f dataSize(UV_DIMS, UV_DIMS);
+		const Graphics::TextureDescriptor texDesc(
+			Graphics::TEXTURE_RGBA_8888, 
+			dataSize, texSize, Graphics::LINEAR_CLAMP, 
+			true, false, 0, Graphics::TEXTURE_CUBE_MAP);
+		m_surfaceTexture.Reset(Pi::renderer->CreateTexture(texDesc));
+
 		for(int i=0; i<NUM_PATCHES; i++) 
 		{
 			assert(!m_hasGpuJobRequest[i]);
 			assert(!m_gpuJob[i].HasGPUJob());
-
-			// use m_surfaceTexture texture?
-			// create texture
-			const vector2f texSize(1.0f, 1.0f);
-			const vector2f dataSize(UV_DIMS, UV_DIMS);
-			const Graphics::TextureDescriptor texDesc(
-				Graphics::TEXTURE_RGBA_8888, 
-				dataSize, texSize, Graphics::LINEAR_CLAMP, 
-				true, false, 0, Graphics::TEXTURE_CUBE_MAP);
-			m_surfaceTexture.Reset(Pi::renderer->CreateTexture(texDesc));
 
 			GenFaceQuad *pQuad = new GenFaceQuad( Pi::renderer, &s_patchFaces[i][0], vector2f(0.0f, 0.0f), vector2f(UV_DIMS, UV_DIMS), s_quadRenderState, Graphics::EFFECT_GEN_JUPITER_GASSPHERE_TEXTURE );
 			STextureFaceGPURequest *pGPUReq = new STextureFaceGPURequest( &s_patchFaces[i][0], GetSystemBody()->GetPath(), i, UV_DIMS, GetTerrain(), pQuad, m_surfaceTexture.Get() );
@@ -1023,12 +1007,6 @@ void GasGiant::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 		Graphics::TEXTURE_DEPTH,
 		false);
 	s_renderTarget = Pi::renderer->CreateRenderTarget(rtDesc);
-}
-
-//static 
-void GasGiant::SetRenderTarget(Graphics::Texture *pTexture)
-{
-	s_renderTarget->SetColorTexture(pTexture);
 }
 
 //static 

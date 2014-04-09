@@ -52,7 +52,6 @@ public:
 	static void UpdateAllGasGiants();
 
 	static void CreateRenderTarget(const Uint16 width, const Uint16 height);
-	static void SetRenderTarget(Graphics::Texture*);
 	static void SetRenderTargetCubemap(const Uint32, Graphics::Texture*);
 	static void BeginRenderTarget();
 	static void EndRenderTarget();
@@ -81,7 +80,6 @@ private:
 	JobHandle m_job[NUM_PATCHES];
 	bool m_hasJobRequest[NUM_PATCHES];
 
-	RefCountedPtr<Graphics::Texture> m_jobTextureBuffers[NUM_PATCHES];
 	GPUJobHandle m_gpuJob[NUM_PATCHES];
 	bool m_hasGpuJobRequest[NUM_PATCHES];
 
