@@ -25,7 +25,8 @@ namespace
 {
 	static const Uint32 UV_DIMS_SMALL = 16;
 	static const Uint32 UV_DIMS = 512;
-	static const float s_initialDelayTime = 5.0f; // (perhaps) 60 seconds seems like a reasonable default
+	static const float s_initialCPUDelayTime = 60.0f; // (perhaps) 60 seconds seems like a reasonable default
+	static const float s_initialGPUDelayTime = 5.0f; // (perhaps) 60 seconds seems like a reasonable default
 	static std::vector<GasGiant*> s_allGasGiants;
 
 	// generate root face patches of the cube/sphere
@@ -50,6 +51,8 @@ namespace
 		// Use only data local to this object
 		void OnRun()
 		{
+			MsgTimer timey;
+
 			assert( corners != nullptr );
 			double fracStep = 1.0 / double(UVDims()-1);
 			for( Sint32 v=0; v<UVDims(); v++ ) {
@@ -71,6 +74,8 @@ namespace
 					col[0].a = 255;
 				}
 			}
+
+			timey.Mark("SingleTextureFaceGPUJob::OnRun");
 		}
 
 		Sint32 Face() const { return face; }
@@ -306,6 +311,8 @@ namespace
 
 		virtual void OnRun() // Runs in the main thread, may trash the GPU state
 		{
+			MsgTimer timey;
+
 			// render the scene
 			GasGiant::SetRenderTargetCubemap( mData->Face(), mData->Texture() );
 			GasGiant::BeginRenderTarget();
@@ -344,6 +351,8 @@ namespace
 
 			// store the result
 			mpResults = sr;
+
+			timey.Mark("SingleTextureFaceGPUJob::OnRun");
 		}
 
 		virtual void OnFinish() // runs in primary thread of the context
@@ -554,7 +563,7 @@ void GasGiant::UpdateAllGasGiants()
 }
 
 GasGiant::GasGiant(const SystemBody *body) : BaseSphere(body),
-	m_hasTempCampos(false), m_tempCampos(0.0), m_timeDelay(s_initialDelayTime)
+	m_hasTempCampos(false), m_tempCampos(0.0), m_timeDelay(s_initialCPUDelayTime)
 {
 	s_allGasGiants.push_back(this);
 	
@@ -562,6 +571,10 @@ GasGiant::GasGiant(const SystemBody *body) : BaseSphere(body),
 		m_hasJobRequest[i] = false;
 		m_hasGpuJobRequest[i] = false;
 	}
+
+	const bool bEnableGPUJobs = (Pi::config->Int("EnableGPUJobs") == 1);
+	if(bEnableGPUJobs)
+		m_timeDelay = s_initialGPUDelayTime;
 
 	//SetUpMaterials is not called until first Render since light count is zero :)
 
@@ -662,7 +675,7 @@ bool GasGiant::AddTextureFaceResult(STextureFaceResult *res)
 
 	return result;
 }
-#define DUMP_TO_TEXTURE 1
+#define DUMP_TO_TEXTURE 0
 
 #if DUMP_TO_TEXTURE
 #include "FileSystem.h"
