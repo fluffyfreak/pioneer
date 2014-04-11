@@ -75,6 +75,7 @@ private:
 	virtual void SetUpMaterials();
 	RefCountedPtr<Graphics::Texture> m_surfaceTextureSmall;
 	RefCountedPtr<Graphics::Texture> m_surfaceTexture;
+	RefCountedPtr<Graphics::Texture> m_builtTexture;
 	
 	std::unique_ptr<Color[]> m_jobColorBuffers[NUM_PATCHES];
 	JobHandle m_job[NUM_PATCHES];

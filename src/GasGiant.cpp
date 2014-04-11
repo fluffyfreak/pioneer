@@ -711,7 +711,7 @@ bool GasGiant::AddTextureFaceResult(STextureFaceGPUResult *res)
 	Graphics::Texture* pTex = res->data().texture.Get();
 	Graphics::TextureGL* pGLTex = static_cast<Graphics::TextureGL*>(pTex);
 	pGLTex->Bind();
-	glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_X + res->face(), 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, buffer.get());
+	glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_X + res->face(), 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer.get());
 	pGLTex->Unbind();
 
 	char filename[1024];
@@ -721,6 +721,21 @@ bool GasGiant::AddTextureFaceResult(STextureFaceGPUResult *res)
 
 	// tidyup
 	delete res;
+
+	bool bCreateTexture = true;
+	for(int i=0; i<NUM_PATCHES; i++) {
+		bCreateTexture = bCreateTexture & (!m_hasGpuJobRequest[i]);
+	}
+
+	if( bCreateTexture ) {
+		m_surfaceTexture = m_builtTexture;
+		m_builtTexture.Reset();
+
+		// change the planet texture for the new higher resolution texture
+		if( m_surfaceMaterial.get() ) {
+			m_surfaceMaterial->texture0 = m_surfaceTexture.Get();
+		}
+	}
 
 	return result;
 }
@@ -746,55 +761,55 @@ void GasGiant::GenerateTexture()
 {
 	const bool bEnableGPUJobs = (Pi::config->Int("EnableGPUJobs") == 1);
 
+	const vector2f texSize(1.0f, 1.0f);
+	const vector2f dataSize(UV_DIMS_SMALL, UV_DIMS_SMALL);
+	const Graphics::TextureDescriptor texDesc(
+		Graphics::TEXTURE_RGBA_8888, 
+		dataSize, texSize, Graphics::LINEAR_CLAMP, 
+		false, false, 0, Graphics::TEXTURE_CUBE_MAP);
+	m_surfaceTextureSmall.Reset(Pi::renderer->CreateTexture(texDesc));
+
+	const Terrain *pTerrain = GetTerrain();
+	const double fracStep = 1.0 / double(UV_DIMS_SMALL-1);
+
+	Graphics::TextureCubeData tcd;
+	std::unique_ptr<Color> bufs[NUM_PATCHES];
+	for(int i=0; i<NUM_PATCHES; i++) {
+		Color *colors = new Color[ (UV_DIMS_SMALL*UV_DIMS_SMALL) ];
+		for( Uint32 v=0; v<UV_DIMS_SMALL; v++ ) {
+			for( Uint32 u=0; u<UV_DIMS_SMALL; u++ ) {
+				// where in this row & colum are we now.
+				const double ustep = double(u) * fracStep;
+				const double vstep = double(v) * fracStep;
+
+				// get point on the surface of the sphere
+				const vector3d p = GetSpherePointFromCorners(ustep, vstep, &s_patchFaces[i][0]);
+				// get colour using `p`
+				const vector3d colour = pTerrain->GetColor(p, 0.0, p);
+
+				// convert to ubyte and store
+				Color* col = colors + (u + (v * UV_DIMS_SMALL));
+				col[0].r = Uint8(colour.x * 255.0);
+				col[0].g = Uint8(colour.y * 255.0);
+				col[0].b = Uint8(colour.z * 255.0);
+				col[0].a = 255;
+			}
+		}
+		bufs[i].reset(colors);
+	}
+
+	// update with buffer from above
+	tcd.posX = bufs[0].get();
+	tcd.negX = bufs[1].get();
+	tcd.posY = bufs[2].get();
+	tcd.negY = bufs[3].get();
+	tcd.posZ = bufs[4].get();
+	tcd.negZ = bufs[5].get();
+	m_surfaceTextureSmall->Update(tcd, dataSize, Graphics::TEXTURE_RGBA_8888);
+
 	// create small texture
 	if( !bEnableGPUJobs )
 	{
-		const vector2f texSize(1.0f, 1.0f);
-		const vector2f dataSize(UV_DIMS_SMALL, UV_DIMS_SMALL);
-		const Graphics::TextureDescriptor texDesc(
-			Graphics::TEXTURE_RGBA_8888, 
-			dataSize, texSize, Graphics::LINEAR_CLAMP, 
-			false, false, 0, Graphics::TEXTURE_CUBE_MAP);
-		m_surfaceTextureSmall.Reset(Pi::renderer->CreateTexture(texDesc));
-
-		const Terrain *pTerrain = GetTerrain();
-		const double fracStep = 1.0 / double(UV_DIMS_SMALL-1);
-
-		Graphics::TextureCubeData tcd;
-		std::unique_ptr<Color> bufs[NUM_PATCHES];
-		for(int i=0; i<NUM_PATCHES; i++) {
-			Color *colors = new Color[ (UV_DIMS_SMALL*UV_DIMS_SMALL) ];
-			for( Uint32 v=0; v<UV_DIMS_SMALL; v++ ) {
-				for( Uint32 u=0; u<UV_DIMS_SMALL; u++ ) {
-					// where in this row & colum are we now.
-					const double ustep = double(u) * fracStep;
-					const double vstep = double(v) * fracStep;
-
-					// get point on the surface of the sphere
-					const vector3d p = GetSpherePointFromCorners(ustep, vstep, &s_patchFaces[i][0]);
-					// get colour using `p`
-					const vector3d colour = pTerrain->GetColor(p, 0.0, p);
-
-					// convert to ubyte and store
-					Color* col = colors + (u + (v * UV_DIMS_SMALL));
-					col[0].r = Uint8(colour.x * 255.0);
-					col[0].g = Uint8(colour.y * 255.0);
-					col[0].b = Uint8(colour.z * 255.0);
-					col[0].a = 255;
-				}
-			}
-			bufs[i].reset(colors);
-		}
-
-		// update with buffer from above
-		tcd.posX = bufs[0].get();
-		tcd.negX = bufs[1].get();
-		tcd.posY = bufs[2].get();
-		tcd.negY = bufs[3].get();
-		tcd.posZ = bufs[4].get();
-		tcd.negZ = bufs[5].get();
-		m_surfaceTextureSmall->Update(tcd, dataSize, Graphics::TEXTURE_RGBA_8888);
-
 		for(int i=0; i<NUM_PATCHES; i++) 
 		{
 			assert(!m_hasJobRequest[i]);
@@ -813,8 +828,8 @@ void GasGiant::GenerateTexture()
 		const Graphics::TextureDescriptor texDesc(
 			Graphics::TEXTURE_RGBA_8888, 
 			dataSize, texSize, Graphics::LINEAR_CLAMP, 
-			true, false, 0, Graphics::TEXTURE_CUBE_MAP);
-		m_surfaceTexture.Reset(Pi::renderer->CreateTexture(texDesc));
+			false, false, 0, Graphics::TEXTURE_CUBE_MAP);
+		m_builtTexture.Reset(Pi::renderer->CreateTexture(texDesc));
 
 		const std::string ColorFracName = GetTerrain()->GetColorFractalName();
 		Output("Color Fractal name: %s\n", ColorFracName.c_str());
@@ -850,7 +865,7 @@ void GasGiant::GenerateTexture()
 				s_quadRenderState, GetTerrain(), GetSystemBody()->GetRadius(),
 				effectType );
 			
-			STextureFaceGPURequest *pGPUReq = new STextureFaceGPURequest( &s_patchFaces[i][0], GetSystemBody()->GetPath(), i, UV_DIMS, GetTerrain(), pQuad, m_surfaceTexture.Get() );
+			STextureFaceGPURequest *pGPUReq = new STextureFaceGPURequest( &s_patchFaces[i][0], GetSystemBody()->GetPath(), i, UV_DIMS, GetTerrain(), pQuad, m_builtTexture.Get() );
 			m_gpuJob[i] = Pi::GpuJobs()->Queue( new SingleTextureFaceGPUJob(pGPUReq) );
 			m_hasGpuJobRequest[i] = true;
 		}
@@ -1047,7 +1062,6 @@ void GasGiant::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 	rsd.depthTest  = false;
 	rsd.depthWrite = false;
 	rsd.blendMode = Graphics::BLEND_ALPHA;
-	rsd.cullMode = Graphics::CULL_NONE;
 	s_quadRenderState = Pi::renderer->CreateRenderState(rsd);
 
 	// Complete the RT description so we can request a buffer.
@@ -1056,7 +1070,7 @@ void GasGiant::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 		width,
 		height,
 		Graphics::TEXTURE_NONE,		// don't create a texture
-		Graphics::TEXTURE_DEPTH,
+		Graphics::TEXTURE_NONE,		// don't create a dpeth buffer
 		false);
 	s_renderTarget = Pi::renderer->CreateRenderTarget(rtDesc);
 }
