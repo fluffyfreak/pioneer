@@ -47,6 +47,7 @@ noinst_HEADERS = \
 	Game.h \
 	GasGiant.h \
 	GeoSphere.h \
+	GPUJobQueue.h \
 	HudTrail.h \
 	HyperspaceCloud.h \
 	IniConfig.h \
@@ -181,6 +182,7 @@ pioneer_SOURCES	= \
 	GeoPatchID.cpp \
 	GeoPatchJobs.cpp \
 	GeoSphere.cpp \
+	GPUJobQueue.cpp \
 	HudTrail.cpp \
 	HyperspaceCloud.cpp \
 	IniConfig.cpp \
