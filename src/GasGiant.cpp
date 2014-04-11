@@ -75,7 +75,7 @@ namespace
 				}
 			}
 
-			timey.Mark("SingleTextureFaceGPUJob::OnRun");
+			timey.Mark("SingleTextureFaceCPUJob::OnRun");
 		}
 
 		Sint32 Face() const { return face; }
