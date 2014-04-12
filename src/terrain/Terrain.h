@@ -53,6 +53,7 @@ public:
 	void DebugDump() const;
 
 	double GetEntropy(const Uint32 idx) const {
+		assert(idx>=0U && idx<12U);
 		return m_entropy[Clamp(idx, 0U, 12U)];
 	}
 
@@ -71,18 +72,19 @@ public:
 	};
 
 	const vector3d& GetColorValue(const Uint32 color, const Uint32 idx) const {
+		assert(idx>=0U && idx<8U);
 		switch(color) {
-			case eROCKCOLOR:		return m_rockColor[8];
-			case eDARKROCKCOLOR:	return m_darkrockColor[8];
-			case eGREYROCKCOLOR:	return m_greyrockColor[8];
-			case ePLANTCOLOR:		return m_plantColor[8];
-			case eDARKPLANTCOLOR:	return m_darkplantColor[8];
-			case eSANDCOLOR:		return m_sandColor[8];
-			case eDARKSANDCOLOR:	return m_darksandColor[8];
-			case eDIRTCOLOR:		return m_dirtColor[8];
-			case eDARKDIRTCOLOR:	return m_darkdirtColor[8];
-			case eGGLIGHTCOLOR:		return m_gglightColor[8];
-			case eGGDARKCOLOR:		return m_ggdarkColor[8];
+			case eROCKCOLOR:		return m_rockColor[idx];
+			case eDARKROCKCOLOR:	return m_darkrockColor[idx];
+			case eGREYROCKCOLOR:	return m_greyrockColor[idx];
+			case ePLANTCOLOR:		return m_plantColor[idx];
+			case eDARKPLANTCOLOR:	return m_darkplantColor[idx];
+			case eSANDCOLOR:		return m_sandColor[idx];
+			case eDARKSANDCOLOR:	return m_darksandColor[idx];
+			case eDIRTCOLOR:		return m_dirtColor[idx];
+			case eDARKDIRTCOLOR:	return m_darkdirtColor[idx];
+			case eGGLIGHTCOLOR:		return m_gglightColor[idx];
+			case eGGDARKCOLOR:		return m_ggdarkColor[idx];
 		}
 		return m_ggdarkColor[0];
 	}
