@@ -24,7 +24,7 @@ RefCountedPtr<GasPatchContext> GasGiant::s_patchContext;
 namespace
 {
 	static const Uint32 UV_DIMS_SMALL = 16;
-	static const Uint32 UV_DIMS = 512;
+	static const Uint32 UV_DIMS = 1024;
 	static const float s_initialCPUDelayTime = 60.0f; // (perhaps) 60 seconds seems like a reasonable default
 	static const float s_initialGPUDelayTime = 5.0f; // (perhaps) 60 seconds seems like a reasonable default
 	static std::vector<GasGiant*> s_allGasGiants;
@@ -670,6 +670,7 @@ bool GasGiant::AddTextureFaceResult(STextureFaceResult *res)
 		// change the planet texture for the new higher resolution texture
 		if( m_surfaceMaterial.get() ) {
 			m_surfaceMaterial->texture0 = m_surfaceTexture.Get();
+			m_surfaceTextureSmall.Reset();
 		}
 	}
 
@@ -731,9 +732,13 @@ bool GasGiant::AddTextureFaceResult(STextureFaceGPUResult *res)
 		m_surfaceTexture = m_builtTexture;
 		m_builtTexture.Reset();
 
+		// these won't be automatically generated otherwise since we used it as a render target
+		m_surfaceTexture->BuildMipmaps();
+
 		// change the planet texture for the new higher resolution texture
 		if( m_surfaceMaterial.get() ) {
 			m_surfaceMaterial->texture0 = m_surfaceTexture.Get();
+			m_surfaceTextureSmall.Reset();
 		}
 	}
 
@@ -759,6 +764,11 @@ inline vector3d GetSpherePointFromCorners(const double x, const double y, const 
 
 void GasGiant::GenerateTexture()
 {
+	for(int i=0; i<NUM_PATCHES; i++) {
+		if (m_hasGpuJobRequest[i] || m_hasJobRequest[i])
+			return;
+	}
+
 	const bool bEnableGPUJobs = (Pi::config->Int("EnableGPUJobs") == 1);
 
 	const vector2f texSize(1.0f, 1.0f);
@@ -828,7 +838,7 @@ void GasGiant::GenerateTexture()
 		const Graphics::TextureDescriptor texDesc(
 			Graphics::TEXTURE_RGBA_8888, 
 			dataSize, texSize, Graphics::LINEAR_CLAMP, 
-			false, false, 0, Graphics::TEXTURE_CUBE_MAP);
+			true, false, 0, Graphics::TEXTURE_CUBE_MAP);
 		m_builtTexture.Reset(Pi::renderer->CreateTexture(texDesc));
 
 		const std::string ColorFracName = GetTerrain()->GetColorFractalName();
