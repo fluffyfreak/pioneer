@@ -361,4 +361,16 @@ void TextureGL::SetSampleMode(TextureSampleMode mode)
 	glBindTexture(m_target, 0);
 }
 
+void TextureGL::BuildMipmaps()
+{
+	const TextureDescriptor& descriptor = GetDescriptor();
+	const bool mipmaps = descriptor.generateMipmaps;
+	if( mipmaps )
+	{
+		glBindTexture(m_target, m_texture);
+		glGenerateMipmap(m_target);
+		glBindTexture(m_target, 0);
+	}
+}
+
 }
