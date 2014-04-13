@@ -109,6 +109,56 @@ vec4 GetColour(const vec3 p)
 }
 #endif
 
+#ifdef GEN_SATURN_ESQUE
+vec4 GetColour(const vec3 p)
+{
+	float n = 0.4*ridged_octavenoise(octaves[0], 0.7, lacunarity[0], vec3(3.142*p.y*p.y), frequency[0], time);
+	n += 0.4*octavenoise(octaves[1], 0.6, lacunarity[1], vec3(3.142*p.y*p.y), frequency[1], time);
+	n += 0.3*octavenoise(octaves[2], 0.5, lacunarity[2], vec3(3.142*p.y*p.y), frequency[2], time);
+	n += 0.8*octavenoise(octaves[0], 0.7, lacunarity[0], vec3(p*p.y*p.y), frequency[0], time);
+	n += 0.5*ridged_octavenoise(octaves[1], 0.7, lacunarity[1], vec3(p*p.y*p.y), frequency[1], time);
+	n *= 0.5;
+	n *= n*n;
+	n += billow_octavenoise(octaves[0], 0.8, lacunarity[0], vec3(snoise(vec4(p*3.142*p, 1.0))), frequency[0], time)*
+		 megavolcano_function(octaves[3], frequency[3], lacunarity[3], p);
+	n = clamp(n, 0.0, 1.0);
+	return mix(vec4(.69, .53, .43, 1.0), vec4(.99, .76, .62, 1.0), n);
+}
+#endif
+
+#ifdef GEN_SATURN2_ESQUE
+vec4 GetColour(const vec3 p)
+{
+	float n = 0.2*billow_octavenoise(octaves[0], 0.8, lacunarity[0], p*p.y*p.y, frequency[0], time);
+	n += 0.5*ridged_octavenoise(octaves[1], 0.7, lacunarity[1], p*p.y*p.y, frequency[1], time);
+	n += 0.25*octavenoise(octaves[2], 0.7, lacunarity[2], p*p.y*p.y, frequency[2], time);
+	//spot
+	n *= n*n*0.5;
+	n += billow_octavenoise(octaves[0], 0.8, lacunarity[0], vec3(snoise(vec4(p*3.142*p, 1.0))), frequency[0], time)
+		 * megavolcano_function(octaves[3], frequency[3], lacunarity[3], p);
+
+	if (n > 1.0) {
+		n -= 1.0;
+		return vec4(mix(vec3(.25, .3, .4), vec3(.0, .2, .0), n ), 1.0);
+	} else if (n >0.8) {
+		n -= 0.8; n *= 5.0;
+		return vec4(mix(vec3(.0, .0, .15), vec3(.25, .3, .4), n ), 1.0);
+	} else if (n>0.6) {
+		n -= 0.6; n*= 5.0;
+		return vec4(mix(vec3(.0, .0, .1), vec3(.0, .0, .15), n ), 1.0);
+	} else if (n>0.4) {
+		n -= 0.4; n*= 5.0;
+		return vec4(mix(vec3(.05, .0, .05), vec3(.0, .0, .1), n ), 1.0);
+	} else if (n>0.2) {
+		n -= 0.2; n*= 5.0;
+		return vec4(mix(vec3(.0, .0, .1), vec3(.05, .0, .05), n ), 1.0);
+	}
+	
+	n *= 5.0;
+	return vec4(mix(vec3(.0, .0, .0), vec3(.0, .0, .1), n ), 1.0);
+}
+#endif // GEN_SATURN2_ESQUE
+
 #ifdef GEN_NEPTUNE_ESQUE
 vec4 GetColour(const vec3 p)
 {
@@ -125,20 +175,19 @@ vec4 GetColour(const vec3 p)
 }
 #endif
 
-#ifdef GEN_SATURN_ESQUE
+#ifdef GEN_NEPTUNE2_ESQUE
 vec4 GetColour(const vec3 p)
 {
-	float n = 0.4*ridged_octavenoise(octaves[0], 0.7, lacunarity[0], vec3(3.142*p.y*p.y), frequency[0], time);
-	n += 0.4*octavenoise(octaves[1], 0.6, lacunarity[1], vec3(3.142*p.y*p.y), frequency[1], time);
-	n += 0.3*octavenoise(octaves[2], 0.5, lacunarity[2], vec3(3.142*p.y*p.y), frequency[2], time);
-	n += 0.8*octavenoise(octaves[0], 0.7, lacunarity[0], vec3(p*p.y*p.y), frequency[0], time);
-	n += 0.5*ridged_octavenoise(octaves[1], 0.7, lacunarity[1], vec3(p*p.y*p.y), frequency[1], time);
+	float n = 0.8*octavenoise(octaves[2], 0.6, lacunarity[2], vec3(3.142*p.y*p.y), frequency[2], time);
+	n += 0.25*ridged_octavenoise(octaves[3], 0.55, lacunarity[3], vec3(3.142*p.y*p.y), frequency[3], time);
+	n += 0.2*octavenoise(octaves[3], 0.5, lacunarity[3], vec3(3.142*p.y*p.y), frequency[3], time);
+	//spot
+	n += 0.8*billow_octavenoise(octaves[1], 0.8, lacunarity[1], vec3(snoise(vec4(p*3.142*p, 1.0))), frequency[1], time) 
+		* megavolcano_function(octaves[0], frequency[0], lacunarity[0], p);
 	n *= 0.5;
 	n *= n*n;
-	n += billow_octavenoise(octaves[0], 0.8, lacunarity[0], vec3(snoise(vec4(p*3.142*p, 1.0))), frequency[0], time)*
-		 megavolcano_function(octaves[3], frequency[3], lacunarity[3], p);
 	n = clamp(n, 0.0, 1.0);
-	return mix(vec4(.69, .53, .43, 1.0), vec4(.99, .76, .62, 1.0), n);
+	return mix(vec4(.04, .05, .15, 1.0), vec4(.80,.94,.96, 1.0), n);
 }
 #endif
 
