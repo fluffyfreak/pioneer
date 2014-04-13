@@ -714,22 +714,23 @@ bool GasGiant::AddGPUGenResult(SGPUGenResult *res)
 {
 	bool result = false;
 	assert(res);
-	assert(res->face() >= 0 && res->face() < NUM_PATCHES);
 	m_hasGpuJobRequest = false;
 	const Sint32 uvDims = res->data().uvDims;
 	assert( uvDims > 0 && uvDims <= 4096 );
 
 #if DUMP_TO_TEXTURE
-	std::unique_ptr<Color, FreeDeleter> buffer(static_cast<Color*>(malloc(uvDims*uvDims*4)));
-	Graphics::Texture* pTex = res->data().texture.Get();
-	Graphics::TextureGL* pGLTex = static_cast<Graphics::TextureGL*>(pTex);
-	pGLTex->Bind();
-	glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_X + res->face(), 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer.get());
-	pGLTex->Unbind();
+	for(int iFace=0; iFace<NUM_PATCHES; iFace++) {
+		std::unique_ptr<Color, FreeDeleter> buffer(static_cast<Color*>(malloc(uvDims*uvDims*4)));
+		Graphics::Texture* pTex = res->data().texture.Get();
+		Graphics::TextureGL* pGLTex = static_cast<Graphics::TextureGL*>(pTex);
+		pGLTex->Bind();
+		glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_X + iFace, 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer.get());
+		pGLTex->Unbind();
 
-	char filename[1024];
-	snprintf(filename, 1024, "%s%d.png", GetSystemBody()->GetName().c_str(), res->face());
-	textureDump(filename, uvDims, uvDims, buffer.get());
+		char filename[1024];
+		snprintf(filename, 1024, "%s%d.png", GetSystemBody()->GetName().c_str(), iFace);
+		textureDump(filename, uvDims, uvDims, buffer.get());
+	}
 #endif
 
 	// tidyup

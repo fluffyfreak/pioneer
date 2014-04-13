@@ -368,7 +368,12 @@ void TextureGL::BuildMipmaps()
 	if( mipmaps )
 	{
 		glBindTexture(m_target, m_texture);
-		glGenerateMipmap(m_target);
+		if( glewIsSupported("GL_ARB_framebuffer_object") ) {
+			glGenerateMipmap(m_target);
+		} else {
+			glTexParameteri(m_target, GL_GENERATE_MIPMAP, GL_TRUE);
+			glTexSubImage2D(m_target, 0, 0, 0, descriptor.dataSize.x, descriptor.dataSize.y, GLImageFormat(descriptor.format), GLImageType(descriptor.format), NULL);
+		}
 		glBindTexture(m_target, 0);
 	}
 }
