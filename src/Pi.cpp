@@ -131,6 +131,7 @@ std::map<SDL_JoystickID,Pi::JoystickState> Pi::joysticks;
 bool Pi::navTunnelDisplayed;
 bool Pi::speedLinesDisplayed = false;
 bool Pi::hudTrailsDisplayed = false;
+bool Pi::supportsGPUJobs = false;
 Gui::Fixed *Pi::menu;
 bool Pi::DrawGUI = true;
 Graphics::Renderer *Pi::renderer;
@@ -433,6 +434,23 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 	navTunnelDisplayed = (config->Int("DisplayNavTunnel")) ? true : false;
 	speedLinesDisplayed = (config->Int("SpeedLines")) ? true : false;
 	hudTrailsDisplayed = (config->Int("HudTrails")) ? true : false;
+
+	supportsGPUJobs = (Pi::config->Int("EnableGPUJobs") == 1);
+	if( supportsGPUJobs ) {
+		for( Uint32 i=0; i<6; i++ )	{
+			std::unique_ptr<Graphics::Material> material;
+			Graphics::MaterialDescriptor desc;
+			desc.effect = Graphics::EFFECT_GEN_GASGIANT_TEXTURE;
+			desc.quality = i;
+			material.reset(Pi::renderer->CreateMaterial(desc));
+			supportsGPUJobs |= material->IsProgramLoaded();
+		}
+		if( !supportsGPUJobs ) {
+			// failed
+			Pi::config->SetInt("EnableGPUJobs", 0);
+			Pi::config->Save();
+		}
+	}
 
 	EnumStrings::Init();
 

@@ -222,6 +222,7 @@ private:
 	static bool navTunnelDisplayed;
 	static bool speedLinesDisplayed;
 	static bool hudTrailsDisplayed;
+	static bool supportsGPUJobs;
 
 	static Gui::Fixed *menu;
 
