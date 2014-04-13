@@ -32,10 +32,7 @@ enum EffectType {
 	EFFECT_GEOSPHERE_TERRAIN_WITH_WATER,
 	EFFECT_GEOSPHERE_SKY,
 	EFFECT_GASSPHERE_TERRAIN,
-	EFFECT_GEN_JUPITER_GASSPHERE_TEXTURE,
-	EFFECT_GEN_NEPTUNE_GASSPHERE_TEXTURE,
-	EFFECT_GEN_SATURN_GASSPHERE_TEXTURE,
-	EFFECT_GEN_URANUS_GASSPHERE_TEXTURE,
+	EFFECT_GEN_GASGIANT_TEXTURE,
 	EFFECT_FRESNEL_SPHERE,
 	EFFECT_SHIELD,
 	EFFECT_SKYBOX,
@@ -91,6 +88,7 @@ public:
 
 	virtual void Apply() { }
 	virtual void Unapply() { }
+	virtual bool IsProgramLoaded() const { return false; }
 
 	void *specialParameter0; //this can be whatever. Bit of a hack.
 

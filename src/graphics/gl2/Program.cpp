@@ -143,6 +143,7 @@ Program::Program()
 , m_defines("")
 , m_program(0)
 , m_libs(LOGZ|LIBS)
+, success(false)
 {
 }
 
@@ -151,6 +152,7 @@ Program::Program(const std::string &name, const std::string &defines, const Uint
 , m_defines(defines)
 , m_program(0)
 , m_libs(libs)
+, success(false)
 {
 	LoadShaders(name, defines);
 	InitUniforms();
@@ -197,7 +199,7 @@ void Program::LoadShaders(const std::string &name, const std::string &defines)
 	glAttachShader(m_program, fs.shader);
 	glLinkProgram(m_program);
 
-	check_glsl_errors(name.c_str(), m_program);
+	success = check_glsl_errors(name.c_str(), m_program);
 
 	//shaders may now be deleted by Shader destructor
 }

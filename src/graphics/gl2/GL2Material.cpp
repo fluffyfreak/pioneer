@@ -18,5 +18,10 @@ void Material::Unapply()
 {
 }
 
+bool Material::IsProgramLoaded() const 
+{ 
+	return m_program->Loaded(); 
+}
+
 }
 }

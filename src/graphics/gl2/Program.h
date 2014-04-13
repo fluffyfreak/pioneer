@@ -29,6 +29,7 @@ namespace Graphics {
 			Program(const std::string &name, const std::string &defines, const Uint32 libs = LOGZ|LIBS);
 			virtual ~Program();
 			void Reload();
+			bool Loaded() const { return success; }
 			virtual void Use();
 			virtual void Unuse();
 
@@ -60,6 +61,7 @@ namespace Graphics {
 			std::string m_defines;
 			GLuint m_program;
 			Uint32 m_libs;
+			bool success;
 		};
 
 	}

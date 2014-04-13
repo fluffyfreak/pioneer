@@ -21,19 +21,25 @@ GenGasGiantColourProgram::GenGasGiantColourProgram(const MaterialDescriptor &des
 	if (desc.textures > 0)
 		ss << "#define TEXTURE0\n";
 
-	switch( desc.effect )
+	switch( desc.quality )
 	{
 	default:
-	case EFFECT_GEN_JUPITER_GASSPHERE_TEXTURE:
+	case GEN_JUPITER_TEXTURE:
 		ss << "#define GEN_JUPITER_ESQUE\n";
 		break;
-	case EFFECT_GEN_NEPTUNE_GASSPHERE_TEXTURE:
-		ss << "#define GEN_NEPTUNE_ESQUE\n";
-		break;
-	case EFFECT_GEN_SATURN_GASSPHERE_TEXTURE:
+	case GEN_SATURN_TEXTURE:
 		ss << "#define GEN_SATURN_ESQUE\n";
 		break;
-	case EFFECT_GEN_URANUS_GASSPHERE_TEXTURE:
+	case GEN_SATURN2_TEXTURE:
+		ss << "#define GEN_SATURN2_ESQUE\n";
+		break;
+	case GEN_NEPTUNE_TEXTURE:
+		ss << "#define GEN_NEPTUNE_ESQUE\n";
+		break;
+	case GEN_NEPTUNE2_TEXTURE:
+		ss << "#define GEN_NEPTUNE2_ESQUE\n";
+		break;
+	case GEN_URANUS_TEXTURE:
 		ss << "#define GEN_URANUS_ESQUE\n";
 		break;
 	}

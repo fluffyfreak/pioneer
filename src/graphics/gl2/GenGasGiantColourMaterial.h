@@ -15,6 +15,15 @@
 namespace Graphics {
 
 	namespace GL2 {
+		enum GasGiantQuality {
+			GEN_JUPITER_TEXTURE = 0,
+			GEN_SATURN_TEXTURE,
+			GEN_SATURN2_TEXTURE,
+			GEN_NEPTUNE_TEXTURE,
+			GEN_NEPTUNE2_TEXTURE,
+			GEN_URANUS_TEXTURE
+		};
+
 		class GenGasGiantColourProgram : public Program {
 		public:
 			GenGasGiantColourProgram(const MaterialDescriptor &);

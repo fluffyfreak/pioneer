@@ -8,6 +8,7 @@
 #include "Game.h"
 #include "RefCounted.h"
 #include "graphics/Material.h"
+#include "graphics/gl2/GenGasGiantColourMaterial.h"
 #include "graphics/Renderer.h"
 #include "graphics/Frustum.h"
 #include "graphics/Graphics.h"
@@ -194,13 +195,14 @@ namespace
 	// a quad with reversed winding
 	class GenFaceQuad : public Graphics::Drawables::Drawable {
 	public:
-		GenFaceQuad(Graphics::Renderer *r, const vector2f &pos, const vector2f &size, Graphics::RenderState *state, Graphics::EffectType effect)
+		GenFaceQuad(Graphics::Renderer *r, const vector2f &pos, const vector2f &size, Graphics::RenderState *state, const Uint32 GGQuality)
 		{
 			assert(state);
 			m_renderState = state;
 
 			Graphics::MaterialDescriptor desc;
-			desc.effect = effect;
+			desc.effect = Graphics::EFFECT_GEN_GASGIANT_TEXTURE;
+			desc.quality = GGQuality;
 			m_material.reset(r->CreateMaterial(desc));
 			
 			// these might need to be reversed
@@ -846,27 +848,25 @@ void GasGiant::GenerateTexture()
 		static const std::string GGSaturn2("GGSaturn2");
 		static const std::string GGUranus("GGUranus");
 
-		Graphics::EffectType effectType = Graphics::EFFECT_GEN_JUPITER_GASSPHERE_TEXTURE;
-		if( ColorFracName == GGNeptune ) {
-			effectType = Graphics::EFFECT_GEN_NEPTUNE_GASSPHERE_TEXTURE;
-		} else if( ColorFracName == GGNeptune2 ) {
-			effectType = Graphics::EFFECT_GEN_NEPTUNE_GASSPHERE_TEXTURE;
-		} else if( ColorFracName == GGSaturn ) {
-			effectType = Graphics::EFFECT_GEN_SATURN_GASSPHERE_TEXTURE;
+		Uint32 GasGiantType = Graphics::GL2::GEN_JUPITER_TEXTURE;
+		if( ColorFracName == GGSaturn ) {
+			GasGiantType = Graphics::GL2::GEN_SATURN_TEXTURE;
 		} else if( ColorFracName == GGSaturn2 ) {
-			effectType = Graphics::EFFECT_GEN_SATURN_GASSPHERE_TEXTURE;
+			GasGiantType = Graphics::GL2::GEN_SATURN2_TEXTURE;
+		} else if( ColorFracName == GGNeptune ) {
+			GasGiantType = Graphics::GL2::GEN_NEPTUNE_TEXTURE;
+		} else if( ColorFracName == GGNeptune2 ) {
+			GasGiantType = Graphics::GL2::GEN_NEPTUNE2_TEXTURE;
 		} else if( ColorFracName == GGUranus ) {
-			effectType = Graphics::EFFECT_GEN_URANUS_GASSPHERE_TEXTURE;
+			GasGiantType = Graphics::GL2::GEN_URANUS_TEXTURE;
 		}
 
 		assert(!m_hasGpuJobRequest);
 		assert(!m_gpuJob.HasGPUJob());
 
-		GenFaceQuad *pQuad = new GenFaceQuad( 
-			Pi::renderer, 
+		GenFaceQuad *pQuad = new GenFaceQuad( Pi::renderer, 
 			vector2f(0.0f, 0.0f), vector2f(UV_DIMS, UV_DIMS), 
-			s_quadRenderState, 
-			effectType );
+			s_quadRenderState, GasGiantType );
 			
 		SGPUGenRequest *pGPUReq = new SGPUGenRequest( GetSystemBody()->GetPath(), UV_DIMS, GetTerrain(), GetSystemBody()->GetRadius(), pQuad, m_builtTexture.Get() );
 		m_gpuJob = Pi::GpuJobs()->Queue( new SingleGPUGenJob(pGPUReq) );
