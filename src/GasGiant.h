@@ -25,7 +25,7 @@ class GasPatch;
 class GasPatchContext;
 namespace { 
 	class STextureFaceResult; 
-	class STextureFaceGPUResult;
+	class SGPUGenResult;
 }
 
 #define NUM_PATCHES 6
@@ -46,7 +46,7 @@ public:
 	virtual void Reset() {};
 
 	static bool OnAddTextureFaceResult(const SystemPath &path, STextureFaceResult *res);
-	static bool OnAddTextureFaceResult(const SystemPath &path, STextureFaceGPUResult *res);
+	static bool OnAddGPUGenResult(const SystemPath &path, SGPUGenResult *res);
 	static void Init();
 	static void Uninit();
 	static void UpdateAllGasGiants();
@@ -60,7 +60,7 @@ private:
 	void BuildFirstPatches();
 	void GenerateTexture();
 	bool AddTextureFaceResult(STextureFaceResult *res);
-	bool AddTextureFaceResult(STextureFaceGPUResult *res);
+	bool AddGPUGenResult(SGPUGenResult *res);
 
 	static RefCountedPtr<GasPatchContext> s_patchContext;
 
@@ -81,8 +81,8 @@ private:
 	JobHandle m_job[NUM_PATCHES];
 	bool m_hasJobRequest[NUM_PATCHES];
 
-	GPUJobHandle m_gpuJob[NUM_PATCHES];
-	bool m_hasGpuJobRequest[NUM_PATCHES];
+	GPUJobHandle m_gpuJob;
+	bool m_hasGpuJobRequest;
 
 	float m_timeDelay;
 };
