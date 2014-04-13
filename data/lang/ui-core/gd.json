@@ -169,7 +169,7 @@
    },
    "CREDIBLE" : {
       "description" : "For player reputation",
-      "message" : "Credible"
+      "message" : "Creideasach"
    },
    "CREW_CABINS" : {
       "description" : "",
@@ -221,7 +221,7 @@
    },
    "DISPLAY_HUD_TRAILS" : {
       "description" : "",
-      "message" : "Display HUD trails"
+      "message" : "Seall staranan HUD"
    },
    "DISPLAY_NAV_TUNNELS" : {
       "description" : "",
@@ -297,11 +297,11 @@
    },
    "EXPERIENCED" : {
       "description" : "For player reputation",
-      "message" : "Experienced"
+      "message" : "Eòlach"
    },
    "EXPERT" : {
       "description" : "For player reputation",
-      "message" : "Expert"
+      "message" : "Fiosrachail"
    },
    "FAILED" : {
       "description" : "",
@@ -437,11 +437,11 @@
    },
    "INCOMPETENT" : {
       "description" : "For player reputation",
-      "message" : "Incompetent"
+      "message" : "Neo-chomasach"
    },
    "INEXPERIENCED" : {
       "description" : "For player reputation",
-      "message" : "Inexperienced"
+      "message" : "Aineolach"
    },
    "INVERT_MOUSE_Y" : {
       "description" : "",
@@ -478,6 +478,18 @@
    "LANGUAGE_RESTART_GAME_TO_APPLY" : {
       "description" : "",
       "message" : "Cànan (ath-thòisich an geama gus seo a chur an sàs)"
+   },
+   "LAUNCH_PERMISSION_DENIED_BUSY" : {
+      "description" : "",
+      "message" : "Chaidh an t-iarrtas losgaidh a dhiùltadh: tha an t-ionad docaidh trang."
+   },
+   "LAUNCH_PERMISSION_DENIED_CREW" : {
+      "description" : "",
+      "message" : "Permission to launch denied: not enough crew too handle this ship."
+   },
+   "LAUNCH_PERMISSION_DENIED_FINED" : {
+      "description" : "",
+      "message" : "Permission to launch denied: you have outstanding fines."
    },
    "LEGAL_STATUS" : {
       "description" : "",
@@ -549,7 +561,7 @@
    },
    "MASTER" : {
       "description" : "For player reputation",
-      "message" : "Master"
+      "message" : "Maighstir"
    },
    "MASTER_VOL" : {
       "description" : "Master sound in settings option",
@@ -561,7 +573,7 @@
    },
    "MAXIMUM_CREW" : {
       "description" : "",
-      "message" : "Maximum crew"
+      "message" : "An sgioba as motha"
    },
    "MEDIUM" : {
       "description" : "",
@@ -602,6 +614,10 @@
    "MINIMUM_CREW" : {
       "description" : "",
       "message" : "An criutha as lugha"
+   },
+   "MISSILE_MOUNTS" : {
+      "description" : "",
+      "message" : "Missile mounts"
    },
    "MISSIONS" : {
       "description" : "",
@@ -655,9 +671,13 @@
       "description" : "",
       "message" : "An t-ath phàigheadh"
    },
+   "NO" : {
+      "description" : "Negative answer to a question",
+      "message" : "No"
+   },
    "NOBODY" : {
       "description" : "For player reputation",
-      "message" : "Nobody"
+      "message" : "Gun urram"
    },
    "NONE" : {
       "description" : "",
@@ -670,6 +690,10 @@
    "NOT_ENOUGH_ALLOY_TO_ATTEMPT_A_REPAIR" : {
       "description" : "",
       "message" : "Chan eil {alloy} gu leòr agad gus feuchainn ris a chàradh"
+   },
+   "NOT_SUPPORTED_ON_THIS_SHIP" : {
+      "description" : "",
+      "message" : "{equipment} is not supported on this ship model"
    },
    "NO_MISSIONS" : {
       "description" : "",
@@ -713,7 +737,7 @@
    },
    "ORBITAL_ANALYSIS_NOTES" : {
       "description" : "",
-      "message" : "Circular orbit speed is given for a tangential velocity. The ship should be moving in a direction at 90° to the ship/{name} axis.\n\nDescent speed is an absolute minimum, and is also tangential. A slower speed or a lower angle will result in a course which intersects with the surface of {name}.\n\nEscape speed will in theory work in any direction, as long as the ship does not collide with {name} on the way.\n\t\t"
+      "message" : "Thèid luaths cearcallach na reul-cuairte a shealltainn mar luaths beantanach. Mu chòir dhan long a bhith a' siubhal le 90° an comhair aiseal na luinge/{name}.\n\nTha an luaths teàrnaidh cho beag 's a ghabhas agus tha e beantanach cuideachd. Bheir luaths as ìsle le ceum as ìsle cùrsa dhut a dh'eadar-ghearras ris an uachdar aig {name}.\n\nBu chòir don luaths teichidh obrachadh air comhair sam bith cho fad 's nach buail an long ri {name} air an t-slighe.\n\t\t"
    },
    "OWED" : {
       "description" : "",
@@ -769,7 +793,7 @@
    },
    "PROFESSIONAL" : {
       "description" : "For player reputation",
-      "message" : "Professional"
+      "message" : "Ceàirdeach"
    },
    "QUALIFICATION_SCORES" : {
       "description" : "",
@@ -777,7 +801,7 @@
    },
    "QUICKLOAD" : {
       "description" : "",
-      "message" : "Quickload"
+      "message" : "Grad-luchdadh"
    },
    "QUIT" : {
       "description" : "",
@@ -799,9 +823,13 @@
       "description" : "",
       "message" : "Tog connadh"
    },
+   "REFUEL_FULL" : {
+      "description" : "",
+      "message" : "Refuel full"
+   },
    "RELIABLE" : {
       "description" : "For player reputation",
-      "message" : "Reliable"
+      "message" : "Earbsach"
    },
    "REPAIR_X_HULL_DAMAGE_FOR_X" : {
       "description" : "",
@@ -809,11 +837,15 @@
    },
    "REPUTATION" : {
       "description" : "",
-      "message" : "Reputation"
+      "message" : "Cliù"
    },
    "REQUEST_LAUNCH" : {
       "description" : "",
       "message" : "Iarr cead losgaidh"
+   },
+   "RETURN_TO_GAME" : {
+      "description" : "",
+      "message" : "Return to game"
    },
    "RETURN_TO_MENU" : {
       "description" : "",
@@ -866,6 +898,10 @@
    "SHIP_IS_ALREADY_FULLY_REPAIRED" : {
       "description" : "",
       "message" : "Tha cor do shoitheach foirfe."
+   },
+   "SHIP_IS_FULLY_EQUIPPED" : {
+      "description" : "",
+      "message" : "Your ship is fully equipped."
    },
    "SHIP_IS_FULLY_LADEN" : {
       "description" : "",
@@ -923,6 +959,10 @@
       "description" : "",
       "message" : "Toglaich fireann/boireann"
    },
+   "TOO_SMALL_FOR_CURRENT_CREW" : {
+      "description" : "",
+      "message" : "Ship is too small for the current crew."
+   },
    "TOTAL" : {
       "description" : "",
       "message" : "Iomlan:"
@@ -937,7 +977,7 @@
    },
    "TRUSTWORTHY" : {
       "description" : "For player reputation",
-      "message" : "Trustworthy"
+      "message" : "Urrasach"
    },
    "TYPE" : {
       "description" : "",
@@ -949,7 +989,7 @@
    },
    "UNRELIABLE" : {
       "description" : "",
-      "message" : "Unreliable"
+      "message" : "Neo-earbsach"
    },
    "UP_ACCEL" : {
       "description" : "",
@@ -998,6 +1038,10 @@
    "WE_HAVE_NO_BUSINESS_WITH_YOU" : {
       "description" : "",
       "message" : "Chan eil gnothach againn ruibh aig an àm seo."
+   },
+   "YES" : {
+      "description" : "Positive answer to a question",
+      "message" : "Yes"
    },
    "YOURE_GOING_TO_REGRET_SACKING_ME" : {
       "description" : "",

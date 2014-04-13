@@ -21,6 +21,8 @@ namespace Easing {
 // c: change over range (ie end-begin)
 // d: duration of range
 
+template <typename T> struct Function { typedef T (*Type)(T t, T b, T c, T d); };
+
 
 // p(t) = t
 namespace Linear {
@@ -46,9 +48,9 @@ namespace Quad {
 		return -c *t*(t-2) + b;
 	}
 	template <typename T> T EaseInOut(T t, T b, T c, T d) {
-		t/=d;
-		if (t/2 < 1) return ((c/2)*(t*t)) + b;
-		return -c/2 * (((t-2)*(t-1)) - 1) + b;
+		t/=d/2;
+		if (t < 1) return ((c/2)*(t*t)) + b;
+		return -c/2 * ((t-1)*(t-3)-1) + b;
 	}
 }
 
@@ -143,13 +145,13 @@ namespace Circ {
 		return -c * (sqrt(1 - t*t) - 1) + b;
 	}
 	template <typename T> T EaseOut(T t, T b, T c, T d) {
-		t/=d-1;
-		return c * sqrt(1 - t*t) + b;
+		t/=d;
+		return c * (sqrt(1 - (t-1)*(t-1))) + b;
 	}
 	template <typename T> T EaseInOut(T t, T b, T c, T d) {
 		t/=d/2;
 		if (t < 1) return -c/2 * (sqrt(1 - t*t) - 1) + b;
-		return c/2 * (sqrt(1 - t*(t-2)) + 1) + b;
+		return c/2 * (sqrt(1 - (t-2)*(t-2)) + 1) + b;
 	}
 }
 

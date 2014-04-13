@@ -373,7 +373,7 @@ local onEnterSystem = function (player)
 
 				if Engine.rand:Number(1) <= risk then
 					local shipdef = shipdefs[Engine.rand:Integer(1,#shipdefs)]
-					local default_drive = shipdef.defaultHyperdrive
+					local default_drive = 'DRIVE_CLASS'..tostring(shipdef.hyperdriveClass)
 
 					local max_laser_size = shipdef.capacity - EquipDef[default_drive].mass
                     local laserdefs = utils.build_array(utils.filter(
@@ -392,7 +392,7 @@ local onEnterSystem = function (player)
 
 			if ship then
 				local pirate_greeting = string.interp(l["PIRATE_TAUNTS_"..Engine.rand:Integer(1,num_pirate_taunts)-1], {
-					client = mission.client.name, location = mission.location,})
+					client = mission.client.name, location = mission.location:GetSystemBody().name,})
 				Comms.ImportantMessage(pirate_greeting, ship.label)
 			end
 		end

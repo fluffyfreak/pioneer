@@ -23,7 +23,7 @@ Point MultiLineText::PreferredSize()
 	// we'll compute a size for about 75 chars wide. container may choose to
 	// override us, but if it gives us what we ask for this will make sure we
 	// get something readable
-	return m_layout->ComputeSize(Point(GetContext()->GetFont(GetFont())->GetGlyph(' ').advx * 75, 0));
+	return m_layout->ComputeSize(Point(GetContext()->GetFont(GetFont())->GetGlyph(' ').advX * 75, 0));
 }
 
 void MultiLineText::Layout()
@@ -36,7 +36,7 @@ void MultiLineText::Layout()
 
 void MultiLineText::Draw()
 {
-	m_layout->Draw(GetSize(), GetDrawOffset(), GetContext()->GetScissor());
+	m_layout->Draw(GetSize(), GetDrawOffset(), GetContext()->GetScissor(), Color(Color::WHITE.r, Color::WHITE.g, Color::WHITE.b, Color::WHITE.a*GetContext()->GetOpacity()));
 }
 
 Widget *MultiLineText::SetFont(Font font) {
