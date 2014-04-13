@@ -48,6 +48,9 @@ void GPUJobRunner::Process()
 	if(job)
 		timer.reset(new MsgTimer);
 
+	Profiler::Timer jobTimes;
+	jobTimes.Start();
+
 	while (job) {
 		// record the job so we can cancel it in case of premature shutdown
 		m_job = job;
@@ -68,7 +71,15 @@ void GPUJobRunner::Process()
 		if (m_queueDestroyed) {
 			return;
 		}
-		job = m_jobQueue->GetGPUJob();
+
+		jobTimes.SoftStop();
+		const double ms = jobTimes.millicycles();
+		if( ms > 1.0 / 60.0 ) {
+			job = nullptr;
+			break;
+		} else {
+			job = m_jobQueue->GetGPUJob();
+		}
 	}
 
 	if(timer.get())
