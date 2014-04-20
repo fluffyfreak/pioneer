@@ -128,6 +128,8 @@ private:
 	UI::Slider *thrustSliders[2*3]; //thruster sliders 2*xyz (linear & angular)
 
 	sigc::signal<void> onModelChanged;
+
+	std::unique_ptr<VolumetricClouds> m_VolumeClouds;
 };
 
 #endif

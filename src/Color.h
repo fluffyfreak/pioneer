@@ -24,6 +24,13 @@ struct Color4f {
 
 	float GetLuminance() const;
 
+	void Limit() {
+		r = Clamp(r, 0.0f, 1.0f);
+		g = Clamp(g, 0.0f, 1.0f);
+		b = Clamp(b, 0.0f, 1.0f);
+		a = Clamp(a, 0.0f, 1.0f);
+	}
+
 	static const Color4f BLACK;
 	static const Color4f WHITE;
 	static const Color4f RED;

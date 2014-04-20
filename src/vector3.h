@@ -140,4 +140,22 @@ template<> inline vector3<double>::vector3(const double vals[3]): x(vals[0]), y(
 typedef vector3<float > vector3f;
 typedef vector3<double> vector3d;
 
+template <typename T>
+inline T Dot(vector3<T> v1, vector3<T> v2)
+{
+	return (v1.x * v2.x + v1.y * v2.y + v1.z * v2.z);
+}
+
+template <typename T>
+inline T Dist(vector3<T> pn1, vector3<T> pn2)
+{
+	return sqrtf( (pn1.x - pn2.x) * (pn1.x - pn2.x) + (pn1.y - pn2.y) * (pn1.y - pn2.y) + (pn1.z - pn2.z) * (pn1.z - pn2.z));
+}
+
+template <typename T>
+inline T SqDist(vector3<T> pn1, vector3<T> pn2)
+{
+	return ( (pn1.x - pn2.x) * (pn1.x - pn2.x) + (pn1.y - pn2.y) * (pn1.y - pn2.y) + (pn1.z - pn2.z) * (pn1.z - pn2.z));
+}
+
 #endif /* _VECTOR3_H */
