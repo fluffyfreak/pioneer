@@ -1,5 +1,9 @@
 #include "VolumeClouds.h"
 #include "Pi.h"
+#include "FileSystem.h"
+#include "SDLWrappers.h"
+#include "StringF.h"
+#include "graphics/Frustum.h"
 
 #define GL_CLAMP_TO_EDGE 0x812F
 
@@ -40,22 +44,45 @@ VolumetricClouds::VolumetricClouds()
 	ImpostorSize = 512;			//maximum size of the impostor
 }
 
+Sint32 GetNumMatching(const std::string &match, const std::vector<FileSystem::FileInfo>& fileList) {
+	Sint32 num_matching = 0;
+	for (std::vector<FileSystem::FileInfo>::const_iterator it = fileList.begin(), itEnd = fileList.end(); it!=itEnd; ++it) {
+		if (starts_with((*it).GetName(), match)) {
+			++num_matching;
+		}
+	}
+	return num_matching;
+}
+
+Sint32 GetNumRaceItem(const Sint32 speciesIdx, const Sint32 race, const char* item) {
+	char filename[1024];
+	snprintf(filename, sizeof(filename), "facegen/species_%d/race_%d/%s", speciesIdx, race, item);
+	std::vector<FileSystem::FileInfo> fileList;
+	FileSystem::gameDataFiles.ReadDirectory(filename, fileList);
+	char itemMask[256];
+	snprintf(itemMask, sizeof(itemMask), "%s_0_", item);
+	return GetNumMatching(itemMask, fileList);
+}
+
 void VolumetricClouds::GrowCloud(VolumetricCloud* Cloud, int level, float radius, vector3f Position)
 {
-	FILE* fp = NULL;
 	char strname[256];
 	sprintf(strname, "clouds/cloud%d.dat", rand() % NUM_CLOUD_FILES);
+	RefCountedPtr<FileSystem::FileData> filedata = FileSystem::gameDataFiles.ReadFile(strname);
+	if (!filedata) {
+		Output("VolumetricClouds::GrowCloud: %s: could not read file\n", strname);
+		return;
+	}
 
-	fp = fopen(strname, "rb");
-	if (!fp) return;
+	ByteRange filebytes = filedata->AsByteRange();
 
 	int Num;
-	fread(&Num, sizeof(int), 1, fp);
+	filebytes.read((char*)&Num, sizeof(int), 1);
 
 	CloudPuff	puff;
 	for (int i = 0; i < Num; i++)
 	{
-		fread(&puff.Position, sizeof(vector3f), 1, fp);
+		filebytes.read((char*)&puff.Position, sizeof(vector3f), 1);
 
 		const float len = puff.Position.Length();
 		if (len > Cloud->Radius)
@@ -81,13 +108,12 @@ void VolumetricClouds::GrowCloud(VolumetricCloud* Cloud, int level, float radius
 	}
 	for (int i = 0; i < Num; i++)
 	{
-		fread(&Cloud->Puffs[i].Size, sizeof(float), 1, fp);
+		filebytes.read((char*)&Cloud->Puffs[i].Size, sizeof(float), 1);
 	}
 	for (int i = 0; i < Num; i++)
 	{
-		fread(&Cloud->Puffs[i].Color, sizeof(Color4f), 1, fp);
+		filebytes.read((char*)&Cloud->Puffs[i].Color, sizeof(Color4f), 1);
 	}
-	fclose(fp);
 	
 	//allocate buffers for rendering
 	Cloud->VertexBuffer = new vector3f[Num * 4];
@@ -160,13 +186,13 @@ int VolumetricClouds::Create(int Num, float PlaneSize, float PlaneHeight)
 	return 0;
 }
 
-void VolumetricClouds::Update(vector3f Sun, vector3f Camera)
+void VolumetricClouds::Update(Graphics::Renderer *r, const Graphics::Frustum &frustum, const vector3f& Sun, const vector3f& Camera)
 {
 	vector3f SunDir, ToCam;
 
 	SunDir = Sun.Normalized();
 	
-	for (unsigned i = 0; i < Clouds.size(); i++)
+	for (unsigned int i = 0, iEnd = Clouds.size(); i < iEnd; i++)
 	{
 		//if the angle between the camera and the cloud center
 		//has changed enough since the last lighting calculation
@@ -181,9 +207,11 @@ void VolumetricClouds::Update(vector3f Sun, vector3f Camera)
 		}
 		else
 		{
-			float dot = ToCam.Dot(Clouds[i].LastCamera);
-			bool in_frustum = Frustum.SphereInFrustum(Clouds[i].Center, Clouds[i].Radius);
-			int mip_size = GetImpostorSize((Clouds[i].Center - Camera).LengthSqr());
+			const float dot = ToCam.Dot(Clouds[i].LastCamera);
+			const vector3d center(Clouds[i].Center);
+			const double radius = Clouds[i].Radius;
+			const bool in_frustum = frustum.TestPoint(center, radius);
+			const int mip_size = GetImpostorSize((Clouds[i].Center - Camera).LengthSqr());
 			
 			//same as above only recreating the impostor
 			//also recreates the impostor if the current mip level
@@ -215,13 +243,15 @@ int VolumetricClouds::GetImpostorSize(float d)
 	return Size;
 }
 
-void VolumetricClouds::Render(vector3f Camera, vector3f Sun)
+void VolumetricClouds::Render(Graphics::Renderer *r, const Graphics::Frustum &frustum, const vector3f& Sun, const vector3f& Camera)
 {
-	unsigned i, j;
+	Update(r, frustum, Sun, Camera );
 
 	NumSprites = NumImpostors = 0;
 
-	for (i = 0; i < Clouds.size(); i++)
+	const unsigned int numClouds = Clouds.size();
+
+	for (unsigned int i = 0; i < numClouds; i++)
 	{
 		Clouds[i].DistanceFromCamera = SqDist(Clouds[i].Center, Camera);
 	}
@@ -230,8 +260,8 @@ void VolumetricClouds::Render(vector3f Camera, vector3f Sun)
 	while (!done)
 	{
 		done = true;	
-		for (i = 0; i < Clouds.size(); i++)
-			for (j = i+1; j < Clouds.size(); j++)
+		for (unsigned int i = 0; i < numClouds; i++)
+			for (unsigned int j = i+1; j < numClouds; j++)
 			{
 				if (Clouds[i].DistanceFromCamera < Clouds[j].DistanceFromCamera)
 				{
@@ -244,7 +274,7 @@ void VolumetricClouds::Render(vector3f Camera, vector3f Sun)
 	float dist_impostor, dist_3D;
 	float alpha;
 
-	for (i = 0; i < Clouds.size(); i++)
+	for (unsigned int i = 0; i < numClouds; i++)
 	{
 		dist_impostor = Clouds[i].Radius * DIST_MUL_IMPOSTOR; //beyond this render only the impostor
 		dist_impostor *= dist_impostor;	//square this since the camera distance is also squared
@@ -252,7 +282,10 @@ void VolumetricClouds::Render(vector3f Camera, vector3f Sun)
 		dist_3D *= dist_3D; //square ourselves
 
 		//if we're in between we need to interpolate
-		if (!Frustum.SphereInFrustum(Clouds[i].Center, Clouds[i].Radius)) continue;
+		const vector3d center(Clouds[i].Center);
+		const double radius = Clouds[i].Radius;
+		if (!frustum.TestPoint(center, radius)) 
+			continue;
 
 		if (Clouds[i].DistanceFromCamera > dist_impostor)
 			//fully impostor

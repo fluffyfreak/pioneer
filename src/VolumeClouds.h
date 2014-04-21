@@ -3,6 +3,8 @@
 
 #include "libs.h"
 
+namespace Graphics { class Renderer; class Frustum; }
+
 #define SORT_TOWARD 0
 #define SORT_AWAY 1
 
@@ -41,8 +43,8 @@ public:
 	VolumetricClouds();
 	
 	int 	Create(int NumClouds, float PlaneSize, float PlaneHeight);	
-	void	Update(vector3f Sun, vector3f Camera);
-	void	Render(vector3f Sun, vector3f Camera);
+	void	Update(Graphics::Renderer *r, const Graphics::Frustum &frustum, const vector3f& Sun, const vector3f& Camera);
+	void	Render(Graphics::Renderer *r, const Graphics::Frustum &frustum, const vector3f& Sun, const vector3f& Camera);
 	void	Destroy();
 	void	GetInfo(int* Sprites, int* Impostors)
 	{

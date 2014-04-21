@@ -3,6 +3,7 @@
 
 #include "ModelViewer.h"
 #include "FileSystem.h"
+#include "graphics/Frustum.h"
 #include "graphics/Graphics.h"
 #include "graphics/Light.h"
 #include "graphics/TextureBuilder.h"
@@ -522,6 +523,9 @@ void ModelViewer::DrawModel()
 
 void ModelViewer::MainLoop()
 {
+	m_VolumeClouds.reset( new VolumetricClouds );
+	m_VolumeClouds->Create( 30, 200, 0 );
+
 	double lastTime = SDL_GetTicks() * 0.001;
 	while (!m_done)
 	{
@@ -551,6 +555,12 @@ void ModelViewer::MainLoop()
 			m_shields->Update(m_options.showShields ? 1.0f : (1.0f - dif), 1.0f);
 			DrawModel();
 		}
+		
+		matrix4x4d mv, pr;;
+		matrix4x4ftod(m_renderer->GetCurrentModelView(), mv);
+		matrix4x4ftod(m_renderer->GetCurrentProjection(), pr);
+		Graphics::Frustum frustum(mv, pr);
+		m_VolumeClouds->Render( m_renderer, frustum, vector3f(1.0f, 1.0f, 1.0f), m_viewPos);
 
 		m_ui->Update();
 		if (m_options.showUI && !m_screenshotQueued) {

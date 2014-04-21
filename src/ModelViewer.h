@@ -13,6 +13,8 @@
 #include "scenegraph/SceneGraph.h"
 #include "ui/Context.h"
 
+#include "VolumeClouds.h"
+
 class ModelViewer {
 public:
 	ModelViewer(Graphics::Renderer *r, LuaManager *l);
