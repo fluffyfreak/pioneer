@@ -55,6 +55,7 @@ public:
 	EffectType effect;
 	bool alphaTest;
 	bool glowMap;
+	bool ambientMap;
 	bool lighting;
 	bool specularMap;
 	bool usePatterns; //pattern/color system
@@ -79,6 +80,7 @@ public:
 	Texture *texture2;
 	Texture *texture3;
 	Texture *texture4;
+	Texture *texture5;
 	Texture *heatGradient;
 
 	Color diffuse;
