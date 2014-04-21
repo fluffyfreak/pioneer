@@ -70,6 +70,13 @@ Color4f Color4f::FromLuaTable(lua_State *l, int idx)
 	return Color4f(r, g, b, a);
 }
 
+void Color4f::Limit() {
+	r = Clamp(r, 0.0f, 1.0f);
+	g = Clamp(g, 0.0f, 1.0f);
+	b = Clamp(b, 0.0f, 1.0f);
+	a = Clamp(a, 0.0f, 1.0f);
+}
+
 void Color4ub::ToLuaTable(lua_State *l)
 {
 	lua_newtable(l);
