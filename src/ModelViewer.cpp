@@ -519,6 +519,13 @@ void ModelViewer::DrawModel()
 
 	if (m_options.showGrid)
 		DrawGrid(mv, m_model->GetDrawClipRadius());
+
+	m_renderer->SetTransform(mv);
+	matrix4x4d modelview, pr;
+	matrix4x4ftod(m_renderer->GetCurrentModelView(), modelview);
+	matrix4x4ftod(m_renderer->GetCurrentProjection(), pr);
+	Graphics::Frustum frustum(modelview, pr);
+	m_VolumeClouds->Render( m_renderer, frustum, vector3f(1.0f, 1.0f, 1.0f), m_viewPos);
 }
 
 void ModelViewer::MainLoop()
@@ -555,12 +562,6 @@ void ModelViewer::MainLoop()
 			m_shields->Update(m_options.showShields ? 1.0f : (1.0f - dif), 1.0f);
 			DrawModel();
 		}
-		
-		matrix4x4d mv, pr;;
-		matrix4x4ftod(m_renderer->GetCurrentModelView(), mv);
-		matrix4x4ftod(m_renderer->GetCurrentProjection(), pr);
-		Graphics::Frustum frustum(mv, pr);
-		m_VolumeClouds->Render( m_renderer, frustum, vector3f(1.0f, 1.0f, 1.0f), m_viewPos);
 
 		m_ui->Update();
 		if (m_options.showUI && !m_screenshotQueued) {

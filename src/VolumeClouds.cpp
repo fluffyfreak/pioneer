@@ -161,13 +161,11 @@ void VolumetricClouds::GenerateTexture()
 	delete [] B;		
 }
 
-int VolumetricClouds::Create(int Num, float PlaneSize, float PlaneHeight)
+int VolumetricClouds::Create(const int Num, const float PlaneSize, const float PlaneHeight)
 {
-	int i;
-	
 	GenerateTexture();
 
-	for (i = 0; i < Num; i++)
+	for (int i = 0; i < Num; i++)
 	{
 		VolumetricCloud Cloud;
 		Cloud.Center.x = rand() % (int)(PlaneSize * 2) - PlaneSize;

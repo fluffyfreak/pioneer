@@ -42,7 +42,7 @@ class VolumetricClouds
 public:
 	VolumetricClouds();
 	
-	int 	Create(int NumClouds, float PlaneSize, float PlaneHeight);	
+	int 	Create(const int NumClouds, const float PlaneSize, const float PlaneHeight);	
 	void	Update(Graphics::Renderer *r, const Graphics::Frustum &frustum, const vector3f& Sun, const vector3f& Camera);
 	void	Render(Graphics::Renderer *r, const Graphics::Frustum &frustum, const vector3f& Sun, const vector3f& Camera);
 	void	Destroy();
