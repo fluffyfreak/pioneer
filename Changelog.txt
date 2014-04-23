@@ -19,18 +19,19 @@ April 2014
 
    * Script and UI API changes
      * Animation object, UI.Context.Animate and AddAnimation methods (#2830)
-     * Improve tradeships.lua (#2851)
-     * ship:SetShipType doesn't equip the default hyperdrive anymore
-     * shipdef.defaultHyperdrive has been removed in favour of
-       shipdef.hyperdriveClass (#2859)
+     * Improve TradeShips.lua (#2851)
+     * Ship.SetShipType doesn't equip the default hyperdrive anymore
+     * ShipDef.defaultHyperdrive has been removed in favour of
+       ShipDef.hyperdriveClass (#2859)
      * New attribute SpaceStation.numShipsDocked to get number of occupied ports
+     * Body.FindNearestTo to find bodies near this body
 
    * Internal changes
      * Emit Lua events and timers in hyperspace
      * Output some system info for debugging purposes (#2832)
      * Add serialization support for LuaRef objects (#2849)
      * Add facilities to easily call arbitrary Lua methods from C++ (#2854, #2869)
-	 * Address some warnings from cppcheck and GCC (#2871)
+     * Address some warnings from cppcheck and GCC (#2871)
 
    * Fixes
      * Fix duplication of cargo during cargo scooping (#2644, #2828)
