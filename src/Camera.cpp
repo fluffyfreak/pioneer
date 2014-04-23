@@ -25,7 +25,7 @@ using namespace Graphics;
 static const float OBJECT_HIDDEN_PIXEL_THRESHOLD = 2.0f;
 
 // if a terrain object would render smaller than this many pixels, draw a billboard instead
-static const float BILLBOARD_PIXEL_THRESHOLD = 15.0f;
+static const float BILLBOARD_PIXEL_THRESHOLD = 8.0f;
 
 CameraContext::CameraContext(float width, float height, float fovAng, float zNear, float zFar) :
 	m_width(width),
@@ -114,15 +114,15 @@ static void position_system_lights(Frame *camFrame, Frame *frame, std::vector<Ca
 		const double dist = lpos.Length() / AU;
 		lpos *= 1.0/dist; // normalize
 
-		const Uint8 *col = StarSystem::starRealColors[body->type];
+		const Uint8 *col = StarSystem::starRealColors[body->GetType()];
 
 		const Color lightCol(col[0], col[1], col[2], 0);
 		vector3f lightpos(lpos.x, lpos.y, lpos.z);
 		lights.push_back(Camera::LightSource(frame->GetBody(), Graphics::Light(Graphics::Light::LIGHT_DIRECTIONAL, lightpos, lightCol, lightCol)));
 	}
 
-	for (Frame::ChildIterator it = frame->BeginChildren(); it != frame->EndChildren(); ++it) {
-		position_system_lights(camFrame, *it, lights);
+	for (Frame* kid : frame->GetChildren()) {
+		position_system_lights(camFrame, kid, lights);
 	}
 }
 
@@ -132,9 +132,7 @@ void Camera::Update()
 
 	// evaluate each body and determine if/where/how to draw it
 	m_sortedBodies.clear();
-	for (Space::BodyIterator i = Pi::game->GetSpace()->BodiesBegin(); i != Pi::game->GetSpace()->BodiesEnd(); ++i) {
-		Body *b = *i;
-
+	for (Body* b : Pi::game->GetSpace()->GetBodies()) {
 		BodyAttrs attrs;
 		attrs.body = b;
 
@@ -151,7 +149,7 @@ void Camera::Update()
 		attrs.bodyFlags = b->GetFlags();
 
 		// approximate pixel width (disc diameter) of body on screen
-		float pixSize = (Graphics::GetScreenWidth() * rad / attrs.camDist);
+		const float pixSize = Graphics::GetScreenHeight() * 2.0 * rad / (attrs.camDist * Graphics::GetFovFactor());
 		if (pixSize < OBJECT_HIDDEN_PIXEL_THRESHOLD)
 			continue;
 
@@ -162,18 +160,16 @@ void Camera::Update()
 				attrs.billboard = true;
 				vector3d pos;
 				double size = rad * 2.0 * m_context->GetFrustum().TranslatePoint(attrs.viewCoords, pos);
-				attrs.billboardPos = vector3f(&pos.x);
+				attrs.billboardPos = vector3f(pos);
 				attrs.billboardSize = float(size);
 				if (b->IsType(Object::STAR)) {
-					Uint8 *col = StarSystem::starRealColors[b->GetSystemBody()->type];
+					const Uint8 *col = StarSystem::starRealColors[b->GetSystemBody()->GetType()];
 					attrs.billboardColor = Color(col[0], col[1], col[2], 255);
 				}
 				else if (b->IsType(Object::PLANET)) {
-					double surfaceDensity; // unused
-					// XXX this is pretty crap because its not always right
-					// (gas giants are always white) and because it should have
-					// some star colour mixed in to simulate lighting
-					b->GetSystemBody()->GetAtmosphereFlavor(&attrs.billboardColor, &surfaceDensity);
+					// XXX this should incorporate some lighting effect
+					// (ie, colour of the illuminating star(s))
+					attrs.billboardColor = b->GetSystemBody()->GetAlbedo();
 					attrs.billboardColor.a = 255; // no alpha, these things are hard enough to see as it is
 				}
 				else
@@ -295,8 +291,7 @@ void Camera::CalcShadows(const int lightNum, const Body *b, std::vector<Shadow> 
 	else bRadius = b->GetPhysRadius();
 
 	// Look for eclipsing third bodies:
-	for (Space::BodyIterator ib2 = Pi::game->GetSpace()->BodiesBegin(); ib2 != Pi::game->GetSpace()->BodiesEnd(); ++ib2) {
-		Body *b2 = *ib2;
+	for (const Body *b2 : Pi::game->GetSpace()->GetBodies()) {
 		if ( b2 == b || b2 == lightBody || !(b2->IsType(Object::PLANET) || b2->IsType(Object::STAR)))
 			continue;
 
@@ -363,7 +358,7 @@ float Camera::ShadowedIntensity(const int lightNum, const Body *b) const {
 	shadows.reserve(16);
 	CalcShadows(lightNum, b, shadows);
 	float product = 1.0;
-	for (std::vector<Camera::Shadow>::const_iterator it = shadows.begin(), itEnd = shadows.end(); it!=itEnd; it++)
+	for (std::vector<Camera::Shadow>::const_iterator it = shadows.begin(), itEnd = shadows.end(); it!=itEnd; ++it)
 		product *= 1.0 - discCovered(it->centre.Length() / it->lrad, it->srad / it->lrad);
 	return product;
 }

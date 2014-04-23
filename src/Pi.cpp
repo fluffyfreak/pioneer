@@ -13,7 +13,7 @@
 #include "Frame.h"
 #include "GalacticView.h"
 #include "Game.h"
-#include "GeoSphere.h"
+#include "BaseSphere.h"
 #include "Intro.h"
 #include "Lang.h"
 #include "LuaComms.h"
@@ -89,7 +89,6 @@ sigc::signal<void, bool> Pi::onMouseWheel;
 sigc::signal<void> Pi::onPlayerChangeTarget;
 sigc::signal<void> Pi::onPlayerChangeFlightControlState;
 sigc::signal<void> Pi::onPlayerChangeEquipment;
-sigc::signal<void, const SpaceStation*> Pi::onDockingClearanceExpired;
 LuaSerializer *Pi::luaSerializer;
 LuaTimer *Pi::luaTimer;
 LuaNameGen *Pi::luaNameGen;
@@ -362,7 +361,7 @@ std::string Pi::GetSaveDir()
 	return FileSystem::JoinPath(FileSystem::GetUserDir(), Pi::SAVE_DIR_NAME);
 }
 
-void Pi::Init(const std::map<std::string,std::string> &options)
+void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 {
 #ifdef PIONEER_PROFILER
 	Profiler::reset();
@@ -378,10 +377,21 @@ void Pi::Init(const std::map<std::string,std::string> &options)
 #endif
 
 	Pi::config = new GameConfig(options);
-	KeyBindings::InitBindings();
+	if (!no_gui) // This re-saves the config file. With no GUI we want to allow multiple instances in parallel.
+		KeyBindings::InitBindings();
 
 	if (config->Int("RedirectStdio"))
 		OS::RedirectStdio();
+
+	std::string version(PIONEER_VERSION);
+	if (strlen(PIONEER_EXTRAVERSION)) version += " (" PIONEER_EXTRAVERSION ")";
+	const char* platformName = SDL_GetPlatform();
+	if(platformName)
+		Output("ver %s on: %s\n\n", version.c_str(), platformName);
+	else
+		Output("ver %s but could not detect platform name.\n\n", version.c_str());
+
+	Output("%s\n", OS::GetOSInfoString().c_str());
 
 	ModManager::Init();
 
@@ -409,6 +419,7 @@ void Pi::Init(const std::map<std::string,std::string> &options)
 	videoSettings.width = config->Int("ScrWidth");
 	videoSettings.height = config->Int("ScrHeight");
 	videoSettings.fullscreen = (config->Int("StartFullscreen") != 0);
+	videoSettings.hidden = no_gui;
 	videoSettings.useOVR = (config->Int("EnableOVR") != 0) && OculusRiftInterface::HasHMD();
 	videoSettings.requestedSamples = config->Int("AntiAliasingMode");
 	videoSettings.vsync = (config->Int("VSync") != 0);
@@ -469,7 +480,7 @@ void Pi::Init(const std::map<std::string,std::string> &options)
 	// templates. so now we have crap everywhere :/
 	Lua::Init();
 
-	Pi::ui.Reset(new UI::Context(Lua::manager, Pi::renderer, Graphics::GetScreenWidth(), Graphics::GetScreenHeight(), Lang::GetCore().GetLangCode()));
+	Pi::ui.Reset(new UI::Context(Lua::manager, Pi::renderer, Graphics::GetScreenWidth(), Graphics::GetScreenHeight()));
 
 	LuaInit();
 
@@ -524,7 +535,7 @@ void Pi::Init(const std::map<std::string,std::string> &options)
 
 	draw_progress(gauge, label, 0.6f);
 
-	GeoSphere::Init();
+	BaseSphere::Init();
 	draw_progress(gauge, label, 0.7f);
 
 	CityOnPlanet::Init();
@@ -537,7 +548,7 @@ void Pi::Init(const std::map<std::string,std::string> &options)
 	Sfx::Init(Pi::renderer);
 	draw_progress(gauge, label, 0.95f);
 
-	if (!config->Int("DisableSound")) {
+	if (!no_gui && !config->Int("DisableSound")) {
 		Sound::Init();
 		Sound::SetMasterVolume(config->Float("MasterVolume"));
 		Sound::SetSfxVolume(config->Float("SfxVolume"));
@@ -682,7 +693,7 @@ void Pi::Quit()
 	Sound::Uninit();
 	SpaceStation::Uninit();
 	CityOnPlanet::Uninit();
-	GeoSphere::Uninit();
+	BaseSphere::Uninit();
 	Galaxy::Uninit();
 	Faction::Uninit();
 	FaceGenManager::Destroy();
@@ -723,7 +734,7 @@ void Pi::SetView(View *v)
 
 void Pi::OnChangeDetailLevel()
 {
-	GeoSphere::OnChangeDetailLevel();
+	BaseSphere::OnChangeDetailLevel();
 }
 
 void Pi::HandleEvents()
@@ -1257,7 +1268,7 @@ void Pi::MainLoop()
 					break;
 				}
 				game->TimeStep(step);
-				GeoSphere::UpdateAllGeoSpheres();
+				BaseSphere::UpdateAllBaseSphereDerivatives();
 
 				accumulator -= step;
 			}
@@ -1272,7 +1283,7 @@ void Pi::MainLoop()
 		} else {
 			// paused
 			PROFILE_SCOPED_RAW("paused")
-			GeoSphere::UpdateAllGeoSpheres();
+			BaseSphere::UpdateAllBaseSphereDerivatives();
 		}
 		frame_stat++;
 
@@ -1306,8 +1317,8 @@ void Pi::MainLoop()
 
 		/* Calculate position for this rendered frame (interpolated between two physics ticks */
         // XXX should this be here? what is this anyway?
-		for (Space::BodyIterator i = game->GetSpace()->BodiesBegin(); i != game->GetSpace()->BodiesEnd(); ++i) {
-			(*i)->UpdateInterpTransform(Pi::GetGameTickAlpha());
+		for (Body* b : game->GetSpace()->GetBodies()) {
+			b->UpdateInterpTransform(Pi::GetGameTickAlpha());
 		}
 		game->GetSpace()->GetRootFrame()->UpdateInterpTransform(Pi::GetGameTickAlpha());
 
@@ -1466,16 +1477,15 @@ void Pi::MainLoop()
 
 			snprintf(
 				fps_readout, sizeof(fps_readout),
-				"%d fps (%.1f ms/f), %d phys updates, %d triangles, %.3f M tris/sec, %d terrain vtx/sec, %d glyphs/sec\n"
+				"%d fps (%.1f ms/f), %d phys updates, %d triangles, %.3f M tris/sec, %d glyphs/sec\n"
 				"Lua mem usage: %d MB + %d KB + %d bytes\n\n Oculus Yaw: %.3f, Pitch: %.3f, Roll %.3f",
 				frame_stat, (1000.0/frame_stat), phys_stat, Pi::statSceneTris, Pi::statSceneTris*frame_stat*1e-6,
-				GeoSphere::GetVtxGenCount(), Text::TextureFont::GetGlyphCount(),
+				Text::TextureFont::GetGlyphCount(),
 				lua_memMB, lua_memKB, lua_memB, yaw, pitch, roll
 			);
 			frame_stat = 0;
 			phys_stat = 0;
 			Text::TextureFont::ClearGlyphCount();
-			GeoSphere::ClearVtxGenCount();
 			if (SDL_GetTicks() - last_stats > 1200) last_stats = SDL_GetTicks();
 			else last_stats += 1000;
 		}

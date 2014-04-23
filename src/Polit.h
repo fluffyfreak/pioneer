@@ -52,7 +52,7 @@ namespace Polit {
 	};
 
 	void NotifyOfCrime(Ship *s, enum Crime c);
-	void GetSysPolitStarSystem(const StarSystem *s, const fixed human_infestedness, SysPolit &outSysPolit);
+	void GetSysPolitStarSystem(const StarSystem *s, const fixed &human_infestedness, SysPolit &outSysPolit);
 	bool IsCommodityLegal(const StarSystem *s, const Equip::Type t);
 	void Init();
 	void Serialize(Serializer::Writer &wr);
@@ -65,6 +65,8 @@ namespace Polit {
 
 class SysPolit {
 public:
+	SysPolit() : govType(Polit::GOV_INVALID) { }
+
 	const char *GetGovernmentDesc() const;
 	const char *GetEconomicDesc() const;
 

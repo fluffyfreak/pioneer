@@ -61,10 +61,10 @@ static int l_starsystem_get_station_paths(lua_State *l)
 
 	lua_newtable(l);
 
-	for (std::vector<SystemBody*>::const_iterator i = s->m_spaceStations.begin(); i != s->m_spaceStations.end(); ++i)
+	for (const SystemBody *station : s->GetSpaceStations())
 	{
 		lua_pushinteger(l, lua_rawlen(l, -1)+1);
-		LuaObject<SystemPath>::PushToLua(&(*i)->path);
+		LuaObject<SystemPath>::PushToLua(&station->GetPath());
 		lua_rawset(l, -3);
 	}
 
@@ -101,10 +101,10 @@ static int l_starsystem_get_body_paths(lua_State *l)
 
 	lua_newtable(l);
 
-	for (std::vector< RefCountedPtr<SystemBody> >::const_iterator i = s->m_bodies.begin(); i != s->m_bodies.end(); ++i)
+	for (RefCountedPtr<const SystemBody> sb : s->GetBodies())
 	{
 		lua_pushinteger(l, lua_rawlen(l, -1)+1);
-		LuaObject<SystemPath>::PushToLua(&(*i)->path);
+		LuaObject<SystemPath>::PushToLua(&sb->GetPath());
 		lua_rawset(l, -3);
 	}
 
@@ -235,7 +235,7 @@ static int l_starsystem_get_nearby_systems(lua_State *l)
 
 	lua_newtable(l);
 
-	const SystemPath here = s->GetPath();
+	const SystemPath &here = s->GetPath();
 
 	const int here_x = here.sectorX;
 	const int here_y = here.sectorY;
@@ -416,7 +416,8 @@ static int l_starsystem_attr_path(lua_State *l)
 /*
  * Attribute: lawlessness
  *
- * The lawlessness value for the system
+ * The lawlessness value for the system, 0 for peaceful, 1 for raging
+ * hordes of pirates
  *
  * Availability:
  *

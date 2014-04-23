@@ -238,7 +238,7 @@ static int l_fac_add_to_factions(lua_State *L)
 {
 	FactionBuilder *facbld = l_fac_check_builder(L, 1);
 
-	const std::string factionName(luaL_checkstring(L, 2));
+	//const std::string factionName(luaL_checkstring(L, 2));
 
 	if (!facbld->registered && !facbld->skip) {
 		/* XXX maybe useful for debugging, leaving for now
@@ -529,7 +529,7 @@ void Faction::SetBestFitHomeworld(Sint32 x, Sint32 y, Sint32 z, Sint32 si, Uint3
 		while (Uint32(candidateSi) < sec->m_systems.size()) {
 			path.systemIndex = candidateSi;
 			sys = StarSystemCache::GetCached(path);
-			if (sys->m_spaceStations.size() > 0) {
+			if (sys->HasSpaceStations()) {
 				si = candidateSi;
 				break;
 			}

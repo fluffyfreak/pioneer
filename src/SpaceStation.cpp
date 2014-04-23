@@ -19,6 +19,7 @@
 #include "Ship.h"
 #include "Space.h"
 #include "StringF.h"
+#include "ShipCpanel.h"
 #include "galaxy/StarSystem.h"
 #include "graphics/Graphics.h"
 #include "scenegraph/ModelSkin.h"
@@ -138,8 +139,8 @@ void SpaceStation::InitStation()
 {
 	m_adjacentCity = 0;
 	for(int i=0; i<NUM_STATIC_SLOTS; i++) m_staticSlot[i] = false;
-	Random rand(m_sbody->seed);
-	bool ground = m_sbody->type == SystemBody::TYPE_STARPORT_ORBITAL ? false : true;
+	Random rand(m_sbody->GetSeed());
+	bool ground = m_sbody->GetType() == SystemBody::TYPE_STARPORT_ORBITAL ? false : true;
 	if (ground) {
 		m_type = &SpaceStationType::surfaceStationTypes[ rand.Int32(SpaceStationType::surfaceStationTypes.size()) ];
 	} else {
@@ -277,7 +278,7 @@ bool SpaceStation::LaunchShip(Ship *ship, int port)
 	m_doorAnimationStep = 0.3; // open door
 
 	const Aabb& aabb = ship->GetAabb();
-	const matrix3x3d mt = ship->GetOrient();
+	const matrix3x3d& mt = ship->GetOrient();
 	const vector3d up = mt.VectorY().Normalized() * aabb.min.y;
 
 	sd.fromPos = (ship->GetPosition() - GetPosition() + up) * GetOrient();	// station space
@@ -407,7 +408,8 @@ void SpaceStation::DockingUpdate(const double timeStep)
 			m_doorAnimationStep = 0.3; // open door
 
 			if (dt.stagePos >= 1.0) {
-				if (dt.ship == static_cast<Ship*>(Pi::player)) Pi::onDockingClearanceExpired.emit(this);
+				if (dt.ship == Pi::player)
+					Pi::cpan->MsgLog()->ImportantMessage(GetLabel(), Lang::DOCKING_CLEARANCE_EXPIRED);
 				dt.ship = 0;
 				dt.stage = 0;
 				m_doorAnimationStep = -0.3; // close door
@@ -565,7 +567,7 @@ void SpaceStation::Render(Graphics::Renderer *r, const Camera *camera, const vec
 		Planet *planet = static_cast<Planet*>(b);
 
 		if (!m_adjacentCity) {
-			m_adjacentCity = new CityOnPlanet(planet, this, m_sbody->seed);
+			m_adjacentCity = new CityOnPlanet(planet, this, m_sbody->GetSeed());
 		}
 		m_adjacentCity->Render(r, camera->GetContext()->GetFrustum(), this, viewCoords, viewTransform);
 

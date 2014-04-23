@@ -59,6 +59,10 @@
       "description" : "",
       "message" : "Skyddar ditt rymdskepp från hettan vid återinträde i atmosfär."
    },
+   "AUTOMATIC_SYSTEM_SELECTION" : {
+      "description" : "",
+      "message" : "Automatiskt systemval"
+   },
    "AUTOPILOT" : {
       "description" : "",
       "message" : "Autopilot"
@@ -303,10 +307,6 @@
       "description" : "",
       "message" : "\" Dir \""
    },
-   "DISABLED_AUTOMATIC_SYSTEM_SELECTION" : {
-      "description" : "",
-      "message" : "Avaktiverat automatiskt systemval."
-   },
    "DISTANCE_FROM_SHIP_TO_NAV_TARGET" : {
       "description" : "",
       "message" : "Avstånd från skepp till navigationsmål"
@@ -434,10 +434,6 @@
    "ECONOMY_TYPE" : {
       "description" : "",
       "message" : "Ekonomityp:"
-   },
-   "ENABLED_AUTOMATIC_SYSTEM_SELECTION" : {
-      "description" : "",
-      "message" : "Aktiverat automatiskt systemval."
    },
    "EQUATORIAL_RADIUS_TO_POLAR_RADIUS_RATIO" : {
       "description" : "",
@@ -724,8 +720,8 @@
       "message" : "Landat"
    },
    "LANG_NAME" : {
-      "description" : "The name that native speakers use for this language. This will be used in the language selection screen. For obscure reasons this currently must only use Latin-1 characters.",
-      "message" : "Engelska"
+      "description" : "The name that native speakers use for this language. This will be used in the language selection screen.",
+      "message" : "Svenska"
    },
    "LARGE" : {
       "description" : "",
@@ -750,10 +746,6 @@
    "LASER_FIRE_DETECTED" : {
       "description" : "",
       "message" : "Lasereld upptäckt."
-   },
-   "LAUNCH_PERMISSION_DENIED_BUSY" : {
-      "description" : "",
-      "message" : "Tillstånd för uppskjutning nekat: landningsplats upptaget."
    },
    "LIBERAL_DEMOCRACY" : {
       "description" : "",
@@ -1079,9 +1071,25 @@
       "description" : "",
       "message" : "%days{f.0} dagar"
    },
+   "NUMBER_DECIMAL_POINT" : {
+      "description" : "Decimal delimiter used in numbers.",
+      "message" : ","
+   },
    "NUMBER_G" : {
       "description" : "",
       "message" : "%acceleration{f.1} G"
+   },
+   "NUMBER_GROUP_MIN" : {
+      "description" : "Smallest number to start grouping of digits for. (E.g. if \"10000\" start grouping thousands with 10,000, and not 1,000).",
+      "message" : "10000"
+   },
+   "NUMBER_GROUP_NUM" : {
+      "description" : "For large number, group digits by this many. European languages use 3 (group thousands). 0 means no grouping.",
+      "message" : "3"
+   },
+   "NUMBER_GROUP_SEP" : {
+      "description" : "For large number, separator used when grouping digits. E.g. 1,000 or 1 000 or 1'000.",
+      "message" : " "
    },
    "NUMBER_HOURS" : {
       "description" : "",
@@ -1433,7 +1441,7 @@
    },
    "SET_HYPERSPACE_TARGET_TO_FOLLOW_THIS_DEPARTURE" : {
       "description" : "",
-      "message" : "Hyperrymdanalyserare: Sätt hyperrymdmål till att följa denna avgång"
+      "message" : "Hyperrymdsmolnanalysator: Sätt hyperrymdsmål till att följa denna avgång"
    },
    "SET_LOW_THRUST_POWER_LEVEL_TO_X_PERCENT" : {
       "description" : "",
@@ -1577,15 +1585,15 @@
    },
    "STAR_AF_GIANT" : {
       "description" : "",
-      "message" : "Vit jättestjärna"
+      "message" : "Vit jätte"
    },
    "STAR_AF_HYPER_GIANT" : {
       "description" : "",
-      "message" : "Vit hyperjättestjärna"
+      "message" : "Vit hyperjätte"
    },
    "STAR_AF_SUPER_GIANT" : {
       "description" : "",
-      "message" : "Vit superjättestjärna"
+      "message" : "Vit superjätte"
    },
    "STAR_B" : {
       "description" : "",
@@ -1593,19 +1601,19 @@
    },
    "STAR_B_GIANT" : {
       "description" : "",
-      "message" : "Blå jättestjärna"
+      "message" : "Blå jätte"
    },
    "STAR_B_HYPER_GIANT" : {
       "description" : "",
-      "message" : "Blå hyperjättestjärna"
+      "message" : "Blå hyperjätte"
    },
    "STAR_B_SUPER_GIANT" : {
       "description" : "",
-      "message" : "Blå superjättestjärna"
+      "message" : "Blå superjätte"
    },
    "STAR_B_WF" : {
       "description" : "",
-      "message" : "Wolf-Rayet stjärna - Riskerar kollaps"
+      "message" : "Wolf-Rayet - Riskerar kollaps"
    },
    "STAR_F" : {
       "description" : "",
@@ -1617,15 +1625,15 @@
    },
    "STAR_G_GIANT" : {
       "description" : "",
-      "message" : "Gul jättestjärna - Ostabil"
+      "message" : "Gul jätte - Ostabil"
    },
    "STAR_G_HYPER_GIANT" : {
       "description" : "",
-      "message" : "Gul hyperjättestjärna - Ostabil"
+      "message" : "Gul hyperjätte - Ostabil"
    },
    "STAR_G_SUPER_GIANT" : {
       "description" : "",
-      "message" : "Gul superjättestjärna"
+      "message" : "Gul superjätte"
    },
    "STAR_IM_BH" : {
       "description" : "",
@@ -1637,15 +1645,15 @@
    },
    "STAR_K_GIANT" : {
       "description" : "",
-      "message" : "Orange jättestjärna - Ostabil"
+      "message" : "Orange jätte - Ostabil"
    },
    "STAR_K_HYPER_GIANT" : {
       "description" : "",
-      "message" : "Orange hyperjättestjärna - Ostabil"
+      "message" : "Orange hyperjätte - Ostabil"
    },
    "STAR_K_SUPER_GIANT" : {
       "description" : "",
-      "message" : "Orange superjättestjärna"
+      "message" : "Orange superjätte"
    },
    "STAR_M" : {
       "description" : "",
@@ -1653,19 +1661,19 @@
    },
    "STAR_M_GIANT" : {
       "description" : "",
-      "message" : "Röd jättestjärna"
+      "message" : "Röd jätte"
    },
    "STAR_M_HYPER_GIANT" : {
       "description" : "",
-      "message" : "Röd hyperjättestjärna"
+      "message" : "Röd hyperjätte"
    },
    "STAR_M_SUPER_GIANT" : {
       "description" : "",
-      "message" : "Röd superjättestjärna"
+      "message" : "Röd superjätte"
    },
    "STAR_M_WF" : {
       "description" : "",
-      "message" : "Wolf-Rayet stjärna - Ostabil"
+      "message" : "Wolf-Rayet - Ostabil"
    },
    "STAR_O" : {
       "description" : "",
@@ -1673,19 +1681,19 @@
    },
    "STAR_O_GIANT" : {
       "description" : "",
-      "message" : "Het blå jättestjärna"
+      "message" : "Het blå jätte"
    },
    "STAR_O_HYPER_GIANT" : {
       "description" : "",
-      "message" : "Het blå hyperjättestjärna"
+      "message" : "Het blå hyperjätte"
    },
    "STAR_O_SUPER_GIANT" : {
       "description" : "",
-      "message" : "Het blå superjättestjärna"
+      "message" : "Het blå superjätte"
    },
    "STAR_O_WF" : {
       "description" : "",
-      "message" : "Wolf-Rayet stjärna - Nära förestående kollaps"
+      "message" : "Wolf-Rayet - Nära förestående kollaps"
    },
    "STAR_SM_BH" : {
       "description" : "",

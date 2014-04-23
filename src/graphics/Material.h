@@ -31,6 +31,7 @@ enum EffectType {
 	EFFECT_GEOSPHERE_TERRAIN_WITH_LAVA,
 	EFFECT_GEOSPHERE_TERRAIN_WITH_WATER,
 	EFFECT_GEOSPHERE_SKY,
+	EFFECT_GASSPHERE_TERRAIN,
 	EFFECT_FRESNEL_SPHERE,
 	EFFECT_SHIELD,
 	EFFECT_SKYBOX,
@@ -54,6 +55,7 @@ public:
 	EffectType effect;
 	bool alphaTest;
 	bool glowMap;
+	bool ambientMap;
 	bool lighting;
 	bool specularMap;
 	bool usePatterns; //pattern/color system
@@ -78,6 +80,7 @@ public:
 	Texture *texture2;
 	Texture *texture3;
 	Texture *texture4;
+	Texture *texture5;
 	Texture *heatGradient;
 
 	Color diffuse;

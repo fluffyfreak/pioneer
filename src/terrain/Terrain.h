@@ -89,9 +89,6 @@ protected:
 	double m_invMaxHeight;
 	double m_planetRadius;
 	double m_planetEarthRadii;
-	double m_noise1;
-	double m_noise2;
-	double m_noise3;
 
 	double m_entropy[12];
 
@@ -115,9 +112,9 @@ protected:
 	struct MinBodyData {
 		MinBodyData(const SystemBody* body) {
 			m_radius = body->GetRadius();
-			m_aspectRatio = body->aspectRatio.ToDouble();
-			m_path = body->path;
-			m_name = body->name;
+			m_aspectRatio = body->GetAspectRatio();
+			m_path = body->GetPath();
+			m_name = body->GetName();
 		}
 		double m_radius;
 		double m_aspectRatio;

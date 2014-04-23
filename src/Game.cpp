@@ -20,6 +20,7 @@
 #include "SystemInfoView.h"
 #include "UIView.h"
 #include "LuaEvent.h"
+#include "LuaRef.h"
 #include "ObjectViewerView.h"
 #include "FileSystem.h"
 #include "graphics/Renderer.h"
@@ -129,6 +130,10 @@ Game::Game(Serializer::Reader &rd) :
 
 	Serializer::Reader section;
 
+	// Preparing the Lua stuff
+	LuaRef::InitLoad();
+	Pi::luaSerializer->InitTableRefs();
+
 	// game state
 	section = rd.RdSection("Game");
 	m_time = section.Double();
@@ -165,7 +170,8 @@ Game::Game(Serializer::Reader &rd) :
 	section = rd.RdSection("LuaModules");
 	Pi::luaSerializer->Unserialize(section);
 
-
+	Pi::luaSerializer->UninitTableRefs();
+	LuaRef::UninitLoad();
 	// signature check
 	for (Uint32 i = 0; i < strlen(s_saveEnd)+1; i++)
 		if (rd.Byte() != s_saveEnd[i]) throw SavedGameCorruptException();
@@ -173,6 +179,8 @@ Game::Game(Serializer::Reader &rd) :
 
 void Game::Serialize(Serializer::Writer &wr)
 {
+	// preparing the lua serializer
+	Pi::luaSerializer->InitTableRefs();
 	// leading signature
 	for (Uint32 i = 0; i < strlen(s_saveStart)+1; i++)
 		wr.Byte(s_saveStart[i]);
@@ -241,6 +249,8 @@ void Game::Serialize(Serializer::Writer &wr)
 	// trailing signature
 	for (Uint32 i = 0; i < strlen(s_saveEnd)+1; i++)
 		wr.Byte(s_saveEnd[i]);
+
+	Pi::luaSerializer->UninitTableRefs();
 }
 
 void Game::TimeStep(float step)
@@ -308,13 +318,13 @@ bool Game::UpdateTimeAccel()
 
 		else if (!m_forceTimeAccel) {
 			// check we aren't too near to objects for timeaccel //
-			for (Space::BodyIterator i = m_space->BodiesBegin(); i != m_space->BodiesEnd(); ++i) {
-				if ((*i) == m_player.get()) continue;
-				if ((*i)->IsType(Object::HYPERSPACECLOUD)) continue;
+			for (const Body* b : m_space->GetBodies()) {
+				if (b == m_player.get()) continue;
+				if (b->IsType(Object::HYPERSPACECLOUD)) continue;
 
-				vector3d toBody = m_player->GetPosition() - (*i)->GetPositionRelTo(m_player->GetFrame());
+				vector3d toBody = m_player->GetPosition() - b->GetPositionRelTo(m_player->GetFrame());
 				double dist = toBody.Length();
-				double rad = (*i)->GetPhysRadius();
+				double rad = b->GetPhysRadius();
 
 				if (dist < 1000.0) {
 					newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_1X);
@@ -377,12 +387,12 @@ void Game::SwitchToHyperspace()
 	// find all the departure clouds, convert them to arrival clouds and store
 	// them for the next system
 	m_hyperspaceClouds.clear();
-	for (Space::BodyIterator i = m_space->BodiesBegin(); i != m_space->BodiesEnd(); ++i) {
+	for (Body* b : m_space->GetBodies()) {
 
-		if (!(*i)->IsType(Object::HYPERSPACECLOUD)) continue;
+		if (!b->IsType(Object::HYPERSPACECLOUD)) continue;
 
 		// only want departure clouds with ships in them
-		HyperspaceCloud *cloud = static_cast<HyperspaceCloud*>(*i);
+		HyperspaceCloud *cloud = static_cast<HyperspaceCloud*>(b);
 		if (cloud->IsArrival() || cloud->GetShip() == 0)
 			continue;
 
@@ -525,14 +535,14 @@ void Game::SwitchToNormalSpace()
 					// itself out long before the player can get near
 
 					SystemBody *sbody = m_space->GetStarSystem()->GetBodyByPath(&sdest);
-					if (sbody->type == SystemBody::TYPE_STARPORT_ORBITAL) {
+					if (sbody->GetType() == SystemBody::TYPE_STARPORT_ORBITAL) {
 						ship->SetFrame(target_body->GetFrame());
 						ship->SetPosition(MathUtil::RandomPointOnSphere(1000.0)*1000.0); // somewhere 1000km out
 					}
 
 					else {
-						if (sbody->type == SystemBody::TYPE_STARPORT_SURFACE) {
-							sbody = sbody->parent;
+						if (sbody->GetType() == SystemBody::TYPE_STARPORT_SURFACE) {
+							sbody = sbody->GetParent();
 							SystemPath path = m_space->GetStarSystem()->GetPathOf(sbody);
 							target_body = m_space->FindBodyForPath(&path);
 						}
@@ -589,9 +599,9 @@ void Game::SetTimeAccel(TimeAccel t)
 
 	// Give all ships a half-step acceleration to stop autopilot overshoot
 	if (t < m_timeAccel)
-		for (Space::BodyIterator i = m_space->BodiesBegin(); i != m_space->BodiesEnd(); ++i)
-			if ((*i)->IsType(Object::SHIP))
-				(static_cast<Ship*>(*i))->TimeAccelAdjust(0.5f * GetTimeStep());
+		for (Body* b : m_space->GetBodies())
+			if (b->IsType(Object::SHIP))
+				(static_cast<Ship*>(b))->TimeAccelAdjust(0.5f * GetTimeStep());
 
 	m_timeAccel = t;
 
