@@ -11,7 +11,7 @@
 
 namespace Graphics {
 
-bool WindowSDL::CreateWindowAndContext(const char *name, int w, int h, bool fullscreen, bool hidden, int samples, int depth_bits, bool useOVR) {
+bool WindowSDL::CreateWindowAndContext(const char *name, int w, int h, bool fullscreen, bool hidden, bool useOVR, int samples, int depth_bits) {
 	Uint32 winFlags = SDL_WINDOW_OPENGL | (hidden ? SDL_WINDOW_HIDDEN : SDL_WINDOW_SHOWN);
 	if (!hidden && fullscreen && !useOVR) winFlags |= SDL_WINDOW_FULLSCREEN;
 
