@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _SYSTEMPATH_H
@@ -57,6 +57,25 @@ public:
 		return (a.bodyIndex < b.bodyIndex);
 	}
 
+	class LessSectorOnly {
+	public:
+		bool operator()(const SystemPath& a, const SystemPath& b) const {
+			if (a.sectorX != b.sectorX) return (a.sectorX < b.sectorX);
+			if (a.sectorY != b.sectorY) return (a.sectorY < b.sectorY);
+			return (a.sectorZ < b.sectorZ);
+		}
+	};
+
+	class LessSystemOnly {
+	public:
+		bool operator()(const SystemPath& a, const SystemPath& b) const {
+			if (a.sectorX != b.sectorX) return (a.sectorX < b.sectorX);
+			if (a.sectorY != b.sectorY) return (a.sectorY < b.sectorY);
+			if (a.sectorZ != b.sectorZ) return (a.sectorZ < b.sectorZ);
+			return (a.systemIndex < b.systemIndex);
+		}
+	};
+
 	bool IsSectorPath() const {
 		return (systemIndex == Uint32(-1) && bodyIndex == Uint32(-1));
 	}
@@ -114,6 +133,21 @@ public:
 		Sint32 si = Sint32(rd.Int32());
 		Sint32 bi = Sint32(rd.Int32());
 		return SystemPath(x, y, z, si, bi);
+	}
+
+	// sometimes it's useful to be able to get the SystemPath data as a blob
+	// (for example, to be used for hashing)
+	// see, LuaObject<SystemPath>::PushToLua in LuaSystemPath.cpp
+	static_assert(sizeof(Sint32) == sizeof(Uint32), "something crazy is going on!");
+	static const size_t SizeAsBlob = 5*sizeof(Uint32);
+	void SerializeToBlob(char *blob) const {
+		// could just memcpy(blob, this, sizeof(SystemPath))
+		// but that might include packing and/or vtable pointer
+		memcpy(blob + 0*sizeof(Uint32), &sectorX, sizeof(Uint32));
+		memcpy(blob + 1*sizeof(Uint32), &sectorY, sizeof(Uint32));
+		memcpy(blob + 2*sizeof(Uint32), &sectorZ, sizeof(Uint32));
+		memcpy(blob + 3*sizeof(Uint32), &systemIndex, sizeof(Uint32));
+		memcpy(blob + 4*sizeof(Uint32), &bodyIndex, sizeof(Uint32));
 	}
 };
 

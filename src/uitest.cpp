@@ -1,3 +1,6 @@
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
+
 #include <cstdlib>
 #include "SDL.h"
 #include "ui/Context.h"
@@ -28,31 +31,31 @@ public:
 static bool toggle_disabled_handler(UI::Widget *w)
 {
 	w->IsDisabled() ? w->Enable() : w->Disable();
-	printf("toggle disabled: %p %s now %s\n", w, typeid(*w).name(), w->IsDisabled() ? "DISABLED" : "ENABLED");
+	Output("toggle disabled: %p %s now %s\n", w, typeid(*w).name(), w->IsDisabled() ? "DISABLED" : "ENABLED");
 	return true;
 }
 
 static bool click_handler(UI::Widget *w)
 {
-	printf("click: %p %s\n", w, typeid(*w).name());
+	Output("click: %p %s\n", w, typeid(*w).name());
 	return true;
 }
 
 static bool move_handler(const UI::MouseMotionEvent &event, UI::Widget *w)
 {
-	printf("move: %p %s %d,%d\n", w, typeid(*w).name(), event.pos.x, event.pos.y);
+	Output("move: %p %s %d,%d\n", w, typeid(*w).name(), event.pos.x, event.pos.y);
 	return true;
 }
 
 static bool over_handler(UI::Widget *w)
 {
-	printf("over: %p %s\n", w, typeid(*w).name());
+	Output("over: %p %s\n", w, typeid(*w).name());
 	return true;
 }
 
 static bool out_handler(UI::Widget *w)
 {
-	printf("out: %p %s\n", w, typeid(*w).name());
+	Output("out: %p %s\n", w, typeid(*w).name());
 	return true;
 }
 
@@ -63,7 +66,7 @@ static void colour_change(float v, UI::ColorBackground *back, UI::Slider *r, UI:
 
 static void option_selected(unsigned int index, const std::string &option)
 {
-	printf("option selected: %d %s\n", index, option.c_str());
+	Output("option selected: %d %s\n", index, option.c_str());
 }
 
 static void fill_label(float v, UI::Label *label)
@@ -102,12 +105,17 @@ static bool remove_floating_widget(UI::Context *c, UI::Widget *widget)
 }
 #endif
 
+static void animation_callback(int n)
+{
+	printf("%d animation completed\n", n);
+}
+
 int main(int argc, char **argv)
 {
 	FileSystem::Init();
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-		fprintf(stderr, "sdl init failed: %s\n", SDL_GetError());
+		Output("sdl init failed: %s\n", SDL_GetError());
 		exit(-1);
 	}
 
@@ -115,7 +123,7 @@ int main(int argc, char **argv)
 	videoSettings.width = WIDTH;
 	videoSettings.height = HEIGHT;
 	videoSettings.fullscreen = false;
-	videoSettings.shaders = false;
+	videoSettings.hidden = false;
 	videoSettings.requestedSamples = 0;
 	videoSettings.vsync = false;
 	videoSettings.useTextureCompression = false;
@@ -127,7 +135,65 @@ int main(int argc, char **argv)
 
 	Lua::Init();
 
-	RefCountedPtr<UI::Context> c(new UI::Context(Lua::manager, r, WIDTH, HEIGHT, "English"));
+	RefCountedPtr<UI::Context> c(new UI::Context(Lua::manager, r, WIDTH, HEIGHT));
+
+	UI::Grid *g = c->Grid(3,3);
+	UI::Image *img[9];
+	for (int y = 0; y < 3; y++)
+		for (int x = 0; x < 3; x++) {
+			int i = y*3+x;
+			img[i] = c->Image("textures/background.jpg");
+			g->SetCell(x, y, img[i]);
+			c->Animate(
+				new UI::Animation(img[i], UI::Animation::TYPE_IN, UI::Animation::EASING_ZERO, UI::Animation::TARGET_POSITION_X, 0.0f, false,
+				new UI::Animation(img[i], UI::Animation::TYPE_IN, UI::Animation::EASING_ZERO, UI::Animation::TARGET_PAUSE, float(i)*0.2, false,
+				new UI::Animation(img[i], UI::Animation::TYPE_IN, UI::Animation::EASING_LINEAR, UI::Animation::TARGET_POSITION_X, 0.2f, false, nullptr, sigc::bind(sigc::ptr_fun(&animation_callback), i)))));
+			c->Animate(
+				new UI::Animation(img[i], UI::Animation::TYPE_IN, UI::Animation::EASING_ZERO, UI::Animation::TARGET_POSITION_Y, 0.0f, false,
+				new UI::Animation(img[i], UI::Animation::TYPE_IN, UI::Animation::EASING_ZERO, UI::Animation::TARGET_PAUSE, float(i)*0.2, false,
+				new UI::Animation(img[i], UI::Animation::TYPE_IN, UI::Animation::EASING_LINEAR, UI::Animation::TARGET_POSITION_Y, 0.2f, false))));
+		}
+	c->GetTopLayer()->SetInnerWidget(g);
+
+	/*
+	c->GetAnimationController().Add(new UI::Animation(img, UI::Animation::TYPE_IN, UI::Animation::EASING_LINEAR, UI::Animation::TARGET_POSITION_X, 1.3f, false));
+	c->GetAnimationController().Add(new UI::Animation(img, UI::Animation::TYPE_IN, UI::Animation::EASING_QUAD, UI::Animation::TARGET_POSITION_Y_REV, 1.0f, false,
+		new UI::Animation(img, UI::Animation::TYPE_OUT, UI::Animation::EASING_QUINT, UI::Animation::TARGET_OPACITY, 1.0f, false)));
+	*/
+
+#if 0
+	UI::Background *cb = c->Background();
+	cb->SetInnerWidget(
+		c->Margin(10)->SetInnerWidget(
+			c->Background()->SetInnerWidget(
+				c->Margin(10)->SetInnerWidget(
+					c->Image("textures/background.jpg")
+				)
+			)
+		)
+	);
+	c->GetTopLayer()->SetInnerWidget(
+		c->Margin(10)->SetInnerWidget(
+			cb
+		)
+	);
+
+	c->GetAnimationController().Add(UI::Animation(cb, UI::Animation::TYPE_IN_OUT, UI::Animation::EASING_SINE, UI::Animation::TARGET_OPACITY, 4.0f, true));
+#endif
+
+#if 0
+	UI::VBox *box = c->VBox();
+	for (int i = 0; i < 2; i++) {
+		box->PackEnd(UI::WidgetSet(
+			c->ColorBackground(Color4ub(rand()%256,rand()%256,rand()%256,255).ToColor4f())
+				->SetInnerWidget(c->Image("icons/object_star_m.png", UI::Widget::PRESERVE_ASPECT | UI::Widget::EXPAND_HEIGHT)),
+			c->ColorBackground(Color4ub(rand()%256,rand()%256,rand()%256,255).ToColor4f())
+				->SetInnerWidget(c->Label("foo"))
+			)
+		);
+	}
+	c->GetTopLayer()->SetInnerWidget(box);
+#endif
 
 #if 0
 	UI::Gauge *gauge;
@@ -135,6 +201,7 @@ int main(int argc, char **argv)
 	gauge->SetWarningLevel(0.4f);
 	gauge->SetCriticalLevel(0.2f);
 	gauge->SetLevelAscending(false);
+	gauge->SetUpperValue(14.0f);
 #endif
 
 #if 0
@@ -531,6 +598,7 @@ int main(int argc, char **argv)
 		c->Label("ten"),
 		c->Label("twenty")
 	));
+	table->SetMouseEnabled(true);
 	for (char ch = 'a'; ch <= 'z'; ch++) {
 		static char buf[32];
 		memset(buf, ch, sizeof(buf));
@@ -579,11 +647,13 @@ int main(int argc, char **argv)
 	);
 #endif
 
+#if 0
 	UI::Table *t = c->Table();
 	t->AddRow(c->MultiLineText("Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."));
 	t->AddRow(c->MultiLineText("Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."));
 	t->AddRow(c->MultiLineText("Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."));
 	c->GetTopLayer()->SetInnerWidget(t);
+#endif
 
 	//int count = 0;
 
@@ -610,7 +680,7 @@ int main(int argc, char **argv)
 //		thing.Update();
 
 //		slider->SetValue(slider->GetValue() + 0.01);
-//		gauge->SetValue(gauge->GetValue() + 0.001);
+//		gauge->SetValue(gauge->GetValue() + 0.1);
 
 #if 0
 		if (++count == 400) {
@@ -621,7 +691,7 @@ int main(int argc, char **argv)
 			c->Layout();
 		}
 		else if (count < 400 && count % 10 == 0)
-			printf("%d\n", count);
+			Output("%d\n", count);
 #endif
 
 #if 0

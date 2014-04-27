@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _GAME_H
@@ -23,10 +23,10 @@ public:
 	static void SaveGame(const std::string &filename, Game *game);
 
 	// start docked in station referenced by path
-	Game(const SystemPath &path);
+	Game(const SystemPath &path, double time = 0.0);
 
 	// start at position relative to body referenced by path
-	Game(const SystemPath &path, const vector3d &pos);
+	Game(const SystemPath &path, const vector3d &pos, double time = 0.0);
 
 	// load game
 	Game(Serializer::Reader &rd);
@@ -40,9 +40,9 @@ public:
 	bool IsNormalSpace() const { return m_state == STATE_NORMAL; }
 	bool IsHyperspace() const { return m_state == STATE_HYPERSPACE; }
 
-	Space *GetSpace() const { return m_space.Get(); }
+	Space *GetSpace() const { return m_space.get(); }
 	double GetTime() const { return m_time; }
-	Player *GetPlayer() const { return m_player.Get(); }
+	Player *GetPlayer() const { return m_player.get(); }
 
 	// physics step
 	void TimeStep(float step);
@@ -59,6 +59,8 @@ public:
 	double GetHyperspaceDuration() const { return m_hyperspaceDuration; }
 	double GetHyperspaceEndTime() const { return m_hyperspaceEndTime; }
 	double GetHyperspaceArrivalProbability() const;
+	const SystemPath& GetHyperspaceDest() const { return m_hyperspaceDest; }
+	const SystemPath& GetHyperspaceSource() const { return m_hyperspaceSource; }
 
 	enum TimeAccel {
 		TIMEACCEL_PAUSED,
@@ -90,10 +92,10 @@ private:
 	void SwitchToHyperspace();
 	void SwitchToNormalSpace();
 
-	ScopedPtr<Space> m_space;
+	std::unique_ptr<Space> m_space;
 	double m_time;
 
-	ScopedPtr<Player> m_player;
+	std::unique_ptr<Player> m_player;
 
 	enum State {
 		STATE_NORMAL,
@@ -105,6 +107,7 @@ private:
 
 	std::list<HyperspaceCloud*> m_hyperspaceClouds;
 	SystemPath m_hyperspaceSource;
+	SystemPath m_hyperspaceDest;
 	double m_hyperspaceProgress;
 	double m_hyperspaceDuration;
 	double m_hyperspaceEndTime;

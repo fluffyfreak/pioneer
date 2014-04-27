@@ -1,10 +1,10 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Gui.h"
 #include "GuiContainer.h"
 
-//#define GUI_DEBUG_CONTAINER
+#include <SDL_stdinc.h>
 
 namespace Gui {
 
@@ -28,7 +28,7 @@ void Container::_OnSetSize()
 
 void Container::_OnMouseLeave()
 {
-	for (std::list<widget_pos>::iterator i = m_children.begin(); i != m_children.end(); ++i) {
+	for (WidgetList::iterator i = m_children.begin(), itEnd = m_children.end(); i != itEnd; ++i) {
 		if ((*i).w->IsMouseOver() == true)
 			(*i).w->OnMouseLeave();
 	}
@@ -38,7 +38,7 @@ bool Container::OnMouseMotion(MouseMotionEvent *e)
 {
 	float x = e->x;
 	float y = e->y;
-	for (std::list<widget_pos>::iterator i = m_children.begin(); i != m_children.end(); ++i) {
+	for (WidgetList::iterator i = m_children.begin(), itEnd = m_children.end(); i != itEnd; ++i) {
 		float *pos,size[2];
 		if (!(*i).w->IsVisible()) {
 			if ((*i).w->IsMouseOver() == true)
@@ -72,7 +72,7 @@ bool Container::HandleMouseEvent(MouseButtonEvent *e)
 {
 	float x = e->x;
 	float y = e->y;
-	for (std::list<widget_pos>::iterator i = m_children.begin(); i != m_children.end(); ++i) {
+	for (WidgetList::iterator i = m_children.begin(), itEnd = m_children.end(); i != itEnd; ++i) {
 		float *pos,size[2];
 		if (!(*i).w->IsVisible()) continue;
 		if (!(*i).w->GetEnabled()) continue;
@@ -104,7 +104,8 @@ bool Container::HandleMouseEvent(MouseButtonEvent *e)
 
 void Container::DeleteAllChildren()
 {
-	for (std::list<widget_pos>::iterator i = m_children.begin(); i != m_children.end(); ++i) {
+	PROFILE_SCOPED()
+	for (WidgetList::iterator i = m_children.begin(), itEnd = m_children.end(); i != itEnd; ++i) {
 		delete (*i).w;
 	}
 	m_children.clear();
@@ -112,7 +113,8 @@ void Container::DeleteAllChildren()
 
 void Container::RemoveAllChildren()
 {
-	for (std::list<widget_pos>::iterator i = m_children.begin(); i != m_children.end(); ++i) {
+	PROFILE_SCOPED()
+	for (WidgetList::iterator i = m_children.begin(), itEnd = m_children.end(); i != itEnd; ++i) {
 		i->w->SetParent(0);
 	}
 	m_children.clear();
@@ -120,6 +122,7 @@ void Container::RemoveAllChildren()
 
 void Container::PrependChild(Widget *child, float x, float y)
 {
+	PROFILE_SCOPED()
 	assert(child->GetParent() == 0);
 	assert(FindChild(child) == m_children.end());
 
@@ -133,6 +136,7 @@ void Container::PrependChild(Widget *child, float x, float y)
 
 void Container::AppendChild(Widget *child, float x, float y)
 {
+	PROFILE_SCOPED()
 	assert(child->GetParent() == 0);
 	assert(FindChild(child) == m_children.end());
 
@@ -146,7 +150,8 @@ void Container::AppendChild(Widget *child, float x, float y)
 
 void Container::MoveChild(Widget *child, float x, float y)
 {
-	std::list<widget_pos>::iterator it = FindChild(child);
+	PROFILE_SCOPED()
+	WidgetList::iterator it = FindChild(child);
 	if (it != m_children.end()) {
 		it->pos[0] = x;
 		it->pos[1] = y;
@@ -155,7 +160,8 @@ void Container::MoveChild(Widget *child, float x, float y)
 
 void Container::RemoveChild(Widget *child)
 {
-	std::list<widget_pos>::iterator it = FindChild(child);
+	PROFILE_SCOPED()
+	WidgetList::iterator it = FindChild(child);
 	if (it != m_children.end()) {
 		it->w->SetParent(0);
 		m_children.erase(it);
@@ -164,66 +170,42 @@ void Container::RemoveChild(Widget *child)
 
 Container::WidgetList::const_iterator Container::FindChild(const Widget *w) const
 {
-	for (std::list<widget_pos>::const_iterator i = m_children.begin(); i != m_children.end(); ++i)
+	PROFILE_SCOPED()
+	for (WidgetList::const_iterator i = m_children.begin(); i != m_children.end(); ++i)
 		if (i->w == w) return i;
 	return m_children.end();
 }
 
 Container::WidgetList::iterator Container::FindChild(const Widget *w)
 {
-	for (std::list<widget_pos>::iterator i = m_children.begin(); i != m_children.end(); ++i)
+	PROFILE_SCOPED()
+	for (WidgetList::iterator i = m_children.begin(), itEnd = m_children.end(); i != itEnd; ++i)
 		if (i->w == w) return i;
 	return m_children.end();
 }
 
 void Container::Draw()
 {
+	PROFILE_SCOPED()
+
+	Graphics::Renderer *r = Gui::Screen::GetRenderer();
+	r->SetRenderState(Gui::Screen::alphaBlendState);
+
 	float size[2];
 	GetSize(size);
 	if (!m_transparent) {
-		if (m_bgcol[3] < 1.0) {
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		}
-		glBegin(GL_QUADS);
-			glColor4fv(m_bgcol);
-			glVertex2f(0, size[1]);
-			glVertex2f(size[0], size[1]);
-			glVertex2f(size[0], 0);
-			glVertex2f(0, 0);
-		glEnd();
-		if (m_bgcol[3] < 1.0) {
-			glBlendFunc(GL_ONE, GL_ZERO);
-			glDisable(GL_BLEND);
-		}
+		PROFILE_SCOPED_RAW("Container::Draw - !m_transparent")
+		Theme::DrawRect(vector2f(0.f), vector2f(size[0], size[1]), m_bgcol, Screen::alphaBlendState);
 	}
-#ifdef GUI_DEBUG_CONTAINER
-	glBegin(GL_LINE_LOOP);
-		glColor3f(1,1,1);
-		glVertex2f(0, size[1]);
-		glVertex2f(size[0], size[1]);
-		glVertex2f(size[0], 0);
-		glVertex2f(0, 0);
-	glEnd();
-#endif /* GUI_DEBUG_CONTAINER */
-	for (std::list<widget_pos>::iterator i = m_children.begin(); i != m_children.end(); ++i) {
-		if (!(*i).w->IsVisible()) continue;
-		glPushMatrix();
-		glTranslatef((*i).pos[0], (*i).pos[1], 0);
-#ifdef GUI_DEBUG_CONTAINER
-		float csize[2];
-		(*i).w->GetSize(csize);
 
-		glBegin(GL_LINE_LOOP);
-			glColor3f(0,0,1);
-			glVertex2f(0, csize[1]);
-			glVertex2f(csize[0], csize[1]);
-			glVertex2f(csize[0], 0);
-			glVertex2f(0, 0);
-		glEnd();
-#endif /* GUI_DEBUG_CONTAINER */
+	for (WidgetList::iterator i = m_children.begin(), itEnd = m_children.end(); i != itEnd; ++i) {
+		if (!(*i).w->IsVisible()) continue;
+
+		PROFILE_SCOPED_RAW("Container::Draw - Child Loop")
+
+		Graphics::Renderer::MatrixTicket ticket(r, Graphics::MatrixMode::MODELVIEW);
+		r->Translate((*i).pos[0], (*i).pos[1], 0);
 		(*i).w->Draw();
-		glPopMatrix();
 	}
 }
 
@@ -239,14 +221,16 @@ bool Container::OnMouseUp(MouseButtonEvent *e)
 
 void Container::ShowChildren()
 {
-	for (std::list<widget_pos>::iterator i = m_children.begin(); i != m_children.end(); ++i) {
+	PROFILE_SCOPED()
+	for (WidgetList::iterator i = m_children.begin(), itEnd = m_children.end(); i != itEnd; ++i) {
 		(*i).w->Show();
 	}
 }
 
 void Container::HideChildren()
 {
-	for (std::list<widget_pos>::iterator i = m_children.begin(); i != m_children.end(); ++i) {
+	PROFILE_SCOPED()
+	for (WidgetList::iterator i = m_children.begin(), itEnd = m_children.end(); i != itEnd; ++i) {
 		(*i).w->Hide();
 	}
 }
@@ -261,6 +245,7 @@ void Container::GetChildPosition(const Widget *child, float outPos[2]) const
 
 void Container::Show()
 {
+	PROFILE_SCOPED()
 	Widget::Show();
 	if (IsVisible()) {
 		ResizeRequest();
@@ -269,7 +254,8 @@ void Container::Show()
 
 void Container::ShowAll()
 {
-	for (std::list<widget_pos>::iterator i = m_children.begin(); i != m_children.end(); ++i) {
+	PROFILE_SCOPED()
+	for (WidgetList::iterator i = m_children.begin(), itEnd = m_children.end(); i != itEnd; ++i) {
 		(*i).w->ShowAll();
 	}
 	Show();
@@ -277,6 +263,7 @@ void Container::ShowAll()
 
 void Container::HideAll()
 {
+	PROFILE_SCOPED()
 	HideChildren();
 	Hide();
 }
@@ -284,11 +271,6 @@ void Container::HideAll()
 void Container::SetBgColor(const Color &col)
 {
 	m_bgcol = col;
-}
-
-void Container::SetBgColor(float r, float g, float b, float a)
-{
-	m_bgcol = Color(r, g, b, a);
 }
 
 }

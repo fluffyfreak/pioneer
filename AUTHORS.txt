@@ -11,6 +11,7 @@ The Pioneer Developers are:
 * Alessandro Giachi
 * Andrew Cook
 * Andrew Copland
+* Antti Salonen
 * Asier Basagoiti
 * Benamucki
 * Benjamin Hodgetts
@@ -37,6 +38,7 @@ The Pioneer Developers are:
 * jmf
 * John Bartholomew
 * John Jordan
+* Karl Fogelmark
 * Kimmo Kotajärvi
 * Konrad Mruk
 * Krzysztof Niedźwiecki
@@ -48,6 +50,7 @@ The Pioneer Developers are:
 * Marcel Tulloh
 * Marcus de Roos
 * Michele Botticelli
+* Miha Vitorovič
 * Nic
 * Oleg Ovcharenko
 * Paul Mahol
@@ -72,6 +75,7 @@ The Pioneer Developers are:
 * Thierry Dupré
 * Tim Jones
 * Tom Morton
+* Torham2234
 * Ulf Pettersson
 * Uncle Bob
 * Vincent Teerling
@@ -79,7 +83,8 @@ The Pioneer Developers are:
 Licensing
 =========
 
-Copyright © 2008-2013 Pioneer Developers
+Copyright © 2008-2014 Pioneer Developers
+Portions copyright © 2013-2014 Meteoric Games Ltd.
 
 Pioneer's core code and extension modules are licensed under the terms of the
 GNU General Public License version 3. See licenses/GPL-3.txt for details.
@@ -122,6 +127,10 @@ Pioneer includes the following third-party software:
   Copyright (c) 2007-2010 Baptiste Lepilleur
   Licensed under the MIT licence (see contrib/json/json.h)
 
+  High Performance C++ Profiler
+  https://code.google.com/p/high-performance-cplusplus-profiler/
+  Licensed under the MIT license
+
   Titillium Text font
   Copyright (C) 2007-2009 Academia di Belle Arte di Urbino - Campivisivi
   Licensed under the SIL Open Font Licence v1.1 (see licenses/SIL-1.1.txt)
@@ -140,6 +149,12 @@ Pioneer includes the following third-party software:
   Copyright (c) 2003, Bitstream Inc.
   parts Copyright (c) 2006, Tavmjong Bah
   License: see licenses/DejaVu-license.txt
+
+  WenWuanYi Micro Hei Font
+  Copyright (c) 2008-2009 The WenQuanYi Project Board of Trusteess
+  Copyright (c) 2008-2009, Qianqian Fangi [FangQ]
+  Copyright (c) 2008-2009, mozbug
+  Licensed under the Apache License 2.0 (see licenses/Apache-2.0.txt)
 
   WPZOOM Developer Icon Set
   http://www.wpzoom.com/wpzoom/new-freebie-wpzoom-developer-icon-set-154-free-icons/

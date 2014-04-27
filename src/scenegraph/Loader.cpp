@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Loader.h"
@@ -7,11 +7,9 @@
 #include "LOD.h"
 #include "Parser.h"
 #include "SceneGraph.h"
-#include "StaticGeometry.h"
 #include "StringF.h"
 #include "utils.h"
 #include "graphics/Renderer.h"
-#include "graphics/Surface.h"
 #include "graphics/TextureBuilder.h"
 #include "FileSystem.h"
 #include <assimp/Importer.hpp>
@@ -22,7 +20,6 @@
 #include <assimp/material.h>
 
 namespace {
-
 	class AssimpFileReadStream : public Assimp::IOStream
 	{
 	public:
@@ -113,22 +110,13 @@ namespace {
 	private:
 		FileSystem::FileSource &m_fs;
 	};
-
 } // anonymous namespace
 
 namespace SceneGraph {
-
 Loader::Loader(Graphics::Renderer *r, bool logWarnings)
-: m_renderer(r)
-, m_model(0)
+: BaseLoader(r)
 , m_doLog(logWarnings)
 , m_mostDetailedLod(false)
-{
-	Graphics::Texture *sdfTex = Graphics::TextureBuilder("fonts/label3d.png", Graphics::LINEAR_CLAMP, true, true, true).GetOrCreateTexture(r, "model");
-	m_labelFont.Reset(new Text::DistanceFieldFont("fonts/sdf_definition.txt", sdfTex));
-}
-
-Loader::~Loader()
 {
 }
 
@@ -149,7 +137,7 @@ Model *Loader::LoadModel(const std::string &shortname, const std::string &basepa
 		const std::string &fpath = info.GetPath();
 
 		//check it's the expected type
-		if (info.IsFile() && ends_with(fpath, ".model")) {
+		if (info.IsFile() && ends_with_ci(fpath, ".model")) {
 			//check it's the wanted name & load it
 			const std::string name = info.GetName();
 
@@ -167,14 +155,13 @@ Model *Loader::LoadModel(const std::string &shortname, const std::string &basepa
 					Parser p(fileSource, fpath, m_curPath);
 					p.Parse(&modelDefinition);
 				} catch (ParseError &err) {
-					fprintf(stderr, "%s\n", err.what());
+					Output("%s\n", err.what());
 					throw LoadingError(err.what());
 				}
 				modelDefinition.name = shortname;
 				return CreateModel(modelDefinition);
 			}
 		}
-
 	}
 	throw (LoadingError("File not found"));
 }
@@ -196,54 +183,10 @@ Model *Loader::CreateModel(ModelDefinition &def)
 	for(std::vector<MaterialDefinition>::const_iterator it = def.matDefs.begin();
 		it != def.matDefs.end(); ++it)
 	{
-		//Build material descriptor
-		assert(!(*it).name.empty());
-		const std::string &diffTex = (*it).tex_diff;
-		const std::string &specTex = (*it).tex_spec;
-		const std::string &glowTex = (*it).tex_glow;
-
-		Graphics::MaterialDescriptor matDesc;
-		matDesc.lighting = !it->unlit;
-		matDesc.alphaTest = it->alpha_test;
-		matDesc.twoSided = it->two_sided;
-
-		if ((*it).use_pattern) {
-			patternsUsed = true;
-			matDesc.usePatterns = true;
-		}
-
-		//diffuse texture is a must. Will create a white dummy texture if one is not supplied
-		matDesc.textures = 1;
-		matDesc.specularMap = !specTex.empty();
-		matDesc.glowMap = !glowTex.empty();
-
-		//Create material and set parameters
-		RefCountedPtr<Material> mat(m_renderer->CreateMaterial(matDesc));
-		mat->diffuse = (*it).diffuse;
-		mat->specular = (*it).specular;
-		mat->emissive = (*it).emissive;
-		mat->shininess = (*it).shininess;
-
-		//semitransparent material
-		//the node must be marked transparent when using this material
-		//and should not be mixed with opaque materials
-		if ((*it).opacity < 100)
-			mat->diffuse.a = float((*it).opacity) / 100.f;
-
-		if (!diffTex.empty())
-			mat->texture0 = Graphics::TextureBuilder::Model(diffTex).GetOrCreateTexture(m_renderer, "model");
-		else
-			mat->texture0 = Graphics::TextureBuilder::GetWhiteTexture(m_renderer);
-		if (!specTex.empty())
-			mat->texture1 = Graphics::TextureBuilder::Model(specTex).GetOrCreateTexture(m_renderer, "model");
-		if (!glowTex.empty())
-			mat->texture2 = Graphics::TextureBuilder::Model(glowTex).GetOrCreateTexture(m_renderer, "model");
-		//texture3 is reserved for pattern
-		//texture4 is reserved for color gradient
-
-		model->m_materials.push_back(std::make_pair((*it).name, mat));
+		if (it->use_pattern) patternsUsed = true;
+		ConvertMaterialDefinition(*it);
 	}
-	//printf("Loaded %d materials\n", int(model->m_materials.size()));
+	//Output("Loaded %d materials\n", int(model->m_materials.size()));
 
 	//load meshes
 	//"mesh" here refers to a "mesh xxx.yyy"
@@ -293,7 +236,7 @@ Model *Loader::CreateModel(ModelDefinition &def)
 					model->GetRoot()->AddChild(mesh.Get());
 			} catch (LoadingError &err) {
 				delete model;
-				fprintf(stderr, "%s\n", err.what());
+				Output("%s\n", err.what());
 				throw;
 			}
 		}
@@ -327,39 +270,14 @@ Model *Loader::CreateModel(ModelDefinition &def)
 	// If no collision mesh is defined, a simple bounding box will be generated
 	m_model->CreateCollisionMesh();
 
+	// Do an initial animation update to get all the animation transforms correct
+	m_model->UpdateAnimations();
+
 	//find usable pattern textures from the model directory
-	if (patternsUsed) {
-		FindPatterns(model->m_patterns);
-
-		if (model->m_patterns.empty()) {
-			model->m_patterns.push_back(Pattern());
-			Pattern &dumpat = m_model->m_patterns.back();
-			dumpat.name = "Dummy";
-			dumpat.texture = RefCountedPtr<Graphics::Texture>(Graphics::TextureBuilder::GetWhiteTexture(m_renderer));
-		}
-
-		//set up some noticeable default colors
-		std::vector<Color4ub> colors;
-		colors.push_back(Color4ub::RED);
-		colors.push_back(Color4ub::GREEN);
-		colors.push_back(Color4ub::BLUE);
-		model->SetColors(colors);
-		model->SetPattern(0);
-	}
+	if (patternsUsed)
+		SetUpPatterns();
 
 	return model;
-}
-
-void Loader::FindPatterns(PatternContainer &output)
-{
-	for (FileSystem::FileEnumerator files(FileSystem::gameDataFiles, m_curPath); !files.Finished(); files.Next()) {
-		const FileSystem::FileInfo &info = files.Current();
-		if (info.IsFile()) {
-			const std::string &name = info.GetName();
-			if (ends_with(name, ".png") && starts_with(name, "pattern"))
-				output.push_back(Pattern(name, m_curPath, m_renderer));
-		}
-	}
 }
 
 RefCountedPtr<Node> Loader::LoadMesh(const std::string &filename, const AnimList &animDefs)
@@ -373,7 +291,7 @@ RefCountedPtr<Node> Loader::LoadMesh(const std::string &filename, const AnimList
 
 	//Removing components is suggested to optimize loading. We do not care about vtx colors now.
 	importer.SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, aiComponent_COLORS);
-	importer.SetPropertyInteger(AI_CONFIG_PP_SLM_VERTEX_LIMIT, Graphics::StaticMesh::MAX_VERTICES);
+	importer.SetPropertyInteger(AI_CONFIG_PP_SLM_VERTEX_LIMIT, 65536);
 
 	//There are several optimizations assimp can do, intentionally skipping them now
 	const aiScene *scene = importer.ReadFile(
@@ -437,22 +355,6 @@ bool Loader::CheckKeysInRange(const aiNodeAnim *chan, double start, double end)
 	return (posKeysInRange > 0 || rotKeysInRange > 0 || sclKeysInRange > 0);
 }
 
-RefCountedPtr<Graphics::Material> Loader::GetDecalMaterial(unsigned int index)
-{
-	assert(index <= Model::MAX_DECAL_MATERIALS);
-	RefCountedPtr<Graphics::Material> &decMat = m_model->m_decalMaterials[index-1];
-	if (!decMat.Valid()) {
-		Graphics::MaterialDescriptor matDesc;
-		matDesc.textures = 1;
-		matDesc.lighting = true;
-		decMat.Reset(m_renderer->CreateMaterial(matDesc));
-		decMat->texture0 = Graphics::TextureBuilder::GetTransparentTexture(m_renderer);
-		decMat->specular = Color::BLACK;
-		decMat->diffuse = Color::WHITE;
-	}
-	return decMat;
-}
-
 void Loader::AddLog(const std::string &msg)
 {
 	if (m_doLog) m_logMessages.push_back(msg);
@@ -481,6 +383,14 @@ void Loader::CheckAnimationConflicts(const Animation* anim, const std::vector<An
 	}
 }
 
+#pragma pack(push, 4)
+struct ModelVtx {
+	vector3f pos;
+	vector3f nrm;
+	vector2f uv0;
+};
+#pragma pack(pop)
+
 void Loader::ConvertAiMeshes(std::vector<RefCountedPtr<StaticGeometry> > &geoms, const aiScene *scene)
 {
 	//XXX sigh, workaround for obj loader
@@ -492,6 +402,7 @@ void Loader::ConvertAiMeshes(std::vector<RefCountedPtr<StaticGeometry> > &geoms,
 	for (unsigned int i=0; i<scene->mNumMeshes; i++) {
 		const aiMesh *mesh = scene->mMeshes[i];
 		assert(mesh->HasNormals());
+		assert(mesh->mNumVertices <= 65536);
 
 		RefCountedPtr<StaticGeometry> geom(new StaticGeometry(m_renderer));
 		geom->SetName(stringf("sgMesh%0{u}", i));
@@ -515,50 +426,80 @@ void Loader::ConvertAiMeshes(std::vector<RefCountedPtr<StaticGeometry> > &geoms,
 		}
 		assert(mat.Valid());
 
+		Graphics::RenderStateDesc rsd;
 		//turn on alpha blending and mark entire node as transparent
 		//(all importers split by material so far)
-		if (mat->diffuse.a < 0.99f) {
+		if (mat->diffuse.a < 255) {
 			geom->SetNodeMask(NODE_TRANSPARENT);
 			geom->m_blendMode = Graphics::BLEND_ALPHA;
+			rsd.blendMode = Graphics::BLEND_ALPHA;
+			rsd.depthWrite = false;
 		}
 
-		const Graphics::AttributeSet vtxAttribs =
-			Graphics::ATTRIB_POSITION |
-			Graphics::ATTRIB_NORMAL |
-			Graphics::ATTRIB_UV0;
-		Graphics::VertexArray *vts = new Graphics::VertexArray(vtxAttribs, mesh->mNumVertices);
+		geom->SetRenderState(m_renderer->CreateRenderState(rsd));
+
+		Graphics::VertexBufferDesc vbd;
+		vbd.attrib[0].semantic = Graphics::ATTRIB_POSITION;
+		vbd.attrib[0].format   = Graphics::ATTRIB_FORMAT_FLOAT3;
+		vbd.attrib[0].offset   = offsetof(ModelVtx, pos);
+		vbd.attrib[1].semantic = Graphics::ATTRIB_NORMAL;
+		vbd.attrib[1].format   = Graphics::ATTRIB_FORMAT_FLOAT3;
+		vbd.attrib[1].offset   = offsetof(ModelVtx, nrm);
+		vbd.attrib[2].semantic = Graphics::ATTRIB_UV0;
+		vbd.attrib[2].format   = Graphics::ATTRIB_FORMAT_FLOAT2;
+		vbd.attrib[2].offset   = offsetof(ModelVtx, uv0);
+		vbd.stride = sizeof(ModelVtx);
+		vbd.numVertices = mesh->mNumVertices;
+		vbd.usage = Graphics::BUFFER_USAGE_STATIC;
+
+		RefCountedPtr<Graphics::VertexBuffer> vb(m_renderer->CreateVertexBuffer(vbd));
 
 		// huge meshes are split by the importer so this should not exceed 65K indices
-		RefCountedPtr<Graphics::Surface> surface(new Graphics::Surface(Graphics::TRIANGLES, vts, mat));
-		std::vector<unsigned short> &indices = surface->GetIndices();
-		indices.reserve(mesh->mNumFaces * 3);
-
-		//copy indices first
-		for (unsigned int f = 0; f < mesh->mNumFaces; f++) {
-			const aiFace *face = &mesh->mFaces[f];
-			for (unsigned int j = 0; j < face->mNumIndices; j++) {
-				indices.push_back(face->mIndices[j]);
+		std::vector<Uint16> indices;
+		if (mesh->mNumFaces > 0)
+		{
+			indices.reserve(mesh->mNumFaces * 3);
+			for (unsigned int f = 0; f < mesh->mNumFaces; f++) {
+				const aiFace *face = &mesh->mFaces[f];
+				for (unsigned int j = 0; j < face->mNumIndices; j++) {
+					indices.push_back(face->mIndices[j]);
+				}
 			}
+		} else {
+			//generate dummy indices
+			AddLog(stringf("Missing indices in mesh %0{u}", i));
+			indices.reserve(mesh->mNumVertices);
+			for (unsigned int v = 0; v < mesh->mNumVertices; v++)
+				indices.push_back(v);
 		}
+
+		assert(indices.size() > 0);
+
+		//create buffer & copy
+		RefCountedPtr<Graphics::IndexBuffer> ib(m_renderer->CreateIndexBuffer(indices.size(), Graphics::BUFFER_USAGE_STATIC));
+		Uint16* idxPtr = ib->Map(Graphics::BUFFER_MAP_WRITE);
+		for (Uint32 j = 0; j < indices.size(); j++)
+			idxPtr[j] = indices[j];
+		ib->Unmap();
 
 		//copy vertices, always assume normals
 		//replace nonexistent UVs with zeros
+		ModelVtx *vtxPtr = vb->Map<ModelVtx>(Graphics::BUFFER_MAP_WRITE);
 		for (unsigned int v = 0; v < mesh->mNumVertices; v++) {
 			const aiVector3D &vtx = mesh->mVertices[v];
 			const aiVector3D &norm = mesh->mNormals[v];
 			const aiVector3D &uv0 = hasUVs ? mesh->mTextureCoords[0][v] : aiVector3D(0.f);
-			vts->Add(vector3f(vtx.x, vtx.y, vtx.z),
-				vector3f(norm.x, norm.y, norm.z),
-				vector2f(uv0.x, uv0.y));
+			vtxPtr[v].pos = vector3f(vtx.x, vtx.y, vtx.z);
+			vtxPtr[v].nrm = vector3f(norm.x, norm.y, norm.z);
+			vtxPtr[v].uv0 = vector2f(uv0.x, uv0.y);
 
 			//update bounding box
 			//untransformed points, collision visitor will transform
 			geom->m_boundingBox.Update(vtx.x, vtx.y, vtx.z);
 		}
+		vb->Unmap();
 
-		RefCountedPtr<Graphics::StaticMesh> smesh(new Graphics::StaticMesh(Graphics::TRIANGLES));
-		smesh->AddSurface(surface);
-		geom->AddMesh(smesh);
+		geom->AddMesh(vb, ib, mat);
 
 		geoms.push_back(geom);
 	}
@@ -570,7 +511,7 @@ void Loader::ConvertAnimations(const aiScene* scene, const AnimList &animDefs, N
 	//This is very limited, and all animdefs are processed for all
 	//meshes, potentially leading to duplicate and wrongly split animations
 	if (animDefs.empty() || scene->mNumAnimations == 0) return;
-	if (scene->mNumAnimations > 1) printf("File has %d animations, treating as one animation\n", scene->mNumAnimations);
+	if (scene->mNumAnimations > 1) Output("File has %d animations, treating as one animation\n", scene->mNumAnimations);
 
 	std::vector<Animation*> &animations = m_model->m_animations;
 
@@ -772,6 +713,40 @@ void Loader::CreateNavlight(const std::string &name, const matrix4x4f &m)
 	m_billboardsRoot->AddChild(lightPoint);
 }
 
+RefCountedPtr<CollisionGeometry> Loader::CreateCollisionGeometry(RefCountedPtr<StaticGeometry> geom, unsigned int collFlag)
+{
+	//Convert StaticMesh points & indices into cgeom
+	//note: it's not slow, but the amount of data being copied is just stupid:
+	//assimp to vtxbuffer, vtxbuffer to vector, vector to cgeom, cgeom to geomtree...
+	assert(geom->GetNumMeshes() == 1);
+	StaticGeometry::Mesh mesh = geom->GetMeshAt(0);
+
+	const Uint32 posOffs = mesh.vertexBuffer->GetDesc().GetOffset(Graphics::ATTRIB_POSITION);
+	const Uint32 stride  = mesh.vertexBuffer->GetDesc().stride;
+	const Uint32 numVtx  = mesh.vertexBuffer->GetDesc().numVertices;
+	const Uint32 numIdx  = mesh.indexBuffer->GetSize();
+
+	//copy vertex positions from buffer
+	std::vector<vector3f> pos;
+	pos.reserve(numVtx);
+
+	Uint8 *vtxPtr = mesh.vertexBuffer->Map<Uint8>(Graphics::BUFFER_MAP_READ);
+	for (Uint32 i = 0; i < numVtx; i++)
+		pos.push_back(*reinterpret_cast<vector3f*>(vtxPtr + (i * stride) + posOffs));
+	mesh.vertexBuffer->Unmap();
+
+	//copy indices from buffer
+	std::vector<unsigned short> idx;
+	idx.reserve(numIdx);
+
+	Uint16 *idxPtr = mesh.indexBuffer->Map(Graphics::BUFFER_MAP_READ);
+	for (Uint32 i = 0; i < numIdx; i++)
+		idx.push_back(idxPtr[i]);
+	mesh.indexBuffer->Unmap();
+	RefCountedPtr<CollisionGeometry> cgeom(new CollisionGeometry(m_renderer, pos, idx, collFlag));
+	return cgeom;
+}
+
 void Loader::ConvertNodes(aiNode *node, Group *_parent, std::vector<RefCountedPtr<StaticGeometry> >& geoms, const matrix4x4f &accum)
 {
 	Group *parent = _parent;
@@ -808,9 +783,9 @@ void Loader::ConvertNodes(aiNode *node, Group *_parent, std::vector<RefCountedPt
 	//nodes named collision_* are not added as renderable geometry
 	if (node->mNumMeshes == 1 && starts_with(nodename, "collision_")) {
 		const unsigned int collflag = GetGeomFlagForNodeName(nodename);
-		RefCountedPtr<Graphics::Surface> surf = geoms.at(node->mMeshes[0])->GetMesh(0)->GetSurface(0);
-		RefCountedPtr<CollisionGeometry> cgeom(new CollisionGeometry(m_renderer, surf.Get(), collflag));
+		RefCountedPtr<CollisionGeometry> cgeom = CreateCollisionGeometry(geoms.at(node->mMeshes[0]), collflag);
 		cgeom->SetName(nodename + "_cgeom");
+		cgeom->SetDynamic(starts_with(nodename, "collision_d"));
 		parent->AddChild(cgeom.Get());
 		return;
 	}
@@ -833,7 +808,13 @@ void Loader::ConvertNodes(aiNode *node, Group *_parent, std::vector<RefCountedPt
 			if (numDecal > 0) {
 				geom->SetNodeMask(NODE_TRANSPARENT);
 				geom->m_blendMode = Graphics::BLEND_ALPHA;
-				geom->GetMesh(0)->GetSurface(0)->SetMaterial(GetDecalMaterial(numDecal));
+				geom->GetMeshAt(0).material = GetDecalMaterial(numDecal);
+				geom->SetNodeFlags(geom->GetNodeFlags() | NODE_DECAL);
+				Graphics::RenderStateDesc rsd;
+				rsd.blendMode = Graphics::BLEND_ALPHA;
+				rsd.depthWrite = false;
+				//XXX add polygon offset to decal state
+				geom->SetRenderState(m_renderer->CreateRenderState(rsd));
 			}
 
 			parent->AddChild(geom.Get());
@@ -884,6 +865,7 @@ void Loader::LoadCollision(const std::string &filename)
 
 		//copy indices
 		//we assume aiProcess_Triangulate does its job
+		assert(mesh->mNumFaces > 0);
 		for (unsigned int f = 0; f < mesh->mNumFaces; f++) {
 			const aiFace *face = &mesh->mFaces[f];
 			for (unsigned int j = 0; j < face->mNumIndices; j++) {
@@ -899,7 +881,7 @@ void Loader::LoadCollision(const std::string &filename)
 		}
 	}
 
-	assert(!vertices.empty() && !vertices.empty());
+	assert(!vertices.empty() && !indices.empty());
 
 	//add pre-transformed geometry at the top level
 	m_model->GetRoot()->AddChild(new CollisionGeometry(m_renderer, vertices, indices, 0));
@@ -907,14 +889,19 @@ void Loader::LoadCollision(const std::string &filename)
 
 unsigned int Loader::GetGeomFlagForNodeName(const std::string &nodename)
 {
-	if (nodename.length() >= 14) {
-		const std::string pad = nodename.substr(13);
-		const int padID = atoi(pad.c_str())-1;
-		if(padID<240) {
-			return 0x10 + padID;
+	//special names after collision_
+	if (nodename.length() > 10) {
+		//landing pads
+		if (nodename.length() >= 14 && nodename.substr(10,3) == "pad") {
+			const std::string pad = nodename.substr(13);
+			const int padID = atoi(pad.c_str())-1;
+			if(padID<240) {
+				return 0x10 + padID;
+			}
 		}
 	}
+	//anything else is static collision
 	return 0x0;
 }
 
-}
+} //namespace

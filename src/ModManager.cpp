@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "ModManager.h"
@@ -12,8 +12,8 @@ void ModManager::Init() {
 	for (FileSystem::FileEnumerator files(FileSystem::userFiles, "mods", 0); !files.Finished(); files.Next()) {
 		const FileSystem::FileInfo &info = files.Current();
 		const std::string &zipPath = info.GetPath();
-		if (ends_with(zipPath, ".zip")) {
-			printf("adding mod: %s\n", zipPath.c_str());
+		if (ends_with_ci(zipPath, ".zip")) {
+			Output("adding mod: %s\n", zipPath.c_str());
 			FileSystem::gameDataFiles.PrependSource(new FileSystem::FileSourceZip(FileSystem::userFiles, zipPath));
 		}
 	}

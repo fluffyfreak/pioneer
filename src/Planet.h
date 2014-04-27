@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _PLANET_H
@@ -10,6 +10,7 @@
 
 namespace Graphics {
 	class Renderer;
+	class RenderState;
 	class Texture;
 	class Material;
 }
@@ -19,7 +20,6 @@ public:
 	OBJDEF(Planet, TerrainBody, PLANET);
 	Planet(SystemBody*);
 	Planet();
-	virtual ~Planet();
 
 	virtual void SubRender(Graphics::Renderer *r, const matrix4x4d &viewTran, const vector3d &camPos);
 
@@ -37,17 +37,17 @@ private:
 	void InitParams(const SystemBody*);
 	void GenerateRings(Graphics::Renderer *renderer);
 	void DrawGasGiantRings(Graphics::Renderer *r, const matrix4x4d &modelView);
-	void DrawAtmosphere(Graphics::Renderer *r, const matrix4x4d &modelView, const vector3d &camPos);
 
 	double m_atmosphereRadius;
 	double m_surfaceGravity_g;
 	RefCountedPtr<Graphics::Texture> m_ringTexture;
 	Graphics::VertexArray m_ringVertices;
-	ScopedPtr<Graphics::Material> m_ringMaterial;
+	std::unique_ptr<Graphics::Material> m_ringMaterial;
+	Graphics::RenderState *m_ringState;
 
 	// Legacy renderer visuals
-	ScopedPtr<Graphics::VertexArray> m_atmosphereVertices;
-	ScopedPtr<Graphics::Material> m_atmosphereMaterial;
+	std::unique_ptr<Graphics::VertexArray> m_atmosphereVertices;
+	std::unique_ptr<Graphics::Material> m_atmosphereMaterial;
 };
 
 #endif /* _PLANET_H */

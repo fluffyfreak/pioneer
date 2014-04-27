@@ -1,9 +1,11 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaFormat.h"
 #include "LuaObject.h"
 #include "LuaUtils.h"
+#include "Lang.h"
+#include "StringF.h"
 #include "utils.h"
 
 /*
@@ -82,10 +84,15 @@ static int l_format_distance(lua_State *l)
  * Create a string representation of the given money value.
  *
  * > string = Format.Money(money)
+ * > string = Format.Money(money, showCents)
  *
  * Parameters:
  *
  *   money - a money value, in dollars
+ *
+ *   showCents - A boolean. If true (default), includes the fractinoal
+ *               part of the amount. If false, omitts the fractional
+ *               part.
  *
  * Return:
  *
@@ -102,7 +109,29 @@ static int l_format_distance(lua_State *l)
 static int l_format_money(lua_State *l)
 {
 	double t = luaL_checknumber(l, 1);
-	lua_pushstring(l, format_money(Sint64(t*100.0)).c_str());
+	if (lua_isboolean(l, 2)){
+		bool show_cents = lua_toboolean(l, 2);
+		lua_pushstring(l, format_money(Sint64(t*100.0), show_cents).c_str());
+	}
+	else
+		lua_pushstring(l, format_money(Sint64(t*100.0)).c_str());
+
+	return 1;
+}
+
+static int l_format_accel_g(lua_State *l)
+{
+	double a = luaL_checknumber(l, 1);
+	const std::string str = stringf(Lang::NUMBER_G, formatarg("acceleration", a));
+	lua_pushlstring(l, str.c_str(), str.size());
+	return 1;
+}
+
+static int l_format_mass_tonnes(lua_State *l)
+{
+	double t = luaL_checknumber(l, 1);
+	const std::string str = stringf(Lang::NUMBER_TONNES, formatarg("mass", t));
+	lua_pushlstring(l, str.c_str(), str.size());
 	return 1;
 }
 
@@ -113,9 +142,11 @@ void LuaFormat::Register()
 	LUA_DEBUG_START(l);
 
 	static const luaL_Reg l_methods[] = {
-		{ "Date",     l_format_date     },
-		{ "Distance", l_format_distance },
-		{ "Money",    l_format_money    },
+		{ "Date",       l_format_date        },
+		{ "Distance",   l_format_distance    },
+		{ "Money",      l_format_money       },
+		{ "AccelG",     l_format_accel_g     },
+		{ "MassTonnes", l_format_mass_tonnes },
 		{ 0, 0 }
 	};
 

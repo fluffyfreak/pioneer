@@ -1,7 +1,7 @@
--- Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
-local Translate = import("Translate")
+local Lang = import("Lang")
 local Engine = import("Engine")
 local Game = import("Game")
 local Event = import("Event")
@@ -9,8 +9,9 @@ local NameGen = import("NameGen")
 local Rand = import("Rand")
 local Serializer = import("Serializer")
 
--- Get the translator function
-local t = Translate:GetTranslator()
+local l = Lang.GetResource("module-goodstrader")
+
+local num_names = 6 -- number of GOODS_TRADER_N names
 
 local ads = {}
 
@@ -25,7 +26,7 @@ local onChat = function (form, ref, option)
 	form:Clear()
 	form:SetTitle(ad.flavour)
 	form:SetFace({ seed = ad.faceseed })
-	form:SetMessage(t("Welcome to ")..ad.flavour)
+	form:SetMessage(l.WELCOME_TO..ad.flavour)
 
 	local onClick = function (ref)
 		if not ads[ref].ispolice then
@@ -97,7 +98,7 @@ local onCreateBB = function (station)
 	for i = 1,num do
 		local ispolice = rand:Integer(1) == 1
 
-		local flavour = string.interp(t('GOODS_TRADER')[rand:Integer(1, #(t('GOODS_TRADER')))], {name = NameGen.Surname(rand)})
+		local flavour = string.interp(l["GOODS_TRADER_"..rand:Integer(1, num_names)-1], {name = NameGen.Surname(rand)})
 
 		local ad = {
 			station  = station,
@@ -116,7 +117,11 @@ local onCreateBB = function (station)
 			end
 		end
 
-		local ref = station:AddAdvert(ad.flavour, onChat, onDelete)
+		local ref = ad.station:AddAdvert({
+			description = ad.flavour,
+			icon        = "goods_trader",
+			onChat      = onChat,
+			onDelete    = onDelete})
 		ads[ref] = ad
 	end
 end
@@ -129,7 +134,11 @@ local onGameStart = function ()
 	if not loaded_data then return end
 
 	for k,ad in pairs(loaded_data.ads) do
-		local ref = ad.station:AddAdvert(ad.flavour, onChat, onDelete)
+		local ref = ad.station:AddAdvert({
+			description = ad.flavour,
+			icon        = "goods_trader",
+			onChat      = onChat,
+			onDelete    = onDelete})
 		ads[ref] = ad
 	end
 

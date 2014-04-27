@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Renderer.h"
@@ -9,7 +9,6 @@ namespace Graphics {
 Renderer::Renderer(WindowSDL *window, int w, int h) :
 	m_width(w), m_height(h), m_ambient(Color::BLACK), m_window(window)
 {
-
 }
 
 Renderer::~Renderer()

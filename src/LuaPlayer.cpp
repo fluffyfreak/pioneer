@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaObject.h"
@@ -9,6 +9,7 @@
 #include "Pi.h"
 #include "Game.h"
 #include "SectorView.h"
+#include "EnumStrings.h"
 
 /*
  * Class: Player
@@ -20,92 +21,6 @@ static int l_player_is_player(lua_State *l)
 {
     lua_pushboolean(l, true);
     return 1;
-}
-
-/*
- * Method: GetMoney
- *
- * Get the player's current money
- *
- * > money = player:GetMoney()
- *
- * Return:
- *
- *   money - the player's money, in dollars
- *
- * Availability:
- *
- *   alpha 10
- *
- * Status:
- *
- *   experimental
- */
-static int l_player_get_money(lua_State *l)
-{
-	Player *p = LuaObject<Player>::CheckFromLua(1);
-	lua_pushnumber(l, p->GetMoney()*0.01);
-	return 1;
-}
-
-/*
- * Method: SetMoney
- *
- * Set the player's money
- *
- * > player:SetMoney(money)
- *
- * Parameters:
- *
- *   money - the new amount of money, in dollars
- *
- * Availability:
- *
- *   alpha 10
- *
- * Status:
- *
- *   experimental
- */
-static int l_player_set_money(lua_State *l)
-{
-	Player *p = LuaObject<Player>::CheckFromLua(1);
-	float m = luaL_checknumber(l, 2);
-	p->SetMoney(Sint64(m*100.0));
-	return 0;
-}
-
-/*
- * Method: AddMoney
- *
- * Add an amount to the player's money
- *
- * > money = player:AddMoney(change)
- *
- * Parameters:
- *
- *   change - the amount of money to add to the player's money, in dollars
- *
- * Return:
- *
- *   money - the player's new money, in dollars
- *
- * Availability:
- *
- *   alpha 10
- *
- * Status:
- *
- *   experimental
- */
-static int l_player_add_money(lua_State *l)
-{
-	Player *p = LuaObject<Player>::CheckFromLua(1);
-	float a = luaL_checknumber(l, 2);
-	Sint64 m = p->GetMoney() + Sint64(a*100.0);
-	p->SetMoney(m);
-	lua_pushnumber(l, m*0.01);
-	return 1;
 }
 
 /*
@@ -135,6 +50,36 @@ static int l_player_add_crime(lua_State *l)
 	Sint64 crimeBitset = LuaConstants::GetConstantFromArg(l, "PolitCrime", 2);
 	Sint64 fine = Sint64(luaL_checknumber(l, 3) * 100.0);
 	Polit::AddCrime(crimeBitset, fine);
+	return 0;
+}
+
+// XXX temporary until crime is moved out to Lua properly
+static int l_player_get_crime(lua_State *l)
+{
+	LuaObject<Player>::CheckFromLua(1); // check that the method is being called on a Player object
+
+	Sint64 crimeBitset, fine;
+	Polit::GetCrime(&crimeBitset, &fine);
+
+	lua_newtable(l);
+	for (Sint64 i = 0; i < 4; i++) { // hardcoding 4 possible Polit::Crime flags
+		if (crimeBitset & (Sint64(1)<<i)) {
+			lua_pushstring(l, EnumStrings::GetString("PolitCrime", 1<<i));
+			lua_rawseti(l, -2, lua_rawlen(l, -2)+1);
+		}
+	}
+
+	lua_pushnumber(l, double(fine) * 0.01);
+
+	return 2;
+}
+
+static int l_player_clear_crime_fine(lua_State *l)
+{
+	LuaObject<Player>::CheckFromLua(1); // check that the method is being called on a Player object
+	Sint64 crimeBitset, fine;
+	Polit::GetCrime(&crimeBitset, &fine);
+	Polit::AddCrime(0, -fine);
 	return 0;
 }
 
@@ -276,7 +221,6 @@ static int l_get_hyperspace_target(lua_State *l)
 		target = Pi::sectorView->GetHyperspaceTarget();
 	else
 		target = player->GetHyperspaceDest();
-	assert(target.IsSystemPath());
 	LuaObject<SystemPath>::PushToLua(target);
 	return 1;
 }
@@ -290,7 +234,7 @@ static int l_get_hyperspace_target(lua_State *l)
  *
  * Parameters:
  *
- *   target - a <SystemPath> to which to set the hyperspace target
+ *   target - a <SystemPath> to which to set the hyperspace target. Must be a system path or the path of a star.
  *
  * Availability:
  *
@@ -305,10 +249,20 @@ static int l_set_hyperspace_target(lua_State *l)
 {
 	LuaObject<Player>::CheckFromLua(1);
 	if (Pi::game->IsNormalSpace()) {
-		const SystemPath sys = *LuaObject<SystemPath>::CheckFromLua(2);
-		if (!sys.IsSystemPath())
-			return luaL_error(l, "Player:SetHyperspaceTarget() -- second parameter is not a system path");
-		Pi::sectorView->SetHyperspaceTarget(sys);
+		const SystemPath path = *LuaObject<SystemPath>::CheckFromLua(2);
+		if (!path.IsSystemPath()) {
+			if (!path.IsBodyPath()) {
+				return luaL_error(l, "Player:SetHyperspaceTarget() -- second parameter is not a system path or the path of a star");
+			}
+			RefCountedPtr<StarSystem> sys = StarSystem::cache->GetCached(path);
+			// Lua should never be able to get an invalid SystemPath
+			// (note: this may change if it becomes possible to remove systems during the game)
+			assert(path.bodyIndex < sys->GetNumBodies());
+			SystemBody *sbody = sys->GetBodyByPath(path);
+			if (!sbody->GetSuperType() == SystemBody::SUPERTYPE_STAR)
+				return luaL_error(l, "Player:SetHyperspaceTarget() -- second parameter is not a system path or the path of a star");
+		}
+		Pi::sectorView->SetHyperspaceTarget(path);
 		return 0;
 	} else
 		return luaL_error(l, "Player:SetHyperspaceTarget() cannot be used while in hyperspace");
@@ -323,11 +277,9 @@ template <> void LuaObject<Player>::RegisterClass()
 	static const luaL_Reg l_methods[] = {
 		{ "IsPlayer", l_player_is_player },
 
-		{ "GetMoney", l_player_get_money },
-		{ "SetMoney", l_player_set_money },
-		{ "AddMoney", l_player_add_money },
-
-		{ "AddCrime",      l_player_add_crime },
+		{ "AddCrime",       l_player_add_crime },
+		{ "GetCrime",       l_player_get_crime },
+		{ "ClearCrimeFine", l_player_clear_crime_fine },
 
 		{ "GetNavTarget",    l_get_nav_target    },
 		{ "SetNavTarget",    l_set_nav_target    },

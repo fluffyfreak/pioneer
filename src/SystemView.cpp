@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "SystemView.h"
@@ -26,9 +26,12 @@ static const float WHEEL_SENSITIVITY = .1f;		// Should be a variable in user set
 // i don't know how to name it
 static const double ROUGH_SIZE_OF_TURD = 10.0;
 
-SystemView::SystemView()
+SystemView::SystemView() : UIView()
 {
 	SetTransparency(true);
+
+	Graphics::RenderStateDesc rsd;
+	m_lineState = Pi::renderer->CreateRenderState(rsd); //m_renderer not set yet
 
 	m_realtime = true;
 
@@ -37,13 +40,13 @@ SystemView::SystemView()
 	Add(m_objectLabels, 0, 0);
 	Gui::Screen::PopFont();
 
-	m_timePoint = (new Gui::Label(""))->Color(0.7f, 0.7f, 0.7f);
+	m_timePoint = (new Gui::Label(""))->Color(178, 178, 178);
 	Add(m_timePoint, 2, Gui::Screen::GetHeight()-Gui::Screen::GetFontHeight()-66);
 
-	m_infoLabel = (new Gui::Label(""))->Color(0.7f, 0.7f, 0.7f);
+	m_infoLabel = (new Gui::Label(""))->Color(178, 178, 178);
 	Add(m_infoLabel, 2, 0);
 
-	m_infoText = (new Gui::Label(""))->Color(0.7f, 0.7f, 0.7f);
+	m_infoText = (new Gui::Label(""))->Color(178, 178, 178);
 	Add(m_infoText, 200, 0);
 
 	m_zoomInButton = new Gui::ImageButton("icons/zoom_in.png");
@@ -149,9 +152,9 @@ void SystemView::PutOrbit(const Orbit *orbit, const vector3d &offset, const Colo
 	if (num_vertices > 1) {
 		// don't close the loop for hyperbolas and parabolas and crashed ellipses
 		if ((orbit->GetEccentricity() > 1.0) || (num_vertices < int(COUNTOF(vts))))
-			m_renderer->DrawLines(num_vertices, vts, color, LINE_STRIP);
+			m_renderer->DrawLines(num_vertices, vts, color, m_lineState, LINE_STRIP);
 		else
-			m_renderer->DrawLines(num_vertices, vts, color, LINE_LOOP);
+			m_renderer->DrawLines(num_vertices, vts, color, m_lineState, LINE_LOOP);
 	}
 }
 
@@ -161,27 +164,27 @@ void SystemView::OnClickObject(const SystemBody *b)
 	std::string desc;
 	std::string data;
 
-	desc += std::string(Lang::NAME);
+	desc += std::string(Lang::NAME_OBJECT);
 	desc += ":\n";
-	data += b->name+"\n";
+	data += b->GetName()+"\n";
 
 	desc += std::string(Lang::DAY_LENGTH);
 	desc += std::string(Lang::ROTATIONAL_PERIOD);
 	desc += ":\n";
-	data += stringf(Lang::N_DAYS, formatarg("days", b->rotationPeriod.ToFloat())) + "\n";
+	data += stringf(Lang::N_DAYS, formatarg("days", b->GetRotationPeriodInDays())) + "\n";
 
 	desc += std::string(Lang::RADIUS);
 	desc += ":\n";
 	data += format_distance(b->GetRadius())+"\n";
 
-	if (b->parent) {
+	if (b->GetParent()) {
 		desc += std::string(Lang::SEMI_MAJOR_AXIS);
 	desc += ":\n";
-		data += format_distance(b->orbit.GetSemiMajorAxis())+"\n";
+		data += format_distance(b->GetOrbit().GetSemiMajorAxis())+"\n";
 
 		desc += std::string(Lang::ORBITAL_PERIOD);
 	desc += ":\n";
-		data += stringf(Lang::N_DAYS, formatarg("days", b->orbit.Period() / (24*60*60))) + "\n";
+		data += stringf(Lang::N_DAYS, formatarg("days", b->GetOrbit().Period() / (24*60*60))) + "\n";
 	}
 	m_infoLabel->SetText(desc);
 	m_infoText->SetText(data);
@@ -203,20 +206,21 @@ void SystemView::PutLabel(const SystemBody *b, const vector3d &offset)
 	vector3d pos;
 	if (Gui::Screen::Project(offset, pos)) {
 		// libsigc++ is a beautiful thing
-		m_objectLabels->Add(b->name, sigc::bind(sigc::mem_fun(this, &SystemView::OnClickObject), b), pos.x, pos.y);
+		m_objectLabels->Add(b->GetName(), sigc::bind(sigc::mem_fun(this, &SystemView::OnClickObject), b), pos.x, pos.y);
 	}
 
 	Gui::Screen::LeaveOrtho();
-	glDisable(GL_LIGHTING);
 }
 
 void SystemView::PutBody(const SystemBody *b, const vector3d &offset, const matrix4x4f &trans)
 {
-	if (b->type == SystemBody::TYPE_STARPORT_SURFACE) return;
-	if (b->type != SystemBody::TYPE_GRAVPOINT) {
+	if (b->GetType() == SystemBody::TYPE_STARPORT_SURFACE) return;
+	if (b->GetType() != SystemBody::TYPE_GRAVPOINT) {
 
-		if (!m_bodyIcon.Valid()) {
-			m_bodyIcon.Reset(new Graphics::Drawables::Disk(m_renderer, Color::WHITE, 1.0f));
+		if (!m_bodyIcon) {
+			Graphics::RenderStateDesc rsd;
+			auto solidState = m_renderer->CreateRenderState(rsd);
+			m_bodyIcon.reset(new Graphics::Drawables::Disk(m_renderer, solidState, Color::WHITE, 1.0f));
 		}
 
 		const double radius = b->GetRadius() * m_zoom;
@@ -241,22 +245,22 @@ void SystemView::PutBody(const SystemBody *b, const vector3d &offset, const matr
 	if(frame->GetSystemBody() == b && frame->GetSystemBody()->GetMass() > 0) {
 		const double t0 = Pi::game->GetTime();
 		Orbit playerOrbit = Pi::player->ComputeOrbit();
-		PutOrbit(&playerOrbit, offset, Color(1.0f, 0.0f, 0.0f), b->GetRadius());
-		PutSelectionBox(offset + playerOrbit.OrbitalPosAtTime(m_time - t0)* double(m_zoom), Color(1.0f, 0.0f, 0.0f));
+		PutOrbit(&playerOrbit, offset, Color::RED, b->GetRadius());
+		PutSelectionBox(offset + playerOrbit.OrbitalPosAtTime(m_time - t0)* double(m_zoom), Color::RED);
 	}
 
-	if (b->children.size()) {
-		for(std::vector<SystemBody*>::const_iterator kid = b->children.begin(); kid != b->children.end(); ++kid) {
-			if (is_zero_general((*kid)->orbit.GetSemiMajorAxis())) continue;
-			if ((*kid)->orbit.GetSemiMajorAxis() * m_zoom < ROUGH_SIZE_OF_TURD) {
-				PutOrbit(&((*kid)->orbit), offset, Color(0.f, 1.f, 0.f, 1.f));
+	if (b->HasChildren()) {
+		for(const SystemBody* kid : b->GetChildren()) {
+			if (is_zero_general(kid->GetOrbit().GetSemiMajorAxis())) continue;
+			if (kid->GetOrbit().GetSemiMajorAxis() * m_zoom < ROUGH_SIZE_OF_TURD) {
+				PutOrbit(&(kid->GetOrbit()), offset, Color(0, 255, 0, 255));
 			}
 
 			// not using current time yet
-			vector3d pos = (*kid)->orbit.OrbitalPosAtTime(m_time);
+			vector3d pos = kid->GetOrbit().OrbitalPosAtTime(m_time);
 			pos *= double(m_zoom);
 
-			PutBody(*kid, offset + pos, trans);
+			PutBody(kid, offset + pos, trans);
 		}
 	}
 }
@@ -265,15 +269,15 @@ void SystemView::PutSelectionBox(const SystemBody *b, const vector3d &rootPos, c
 {
 	// surface starports just show the planet as being selected,
 	// because SystemView doesn't render terrains anyway
-	if (b->type == SystemBody::TYPE_STARPORT_SURFACE)
-		b = b->parent;
+	if (b->GetType() == SystemBody::TYPE_STARPORT_SURFACE)
+		b = b->GetParent();
 	assert(b);
 
 	vector3d pos = rootPos;
 	// while (b->parent), not while (b) because the root SystemBody is defined to be at (0,0,0)
-	while (b->parent) {
-		pos += b->orbit.OrbitalPosAtTime(m_time) * double(m_zoom);
-		b = b->parent;
+	while (b->GetParent()) {
+		pos += b->GetOrbit().OrbitalPosAtTime(m_time) * double(m_zoom);
+		b = b->GetParent();
 	}
 
 	PutSelectionBox(pos, col);
@@ -297,7 +301,7 @@ void SystemView::PutSelectionBox(const vector3d &worldPos, const Color &col)
                 vector3f(x2, y2, 0.f),
                 vector3f(x1, y2, 0.f)
         };
-		m_renderer->DrawLines(4, &verts[0], col, Graphics::LINE_LOOP);
+		m_renderer->DrawLines(4, &verts[0], col, m_lineState, Graphics::LINE_LOOP);
 	}
 
 	Gui::Screen::LeaveOrtho();
@@ -308,18 +312,19 @@ static const GLfloat fogColor[4] = { 0,0,0,1.0f };
 
 void SystemView::GetTransformTo(const SystemBody *b, vector3d &pos)
 {
-	if (b->parent) {
-		GetTransformTo(b->parent, pos);
-		pos -= double(m_zoom) * b->orbit.OrbitalPosAtTime(m_time);
+	if (b->GetParent()) {
+		GetTransformTo(b->GetParent(), pos);
+		pos -= double(m_zoom) * b->GetOrbit().OrbitalPosAtTime(m_time);
 	}
 }
 
 void SystemView::Draw3D()
 {
+	PROFILE_SCOPED()
 	m_renderer->SetPerspectiveProjection(50.f, m_renderer->GetDisplayAspect(), 1.f, 1000.f);
 	m_renderer->ClearScreen();
 
-	SystemPath path = Pi::sectorView->GetSelectedSystem();
+	SystemPath path = Pi::sectorView->GetSelected().SystemOnly();
 	if (m_system) {
 		if (!m_system->GetPath().IsSameSystem(path)) {
 			m_system.Reset();
@@ -336,15 +341,7 @@ void SystemView::Draw3D()
 	std::string t = Lang::TIME_POINT+format_date(m_time);
 	m_timePoint->SetText(t);
 
-	if (!m_system) m_system = StarSystem::GetCached(path);
-
-	// XXX fog is not going to be supported in renderer likely -
-	// fade the circles some other way
-	glEnable(GL_FOG);
-	glFogi(GL_FOG_MODE, GL_EXP2);
-	glFogfv(GL_FOG_COLOR, fogColor);
-	glFogf(GL_FOG_DENSITY, fogDensity);
-	glHint(GL_FOG_HINT, GL_NICEST);
+	if (!m_system) m_system = StarSystem::cache->GetCached(path);
 
 	matrix4x4f trans = matrix4x4f::Identity();
 	trans.Translate(0,0,-ROUGH_SIZE_OF_TURD);
@@ -358,17 +355,17 @@ void SystemView::Draw3D()
 	m_objectLabels->Clear();
 	if (m_system->GetUnexplored())
 		m_infoLabel->SetText(Lang::UNEXPLORED_SYSTEM_NO_SYSTEM_VIEW);
-	else if (m_system->rootBody) {
-		PutBody(m_system->rootBody.Get(), pos, trans);
+	else if (m_system->GetRootBody()) {
+		PutBody(m_system->GetRootBody().Get(), pos, trans);
 		if (Pi::game->GetSpace()->GetStarSystem() == m_system) {
 			const Body *navTarget = Pi::player->GetNavTarget();
 			const SystemBody *navTargetSystemBody = navTarget ? navTarget->GetSystemBody() : 0;
 			if (navTargetSystemBody)
-				PutSelectionBox(navTargetSystemBody, pos, Color(0.0, 1.0, 0.0, 1.0));
+				PutSelectionBox(navTargetSystemBody, pos, Color::GREEN);
 		}
 	}
 
-	glDisable(GL_FOG);
+	UIView::Draw3D();
 }
 
 void SystemView::Update()
@@ -394,6 +391,8 @@ void SystemView::Update()
 		m_rot_x += motion[1]*20*ft;
 		m_rot_z += motion[0]*20*ft;
 	}
+
+	UIView::Update();
 }
 
 void SystemView::MouseWheel(bool up)

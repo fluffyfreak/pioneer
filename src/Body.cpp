@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -194,18 +194,18 @@ void Body::UpdateFrame()
 	if (m_frame->GetRadius() < GetPosition().Length()) {
 		Frame *newFrame = GetFrame()->GetParent();
 		if (newFrame) { 						// don't fall out of root frame
-			printf("%s leaves frame %s\n", GetLabel().c_str(), GetFrame()->GetLabel().c_str());
+			Output("%s leaves frame %s\n", GetLabel().c_str(), GetFrame()->GetLabel().c_str());
 			SwitchToFrame(newFrame);
 			return;
 		}
 	}
 
 	// entering into frames
-	for (Frame::ChildIterator it = m_frame->BeginChildren(); it != m_frame->EndChildren(); ++it) {
-		vector3d pos = GetPositionRelTo(*it);
-		if (pos.Length() >= (*it)->GetRadius()) continue;
-		SwitchToFrame(*it);
-		printf("%s enters frame %s\n", GetLabel().c_str(), (*it)->GetLabel().c_str());
+	for (Frame* kid : m_frame->GetChildren()) {
+		vector3d pos = GetPositionRelTo(kid);
+		if (pos.Length() >= kid->GetRadius()) continue;
+		SwitchToFrame(kid);
+		Output("%s enters frame %s\n", GetLabel().c_str(), kid->GetLabel().c_str());
 		break;
 	}
 }

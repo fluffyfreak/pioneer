@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Parser.h"
@@ -99,10 +99,10 @@ bool Parser::checkColor(std::stringstream &ss, Color &color)
 {
 	float r, g, b;
 	ss >> r >> g >> b;
-	color.r = Clamp(r, 0.f, 1.f);
-	color.g = Clamp(g, 0.f, 1.f);
-	color.b = Clamp(b, 0.f, 1.f);
-	color.a = 1.f; //alpha comes from opacity statement
+	color.r = Clamp(r, 0.f, 1.f) * 255;
+	color.g = Clamp(g, 0.f, 1.f) * 255;
+	color.b = Clamp(b, 0.f, 1.f) * 255;
+	color.a = 255; //alpha comes from opacity statement
 	return true;
 }
 
@@ -183,6 +183,8 @@ bool Parser::parseLine(const std::string &line)
 					return checkTexture(ss, m_curMat->tex_spec);
 				else if (match(token, "tex_glow"))
 					return checkTexture(ss, m_curMat->tex_glow);
+				else if (match(token, "tex_ambi"))
+					return checkTexture(ss, m_curMat->tex_ambi);
 				else if (match(token, "diffuse"))
 					return checkColor(ss, m_curMat->diffuse);
 				else if (match(token, "specular"))
@@ -203,9 +205,6 @@ bool Parser::parseLine(const std::string &line)
 					return true;
 				} else if (match(token, "alpha_test")) {
 					m_curMat->alpha_test = true;
-					return true;
-				} else if (match(token, "two_sided")) {
-					m_curMat->two_sided = true;
 					return true;
 				} else if (match(token, "unlit")) {
 					m_curMat->unlit = true;

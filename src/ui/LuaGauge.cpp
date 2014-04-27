@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Gauge.h"
@@ -18,6 +18,13 @@ public:
 	static int l_attr_value(lua_State *l) {
 		UI::Gauge *gauge = LuaObject<UI::Gauge>::CheckFromLua(1);
 		lua_pushnumber(l, gauge->GetValue());
+		return 1;
+	}
+
+	static int l_set_upper_value(lua_State *l) {
+		UI::Gauge *gauge = LuaObject<UI::Gauge>::CheckFromLua(1);
+		gauge->SetUpperValue(luaL_checknumber(l, 2));
+		lua_pushvalue(l, 1);
 		return 1;
 	}
 
@@ -56,6 +63,7 @@ template <> void LuaObject<UI::Gauge>::RegisterClass()
 
 	static const luaL_Reg l_methods[] = {
 		{ "SetValue",          &LuaGauge::l_set_value },
+		{ "SetUpperValue",     &LuaGauge::l_set_upper_value },
 		{ "SetWarningLevel",   &LuaGauge::l_set_warning_level },
 		{ "SetCriticalLevel",  &LuaGauge::l_set_critical_level },
 		{ "SetLevelAscending", &LuaGauge::l_set_level_ascending },

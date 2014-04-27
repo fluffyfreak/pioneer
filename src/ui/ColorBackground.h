@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef UI_COLORBACKGROUND_H
@@ -14,14 +14,14 @@ class ColorBackground : public Single {
 public:
 	virtual void Draw();
 
-	void SetColor(const Color &color) { m_material->diffuse = color; }
+	void SetColor(const Color &color) { m_color = color; }
 
 protected:
 	friend class Context;
 	ColorBackground(Context *context, const Color &color);
 
 private:
-	ScopedPtr<Graphics::Material> m_material;
+	Color m_color;
 };
 
 }

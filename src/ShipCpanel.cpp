@@ -1,10 +1,9 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
 #include "Pi.h"
 #include "ShipCpanel.h"
-#include "SpaceStationView.h"
 #include "Player.h"
 #include "WorldView.h"
 #include "SpaceStation.h"
@@ -18,7 +17,7 @@
 #include "Game.h"
 
 // XXX duplicated in WorldView. should probably be a theme variable
-static const Color s_hudTextColor(0.0f,1.0f,0.0f,0.8f);
+static const Color s_hudTextColor(0,255,0,204);
 
 ShipCpanel::ShipCpanel(Graphics::Renderer *r): Gui::Fixed(float(Gui::Screen::GetWidth()), 80)
 {
@@ -147,7 +146,7 @@ void ShipCpanel::InitObject()
 	comms_button->SetRenderDimensions(30, 22);
 	Add(comms_button, 98, 56);
 
-	m_clock = (new Gui::Label(""))->Color(1.0f,0.7f,0.0f);
+	m_clock = (new Gui::Label(""))->Color(255,178,0);
 	Add(m_clock, 4, 18);
 
 	m_rightButtonGroup = new Gui::RadioGroup();
@@ -216,9 +215,6 @@ void ShipCpanel::InitObject()
 	Add(m_overlay[OVERLAY_TOP_RIGHT],    500.0f, 2.0f);
 	Add(m_overlay[OVERLAY_BOTTOM_LEFT],  150.0f, 62.0f);
 	Add(m_overlay[OVERLAY_BOTTOM_RIGHT], 520.0f, 62.0f);
-
-	m_connOnDockingClearanceExpired =
-		Pi::onDockingClearanceExpired.connect(sigc::mem_fun(this, &ShipCpanel::OnDockingClearanceExpired));
 }
 
 ShipCpanel::~ShipCpanel()
@@ -233,7 +229,6 @@ ShipCpanel::~ShipCpanel()
 	delete m_useEquipWidget;
 	delete m_msglog;
 	delete m_mfsel;
-	m_connOnDockingClearanceExpired.disconnect();
 	m_connOnRotationDampingChanged.disconnect();
 }
 
@@ -270,13 +265,9 @@ void ShipCpanel::OnMultiFuncUngrabFocus(multifuncfunc_t f)
 	ChangeMultiFunctionDisplay(m_userSelectedMfuncWidget);
 }
 
-void ShipCpanel::OnDockingClearanceExpired(const SpaceStation *s)
-{
-	MsgLog()->ImportantMessage(s->GetLabel(), Lang::DOCKING_CLEARANCE_EXPIRED);
-}
-
 void ShipCpanel::Update()
 {
+	PROFILE_SCOPED()
 	int timeAccel = Pi::game->GetTimeAccel();
 	int requested = Pi::game->GetRequestedTimeAccel();
 
@@ -411,6 +402,7 @@ void ShipCpanel::SetAlertState(Ship::AlertState as)
 
 void ShipCpanel::TimeStepUpdate(float step)
 {
+	PROFILE_SCOPED()
 	m_scanner->TimeStepUpdate(step);
 }
 

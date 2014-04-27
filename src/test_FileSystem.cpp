@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "FileSystem.h"
@@ -73,7 +73,7 @@ void test_enum_models(FileSystem::FileSource &fs)
 	files.AddSearchRoot("models");
 	while (!files.Finished()) {
 		const FileInfo &fi = files.Current();
-		if (fi.IsDir() || ends_with(fi.GetPath(), ".model")) {
+		if (fi.IsDir() || ends_with_ci(fi.GetPath(), ".model")) {
 			printf("  %s (%s) (%s)\n", fi.GetPath().c_str(), ftype_name(fi), fi.GetSource().GetRoot().c_str());
 		}
 		files.Next();

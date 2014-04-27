@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef UI_MULTILINETEXT_H
@@ -28,7 +28,7 @@ protected:
 
 private:
 	std::string m_text;
-	ScopedPtr<TextLayout> m_layout;
+	std::unique_ptr<TextLayout> m_layout;
 	Point m_preferredSize;
 };
 

@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaUtils.h"
@@ -96,7 +96,47 @@ static int l_hash_random(lua_State *L)
 	}
 }
 
+/*
+ * Function: trim
+ *
+ * > s = util.trim(str)
+ *
+ * Trim leading and/or trailing whitespace from a string.
+ *
+ * Parameters:
+ *
+ *   str - A string.
+ *
+ * Availability:
+ *
+ *   November 2013
+ *
+ * Status:
+ *
+ *   experimental
+ */
+static int l_trim(lua_State *l)
+{
+	size_t len;
+	const char *str = luaL_checklstring(l, 1, &len);
+
+	if (len == 0 || (!isspace(str[0]) && !isspace(str[len-1]))) {
+		// empty string, or the string beings & ends with non-whitespace
+		// just return the same value
+		lua_pushvalue(l, 1);
+		return 1;
+	} else {
+		const char *first = str;
+		const char *last = str + (len - 1);
+		while (len && isspace(*first)) { ++first; --len; }
+		while (len && isspace(*last)) { --last; --len; }
+		lua_pushlstring(l, first, len);
+		return 1;
+	}
+}
+
 static const luaL_Reg UTIL_FUNCTIONS[] = {
+	{ "trim", l_trim },
 	{ "hash_random", l_hash_random },
 	{ 0, 0 }
 };
@@ -134,7 +174,7 @@ static bool _import_core(lua_State *L, const std::string &importName)
 
 #undef DEBUG_IMPORT
 #ifdef DEBUG_IMPORT
-#define DEBUG_PRINTF printf
+#define DEBUG_PRINTF Output
 #else
 #define DEBUG_PRINTF(...)
 #endif
@@ -265,7 +305,7 @@ static int l_base_import(lua_State *L)
 bool pi_lua_import(lua_State *L, const std::string &importName)
 {
 	if (!_import(L, importName)) {
-		fprintf(stderr, "%s\n", lua_tostring(L, -1));
+		Output("%s\n", lua_tostring(L, -1));
 		lua_pop(L, 1);
 		return false;
 	}
@@ -480,62 +520,64 @@ void pi_lua_protected_call(lua_State* L, int nargs, int nresults) {
 	}
 }
 
+int pi_lua_loadfile(lua_State *l, const FileSystem::FileData &code)
+{
+	assert(l);
+
+	const StringRange source = code.AsStringRange().StripUTF8BOM();
+	const std::string &path(code.GetInfo().GetPath());
+	bool trusted = code.GetInfo().GetSource().IsTrusted();
+	const std::string chunkName = (trusted ? "[T] @" : "@") + path;
+
+	return luaL_loadbuffer(l, source.begin, source.Size(), chunkName.c_str());
+}
+
 static void pi_lua_dofile(lua_State *l, const FileSystem::FileData &code, int nret)
 {
 	assert(l);
 	LUA_DEBUG_START(l);
+
+	if (pi_lua_loadfile(l, code) != LUA_OK) {
+		const char *msg = lua_tostring(l, -1);
+		Error("%s", msg);
+	}
+
 	// XXX make this a proper protected call (after working out the implications -- *sigh*)
 	lua_pushcfunction(l, &pi_lua_panic);
+	lua_insert(l, -2);
+	int panicidx = lua_absindex(l, -2);
 
-	const StringRange source = code.AsStringRange().StripUTF8BOM();
+	// give the file its own global table, backed by the "real" one
+	lua_newtable(l);
+	lua_newtable(l);
+	lua_pushliteral(l, "__index");
+	lua_getglobal(l, "_G");
+	lua_rawset(l, -3);
+	lua_setmetatable(l, -2);
+	lua_setupvalue(l, -2, 1);
 
-	const std::string &path(code.GetInfo().GetPath());
-	if (path.at(0) == '[') {
-		fprintf(stderr, "Paths starting with '[' are reserved in pi_lua_dofile('%s'\n",
-		        code.GetInfo().GetAbsolutePath().c_str());
-		lua_pop(l, 1);
-		return;
-	}
-
-	bool trusted = code.GetInfo().GetSource().IsTrusted();
-	const std::string chunkName = (trusted ? "[T] @" : "@") + path;
-
-	int panicidx = lua_absindex(l, -1);
-	if (luaL_loadbuffer(l, source.begin, source.Size(), chunkName.c_str())) {
-		pi_lua_panic(l);
-	} else {
-
-		// give the file its own global table, backed by the "real" one
-		lua_newtable(l);
-		lua_newtable(l);
-		lua_pushliteral(l, "__index");
-		lua_getglobal(l, "_G");
-		lua_rawset(l, -3);
-		lua_setmetatable(l, -2);
-		lua_setupvalue(l, -2, 1);
-
-		int ret = lua_pcall(l, 0, nret, -2);
-		if (ret) {
-			const char *emsg = lua_tostring(l, -1);
-			if (emsg) { fprintf(stderr, "lua error: %s\n", emsg); }
-			switch (ret) {
-				case LUA_ERRRUN:
-					fprintf(stderr, "Lua runtime error in pi_lua_dofile('%s')\n",
-							code.GetInfo().GetAbsolutePath().c_str());
-					break;
-				case LUA_ERRMEM:
-					fprintf(stderr, "Memory allocation error in Lua pi_lua_dofile('%s')\n",
-							code.GetInfo().GetAbsolutePath().c_str());
-					break;
-				case LUA_ERRERR:
-					fprintf(stderr, "Error running error handler in pi_lua_dofile('%s')\n",
-							code.GetInfo().GetAbsolutePath().c_str());
-					break;
-				default: abort();
-			}
-			lua_pop(l, 1);
+	int ret = lua_pcall(l, 0, nret, panicidx);
+	if (ret) {
+		const char *emsg = lua_tostring(l, -1);
+		if (emsg) { Output("lua error: %s\n", emsg); }
+		switch (ret) {
+			case LUA_ERRRUN:
+				Output("Lua runtime error in pi_lua_dofile('%s')\n",
+						code.GetInfo().GetAbsolutePath().c_str());
+				break;
+			case LUA_ERRMEM:
+				Output("Memory allocation error in Lua pi_lua_dofile('%s')\n",
+						code.GetInfo().GetAbsolutePath().c_str());
+				break;
+			case LUA_ERRERR:
+				Output("Error running error handler in pi_lua_dofile('%s')\n",
+						code.GetInfo().GetAbsolutePath().c_str());
+				break;
+			default: abort();
 		}
+		lua_pop(l, 1);
 	}
+
 	lua_remove(l, panicidx);
 	LUA_DEBUG_END(l, nret);
 }
@@ -547,7 +589,7 @@ void pi_lua_dofile(lua_State *l, const std::string &path)
 
 	RefCountedPtr<FileSystem::FileData> code = FileSystem::gameDataFiles.ReadFile(path);
 	if (!code) {
-		fprintf(stderr, "could not read Lua file '%s'\n", path.c_str());
+		Output("could not read Lua file '%s'\n", path.c_str());
 		return;
 	}
 
@@ -568,7 +610,7 @@ void pi_lua_dofile_recursive(lua_State *l, const std::string &basepath)
 			pi_lua_dofile_recursive(l, fpath);
 		} else {
 			assert(info.IsFile());
-			if (ends_with(fpath, ".lua")) {
+			if (ends_with_ci(fpath, ".lua")) {
 				RefCountedPtr<FileSystem::FileData> code = info.Read();
 				pi_lua_dofile(l, *code);
 			}
@@ -586,13 +628,13 @@ void pi_lua_warn(lua_State *l, const char *format, ...)
 	va_start(ap, format);
 	vsnprintf(buf, sizeof(buf), format, ap);
 	va_end(ap);
-	fprintf(stderr, "Lua Warning: %s\n", buf);
+	Output("Lua Warning: %s\n", buf);
 
 	lua_Debug info;
 	int level = 0;
 	while (lua_getstack(l, level, &info)) {
 		lua_getinfo(l, "nSl", &info);
-		fprintf(stderr, "  [%d] %s:%d -- %s [%s]\n",
+		Output("  [%d] %s:%d -- %s [%s]\n",
 			level, info.short_src, info.currentline,
 			(info.name ? info.name : "<unknown>"), info.what);
 		++level;

@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -44,12 +44,13 @@ void ToggleButton::GetSizeRequested(float size[2])
 
 void ToggleButton::Draw()
 {
+	PROFILE_SCOPED()
 	float size[2];
 	GetSize(size);
 	if (m_pressed) {
-		Theme::DrawIndent(size);
+		Theme::DrawIndent(size, Screen::alphaBlendState);
 	} else {
-		Theme::DrawOutdent(size);
+		Theme::DrawOutdent(size, Screen::alphaBlendState);
 	}
 }
 

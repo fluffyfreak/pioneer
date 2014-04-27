@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _SHIPTYPE_H
@@ -42,7 +42,10 @@ struct ShipType {
 	Tag tag;
 	Id id;
 	std::string name;
+	std::string shipClass;
+	std::string manufacturer;
 	std::string modelName;
+	std::string cockpitName;
 	float linThrust[THRUSTER_MAX];
 	float angThrust;
 	struct GunMount {
@@ -57,10 +60,13 @@ struct ShipType {
 	float effectiveExhaustVelocity; // velocity at which the propellant escapes the engines
 	int fuelTankMass; //full fuel tank mass, on top of hullMass
 	int baseprice;
-	Equip::Type hyperdrive;
+	int hyperdriveClass;
 	vector3d cameraOffset;
 	int minCrew, maxCrew; // XXX really only for Lua, but needs to be declared in the ship def
 	///////
+
+	// percentage (ie, 0--100) of tank used per second at full thrust
+	float GetFuelUseRate() const;
 
 	static std::string POLICE;
 	static std::string MISSILE_GUIDED;

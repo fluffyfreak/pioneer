@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _GEOPATCHJOBS_H
@@ -59,8 +59,8 @@ public:
 			normals[i] = new vector3f[numVerts];
 			colors[i] = new Color3ub[numVerts];
 
-			borderHeights[i].Reset(new double[numBorderedVerts]);
-			borderVertexs[i].Reset(new vector3d[numBorderedVerts]);
+			borderHeights[i].reset(new double[numBorderedVerts]);
+			borderVertexs[i].reset(new vector3d[numBorderedVerts]);
 		}
 	}
 
@@ -70,8 +70,8 @@ public:
 	double *heights[4];
 
 	// these are created with the request but are destroyed when the request is finished
-	ScopedArray<double> borderHeights[4];
-	ScopedArray<vector3d> borderVertexs[4];
+	std::unique_ptr<double[]> borderHeights[4];
+	std::unique_ptr<vector3d[]> borderVertexs[4];
 
 protected:
 	// deliberately prevent copy constructor access
@@ -91,8 +91,8 @@ public:
 		colors = new Color3ub[numVerts];
 		
 		const int numBorderedVerts = NUMVERTICES(edgeLen_+2);
-		borderHeights.Reset(new double[numBorderedVerts]);
-		borderVertexs.Reset(new vector3d[numBorderedVerts]);
+		borderHeights.reset(new double[numBorderedVerts]);
+		borderVertexs.reset(new vector3d[numBorderedVerts]);
 	}
 
 	// these are created with the request and are given to the resulting patches
@@ -101,8 +101,8 @@ public:
 	double *heights;
 
 	// these are created with the request but are destroyed when the request is finished
-	ScopedPtr<double> borderHeights;
-	ScopedPtr<vector3d> borderVertexs;
+	std::unique_ptr<double> borderHeights;
+	std::unique_ptr<vector3d> borderVertexs;
 
 protected:
 	// deliberately prevent copy constructor access
@@ -203,36 +203,18 @@ protected:
 	SSplitResultData mData;
 };
 
+class GeoPatch;
+
 // ********************************************************************************
 // Overloaded PureJob class to handle generating the mesh for each patch
 // ********************************************************************************
 class BasePatchJob : public Job
 {
 public:
-	BasePatchJob()
-	{
-	}
-
-	virtual ~BasePatchJob()
-	{
-	}
-
-	virtual void OnRun()    // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
-    {
-        ++s_numActivePatchJobs;
-    }
-	virtual void OnFinish()  // runs in primary thread of the context
-	{
-		--s_numActivePatchJobs;
-	}
-	virtual void OnCancel()   // runs in primary thread of the context
-	{
-		--s_numActivePatchJobs;
-	}
-
-	static uint32_t GetNumActivePatchJobs() { return s_numActivePatchJobs; };
-	static void CancelAllPatchJobs() { s_abort = true; }
-	static void ResetPatchJobCancel() { s_abort = false; }
+	BasePatchJob() {}
+	virtual void OnRun() {}    // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
+	virtual void OnFinish() {}
+	virtual void OnCancel() {}
 
 protected:
 	// in patch surface coords, [0,1]
@@ -244,9 +226,6 @@ protected:
 	void GenerateMesh(double *heights, vector3f *normals, Color3ub *colors, double *borderHeights, vector3d *borderVertexs,
 		const vector3d &v0, const vector3d &v1, const vector3d &v2, const vector3d &v3,
 		const int edgeLen, const double fracStep, const Terrain *pTerrain) const;
-
-	static uint32_t s_numActivePatchJobs;
-	static bool s_abort;
 };
 
 // ********************************************************************************
@@ -255,14 +234,14 @@ protected:
 class SinglePatchJob : public BasePatchJob
 {
 public:
-	SinglePatchJob(SSingleSplitRequest *data) : BasePatchJob(), mData(data), mpResults(NULL)	{ /* empty */ }
+	SinglePatchJob(SSingleSplitRequest *data) : mData(data), mpResults(NULL) { /* empty */ }
+	~SinglePatchJob();
 
 	virtual void OnRun();      // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
 	virtual void OnFinish();   // runs in primary thread of the context
-	virtual void OnCancel();   // runs in primary thread of the context
 
 private:
-	ScopedPtr<SSingleSplitRequest> mData;
+	std::unique_ptr<SSingleSplitRequest> mData;
 	SSingleSplitResult *mpResults;
 };
 
@@ -272,14 +251,14 @@ private:
 class QuadPatchJob : public BasePatchJob
 {
 public:
-	QuadPatchJob(SQuadSplitRequest *data) : BasePatchJob(), mData(data), mpResults(NULL) { /* empty */ }
+	QuadPatchJob(SQuadSplitRequest *data) : mData(data), mpResults(NULL) { /* empty */ }
+	~QuadPatchJob();
 
 	virtual void OnRun();      // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
 	virtual void OnFinish();   // runs in primary thread of the context
-	virtual void OnCancel();   // runs in primary thread of the context
 
 private:
-	ScopedPtr<SQuadSplitRequest> mData;
+	std::unique_ptr<SQuadSplitRequest> mData;
 	SQuadSplitResult *mpResults;
 };
 

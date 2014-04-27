@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "ShipCpanelMultiFuncDisplays.h"
@@ -33,14 +33,14 @@ static const unsigned int SCANNER_STEPS = 100;
 enum ScannerBlobWeight { WEIGHT_LIGHT, WEIGHT_HEAVY };
 
 // XXX target colours should be unified throughout the game
-static const Color scannerNavTargetColour     = Color( 0,      1.0f,   0      );
-static const Color scannerCombatTargetColour  = Color( 1.0f,   0,      0      );
-static const Color scannerStationColour       = Color( 1.0f,   1.0f,   1.0f   );
-static const Color scannerShipColour          = Color( 0.953f, 0.929f, 0.114f );
-static const Color scannerMissileColour       = Color( 0.941f, 0.149f, 0.196f );
-static const Color scannerPlayerMissileColour = Color( 0.953f, 0.929f, 0.114f );
-static const Color scannerCargoColour         = Color( 0.65f,  0.65f,  0.65f  );
-static const Color scannerCloudColour         = Color( 0.5f,   0.5f,   1.0f   );
+static const Color scannerNavTargetColour     = Color( 0,   255, 0   );
+static const Color scannerCombatTargetColour  = Color( 255, 0,   0   );
+static const Color scannerStationColour       = Color( 255, 255, 255 );
+static const Color scannerShipColour          = Color( 243, 237, 29  );
+static const Color scannerMissileColour       = Color( 240, 38,  50  );
+static const Color scannerPlayerMissileColour = Color( 243, 237, 29  );
+static const Color scannerCargoColour         = Color( 166, 166, 166 );
+static const Color scannerCloudColour         = Color( 128, 128, 255 );
 
 MsgLogWidget::MsgLogWidget()
 {
@@ -140,6 +140,12 @@ void ScannerWidget::InitObject()
 	m_toggleScanModeConnection = KeyBindings::toggleScanMode.onPress.connect(sigc::mem_fun(this, &ScannerWidget::ToggleMode));
 	m_lastRange = SCANNER_RANGE_MAX * 100.0f;		// force regen
 	GenerateBaseGeometry();
+
+	Graphics::RenderStateDesc rsd;
+	rsd.blendMode = Graphics::BLEND_ALPHA;
+	rsd.depthWrite = false;
+	rsd.depthTest = false;
+	m_renderState = m_renderer->CreateRenderState(rsd);
 }
 
 ScannerWidget::~ScannerWidget()
@@ -182,8 +188,7 @@ void ScannerWidget::Draw()
 	if (!m_contacts.empty()) DrawBlobs(true);
 
 	// disc
-	m_renderer->SetBlendMode(BLEND_ALPHA);
-	Color green(0.f, 1.f, 0.f, 0.1f);
+	Color green(0, 255, 0, 26);
 
 	// XXX 2d vertices
 	VertexArray va(ATTRIB_POSITION | ATTRIB_DIFFUSE, 128); //reserve some space for positions & colors
@@ -192,19 +197,18 @@ void ScannerWidget::Draw()
 		va.Add(vector3f(m_x + m_x * sin(a), m_y + SCANNER_YSHRINK * m_y * cos(a), 0.f), green);
 	}
 	va.Add(vector3f(m_x, m_y + SCANNER_YSHRINK * m_y, 0.f), green);
-	m_renderer->DrawTriangles(&va, Graphics::vtxColorMaterial, TRIANGLE_FAN);
+	m_renderer->DrawTriangles(&va, m_renderState, Graphics::vtxColorMaterial, TRIANGLE_FAN);
 
 	// circles and spokes
-	glPushMatrix();
-	glTranslatef(m_x, m_y, 0);
-	glScalef(m_x, m_y, 1.0f);
-	DrawRingsAndSpokes(false);
-	glPopMatrix();
+	{
+		Graphics::Renderer::MatrixTicket ticket(m_renderer, Graphics::MatrixMode::MODELVIEW);
+		m_renderer->Translate(m_x, m_y, 0);
+		m_renderer->Scale(m_x, m_y, 1.0f);
+		DrawRingsAndSpokes(false);
+	}
 
 	// objects above
 	if (!m_contacts.empty()) DrawBlobs(false);
-
-	m_renderer->SetBlendMode(BLEND_SOLID);
 
 	SetScissor(false);
 }
@@ -403,10 +407,10 @@ void ScannerWidget::DrawBlobs(bool below)
 		const float y_blob = y_base - m_y * SCANNER_YSHRINK * float(pos.y) * m_scale;
 
 		const vector3f verts[] = { vector3f(x, y_base, 0.f), vector3f(x, y_blob, 0.f) };
-		m_renderer->DrawLines(2, &verts[0], *color);
+		m_renderer->DrawLines(2, &verts[0], *color, m_renderState);
 
 		vector3f blob(x, y_blob, 0.f);
-		m_renderer->DrawPoints(1, &blob, color, pointSize);
+		m_renderer->DrawPoints(1, &blob, color, m_renderState, pointSize);
 	}
 }
 
@@ -461,10 +465,10 @@ void ScannerWidget::GenerateRingsAndSpokes()
 	vector3f vn(sin(a), SCANNER_YSHRINK * cos(a), 0.0f);
 
 	// bright part
-	Color col = Color(0.7f, 0.7f, 0.f, 0.5f);
+	Color col = Color(178, 178, 0, 128);
 	if (m_mode == SCANNER_MODE_AUTO) {
 		// green like the scanner to indicate that the scanner is controlling the range
-		col = Color(0.f, 0.7f, 0.f, 0.5f);
+		col = Color(0, 178, 0, 128);
 	}
 	for (int i=0; i<=dimstart; i++) {
 		if (i == csize) return;			// whole circle bright case
@@ -474,7 +478,7 @@ void ScannerWidget::GenerateRingsAndSpokes()
 	m_edgeVts.push_back(vn); m_edgeCols.push_back(col);
 
 	// dim part
-	col = Color(0.2f, 0.3f, 0.2f, 0.5f);
+	col = Color(51, 77, 51, 128);
 	m_edgeVts.push_back(vn); m_edgeCols.push_back(col);
 	for (int i=dimstart+1; i<csize; i++) {
 		m_edgeVts.push_back(vector3f(m_circle[i].x, m_circle[i].y, 0.0f));
@@ -484,13 +488,14 @@ void ScannerWidget::GenerateRingsAndSpokes()
 
 void ScannerWidget::DrawRingsAndSpokes(bool blend)
 {
-	Color col(0.f, 0.4f, 0.f, 0.5f);
-	m_renderer->DrawLines2D(m_vts.size(), &m_vts[0], col);
-	m_renderer->DrawLines(m_edgeVts.size(), &m_edgeVts[0], &m_edgeCols[0]);
+	Color col(0, 102, 0, 128);
+	m_renderer->DrawLines2D(m_vts.size(), &m_vts[0], col, m_renderState);
+	m_renderer->DrawLines(m_edgeVts.size(), &m_edgeVts[0], &m_edgeCols[0], m_renderState);
 }
 
 void ScannerWidget::TimeStepUpdate(float step)
 {
+	PROFILE_SCOPED()
 	if (m_targetRange < m_currentRange)
 		m_currentRange = Clamp(m_currentRange - (m_currentRange*step), m_targetRange, SCANNER_RANGE_MAX);
 	else if (m_targetRange > m_currentRange)
@@ -532,33 +537,18 @@ void UseEquipWidget::FireMissile(int idx)
 		Pi::cpan->MsgLog()->Message("", Lang::SELECT_A_TARGET);
 		return;
 	}
-
-	lua_State *l = Lua::manager->GetLuaState();
-	int pristine_stack = lua_gettop(l);
-	LuaObject<Ship>::PushToLua(Pi::player);
-	lua_pushstring(l, "FireMissileAt");
-	lua_gettable(l, -2);
-	lua_pushvalue(l, -2);
-	lua_pushinteger(l, idx+1);
-	LuaObject<Ship>::PushToLua(static_cast<Ship*>(Pi::player->GetCombatTarget()));
-	lua_call(l, 3, 1);
-	lua_settop(l, pristine_stack);
+	LuaObject<Ship>::CallMethod(Pi::player, "FireMissileAt", idx+1, static_cast<Ship*>(Pi::player->GetCombatTarget()));
 }
 
 void UseEquipWidget::UpdateEquip()
 {
 	DeleteAllChildren();
+	std::vector<std::string> missiles;
 	lua_State *l = Lua::manager->GetLuaState();
-	int pristine_stack = lua_gettop(l);
-	LuaObject<Ship>::PushToLua(Pi::player);
-	lua_pushstring(l, "GetEquip");
-	lua_gettable(l, -2);
-	lua_pushvalue(l, -2);
-	lua_pushstring(l, "MISSILE");
-	lua_call(l, 2, 1);
-	LuaTable table(l, -1);
-	std::vector<std::string> missiles(table.Begin<std::string>(), table.End<std::string>());
-	lua_settop(l, pristine_stack);
+	{ // new scope to destroy the ScopedTable early on.
+		ScopedTable missiles_ref(LuaObject<Ship>::CallMethod<LuaRef>(Pi::player, "GetEquip", "MISSILE"));
+		missiles.assign(missiles_ref.Begin<std::string>(), missiles_ref.End<std::string>());
+	}
 	int numSlots = missiles.size();
 
 	if (numSlots) {

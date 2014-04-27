@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Star.h"
@@ -6,6 +6,8 @@
 #include "graphics/Renderer.h"
 #include "graphics/VertexArray.h"
 #include "gui/Gui.h"
+#include "Pi.h"
+#include <SDL_stdinc.h>
 
 using namespace Graphics;
 
@@ -32,14 +34,17 @@ void Star::InitStar()
 	// this one is much larger because stars have halo effect
 	// if star is wolf-rayet it gets a very large halo effect
 	const SystemBody *sbody = GetSystemBody();
-	const float wf = (sbody->type < SystemBody::TYPE_STAR_S_BH && sbody->type > SystemBody::TYPE_STAR_O_HYPER_GIANT) ? 100.0f : 1.0f;
+	const float wf = (sbody->GetType() < SystemBody::TYPE_STAR_S_BH && sbody->GetType() > SystemBody::TYPE_STAR_O_HYPER_GIANT) ? 100.0f : 1.0f;
 	SetClipRadius(sbody->GetRadius() * 8 * wf);
+
+	Graphics::RenderStateDesc rsd;
+	rsd.blendMode = BLEND_ALPHA;
+	rsd.depthWrite = false;
+	m_haloState = Pi::renderer->CreateRenderState(rsd);
 }
 
 void Star::Render(Graphics::Renderer *renderer, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform)
 {
-	renderer->SetDepthTest(false);
-
 	double radius = GetClipRadius();
 
 	double rad = radius;
@@ -63,16 +68,14 @@ void Star::Render(Graphics::Renderer *renderer, const Camera *camera, const vect
 
 	renderer->SetTransform(trans * rot);
 
-	const float *col = StarSystem::starRealColors[GetSystemBody()->type];
+	const Uint8 *col = StarSystem::starRealColors[GetSystemBody()->GetType()];
 
-	Random(rand);
-
-	renderer->SetBlendMode(BLEND_ALPHA);
+	Random rand;
 
 	//render star halo
 	VertexArray va(ATTRIB_POSITION | ATTRIB_DIFFUSE);
-	const Color bright(col[0], col[1], col[2], 1.f);
-	const Color dark(0.f, 0.f, 0.f, 0.f);
+	const Color bright(col[0], col[1], col[2], 255);
+	const Color dark(0);
 
 	va.Add(vector3f(0.f), bright);
 	for (float ang=0; ang<2*M_PI; ang+=0.26183+rand.Double(0,0.4)) {
@@ -80,10 +83,7 @@ void Star::Render(Graphics::Renderer *renderer, const Camera *camera, const vect
 	}
 	va.Add(vector3f(0.f, rad, 0.f), dark);
 
-	renderer->DrawTriangles(&va, Graphics::vtxColorMaterial, TRIANGLE_FAN);
-	renderer->SetBlendMode(BLEND_SOLID);
-
-	renderer->SetDepthTest(true);
+	renderer->DrawTriangles(&va, m_haloState, Graphics::vtxColorMaterial, TRIANGLE_FAN);
 
 	TerrainBody::Render(renderer, camera, viewCoords, viewTransform);
 }

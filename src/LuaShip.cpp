@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaObject.h"
@@ -21,7 +21,7 @@
 /*
  * Class: Ship
  *
- * Class representing a ship. Inherits from <Body>.
+ * Class representing a ship. Inherits from <ModelBody>.
  */
 
 /*
@@ -59,73 +59,6 @@ static int l_ship_is_player(lua_State *l)
     return 1;
 }
 
-/*
- * Method: GetStats
- *
- * Returns statistics for the ship
- *
- * > stats = ship:GetStats()
- *
- * Returns:
- *
- *   stats - a table with the following fields
- *
- *     maxCapacity - maximum space for cargo and equipment (t)
- *     usedCapacity - amount of space used (t)
- *     usedCargo - amount of cargo space used (t)
- *     freeCapacity - total space remaining (t)
- *     totalMass - total mass of the ship (cargo, equipment & hull) (t)
- *     hullMassLeft - remaining hull mass. when this reaches 0, the ship is destroyed (t)
- *     shieldMass - total mass equivalent of all shields (t)
- *     shieldMassLeft - remaining shield mass. when this reaches 0, the shields are depleted and the hull is exposed (t)
- *     hyperspaceRange - distance of furthest possible jump based on current contents (ly)
- *     maxHyperspaceRange - distance furthest possible jump under ideal conditions (ly)
- *     maxFuelTankMass - mass of internal (thruster) fuel tank, when full (t)
- *     fuelMassLeft - current mass of the internal fuel tank (t)
- *     fuelUse - thruster fuel use, scaled for the strongest thrusters at full thrust (percentage points per second, e.g. 0.0003)
- *
- * Example:
- *
- * > local stats = ship:GetStats()
- * > if stats.shieldMass == stats.shieldMassLeft then
- * >     print("shields at full strength")
- * > end
- *
- * Availability:
- *
- *  alpha 10
- *
- * Status:
- *
- *  experimental
- */
-static int l_ship_get_stats(lua_State *l)
-{
-	LUA_DEBUG_START(l);
-
-	Ship *s = LuaObject<Ship>::CheckFromLua(1);
-	const shipstats_t &stats = s->GetStats();
-
-	lua_newtable(l);
-	pi_lua_settable(l, "maxCapacity",        stats.max_capacity);
-	pi_lua_settable(l, "usedCapacity",       stats.used_capacity);
-	pi_lua_settable(l, "usedCargo",          stats.used_cargo);
-	pi_lua_settable(l, "freeCapacity",       stats.free_capacity);
-	pi_lua_settable(l, "totalMass",          stats.total_mass);
-	pi_lua_settable(l, "hullMassLeft",       stats.hull_mass_left);
-	pi_lua_settable(l, "hyperspaceRange",    stats.hyperspace_range);
-	pi_lua_settable(l, "maxHyperspaceRange", stats.hyperspace_range_max);
-	pi_lua_settable(l, "shieldMass",         stats.shield_mass);
-	pi_lua_settable(l, "shieldMassLeft",     stats.shield_mass_left);
-	pi_lua_settable(l, "maxFuelTankMass",    stats.fuel_tank_mass);
-	pi_lua_settable(l, "fuelUse",            stats.fuel_use);
-	pi_lua_settable(l, "fuelMassLeft",       stats.fuel_tank_mass_left);
-
-	LUA_DEBUG_END(l, 1);
-
-	return 1;
-}
-
 /* Method: SetShipType
  *
  * Replaces the ship with a new ship of the specified type.
@@ -159,7 +92,6 @@ static int l_ship_set_type(lua_State *l)
 		luaL_error(l, "Unknown ship type '%s'", type);
 
 	s->SetShipType(type);
-	s->m_equipment.Set(Equip::SLOT_ENGINE, 0, ShipType::types[type].hyperdrive);
 	s->UpdateStats();
 
 	LUA_DEBUG_END(l, 0);
@@ -788,6 +720,74 @@ static int l_ship_spawn_missile(lua_State *l)
 }
 
 /*
+ * Method: InitiateHyperjumpTo
+ *
+ *   Ready the ship to jump to the given system.
+ *
+ * > status = ship:InitiateHyperjumpTo(path, warmup, duration, checks)
+ *
+ * Parameters:
+ *
+ *   path - a <SystemPath> for the destination system
+ *
+ *   warmup - the time, in seconds, needed for the engines to warm up.
+ *
+ *   duration - travel time, in seconds.
+ *
+ *   checks - optional. A function that doesn't take any parameter and returns
+ *            true as long as all the conditions for hyperspace are met.
+ *
+ * Result:
+ *
+ *   status - a <Constants.ShipJumpStatus> string that tells if the ship can
+ *            hyperspace and if not, describes the reason
+ *
+ * Availability:
+ *
+ *   February 2014
+ *
+ * Status:
+ *
+ *   experimental
+ */
+static int l_ship_initiate_hyperjump_to(lua_State *l)
+{
+	Ship *s = LuaObject<Ship>::CheckFromLua(1);
+	SystemPath *dest = LuaObject<SystemPath>::CheckFromLua(2);
+	int warmup_time = lua_tointeger(l, 3);
+	int duration = lua_tointeger(l, 4);
+	LuaRef checks;
+	if (lua_gettop(l) >= 5)
+		checks = LuaRef(l, 5);
+
+	Ship::HyperjumpStatus status = s->InitiateHyperjumpTo(*dest, warmup_time, duration, checks);
+
+	lua_pushstring(l, EnumStrings::GetString("ShipJumpStatus", status));
+	return 1;
+}
+
+/*
+ * Method: AbortHyperjump
+ *
+ *   Abort the upcoming hyperjump
+ *
+ * > ship:AbortHyperjump()
+ *
+ * Availability:
+ *
+ *   February 2014
+ *
+ * Status:
+ *
+ *   experimental
+ */
+static int l_ship_abort_hyperjump(lua_State *l)
+{
+	LuaObject<Ship>::CheckFromLua(1)->AbortHyperjump();
+	return 0;
+}
+
+/*
  * Method: CheckHyperspaceTo
  *
  * Determine is a ship is able to hyperspace to a given system
@@ -941,6 +941,56 @@ static int l_ship_hyperspace_to(lua_State *l)
 	lua_pushinteger(l, fuel);
 	lua_pushnumber(l, duration);
 	return 3;
+}
+
+/*
+ * Method: GetInvulnerable
+ *
+ * Find out whether a ship can take damage or not.
+ *
+ * > is_invulnerable = ship:GetInvulnerable()
+ *
+ * Return:
+ *
+ *   is_invulnerable - boolean; true if the ship is invulnerable to damage
+ *
+ * Availability:
+ *
+ *  November 2013
+ *
+ * Status:
+ *
+ *  experimental
+ */
+static int l_ship_get_invulnerable(lua_State *l)
+{
+	Ship *s = LuaObject<Ship>::CheckFromLua(1);
+	lua_pushboolean(l, s->IsInvulnerable());
+	return 1;
+}
+
+/*
+ * Method: SetInvulnerable
+ *
+ * Make a ship invulnerable to damage (or not).
+ * Note: Invulnerability is not currently stored in the save game.
+ *
+ * > ship:SetInvulnerable(true)
+ *
+ * Availability:
+ *
+ *  November 2013
+ *
+ * Status:
+ *
+ *  experimental
+ */
+static int l_ship_set_invulnerable(lua_State *l)
+{
+	Ship *s = LuaObject<Ship>::CheckFromLua(1);
+	luaL_checkany(l, 2);
+	s->SetInvulnerable(lua_toboolean(l, 2));
+	return 0;
 }
 
 /*
@@ -1208,12 +1258,11 @@ template <> const char *LuaObject<Ship>::s_type = "Ship";
 
 template <> void LuaObject<Ship>::RegisterClass()
 {
-	static const char *l_parent = "Body";
+	static const char *l_parent = "ModelBody";
 
 	static const luaL_Reg l_methods[] = {
 		{ "IsPlayer", l_ship_is_player },
 
-		{ "GetStats", l_ship_get_stats },
 		{ "SetShipType", l_ship_set_type },
 		{ "SetHullPercent", l_ship_set_hull_percent },
 		{ "SetFuelPercent", l_ship_set_fuel_percent },
@@ -1251,6 +1300,11 @@ template <> void LuaObject<Ship>::RegisterClass()
 		{ "CheckHyperspaceTo", l_ship_check_hyperspace_to },
 		{ "GetHyperspaceDetails", l_ship_get_hyperspace_details },
 		{ "HyperspaceTo",    l_ship_hyperspace_to     },
+		{ "InitiateHyperjumpTo",    l_ship_initiate_hyperjump_to     },
+		{ "AbortHyperjump",    l_ship_abort_hyperjump     },
+
+		{ "GetInvulnerable", l_ship_get_invulnerable },
+		{ "SetInvulnerable", l_ship_set_invulnerable },
 
 		{ 0, 0 }
 	};
@@ -1314,5 +1368,141 @@ template <> void LuaObject<Ship>::RegisterClass()
  * Status:
  *
  *   experimental
+ *
+ *
+ * Attribute: fuelMassLeft
+ *
+ * Remaining thruster fuel mass in tonnes.
+ *
+ * Availability:
+ *
+ *   November 2013
+ *
+ * Status:
+ *
+ *   experimental
+ *
+ *
+ * Attribute: hullMassLeft
+ *
+ * Remaining hull integrity in tonnes. Ship damage reduces hull integrity.
+ * When this reaches 0, the ship is destroyed.
+ *
+ * Availability:
+ *
+ *   November 2013
+ *
+ * Status:
+ *
+ *   experimental
+ *
+ *
+ * Attribute: shieldMassLeft
+ *
+ * Remaining shield strength in tonnes. As shields are depleted, the
+ * shield strength decreases. When this reaches 0, the shields are
+ * fully depleted and the hull is exposed to damage.
+ *
+ * Availability:
+ *
+ *   November 2013
+ *
+ * Status:
+ *
+ *   experimental
+ *
+ *
+ * Attribute: shieldMass
+ *
+ * Maximum shield strength for installed shields. Measured in tonnes.
+ *
+ * Availability:
+ *
+ *   November 2013
+ *
+ * Status:
+ *
+ *   experimental
+ *
+ *
+ * Attribute: hyperspaceRange
+ *
+ * Furthest possible hyperjump given current hyperspace fuel available.
+ * Measured in light-years.
+ *
+ * Availability:
+ *
+ *   November 2013
+ *
+ * Status:
+ *
+ *   experimental
+ *
+ *
+ * Attribute: maxHyperspaceRange
+ *
+ * Furthest possible hyperjump assuming no limits to available hyperspace fuel.
+ * Measured in light-years.
+ *
+ * Availability:
+ *
+ *   November 2013
+ *
+ * Status:
+ *
+ *   experimental
+ *
+ *
+ * Attribute: totalMass
+ *
+ * Mass of the ship including hull, equipment and cargo, but excluding
+ * thruster fuel mass. Measured in tonnes.
+ *
+ * Availability:
+ *
+ *   November 2013
+ *
+ * Status:
+ *
+ *   experimental
+ *
+ *
+ * Attribute: usedCapacity
+ *
+ * Hull capacity used by equipment and cargo. Measured in tonnes.
+ *
+ * Availability:
+ *
+ *   November 2013
+ *
+ * Status:
+ *
+ *   experimental
+ *
+ *
+ * Attribute: usedCargo
+ *
+ * Hull capacity used by cargo only (not equipment). Measured in tonnes.
+ *
+ * Availability:
+ *
+ *   November 2013
+ *
+ * Status:
+ *
+ *   experimental
+ *
+ *
+ * Attribute: freeCapacity
+ *
+ * Total space remaining. Measured in tonnes.
+ *
+ * Availability:
+ *
+ *   November 2013
+ *
+ * Status:
+ *
+ *   experimental
+ *
  */
-

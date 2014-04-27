@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef GAMEUI_FACE_H
@@ -14,9 +14,11 @@ class Face : public UI::Single {
 public:
 	Face(UI::Context *context, Uint32 flags = 0, Uint32 seed = 0);
 
-	virtual UI::Point PreferredSize() { return UI::Point(INT_MAX); }
+	virtual UI::Point PreferredSize();
 	virtual void Layout();
 	virtual void Draw();
+
+	Face *SetHeightLines(Uint32 lines);
 
 	enum Flags { // <enum scope='GameUI::Face' name=GameUIFaceFlags public>
 		RAND        = 0,
@@ -28,12 +30,14 @@ public:
 	};
 
 private:
+	UI::Point m_preferredSize;
+
 	Uint32 m_flags;
 	Uint32 m_seed;
 
 	static RefCountedPtr<Graphics::Material> s_material;
 
-	ScopedPtr<Graphics::Texture> m_texture;
+	std::unique_ptr<Graphics::Texture> m_texture;
 };
 
 }

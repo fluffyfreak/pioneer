@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -185,19 +185,19 @@ void GetCrime(Sint64 *crimeBitset, Sint64 *fine)
 	}
 }
 
-void GetSysPolitStarSystem(const StarSystem *s, const fixed human_infestedness, SysPolit &outSysPolit)
+void GetSysPolitStarSystem(const StarSystem *s, const fixed &human_infestedness, SysPolit &outSysPolit)
 {
 	SystemPath path = s->GetPath();
 	const Uint32 _init[5] = { Uint32(path.sectorX), Uint32(path.sectorY), Uint32(path.sectorZ), path.systemIndex, POLIT_SEED };
 	Random rand(_init, 5);
 
-	Sector sec(path.sectorX, path.sectorY, path.sectorZ);
+	RefCountedPtr<const Sector> sec = Sector::cache.GetCached(path);
 
 	GovType a = GOV_INVALID;
 
 	/* from custom system definition */
-	if (sec.m_systems[path.systemIndex].customSys) {
-		Polit::GovType t = sec.m_systems[path.systemIndex].customSys->govType;
+	if (sec->m_systems[path.systemIndex].GetCustomSystem()) {
+		Polit::GovType t = sec->m_systems[path.systemIndex].GetCustomSystem()->govType;
 		a = t;
 	}
 	if (a == GOV_INVALID) {

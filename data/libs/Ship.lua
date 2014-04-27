@@ -1,12 +1,15 @@
--- Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local Ship = import_core("Ship")
+local Engine = import("Engine")
 local Event = import("Event")
 local Serializer = import("Serializer")
 local ShipDef = import("ShipDef")
 local Timer = import("Timer")
-local Translate = import("Translate")
+local Lang = import("Lang")
+
+local l = Lang.GetResource("ui-core")
 
 -- Temporary mapping while waiting for new-equipment to embed this information.
 local missile_names = {
@@ -20,6 +23,14 @@ local missile_names = {
 --
 -- Class representing a ship. Inherits from <Body>.
 --
+
+-- class method
+function Ship.MakeRandomLabel ()
+	local letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	local a = Engine.rand:Integer(1, #letters)
+	local b = Engine.rand:Integer(1, #letters)
+	return string.format("%s%s-%04d", letters:sub(a,a), letters:sub(b,b), Engine.rand:Integer(10000))
+end
 
 -- This is a protected table (accessors only) in which details of each ship's crew
 -- will be stored.
@@ -124,16 +135,15 @@ end
 --   experimental
 --
 Ship.Refuel = function (self,amount)
-	local t = Translate:GetTranslator()
     local currentFuel = self.fuel
     if currentFuel == 100 then
-		Comms.Message(t('Fuel tank full.'))
+        Comms.Message(l.FUEL_TANK_FULL) -- XXX don't translate in libs
         return 0
     end
-    local ship_stats = self:GetStats()
-    local needed = math.clamp(math.ceil(ship_stats.maxFuelTankMass - ship_stats.fuelMassLeft),0, amount)
-    local removed = self:RemoveEquip('WATER', needed)
-    self:SetFuelPercent(math.clamp(self.fuel + removed * 100 / ship_stats.maxFuelTankMass, 0, 100))
+    local fuelTankMass = ShipDef[self.shipId].fuelTankMass
+    local needed = math.clamp(math.ceil(fuelTankMass - self.fuelMassLeft),0, amount)
+    local removed = self:RemoveEquip('HYDROGEN', needed)
+    self:SetFuelPercent(math.clamp(self.fuel + removed * 100 / fuelTankMass, 0, 100))
     return removed
 end
 
@@ -313,6 +323,25 @@ Ship.GenerateCrew = function (self)
 		newCrew:RollNew(true)
 		self:Enroll(newCrew)
 	end
+end
+
+--
+-- Method: CrewNumber
+--
+-- Returns the number of the current crew employed on the ship.
+--
+-- > ship:CrewNumber()
+--
+-- Availability:
+--
+--   20140404
+--
+-- Status:
+--
+--   experimental
+--
+Ship.CrewNumber = function (self)
+	return #CrewRoster[self]
 end
 
 --

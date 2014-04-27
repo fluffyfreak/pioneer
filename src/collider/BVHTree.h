@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _BVHTREE_H
@@ -9,8 +9,6 @@
 #include "../vector3.h"
 #include "../Aabb.h"
 #include "../utils.h"
-
-#define MAX_SPLITPOS_RETRIES 15
 
 struct BVHNode {
 	Aabb aabb;
@@ -59,6 +57,5 @@ private:
 	size_t m_nodeAllocPos;
 	size_t m_nodeAllocMax;
 };
-
 
 #endif /* _BVHTREE_H */

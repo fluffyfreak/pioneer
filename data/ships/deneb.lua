@@ -1,18 +1,24 @@
--- Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of CC-BY-SA 3.0. See licenses/CC-BY-SA-3.0.txt
 
 define_ship {
-	name='Deneb Transport',
+	name='Deneb',
+	ship_class='medium_freighter',
+	manufacturer='albr',
 	model='deneb',
-	forward_thrust = 15e6,
-	reverse_thrust = 5e6,
-	up_thrust = 10e6,
-	down_thrust = 4e6,
-	left_thrust = 4e6,
-	right_thrust = 4e6,
+	forward_thrust = 10e6,
+	reverse_thrust = 6e6,
+	up_thrust = 6e6,
+	down_thrust = 3e6,
+	left_thrust = 3e6,
+	right_thrust = 3e6,
 	angular_thrust = 50e6,
 	atmoshield = 1,
 	min_atmoshield = 1,
+
+	hull_mass = 75,
+	fuel_tank_mass = 100,
+	capacity = 235,
 	max_cargo = 235,
 	max_laser = 1,
 	max_missile = 8,
@@ -20,11 +26,8 @@ define_ship {
 	max_fuelscoop = 1,
 	min_crew = 2,
 	max_crew = 3,
-	capacity = 235,
-	hull_mass = 100,
-	fuel_tank_mass = 100,
 	--thruster_fuel_use = 0.0001,
-	effective_exhaust_velocity = 51784e3,
-	price = 430000,
+	effective_exhaust_velocity = 186e5,
+	price = 5096e2,
 	hyperdrive_class = 3,
 }

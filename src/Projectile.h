@@ -1,13 +1,14 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _PROJECTILE_H
 #define _PROJECTILE_H
 
+#include "libs.h"
 #include "Body.h"
 #include "EquipType.h"
 #include "graphics/Material.h"
-#include "SmartPtr.h"
+#include "graphics/RenderState.h"
 
 class Frame;
 namespace Graphics {
@@ -48,10 +49,11 @@ private:
 
 	static void BuildModel();
 
-	static ScopedPtr<Graphics::VertexArray> s_sideVerts;
-	static ScopedPtr<Graphics::VertexArray> s_glowVerts;
-	static ScopedPtr<Graphics::Material> s_sideMat;
-	static ScopedPtr<Graphics::Material> s_glowMat;
+	static std::unique_ptr<Graphics::VertexArray> s_sideVerts;
+	static std::unique_ptr<Graphics::VertexArray> s_glowVerts;
+	static std::unique_ptr<Graphics::Material> s_sideMat;
+	static std::unique_ptr<Graphics::Material> s_glowMat;
+	static Graphics::RenderState *s_renderState;
 };
 
 #endif /* _PROJECTILE_H */

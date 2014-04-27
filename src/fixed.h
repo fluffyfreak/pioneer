@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _FIXED_H
@@ -12,7 +12,6 @@ class fixedf {
 public:
 	static const int FRAC = FRAC_BITS;
 	static const Uint64 MASK = (Uint64(1UL)<<FRAC_BITS)-1;
-	static const Sint64 DUMMY= -1 ;		// -1 to ensure signed type (signedness warning otherwise)
 
 	fixedf(): v(0) {}
 //	template <int bits>

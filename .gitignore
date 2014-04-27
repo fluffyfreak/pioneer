@@ -3,6 +3,7 @@ bin/
 lib/
 Debug/
 PreRelease/
+Profile/
 Release/
 ipch/
 src/data
@@ -43,6 +44,8 @@ configure
 depcomp
 install-sh
 missing
+compile
+test-driver
 stamp-h1
 *~
 *.orig
@@ -50,3 +53,6 @@ pioneer-*.tar.*
 Thumbs.db
 *.wwdb
 gmon.out
+.project
+.cproject
+.dirstamp

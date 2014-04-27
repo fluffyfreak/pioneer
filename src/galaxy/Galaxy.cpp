@@ -1,7 +1,8 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
+#include "utils.h"
 #include "Galaxy.h"
 #include "Sector.h"
 #include "Pi.h"
@@ -22,14 +23,14 @@ void Init()
 
 	RefCountedPtr<FileSystem::FileData> filedata = FileSystem::gameDataFiles.ReadFile(filename);
 	if (!filedata) {
-		fprintf(stderr, "Galaxy: couldn't load '%s'\n", filename.c_str());
+		Output("Galaxy: couldn't load '%s'\n", filename.c_str());
 		Pi::Quit();
 	}
 
 	SDL_RWops *datastream = SDL_RWFromConstMem(filedata->GetData(), filedata->GetSize());
 	s_galaxybmp = SDL_LoadBMP_RW(datastream, 1);
 	if (!s_galaxybmp) {
-		fprintf(stderr, "Galaxy: couldn't load: %s (%s)\n", filename.c_str(), SDL_GetError());
+		Output("Galaxy: couldn't load: %s (%s)\n", filename.c_str(), SDL_GetError());
 		Pi::Quit();
 	}
 }
@@ -64,6 +65,19 @@ Uint8 GetSectorDensity(int sx, int sy, int sz)
 	// reduce density somewhat to match real (gliese) density
 	val /= 2;
 	return Uint8(val);
+}
+
+void Dump(FILE* file, Sint32 centerX, Sint32 centerY, Sint32 centerZ, Sint32 radius)
+{
+	for (Sint32 sx = centerX - radius; sx <= centerX + radius; ++sx) {
+		for (Sint32 sy = centerY - radius; sy <= centerY + radius; ++sy) {
+			for (Sint32 sz = centerZ - radius; sz <= centerZ + radius; ++sz) {
+				RefCountedPtr<Sector> sector = Sector::cache.GetCached(SystemPath(sx, sy, sz));
+				sector->Dump(file);
+			}
+			StarSystem::attic.ClearCache();
+		}
+	}
 }
 
 } /* namespace Galaxy */

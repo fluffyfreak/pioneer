@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _FRUSTUM_H
@@ -15,10 +15,9 @@ namespace Graphics {
 // the one used for rendering
 class Frustum {
 public:
-	static Frustum FromGLState();
-
 	// create for specified values
 	Frustum(float width, float height, float fovAng, float nearClip, float farClip);
+	Frustum(const matrix4x4d &modelview, const matrix4x4d &projection);
 
 	// apply the saved frustum
 	void Enable();
@@ -34,12 +33,15 @@ public:
 	// project a point onto the near plane (typically the screen)
 	bool ProjectPoint(const vector3d &in, vector3d &out) const;
 
+	// translate the given point outside the frustum to a point inside
+	// returns scale factor to make object at that point appear correctly
+	double TranslatePoint(const vector3d &in, vector3d &out) const;
+
 private:
 	// create from current gl state
 	Frustum();
 
 	void InitFromMatrix(const matrix4x4d &m);
-	void InitFromGLState();
 
 	struct Plane {
 		double a, b, c, d;
@@ -51,6 +53,7 @@ private:
 	matrix4x4d m_projMatrix;
 	matrix4x4d m_modelMatrix;
 	Plane m_planes[6];
+	double m_translateThresholdSqr;
 };
 
 }

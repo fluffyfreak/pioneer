@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -113,6 +113,7 @@ bool VScrollPortal::OnMouseMotion(MouseMotionEvent *e)
 
 void VScrollPortal::Draw()
 {
+	PROFILE_SCOPED()
 	SetScissor(true);
 
 	float size[2];
@@ -126,11 +127,12 @@ void VScrollPortal::Draw()
 	float scale[2];
 	Screen::GetCoords2Pixels(scale);
 
-	glPushMatrix();
+	Graphics::Renderer *r = Gui::Screen::GetRenderer();
+	Graphics::Renderer::MatrixTicket ticket(r, Graphics::MatrixMode::MODELVIEW);
+
 	// scroll to whole pixel locations whatever the resolution
-	glTranslatef(0, floor((-m_scrollY*toScroll)/scale[1])*scale[1], 0);
+	r->Translate(0, floor((-m_scrollY*toScroll)/scale[1])*scale[1], 0);
 	Container::Draw();
-	glPopMatrix();
 
 	SetScissor(false);
 }

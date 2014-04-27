@@ -1,0 +1,74 @@
+{
+   "APPLY_FOR_MEMBERSHIP" : {
+      "description" : "",
+      "message" : "Üyelik için başvurun"
+   },
+   "BEGIN_TRADE" : {
+      "description" : "",
+      "message" : "Ticarete başlayın"
+   },
+   "FLAVOUR_0_CLUBNAME" : {
+      "description" : "",
+      "message" : "Yıldızlar Arası Pilotların Yakıt Kooperatifi"
+   },
+   "FLAVOUR_0_MEMBER_INTRO" : {
+      "description" : "",
+      "message" : "Burada yakıt alabilir ve {radioactives}ten kurtulabilirsiniz"
+   },
+   "FLAVOUR_0_NONMEMBER_INTRO" : {
+      "description" : "",
+      "message" : "{clubname} is an independent organisation dedicated to providing discounted starship fuel to its members. Branches can be found throughout the galaxy. Benefits of membership include:"
+   },
+   "FLAVOUR_0_WELCOME" : {
+      "description" : "",
+      "message" : "{clubname}, Hoş geldiniz"
+   },
+   "GO_BACK" : {
+      "description" : "",
+      "message" : "Geri"
+   },
+   "HANG_UP" : {
+      "description" : "",
+      "message" : "Bekle."
+   },
+   "LIST_BENEFITS_DISPOSAL" : {
+      "description" : "",
+      "message" : "{radioactives}, free disposal (conditions apply)"
+   },
+   "LIST_BENEFITS_FUEL" : {
+      "description" : "",
+      "message" : "{fuel} at discount prices"
+   },
+   "LIST_BENEFITS_FUEL_INTRO" : {
+      "description" : "",
+      "message" : "Our own stocks of fuel, independent of the general market"
+   },
+   "LIST_BENEFITS_FUEL_TANK" : {
+      "description" : "",
+      "message" : "Fuel tank refilling, where necessary"
+   },
+   "LIST_BENEFITS_JOIN" : {
+      "description" : "",
+      "message" : "Join now! Annual membership costs only {membership_fee}"
+   },
+   "WE_WILL_ONLY_DISPOSE_OF" : {
+      "description" : "",
+      "message" : "Bizden almış olduğunuz kaç ton {military_fuel} varsa sadece o kadar ton {radioactives}ü yok edeceğiz."
+   },
+   "WHAT_CONDITIONS_APPLY" : {
+      "description" : "",
+      "message" : "{radioactives} yok etme için hangi şartlar geçerli?"
+   },
+   "YOUR_MEMBERSHIP_APPLICATION_HAS_BEEN_DECLINED" : {
+      "description" : "",
+      "message" : "Üyelik başvurunuz reddedildi"
+   },
+   "YOU_ARE_NOW_A_MEMBER" : {
+      "description" : "",
+      "message" : "Artık bir üyesiniz. Üyeliğiniz {expiry_date} tarihinde sona erecek."
+   },
+   "YOU_MUST_BUY" : {
+      "description" : "",
+      "message" : "{radioactives}lerinizi almadan önce bizim {military_fuel}ımızı almalısınız"
+   }
+}

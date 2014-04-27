@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "HyperspaceCloud.h"
@@ -15,6 +15,7 @@
 #include "graphics/Material.h"
 #include "graphics/Renderer.h"
 #include "graphics/VertexArray.h"
+#include "graphics/RenderState.h"
 
 using namespace Graphics;
 
@@ -42,10 +43,16 @@ HyperspaceCloud::HyperspaceCloud()
 
 void HyperspaceCloud::InitGraphics()
 {
-	m_graphic.vertices.Reset(new Graphics::VertexArray(ATTRIB_POSITION | ATTRIB_DIFFUSE));
+	m_graphic.vertices.reset(new Graphics::VertexArray(ATTRIB_POSITION | ATTRIB_DIFFUSE));
+
 	Graphics::MaterialDescriptor desc;
 	desc.vertexColors = true;
-	m_graphic.material.Reset(Pi::renderer->CreateMaterial(desc));
+	m_graphic.material.reset(Pi::renderer->CreateMaterial(desc));
+
+	Graphics::RenderStateDesc rsd;
+	rsd.blendMode  = BLEND_ALPHA_ONE;
+	rsd.depthWrite = false;
+	m_graphic.renderState = Pi::renderer->CreateRenderState(rsd);
 }
 
 HyperspaceCloud::~HyperspaceCloud()
@@ -136,8 +143,6 @@ void HyperspaceCloud::UpdateInterpTransform(double alpha)
 
 void HyperspaceCloud::Render(Renderer *renderer, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform)
 {
-	renderer->SetBlendMode(BLEND_ALPHA_ONE);
-
 	matrix4x4d trans = matrix4x4d::Identity();
 	trans.Translate(float(viewCoords.x), float(viewCoords.y), float(viewCoords.z));
 
@@ -155,9 +160,8 @@ void HyperspaceCloud::Render(Renderer *renderer, const Camera *camera, const vec
 	// XXX could just alter the scale instead of recreating the model
 	const float radius = 1000.0f + 200.0f*float(noise(10.0*preciseTime, 0, 0));
 	m_graphic.vertices->Clear();
-	Color4f outerColor = m_isArrival ? Color::BLUE : Color::RED;
-	outerColor.a = 0.f;
-	make_circle_thing(*m_graphic.vertices.Get(), radius, Color(1.0,1.0,1.0,1.0), outerColor);
-	renderer->DrawTriangles(m_graphic.vertices.Get(), m_graphic.material.Get(), TRIANGLE_FAN);
-	renderer->SetBlendMode(BLEND_SOLID);
+	Color outerColor = m_isArrival ? Color::BLUE : Color::RED;
+	outerColor.a = 0;
+	make_circle_thing(*m_graphic.vertices.get(), radius, Color::WHITE, outerColor);
+	renderer->DrawTriangles(m_graphic.vertices.get(), m_graphic.renderState, m_graphic.material.get(), TRIANGLE_FAN);
 }

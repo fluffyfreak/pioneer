@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _HYPERSPACECLOUD_H
@@ -12,6 +12,7 @@ namespace Graphics {
 	class Material;
 	class Renderer;
 	class VertexArray;
+	class RenderState;
 }
 
 /** XXX TODO XXX Not applied to yet... */
@@ -48,8 +49,9 @@ private:
 	bool m_isArrival;
 
 	struct Graphic {
-		ScopedPtr<Graphics::VertexArray> vertices;
-		ScopedPtr<Graphics::Material> material;
+		std::unique_ptr<Graphics::VertexArray> vertices;
+		std::unique_ptr<Graphics::Material> material;
+		Graphics::RenderState *renderState;
 	};
 	Graphic m_graphic;
 };

@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -81,20 +81,21 @@ void TransparentButton::GetSizeRequested(float size[2])
 
 void SolidButton::Draw()
 {
+	PROFILE_SCOPED()
 	float size[2];
 	GetSize(size);
 	if (IsPressed()) {
-		Theme::DrawIndent(size);
+		Theme::DrawIndent(size, Screen::alphaBlendState);
 	} else {
-		Theme::DrawOutdent(size);
+		Theme::DrawOutdent(size, Screen::alphaBlendState);
 	}
 }
 void TransparentButton::Draw()
 {
+	PROFILE_SCOPED()
 	float size[2];
 	GetSize(size);
-	glColor3f(1,1,1);
-	Theme::DrawHollowRect(size);
+	Theme::DrawHollowRect(size, Color::WHITE, Screen::alphaBlendState);
 }
 
 LabelButton::LabelButton(Label *label): Button()
@@ -115,20 +116,21 @@ void LabelButton::GetSizeRequested(float size[2])
 
 void LabelButton::Draw()
 {
+	PROFILE_SCOPED()
 	float size[2];
 	GetSize(size);
-	//printf("%f,%f\n", size[0], size[1]);
-	glColor3f(1,1,1);
-	//Theme::DrawHollowRect(size);
+
 	if (IsPressed()) {
-		Theme::DrawIndent(size);
+		Theme::DrawIndent(size, Screen::alphaBlendState);
 	} else {
-		Theme::DrawOutdent(size);
+		Theme::DrawOutdent(size, Screen::alphaBlendState);
 	}
-	glPushMatrix();
-	glTranslatef(m_padding, m_padding*0.5, 0);
+
+	Graphics::Renderer *r = Gui::Screen::GetRenderer();
+	Graphics::Renderer::MatrixTicket ticket(r, Graphics::MatrixMode::MODELVIEW);
+
+	r->Translate(m_padding, m_padding*0.5, 0);
 	m_label->Draw();
-	glPopMatrix();
 }
 
 void LabelButton::OnSetSize()

@@ -1,18 +1,15 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Graphics.h"
 #include "FileSystem.h"
 #include "Material.h"
 #include "RendererGL2.h"
-#include "RendererLegacy.h"
 #include "OS.h"
 
 namespace Graphics {
 
 static bool initted = false;
-bool shadersAvailable = false;
-bool shadersEnabled = false;
 Material *vtxColorMaterial;
 static int width, height;
 static float g_fov = 85.f;
@@ -65,19 +62,16 @@ Renderer* Init(Settings vs)
 	glewInit();
 
 	if (!glewIsSupported("GL_ARB_vertex_buffer_object"))
-		OS::Error("OpenGL extension ARB_vertex_buffer_object not supported. Pioneer can not run on your graphics card.");
+		Error("OpenGL extension ARB_vertex_buffer_object not supported. Pioneer can not run on your graphics card.");
 
 	Renderer *renderer = 0;
 
-	shadersAvailable = glewIsSupported("GL_VERSION_2_0");
-	shadersEnabled = vs.shaders && shadersAvailable;
+	if (!glewIsSupported("GL_VERSION_2_0") )
+		Error("OpenGL Version 2.0 is not supported. Pioneer cannot run on your graphics card.");
+	
+	renderer = new RendererGL2(window, vs);
 
-	if (shadersEnabled)
-		renderer = new RendererGL2(window, vs);
-	else
-		renderer = new RendererLegacy(window, vs);
-
-	printf("Initialized %s\n", renderer->GetName());
+	Output("Initialized %s\n", renderer->GetName());
 
 	initted = true;
 
@@ -92,11 +86,6 @@ Renderer* Init(Settings vs)
 void Uninit()
 {
 	delete vtxColorMaterial;
-}
-
-bool AreShadersEnabled()
-{
-	return shadersEnabled;
 }
 
 static bool operator==(const VideoMode &a, const VideoMode &b) {

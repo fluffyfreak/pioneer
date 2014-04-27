@@ -1,22 +1,49 @@
--- Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
-local Translate = import("Translate")
 local Engine = import("Engine")
+local Lang = import("Lang")
 local Game = import("Game")
+local Ship = import("Ship")
+local ShipDef = import("ShipDef")
+local Player = import("Player")
 local SystemPath = import("SystemPath")
 local ErrorScreen = import("ErrorScreen")
 
 local ui = Engine.ui
-local t = Translate:GetTranslator()
+local l = Lang.GetResource("ui-core");
 
-local setupPlayerWave = function ()
-	Game.player:SetShipType("wave")
+local setupPlayerSol = function ()
+	Game.player:SetShipType("sinonatrix")
+	Game.player:SetLabel(Ship.MakeRandomLabel())
+	Game.player:AddEquip("DRIVE_CLASS"..ShipDef[Game.player.shipId].hyperdriveClass)
 	Game.player:AddEquip("PULSECANNON_1MW")
 	Game.player:AddEquip("ATMOSPHERIC_SHIELDING")
 	Game.player:AddEquip("AUTOPILOT")
 	Game.player:AddEquip("SCANNER")
-	Game.player:AddEquip("MISSILE_GUIDED", 2)
+	Game.player:AddEquip("HYDROGEN", 2)
+	Game.player:SetMoney(100)
+end
+
+local setupPlayerEridani = function ()
+	Game.player:SetShipType("pumpkinseed")
+	Game.player:SetLabel(Ship.MakeRandomLabel())
+	Game.player:AddEquip("DRIVE_CLASS"..ShipDef[Game.player.shipId].hyperdriveClass)
+	Game.player:AddEquip("PULSECANNON_1MW")
+	Game.player:AddEquip("ATMOSPHERIC_SHIELDING")
+	Game.player:AddEquip("AUTOPILOT")
+	Game.player:AddEquip("SCANNER")
+	Game.player:AddEquip("HYDROGEN", 2)
+	Game.player:SetMoney(100)
+end
+
+local setupPlayerBarnard = function ()
+	Game.player:SetShipType("xylophis")
+	Game.player:SetLabel(Ship.MakeRandomLabel())
+	--Game.player:AddEquip("PULSECANNON_1MW")
+	Game.player:AddEquip("ATMOSPHERIC_SHIELDING")
+	Game.player:AddEquip("AUTOPILOT")
+	Game.player:AddEquip("SCANNER")
 	Game.player:AddEquip("HYDROGEN", 2)
 	Game.player:SetMoney(100)
 end
@@ -24,17 +51,17 @@ end
 local loadGame = function (path)
 	local ok, err = pcall(Game.LoadGame, path)
 	if not ok then
-		ErrorScreen.ShowError(t('Could not load game: ') .. err)
+		ErrorScreen.ShowError(l.COULD_NOT_LOAD_GAME .. err)
 	end
 end
 
 local doLoadDialog = function ()
 	ui:NewLayer(
 		ui.templates.FileDialog({
-			title       = t("Load"),
-			helpText    = t("Select game to load..."),
+			title       = l.LOAD,
+			helpText    = l.SELECT_GAME_TO_LOAD,
 			path        = "savefiles",
-			selectLabel = t("Load game"),
+			selectLabel = l.LOAD_GAME,
 			onSelect    = loadGame,
 			onCancel    = function () ui:DropLayer() end
 		})
@@ -45,21 +72,23 @@ local doSettingsScreen = function()
 	ui.layer:SetInnerWidget(
 		ui.templates.Settings({
 			closeButtons = {
-				{ text = t("Return to menu"), onClick = function () ui.layer:SetInnerWidget(ui.templates.MainMenu()) end }
+				{ text = l.RETURN_TO_MENU, onClick = function () ui.layer:SetInnerWidget(ui.templates.MainMenu()) end }
 			}
 		})
 	)
 end
 
 local buttonDefs = {
-	{ t("Start at Earth"),    function () Game.StartGame(SystemPath.New(0,0,0,0,9))   setupPlayerWave() end },
-	{ t("Start at New Hope"), function () Game.StartGame(SystemPath.New(1,-1,-1,0,4)) setupPlayerWave() end },
-	{ t("Start at Barnard's Star"), function () Game.StartGame(SystemPath.New(-1,0,0,0,1)) setupPlayerWave() end },
-	{ t("Load game"),         doLoadDialog },
-	{ t("Options"),           doSettingsScreen },
-	{ t("Quit"),              function () Engine.Quit() end },
+	{ l.CONTINUE_GAME,          function () loadGame("_exit") end },
+	{ l.START_AT_EARTH,         function () Game.StartGame(SystemPath.New(0,0,0,0,6),48600)   setupPlayerSol() end },
+	{ l.START_AT_NEW_HOPE,      function () Game.StartGame(SystemPath.New(1,-1,-1,0,4)) setupPlayerEridani() end },
+	{ l.START_AT_BARNARDS_STAR, function () Game.StartGame(SystemPath.New(-1,0,0,0,1))  setupPlayerBarnard() end },
+	{ l.LOAD_GAME,              doLoadDialog },
+	{ l.OPTIONS,                doSettingsScreen },
+	{ l.QUIT,                   function () Engine.Quit() end },
 }
 
+local anims = {}
 
 local buttonSet = {}
 for i = 1,#buttonDefs do
@@ -69,7 +98,39 @@ for i = 1,#buttonDefs do
 	if i < 10 then button:AddShortcut(i) end
 	if i == 10 then button:AddShortcut("0") end
 	buttonSet[i] = button
+	table.insert(anims, {
+		widget = button,
+		type = "IN",
+		easing = "ZERO",
+		target = "POSITION_X_REV",
+		duration = i * 0.05,
+		next = {
+			widget = button,
+			type = "IN",
+			easing = "LINEAR",
+			target = "POSITION_X_REV",
+			duration = 0.4,
+		}
+	})
 end
+
+local headingLabel = ui:Label("Pioneer"):SetFont("HEADING_XLARGE")
+table.insert(anims, {
+	widget = headingLabel,
+	type = "IN",
+	easing = "LINEAR",
+	target = "OPACITY",
+	duration = 0.4,
+})
+
+local versionLabel = ui:Label("(build: "..Engine.version..")"):SetFont("HEADING_XSMALL")
+table.insert(anims, {
+	widget = versionLabel,
+	type = "IN",
+	easing = "LINEAR",
+	target = "OPACITY",
+	duration = 0.4,
+})
 
 local menu = 
 	ui:Grid(1, { 0.2, 0.6, 0.2 })
@@ -77,7 +138,7 @@ local menu =
 			ui:Grid({ 0.1, 0.8, 0.1 }, 1)
 				:SetCell(1, 0,
 					ui:Align("LEFT",
-						ui:Label("Pioneer"):SetFont("HEADING_XLARGE")
+						headingLabel
 					)
 				)
 		})
@@ -93,9 +154,12 @@ local menu =
 			ui:Grid({ 0.1, 0.8, 0.1 }, 1)
 				:SetCell(1, 0,
 					ui:Align("RIGHT",
-						ui:Label("(build: "..Engine.version..")"):SetFont("HEADING_XSMALL")
+						versionLabel
 					)
 				)
 		})
 
-ui.templates.MainMenu = function (args) return menu end
+ui.templates.MainMenu = function (args)
+	for _,anim in ipairs(anims) do ui:Animate(anim) end
+	return menu
+end

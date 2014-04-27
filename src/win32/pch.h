@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -24,7 +24,6 @@
 #include "GeoPatchContext.h"
 #include "GeoPatch.h"
 #include "GeoSphere.h"
-//#include "glfreetype.h"
 #include "gui/Gui.h"
 #include "gui/GuiAdjustment.h"
 #include "gui/GuiButton.h"
@@ -48,10 +47,6 @@
 #include "gui/GuiVScrollBar.h"
 #include "gui/GuiVScrollPortal.h"
 #include "gui/GuiWidget.h"
-#include "libs.h"
-#include "MarketAgent.h"
-#include "matrix4x4.h"
-#include "ModelBody.h"
 #include "Random.h"
 #include "Object.h"
 #include "ObjectViewerView.h"
@@ -68,12 +63,9 @@
 #include "SmartPtr.h"
 #include "Space.h"
 #include "SpaceStation.h"
-#include "SpaceStationView.h"
 #include "Star.h"
 #include "SystemInfoView.h"
 #include "SystemView.h"
 #include "utils.h"
-#include "vector3.h"
 #include "View.h"
 #include "WorldView.h"
-

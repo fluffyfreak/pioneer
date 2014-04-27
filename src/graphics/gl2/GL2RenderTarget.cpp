@@ -1,3 +1,6 @@
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
+
 #include "graphics/gl2/GL2RenderTarget.h"
 #include "graphics/TextureGL.h"
 
@@ -42,13 +45,13 @@ RenderTarget::~RenderTarget()
 
 Texture *RenderTarget::GetColorTexture() const
 {
-	return m_colorTexture.Valid() ? m_colorTexture.Get() : 0;
+	return m_colorTexture.Get();
 }
 
 Texture *RenderTarget::GetDepthTexture() const
 {
 	assert(GetDesc().allowDepthTexture);
-	return m_depthTexture.Valid() ? m_depthTexture.Get() : 0;
+	return m_depthTexture.Get();
 }
 
 void RenderTarget::SetColorTexture(Texture* t)

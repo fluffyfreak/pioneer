@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "SpaceStation.h"
@@ -19,8 +19,10 @@
 #include "Ship.h"
 #include "Space.h"
 #include "StringF.h"
+#include "ShipCpanel.h"
 #include "galaxy/StarSystem.h"
 #include "graphics/Graphics.h"
+#include "scenegraph/ModelSkin.h"
 #include <algorithm>
 
 void SpaceStation::Init()
@@ -36,19 +38,7 @@ void SpaceStation::Uninit()
 void SpaceStation::Save(Serializer::Writer &wr, Space *space)
 {
 	ModelBody::Save(wr, space);
-	MarketAgent::Save(wr);
 	wr.Int32(Equip::TYPE_MAX);
-	for (int i=0; i<Equip::TYPE_MAX; i++) {
-		wr.Int32(int(m_equipmentStock[i]));
-	}
-	// save shipyard
-	wr.Int32(m_shipsOnSale.size());
-	for (std::vector<ShipOnSale>::iterator i = m_shipsOnSale.begin();
-			i != m_shipsOnSale.end(); ++i) {
-		wr.String((*i).id);
-		wr.String((*i).regId);
-		(*i).skin.Save(wr);
-	}
 	wr.Int32(m_shipDocking.size());
 	for (Uint32 i=0; i<m_shipDocking.size(); i++) {
 		wr.Int32(space->GetIndexForBody(m_shipDocking[i].ship));
@@ -69,8 +59,6 @@ void SpaceStation::Save(Serializer::Writer &wr, Space *space)
 		}
 	}
 
-	wr.Bool(m_bbCreated);
-	wr.Double(m_lastUpdatedShipyard);
 	wr.Int32(space->GetIndexForSystemBody(m_sbody));
 	wr.Int32(m_numPoliceDocked);
 
@@ -83,25 +71,11 @@ void SpaceStation::Save(Serializer::Writer &wr, Space *space)
 void SpaceStation::Load(Serializer::Reader &rd, Space *space)
 {
 	ModelBody::Load(rd, space);
-	MarketAgent::Load(rd);
+
+	m_oldAngDisplacement = 0.0;
+
 	int num = rd.Int32();
 	if (num > Equip::TYPE_MAX) throw SavedGameCorruptException();
-	for (int i=0; i<Equip::TYPE_MAX; i++) {
-		m_equipmentStock[i] = 0;
-	}
-	for (int i=0; i<num; i++) {
-		m_equipmentStock[i] = static_cast<Equip::Type>(rd.Int32());
-	}
-	// load shipyard
-	const Uint32 numShipsForSale = rd.Int32();
-	for (Uint32 i=0; i<numShipsForSale; i++) {
-		ShipType::Id id(rd.String());
-		std::string regId(rd.String());
-		SceneGraph::ModelSkin skin;
-		skin.Load(rd);
-		ShipOnSale sos(id, regId, skin);
-		m_shipsOnSale.push_back(sos);
-	}
 	const Uint32 numShipDocking = rd.Int32();
 	m_shipDocking.reserve(numShipDocking);
 	for (Uint32 i=0; i<numShipDocking; i++) {
@@ -130,8 +104,6 @@ void SpaceStation::Load(Serializer::Reader &rd, Space *space)
 		}
 	}
 
-	m_bbCreated = rd.Bool();
-	m_lastUpdatedShipyard = rd.Double();
 	m_sbody = space->GetSystemBodyByIndex(rd.Int32());
 	m_numPoliceDocked = rd.Int32();
 
@@ -154,16 +126,12 @@ void SpaceStation::PostLoadFixup(Space *space)
 SpaceStation::SpaceStation(const SystemBody *sbody): ModelBody()
 {
 	m_sbody = sbody;
-	m_lastUpdatedShipyard = 0;
 	m_numPoliceDocked = Pi::rng.Int32(3,10);
-	m_bbCreated = false;
-	m_bbShuffled = false;
 
 	m_oldAngDisplacement = 0.0;
 
 	m_doorAnimationStep = m_doorAnimationState = 0.0;
 
-	SetMoney(1000000000);
 	InitStation();
 }
 
@@ -171,8 +139,8 @@ void SpaceStation::InitStation()
 {
 	m_adjacentCity = 0;
 	for(int i=0; i<NUM_STATIC_SLOTS; i++) m_staticSlot[i] = false;
-	Random rand(m_sbody->seed);
-	bool ground = m_sbody->type == SystemBody::TYPE_STARPORT_ORBITAL ? false : true;
+	Random rand(m_sbody->GetSeed());
+	bool ground = m_sbody->GetType() == SystemBody::TYPE_STARPORT_ORBITAL ? false : true;
 	if (ground) {
 		m_type = &SpaceStationType::surfaceStationTypes[ rand.Int32(SpaceStationType::surfaceStationTypes.size()) ];
 	} else {
@@ -199,74 +167,23 @@ void SpaceStation::InitStation()
 	if (!GetModel())
 		SetModel(m_type->modelName.c_str());
 
-	m_navLights.Reset(new NavLights(GetModel(), 2.2f));
+	SceneGraph::Model *model = GetModel();
+
+	m_navLights.reset(new NavLights(model, 2.2f));
 	m_navLights->SetEnabled(true);
 
 	if (ground) SetClipRadius(CITY_ON_PLANET_RADIUS);		// overrides setmodel
 
-	m_doorAnimation = GetModel()->FindAnimation("doors");
+	m_doorAnimation = model->FindAnimation("doors");
+
+	SceneGraph::ModelSkin skin;
+	skin.SetDecal("pioneer");
+	skin.Apply(model);
 }
 
 SpaceStation::~SpaceStation()
 {
-	onBulletinBoardDeleted.emit();
 	if (m_adjacentCity) delete m_adjacentCity;
-}
-
-void SpaceStation::ReplaceShipOnSale(int idx, const ShipOnSale &with)
-{
-	m_shipsOnSale[idx] = with;
-	onShipsForSaleChanged.emit();
-}
-
-// Fill the list of starships on sale. Ships that
-// can't fit atmo shields are only available in
-// atmosphereless environments
-void SpaceStation::UpdateShipyard()
-{
-	bool atmospheric = false;
-	if (IsGroundStation()) {
-		Body *planet = GetFrame()->GetBody();
-		atmospheric = planet->GetSystemBody()->HasAtmosphere();
-	}
-
-	const std::vector<ShipType::Id> &ships = atmospheric ? ShipType::playable_atmospheric_ships : ShipType::player_ships;
-
-	unsigned int toAdd = 0, toRemove = 0;
-
-	if (m_shipsOnSale.size() == 0)
-		// fill shipyard
-		toAdd = Pi::rng.Int32(20);
-
-	else if (Pi::rng.Int32(2))
-		// add one
-		toAdd = 1;
-
-	else if(m_shipsOnSale.size() > 0)
-		// remove one
-		toRemove = 1;
-
-	else
-		// nothing happens
-		return;
-
-	for (; toAdd > 0; toAdd--) {
-		ShipType::Id id = ships[Pi::rng.Int32(ships.size())];
-		std::string regId = Ship::MakeRandomLabel();
-		SceneGraph::ModelSkin skin;
-		skin.SetRandomColors(Pi::rng);
-		skin.SetPattern(Pi::rng.Int32(0, Pi::FindModel(id)->GetNumPatterns()));
-		skin.SetLabel(regId);
-		ShipOnSale sos(id, regId, skin);
-		m_shipsOnSale.push_back(sos);
-	}
-
-	for (; toRemove > 0; toRemove--) {
-		int pos = Pi::rng.Int32(m_shipsOnSale.size());
-		m_shipsOnSale.erase(m_shipsOnSale.begin() + pos);
-	}
-
-	onShipsForSaleChanged.emit();
 }
 
 void SpaceStation::NotifyRemoved(const Body* const removedBody)
@@ -286,11 +203,35 @@ int SpaceStation::GetMyDockingPort(const Ship *s) const
 	return -1;
 }
 
-int SpaceStation::GetFreeDockingPort() const
+int SpaceStation::NumShipsDocked() const
 {
+	Sint32 numShipsDocked = 0;
+	for (Uint32 i=0; i<m_shipDocking.size(); i++) {
+		if (NULL != m_shipDocking[i].ship) 
+			++numShipsDocked;
+	}
+	return numShipsDocked;
+}
+
+int SpaceStation::GetFreeDockingPort(const Ship *s) const
+{
+	assert(s);
 	for (unsigned int i=0; i<m_type->numDockingPorts; i++) {
 		if (m_shipDocking[i].ship == 0) {
-			return i;
+			// fwing
+			// initial unoccupied check
+			if (m_shipDocking[i].ship != 0) continue;
+
+			// size-of-ship vs size-of-bay check
+			const SpaceStationType::SBayGroup *const pBayGroup = m_type->FindGroupByBay(i);
+			if( !pBayGroup ) continue;
+
+			const Aabb &bbox = s->GetAabb();
+			const double bboxRad = bbox.GetRadius();
+
+			if( pBayGroup->minShipSize < bboxRad && bboxRad < pBayGroup->maxShipSize ) {
+				return i;
+			}
 		}
 	}
 	return -1;
@@ -309,6 +250,20 @@ void SpaceStation::SetDocked(Ship *ship, int port)
 	PositionDockedShip(ship, port);
 }
 
+void SpaceStation::SwapDockedShipsPort(const int oldPort, const int newPort)
+{
+	if( oldPort == newPort )
+		return;
+
+	// set new location
+	Ship *ship = m_shipDocking[oldPort].ship;
+	assert(ship);
+	ship->SetDockedWith(this, newPort);
+
+	m_shipDocking[oldPort].ship = 0;
+	m_shipDocking[oldPort].stage = 0;
+}
+
 bool SpaceStation::LaunchShip(Ship *ship, int port)
 {
 	shipDocking_t &sd = m_shipDocking[port];
@@ -323,7 +278,7 @@ bool SpaceStation::LaunchShip(Ship *ship, int port)
 	m_doorAnimationStep = 0.3; // open door
 
 	const Aabb& aabb = ship->GetAabb();
-	const matrix3x3d mt = ship->GetOrient();
+	const matrix3x3d& mt = ship->GetOrient();
 	const vector3d up = mt.VectorY().Normalized() * aabb.min.y;
 
 	sd.fromPos = (ship->GetPosition() - GetPosition() + up) * GetOrient();	// station space
@@ -453,7 +408,8 @@ void SpaceStation::DockingUpdate(const double timeStep)
 			m_doorAnimationStep = 0.3; // open door
 
 			if (dt.stagePos >= 1.0) {
-				if (dt.ship == static_cast<Ship*>(Pi::player)) Pi::onDockingClearanceExpired.emit(this);
+				if (dt.ship == Pi::player)
+					Pi::cpan->MsgLog()->ImportantMessage(GetLabel(), Lang::DOCKING_CLEARANCE_EXPIRED);
 				dt.ship = 0;
 				dt.stage = 0;
 				m_doorAnimationStep = -0.3; // close door
@@ -533,26 +489,6 @@ void SpaceStation::PositionDockedShip(Ship *ship, int port) const
 
 void SpaceStation::StaticUpdate(const float timeStep)
 {
-	bool update = false;
-
-	// if there's no BB and there are ships here, make one
-	if (!m_bbCreated && GetFreeDockingPort() != 0) {
-		CreateBB();
-		update = true;
-	}
-
-	// if there is and it hasn't had an update for a while, update it
-	else if (Pi::game->GetTime() > m_lastUpdatedShipyard) {
-		LuaEvent::Queue("onUpdateBB", this);
-		update = true;
-	}
-
-	if (update) {
-		UpdateShipyard();
-		// update again in an hour or two
-		m_lastUpdatedShipyard = Pi::game->GetTime() + 3600.0 + 3600.0*Pi::rng.Double();
-	}
-
 	DoLawAndOrder(timeStep);
 	DockingUpdate(timeStep);
 	m_navLights->Update(timeStep);
@@ -579,14 +515,13 @@ void SpaceStation::TimeStepUpdate(const float timeStep)
 			m_navLights->SetColor(i+1, NavLights::NAVLIGHT_YELLOW);
 			continue;
 		}
-		if (dt.ship->GetFlightState() == Ship::FLYING)
+		if (dt.ship->GetFlightState() != Ship::DOCKED && dt.ship->GetFlightState() != Ship::DOCKING)
 			continue;
 		PositionDockedShip(dt.ship, i);
 		m_navLights->SetColor(i+1, NavLights::NAVLIGHT_RED); //docked
 	}
 
-	if (m_doorAnimation)
-		GetModel()->UpdateAnimations();
+	ModelBody::TimeStepUpdate(timeStep);
 }
 
 void SpaceStation::UpdateInterpTransform(double alpha)
@@ -603,32 +538,6 @@ void SpaceStation::UpdateInterpTransform(double alpha)
 bool SpaceStation::IsGroundStation() const
 {
 	return (m_type->dockMethod == SpaceStationType::SURFACE);
-}
-
-/* MarketAgent shite */
-void SpaceStation::Bought(Equip::Type t) {
-	m_equipmentStock[int(t)]++;
-}
-void SpaceStation::Sold(Equip::Type t) {
-	m_equipmentStock[int(t)]--;
-}
-bool SpaceStation::CanBuy(Equip::Type t, bool verbose) const {
-	return true;
-}
-bool SpaceStation::CanSell(Equip::Type t, bool verbose) const {
-	bool result = (m_equipmentStock[int(t)] > 0);
-	if (verbose && !result) {
-		Pi::Message(Lang::ITEM_IS_OUT_OF_STOCK);
-	}
-	return result;
-}
-bool SpaceStation::DoesSell(Equip::Type t) const {
-	return Polit::IsCommodityLegal(Pi::game->GetSpace()->GetStarSystem().Get(), t);
-}
-
-Sint64 SpaceStation::GetPrice(Equip::Type t) const {
-	Sint64 mul = 100 + Pi::game->GetSpace()->GetStarSystem()->GetCommodityBasePriceModPercent(t);
-	return (mul * Sint64(Equip::types[t].basePrice)) / 100;
 }
 
 // Renders space station and adjacent city if applicable
@@ -658,14 +567,21 @@ void SpaceStation::Render(Graphics::Renderer *r, const Camera *camera, const vec
 		Planet *planet = static_cast<Planet*>(b);
 
 		if (!m_adjacentCity) {
-			m_adjacentCity = new CityOnPlanet(planet, this, m_sbody->seed);
+			m_adjacentCity = new CityOnPlanet(planet, this, m_sbody->GetSeed());
 		}
-		m_adjacentCity->Render(r, camera, this, viewCoords, viewTransform);
+		m_adjacentCity->Render(r, camera->GetContext()->GetFrustum(), this, viewCoords, viewTransform);
 
 		RenderModel(r, camera, viewCoords, viewTransform, false);
 
 		ResetLighting(r, oldLights, oldAmbient);
 	}
+}
+
+void SpaceStation::SetLabel(const std::string &label)
+{
+	assert(GetModel());
+	GetModel()->SetLabel(label);
+	Body::SetLabel(label);
 }
 
 // find an empty position for a static ship and mark it as used. these aren't
@@ -686,76 +602,6 @@ bool SpaceStation::AllocateStaticSlot(int& slot)
 	}
 
 	return false;
-}
-
-void SpaceStation::CreateBB()
-{
-	if (m_bbCreated) return;
-
-	// fill the shipyard equipment shop with all kinds of things
-	// XXX should probably be moved out to a MarketAgent/CommodityWidget type
-	//     thing, or just lua
-	for (int i=1; i<Equip::TYPE_MAX; i++) {
-		if (Equip::types[i].slot == Equip::SLOT_CARGO) {
-			m_equipmentStock[i] = Pi::rng.Int32(0,100) * Pi::rng.Int32(1,100);
-		} else {
-			m_equipmentStock[i] = Pi::rng.Int32(0,100);
-		}
-	}
-
-	LuaEvent::Queue("onCreateBB", this);
-	m_bbCreated = true;
-}
-
-static int next_ref = 0;
-int SpaceStation::AddBBAdvert(std::string description, AdvertFormBuilder builder)
-{
-	int ref = ++next_ref;
-	assert(ref);
-
-	BBAdvert ad;
-	ad.ref = ref;
-	ad.description = description;
-	ad.builder = builder;
-
-	m_bbAdverts.push_back(ad);
-
-	onBulletinBoardChanged.emit();
-
-	return ref;
-}
-
-const BBAdvert *SpaceStation::GetBBAdvert(int ref)
-{
-	for (std::vector<BBAdvert>::const_iterator i = m_bbAdverts.begin(); i != m_bbAdverts.end(); ++i)
-		if (i->ref == ref)
-			return &(*i);
-	return 0;
-}
-
-bool SpaceStation::RemoveBBAdvert(int ref)
-{
-	for (std::vector<BBAdvert>::iterator i = m_bbAdverts.begin(); i != m_bbAdverts.end(); ++i)
-		if (i->ref == ref) {
-			BBAdvert ad = (*i);
-			m_bbAdverts.erase(i);
-			onBulletinBoardAdvertDeleted.emit(ad);
-			return true;
-		}
-	return false;
-}
-
-const std::list<const BBAdvert*> SpaceStation::GetBBAdverts()
-{
-	if (!m_bbShuffled) {
-		std::random_shuffle(m_bbAdverts.begin(), m_bbAdverts.end());
-		m_bbShuffled = true;
-	}
-
-	std::list<const BBAdvert*> ads;
-	for (std::vector<BBAdvert>::const_iterator i = m_bbAdverts.begin(); i != m_bbAdverts.end(); ++i)
-		ads.push_back(&(*i));
-	return ads;
 }
 
 vector3d SpaceStation::GetTargetIndicatorPosition(const Frame *relTo) const
@@ -787,7 +633,8 @@ void SpaceStation::DoLawAndOrder(const double timeStep)
 			&& m_numPoliceDocked
 			&& (fine > 1000)
 			&& (GetPositionRelTo(Pi::player).Length() < 100000.0)) {
-		int port = GetFreeDockingPort();
+		Ship *ship = new Ship(ShipType::POLICE);
+		int port = GetFreeDockingPort(ship);
 		// at 60 Hz updates (ie, 1x time acceleration),
 		// this spawns a police ship with probability ~0.83% each frame
 		// This makes it unlikely (but not impossible) that police will spawn on top of each other
@@ -796,7 +643,6 @@ void SpaceStation::DoLawAndOrder(const double timeStep)
 		if (port != -1 && 2.0*Pi::rng.Double() < timeStep) {
 			m_numPoliceDocked--;
 			// Make police ship intent on killing the player
-			Ship *ship = new Ship(ShipType::POLICE);
 			ship->AIKill(Pi::player);
 			ship->SetFrame(GetFrame());
 			ship->SetDockedWith(this, port);
@@ -806,6 +652,8 @@ void SpaceStation::DoLawAndOrder(const double timeStep)
 			ship->m_equipment.Add(Equip::LASER_COOLING_BOOSTER);
 			ship->m_equipment.Add(Equip::ATMOSPHERIC_SHIELDING);
 			ship->UpdateStats();
+		} else {
+			delete ship;
 		}
 	}
 }

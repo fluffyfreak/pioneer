@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaConstants.h"
@@ -178,6 +178,30 @@ void LuaConstants::Register(lua_State *l)
 	 * Status:
 	 *
 	 *   stable
+	 */
+
+	/*
+	 * Constants: PhysicsObjectType
+	 *
+	 * General physical objects
+	 *
+	 *   BODY - .
+	 *	  MODELBODY - .
+	 *	  SHIP - .
+	 *	  PLAYER - .
+	 *	  SPACESTATION - .
+	 *	  PLANET - .
+	 *	  STAR - .
+	 *	  CARGOBODY - .
+	 *	  MISSILE - .
+	 *
+	 * Availability:
+	 *
+	 *   2014 April
+	 *
+	 * Status:
+	 *
+	 *   experimental
 	 */
 
 	/*
@@ -510,6 +534,7 @@ void LuaConstants::Register(lua_State *l)
 	 * DOCKING    - in docking animation
 	 * DOCKED     - docked with station
 	 * LANDED     - rough landed (not docked)
+	 * JUMPING    - just initiating hyperjump (as of February 2014)
 	 * HYPERSPACE - in hyperspace
 	 *
 	 * Availability:

@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _FACTIONS_H
@@ -17,22 +17,25 @@
 class Faction : public DeleteEmitter {
 public:
 	static void Init();
+	static void ClearHomeSectors();
+	static void SetHomeSectors();
 	static void Uninit();
 
 	// XXX this is not as const-safe as it should be
 	static Faction *GetFaction       (const Uint32 index);
-	static Faction *GetFaction       (const std::string factionName);
-	static Faction *GetNearestFaction(const Sector sec, Uint32 sysIndex);
+	static Faction *GetFaction       (const std::string& factionName);
+	static Faction *GetNearestFaction(const Sector::System* sys);
 	static bool     IsHomeSystem     (const SystemPath& sysPath);
 
 	static const Uint32 GetNumFactions();
+
+	static bool MayAssignFactions();
 
 	static const Uint32 BAD_FACTION_IDX;        // used by the no faction object to denote it's not a proper faction
 	static const Color  BAD_FACTION_COLOUR;     // factionColour to use on failing to find an appropriate faction
 	static const float  FACTION_BASE_ALPHA;     // Alpha to use on factionColour of systems with unknown population
 
 	Faction();
-	~Faction();
 
 	Uint32             idx;                 // faction index
 	std::string	       name;                // Formal name "Federation", "Empire", "Bob's Rib-shack consortium of delicious worlds (tm)", etc.
@@ -67,17 +70,18 @@ public:
 
 	const double         Radius()  const { return (FACTION_CURRENT_YEAR - foundingDate) * expansionRate; };
 	const bool           IsValid() const { return idx != BAD_FACTION_IDX; };
-	const Color          AdjustedColour(fixed population, bool inRange);
+	const Color          AdjustedColour(fixed population, bool inRange) const;
 	const Polit::GovType PickGovType(Random &rand) const;
 
 	// set the homeworld to one near the supplied co-ordinates
 	void SetBestFitHomeworld(Sint32 x, Sint32 y, Sint32 z, Sint32 si, Uint32 bi, Sint32 axisChange);
+	RefCountedPtr<const Sector> GetHomeSector();
 
 private:
 	static const double FACTION_CURRENT_YEAR;	// used to calculate faction radius
 
-	Sector* m_homesector;						// cache of home sector to use in distance calculations
-	const bool IsCloserAndContains(double& closestFactionDist, const Sector sec, Uint32 sysIndex);
+	RefCountedPtr<const Sector> m_homesector;	// cache of home sector to use in distance calculations
+	const bool IsCloserAndContains(double& closestFactionDist, const Sector::System* sys);
 };
 
 /* One day it might grow up to become a full tree, on the  other hand it might be
@@ -88,7 +92,7 @@ private:
 class FactionOctsapling {
 public:
 	void Add(Faction* faction);
-	std::vector<Faction*> CandidateFactions(const Sector sec, Uint32 sysIndex);
+	const std::vector<Faction*>& CandidateFactions(const Sector::System* sys);
 
 private:
 	std::vector<Faction*> octbox[2][2][2];

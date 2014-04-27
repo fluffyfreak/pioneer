@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaEngine.h"
@@ -17,6 +17,8 @@
 #include "SoundMusic.h"
 #include "KeyBindings.h"
 #include "Lang.h"
+#include "Player.h"
+#include "scenegraph/Model.h"
 
 /*
  * Interface: Engine
@@ -202,22 +204,6 @@ static int l_engine_set_vsync_enabled(lua_State *l)
 	return 0;
 }
 
-static int l_engine_get_shaders_enabled(lua_State *l)
-{
-	lua_pushboolean(l, Pi::config->Int("DisableShaders") == 0);
-	return 1;
-}
-
-static int l_engine_set_shaders_enabled(lua_State *l)
-{
-	if (lua_isnone(l, 1))
-		return luaL_error(l, "SetShadersEnabled takes one boolean argument");
-	const bool enabled = lua_toboolean(l, 1);
-	Pi::config->SetInt("DisableShaders", (enabled ? 0 : 1));
-	Pi::config->Save();
-	return 0;
-}
-
 static int l_engine_get_texture_compression_enabled(lua_State *l)
 {
 	lua_pushboolean(l, Pi::config->Int("UseTextureCompression") != 0);
@@ -294,7 +280,7 @@ static int l_engine_set_fractal_detail_level(lua_State *l)
 {
 	const int level = LuaConstants::GetConstantFromArg(l, "DetailLevel", 1);
 	if (level != Pi::detail.fracmult) {
-		Pi::detail.cities = level;
+		Pi::detail.fracmult = level;
 		Pi::config->SetInt("FractalMultiple", level);
 		Pi::config->Save();
 		Pi::OnChangeDetailLevel();
@@ -336,6 +322,60 @@ static int l_engine_set_display_nav_tunnels(lua_State *l)
 	Pi::config->SetInt("DisplayNavTunnel", (enabled ? 1 : 0));
 	Pi::config->Save();
 	Pi::SetNavTunnelDisplayed(enabled);
+	return 0;
+}
+
+static int l_engine_get_display_speed_lines(lua_State *l)
+{
+	lua_pushboolean(l, Pi::config->Int("SpeedLines") != 0);
+	return 1;
+}
+
+static int l_engine_set_display_speed_lines(lua_State *l)
+{
+	if (lua_isnone(l, 1))
+		return luaL_error(l, "SetDisplaySpeedLines takes one boolean argument");
+	const bool enabled = lua_toboolean(l, 1);
+	Pi::config->SetInt("SpeedLines", (enabled ? 1 : 0));
+	Pi::config->Save();
+	Pi::SetSpeedLinesDisplayed(enabled);
+	return 0;
+}
+
+static int l_engine_get_cockpit_enabled(lua_State *l)
+{
+	lua_pushboolean(l, Pi::config->Int("EnableCockpit") != 0);
+	return 1;
+}
+
+static int l_engine_set_cockpit_enabled(lua_State *l)
+{
+	if (lua_isnone(l, 1))
+		return luaL_error(l, "SetCockpitEnabled takes one boolean argument");
+	const bool enabled = lua_toboolean(l, 1);
+	Pi::config->SetInt("EnableCockpit", (enabled ? 1 : 0));
+	Pi::config->Save();
+	if (Pi::player) {
+		Pi::player->InitCockpit();
+		if (enabled) Pi::player->OnCockpitActivated();
+	}
+	return 0;
+}
+
+static int l_engine_get_display_hud_trails(lua_State *l)
+{
+	lua_pushboolean(l, Pi::config->Int("HudTrails") != 0);
+	return 1;
+}
+
+static int l_engine_set_display_hud_trails(lua_State *l)
+{
+	if (lua_isnone(l, 1))
+		return luaL_error(l, "SetDisplayHudTrails takes one boolean argument");
+	const bool enabled = lua_toboolean(l, 1);
+	Pi::config->SetInt("HudTrails", (enabled ? 1 : 0));
+	Pi::config->Save();
+	Pi::SetHudTrailsDisplayed(enabled);
 	return 0;
 }
 
@@ -491,17 +531,26 @@ static void push_bindings(lua_State *l, const KeyBindings::BindingPrototype *pro
 			lua_pushstring(l, proto->label);
 			lua_setfield(l, -2, "label");
 			if (proto->kb) {
-				const KeyBindings::KeyBinding kb = proto->kb->binding;
-				lua_pushstring(l, KeyBindings::KeyBindingToString(kb).c_str());
-				lua_setfield(l, -2, "binding");
-				lua_pushstring(l, kb.Description().c_str());
-				lua_setfield(l, -2, "bindingDescription");
+				const KeyBindings::KeyBinding kb1 = proto->kb->binding1;
+				if (kb1.Enabled()) {
+					lua_pushstring(l, kb1.ToString().c_str());
+					lua_setfield(l, -2, "binding1");
+					lua_pushstring(l, kb1.Description().c_str());
+					lua_setfield(l, -2, "bindingDescription1");
+				}
+				const KeyBindings::KeyBinding kb2 = proto->kb->binding2;
+				if (kb2.Enabled()) {
+					lua_pushstring(l, kb2.ToString().c_str());
+					lua_setfield(l, -2, "binding2");
+					lua_pushstring(l, kb2.Description().c_str());
+					lua_setfield(l, -2, "bindingDescription2");
+				}
 			} else if (proto->ab) {
 				const KeyBindings::AxisBinding &ab = *proto->ab;
-				lua_pushstring(l, KeyBindings::AxisBindingToString(ab).c_str());
-				lua_setfield(l, -2, "binding");
+				lua_pushstring(l, ab.ToString().c_str());
+				lua_setfield(l, -2, "binding1");
 				lua_pushstring(l, ab.Description().c_str());
-				lua_setfield(l, -2, "bindingDescription");
+				lua_setfield(l, -2, "bindingDescription1");
 			} else {
 				assert(0); // invalid prototype binding
 			}
@@ -535,19 +584,21 @@ static void push_bindings(lua_State *l, const KeyBindings::BindingPrototype *pro
  *
  * bindings = {
  *   { -- a page
- *   	label = 'CONTROLS', -- the (translated) name of the page
- *   	{ -- a group
- *   		label = 'Miscellaneous', -- the (translated) name of the group
- *   		{ -- a binding
- *   			type = 'KEY', -- the type of binding; can be 'KEY' or 'AXIS'
- *   			id = 'BindToggleLuaConsole', -- the internal ID of the binding; pass this to Engine.SetKeyBinding
- *   			label = 'Toggle Lua console', -- the (translated) label for the binding
- *   			binding = 'Key96', -- the current bound key or axis (value stored in config file)
- *   			bindingDescription = '`', -- display text for the current bound key or axis
- *   		},
- *   		-- ... more bindings
- *   	},
- *   	-- ... more groups
+ *      label = 'CONTROLS', -- the (translated) name of the page
+ *      { -- a group
+ *          label = 'Miscellaneous', -- the (translated) name of the group
+ *          { -- a binding
+ *              type = 'KEY', -- the type of binding; can be 'KEY' or 'AXIS'
+ *              id = 'BindToggleLuaConsole', -- the internal ID of the binding; pass this to Engine.SetKeyBinding
+ *              label = 'Toggle Lua console', -- the (translated) label for the binding
+ *              binding1 = 'Key96', -- the first bound key or axis (value stored in config file)
+ *              bindingDescription1 = '`', -- display text for the first bound key or axis
+ *              binding2 = 'Key96', -- the second bound key or axis (value stored in config file)
+ *              bindingDescription2 = '`', -- display text for the second bound key or axis
+ *          },
+ *          -- ... more bindings
+ *      },
+ *      -- ... more groups
  *   },
  *   -- ... more pages
  * }
@@ -578,20 +629,34 @@ static int l_engine_get_key_bindings(lua_State *l)
 }
 
 static int set_key_binding(lua_State *l, const char *config_id, KeyBindings::KeyAction *action) {
-	const char *binding_config = luaL_checkstring(l, 2);
-	if (!KeyBindings::KeyBindingFromString(binding_config, &(action->binding)))
-		return luaL_error(l, "invalid key binding given to Engine.SetKeyBinding");
-	Pi::config->SetString(config_id, KeyBindings::KeyBindingToString(action->binding));
+	const char *binding_config_1 = lua_tostring(l, 2);
+	const char *binding_config_2 = lua_tostring(l, 3);
+	KeyBindings::KeyBinding kb1, kb2;
+	if (binding_config_1) {
+		if (!KeyBindings::KeyBinding::FromString(binding_config_1, kb1))
+			return luaL_error(l, "invalid first key binding given to Engine.SetKeyBinding");
+	} else
+		kb1.Clear();
+	if (binding_config_2) {
+		if (!KeyBindings::KeyBinding::FromString(binding_config_2, kb2))
+			return luaL_error(l, "invalid second key binding given to Engine.SetKeyBinding");
+	} else
+		kb2.Clear();
+	action->binding1 = kb1;
+	action->binding2 = kb2;
+	Pi::config->SetString(config_id, action->ToString());
 	Pi::config->Save();
 	return 0;
 }
 
 static int set_axis_binding(lua_State *l, const char *config_id, KeyBindings::AxisBinding *binding) {
 	const char *binding_config = luaL_checkstring(l, 2);
-	if (!KeyBindings::AxisBindingFromString(binding_config, binding))
+	KeyBindings::AxisBinding ab;
+	if (!KeyBindings::AxisBinding::FromString(binding_config, ab))
 		return luaL_error(l, "invalid axis binding given to Engine.SetKeyBinding");
-	Pi::config->SetString(config_id, KeyBindings::AxisBindingToString(*binding));
+	Pi::config->SetString(config_id, ab.ToString());
 	Pi::config->Save();
+	*binding = ab;
 	return 0;
 }
 
@@ -599,7 +664,7 @@ static int l_engine_set_key_binding(lua_State *l)
 {
 	const char *binding_id = luaL_checkstring(l, 1);
 
-#define KEY_BINDING(action, config_id, label, default_key) \
+#define KEY_BINDING(action, config_id, label, def1, def2) \
 	if (strcmp(binding_id, config_id) == 0) { return set_key_binding(l, config_id, &KeyBindings :: action); }
 #define AXIS_BINDING(action, config_id, label, default_axis) \
 	if (strcmp(binding_id, config_id) == 0) { return set_axis_binding(l, config_id, &KeyBindings :: action); }
@@ -643,6 +708,14 @@ static int l_engine_set_joystick_enabled(lua_State *l)
 	return 0;
 }
 
+static int l_engine_get_model(lua_State *l)
+{
+	const std::string name(luaL_checkstring(l, 1));
+	SceneGraph::Model *model = Pi::FindModel(name);
+	LuaObject<SceneGraph::Model>::PushToLua(model);
+	return 1;
+}
+
 void LuaEngine::Register()
 {
 	lua_State *l = Lua::manager->GetLuaState();
@@ -659,8 +732,6 @@ void LuaEngine::Register()
 		{ "SetFullscreen", l_engine_set_fullscreen },
 		{ "GetVSyncEnabled", l_engine_get_vsync_enabled },
 		{ "SetVSyncEnabled", l_engine_set_vsync_enabled },
-		{ "GetShadersEnabled", l_engine_get_shaders_enabled },
-		{ "SetShadersEnabled", l_engine_set_shaders_enabled },
 		{ "GetTextureCompressionEnabled", l_engine_get_texture_compression_enabled },
 		{ "SetTextureCompressionEnabled", l_engine_set_texture_compression_enabled },
 		{ "GetMultisampling", l_engine_get_multisampling },
@@ -677,6 +748,15 @@ void LuaEngine::Register()
 
 		{ "GetDisplayNavTunnels", l_engine_get_display_nav_tunnels },
 		{ "SetDisplayNavTunnels", l_engine_set_display_nav_tunnels },
+
+		{ "GetDisplaySpeedLines", l_engine_get_display_speed_lines },
+		{ "SetDisplaySpeedLines", l_engine_set_display_speed_lines },
+
+		{ "GetCockpitEnabled", l_engine_get_cockpit_enabled },
+		{ "SetCockpitEnabled", l_engine_set_cockpit_enabled },
+
+		{ "GetDisplayHudTrails", l_engine_get_display_hud_trails },
+		{ "SetDisplayHudTrails", l_engine_set_display_hud_trails },
 
 		{ "GetMasterMuted", l_engine_get_master_muted },
 		{ "SetMasterMuted", l_engine_set_master_muted },
@@ -697,6 +777,8 @@ void LuaEngine::Register()
 		{ "SetMouseYInverted", l_engine_set_mouse_y_inverted },
 		{ "GetJoystickEnabled", l_engine_get_joystick_enabled },
 		{ "SetJoystickEnabled", l_engine_set_joystick_enabled },
+
+		{ "GetModel", l_engine_get_model },
 
 		{ 0, 0 }
 	};

@@ -1,7 +1,8 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "ModelSpinner.h"
+#include "Shields.h"
 #include "Ship.h"
 #include "Pi.h"
 #include "Game.h"
@@ -11,18 +12,20 @@ using namespace UI;
 
 namespace GameUI {
 
-ModelSpinner::ModelSpinner(Context *context, SceneGraph::Model *model, const SceneGraph::ModelSkin &skin) : Widget(context),
+ModelSpinner::ModelSpinner(Context *context, SceneGraph::Model *model, const SceneGraph::ModelSkin &skin, unsigned int pattern) : Widget(context),
 	m_skin(skin),
-	m_rotX(0), m_rotY(0),
+	m_rotX(DEG2RAD(-15.0)), m_rotY(DEG2RAD(180.0)),
 	m_rightMouseButton(false)
 {
-	m_model.Reset(model->MakeInstance());
-	m_skin.Apply(m_model.Get());
+	m_model.reset(model->MakeInstance());
+	m_skin.Apply(m_model.get());
+	m_model->SetPattern(pattern);
+	m_shields.reset(new Shields(model));
 
-	Color lc(1.f);
+	Color lc(255);
 	m_light.SetDiffuse(lc);
 	m_light.SetSpecular(lc);
-	m_light.SetPosition(vector3f(1.f, 1.f, 0.f));
+	m_light.SetPosition(vector3f(0.f, 1.f, 1.f));
 	m_light.SetType(Graphics::Light::LIGHT_DIRECTIONAL);
 }
 
@@ -36,9 +39,12 @@ void ModelSpinner::Layout()
 
 void ModelSpinner::Update()
 {
-	if (!(m_rightMouseButton && IsMouseActive())) {
-		m_rotX += .5*Pi::GetFrameTime();
+	if (!(m_rightMouseButton && IsMouseActive()))
 		m_rotY += Pi::GetFrameTime();
+
+	if (m_model) {
+		m_shields->SetEnabled(false);
+		m_shields->Update(0.0f, 0.0f);
 	}
 }
 
@@ -52,7 +58,6 @@ void ModelSpinner::Draw()
 	r->SetPerspectiveProjection(fov, 1.f, 1.f, 10000.f);
 	r->SetTransform(matrix4x4f::Identity());
 
-	r->SetDepthTest(true);
 	r->ClearDepthBuffer();
 
 	r->SetLights(1, &m_light);

@@ -1,4 +1,4 @@
-/* Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details */
+/* Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details */
 /* Licensed under the terms of the GPL v3. See licenses/GPL-3.txt        */
 
 /* THIS FILE IS AUTO-GENERATED, CHANGES WILL BE OVERWRITTEN */
@@ -8,17 +8,21 @@
 #include "EquipType.h"
 #include "LuaEngine.h"
 #include "LuaFileSystem.h"
+#include "Object.h"
 #include "Polit.h"
 #include "Ship.h"
 #include "ShipType.h"
 #include "galaxy/StarSystem.h"
 #include "gameui/Face.h"
+#include "scenegraph/Model.h"
 #include "ui/Align.h"
+#include "ui/Animation.h"
 #include "ui/Event.h"
 #include "ui/Expand.h"
 #include "ui/Gradient.h"
 #include "ui/Margin.h"
 #include "ui/NumberLabel.h"
+#include "ui/Table.h"
 #include "ui/Widget.h"
 
 const struct EnumItem ENUM_EquipSlot[] = {
@@ -137,6 +141,19 @@ const struct EnumItem ENUM_FileSystemRoot[] = {
 	{ 0, 0 },
 };
 
+const struct EnumItem ENUM_PhysicsObjectType[] = {
+	{ "BODY", Object::BODY },
+	{ "MODELBODY", Object::MODELBODY },
+	{ "SHIP", Object::SHIP },
+	{ "PLAYER", Object::PLAYER },
+	{ "SPACESTATION", Object::SPACESTATION },
+	{ "PLANET", Object::PLANET },
+	{ "STAR", Object::STAR },
+	{ "CARGOBODY", Object::CARGOBODY },
+	{ "MISSILE", Object::MISSILE },
+	{ 0, 0 },
+};
+
 const struct EnumItem ENUM_PolitCrime[] = {
 	{ "TRADING_ILLEGAL_GOODS", Polit::CRIME_TRADING_ILLEGAL_GOODS },
 	{ "WEAPON_DISCHARGE", Polit::CRIME_WEAPON_DISCHARGE },
@@ -179,6 +196,7 @@ const struct EnumItem ENUM_ShipFlightState[] = {
 	{ "DOCKING", Ship::DOCKING },
 	{ "DOCKED", Ship::DOCKED },
 	{ "LANDED", Ship::LANDED },
+	{ "JUMPING", Ship::JUMPING },
 	{ "HYPERSPACE", Ship::HYPERSPACE },
 	{ 0, 0 },
 };
@@ -187,6 +205,7 @@ const struct EnumItem ENUM_ShipJumpStatus[] = {
 	{ "OK", Ship::HYPERJUMP_OK },
 	{ "CURRENT_SYSTEM", Ship::HYPERJUMP_CURRENT_SYSTEM },
 	{ "NO_DRIVE", Ship::HYPERJUMP_NO_DRIVE },
+	{ "INITIATED", Ship::HYPERJUMP_INITIATED },
 	{ "DRIVE_ACTIVE", Ship::HYPERJUMP_DRIVE_ACTIVE },
 	{ "OUT_OF_RANGE", Ship::HYPERJUMP_OUT_OF_RANGE },
 	{ "INSUFFICIENT_FUEL", Ship::HYPERJUMP_INSUFFICIENT_FUEL },
@@ -310,6 +329,16 @@ const struct EnumItem ENUM_GameUIFaceFlags[] = {
 	{ 0, 0 },
 };
 
+const struct EnumItem ENUM_ModelDebugFlags[] = {
+	{ "NONE", SceneGraph::Model::DEBUG_NONE },
+	{ "BBOX", SceneGraph::Model::DEBUG_BBOX },
+	{ "COLLMESH", SceneGraph::Model::DEBUG_COLLMESH },
+	{ "WIREFRAME", SceneGraph::Model::DEBUG_WIREFRAME },
+	{ "TAGS", SceneGraph::Model::DEBUG_TAGS },
+	{ "DOCKING", SceneGraph::Model::DEBUG_DOCKING },
+	{ 0, 0 },
+};
+
 const struct EnumItem ENUM_UIAlignDirection[] = {
 	{ "TOP_LEFT", UI::Align::TOP_LEFT },
 	{ "TOP", UI::Align::TOP },
@@ -320,6 +349,37 @@ const struct EnumItem ENUM_UIAlignDirection[] = {
 	{ "BOTTOM_LEFT", UI::Align::BOTTOM_LEFT },
 	{ "BOTTOM", UI::Align::BOTTOM },
 	{ "BOTTOM_RIGHT", UI::Align::BOTTOM_RIGHT },
+	{ 0, 0 },
+};
+
+const struct EnumItem ENUM_UIAnimationType[] = {
+	{ "IN", UI::Animation::TYPE_IN },
+	{ "OUT", UI::Animation::TYPE_OUT },
+	{ "IN_OUT", UI::Animation::TYPE_IN_OUT },
+	{ 0, 0 },
+};
+
+const struct EnumItem ENUM_UIAnimationEasing[] = {
+	{ "ZERO", UI::Animation::EASING_ZERO },
+	{ "ONE", UI::Animation::EASING_ONE },
+	{ "LINEAR", UI::Animation::EASING_LINEAR },
+	{ "QUAD", UI::Animation::EASING_QUAD },
+	{ "CUBIC", UI::Animation::EASING_CUBIC },
+	{ "QUART", UI::Animation::EASING_QUART },
+	{ "QUINT", UI::Animation::EASING_QUINT },
+	{ "SINE", UI::Animation::EASING_SINE },
+	{ "EXPO", UI::Animation::EASING_EXPO },
+	{ "CIRC", UI::Animation::EASING_CIRC },
+	{ 0, 0 },
+};
+
+const struct EnumItem ENUM_UIAnimationTarget[] = {
+	{ "PAUSE", UI::Animation::TARGET_PAUSE },
+	{ "OPACITY", UI::Animation::TARGET_OPACITY },
+	{ "POSITION_X", UI::Animation::TARGET_POSITION_X },
+	{ "POSITION_Y", UI::Animation::TARGET_POSITION_Y },
+	{ "POSITION_X_REV", UI::Animation::TARGET_POSITION_X_REV },
+	{ "POSITION_Y_REV", UI::Animation::TARGET_POSITION_Y_REV },
 	{ 0, 0 },
 };
 
@@ -409,6 +469,23 @@ const struct EnumItem ENUM_UINumberLabelFormat[] = {
 	{ "INTEGER", UI::NumberLabel::FORMAT_INTEGER },
 	{ "PERCENT", UI::NumberLabel::FORMAT_PERCENT },
 	{ "PERCENT_INTEGER", UI::NumberLabel::FORMAT_PERCENT_INTEGER },
+	{ "MONEY", UI::NumberLabel::FORMAT_MONEY },
+	{ "MASS_TONNES", UI::NumberLabel::FORMAT_MASS_TONNES },
+	{ 0, 0 },
+};
+
+const struct EnumItem ENUM_UITableRowAlignDirection[] = {
+	{ "TOP", UI::Table::ROW_TOP },
+	{ "CENTER", UI::Table::ROW_CENTER },
+	{ "BOTTOM", UI::Table::ROW_BOTTOM },
+	{ 0, 0 },
+};
+
+const struct EnumItem ENUM_UITableColumnAlignDirection[] = {
+	{ "LEFT", UI::Table::COLUMN_LEFT },
+	{ "CENTER", UI::Table::COLUMN_CENTER },
+	{ "RIGHT", UI::Table::COLUMN_RIGHT },
+	{ "JUSTIFY", UI::Table::COLUMN_JUSTIFY },
 	{ 0, 0 },
 };
 
@@ -432,6 +509,11 @@ const struct EnumItem ENUM_UIFont[] = {
 	{ "HEADING_NORMAL", UI::Widget::FONT_HEADING_NORMAL },
 	{ "HEADING_LARGE", UI::Widget::FONT_HEADING_LARGE },
 	{ "HEADING_XLARGE", UI::Widget::FONT_HEADING_XLARGE },
+	{ "MONO_XSMALL", UI::Widget::FONT_MONO_XSMALL },
+	{ "MONO_SMALL", UI::Widget::FONT_MONO_SMALL },
+	{ "MONO_NORMAL", UI::Widget::FONT_MONO_NORMAL },
+	{ "MONO_LARGE", UI::Widget::FONT_MONO_LARGE },
+	{ "MONO_XLARGE", UI::Widget::FONT_MONO_XLARGE },
 	{ "INHERIT", UI::Widget::FONT_INHERIT },
 	{ 0, 0 },
 };
@@ -441,6 +523,7 @@ const struct EnumTable ENUM_TABLES[] = {
 	{ "EquipType", ENUM_EquipType },
 	{ "DetailLevel", ENUM_DetailLevel },
 	{ "FileSystemRoot", ENUM_FileSystemRoot },
+	{ "PhysicsObjectType", ENUM_PhysicsObjectType },
 	{ "PolitCrime", ENUM_PolitCrime },
 	{ "PolitEcon", ENUM_PolitEcon },
 	{ "PolitGovType", ENUM_PolitGovType },
@@ -456,7 +539,11 @@ const struct EnumTable ENUM_TABLES[] = {
 	{ "BodyType", ENUM_BodyType },
 	{ "BodySuperType", ENUM_BodySuperType },
 	{ "GameUIFaceFlags", ENUM_GameUIFaceFlags },
+	{ "ModelDebugFlags", ENUM_ModelDebugFlags },
 	{ "UIAlignDirection", ENUM_UIAlignDirection },
+	{ "UIAnimationType", ENUM_UIAnimationType },
+	{ "UIAnimationEasing", ENUM_UIAnimationEasing },
+	{ "UIAnimationTarget", ENUM_UIAnimationTarget },
 	{ "UIEventType", ENUM_UIEventType },
 	{ "UIKeyboardAction", ENUM_UIKeyboardAction },
 	{ "UIMouseButtonAction", ENUM_UIMouseButtonAction },
@@ -468,6 +555,8 @@ const struct EnumTable ENUM_TABLES[] = {
 	{ "UIGradientDirection", ENUM_UIGradientDirection },
 	{ "UIMarginDirection", ENUM_UIMarginDirection },
 	{ "UINumberLabelFormat", ENUM_UINumberLabelFormat },
+	{ "UITableRowAlignDirection", ENUM_UITableRowAlignDirection },
+	{ "UITableColumnAlignDirection", ENUM_UITableColumnAlignDirection },
 	{ "UISizeControl", ENUM_UISizeControl },
 	{ "UIFont", ENUM_UIFont },
 	{ 0, 0 },
@@ -478,6 +567,7 @@ const struct EnumTable ENUM_TABLES_PUBLIC[] = {
 	{ "EquipType", ENUM_EquipType },
 	{ "DetailLevel", ENUM_DetailLevel },
 	{ "FileSystemRoot", ENUM_FileSystemRoot },
+	{ "PhysicsObjectType", ENUM_PhysicsObjectType },
 	{ "PolitCrime", ENUM_PolitCrime },
 	{ "PolitEcon", ENUM_PolitEcon },
 	{ "PolitGovType", ENUM_PolitGovType },
@@ -493,7 +583,11 @@ const struct EnumTable ENUM_TABLES_PUBLIC[] = {
 	{ "BodyType", ENUM_BodyType },
 	{ "BodySuperType", ENUM_BodySuperType },
 	{ "GameUIFaceFlags", ENUM_GameUIFaceFlags },
+	{ "ModelDebugFlags", ENUM_ModelDebugFlags },
 	{ "UIAlignDirection", ENUM_UIAlignDirection },
+	{ "UIAnimationType", ENUM_UIAnimationType },
+	{ "UIAnimationEasing", ENUM_UIAnimationEasing },
+	{ "UIAnimationTarget", ENUM_UIAnimationTarget },
 	{ "UIEventType", ENUM_UIEventType },
 	{ "UIKeyboardAction", ENUM_UIKeyboardAction },
 	{ "UIMouseButtonAction", ENUM_UIMouseButtonAction },
@@ -504,6 +598,8 @@ const struct EnumTable ENUM_TABLES_PUBLIC[] = {
 	{ "UIExpandDirection", ENUM_UIExpandDirection },
 	{ "UIGradientDirection", ENUM_UIGradientDirection },
 	{ "UIMarginDirection", ENUM_UIMarginDirection },
+	{ "UITableRowAlignDirection", ENUM_UITableRowAlignDirection },
+	{ "UITableColumnAlignDirection", ENUM_UITableColumnAlignDirection },
 	{ "UISizeControl", ENUM_UISizeControl },
 	{ "UIFont", ENUM_UIFont },
 	{ 0, 0 },

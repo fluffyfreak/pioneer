@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -32,7 +32,7 @@ Image::Image(const char *filename, float renderWidth, float renderHeight):
 void Image::InitTexture(const char* filename)
 {
 	Graphics::TextureBuilder b = Graphics::TextureBuilder::UI(filename);
-	m_quad.Reset(new TexturedQuad(b.GetOrCreateTexture(Gui::Screen::GetRenderer(), "ui")));
+	m_quad.reset(new TexturedQuad(b.GetOrCreateTexture(Gui::Screen::GetRenderer(), "ui")));
 }
 
 void Image::GetSizeRequested(float size[2])
@@ -49,11 +49,11 @@ void Image::SetRenderDimensions(const float wide, const float high)
 
 void Image::Draw()
 {
+	PROFILE_SCOPED()
 	float allocSize[2];
 	GetSize(allocSize);
 
 	Graphics::Renderer *r = Gui::Screen::GetRenderer();
-	r->SetBlendMode(Graphics::BLEND_ALPHA);
 	m_quad->Draw(r, vector2f(0.0f), vector2f(allocSize[0],allocSize[1]), m_color);
 }
 

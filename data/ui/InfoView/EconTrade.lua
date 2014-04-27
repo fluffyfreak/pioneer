@@ -1,8 +1,8 @@
--- Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
-local Translate = import("Translate")
 local Engine = import("Engine")
+local Lang = import("Lang")
 local Game = import("Game")
 local EquipDef = import("EquipDef")
 
@@ -10,13 +10,13 @@ local SmallLabeledButton = import("ui/SmallLabeledButton")
 local InfoGauge = import("ui/InfoGauge")
 
 local ui = Engine.ui
-local t = Translate:GetTranslator()
+local l = Lang.GetResource("ui-core");
 
 local econTrade = function ()
 
 	local cash = Game.player:GetMoney()
 
-	local stats = Game.player:GetStats()
+	local player = Game.player
 
 	local usedCabins = Game.player:GetEquipCount("CABIN", "PASSENGER_CABIN")
 	local totalCabins = Game.player:GetEquipCount("CABIN", "UNOCCUPIED_CABIN") + usedCabins
@@ -46,12 +46,15 @@ local econTrade = function ()
 						table.insert(cargoNameColumn, ui:Label(et.name))
 						table.insert(cargoQuantityColumn, ui:Label(count.."t"))
 
-						local jettisonButton = SmallLabeledButton.New(t("JETTISON"))
+						local jettisonButton = SmallLabeledButton.New(l.JETTISON)
 						jettisonButton.button.onClick:Connect(function ()
 							Game.player:Jettison(type)
 							updateCargoListWidget()
 							cargoListWidget:SetInnerWidget(updateCargoListWidget())
 						end)
+						if Game.player.flightState ~= "FLYING" then
+							jettisonButton.widget:Disable()
+						end
 						table.insert(cargoJettisonColumn, jettisonButton.widget)
 					end
 				end
@@ -61,7 +64,7 @@ local econTrade = function ()
 		-- Function returns a UI with which to populate the cargo list widget
 		return
 			ui:VBox(10):PackEnd({
-				ui:Label(t("CARGO")):SetFont("HEADING_LARGE"),
+				ui:Label(l.CARGO):SetFont("HEADING_LARGE"),
 				ui:Scroller():SetInnerWidget(
 					ui:Grid(3,1)
 						:SetColumn(0, { ui:VBox():PackEnd(cargoNameColumn) })
@@ -73,13 +76,18 @@ local econTrade = function ()
 
 	cargoListWidget:SetInnerWidget(updateCargoListWidget())
 
-	local cargoGauge = InfoGauge.New({
-		formatter = function (v)
-			local stats = Game.player:GetStats()
-			return string.format("%d/%dt", stats.usedCargo, stats.freeCapacity)
-		end
-	})
-	cargoGauge:SetValue(stats.usedCargo/stats.freeCapacity)
+	local cargoGauge = ui:Gauge()
+	local cargoUsedLabel = ui:Label("")
+	local cargoFreeLabel = ui:Label("")
+	local function cargoUpdate ()
+		cargoGauge:SetUpperValue(player.totalCargo)
+		cargoGauge:SetValue(player.usedCargo)
+		cargoUsedLabel:SetText(string.interp(l.CARGO_T_USED, { amount = player.usedCargo }))
+		cargoFreeLabel:SetText(string.interp(l.CARGO_T_FREE, { amount = player.totalCargo-player.usedCargo }))
+	end
+	player:Connect("usedCargo", cargoUpdate)
+	player:Connect("totalCargo", cargoUpdate)
+	cargoUpdate()
 
 	local fuelGauge = InfoGauge.New({
 		label          = ui:NumberLabel("PERCENT"),
@@ -91,11 +99,17 @@ local econTrade = function ()
 	fuelGauge.gauge:Bind("valuePercent", Game.player, "fuel")
 
 	-- Define the refuel button
-	local refuelButton = SmallLabeledButton.New(t('REFUEL'))
+	local refuelButton = SmallLabeledButton.New(l.REFUEL)
+	local refuelMaxButton = SmallLabeledButton.New(l.REFUEL_FULL)
 
 	local refuelButtonRefresh = function ()
-		if Game.player.fuel == 100 or Game.player:GetEquipCount('CARGO', 'WATER') == 0 then refuelButton.widget:Disable() end
-		fuelGauge:SetValue(Game.player.fuel/100)
+		if Game.player.fuel == 100 or Game.player:GetEquipCount('CARGO', 'HYDROGEN') == 0 then
+			refuelButton.widget:Disable()
+			refuelMaxButton.widget:Disable()
+		end
+		local fuel_percent = Game.player.fuel/100
+		fuelGauge.gauge:SetValue(fuel_percent)
+		fuelGauge.label:SetValue(fuel_percent)
 	end
 	refuelButtonRefresh()
 
@@ -104,27 +118,34 @@ local econTrade = function ()
 		Game.player:Refuel(1)
 		-- ...then we update the cargo list widget...
 		cargoListWidget:SetInnerWidget(updateCargoListWidget())
-		-- ...and the gauge.
-		stats = Game.player:GetStats()
-		cargoGauge:SetValue(stats.usedCargo/stats.freeCapacity)
+
+		refuelButtonRefresh()
+	end
+	local refuelMax = function ()
+		repeat
+			Game.player:Refuel(1)
+		until Game.player.fuel == 100 or Game.player:GetEquipCount('CARGO', 'HYDROGEN') == 0
+		cargoListWidget:SetInnerWidget(updateCargoListWidget())
 
 		refuelButtonRefresh()
 	end
 
 	refuelButton.button.onClick:Connect(refuel)
+	refuelMaxButton.button.onClick:Connect(refuelMax)
 
 	return ui:Expand():SetInnerWidget(
-		ui:Grid(2,1)
+		ui:Grid({48,4,48},1)
 			:SetColumn(0, {
 				ui:Margin(5, "HORIZONTAL",
 					ui:VBox(20):PackEnd({
 						ui:Grid(2,1)
 							:SetColumn(0, {
 								ui:VBox():PackEnd({
-									ui:Label(t("CASH")..":"),
+									ui:Label(l.CASH..":"),
 									ui:Margin(10),
-									ui:Label(t("CARGO_SPACE")..":"),
-									ui:Label(t("CABINS")..":"),
+									ui:Label(l.CARGO_SPACE..":"),
+									ui:Margin(5),
+									ui:Label(l.CABINS..":"),
 									ui:Margin(10),
 								})
 							})
@@ -132,24 +153,39 @@ local econTrade = function ()
 								ui:VBox():PackEnd({
 									ui:Label(string.format("$%.2f", cash)),
 									ui:Margin(10),
-									cargoGauge.widget,
-									ui:Grid(2,1):SetRow(0, { ui:Label(t("Total: ")..totalCabins), ui:Label(t("USED")..": "..usedCabins) }),
+									ui:Margin(0, "HORIZONTAL",
+										ui:HBox(10):PackEnd({
+											ui:Align("MIDDLE",
+												ui:HBox(10):PackEnd({
+													cargoGauge,
+												})
+											),
+											ui:VBox():PackEnd({
+												cargoUsedLabel,
+												cargoFreeLabel,
+											}):SetFont("XSMALL"),
+										})
+									),
+									ui:Grid(2,1):SetRow(0, { ui:Label(l.TOTAL..totalCabins), ui:Label(l.USED..": "..usedCabins) }),
 									ui:Margin(10),
 								})
 							}),
 						ui:Grid({50,10,40},1)
 							:SetRow(0, {
 								ui:HBox(5):PackEnd({
-									ui:Label("Fuel:"),
+									ui:Label(l.FUEL..":"),
 									fuelGauge,
 								}),
 								nil,
-								refuelButton.widget,
+								ui:VBox(5):PackEnd({
+									refuelButton.widget,
+									refuelMaxButton.widget,
+								}),
 							})
 					})
 				)
 			})
-			:SetColumn(1, {
+			:SetColumn(2, {
 				cargoListWidget
 			})
 	)

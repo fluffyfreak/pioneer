@@ -1,16 +1,15 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "GameConfig.h"
 #include "KeyBindings.h"
 #include "FileSystem.h"
 
-GameConfig::GameConfig()
+GameConfig::GameConfig(const std::map<std::string,std::string> &override_)
 {
 	// set defaults
 	std::map<std::string, std::string> &map = m_map[""];
-	map["Lang"] = "English";
-	map["DisableShaders"] = "0";
+	map["Lang"] = "en";
 	map["DisableEclipse"] = "0";
 	map["DisableSound"] = "0";
 	map["StartFullscreen"] = "0";
@@ -37,8 +36,10 @@ GameConfig::GameConfig()
 	map["DefaultLowThrustPower"] = "0.25";
 	map["VSync"] = "0";
 	map["UseTextureCompression"] = "0";
-	map["CockpitCamera"] = "1";
 	map["WorkerThreads"] = "0";
+	map["SpeedLines"] = "0";
+	map["EnableCockpit"] = "0";
+	map["HudTrails"] = "0";
 
 #ifdef _WIN32
 	map["RedirectStdio"] = "1";
@@ -48,6 +49,12 @@ GameConfig::GameConfig()
 	map["EnableGLDebug"] = "0";
 
 	Load();
+
+	for (auto i = override_.begin(); i != override_.end(); ++i) {
+		const std::string &key = (*i).first;
+		const std::string &val = (*i).second;
+		map[key] = val;
+	}
 }
 
 void GameConfig::Load()
