@@ -140,6 +140,12 @@ void ScannerWidget::InitObject()
 	m_toggleScanModeConnection = KeyBindings::toggleScanMode.onPress.connect(sigc::mem_fun(this, &ScannerWidget::ToggleMode));
 	m_lastRange = SCANNER_RANGE_MAX * 100.0f;		// force regen
 	GenerateBaseGeometry();
+
+	Graphics::RenderStateDesc rsd;
+	rsd.blendMode = Graphics::BLEND_ALPHA;
+	rsd.depthWrite = false;
+	rsd.depthTest = false;
+	m_renderState = m_renderer->CreateRenderState(rsd);
 }
 
 ScannerWidget::~ScannerWidget()
@@ -182,7 +188,6 @@ void ScannerWidget::Draw()
 	if (!m_contacts.empty()) DrawBlobs(true);
 
 	// disc
-	m_renderer->SetBlendMode(BLEND_ALPHA);
 	Color green(0, 255, 0, 26);
 
 	// XXX 2d vertices
@@ -192,7 +197,7 @@ void ScannerWidget::Draw()
 		va.Add(vector3f(m_x + m_x * sin(a), m_y + SCANNER_YSHRINK * m_y * cos(a), 0.f), green);
 	}
 	va.Add(vector3f(m_x, m_y + SCANNER_YSHRINK * m_y, 0.f), green);
-	m_renderer->DrawTriangles(&va, Graphics::vtxColorMaterial, TRIANGLE_FAN);
+	m_renderer->DrawTriangles(&va, m_renderState, Graphics::vtxColorMaterial, TRIANGLE_FAN);
 
 	// circles and spokes
 	{
@@ -204,8 +209,6 @@ void ScannerWidget::Draw()
 
 	// objects above
 	if (!m_contacts.empty()) DrawBlobs(false);
-
-	m_renderer->SetBlendMode(BLEND_SOLID);
 
 	SetScissor(false);
 }
@@ -404,10 +407,10 @@ void ScannerWidget::DrawBlobs(bool below)
 		const float y_blob = y_base - m_y * SCANNER_YSHRINK * float(pos.y) * m_scale;
 
 		const vector3f verts[] = { vector3f(x, y_base, 0.f), vector3f(x, y_blob, 0.f) };
-		m_renderer->DrawLines(2, &verts[0], *color);
+		m_renderer->DrawLines(2, &verts[0], *color, m_renderState);
 
 		vector3f blob(x, y_blob, 0.f);
-		m_renderer->DrawPoints(1, &blob, color, pointSize);
+		m_renderer->DrawPoints(1, &blob, color, m_renderState, pointSize);
 	}
 }
 
@@ -486,8 +489,8 @@ void ScannerWidget::GenerateRingsAndSpokes()
 void ScannerWidget::DrawRingsAndSpokes(bool blend)
 {
 	Color col(0, 102, 0, 128);
-	m_renderer->DrawLines2D(m_vts.size(), &m_vts[0], col);
-	m_renderer->DrawLines(m_edgeVts.size(), &m_edgeVts[0], &m_edgeCols[0]);
+	m_renderer->DrawLines2D(m_vts.size(), &m_vts[0], col, m_renderState);
+	m_renderer->DrawLines(m_edgeVts.size(), &m_edgeVts[0], &m_edgeCols[0], m_renderState);
 }
 
 void ScannerWidget::TimeStepUpdate(float step)
@@ -534,33 +537,18 @@ void UseEquipWidget::FireMissile(int idx)
 		Pi::cpan->MsgLog()->Message("", Lang::SELECT_A_TARGET);
 		return;
 	}
-
-	lua_State *l = Lua::manager->GetLuaState();
-	int pristine_stack = lua_gettop(l);
-	LuaObject<Ship>::PushToLua(Pi::player);
-	lua_pushstring(l, "FireMissileAt");
-	lua_gettable(l, -2);
-	lua_pushvalue(l, -2);
-	lua_pushinteger(l, idx+1);
-	LuaObject<Ship>::PushToLua(static_cast<Ship*>(Pi::player->GetCombatTarget()));
-	lua_call(l, 3, 1);
-	lua_settop(l, pristine_stack);
+	LuaObject<Ship>::CallMethod(Pi::player, "FireMissileAt", idx+1, static_cast<Ship*>(Pi::player->GetCombatTarget()));
 }
 
 void UseEquipWidget::UpdateEquip()
 {
 	DeleteAllChildren();
+	std::vector<std::string> missiles;
 	lua_State *l = Lua::manager->GetLuaState();
-	int pristine_stack = lua_gettop(l);
-	LuaObject<Ship>::PushToLua(Pi::player);
-	lua_pushstring(l, "GetEquip");
-	lua_gettable(l, -2);
-	lua_pushvalue(l, -2);
-	lua_pushstring(l, "MISSILE");
-	lua_call(l, 2, 1);
-	LuaTable table(l, -1);
-	std::vector<std::string> missiles(table.Begin<std::string>(), table.End<std::string>());
-	lua_settop(l, pristine_stack);
+	{ // new scope to destroy the ScopedTable early on.
+		ScopedTable missiles_ref(LuaObject<Ship>::CallMethod<LuaRef>(Pi::player, "GetEquip", "MISSILE"));
+		missiles.assign(missiles_ref.Begin<std::string>(), missiles_ref.End<std::string>());
+	}
 	int numSlots = missiles.size();
 
 	if (numSlots) {

@@ -118,6 +118,7 @@ local onChat = function (form, ref, option)
 
 	if option == 0 then
 		-- Initial proposal
+		form:SetTitle(ad.title)
 		form:SetFace({ female = ad.isfemale, seed = ad.faceseed, name = ad.name })
 		-- Replace token with details of last service (which might have
 		-- been seconds ago)
@@ -137,6 +138,7 @@ local onChat = function (form, ref, option)
 	if option == 1 then
 		-- Yes please, service my engine
 		form:Clear()
+		form:SetTitle(ad.title)
 		form:SetFace({ female = ad.isfemale, seed = ad.faceseed, name = ad.name })
 		if Game.player:GetMoney() >= price then -- We did check earlier, but...
 			-- Say thanks
@@ -196,7 +198,11 @@ local onCreateBB = function (station)
 		baseprice = flavours[n].baseprice *rand:Number(0.8,1.2), -- A little per-station flavouring
 	}
 
-	local ref = station:AddAdvert(ad.title, onChat, onDelete)
+	local ref = station:AddAdvert({
+		description = ad.title,
+		icon        = "breakdown_servicing",
+		onChat      = onChat,
+		onDelete    = onDelete})
 	ads[ref] = ad
 end
 
@@ -214,7 +220,11 @@ local onGameStart = function ()
 		}
 	else
 		for k,ad in pairs(loaded_data.ads) do
-			local ref = ad.station:AddAdvert(ad.title, onChat, onDelete)
+		local ref = ad.station:AddAdvert({
+			description = ad.title,
+			icon        = "breakdown_servicing",
+			onChat      = onChat,
+			onDelete    = onDelete})
 			ads[ref] = ad
 		end
 

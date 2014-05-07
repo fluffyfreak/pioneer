@@ -7,11 +7,12 @@
 #include "libs.h"
 #include "gui/Gui.h"
 #include "gui/GuiWidget.h"
-#include "View.h"
+#include "UIView.h"
 #include "Serializer.h"
 #include "SpeedLines.h"
 #include "Background.h"
 #include "EquipType.h"
+#include "Camera.h"
 #include "CameraController.h"
 
 class Body;
@@ -21,7 +22,7 @@ class Ship;
 class NavTunnelWidget;
 namespace Gui { class TexturedQuad; }
 
-class WorldView: public View {
+class WorldView: public UIView {
 public:
 	friend class NavTunnelWidget;
 	WorldView();
@@ -93,8 +94,8 @@ private:
 	void DrawImageIndicator(const Indicator &marker, Gui::TexturedQuad *quad, const Color &c);
 	void DrawEdgeMarker(const Indicator &marker, const Color &c);
 
-	Gui::Button *AddCommsOption(const std::string msg, int ypos, int optnum);
-	void AddCommsNavOption(const std::string msg, Body *target);
+	Gui::Button *AddCommsOption(const std::string &msg, int ypos, int optnum);
+	void AddCommsNavOption(const std::string &msg, Body *target);
 	void OnClickCommsNavOption(Body *target);
 	void BuildCommsNavOptions();
 
@@ -152,6 +153,7 @@ private:
 	Gui::LabelSet *m_bodyLabels;
 	std::map<Body*,vector3d> m_projectedPos;
 
+	RefCountedPtr<CameraContext> m_cameraContext;
 	std::unique_ptr<Camera> m_camera;
 	std::unique_ptr<InternalCameraController> m_internalCameraController;
 	std::unique_ptr<ExternalCameraController> m_externalCameraController;
@@ -167,17 +169,20 @@ private:
 
 	std::unique_ptr<Gui::TexturedQuad> m_indicatorMousedir;
 	vector2f m_indicatorMousedirSize;
+
+	Graphics::RenderState *m_blendState;
 };
 
 class NavTunnelWidget: public Gui::Widget {
 public:
-	NavTunnelWidget(WorldView *worldView);
+	NavTunnelWidget(WorldView *worldView, Graphics::RenderState*);
 	virtual void Draw();
 	virtual void GetSizeRequested(float size[2]);
 	void DrawTargetGuideSquare(const vector2f &pos, const float size, const Color &c);
 
 private:
 	WorldView *m_worldView;
+	Graphics::RenderState *m_renderState;
 };
 
 #endif /* _WORLDVIEW_H */

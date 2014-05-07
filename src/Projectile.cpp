@@ -26,13 +26,13 @@ std::unique_ptr<Graphics::VertexArray> Projectile::s_sideVerts;
 std::unique_ptr<Graphics::VertexArray> Projectile::s_glowVerts;
 std::unique_ptr<Graphics::Material> Projectile::s_sideMat;
 std::unique_ptr<Graphics::Material> Projectile::s_glowMat;
+Graphics::RenderState *Projectile::s_renderState = nullptr;
 
 void Projectile::BuildModel()
 {
 	//set up materials
 	Graphics::MaterialDescriptor desc;
 	desc.textures = 1;
-	desc.twoSided = true;
 	s_sideMat.reset(Pi::renderer->CreateMaterial(desc));
 	s_glowMat.reset(Pi::renderer->CreateMaterial(desc));
 	s_sideMat->texture0 = Graphics::TextureBuilder::Billboard("textures/projectile_l.png").GetOrCreateTexture(Pi::renderer, "billboard");
@@ -90,6 +90,12 @@ void Projectile::BuildModel()
 		gw -= 0.1f; // they get smaller
 		gz -= 0.2f; // as they move back
 	}
+
+	Graphics::RenderStateDesc rsd;
+	rsd.blendMode = Graphics::BLEND_ALPHA_ONE;
+	rsd.depthWrite = false;
+	rsd.cullMode = Graphics::CULL_NONE;
+	s_renderState = Pi::renderer->CreateRenderState(rsd);
 }
 
 void Projectile::FreeModel()
@@ -179,11 +185,11 @@ double Projectile::GetRadius() const
 static void MiningLaserSpawnTastyStuff(Frame *f, const SystemBody *asteroid, const vector3d &pos)
 {
 	Equip::Type t;
-	if (20*Pi::rng.Fixed() < asteroid->m_metallicity) {
+	if (20*Pi::rng.Fixed() < asteroid->GetMetallicity()) {
 		t = Equip::PRECIOUS_METALS;
-	} else if (8*Pi::rng.Fixed() < asteroid->m_metallicity) {
+	} else if (8*Pi::rng.Fixed() < asteroid->GetMetallicity()) {
 		t = Equip::METAL_ALLOYS;
-	} else if (Pi::rng.Fixed() < asteroid->m_metallicity) {
+	} else if (Pi::rng.Fixed() < asteroid->GetMetallicity()) {
 		t = Equip::METAL_ORE;
 	} else if (Pi::rng.Fixed() < fixed(1,2)) {
 		t = Equip::WATER;
@@ -215,7 +221,7 @@ void Projectile::StaticUpdate(const float timeStep)
 		else if (o->IsType(Object::BODY)) {
 			Body *hit = static_cast<Body*>(o);
 			if (hit != m_parent) {
-				hit->OnDamage(m_parent, GetDamage());
+				hit->OnDamage(m_parent, GetDamage(), c);
 				Pi::game->GetSpace()->KillBody(this);
 				if (hit->IsType(Object::SHIP))
 					LuaEvent::Queue("onShipHit", dynamic_cast<Ship*>(hit), dynamic_cast<Body*>(m_parent));
@@ -231,7 +237,7 @@ void Projectile::StaticUpdate(const float timeStep)
 			double terrainHeight = planet->GetTerrainHeight(pos.Normalized());
 			if (terrainHeight > pos.Length()) {
 				// hit the fucker
-				if (b->type == SystemBody::TYPE_PLANET_ASTEROID) {
+				if (b->GetType() == SystemBody::TYPE_PLANET_ASTEROID) {
 					vector3d n = GetPosition().Normalized();
 					MiningLaserSpawnTastyStuff(planet->GetFrame(), b, n*terrainHeight + 5.0*n);
 					Sfx::Add(this, Sfx::TYPE_EXPLOSION);
@@ -263,9 +269,6 @@ void Projectile::Render(Graphics::Renderer *renderer, const Camera *camera, cons
 	m[13] = from.y;
 	m[14] = from.z;
 
-	renderer->SetBlendMode(Graphics::BLEND_ALPHA_ONE);
-	renderer->SetDepthWrite(false);
-
 	// increase visible size based on distance from camera, z is always negative
 	// allows them to be smaller while maintaining visibility for game play
 	const float dist_scale = float(viewCoords.z / -500);
@@ -284,7 +287,7 @@ void Projectile::Render(Graphics::Renderer *renderer, const Camera *camera, cons
 
 	if (color.a > 3) {
 		s_sideMat->diffuse = color;
-		renderer->DrawTriangles(s_sideVerts.get(), s_sideMat.get());
+		renderer->DrawTriangles(s_sideVerts.get(), s_renderState, s_sideMat.get());
 	}
 
 	// fade out glow quads when viewing nearly edge on
@@ -294,11 +297,8 @@ void Projectile::Render(Graphics::Renderer *renderer, const Camera *camera, cons
 
 	if (color.a > 3) {
 		s_glowMat->diffuse = color;
-		renderer->DrawTriangles(s_glowVerts.get(), s_glowMat.get());
+		renderer->DrawTriangles(s_glowVerts.get(), s_renderState, s_glowMat.get());
 	}
-
-	renderer->SetBlendMode(Graphics::BLEND_SOLID);
-	renderer->SetDepthWrite(true);
 }
 
 void Projectile::Add(Body *parent, Equip::Type type, const vector3d &pos, const vector3d &baseVel, const vector3d &dirVel)

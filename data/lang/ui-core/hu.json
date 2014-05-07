@@ -55,6 +55,14 @@
       "description" : "",
       "message" : "Utaskabin"
    },
+   "CABIN_FREE" : {
+      "description" : "",
+      "message" : "{amount} szabad"
+   },
+   "CABIN_USED" : {
+      "description" : "",
+      "message" : "{amount} foglalt"
+   },
    "CANCEL" : {
       "description" : "",
       "message" : "Mégse"
@@ -74,6 +82,14 @@
    "CARGO_SPACE" : {
       "description" : "",
       "message" : "Raktér kapacitás"
+   },
+   "CARGO_T_FREE" : {
+      "description" : "",
+      "message" : "{amount}t szabad"
+   },
+   "CARGO_T_USED" : {
+      "description" : "",
+      "message" : "{amount}t foglalt"
    },
    "CASH" : {
       "description" : "",
@@ -139,6 +155,10 @@
       "description" : "",
       "message" : "Főtörzs"
    },
+   "CONTINUE_GAME" : {
+      "description" : "",
+      "message" : "Játék folytatása"
+   },
    "CONTROLS" : {
       "description" : "",
       "message" : "Irányítás"
@@ -150,6 +170,10 @@
    "COULD_NOT_LOAD_GAME" : {
       "description" : "",
       "message" : "Mentés nem tölthető be:"
+   },
+   "CREDIBLE" : {
+      "description" : "For player reputation",
+      "message" : "Szavahihető"
    },
    "CREW_CABINS" : {
       "description" : "",
@@ -175,6 +199,18 @@
       "description" : "",
       "message" : "Delta-V"
    },
+   "DELTA_V_EMPTY" : {
+      "description" : "Delta-v capacity of a ship with no cargo or upgrades",
+      "message" : "Delta-v (üres)"
+   },
+   "DELTA_V_FULL" : {
+      "description" : "Delta-v capacity of a ship with maximum cargo",
+      "message" : "Delta-v (tele)"
+   },
+   "DELTA_V_MAX" : {
+      "description" : "Delta-v capacity of a ship with cargo bay fully loaded with propellant",
+      "message" : "Delta-v (max)"
+   },
    "DESCENT_TO_GROUND_SPEED" : {
       "description" : "",
       "message" : "Sebesség ereszkedéshez:"
@@ -186,6 +222,10 @@
    "DISMISS" : {
       "description" : "",
       "message" : "Elbocsájt"
+   },
+   "DISPLAY_HUD_TRAILS" : {
+      "description" : "",
+      "message" : "HUD nyomvonalak"
    },
    "DISPLAY_NAV_TUNNELS" : {
       "description" : "",
@@ -225,7 +265,7 @@
    },
    "ENABLE_COCKPIT" : {
       "description" : "",
-      "message" : "Enable cockpit (EXPERIMENTAL)"
+      "message" : "Kabin bekapcsolása (KISÉRLETI)"
    },
    "ENABLE_JOYSTICK" : {
       "description" : "",
@@ -233,7 +273,7 @@
    },
    "ENGINEERING" : {
       "description" : "",
-      "message" : "Gépészet"
+      "message" : "Gépészet:"
    },
    "EQUIPMENT" : {
       "description" : "",
@@ -258,6 +298,14 @@
    "EXIT_THIS_GAME" : {
       "description" : "",
       "message" : "Kilépés"
+   },
+   "EXPERIENCED" : {
+      "description" : "For player reputation",
+      "message" : "Tapasztalt"
+   },
+   "EXPERT" : {
+      "description" : "For player reputation",
+      "message" : "Szakértő"
    },
    "FAILED" : {
       "description" : "",
@@ -284,7 +332,7 @@
       "message" : "Fraktál részletesség"
    },
    "FREE" : {
-      "description" : "",
+      "description" : "Used in Ship Information view as in Capacity: 10t (5t free)",
       "message" : "szabad"
    },
    "FRONT_WEAPON" : {
@@ -391,6 +439,14 @@
       "description" : "",
       "message" : "Inaktív"
    },
+   "INCOMPETENT" : {
+      "description" : "For player reputation",
+      "message" : "Alkalmatlan"
+   },
+   "INEXPERIENCED" : {
+      "description" : "For player reputation",
+      "message" : "Tapasztalatlan"
+   },
    "INVERT_MOUSE_Y" : {
       "description" : "",
       "message" : "Egér Y tengely megfordítása"
@@ -426,6 +482,18 @@
    "LANGUAGE_RESTART_GAME_TO_APPLY" : {
       "description" : "",
       "message" : "Nyelv (újraindítás szükséges)"
+   },
+   "LAUNCH_PERMISSION_DENIED_BUSY" : {
+      "description" : "",
+      "message" : "Leszállási engedély megtagadva: leszállóöböl foglalt."
+   },
+   "LAUNCH_PERMISSION_DENIED_CREW" : {
+      "description" : "",
+      "message" : "Nem teljes a létszám a hajón, a felszállási engedélyt nem adom meg."
+   },
+   "LAUNCH_PERMISSION_DENIED_FINED" : {
+      "description" : "",
+      "message" : "Kifizetetlen bírságai vannak, a felszállási engedélyt nem adom meg."
    },
    "LEGAL_STATUS" : {
       "description" : "",
@@ -496,12 +564,20 @@
       "message" : "Tömeg"
    },
    "MASTER" : {
-      "description" : "",
+      "description" : "For player reputation",
+      "message" : "Mester"
+   },
+   "MASTER_VOL" : {
+      "description" : "Master sound in settings option",
       "message" : "Fő hangerő:"
    },
    "MAX" : {
       "description" : "",
       "message" : "max"
+   },
+   "MAXIMUM_CREW" : {
+      "description" : "",
+      "message" : "Maximum legénység"
    },
    "MEDIUM" : {
       "description" : "",
@@ -543,6 +619,10 @@
       "description" : "",
       "message" : "Minimális legénység"
    },
+   "MISSILE_MOUNTS" : {
+      "description" : "",
+      "message" : "Rakéta kapacitás"
+   },
    "MISSIONS" : {
       "description" : "",
       "message" : "Küldetések"
@@ -575,8 +655,12 @@
       "description" : "",
       "message" : "Némít"
    },
-   "NAME" : {
-      "description" : "",
+   "NAME_OBJECT" : {
+      "description" : "For an item or object",
+      "message" : "Név"
+   },
+   "NAME_PERSON" : {
+      "description" : "For a person",
       "message" : "Név"
    },
    "NAVIGATION" : {
@@ -591,6 +675,14 @@
       "description" : "",
       "message" : "Következő kifizetés"
    },
+   "NO" : {
+      "description" : "Negative answer to a question",
+      "message" : "Nincs"
+   },
+   "NOBODY" : {
+      "description" : "For player reputation",
+      "message" : "Senki"
+   },
    "NONE" : {
       "description" : "",
       "message" : "Nincs"
@@ -602,6 +694,10 @@
    "NOT_ENOUGH_ALLOY_TO_ATTEMPT_A_REPAIR" : {
       "description" : "",
       "message" : "Nincs elegendő {alloy} a javításhoz."
+   },
+   "NOT_SUPPORTED_ON_THIS_SHIP" : {
+      "description" : "",
+      "message" : "Ezen a típuson nincs {equipment} foglalat."
    },
    "NO_MISSIONS" : {
       "description" : "",
@@ -699,6 +795,10 @@
       "description" : "",
       "message" : "Ár"
    },
+   "PROFESSIONAL" : {
+      "description" : "For player reputation",
+      "message" : "Szakértő"
+   },
    "QUALIFICATION_SCORES" : {
       "description" : "",
       "message" : "Képzettség pont:"
@@ -723,13 +823,29 @@
       "description" : "",
       "message" : "Újratölt"
    },
+   "REFUEL_FULL" : {
+      "description" : "",
+      "message" : "Teletölt"
+   },
+   "RELIABLE" : {
+      "description" : "For player reputation",
+      "message" : "Megbízható"
+   },
    "REPAIR_X_HULL_DAMAGE_FOR_X" : {
       "description" : "",
       "message" : "{damage}% hajótest sérülés javíttatása {price} -ért"
    },
+   "REPUTATION" : {
+      "description" : "",
+      "message" : "Hírnév"
+   },
    "REQUEST_LAUNCH" : {
       "description" : "",
       "message" : "Felszállási engedély kérése"
+   },
+   "RETURN_TO_GAME" : {
+      "description" : "",
+      "message" : "Vissza"
    },
    "RETURN_TO_MENU" : {
       "description" : "",
@@ -782,6 +898,10 @@
    "SHIP_IS_ALREADY_FULLY_REPAIRED" : {
       "description" : "",
       "message" : "A hajó tökéletes állapotban van."
+   },
+   "SHIP_IS_FULLY_EQUIPPED" : {
+      "description" : "",
+      "message" : "A hajód teljesen fel van szerelve"
    },
    "SHIP_IS_FULLY_LADEN" : {
       "description" : "",
@@ -839,6 +959,10 @@
       "description" : "",
       "message" : "Férfi/Nő"
    },
+   "TOO_SMALL_FOR_CURRENT_CREW" : {
+      "description" : "",
+      "message" : "Túl kicsi a hajó a legénységnek."
+   },
    "TOTAL" : {
       "description" : "",
       "message" : "Összesen:"
@@ -851,6 +975,10 @@
       "description" : "",
       "message" : "Illegális termékek kereskedelme"
    },
+   "TRUSTWORTHY" : {
+      "description" : "For player reputation",
+      "message" : "Felelős"
+   },
    "TYPE" : {
       "description" : "",
       "message" : "Típus"
@@ -858,6 +986,10 @@
    "UNLAWFUL_WEAPONS_DISCHARGE" : {
       "description" : "",
       "message" : "Törvénytelen fegyverhasználat"
+   },
+   "UNRELIABLE" : {
+      "description" : "",
+      "message" : "Megbízhatatlan"
    },
    "UP_ACCEL" : {
       "description" : "",
@@ -893,7 +1025,7 @@
    },
    "WEIGHT_EMPTY" : {
       "description" : "",
-      "message" : "Üres tömeg:"
+      "message" : "Üres súly"
    },
    "WEIGHT_FULLY_LOADED" : {
       "description" : "",
@@ -906,6 +1038,10 @@
    "WE_HAVE_NO_BUSINESS_WITH_YOU" : {
       "description" : "",
       "message" : "Jelenleg nincs veled semmi dolgunk."
+   },
+   "YES" : {
+      "description" : "Positive answer to a question",
+      "message" : "Van"
    },
    "YOURE_GOING_TO_REGRET_SACKING_ME" : {
       "description" : "",

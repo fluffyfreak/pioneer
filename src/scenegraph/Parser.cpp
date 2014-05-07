@@ -183,6 +183,8 @@ bool Parser::parseLine(const std::string &line)
 					return checkTexture(ss, m_curMat->tex_spec);
 				else if (match(token, "tex_glow"))
 					return checkTexture(ss, m_curMat->tex_glow);
+				else if (match(token, "tex_ambi"))
+					return checkTexture(ss, m_curMat->tex_ambi);
 				else if (match(token, "diffuse"))
 					return checkColor(ss, m_curMat->diffuse);
 				else if (match(token, "specular"))
@@ -203,9 +205,6 @@ bool Parser::parseLine(const std::string &line)
 					return true;
 				} else if (match(token, "alpha_test")) {
 					m_curMat->alpha_test = true;
-					return true;
-				} else if (match(token, "two_sided")) {
-					m_curMat->two_sided = true;
 					return true;
 				} else if (match(token, "unlit")) {
 					m_curMat->unlit = true;

@@ -68,9 +68,9 @@ void Player::InitCockpit()
 }
 
 //XXX perhaps remove this, the sound is very annoying
-bool Player::OnDamage(Object *attacker, float kgDamage)
+bool Player::OnDamage(Object *attacker, float kgDamage, const CollisionContact& contactData)
 {
-	bool r = Ship::OnDamage(attacker, kgDamage);
+	bool r = Ship::OnDamage(attacker, kgDamage, contactData);
 	if (!IsDead() && (GetPercentHull() < 25.0f)) {
 		Sound::BodyMakeNoise(this, "warning", .5f);
 	}
@@ -201,6 +201,15 @@ void Player::SetNavTarget(Body* const target, bool setSpeedTo)
 }
 //temporary targeting stuff ends
 
+Ship::HyperjumpStatus Player::InitiateHyperjumpTo(const SystemPath &dest, int warmup_time, double duration, LuaRef checks) {
+	HyperjumpStatus status = Ship::InitiateHyperjumpTo(dest, warmup_time, duration, checks);
+
+	if (status == HYPERJUMP_OK)
+		s_soundHyperdrive.Play("Hyperdrive_Charge");
+
+	return status;
+}
+
 Ship::HyperjumpStatus Player::StartHyperspaceCountdown(const SystemPath &dest)
 {
 	HyperjumpStatus status = Ship::StartHyperspaceCountdown(dest);
@@ -212,6 +221,12 @@ Ship::HyperjumpStatus Player::StartHyperspaceCountdown(const SystemPath &dest)
 	DisengageSliceDrive();
 
 	return status;
+}
+
+void Player::AbortHyperjump()
+{
+	s_soundHyperdrive.Play("Hyperdrive_Abort");
+	Ship::AbortHyperjump();
 }
 
 void Player::ResetHyperspaceCountdown()

@@ -12,8 +12,8 @@
       "message" : "Alleanze:"
    },
    "ALT" : {
-      "description" : "",
-      "message" : "\"alt \""
+      "description" : "Alt key on keyboard",
+      "message" : "Alt"
    },
    "ALT_IN_KM" : {
       "description" : "",
@@ -58,6 +58,10 @@
    "ATMOSPHERIC_SHIELDING_DESCRIPTION" : {
       "description" : "",
       "message" : "Proteggono l'astronave dal surriscaldamento durante l'ingresso in atmosfera."
+   },
+   "AUTOMATIC_SYSTEM_SELECTION" : {
+      "description" : "",
+      "message" : "Selezione automatica del sistema"
    },
    "AUTOPILOT" : {
       "description" : "",
@@ -268,8 +272,8 @@
       "message" : "\" atmosfera a prevalenza di monossido di carbonio\""
    },
    "CTRL" : {
-      "description" : "",
-      "message" : "\"ctrl \""
+      "description" : "Ctrl key on keyboard",
+      "message" : "Ctrl"
    },
    "CURRENT_SYSTEM" : {
       "description" : "",
@@ -303,10 +307,6 @@
       "description" : "",
       "message" : "\" Dir \""
    },
-   "DISABLED_AUTOMATIC_SYSTEM_SELECTION" : {
-      "description" : "",
-      "message" : "Selezione automatica dei sistemi Disabilitata."
-   },
    "DISTANCE_FROM_SHIP_TO_NAV_TARGET" : {
       "description" : "",
       "message" : "Distanza dalla destinazione selezionata"
@@ -334,6 +334,10 @@
    "DRAW_OUT_RANGE_LABELS" : {
       "description" : "",
       "message" : "Contrassegna i sistemi fuori portata"
+   },
+   "DRAW_UNINHABITED_LABELS" : {
+      "description" : "",
+      "message" : "Contrassegna i sistemi disabitati"
    },
    "DRAW_VERTICAL_LINES" : {
       "description" : "",
@@ -431,10 +435,6 @@
       "description" : "",
       "message" : "Forma di economia:"
    },
-   "ENABLED_AUTOMATIC_SYSTEM_SELECTION" : {
-      "description" : "",
-      "message" : "Selezione automatica dei sistemi Abilitata."
-   },
    "EQUATORIAL_RADIUS_TO_POLAR_RADIUS_RATIO" : {
       "description" : "",
       "message" : "Rapporto equatoriale - polare"
@@ -489,7 +489,7 @@
    },
    "FRUIT_AND_VEG" : {
       "description" : "",
-      "message" : "Frutta e Verdura"
+      "message" : "Frutta e verdura"
    },
    "FUEL" : {
       "description" : "",
@@ -534,6 +534,10 @@
    "GAME_SAVE_CANNOT_WRITE" : {
       "description" : "",
       "message" : "Questo salvataggio non può essere scritto per via di un errore di sistema."
+   },
+   "GENERAL_VIEW_CONTROLS" : {
+      "description" : "",
+      "message" : "Controlli Generali della Visuale"
    },
    "GOVERNMENT_TYPE" : {
       "description" : "",
@@ -605,7 +609,7 @@
    },
    "HYPERCLOUD_ANALYZER" : {
       "description" : "",
-      "message" : "Analizzatore di Nubi Iperspaziali"
+      "message" : "Analizzatore di nubi iperspaziali"
    },
    "HYPERCLOUD_ANALYZER_DESCRIPTION" : {
       "description" : "",
@@ -716,7 +720,7 @@
       "message" : "Atterrato"
    },
    "LANG_NAME" : {
-      "description" : "The name that native speakers use for this language. This will be used in the language selection screen. For obscure reasons this currently must only use Latin-1 characters.",
+      "description" : "The name that native speakers use for this language. This will be used in the language selection screen.",
       "message" : "Italiano"
    },
    "LARGE" : {
@@ -743,17 +747,13 @@
       "description" : "",
       "message" : "Rilevata attività ostile."
    },
-   "LAUNCH_PERMISSION_DENIED_BUSY" : {
-      "description" : "",
-      "message" : "Autorizzazione al lancio negata: attracco occupato."
-   },
    "LIBERAL_DEMOCRACY" : {
       "description" : "",
       "message" : "Liberal-Democrazia"
    },
    "LIQUID_OXYGEN" : {
       "description" : "",
-      "message" : "Ossigeno Liquido"
+      "message" : "Ossigeno liquido"
    },
    "LIQUID_OXYGEN_DESCRIPTION" : {
       "description" : "",
@@ -787,6 +787,70 @@
       "description" : "",
       "message" : "Modalità controllo manuale"
    },
+   "MAP_LOCK_HYPERSPACE_TARGET" : {
+      "description" : "",
+      "message" : "Blocca Destinazione Iperspaziale"
+   },
+   "MAP_TOGGLE_INFO_PANEL" : {
+      "description" : "",
+      "message" : "Mostra/nascondi Pannello Informazioni"
+   },
+   "MAP_TOGGLE_SELECTION_FOLLOW_VIEW" : {
+      "description" : "",
+      "message" : "Attiva/disattiva Visuale Centrata sulla Selezione"
+   },
+   "MAP_VIEW_ROTATE_DOWN" : {
+      "description" : "",
+      "message" : "Ruota Visuale in Giù"
+   },
+   "MAP_VIEW_ROTATE_LEFT" : {
+      "description" : "",
+      "message" : "Ruota Visuale a Sinistra"
+   },
+   "MAP_VIEW_ROTATE_RIGHT" : {
+      "description" : "",
+      "message" : "Ruota Visuale a Destra"
+   },
+   "MAP_VIEW_ROTATE_UP" : {
+      "description" : "",
+      "message" : "Ruota Visuale in Su"
+   },
+   "MAP_VIEW_SHIFT_BACKWARD" : {
+      "description" : "",
+      "message" : "Scorri Visuale Indietro"
+   },
+   "MAP_VIEW_SHIFT_DOWN" : {
+      "description" : "",
+      "message" : "Scorri Visuale in Giù"
+   },
+   "MAP_VIEW_SHIFT_FORWARD" : {
+      "description" : "",
+      "message" : "Scorri Visuale in Avanti"
+   },
+   "MAP_VIEW_SHIFT_LEFT" : {
+      "description" : "",
+      "message" : "Scorri Visuale a Sinistra"
+   },
+   "MAP_VIEW_SHIFT_RIGHT" : {
+      "description" : "",
+      "message" : "Scorri Visuale a Destra"
+   },
+   "MAP_VIEW_SHIFT_UP" : {
+      "description" : "",
+      "message" : "Scorri Visuale in Su"
+   },
+   "MAP_WARP_TO_CURRENT_SYSTEM" : {
+      "description" : "",
+      "message" : "Salta al Sistema Corrente"
+   },
+   "MAP_WARP_TO_HYPERSPACE_TARGET" : {
+      "description" : "",
+      "message" : "Salta alla Destinazione Iperspaziale"
+   },
+   "MAP_WARP_TO_SELECTED_SYSTEM" : {
+      "description" : "",
+      "message" : "Salta al Sistema Selezionato"
+   },
    "MASS" : {
       "description" : "",
       "message" : "Massa"
@@ -812,8 +876,8 @@
       "message" : "Messaggio da %sender:"
    },
    "META" : {
-      "description" : "",
-      "message" : "\"meta \""
+      "description" : "'Meta' key on keyboard",
+      "message" : "Meta"
    },
    "METAL_ALLOYS" : {
       "description" : "",
@@ -939,8 +1003,12 @@
       "description" : "",
       "message" : "%speed{f.0} m/s relativa a %frame"
    },
-   "NAME" : {
-      "description" : "",
+   "NAME_OBJECT" : {
+      "description" : "For an item or object",
+      "message" : "Nome"
+   },
+   "NAME_PERSON" : {
+      "description" : "For a person",
       "message" : "Nome"
    },
    "NARCOTICS" : {
@@ -1003,9 +1071,25 @@
       "description" : "",
       "message" : "%days{f.0} gg"
    },
+   "NUMBER_DECIMAL_POINT" : {
+      "description" : "Decimal delimiter used in numbers.",
+      "message" : "."
+   },
    "NUMBER_G" : {
       "description" : "",
       "message" : "%acceleration{f.1} G"
+   },
+   "NUMBER_GROUP_MIN" : {
+      "description" : "Smallest number to start grouping of digits for. (E.g. if \"10000\" start grouping thousands with 10,000, and not 1,000).",
+      "message" : "1000"
+   },
+   "NUMBER_GROUP_NUM" : {
+      "description" : "For large number, group digits by this many. European languages use 3 (group thousands). 0 means no grouping.",
+      "message" : "3"
+   },
+   "NUMBER_GROUP_SEP" : {
+      "description" : "For large number, separator used when grouping digits. E.g. 1,000 or 1 000 or 1'000.",
+      "message" : "."
    },
    "NUMBER_HOURS" : {
       "description" : "",
@@ -1231,6 +1315,10 @@
       "description" : "",
       "message" : "Azzera Zoom"
    },
+   "RESET_ORIENTATION_AND_ZOOM" : {
+      "description" : "",
+      "message" : "Reimposta Orientamento e Zoom"
+   },
    "ROBOTS" : {
       "description" : "",
       "message" : "Robot"
@@ -1297,7 +1385,7 @@
    },
    "SCANNER_CONTROL" : {
       "description" : "",
-      "message" : "Controllo Scanner"
+      "message" : "Controllo scanner"
    },
    "SCANNER_DESCRIPTION" : {
       "description" : "",
@@ -1315,9 +1403,17 @@
       "description" : "",
       "message" : "Cerca"
    },
+   "SEARCH_MAP" : {
+      "description" : "",
+      "message" : "Cerca nella Mappa"
+   },
    "SECTOR_COORDINATES" : {
       "description" : "",
       "message" : "Coordinate settore:"
+   },
+   "SECTOR_MAP_VIEW" : {
+      "description" : "",
+      "message" : "Visuale Mappa Settore"
    },
    "SECTOR_X_Y_Z" : {
       "description" : "",
@@ -1384,8 +1480,8 @@
       "message" : "Resistenza scudi: %shields{f.2}"
    },
    "SHIFT" : {
-      "description" : "",
-      "message" : "\"shift \""
+      "description" : "Shift key on keyboard",
+      "message" : "Maiusc"
    },
    "SHIP" : {
       "description" : "",
@@ -1753,7 +1849,7 @@
    },
    "UNOCCUPIED_CABIN" : {
       "description" : "",
-      "message" : "Alloggio Passeggeri Extra"
+      "message" : "Alloggio passeggeri extra"
    },
    "UNOCCUPIED_CABIN_DESCRIPTION" : {
       "description" : "",

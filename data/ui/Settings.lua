@@ -5,7 +5,7 @@ local Game = import("Game")
 local Engine = import("Engine")
 local Lang = import("Lang")
 local utils = import("utils")
-local TabGroup = import("ui/TabGroup")
+local TabView = import("ui/TabView")
 local SmallLabeledButton = import("ui/SmallLabeledButton")
 local KeyBindingCapture = import("UI.Game.KeyBindingCapture")
 local AxisBindingCapture = import("UI.Game.AxisBindingCapture")
@@ -94,10 +94,14 @@ ui.templates.Settings = function (args)
 		local navTunnelsCheckBox = optionCheckBox(
 			Engine.GetDisplayNavTunnels, Engine.SetDisplayNavTunnels,
 			l.DISPLAY_NAV_TUNNELS)
-		
+
 		local speedLinesCheckBox = optionCheckBox(
 			Engine.GetDisplaySpeedLines, Engine.SetDisplaySpeedLines,
 			l.DISPLAY_SPEED_LINES)
+
+		local hudTrailsCheckBox = optionCheckBox(
+			Engine.GetDisplayHudTrails, Engine.SetDisplayHudTrails,
+			l.DISPLAY_HUD_TRAILS)
 
 		local cockpitCheckBox = optionCheckBox(
 			Engine.GetCockpitEnabled, Engine.SetCockpitEnabled,
@@ -125,6 +129,7 @@ ui.templates.Settings = function (args)
 				cityDetailDropDown,
 				navTunnelsCheckBox,
 				speedLinesCheckBox,
+				hudTrailsCheckBox,
 				cockpitCheckBox,
 			})))
 	end
@@ -146,13 +151,19 @@ ui.templates.Settings = function (args)
 			return optionCheckBox(getter, setter, l.MUTE)
 		end
 
-		return ui:VBox():PackEnd(ui:Grid({1,2,1}, 3)
-			:SetCell(0,0,muteBox(Engine.GetMasterMuted, Engine.SetMasterMuted))
-			:SetCell(1,0,volumeSlider(l.MASTER, Engine.GetMasterVolume, Engine.SetMasterVolume))
-			:SetCell(0,1,muteBox(Engine.GetMusicMuted, Engine.SetMusicMuted))
-			:SetCell(1,1,volumeSlider(l.MUSIC, Engine.GetMusicVolume, Engine.SetMusicVolume))
-			:SetCell(0,2,muteBox(Engine.GetEffectsMuted, Engine.SetEffectsMuted))
-			:SetCell(1,2,volumeSlider(l.EFFECTS, Engine.GetEffectsVolume, Engine.SetEffectsVolume)))
+		return ui:Table():SetColumnSpacing(10)
+			:AddRow({
+				muteBox(Engine.GetMasterMuted, Engine.SetMasterMuted),
+				volumeSlider(l.MASTER_VOL, Engine.GetMasterVolume, Engine.SetMasterVolume),
+			})
+			:AddRow({
+				muteBox(Engine.GetMusicMuted, Engine.SetMusicMuted),
+				volumeSlider(l.MUSIC, Engine.GetMusicVolume, Engine.SetMusicVolume),
+			})
+			:AddRow({
+				muteBox(Engine.GetEffectsMuted, Engine.SetEffectsMuted),
+				volumeSlider(l.EFFECTS, Engine.GetEffectsVolume, Engine.SetEffectsVolume),
+			})
 	end
 
 	local languageTemplate = function()
@@ -215,13 +226,13 @@ ui.templates.Settings = function (args)
 		return captureDialog(AxisBindingCapture, label, onOk)
 	end
 
-	local initKeyBindingControls = function (grid, row, info)
+	local initKeyBindingControls = function (bindingsTable, info)
 		local bindings = { info.binding1, info.binding2 }
 		local descriptions = { info.bindingDescription1, info.bindingDescription2 }
 		local buttons = { SmallLabeledButton.New(''), SmallLabeledButton.New('') }
 
-		grid:SetCell(0, row, ui:Label(info.label))
-		grid:SetCell(1, row, buttons[1])
+		local extra = ui:Margin(0)
+		bindingsTable:AddRow({ ui:Margin(30, 'LEFT', info.label), buttons[1], extra })
 
 		local updateUI = function ()
 			buttons[1].label:SetText(descriptions[1] or '')
@@ -229,9 +240,9 @@ ui.templates.Settings = function (args)
 			-- the first button is always shown
 			-- the second button is shown if there's already one binding
 			if bindings[1] then
-				grid:SetCell(2, row, buttons[2])
+				extra:SetInnerWidget(buttons[2])
 			else
-				grid:ClearCell(2, row)
+				extra:RemoveInnerWidget()
 			end
 		end
 
@@ -265,12 +276,10 @@ ui.templates.Settings = function (args)
 		updateUI()
 	end
 
-	local initAxisBindingControls = function (grid, row, info)
+	local initAxisBindingControls = function (bindingsTable, info)
 		local button = SmallLabeledButton.New(info.bindingDescription1 or '')
 
-		grid:SetCell(0, row, ui:Label(info.label))
-		grid:SetCell(1, row, button)
-		grid:ClearCell(2, row)
+		bindingsTable:AddRow({ ui:Margin(30, 'LEFT', info.label), button })
 
 		button.button.onClick:Connect(function ()
 			local dialog = captureAxisDialog(info.label, function (new_binding, new_binding_description)
@@ -291,26 +300,28 @@ ui.templates.Settings = function (args)
 		box:PackEnd(ui:Label(l.CONTROL_OPTIONS):SetFont('HEADING_LARGE'))
 		box:PackEnd(options)
 
+		local bindingsTable = ui:Table():SetColumnSpacing(20)
+
+		box:PackEnd(bindingsTable)
+
 		local pages = Engine.GetKeyBindings()
 		for page_idx = 1, #pages do
 			local page = pages[page_idx]
-			box:PackEnd(ui:Label(page.label):SetFont('HEADING_LARGE'))
+			bindingsTable:AddRow({ui:Label(page.label):SetFont("HEADING_LARGE")})
 			for group_idx = 1, #page do
 				local group = page[group_idx]
-				box:PackEnd(ui:Margin(10, 'LEFT', ui:Label(group.label):SetFont('HEADING_NORMAL')))
-				local grid = ui:Grid(3, #group)
-				-- grid columns: Action, Binding 1, Binding 2
+				bindingsTable:AddRow({ui:Margin(10, 'LEFT', ui:Label(group.label):SetFont('HEADING_NORMAL'))})
 				for i = 1, #group do
 					local info = group[i]
 					if info.type == 'KEY' then
-						initKeyBindingControls(grid, i - 1, info)
+						initKeyBindingControls(bindingsTable, info)
 					elseif info.type == 'AXIS' then
-						initAxisBindingControls(grid, i - 1, info)
+						initAxisBindingControls(bindingsTable, info)
 					end
 				end
-				box:PackEnd(ui:Margin(30, 'LEFT', grid))
 			end
 		end
+
 		return box
 	end
 
@@ -322,7 +333,7 @@ ui.templates.Settings = function (args)
 	end
 
 	local setTabs = nil
-	setTabs = TabGroup.New()
+	setTabs = TabView.New()
 	setTabs:AddTab({ id = "Video",    title = l.VIDEO,    icon = "VideoCamera", template = wrapWithScroller(videoTemplate)    })
 	setTabs:AddTab({ id = "Sound",    title = l.SOUND,    icon = "Speaker",     template = wrapWithScroller(soundTemplate)    })
 	setTabs:AddTab({ id = "Language", title = l.LANGUAGE, icon = "Globe1",      template = wrapWithScroller(languageTemplate) })
@@ -335,6 +346,9 @@ ui.templates.Settings = function (args)
 			local btn = ui:Button():SetInnerWidget(ui:Label(items[i].text))
 			btn.onClick:Connect(items[i].onClick)
 			close_buttons[i] = btn
+			if (items[i].toDisable and items[i].toDisable()) then
+				btn:Disable()
+			end
 		end
 	end
 
@@ -350,25 +364,32 @@ end
 ui.templates.SettingsInGame = function ()
 	return ui.templates.Settings({
 		closeButtons = {
-			{ text = l.SAVE, onClick = function ()
-				local settings_view = ui.layer.innerWidget
-				ui:NewLayer(
-					ui.templates.FileDialog({
-						title        = l.SAVE,
-						helpText     = l.SELECT_A_FILE_TO_SAVE_TO_OR_ENTER_A_NEW_FILENAME,
-						path         = "savefiles",
-						allowNewFile = true,
-						selectLabel  = l.SAVE,
-						onSelect     = function (filename)
-							Game.SaveGame(filename)
-							ui:DropLayer()
-						end,
-						onCancel    = function ()
-							ui:DropLayer()
-						end
-					})
-				)
-			end },
+			{
+				text = l.SAVE,
+				onClick = function ()
+					local settings_view = ui.layer.innerWidget
+					ui:NewLayer(
+						ui.templates.FileDialog({
+							title        = l.SAVE,
+							helpText     = l.SELECT_A_FILE_TO_SAVE_TO_OR_ENTER_A_NEW_FILENAME,
+							path         = "savefiles",
+							allowNewFile = true,
+							selectLabel  = l.SAVE,
+							onSelect     = function (filename)
+								Game.SaveGame(filename)
+								ui:DropLayer()
+							end,
+							onCancel    = function ()
+								ui:DropLayer()
+							end
+						})
+					)
+				end,
+				toDisable = function()
+					return Game.player.flightState == "HYPERSPACE"
+				end
+			},
+			{ text = l.RETURN_TO_GAME, onClick = Game.SwitchView },
 			{ text = l.EXIT_THIS_GAME, onClick = Game.EndGame }
 		}
 	})

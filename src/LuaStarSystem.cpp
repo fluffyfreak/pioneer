@@ -12,8 +12,9 @@
 #include "Star.h"
 #include "Planet.h"
 #include "SpaceStation.h"
+#include "galaxy/Galaxy.h"
 #include "galaxy/Sector.h"
-#include "galaxy/SectorCache.h"
+#include "galaxy/GalaxyCache.h"
 #include "Factions.h"
 #include "FileSystem.h"
 
@@ -61,10 +62,10 @@ static int l_starsystem_get_station_paths(lua_State *l)
 
 	lua_newtable(l);
 
-	for (std::vector<SystemBody*>::const_iterator i = s->m_spaceStations.begin(); i != s->m_spaceStations.end(); ++i)
+	for (const SystemBody *station : s->GetSpaceStations())
 	{
 		lua_pushinteger(l, lua_rawlen(l, -1)+1);
-		LuaObject<SystemPath>::PushToLua(&(*i)->path);
+		LuaObject<SystemPath>::PushToLua(&station->GetPath());
 		lua_rawset(l, -3);
 	}
 
@@ -101,10 +102,10 @@ static int l_starsystem_get_body_paths(lua_State *l)
 
 	lua_newtable(l);
 
-	for (std::vector< RefCountedPtr<SystemBody> >::const_iterator i = s->m_bodies.begin(); i != s->m_bodies.end(); ++i)
+	for (RefCountedPtr<const SystemBody> sb : s->GetBodies())
 	{
 		lua_pushinteger(l, lua_rawlen(l, -1)+1);
-		LuaObject<SystemPath>::PushToLua(&(*i)->path);
+		LuaObject<SystemPath>::PushToLua(&sb->GetPath());
 		lua_rawset(l, -3);
 	}
 
@@ -235,20 +236,20 @@ static int l_starsystem_get_nearby_systems(lua_State *l)
 
 	lua_newtable(l);
 
-	const SystemPath here = s->GetPath();
+	const SystemPath &here = s->GetPath();
 
 	const int here_x = here.sectorX;
 	const int here_y = here.sectorY;
 	const int here_z = here.sectorZ;
 	const Uint32 here_idx = here.systemIndex;
-	const Sector* here_sec = Sector::cache.GetCached(here);
+	RefCountedPtr<const Sector> here_sec = Pi::GetGalaxy()->GetSector(here);
 
 	const int diff_sec = int(ceil(dist_ly/Sector::SIZE));
 
 	for (int x = here_x-diff_sec; x <= here_x+diff_sec; x++) {
 		for (int y = here_y-diff_sec; y <= here_y+diff_sec; y++) {
 			for (int z = here_z-diff_sec; z <= here_z+diff_sec; z++) {
-				const Sector* sec = Sector::cache.GetCached(SystemPath(x, y, z));
+				RefCountedPtr<const Sector> sec = Pi::GetGalaxy()->GetSector(SystemPath(x, y, z));
 
 				for (unsigned int idx = 0; idx < sec->m_systems.size(); idx++) {
 					if (x == here_x && y == here_y && z == here_z && idx == here_idx)
@@ -257,7 +258,7 @@ static int l_starsystem_get_nearby_systems(lua_State *l)
 					if (Sector::DistanceBetween(here_sec, here_idx, sec, idx) > dist_ly)
 						continue;
 
-					RefCountedPtr<StarSystem> sys = StarSystem::GetCached(SystemPath(x, y, z, idx));
+					RefCountedPtr<StarSystem> sys = Pi::GetGalaxy()->GetStarSystem(SystemPath(x, y, z, idx));
 					if (filter) {
 						lua_pushvalue(l, 3);
 						LuaObject<StarSystem>::PushToLua(sys.Get());
@@ -319,8 +320,8 @@ static int l_starsystem_distance_to(lua_State *l)
 		loc2 = &(s2->GetPath());
 	}
 
-	const Sector* sec1 = Sector::cache.GetCached(*loc1);
-	const Sector* sec2 = Sector::cache.GetCached(*loc2);
+	RefCountedPtr<const Sector> sec1 = Pi::GetGalaxy()->GetSector(*loc1);
+	RefCountedPtr<const Sector> sec2 = Pi::GetGalaxy()->GetSector(*loc2);
 
 	double dist = Sector::DistanceBetween(sec1, loc1->systemIndex, sec2, loc2->systemIndex);
 
@@ -416,7 +417,8 @@ static int l_starsystem_attr_path(lua_State *l)
 /*
  * Attribute: lawlessness
  *
- * The lawlessness value for the system
+ * The lawlessness value for the system, 0 for peaceful, 1 for raging
+ * hordes of pirates
  *
  * Availability:
  *
@@ -458,7 +460,7 @@ static int l_starsystem_attr_population(lua_State *l)
 /*
  * Attribute: faction
  *
- * The faction that controls this system
+ * The <Faction> that controls this system
  *
  * Availability:
  *

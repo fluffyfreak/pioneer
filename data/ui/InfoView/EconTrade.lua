@@ -52,6 +52,9 @@ local econTrade = function ()
 							updateCargoListWidget()
 							cargoListWidget:SetInnerWidget(updateCargoListWidget())
 						end)
+						if Game.player.flightState ~= "FLYING" then
+							jettisonButton.widget:Disable()
+						end
 						table.insert(cargoJettisonColumn, jettisonButton.widget)
 					end
 				end
@@ -73,12 +76,18 @@ local econTrade = function ()
 
 	cargoListWidget:SetInnerWidget(updateCargoListWidget())
 
-	local cargoGauge = InfoGauge.New({
-		formatter = function (v)
-			return string.format("%d/%dt", player.usedCargo, player.freeCapacity)
-		end
-	})
-	cargoGauge:SetValue(player.usedCargo/player.freeCapacity)
+	local cargoGauge = ui:Gauge()
+	local cargoUsedLabel = ui:Label("")
+	local cargoFreeLabel = ui:Label("")
+	local function cargoUpdate ()
+		cargoGauge:SetUpperValue(player.totalCargo)
+		cargoGauge:SetValue(player.usedCargo)
+		cargoUsedLabel:SetText(string.interp(l.CARGO_T_USED, { amount = player.usedCargo }))
+		cargoFreeLabel:SetText(string.interp(l.CARGO_T_FREE, { amount = player.totalCargo-player.usedCargo }))
+	end
+	player:Connect("usedCargo", cargoUpdate)
+	player:Connect("totalCargo", cargoUpdate)
+	cargoUpdate()
 
 	local fuelGauge = InfoGauge.New({
 		label          = ui:NumberLabel("PERCENT"),
@@ -91,10 +100,16 @@ local econTrade = function ()
 
 	-- Define the refuel button
 	local refuelButton = SmallLabeledButton.New(l.REFUEL)
+	local refuelMaxButton = SmallLabeledButton.New(l.REFUEL_FULL)
 
 	local refuelButtonRefresh = function ()
-		if Game.player.fuel == 100 or Game.player:GetEquipCount('CARGO', 'WATER') == 0 then refuelButton.widget:Disable() end
-		fuelGauge:SetValue(Game.player.fuel/100)
+		if Game.player.fuel == 100 or Game.player:GetEquipCount('CARGO', 'HYDROGEN') == 0 then
+			refuelButton.widget:Disable()
+			refuelMaxButton.widget:Disable()
+		end
+		local fuel_percent = Game.player.fuel/100
+		fuelGauge.gauge:SetValue(fuel_percent)
+		fuelGauge.label:SetValue(fuel_percent)
 	end
 	refuelButtonRefresh()
 
@@ -103,13 +118,20 @@ local econTrade = function ()
 		Game.player:Refuel(1)
 		-- ...then we update the cargo list widget...
 		cargoListWidget:SetInnerWidget(updateCargoListWidget())
-		-- ...and the gauge.
-		cargoGauge:SetValue(player.usedCargo/player.freeCapacity)
+
+		refuelButtonRefresh()
+	end
+	local refuelMax = function ()
+		repeat
+			Game.player:Refuel(1)
+		until Game.player.fuel == 100 or Game.player:GetEquipCount('CARGO', 'HYDROGEN') == 0
+		cargoListWidget:SetInnerWidget(updateCargoListWidget())
 
 		refuelButtonRefresh()
 	end
 
 	refuelButton.button.onClick:Connect(refuel)
+	refuelMaxButton.button.onClick:Connect(refuelMax)
 
 	return ui:Expand():SetInnerWidget(
 		ui:Grid({48,4,48},1)
@@ -122,6 +144,7 @@ local econTrade = function ()
 									ui:Label(l.CASH..":"),
 									ui:Margin(10),
 									ui:Label(l.CARGO_SPACE..":"),
+									ui:Margin(5),
 									ui:Label(l.CABINS..":"),
 									ui:Margin(10),
 								})
@@ -130,7 +153,19 @@ local econTrade = function ()
 								ui:VBox():PackEnd({
 									ui:Label(string.format("$%.2f", cash)),
 									ui:Margin(10),
-									cargoGauge.widget,
+									ui:Margin(0, "HORIZONTAL",
+										ui:HBox(10):PackEnd({
+											ui:Align("MIDDLE",
+												ui:HBox(10):PackEnd({
+													cargoGauge,
+												})
+											),
+											ui:VBox():PackEnd({
+												cargoUsedLabel,
+												cargoFreeLabel,
+											}):SetFont("XSMALL"),
+										})
+									),
 									ui:Grid(2,1):SetRow(0, { ui:Label(l.TOTAL..totalCabins), ui:Label(l.USED..": "..usedCabins) }),
 									ui:Margin(10),
 								})
@@ -138,11 +173,14 @@ local econTrade = function ()
 						ui:Grid({50,10,40},1)
 							:SetRow(0, {
 								ui:HBox(5):PackEnd({
-									ui:Label("Fuel:"),
+									ui:Label(l.FUEL..":"),
 									fuelGauge,
 								}),
 								nil,
-								refuelButton.widget,
+								ui:VBox(5):PackEnd({
+									refuelButton.widget,
+									refuelMaxButton.widget,
+								}),
 							})
 					})
 				)

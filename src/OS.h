@@ -15,9 +15,6 @@ namespace OS {
 	void NotifyLoadBegin();
 	void NotifyLoadEnd();
 
-	void Error(const char *format, ...)  __attribute((format(printf,1,2))) __attribute((noreturn));
-	void Warning(const char *format, ...)  __attribute((format(printf,1,2)));
-
 	const char *GetIconFilename();
 
 	void RedirectStdio();
@@ -33,6 +30,9 @@ namespace OS {
 
 	// http://stackoverflow.com/questions/150355/programmatically-find-the-number-of-cores-on-a-machine
 	int GetNumCores();
+
+	// return a string describing the operating system that the game is running on, useful!
+	const std::string GetOSInfoString();
 }
 
 #endif

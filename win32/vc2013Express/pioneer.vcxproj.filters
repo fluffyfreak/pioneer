@@ -30,9 +30,6 @@
     <ClCompile Include="..\..\src\EquipType.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\FaceVideoLink.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\Frame.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -205,12 +202,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\LuaSystemPath.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ShipSpinnerWidget.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ChatForm.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\FormController.cpp">
@@ -405,7 +396,25 @@
     <ClCompile Include="..\..\src\SpeedLines.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\Shields.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\ShipCockpit.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\LuaModelBody.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\HudTrail.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Sensors.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\GasGiant.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\BaseSphere.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -441,9 +450,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\EquipType.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\FaceVideoLink.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\fixed.h">
@@ -618,12 +624,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\LuaMusic.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ShipSpinnerWidget.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ChatForm.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\FormController.h">
@@ -818,6 +818,9 @@
     <ClInclude Include="..\..\src\FaceGenManager.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\Shields.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\EquipSet.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -825,6 +828,21 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\ShipCockpit.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\HudTrail.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Sensors.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\BaseSphere.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\GasGiant.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\matrix3x3.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

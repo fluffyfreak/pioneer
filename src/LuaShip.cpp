@@ -21,7 +21,7 @@
 /*
  * Class: Ship
  *
- * Class representing a ship. Inherits from <Body>.
+ * Class representing a ship. Inherits from <ModelBody>.
  */
 
 /*
@@ -92,7 +92,6 @@ static int l_ship_set_type(lua_State *l)
 		luaL_error(l, "Unknown ship type '%s'", type);
 
 	s->SetShipType(type);
-	s->m_equipment.Set(Equip::SLOT_ENGINE, 0, ShipType::types[type].hyperdrive);
 	s->UpdateStats();
 
 	LUA_DEBUG_END(l, 0);
@@ -721,6 +720,74 @@ static int l_ship_spawn_missile(lua_State *l)
 }
 
 /*
+ * Method: InitiateHyperjumpTo
+ *
+ *   Ready the ship to jump to the given system.
+ *
+ * > status = ship:InitiateHyperjumpTo(path, warmup, duration, checks)
+ *
+ * Parameters:
+ *
+ *   path - a <SystemPath> for the destination system
+ *
+ *   warmup - the time, in seconds, needed for the engines to warm up.
+ *
+ *   duration - travel time, in seconds.
+ *
+ *   checks - optional. A function that doesn't take any parameter and returns
+ *            true as long as all the conditions for hyperspace are met.
+ *
+ * Result:
+ *
+ *   status - a <Constants.ShipJumpStatus> string that tells if the ship can
+ *            hyperspace and if not, describes the reason
+ *
+ * Availability:
+ *
+ *   February 2014
+ *
+ * Status:
+ *
+ *   experimental
+ */
+static int l_ship_initiate_hyperjump_to(lua_State *l)
+{
+	Ship *s = LuaObject<Ship>::CheckFromLua(1);
+	SystemPath *dest = LuaObject<SystemPath>::CheckFromLua(2);
+	int warmup_time = lua_tointeger(l, 3);
+	int duration = lua_tointeger(l, 4);
+	LuaRef checks;
+	if (lua_gettop(l) >= 5)
+		checks = LuaRef(l, 5);
+
+	Ship::HyperjumpStatus status = s->InitiateHyperjumpTo(*dest, warmup_time, duration, checks);
+
+	lua_pushstring(l, EnumStrings::GetString("ShipJumpStatus", status));
+	return 1;
+}
+
+/*
+ * Method: AbortHyperjump
+ *
+ *   Abort the upcoming hyperjump
+ *
+ * > ship:AbortHyperjump()
+ *
+ * Availability:
+ *
+ *   February 2014
+ *
+ * Status:
+ *
+ *   experimental
+ */
+static int l_ship_abort_hyperjump(lua_State *l)
+{
+	LuaObject<Ship>::CheckFromLua(1)->AbortHyperjump();
+	return 0;
+}
+
+/*
  * Method: CheckHyperspaceTo
  *
  * Determine is a ship is able to hyperspace to a given system
@@ -1191,7 +1258,7 @@ template <> const char *LuaObject<Ship>::s_type = "Ship";
 
 template <> void LuaObject<Ship>::RegisterClass()
 {
-	static const char *l_parent = "Body";
+	static const char *l_parent = "ModelBody";
 
 	static const luaL_Reg l_methods[] = {
 		{ "IsPlayer", l_ship_is_player },
@@ -1233,6 +1300,8 @@ template <> void LuaObject<Ship>::RegisterClass()
 		{ "CheckHyperspaceTo", l_ship_check_hyperspace_to },
 		{ "GetHyperspaceDetails", l_ship_get_hyperspace_details },
 		{ "HyperspaceTo",    l_ship_hyperspace_to     },
+		{ "InitiateHyperjumpTo",    l_ship_initiate_hyperjump_to     },
+		{ "AbortHyperjump",    l_ship_abort_hyperjump     },
 
 		{ "GetInvulnerable", l_ship_get_invulnerable },
 		{ "SetInvulnerable", l_ship_set_invulnerable },

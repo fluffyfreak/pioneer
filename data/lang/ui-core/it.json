@@ -55,6 +55,14 @@
       "description" : "",
       "message" : "Alloggi"
    },
+   "CABIN_FREE" : {
+      "description" : "",
+      "message" : "{amount} liberi"
+   },
+   "CABIN_USED" : {
+      "description" : "",
+      "message" : "{amount} occupati"
+   },
    "CANCEL" : {
       "description" : "",
       "message" : "Annulla"
@@ -74,6 +82,14 @@
    "CARGO_SPACE" : {
       "description" : "",
       "message" : "Capacità di carico"
+   },
+   "CARGO_T_FREE" : {
+      "description" : "",
+      "message" : "{amount}t disponibili"
+   },
+   "CARGO_T_USED" : {
+      "description" : "",
+      "message" : "{amount}t occupate"
    },
    "CASH" : {
       "description" : "",
@@ -139,6 +155,10 @@
       "description" : "",
       "message" : "Conestabile"
    },
+   "CONTINUE_GAME" : {
+      "description" : "",
+      "message" : "Continua partita"
+   },
    "CONTROLS" : {
       "description" : "",
       "message" : "Controlli"
@@ -150,6 +170,10 @@
    "COULD_NOT_LOAD_GAME" : {
       "description" : "",
       "message" : "Impossibile caricare la partita:"
+   },
+   "CREDIBLE" : {
+      "description" : "For player reputation",
+      "message" : "Credibile"
    },
    "CREW_CABINS" : {
       "description" : "",
@@ -175,6 +199,18 @@
       "description" : "",
       "message" : "Delta-V"
    },
+   "DELTA_V_EMPTY" : {
+      "description" : "Delta-v capacity of a ship with no cargo or upgrades",
+      "message" : "Delta-v (vuoto)"
+   },
+   "DELTA_V_FULL" : {
+      "description" : "Delta-v capacity of a ship with maximum cargo",
+      "message" : "Delta-v (pieno)"
+   },
+   "DELTA_V_MAX" : {
+      "description" : "Delta-v capacity of a ship with cargo bay fully loaded with propellant",
+      "message" : "Delta-v (max)"
+   },
    "DESCENT_TO_GROUND_SPEED" : {
       "description" : "",
       "message" : "Velocità di discesa-a-terra:"
@@ -186,6 +222,10 @@
    "DISMISS" : {
       "description" : "",
       "message" : "Licenzia"
+   },
+   "DISPLAY_HUD_TRAILS" : {
+      "description" : "",
+      "message" : "Mostra scie nel HUD"
    },
    "DISPLAY_NAV_TUNNELS" : {
       "description" : "",
@@ -233,7 +273,7 @@
    },
    "ENGINEERING" : {
       "description" : "",
-      "message" : "Ingegneria"
+      "message" : "Ingegneria:"
    },
    "EQUIPMENT" : {
       "description" : "",
@@ -258,6 +298,14 @@
    "EXIT_THIS_GAME" : {
       "description" : "",
       "message" : "Esci dalla partita"
+   },
+   "EXPERIENCED" : {
+      "description" : "For player reputation",
+      "message" : "Competente"
+   },
+   "EXPERT" : {
+      "description" : "For player reputation",
+      "message" : "Esperto"
    },
    "FAILED" : {
       "description" : "",
@@ -284,7 +332,7 @@
       "message" : "Dettaglo frattali"
    },
    "FREE" : {
-      "description" : "",
+      "description" : "Used in Ship Information view as in Capacity: 10t (5t free)",
       "message" : "liberi"
    },
    "FRONT_WEAPON" : {
@@ -391,6 +439,14 @@
       "description" : "",
       "message" : "Inattivo"
    },
+   "INCOMPETENT" : {
+      "description" : "For player reputation",
+      "message" : "Incompetente"
+   },
+   "INEXPERIENCED" : {
+      "description" : "For player reputation",
+      "message" : "Inesperto"
+   },
    "INVERT_MOUSE_Y" : {
       "description" : "",
       "message" : "Inverti Mouse Y"
@@ -426,6 +482,18 @@
    "LANGUAGE_RESTART_GAME_TO_APPLY" : {
       "description" : "",
       "message" : "Lingua (riavvia il gioco per applicare)"
+   },
+   "LAUNCH_PERMISSION_DENIED_BUSY" : {
+      "description" : "",
+      "message" : "Autorizzazione al lancio negata: attracco occupato."
+   },
+   "LAUNCH_PERMISSION_DENIED_CREW" : {
+      "description" : "",
+      "message" : "Permesso di lancio negato: equipaggio insufficiente per poter pilotare questa astronave."
+   },
+   "LAUNCH_PERMISSION_DENIED_FINED" : {
+      "description" : "",
+      "message" : "Permesso di lancio negato: lei ha delle multe pendenti."
    },
    "LEGAL_STATUS" : {
       "description" : "",
@@ -496,12 +564,20 @@
       "message" : "Massa"
    },
    "MASTER" : {
-      "description" : "",
+      "description" : "For player reputation",
+      "message" : "Maestro"
+   },
+   "MASTER_VOL" : {
+      "description" : "Master sound in settings option",
       "message" : "Principale:"
    },
    "MAX" : {
       "description" : "",
       "message" : "massimo"
+   },
+   "MAXIMUM_CREW" : {
+      "description" : "",
+      "message" : "Equipaggio massimo"
    },
    "MEDIUM" : {
       "description" : "",
@@ -543,6 +619,10 @@
       "description" : "",
       "message" : "Equipaggio minimo"
    },
+   "MISSILE_MOUNTS" : {
+      "description" : "",
+      "message" : "Supporti per missili"
+   },
    "MISSIONS" : {
       "description" : "",
       "message" : "Missioni"
@@ -575,8 +655,12 @@
       "description" : "",
       "message" : "Muto"
    },
-   "NAME" : {
-      "description" : "",
+   "NAME_OBJECT" : {
+      "description" : "For an item or object",
+      "message" : "Nome"
+   },
+   "NAME_PERSON" : {
+      "description" : "For a person",
       "message" : "Nome"
    },
    "NAVIGATION" : {
@@ -591,6 +675,14 @@
       "description" : "",
       "message" : "Prossima paga"
    },
+   "NO" : {
+      "description" : "Negative answer to a question",
+      "message" : "No"
+   },
+   "NOBODY" : {
+      "description" : "For player reputation",
+      "message" : "Nessuno"
+   },
    "NONE" : {
       "description" : "",
       "message" : "Vuoto"
@@ -602,6 +694,10 @@
    "NOT_ENOUGH_ALLOY_TO_ATTEMPT_A_REPAIR" : {
       "description" : "",
       "message" : "Non ci sono abbastanza {alloy} per tentare la riparazione"
+   },
+   "NOT_SUPPORTED_ON_THIS_SHIP" : {
+      "description" : "",
+      "message" : "{equipment} non è supportato da questo modello di astronave."
    },
    "NO_MISSIONS" : {
       "description" : "",
@@ -699,6 +795,10 @@
       "description" : "",
       "message" : "Prezzo"
    },
+   "PROFESSIONAL" : {
+      "description" : "For player reputation",
+      "message" : "Professionista"
+   },
    "QUALIFICATION_SCORES" : {
       "description" : "",
       "message" : "Punteggi qualifiche"
@@ -723,13 +823,29 @@
       "description" : "",
       "message" : "Rifornimento"
    },
+   "REFUEL_FULL" : {
+      "description" : "",
+      "message" : "Rifornimento completo"
+   },
+   "RELIABLE" : {
+      "description" : "For player reputation",
+      "message" : "Affidabile"
+   },
    "REPAIR_X_HULL_DAMAGE_FOR_X" : {
       "description" : "",
       "message" : "Ripara il {damage}% dei danni allo scafo per {price}"
    },
+   "REPUTATION" : {
+      "description" : "",
+      "message" : "Reputazione"
+   },
    "REQUEST_LAUNCH" : {
       "description" : "",
       "message" : "Richiesta autorizzazione al lancio"
+   },
+   "RETURN_TO_GAME" : {
+      "description" : "",
+      "message" : "Torna al gioco"
    },
    "RETURN_TO_MENU" : {
       "description" : "",
@@ -782,6 +898,10 @@
    "SHIP_IS_ALREADY_FULLY_REPAIRED" : {
       "description" : "",
       "message" : "Al momento la Sua nave non necessita di manutenzione."
+   },
+   "SHIP_IS_FULLY_EQUIPPED" : {
+      "description" : "",
+      "message" : "La tua astronave completamente equipaggiata."
    },
    "SHIP_IS_FULLY_LADEN" : {
       "description" : "",
@@ -839,6 +959,10 @@
       "description" : "",
       "message" : "Cambia maschio/femmina"
    },
+   "TOO_SMALL_FOR_CURRENT_CREW" : {
+      "description" : "",
+      "message" : "L'astronave è troppo piccola per questo equipaggio."
+   },
    "TOTAL" : {
       "description" : "",
       "message" : "Totale:"
@@ -851,6 +975,10 @@
       "description" : "",
       "message" : "Commercio di merci Illegali"
    },
+   "TRUSTWORTHY" : {
+      "description" : "For player reputation",
+      "message" : "Fidato"
+   },
    "TYPE" : {
       "description" : "",
       "message" : "Tipo"
@@ -858,6 +986,10 @@
    "UNLAWFUL_WEAPONS_DISCHARGE" : {
       "description" : "",
       "message" : "Scaricare illecitamente le proprie armi"
+   },
+   "UNRELIABLE" : {
+      "description" : "",
+      "message" : "Inaffidabile"
    },
    "UP_ACCEL" : {
       "description" : "",
@@ -893,7 +1025,7 @@
    },
    "WEIGHT_EMPTY" : {
       "description" : "",
-      "message" : "Peso a vuoto:"
+      "message" : "Peso a vuoto"
    },
    "WEIGHT_FULLY_LOADED" : {
       "description" : "",
@@ -906,6 +1038,10 @@
    "WE_HAVE_NO_BUSINESS_WITH_YOU" : {
       "description" : "",
       "message" : "Al momento non ha pendenze con la Polizia."
+   },
+   "YES" : {
+      "description" : "Positive answer to a question",
+      "message" : "Sì"
    },
    "YOURE_GOING_TO_REGRET_SACKING_ME" : {
       "description" : "",

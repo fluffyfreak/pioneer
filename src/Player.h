@@ -20,7 +20,7 @@ public:
 	Player(ShipType::Id shipId);
 	Player() {}; //default constructor used before Load
 	virtual void SetDockedWith(SpaceStation *, int port);
-	virtual bool OnDamage(Object *attacker, float kgDamage);
+	virtual bool OnDamage(Object *attacker, float kgDamage, const CollisionContact& contactData);
 	virtual bool SetWheelState(bool down); // returns success of state change, NOT state itself
 	virtual Missile * SpawnMissile(ShipType::Id missile_type, int power=-1);
 	virtual void SetAlertState(Ship::AlertState as);
@@ -34,6 +34,8 @@ public:
 	void SetCombatTarget(Body* const target, bool setSpeedTo = false);
 	void SetNavTarget(Body* const target, bool setSpeedTo = false);
 
+	virtual Ship::HyperjumpStatus InitiateHyperjumpTo(const SystemPath &dest, int warmup_time, double duration, LuaRef checks);
+	virtual void AbortHyperjump();
 	virtual Ship::HyperjumpStatus StartHyperspaceCountdown(const SystemPath &dest);
 	virtual void ResetHyperspaceCountdown();
 	

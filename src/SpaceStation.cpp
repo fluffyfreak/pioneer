@@ -19,8 +19,10 @@
 #include "Ship.h"
 #include "Space.h"
 #include "StringF.h"
+#include "ShipCpanel.h"
 #include "galaxy/StarSystem.h"
 #include "graphics/Graphics.h"
+#include "scenegraph/ModelSkin.h"
 #include <algorithm>
 
 void SpaceStation::Init()
@@ -69,6 +71,9 @@ void SpaceStation::Save(Serializer::Writer &wr, Space *space)
 void SpaceStation::Load(Serializer::Reader &rd, Space *space)
 {
 	ModelBody::Load(rd, space);
+
+	m_oldAngDisplacement = 0.0;
+
 	int num = rd.Int32();
 	if (num > Equip::TYPE_MAX) throw SavedGameCorruptException();
 	const Uint32 numShipDocking = rd.Int32();
@@ -134,8 +139,8 @@ void SpaceStation::InitStation()
 {
 	m_adjacentCity = 0;
 	for(int i=0; i<NUM_STATIC_SLOTS; i++) m_staticSlot[i] = false;
-	Random rand(m_sbody->seed);
-	bool ground = m_sbody->type == SystemBody::TYPE_STARPORT_ORBITAL ? false : true;
+	Random rand(m_sbody->GetSeed());
+	bool ground = m_sbody->GetType() == SystemBody::TYPE_STARPORT_ORBITAL ? false : true;
 	if (ground) {
 		m_type = &SpaceStationType::surfaceStationTypes[ rand.Int32(SpaceStationType::surfaceStationTypes.size()) ];
 	} else {
@@ -162,12 +167,18 @@ void SpaceStation::InitStation()
 	if (!GetModel())
 		SetModel(m_type->modelName.c_str());
 
-	m_navLights.reset(new NavLights(GetModel(), 2.2f));
+	SceneGraph::Model *model = GetModel();
+
+	m_navLights.reset(new NavLights(model, 2.2f));
 	m_navLights->SetEnabled(true);
 
 	if (ground) SetClipRadius(CITY_ON_PLANET_RADIUS);		// overrides setmodel
 
-	m_doorAnimation = GetModel()->FindAnimation("doors");
+	m_doorAnimation = model->FindAnimation("doors");
+
+	SceneGraph::ModelSkin skin;
+	skin.SetDecal("pioneer");
+	skin.Apply(model);
 }
 
 SpaceStation::~SpaceStation()
@@ -267,7 +278,7 @@ bool SpaceStation::LaunchShip(Ship *ship, int port)
 	m_doorAnimationStep = 0.3; // open door
 
 	const Aabb& aabb = ship->GetAabb();
-	const matrix3x3d mt = ship->GetOrient();
+	const matrix3x3d& mt = ship->GetOrient();
 	const vector3d up = mt.VectorY().Normalized() * aabb.min.y;
 
 	sd.fromPos = (ship->GetPosition() - GetPosition() + up) * GetOrient();	// station space
@@ -397,7 +408,8 @@ void SpaceStation::DockingUpdate(const double timeStep)
 			m_doorAnimationStep = 0.3; // open door
 
 			if (dt.stagePos >= 1.0) {
-				if (dt.ship == static_cast<Ship*>(Pi::player)) Pi::onDockingClearanceExpired.emit(this);
+				if (dt.ship == Pi::player)
+					Pi::cpan->MsgLog()->ImportantMessage(GetLabel(), Lang::DOCKING_CLEARANCE_EXPIRED);
 				dt.ship = 0;
 				dt.stage = 0;
 				m_doorAnimationStep = -0.3; // close door
@@ -503,7 +515,7 @@ void SpaceStation::TimeStepUpdate(const float timeStep)
 			m_navLights->SetColor(i+1, NavLights::NAVLIGHT_YELLOW);
 			continue;
 		}
-		if (dt.ship->GetFlightState() == Ship::FLYING)
+		if (dt.ship->GetFlightState() != Ship::DOCKED && dt.ship->GetFlightState() != Ship::DOCKING)
 			continue;
 		PositionDockedShip(dt.ship, i);
 		m_navLights->SetColor(i+1, NavLights::NAVLIGHT_RED); //docked
@@ -555,14 +567,21 @@ void SpaceStation::Render(Graphics::Renderer *r, const Camera *camera, const vec
 		Planet *planet = static_cast<Planet*>(b);
 
 		if (!m_adjacentCity) {
-			m_adjacentCity = new CityOnPlanet(planet, this, m_sbody->seed);
+			m_adjacentCity = new CityOnPlanet(planet, this, m_sbody->GetSeed());
 		}
-		m_adjacentCity->Render(r, camera, this, viewCoords, viewTransform);
+		m_adjacentCity->Render(r, camera->GetContext()->GetFrustum(), this, viewCoords, viewTransform);
 
 		RenderModel(r, camera, viewCoords, viewTransform, false);
 
 		ResetLighting(r, oldLights, oldAmbient);
 	}
+}
+
+void SpaceStation::SetLabel(const std::string &label)
+{
+	assert(GetModel());
+	GetModel()->SetLabel(label);
+	Body::SetLabel(label);
 }
 
 // find an empty position for a static ship and mark it as used. these aren't

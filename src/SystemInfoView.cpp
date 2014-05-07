@@ -2,6 +2,7 @@
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Pi.h"
+#include "galaxy/Galaxy.h"
 #include "galaxy/Sector.h"
 #include "SectorView.h"
 #include "SystemInfoView.h"
@@ -17,25 +18,35 @@
 #include "graphics/Drawables.h"
 #include "Factions.h"
 
-SystemInfoView::SystemInfoView()
+SystemInfoView::SystemInfoView() : UIView()
 {
 	SetTransparency(true);
-	m_refresh = false;
+	m_refresh = REFRESH_NONE;
 }
 
 void SystemInfoView::OnBodySelected(SystemBody *b)
 {
 	{
-		printf("\n");
-		printf("Gas, liquid, ice: %f, %f, %f\n", b->m_volatileGas.ToFloat(), b->m_volatileLiquid.ToFloat(), b->m_volatileIces.ToFloat());
+		Output("\n");
+		Output("Gas, liquid, ice: %f, %f, %f\n", b->GetVolatileGas().ToFloat(), b->GetVolatileLiquid().ToFloat(), b->GetVolatileIces().ToFloat());
 	}
 
 	SystemPath path = m_system->GetPathOf(b);
 	RefCountedPtr<StarSystem> currentSys = Pi::game->GetSpace()->GetStarSystem();
-	if (currentSys && currentSys->GetPath() == m_system->GetPath()) {
-		Body* body = Pi::game->GetSpace()->FindBodyForPath(&path);
-		if(body != 0)
-			Pi::player->SetNavTarget(body);
+	bool isCurrentSystem = (currentSys && currentSys->GetPath() == m_system->GetPath());
+
+	if (path == m_selectedBodyPath) {
+		if (isCurrentSystem) {
+			Pi::player->SetNavTarget(0);
+		}
+	} else {
+		if (isCurrentSystem) {
+			Body* body = Pi::game->GetSpace()->FindBodyForPath(&path);
+			if(body != 0)
+				Pi::player->SetNavTarget(body);
+		} else if (b->GetSuperType() == SystemBody::SUPERTYPE_STAR) { // We allow hyperjump to any star of the system
+			Pi::sectorView->SetSelected(path);
+		}
 	}
 
 	UpdateIconSelections();
@@ -62,62 +73,62 @@ void SystemInfoView::OnBodyViewed(SystemBody *b)
 }
 
 	bool multiple = (b->GetSuperType() == SystemBody::SUPERTYPE_STAR &&
-					 b->parent && b->parent->type == SystemBody::TYPE_GRAVPOINT && b->parent->parent);
+					 b->GetParent() && b->GetParent()->GetType() == SystemBody::TYPE_GRAVPOINT && b->GetParent()->GetParent());
 	{
-		Gui::Label *l = new Gui::Label(b->name + ": " + b->GetAstroDescription() +
-			(multiple ? (std::string(" (")+b->parent->name + ")") : ""));
+		Gui::Label *l = new Gui::Label(b->GetName() + ": " + b->GetAstroDescription() +
+			(multiple ? (std::string(" (")+b->GetParent()->GetName() + ")") : ""));
 		l->Color(255,255,0);
 		m_infoBox->PackStart(l);
 	}
 
-	_add_label_and_value(Lang::MASS, stringf(Lang::N_WHATEVER_MASSES, formatarg("mass", b->mass.ToDouble()),
+	_add_label_and_value(Lang::MASS, stringf(Lang::N_WHATEVER_MASSES, formatarg("mass", b->GetMassAsFixed().ToDouble()),
 		formatarg("units", std::string(b->GetSuperType() == SystemBody::SUPERTYPE_STAR ? Lang::SOLAR : Lang::EARTH))));
 
-	_add_label_and_value(Lang::RADIUS, stringf(Lang::N_WHATEVER_RADII, formatarg("radius", b->radius.ToDouble()),
+	_add_label_and_value(Lang::RADIUS, stringf(Lang::N_WHATEVER_RADII, formatarg("radius", b->GetRadiusAsFixed().ToDouble()),
 		formatarg("units", std::string(b->GetSuperType() == SystemBody::SUPERTYPE_STAR ? Lang::SOLAR : Lang::EARTH)),
 		formatarg("radkm", b->GetRadius() / 1000.0)));
 
 	if (b->GetSuperType() == SystemBody::SUPERTYPE_STAR) {
-		_add_label_and_value(Lang::EQUATORIAL_RADIUS_TO_POLAR_RADIUS_RATIO, stringf("%0{f.3}", b->aspectRatio.ToDouble()));
+		_add_label_and_value(Lang::EQUATORIAL_RADIUS_TO_POLAR_RADIUS_RATIO, stringf("%0{f.3}", b->GetAspectRatio()));
 	}
 
-	if (b->type != SystemBody::TYPE_STARPORT_ORBITAL) {
-		_add_label_and_value(Lang::SURFACE_TEMPERATURE, stringf(Lang::N_CELSIUS, formatarg("temperature", b->averageTemp-273)));
+	if (b->GetType() != SystemBody::TYPE_STARPORT_ORBITAL) {
+		_add_label_and_value(Lang::SURFACE_TEMPERATURE, stringf(Lang::N_CELSIUS, formatarg("temperature", b->GetAverageTemp()-273)));
 		_add_label_and_value(Lang::SURFACE_GRAVITY, stringf("%0{f.3} m/s^2", b->CalcSurfaceGravity()));
 	}
 
-	if (b->parent) {
-		float days = float(b->orbit.Period()) / float(60*60*24);
+	if (b->GetParent()) {
+		float days = float(b->GetOrbit().Period()) / float(60*60*24);
 		if (days > 1000) {
 			data = stringf(Lang::N_YEARS, formatarg("years", days/365));
 		} else {
-			data = stringf(Lang::N_DAYS, formatarg("days", b->orbit.Period() / (60*60*24)));
+			data = stringf(Lang::N_DAYS, formatarg("days", b->GetOrbit().Period() / (60*60*24)));
 		}
 		if (multiple) {
-			float pdays = float(b->parent->orbit.Period()) /float(60*60*24);
+			float pdays = float(b->GetParent()->GetOrbit().Period()) /float(60*60*24);
 			data += " (" + (pdays > 1000 ? stringf(Lang::N_YEARS, formatarg("years", pdays/365))
-										 : stringf(Lang::N_DAYS, formatarg("days", b->parent->orbit.Period() / (60*60*24)))) + ")";
+										 : stringf(Lang::N_DAYS, formatarg("days", b->GetParent()->GetOrbit().Period() / (60*60*24)))) + ")";
 		}
 		_add_label_and_value(Lang::ORBITAL_PERIOD, data);
-		_add_label_and_value(Lang::PERIAPSIS_DISTANCE, format_distance(b->orbMin.ToDouble()*AU, 3) +
-			(multiple ? (std::string(" (") + format_distance(b->parent->orbMin.ToDouble()*AU, 3)+ ")") : ""));
-		_add_label_and_value(Lang::APOAPSIS_DISTANCE, format_distance(b->orbMax.ToDouble()*AU, 3) +
-			(multiple ? (std::string(" (") + format_distance(b->parent->orbMax.ToDouble()*AU, 3)+ ")") : ""));
-		_add_label_and_value(Lang::ECCENTRICITY, stringf("%0{f.2}", b->orbit.GetEccentricity()) +
-			(multiple ? (std::string(" (") + stringf("%0{f.2}", b->parent->orbit.GetEccentricity()) + ")") : ""));
-		if (b->type != SystemBody::TYPE_STARPORT_ORBITAL) {
-			_add_label_and_value(Lang::AXIAL_TILT, stringf(Lang::N_DEGREES, formatarg("angle", b->axialTilt.ToDouble() * (180.0/M_PI))));
-			if (b->rotationPeriod != 0) {
+		_add_label_and_value(Lang::PERIAPSIS_DISTANCE, format_distance(b->GetOrbMin()*AU, 3) +
+			(multiple ? (std::string(" (") + format_distance(b->GetParent()->GetOrbMin()*AU, 3)+ ")") : ""));
+		_add_label_and_value(Lang::APOAPSIS_DISTANCE, format_distance(b->GetOrbMax()*AU, 3) +
+			(multiple ? (std::string(" (") + format_distance(b->GetParent()->GetOrbMax()*AU, 3)+ ")") : ""));
+		_add_label_and_value(Lang::ECCENTRICITY, stringf("%0{f.2}", b->GetOrbit().GetEccentricity()) +
+			(multiple ? (std::string(" (") + stringf("%0{f.2}", b->GetParent()->GetOrbit().GetEccentricity()) + ")") : ""));
+		if (b->GetType() != SystemBody::TYPE_STARPORT_ORBITAL) {
+			_add_label_and_value(Lang::AXIAL_TILT, stringf(Lang::N_DEGREES, formatarg("angle", b->GetAxialTilt() * (180.0/M_PI))));
+			if (b->IsRotating()) {
 				_add_label_and_value(
 					std::string(Lang::DAY_LENGTH)+std::string(Lang::ROTATIONAL_PERIOD),
-					stringf(Lang::N_EARTH_DAYS, formatarg("days", b->rotationPeriod.ToDouble())));
+					stringf(Lang::N_EARTH_DAYS, formatarg("days", b->GetRotationPeriodInDays())));
 			}
 		}
 		int numSurfaceStarports = 0;
 		std::string nameList;
-		for (std::vector<SystemBody*>::iterator i = b->children.begin(); i != b->children.end(); ++i) {
-			if ((*i)->type == SystemBody::TYPE_STARPORT_SURFACE) {
-				nameList += (numSurfaceStarports ? ", " : "") + (*i)->name;
+		for (const SystemBody* kid : b->GetChildren()) {
+			if (kid->GetType() == SystemBody::TYPE_STARPORT_SURFACE) {
+				nameList += (numSurfaceStarports ? ", " : "") + kid->GetName();
 				numSurfaceStarports++;
 			}
 		}
@@ -209,22 +220,21 @@ void SystemInfoView::PutBodies(SystemBody *body, Gui::Fixed *container, int dir,
 	myPos[0] = pos[0];
 	myPos[1] = pos[1];
 	if (body->GetSuperType() == SystemBody::SUPERTYPE_STARPORT) starports++;
-	if (body->type == SystemBody::TYPE_STARPORT_SURFACE) {
+	if (body->GetType() == SystemBody::TYPE_STARPORT_SURFACE) {
 		onSurface++;
 		return;
 	}
-	if (body->type != SystemBody::TYPE_GRAVPOINT) {
-		BodyIcon *ib = new BodyIcon(body->GetIcon());
-		ib->SetRenderer(m_renderer);
+	if (body->GetType() != SystemBody::TYPE_GRAVPOINT) {
+		BodyIcon *ib = new BodyIcon(body->GetIcon(), m_renderer);
 		if (body->GetSuperType() == SystemBody::SUPERTYPE_ROCKY_PLANET) {
-			for (std::vector<SystemBody*>::iterator i = body->children.begin(); i != body->children.end(); ++i) {
-				if ((*i)->type == SystemBody::TYPE_STARPORT_SURFACE) {
+			for (const SystemBody* kid : body->GetChildren()) {
+				if (kid->GetType() == SystemBody::TYPE_STARPORT_SURFACE) {
 					ib->SetHasStarport();
 					break;
 				}
 			}
 		}
-		m_bodyIcons.push_back(std::pair<std::string, BodyIcon*>(body->name, ib));
+		m_bodyIcons.push_back(std::pair<Uint32, BodyIcon*>(body->GetPath().bodyIndex, ib));
 		ib->GetSize(size);
 		if (prevSize < 0) prevSize = size[!dir];
 		ib->onSelect.connect(sigc::bind(sigc::mem_fun(this, &SystemInfoView::OnBodySelected), body));
@@ -245,9 +255,8 @@ void SystemInfoView::PutBodies(SystemBody *body, Gui::Fixed *container, int dir,
 	}
 
 	float prevSizeForKids = size[!dir];
-	for (std::vector<SystemBody*>::iterator i = body->children.begin();
-	     i != body->children.end(); ++i) {
-		PutBodies(*i, container, dir, myPos, majorBodies, starports, onSurface, prevSizeForKids);
+	for (SystemBody* kid : body->GetChildren()) {
+		PutBodies(kid, container, dir, myPos, majorBodies, starports, onSurface, prevSizeForKids);
 	}
 }
 
@@ -256,7 +265,7 @@ void SystemInfoView::OnClickBackground(Gui::MouseButtonEvent *e)
 	if (e->isdown && e->button == SDL_BUTTON_LEFT) {
 		// XXX reinit view unnecessary - we only want to show
 		// the general system info text...
-		m_refresh = true;
+		m_refresh = REFRESH_ALL;
 	}
 }
 
@@ -264,11 +273,12 @@ void SystemInfoView::SystemChanged(const SystemPath &path)
 {
 	DeleteAllChildren();
 	m_tabs = 0;
+	m_bodyIcons.clear();
 
-	if (!path.IsSystemPath())
+	if (!path.HasValidSystem())
 		return;
 
-	m_system = StarSystem::GetCached(path);
+	m_system = Pi::GetGalaxy()->GetStarSystem(path);
 
 	m_sbodyInfoTab = new Gui::Fixed(float(Gui::Screen::GetWidth()), float(Gui::Screen::GetHeight()-100));
 
@@ -280,6 +290,7 @@ void SystemInfoView::SystemChanged(const SystemPath &path)
 
 		Gui::Label *l = (new Gui::Label(_info))->Color(255,255,0);
 		m_sbodyInfoTab->Add(l, 35, 300);
+		m_selectedBodyPath = SystemPath();
 
 		ShowAll();
 		return;
@@ -296,23 +307,22 @@ void SystemInfoView::SystemChanged(const SystemPath &path)
 
 	m_sbodyInfoTab->onMouseButtonEvent.connect(sigc::mem_fun(this, &SystemInfoView::OnClickBackground));
 
-	m_bodyIcons.clear();
 	int majorBodies, starports, onSurface;
 	{
 		float pos[2] = { 0, 0 };
 		float psize = -1;
 		majorBodies = starports = onSurface = 0;
-		PutBodies(m_system->rootBody.Get(), m_econInfoTab, 1, pos, majorBodies, starports, onSurface, psize);
+		PutBodies(m_system->GetRootBody().Get(), m_econInfoTab, 1, pos, majorBodies, starports, onSurface, psize);
 
 		majorBodies = starports = onSurface = 0;
 		pos[0] = pos[1] = 0;
 		psize = -1;
-		PutBodies(m_system->rootBody.Get(), m_sbodyInfoTab, 1, pos, majorBodies, starports, onSurface, psize);
+		PutBodies(m_system->GetRootBody().Get(), m_sbodyInfoTab, 1, pos, majorBodies, starports, onSurface, psize);
 
 		majorBodies = starports = onSurface = 0;
 		pos[0] = pos[1] = 0;
 		psize = -1;
-		PutBodies(m_system->rootBody.Get(), demographicsTab, 1, pos, majorBodies, starports, onSurface, psize);
+		PutBodies(m_system->GetRootBody().Get(), demographicsTab, 1, pos, majorBodies, starports, onSurface, psize);
 	}
 
 	std::string _info = stringf(
@@ -425,20 +435,65 @@ void SystemInfoView::Draw3D()
 	PROFILE_SCOPED()
 	m_renderer->SetTransform(matrix4x4f::Identity());
 	m_renderer->ClearScreen();
+	UIView::Draw3D();
+}
+
+SystemInfoView::RefreshType SystemInfoView::NeedsRefresh()
+{
+	if (!m_system || !Pi::sectorView->GetSelected().IsSameSystem(m_system->GetPath()))
+		return REFRESH_ALL;
+
+	if (m_system->GetUnexplored())
+		return REFRESH_NONE; // Nothing can be selected and we reset in SystemChanged
+
+	RefCountedPtr<StarSystem> currentSys = Pi::game->GetSpace()->GetStarSystem();
+	if (!currentSys || currentSys->GetPath() != m_system->GetPath()) {
+		// We are not currently in the selected system
+		if (Pi::sectorView->GetSelected() != m_selectedBodyPath)
+			return REFRESH_SELECTED;
+	} else {
+		Body *navTarget = Pi::player->GetNavTarget();
+		if (navTarget && navTarget->GetSystemBody()->GetType() != SystemBody::TYPE_STARPORT_SURFACE) {
+			// Navigation target is something we show in the info view
+			if (navTarget->GetSystemBody()->GetPath() != m_selectedBodyPath)
+				return REFRESH_SELECTED; // and wasn't selected, yet
+		} else {
+			// nothing to be selected
+			if (m_selectedBodyPath.IsBodyPath())
+				return REFRESH_SELECTED; // but there was something selected
+		}
+	}
+
+	return REFRESH_NONE;
 }
 
 void SystemInfoView::Update()
 {
-	if (m_refresh) {
-		SystemChanged(Pi::sectorView->GetSelectedSystem());
-		m_refresh = false;
+	switch (m_refresh) {
+		case REFRESH_ALL:
+			SystemChanged(Pi::sectorView->GetSelected());
+			m_refresh = REFRESH_NONE;
+			assert(NeedsRefresh() == REFRESH_NONE);
+			break;
+		case REFRESH_SELECTED:
+			UpdateIconSelections();
+			m_refresh = REFRESH_NONE;
+			assert(NeedsRefresh() == REFRESH_NONE);
+			break;
+		case REFRESH_NONE:
+			break;
 	}
+    UIView::Update();
 }
 
 void SystemInfoView::OnSwitchTo()
 {
-	if (!m_system || !Pi::sectorView->GetSelectedSystem().IsSameSystem(m_system->GetPath()))
-		m_refresh = true;
+	if (m_refresh != REFRESH_ALL) {
+		RefreshType needsRefresh = NeedsRefresh();
+		if (needsRefresh != REFRESH_NONE)
+			m_refresh = needsRefresh;
+	}
+    UIView::OnSwitchTo();
 }
 
 void SystemInfoView::NextPage()
@@ -449,24 +504,45 @@ void SystemInfoView::NextPage()
 
 void SystemInfoView::UpdateIconSelections()
 {
-	//navtarget can be only set in current system
-	for (std::vector<std::pair<std::string, BodyIcon*> >::iterator it = m_bodyIcons.begin();
-		 it != m_bodyIcons.end(); ++it) {
-			 (*it).second->SetSelected(false);
+	m_selectedBodyPath = SystemPath();
+
+	for (auto& bodyIcon : m_bodyIcons) {
+
+		bodyIcon.second->SetSelected(false);
 
 		RefCountedPtr<StarSystem> currentSys = Pi::game->GetSpace()->GetStarSystem();
-		if (currentSys && currentSys->GetPath() == m_system->GetPath() &&
-			Pi::player->GetNavTarget() &&
-			(*it).first == Pi::player->GetNavTarget()->GetLabel()) {
-
-			(*it).second->SetSelected(true);
+		if (currentSys && currentSys->GetPath() == m_system->GetPath()) {
+			//navtarget can be only set in current system
+			if (Body* navtarget = Pi::player->GetNavTarget()) {
+				const SystemPath& navpath = navtarget->GetSystemBody()->GetPath();
+				if (bodyIcon.first == navpath.bodyIndex) {
+					bodyIcon.second->SetSelectColor(Color(0, 255, 0, 255));
+					bodyIcon.second->SetSelected(true);
+					m_selectedBodyPath = navpath;
+				}
+			}
+		} else {
+			SystemPath selected = Pi::sectorView->GetSelected();
+			if (selected.IsSameSystem(m_system->GetPath()) && !selected.IsSystemPath()) {
+				if (bodyIcon.first == selected.bodyIndex) {
+					bodyIcon.second->SetSelectColor(Color(64, 96, 255, 255));
+					bodyIcon.second->SetSelected(true);
+					m_selectedBodyPath = selected;
+				}
+			}
 		}
 	}
 }
 
-SystemInfoView::BodyIcon::BodyIcon(const char *img) :
-	Gui::ImageRadioButton(0, img, img), m_hasStarport(false)
+SystemInfoView::BodyIcon::BodyIcon(const char *img, Graphics::Renderer *r)
+	: Gui::ImageRadioButton(0, img, img)
+	, m_renderer(r)
+	, m_hasStarport(false)
+	, m_selectColor(0, 255, 0, 255)
 {
+	//no blending
+	Graphics::RenderStateDesc rsd;
+	m_renderState = r->CreateRenderState(rsd);
 }
 
 void SystemInfoView::BodyIcon::Draw()
@@ -479,18 +555,19 @@ void SystemInfoView::BodyIcon::Draw()
 	    Color portColor = Color(64, 128, 128, 255);
 	    // The -0.1f offset seems to be the best compromise to make the circles closed (e.g. around Mars), symmetric, fitting with selection
 	    // and not overlapping to much with asteroids
-	    Graphics::Drawables::Circle circle = Graphics::Drawables::Circle(size[0]*0.5f, size[0]*0.5f-0.1f, size[1]*0.5f, 0.f, portColor);
+	    Graphics::Drawables::Circle circle =
+			Graphics::Drawables::Circle(size[0]*0.5f, size[0]*0.5f-0.1f, size[1]*0.5f, 0.f,
+			portColor, m_renderState);
 	    circle.Draw(m_renderer);
 	}
 	if (GetSelected()) {
-	    Color selectColor = Color(0, 255, 0, 255);
 	    const vector2f vts[] = {
 		    vector2f(0.f, 0.f),
 		    vector2f(size[0], 0.f),
 		    vector2f(size[0], size[1]),
 		    vector2f(0.f, size[1]),
 	    };
-	    m_renderer->DrawLines2D(COUNTOF(vts), vts, selectColor, Graphics::LINE_LOOP);
+	    m_renderer->DrawLines2D(COUNTOF(vts), vts, m_selectColor, m_renderState, Graphics::LINE_LOOP);
 	}
 }
 
