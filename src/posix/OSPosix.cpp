@@ -18,7 +18,7 @@ namespace OS {
 
 	namespace {
 		static const std::string s_NoOSIdentified("No OS Identified\n");
-	};
+	}
 
 void NotifyLoadBegin()
 {
@@ -111,8 +111,13 @@ const std::string GetOSInfoString()
 	}
 
 	char infoString[2048];
+#if defined(__APPLE__)
+	snprintf(infoString, 2048, "System Name: %s\nHost Name: %s\nRelease(Kernel) Version: %s\nKernel Build Timestamp: %s\nMachine Arch: %s\n",
+		uts.sysname, uts.nodename, uts.release, uts.version, uts.machine);
+#else
 	snprintf(infoString, 2048, "System Name: %s\nHost Name: %s\nRelease(Kernel) Version: %s\nKernel Build Timestamp: %s\nMachine Arch: %s\nDomain Name: %s\n",
 		uts.sysname, uts.nodename, uts.release, uts.version, uts.machine, uts.domainname);
+#endif
 
 	return std::string(infoString);
 }

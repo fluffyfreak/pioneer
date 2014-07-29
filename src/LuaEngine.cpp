@@ -523,7 +523,7 @@ static void push_bindings(lua_State *l, const KeyBindings::BindingPrototype *pro
 			lua_createtable(l, 0, 5);
 			// [-3] bindings, [-2] group, [-1] binding
 
-			// fields: type ('KEY' or 'AXIS'), id ('BindIncreaseSpeed'), label ('Increase Speed'), binding ('Key13'), bindingDescription ('')
+			// fields are: type ('KEY' or 'AXIS'), id ('BindIncreaseSpeed'), label ('Increase Speed'), binding ('Key13'), bindingDescription ('')
 			lua_pushstring(l, (proto->kb ? "KEY" : "AXIS"));
 			lua_setfield(l, -2, "type");
 			lua_pushstring(l, proto->function);
@@ -582,26 +582,26 @@ static void push_bindings(lua_State *l, const KeyBindings::BindingPrototype *pro
  *
  * The bindings table has the following structure (in Lua syntax):
  *
- * bindings = {
- *   { -- a page
- *      label = 'CONTROLS', -- the (translated) name of the page
- *      { -- a group
- *          label = 'Miscellaneous', -- the (translated) name of the group
- *          { -- a binding
- *              type = 'KEY', -- the type of binding; can be 'KEY' or 'AXIS'
- *              id = 'BindToggleLuaConsole', -- the internal ID of the binding; pass this to Engine.SetKeyBinding
- *              label = 'Toggle Lua console', -- the (translated) label for the binding
- *              binding1 = 'Key96', -- the first bound key or axis (value stored in config file)
- *              bindingDescription1 = '`', -- display text for the first bound key or axis
- *              binding2 = 'Key96', -- the second bound key or axis (value stored in config file)
- *              bindingDescription2 = '`', -- display text for the second bound key or axis
- *          },
- *          -- ... more bindings
- *      },
- *      -- ... more groups
- *   },
- *   -- ... more pages
- * }
+ * > bindings = {
+ * >   { -- a page
+ * >      label = 'CONTROLS', -- the (translated) name of the page
+ * >      { -- a group
+ * >          label = 'Miscellaneous', -- the (translated) name of the group
+ * >          { -- a binding
+ * >              type = 'KEY', -- the type of binding; can be 'KEY' or 'AXIS'
+ * >              id = 'BindToggleLuaConsole', -- the internal ID of the binding; pass this to Engine.SetKeyBinding
+ * >              label = 'Toggle Lua console', -- the (translated) label for the binding
+ * >              binding1 = 'Key96', -- the first bound key or axis (value stored in config file)
+ * >              bindingDescription1 = '`', -- display text for the first bound key or axis
+ * >              binding2 = 'Key96', -- the second bound key or axis (value stored in config file)
+ * >              bindingDescription2 = '`', -- display text for the second bound key or axis
+ * >          },
+ * >          -- ... more bindings
+ * >      },
+ * >      -- ... more groups
+ * >   },
+ * >   -- ... more pages
+ * > }
  *
  * Availability:
  *
@@ -650,13 +650,16 @@ static int set_key_binding(lua_State *l, const char *config_id, KeyBindings::Key
 }
 
 static int set_axis_binding(lua_State *l, const char *config_id, KeyBindings::AxisBinding *binding) {
-	const char *binding_config = luaL_checkstring(l, 2);
+	const char *binding_config = lua_tostring(l, 2);
 	KeyBindings::AxisBinding ab;
-	if (!KeyBindings::AxisBinding::FromString(binding_config, ab))
-		return luaL_error(l, "invalid axis binding given to Engine.SetKeyBinding");
+	if (binding_config) {
+		if (!KeyBindings::AxisBinding::FromString(binding_config, ab))
+			return luaL_error(l, "invalid axis binding given to Engine.SetKeyBinding");
+	} else
+		ab.Clear();
+	*binding = ab;
 	Pi::config->SetString(config_id, ab.ToString());
 	Pi::config->Save();
-	*binding = ab;
 	return 0;
 }
 

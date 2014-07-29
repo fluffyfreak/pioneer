@@ -21,7 +21,6 @@
 #include "LuaConstants.h"
 #include "LuaDev.h"
 #include "LuaEngine.h"
-#include "LuaEquipDef.h"
 #include "LuaEvent.h"
 #include "LuaFileSystem.h"
 #include "LuaFormat.h"
@@ -88,7 +87,6 @@ sigc::signal<void, int, int, int> Pi::onMouseButtonDown;
 sigc::signal<void, bool> Pi::onMouseWheel;
 sigc::signal<void> Pi::onPlayerChangeTarget;
 sigc::signal<void> Pi::onPlayerChangeFlightControlState;
-sigc::signal<void> Pi::onPlayerChangeEquipment;
 LuaSerializer *Pi::luaSerializer;
 LuaTimer *Pi::luaTimer;
 LuaNameGen *Pi::luaNameGen;
@@ -149,7 +147,10 @@ ObjectViewerView *Pi::objectViewerView;
 #endif
 
 Sound::MusicPlayer Pi::musicPlayer;
-std::unique_ptr<JobQueue> Pi::jobQueue;
+std::unique_ptr<AsyncJobQueue> Pi::asyncJobQueue;
+std::unique_ptr<SyncJobQueue> Pi::syncJobQueue;
+
+Galaxy* Pi::s_galaxy = nullptr;
 
 // XXX enabling this breaks UI gauge rendering. see #2627
 #define USE_RTT 1
@@ -297,7 +298,6 @@ static void LuaInit()
 	LuaConstants::Register(Lua::manager->GetLuaState());
 	LuaLang::Register();
 	LuaEngine::Register();
-	LuaEquipDef::Register();
 	LuaFileSystem::Register();
 	LuaGame::Register();
 	LuaComms::Register();
@@ -366,6 +366,9 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 #ifdef PIONEER_PROFILER
 	Profiler::reset();
 #endif
+
+	Profiler::Timer timer;
+	timer.Start();
 
 	OS::NotifyLoadBegin();
 
@@ -470,8 +473,9 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 	const int numCores = OS::GetNumCores();
 	assert(numCores > 0);
 	if (numThreads == 0) numThreads = std::max(Uint32(numCores) - 1, 1U);
-	jobQueue.reset(new JobQueue(numThreads));
+	asyncJobQueue.reset(new AsyncJobQueue(numThreads));
 	Output("started %d worker threads\n", numThreads);
+	syncJobQueue.reset(new SyncJobQueue);
 
 	// XXX early, Lua init needs it
 	ShipType::Init();
@@ -507,21 +511,20 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 
 	draw_progress(gauge, label, 0.1f);
 
-	Galaxy::Init();
+	s_galaxy = new Galaxy;
+
 	draw_progress(gauge, label, 0.2f);
 
-	FaceGenManager::Init();
-	draw_progress(gauge, label, 0.25f);
+	s_galaxy->Init();
 
-	Faction::Init();
 	draw_progress(gauge, label, 0.3f);
 
-	CustomSystem::Init();
+	FaceGenManager::Init();
+
 	draw_progress(gauge, label, 0.4f);
 
 	// Reload home sector, they might have changed, due to custom systems
 	// Sectors might be changed in game, so have to re-create them again once we have a Game.
-	Faction::SetHomeSectors();
 	draw_progress(gauge, label, 0.45f);
 
 	modelCache = new ModelCache(Pi::renderer);
@@ -675,6 +678,9 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 
 	luaConsole = new LuaConsole();
 	KeyBindings::toggleLuaConsole.onPress.connect(sigc::mem_fun(Pi::luaConsole, &LuaConsole::Toggle));
+
+	timer.Stop();
+	Output("\n\nLoading took: %lf milliseconds\n", timer.millicycles());
 }
 
 bool Pi::IsConsoleActive()
@@ -694,10 +700,7 @@ void Pi::Quit()
 	SpaceStation::Uninit();
 	CityOnPlanet::Uninit();
 	BaseSphere::Uninit();
-	Galaxy::Uninit();
-	Faction::Uninit();
 	FaceGenManager::Destroy();
-	CustomSystem::Uninit();
 	Graphics::Uninit();
 	Pi::ui.Reset(0);
 	LuaUninit();
@@ -705,19 +708,17 @@ void Pi::Quit()
 	delete Pi::modelCache;
 	delete Pi::renderer;
 	delete Pi::config;
-	StarSystemCache::ShrinkCache(SystemPath(), true);
+	delete Pi::s_galaxy;
 	SDL_Quit();
 	FileSystem::Uninit();
-	jobQueue.reset();
+	asyncJobQueue.reset();
+	syncJobQueue.reset();
 	exit(0);
 }
 
 void Pi::FlushCaches()
 {
-	StarSystemCache::ShrinkCache(SystemPath(), true);
-	Sector::cache.ClearCache();
-	// XXX Ideally the cache would now be empty, but we still have Faction::m_homesector :(
-	// assert(Sector::cache.IsEmpty());
+	s_galaxy->FlushCaches();
 }
 
 void Pi::BoinkNoise()
@@ -875,13 +876,17 @@ void Pi::HandleEvents()
 										ship->AIFlyTo(Pi::player);	// a less lethal option
 									else
 										ship->AIKill(Pi::player);	// a really lethal option!
-									ship->m_equipment.Set(Equip::SLOT_LASER, 0, Equip::PULSECANNON_DUAL_1MW);
-									ship->m_equipment.Add(Equip::LASER_COOLING_BOOSTER);
-									ship->m_equipment.Add(Equip::ATMOSPHERIC_SHIELDING);
+									lua_State *l = Lua::manager->GetLuaState();
+									pi_lua_import(l, "Equipment");
+									LuaTable equip(l, -1);
+									LuaObject<Ship>::CallMethod<>(ship, "AddEquip", equip.Sub("laser").Sub("pulsecannon_dual_1mw"));
+									LuaObject<Ship>::CallMethod<>(ship, "AddEquip", equip.Sub("misc").Sub("laser_cooling_booster"));
+									LuaObject<Ship>::CallMethod<>(ship, "AddEquip", equip.Sub("misc").Sub("atmospheric_shielding"));
+									lua_pop(l, 5);
 									ship->SetFrame(Pi::player->GetFrame());
 									ship->SetPosition(Pi::player->GetPosition()+100.0*dir);
 									ship->SetVelocity(Pi::player->GetVelocity());
-									ship->UpdateStats();
+									ship->UpdateEquipStats();
 									game->GetSpace()->AddBody(ship);
 								}
 							}
@@ -1034,20 +1039,13 @@ static void OnPlayerDockOrUndock()
 	Pi::game->SetTimeAccel(Game::TIMEACCEL_1X);
 }
 
-static void OnPlayerChangeEquipment(Equip::Type e)
-{
-	Pi::onPlayerChangeEquipment.emit();
-}
-
 void Pi::StartGame()
 {
 	Pi::player->onDock.connect(sigc::ptr_fun(&OnPlayerDockOrUndock));
 	Pi::player->onUndock.connect(sigc::ptr_fun(&OnPlayerDockOrUndock));
-	Pi::player->m_equipment.onChange.connect(sigc::ptr_fun(&OnPlayerChangeEquipment));
 	cpan->ShowAll();
 	DrawGUI = true;
 	cpan->SetAlertState(Ship::ALERT_NONE);
-	OnPlayerChangeEquipment(Equip::NONE);
 	SetView(worldView);
 
 	// fire event before the first frame
@@ -1072,7 +1070,7 @@ void Pi::Start()
 	ui->DropAllLayers();
 	ui->GetTopLayer()->SetInnerWidget(ui->CallTemplate("MainMenu"));
 
-	Pi::ui->SetMousePointer("icons/indicator_mousedir.png", UI::Point(25, 20));
+	Pi::ui->SetMousePointer("icons/cursors/mouse_cursor_2.png", UI::Point(15, 8));
 
 	//XXX global ambient colour hack to make explicit the old default ambient colour dependency
 	// for some models
@@ -1456,14 +1454,13 @@ void Pi::MainLoop()
 			// XXX should this really be limited to while the player is alive?
 			// this is something we need not do every turn...
 			if (!config->Int("DisableSound")) AmbientSounds::Update();
-			if( !Pi::game->IsHyperspace() ) {
-				StarSystemCache::ShrinkCache( Pi::game->GetSpace()->GetStarSystem()->GetPath() );
 			}
-		}
 		cpan->Update();
 		musicPlayer.Update();
 
-		jobQueue->FinishJobs();
+		syncJobQueue->RunJobs(SYNC_JOBS_PER_LOOP);
+		asyncJobQueue->FinishJobs();
+		syncJobQueue->FinishJobs();
 
 #if WITH_DEVKEYS
 		if (Pi::showDebugInfo && SDL_GetTicks() - last_stats > 1000) {
@@ -1478,10 +1475,10 @@ void Pi::MainLoop()
 			snprintf(
 				fps_readout, sizeof(fps_readout),
 				"%d fps (%.1f ms/f), %d phys updates, %d triangles, %.3f M tris/sec, %d glyphs/sec\n"
-				"Lua mem usage: %d MB + %d KB + %d bytes\n\n Oculus Yaw: %.3f, Pitch: %.3f, Roll %.3f",
+				"Lua mem usage: %d MB + %d KB + %d bytes (stack top: %d)\n\n Oculus Yaw: %.3f, Pitch: %.3f, Roll %.3f",
 				frame_stat, (1000.0/frame_stat), phys_stat, Pi::statSceneTris, Pi::statSceneTris*frame_stat*1e-6,
 				Text::TextureFont::GetGlyphCount(),
-				lua_memMB, lua_memKB, lua_memB, yaw, pitch, roll
+				lua_memMB, lua_memKB, lua_memB, lua_gettop(Lua::manager->GetLuaState()), yaw, pitch, roll
 			);
 			frame_stat = 0;
 			phys_stat = 0;
@@ -1510,51 +1507,6 @@ void Pi::MainLoop()
 		}
 #endif /* MAKING_VIDEO */
 	}
-}
-
-float Pi::CalcHyperspaceRangeMax(int hyperclass, int total_mass_in_tonnes)
-{
-	// 625.0f is balancing parameter
-	return 625.0f * hyperclass * hyperclass / (total_mass_in_tonnes);
-}
-
-float Pi::CalcHyperspaceRange(int hyperclass, float total_mass_in_tonnes, int fuel)
-{
-	const float range_max = CalcHyperspaceRangeMax(hyperclass, total_mass_in_tonnes);
-	int fuel_required_max = CalcHyperspaceFuelOut(hyperclass, range_max, range_max);
-
-	if(fuel_required_max <= fuel)
-		return range_max;
-	else {
-		// range is proportional to fuel - use this as first guess
-		float range = range_max*fuel/fuel_required_max;
-
-		// if the range is too big due to rounding error, lower it until is is OK.
-		while(range > 0 && CalcHyperspaceFuelOut(hyperclass, range, range_max) > fuel)
-			range -= 0.05;
-
-		// range is never negative
-		range = std::max(range, 0.0f);
-		return range;
-	}
-}
-
-float Pi::CalcHyperspaceDuration(int hyperclass, int total_mass_in_tonnes, float dist)
-{
-	float hyperspace_range_max = CalcHyperspaceRangeMax(hyperclass, total_mass_in_tonnes);
-
-	// 0.36 is balancing parameter
-	return ((dist * dist * 0.36) / (hyperspace_range_max * hyperclass)) *
-			(60.0 * 60.0 * 24.0 * sqrtf(total_mass_in_tonnes));
-}
-
-float Pi::CalcHyperspaceFuelOut(int hyperclass, float dist, float hyperspace_range_max)
-{
-	int outFuelRequired = int(ceil(hyperclass*hyperclass*dist / hyperspace_range_max));
-	if (outFuelRequired > hyperclass*hyperclass) outFuelRequired = hyperclass*hyperclass;
-	if (outFuelRequired < 1) outFuelRequired = 1;
-
-	return outFuelRequired;
 }
 
 void Pi::Message(const std::string &message, const std::string &from, enum MsgLevel level)

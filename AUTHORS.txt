@@ -24,6 +24,7 @@ The Pioneer Developers are:
 * Craig Thomson
 * Dan Bennett
 * Darren Salt
+* Denis Volk
 * DerpyHooves
 * Dionisis Kontominas
 * Enric Morales
@@ -79,6 +80,7 @@ The Pioneer Developers are:
 * Ulf Pettersson
 * Uncle Bob
 * Vincent Teerling
+* Wayne Ashworth
 
 Licensing
 =========

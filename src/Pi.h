@@ -20,6 +20,7 @@
 
 class DeathView;
 class GalacticView;
+class Galaxy;
 class Intro;
 class LuaConsole;
 class LuaNameGen;
@@ -100,10 +101,6 @@ public:
 	static void SetMouseGrab(bool on);
 	static void FlushCaches();
 	static void BoinkNoise();
-	static float CalcHyperspaceRangeMax(int hyperclass, int total_mass_in_tonnes);
-	static float CalcHyperspaceRange(int hyperclass, float total_mass_in_tonnes, int fuel);
-	static float CalcHyperspaceDuration(int hyperclass, int total_mass_in_tonnes, float dist);
-	static float CalcHyperspaceFuelOut(int hyperclass, float dist, float hyperspace_range_max);
 	static void Message(const std::string &message, const std::string &from = "", enum MsgLevel level = MSG_NORMAL);
 	static std::string GetSaveDir();
 	static SceneGraph::Model *FindModel(const std::string&, bool allowPlaceholder = true);
@@ -122,7 +119,6 @@ public:
 	static sigc::signal<void, bool> onMouseWheel;
 	static sigc::signal<void> onPlayerChangeTarget; // navigation or combat
 	static sigc::signal<void> onPlayerChangeFlightControlState;
-	static sigc::signal<void> onPlayerChangeEquipment;
 
 	static LuaSerializer *luaSerializer;
 	static LuaTimer *luaTimer;
@@ -173,7 +169,10 @@ public:
 	static struct DetailLevel detail;
 	static GameConfig *config;
 
-	static JobQueue *Jobs() { return jobQueue.get();}
+	static JobQueue *GetAsyncJobQueue() { return asyncJobQueue.get();}
+	static JobQueue *GetSyncJobQueue() { return syncJobQueue.get();}
+
+	static Galaxy* GetGalaxy() { return s_galaxy; }
 
 	static bool DrawGUI;
 
@@ -181,8 +180,11 @@ private:
 	static void HandleEvents();
 	static void InitJoysticks();
 
-	static std::unique_ptr<JobQueue> jobQueue;
+	static const Uint32 SYNC_JOBS_PER_LOOP = 1;
+	static std::unique_ptr<AsyncJobQueue> asyncJobQueue;
+	static std::unique_ptr<SyncJobQueue> syncJobQueue;
 
+	static Galaxy* s_galaxy;
 	static bool menuDone;
 
 	static View *currentView;
@@ -192,9 +194,6 @@ private:
 	  * factor between one physics tick and another [0.0-1.0]
 	  */
 	static float gameTickAlpha;
-	static int timeAccelIdx;
-	static int requestedTimeAccelIdx;
-	static bool forceTimeAccel;
 	static float frameTime;
 	static std::map<SDL_Keycode,bool> keyState;
 	static int keyModState;
@@ -203,7 +202,6 @@ private:
 	static bool doingMouseGrab;
 	static bool warpAfterMouseGrab;
 	static int mouseGrabWarpPos[2];
-	static const float timeAccelRates[];
 
 	static bool joystickEnabled;
 	static bool mouseYInvert;

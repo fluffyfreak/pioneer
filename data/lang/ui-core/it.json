@@ -47,6 +47,10 @@
       "description" : "",
       "message" : "Bacheca Annunci"
    },
+   "BUY" : {
+      "description" : "Commodities and equipment prices",
+      "message" : "Compra"
+   },
    "BUY_SHIP" : {
       "description" : "",
       "message" : "Compra Astronave"
@@ -154,6 +158,10 @@
    "CONSTABLE" : {
       "description" : "",
       "message" : "Conestabile"
+   },
+   "CONTINUE_GAME" : {
+      "description" : "",
+      "message" : "Continua partita"
    },
    "CONTROLS" : {
       "description" : "",
@@ -799,10 +807,6 @@
       "description" : "",
       "message" : "Punteggi qualifiche"
    },
-   "QUICKLOAD" : {
-      "description" : "",
-      "message" : "Caricamento rapido"
-   },
    "QUIT" : {
       "description" : "",
       "message" : "Esci"
@@ -845,7 +849,7 @@
    },
    "RETURN_TO_GAME" : {
       "description" : "",
-      "message" : "Torna la gioco"
+      "message" : "Torna al gioco"
    },
    "RETURN_TO_MENU" : {
       "description" : "",
@@ -882,6 +886,10 @@
    "SELECT_GAME_TO_LOAD" : {
       "description" : "",
       "message" : "Seleziona la partita da caricare..."
+   },
+   "SELL" : {
+      "description" : "Commodities and equipment prices",
+      "message" : "Vendi"
    },
    "SENSORS" : {
       "description" : "",

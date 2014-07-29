@@ -47,6 +47,10 @@
       "description" : "",
       "message" : "Hirdetőtábla"
    },
+   "BUY" : {
+      "description" : "Commodities and equipment prices",
+      "message" : "Vesz"
+   },
    "BUY_SHIP" : {
       "description" : "",
       "message" : "Megvesz"
@@ -154,6 +158,10 @@
    "CONSTABLE" : {
       "description" : "",
       "message" : "Főtörzs"
+   },
+   "CONTINUE_GAME" : {
+      "description" : "",
+      "message" : "Játék folytatása"
    },
    "CONTROLS" : {
       "description" : "",
@@ -799,10 +807,6 @@
       "description" : "",
       "message" : "Képzettség pont:"
    },
-   "QUICKLOAD" : {
-      "description" : "",
-      "message" : "Gyorsmentés betöltése"
-   },
    "QUIT" : {
       "description" : "",
       "message" : "Kilépés"
@@ -882,6 +886,10 @@
    "SELECT_GAME_TO_LOAD" : {
       "description" : "",
       "message" : "Válassz betöltendö mentést..."
+   },
+   "SELL" : {
+      "description" : "Commodities and equipment prices",
+      "message" : "Elad"
    },
    "SENSORS" : {
       "description" : "",

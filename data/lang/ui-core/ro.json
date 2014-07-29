@@ -47,6 +47,10 @@
       "description" : "",
       "message" : "Avizier"
    },
+   "BUY" : {
+      "description" : "Commodities and equipment prices",
+      "message" : "Cumpără"
+   },
    "BUY_SHIP" : {
       "description" : "",
       "message" : "Buy Ship"
@@ -154,6 +158,10 @@
    "CONSTABLE" : {
       "description" : "",
       "message" : "Constable"
+   },
+   "CONTINUE_GAME" : {
+      "description" : "",
+      "message" : "Continue game"
    },
    "CONTROLS" : {
       "description" : "",
@@ -799,10 +807,6 @@
       "description" : "",
       "message" : "Scor de calificare"
    },
-   "QUICKLOAD" : {
-      "description" : "",
-      "message" : "Quickload"
-   },
    "QUIT" : {
       "description" : "",
       "message" : "Ieşire"
@@ -882,6 +886,10 @@
    "SELECT_GAME_TO_LOAD" : {
       "description" : "",
       "message" : "Selectează jocul pentru încărcare..."
+   },
+   "SELL" : {
+      "description" : "Commodities and equipment prices",
+      "message" : "Vinde"
    },
    "SENSORS" : {
       "description" : "",

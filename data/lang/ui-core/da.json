@@ -47,6 +47,10 @@
       "description" : "",
       "message" : "Opslagstavle"
    },
+   "BUY" : {
+      "description" : "Commodities and equipment prices",
+      "message" : "Buy"
+   },
    "BUY_SHIP" : {
       "description" : "",
       "message" : "Køb Skib"
@@ -154,6 +158,10 @@
    "CONSTABLE" : {
       "description" : "",
       "message" : "Betjent"
+   },
+   "CONTINUE_GAME" : {
+      "description" : "",
+      "message" : "Continue game"
    },
    "CONTROLS" : {
       "description" : "",
@@ -799,10 +807,6 @@
       "description" : "",
       "message" : "Kvalificeringspoint"
    },
-   "QUICKLOAD" : {
-      "description" : "",
-      "message" : "Hurtig-åbn"
-   },
    "QUIT" : {
       "description" : "",
       "message" : "Afslut"
@@ -882,6 +886,10 @@
    "SELECT_GAME_TO_LOAD" : {
       "description" : "",
       "message" : "Vælg et spil at åbne..."
+   },
+   "SELL" : {
+      "description" : "Commodities and equipment prices",
+      "message" : "Sell"
    },
    "SENSORS" : {
       "description" : "",
