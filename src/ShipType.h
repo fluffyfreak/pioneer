@@ -6,9 +6,9 @@
 
 #include "libs.h"
 #include "vector3.h"
-#include "EquipType.h"
 #include <vector>
 #include <map>
+#include <string>
 
 struct ShipType {
 	enum Thruster { // <enum scope='ShipType' name=ShipTypeThruster prefix=THRUSTER_ public>
@@ -54,6 +54,7 @@ struct ShipType {
 		double sep;
 		DualLaserOrientation orient;
 	} gunMount[GUNMOUNT_MAX];
+	std::map<std::string, int> slots;
 	typedef std::map<std::string,std::pair<std::string, Equip::Type>> TTagTurretMap;
 	typedef TTagTurretMap::const_iterator TTagTurretMapIter;
 	TTagTurretMap turretsMap;
@@ -81,8 +82,6 @@ struct ShipType {
 	static std::vector<Id> player_ships;
 	static std::vector<Id> static_ships;
 	static std::vector<Id> missile_ships;
-
-	static std::vector<Id> playable_atmospheric_ships;
 
 	static const char *gunmountNames[GUNMOUNT_MAX];
 	static void Init();

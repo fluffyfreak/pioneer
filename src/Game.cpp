@@ -25,7 +25,7 @@
 #include "FileSystem.h"
 #include "graphics/Renderer.h"
 
-static const int  s_saveVersion   = 72;
+static const int  s_saveVersion   = 75;
 static const char s_saveStart[]   = "PIONEER";
 static const char s_saveEnd[]     = "END";
 
@@ -148,6 +148,8 @@ Game::Game(Serializer::Reader &rd) :
 	section = rd.RdSection("Space");
 	m_space.reset(new Space(this, section, m_time));
 	m_player.reset(static_cast<Player*>(m_space->GetBodyByIndex(section.Int32())));
+
+	assert(!m_player->IsDead()); // Pioneer does not support necromancy
 
 	// space transition state
 	section = rd.RdSection("HyperspaceClouds");
@@ -742,6 +744,13 @@ Game *Game::LoadGame(const std::string &filename)
 void Game::SaveGame(const std::string &filename, Game *game)
 {
 	assert(game);
+
+	if (game->IsHyperspace())
+		throw CannotSaveInHyperspace();
+
+	if (game->GetPlayer()->IsDead())
+		throw CannotSaveDeadPlayer();
+
 	if (!FileSystem::userFiles.MakeDirectory(Pi::SAVE_DIR_NAME)) {
 		throw CouldNotOpenFileException();
 	}

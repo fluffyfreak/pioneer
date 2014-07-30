@@ -14,7 +14,7 @@ local NameGen = import("NameGen")
 local Character = import("Character")
 local Format = import("Format")
 local Serializer = import("Serializer")
-local EquipDef = import("EquipDef")
+local Equipment = import("Equipment")
 local ShipDef = import("ShipDef")
 local Ship = import("Ship")
 local utils = import("utils")
@@ -178,7 +178,7 @@ local makeAdvert = function (station)
 
 	-- XXX hull mass is a bad way to determine suitability for role
 	--local shipdefs = utils.build_array(utils.filter(function (k,def) return def.tag == 'SHIP' and def.hullMass >= (danger * 17) and def.equipSlotCapacity.ATMOSHIELD > 0 end, pairs(ShipDef)))
-	local shipdefs = utils.build_array(utils.filter(function (k,def) return def.tag == 'SHIP' and def.hyperdriveClass > 0 and def.equipSlotCapacity.ATMOSHIELD > 0 end, pairs(ShipDef)))
+	local shipdefs = utils.build_array(utils.filter(function (k,def) return def.tag == 'SHIP' and def.hyperdriveClass > 0 and def.equipSlotCapacity.atmo_shield > 0 end, pairs(ShipDef)))
 	local shipdef = shipdefs[Engine.rand:Integer(1,#shipdefs)]
 	local shipid = shipdef.id
 	local shipname = shipdef.name
@@ -277,7 +277,8 @@ local onEnterSystem = function (ship)
 						local station = Space.GetBody(mission.location.bodyIndex)
 						local shiptype = ShipDef[mission.shipid]
 						local default_drive = shiptype.hyperdriveClass
-						local laserdefs = utils.build_array(utils.filter(function (k,def) return def.slot == 'LASER' end, pairs(EquipDef)))
+						local laserdefs = utils.build_array(pairs(Equipment.laser))
+						table.sort(laserdefs, function (l1, l2) return l1.price < l2.price end)
 						local laserdef = laserdefs[mission.danger]
 						local count = default_drive ^ 2
 
@@ -286,16 +287,17 @@ local onEnterSystem = function (ship)
 							return -- TODO
 						end
 						mission.ship:SetLabel(mission.shipregid)
-						mission.ship:AddEquip('ATMOSPHERIC_SHIELDING')
-						mission.ship:AddEquip('DRIVE_CLASS'..tostring(default_drive))
-						mission.ship:AddEquip(laserdef.id)
-						mission.ship:AddEquip('SHIELD_GENERATOR', mission.danger)
-						mission.ship:AddEquip('HYDROGEN', count)
+						mission.ship:AddEquip(Equipment.misc.atmospheric_shielding)
+						local engine = Equipment.hyperspace['hyperdrive_'..tostring(default_drive)]
+						mission.ship:AddEquip(engine)
+						mission.ship:AddEquip(laserdef)
+						mission.ship:AddEquip(Equipment.misc.shield_generator, mission.danger)
+						mission.ship:AddEquip(Equipment.cargo.hydrogen, count)
 						if mission.danger > 2 then
-							mission.ship:AddEquip('SHIELD_ENERGY_BOOSTER')
+							mission.ship:AddEquip(Equipment.misc.shield_energy_booster)
 						end
 						if mission.danger > 3 then
-							mission.ship:AddEquip('LASER_COOLING_BOOSTER')
+							mission.ship:AddEquip(Equipment.misc.laser_cooling_booster)
 						end
 						_setupHooksForMission(mission)
 						mission.shipstate = 'docked'
@@ -360,7 +362,6 @@ local onShipDocked = function (ship, station)
 				mission.status = 'FAILED'
 			end
 		end
-		return
 	end
 end
 
@@ -397,7 +398,7 @@ local onAICompleted = function (ship, ai_error)
 				local system = systems[Engine.rand:Integer(1,#systems)]
 
 				mission.shipstate = 'inbound'
-				ship:HyperspaceTo(system.path)
+				ship:HyperjumpTo(system.path)
 			-- the only other states are flying and inbound, and there is no AI to complete for inbound
 			elseif ai_error == 'NONE' then
 				Timer:CallAt(Game.time + 60 * 60 * 8, function ()

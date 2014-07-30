@@ -47,6 +47,10 @@
       "description" : "",
       "message" : "Ogłoszenia"
    },
+   "BUY" : {
+      "description" : "Commodities and equipment prices",
+      "message" : "Kupno"
+   },
    "BUY_SHIP" : {
       "description" : "",
       "message" : "Kup statek"
@@ -154,6 +158,10 @@
    "CONSTABLE" : {
       "description" : "",
       "message" : "Posterunkowy"
+   },
+   "CONTINUE_GAME" : {
+      "description" : "",
+      "message" : "Kontynuacja gry"
    },
    "CONTROLS" : {
       "description" : "",
@@ -799,10 +807,6 @@
       "description" : "",
       "message" : "Posiadane kwalifikacje"
    },
-   "QUICKLOAD" : {
-      "description" : "",
-      "message" : "Wczytanie szybkiego zapisu"
-   },
    "QUIT" : {
       "description" : "",
       "message" : "Wyjdź"
@@ -882,6 +886,10 @@
    "SELECT_GAME_TO_LOAD" : {
       "description" : "",
       "message" : "Wybierz zapis do wczytania..."
+   },
+   "SELL" : {
+      "description" : "Commodities and equipment prices",
+      "message" : "Sprzedaż"
    },
    "SENSORS" : {
       "description" : "",

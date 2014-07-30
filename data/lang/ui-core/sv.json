@@ -47,6 +47,10 @@
       "description" : "",
       "message" : "Anslagstavla"
    },
+   "BUY" : {
+      "description" : "Commodities and equipment prices",
+      "message" : "Köpa"
+   },
    "BUY_SHIP" : {
       "description" : "",
       "message" : "Köp skepp"
@@ -154,6 +158,10 @@
    "CONSTABLE" : {
       "description" : "",
       "message" : "Konstapel"
+   },
+   "CONTINUE_GAME" : {
+      "description" : "",
+      "message" : "Fortsätt spelet"
    },
    "CONTROLS" : {
       "description" : "",
@@ -799,10 +807,6 @@
       "description" : "",
       "message" : "Kvalificeringspoäng"
    },
-   "QUICKLOAD" : {
-      "description" : "",
-      "message" : "Snabbladdning"
-   },
    "QUIT" : {
       "description" : "",
       "message" : "Avsluta"
@@ -882,6 +886,10 @@
    "SELECT_GAME_TO_LOAD" : {
       "description" : "",
       "message" : "Välj spel att ladda..."
+   },
+   "SELL" : {
+      "description" : "Commodities and equipment prices",
+      "message" : "Sälja"
    },
    "SENSORS" : {
       "description" : "",

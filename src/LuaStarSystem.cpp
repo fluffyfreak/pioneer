@@ -3,17 +3,20 @@
 
 #include "LuaObject.h"
 #include "LuaConstants.h"
+#include "LuaTable.h"
+#include "LuaUtils.h"
 #include "EnumStrings.h"
 #include "LuaUtils.h"
 #include "galaxy/StarSystem.h"
-#include "EquipType.h"
+#include "galaxy/Economy.h"
 #include "Pi.h"
 #include "Space.h"
 #include "Star.h"
 #include "Planet.h"
 #include "SpaceStation.h"
+#include "galaxy/Galaxy.h"
 #include "galaxy/Sector.h"
-#include "galaxy/SectorCache.h"
+#include "galaxy/GalaxyCache.h"
 #include "Factions.h"
 #include "FileSystem.h"
 
@@ -118,20 +121,21 @@ static int l_starsystem_get_body_paths(lua_State *l)
  *
  * Get the price alterations for cargo items bought and sold in this system
  *
- * > alterations = system:GetCommodityBasePriceAlterations()
+ * > alteration = system:GetCommodityBasePriceAlterations(cargo_item)
  *
+ * Parameters:
+ *
+ *   cargo_item - The cargo item for which one wants to know the alteration
  * Return:
  *
- *   alterations - a table. The keys are <Constants.EquipType> strings for
- *                 each cargo. The values are numbers that indicate the
- *                 percentage change to each cargo base price. Loosely,
+ *   percentage -  percentage change to the cargo base price. Loosely,
  *                 positive values make the commodity more expensive,
  *                 indicating it is in demand, while negative values make the
  *                 commodity cheaper, indicating a surplus.
  *
  * Availability:
  *
- *   alpha 10
+ *   June 2014
  *
  * Status:
  *
@@ -143,17 +147,19 @@ static int l_starsystem_get_commodity_base_price_alterations(lua_State *l)
 	LUA_DEBUG_START(l);
 
 	StarSystem *s = LuaObject<StarSystem>::CheckFromLua(1);
+	LuaTable equip(l, 2);
 
-	lua_newtable(l);
-
-	for (int e = Equip::FIRST_COMMODITY; e <= Equip::LAST_COMMODITY; e++) {
-		lua_pushstring(l, EnumStrings::GetString("EquipType", e));
-		lua_pushnumber(l, s->GetCommodityBasePriceModPercent(e));
-		lua_rawset(l, -3);
+	if (!equip.CallMethod<bool>("IsValidSlot", "cargo")) {
+		luaL_error(l, "GetCommodityBasePriceAlterations takes a valid cargo item as argument.");
+		return 0;
 	}
+	equip.PushValueToStack("l10n_key"); // For now let's just use this poor man's hack.
+	GalacticEconomy::Commodity e = static_cast<GalacticEconomy::Commodity>(
+			LuaConstants::GetConstantFromArg(l, "CommodityType", -1));
+	lua_pop(l, 1);
+	lua_pushnumber(l, s->GetCommodityBasePriceModPercent(e));
 
 	LUA_DEBUG_END(l, 1);
-
 	return 1;
 }
 
@@ -166,7 +172,7 @@ static int l_starsystem_get_commodity_base_price_alterations(lua_State *l)
  *
  * Parameters:
  *
- *   cargo - a <Constants.EquipType> string for the wanted commodity
+ *   cargo - the wanted commodity (for instance, Equipment.cargo.hydrogen)
  *
  * Return:
  *
@@ -184,7 +190,11 @@ static int l_starsystem_is_commodity_legal(lua_State *l)
 {
 	PROFILE_SCOPED()
 	StarSystem *s = LuaObject<StarSystem>::CheckFromLua(1);
-	Equip::Type e = static_cast<Equip::Type>(LuaConstants::GetConstantFromArg(l, "EquipType", 2));
+	// XXX: Don't use the l10n_key hack, this is just UGLY!!
+	luaL_checktype(l, 2, LUA_TTABLE);
+	LuaTable(l, 2).PushValueToStack("l10n_key");
+	GalacticEconomy::Commodity e = static_cast<GalacticEconomy::Commodity>(
+			LuaConstants::GetConstantFromArg(l, "CommodityType", -1));
 	lua_pushboolean(l, Polit::IsCommodityLegal(s, e));
 	return 1;
 }
@@ -241,14 +251,14 @@ static int l_starsystem_get_nearby_systems(lua_State *l)
 	const int here_y = here.sectorY;
 	const int here_z = here.sectorZ;
 	const Uint32 here_idx = here.systemIndex;
-	RefCountedPtr<const Sector> here_sec = Sector::cache.GetCached(here);
+	RefCountedPtr<const Sector> here_sec = Pi::GetGalaxy()->GetSector(here);
 
 	const int diff_sec = int(ceil(dist_ly/Sector::SIZE));
 
 	for (int x = here_x-diff_sec; x <= here_x+diff_sec; x++) {
 		for (int y = here_y-diff_sec; y <= here_y+diff_sec; y++) {
 			for (int z = here_z-diff_sec; z <= here_z+diff_sec; z++) {
-				RefCountedPtr<const Sector> sec = Sector::cache.GetCached(SystemPath(x, y, z));
+				RefCountedPtr<const Sector> sec = Pi::GetGalaxy()->GetSector(SystemPath(x, y, z));
 
 				for (unsigned int idx = 0; idx < sec->m_systems.size(); idx++) {
 					if (x == here_x && y == here_y && z == here_z && idx == here_idx)
@@ -257,7 +267,7 @@ static int l_starsystem_get_nearby_systems(lua_State *l)
 					if (Sector::DistanceBetween(here_sec, here_idx, sec, idx) > dist_ly)
 						continue;
 
-					RefCountedPtr<StarSystem> sys = StarSystemCache::GetCached(SystemPath(x, y, z, idx));
+					RefCountedPtr<StarSystem> sys = Pi::GetGalaxy()->GetStarSystem(SystemPath(x, y, z, idx));
 					if (filter) {
 						lua_pushvalue(l, 3);
 						LuaObject<StarSystem>::PushToLua(sys.Get());
@@ -319,8 +329,8 @@ static int l_starsystem_distance_to(lua_State *l)
 		loc2 = &(s2->GetPath());
 	}
 
-	RefCountedPtr<const Sector> sec1 = Sector::cache.GetCached(*loc1);
-	RefCountedPtr<const Sector> sec2 = Sector::cache.GetCached(*loc2);
+	RefCountedPtr<const Sector> sec1 = Pi::GetGalaxy()->GetSector(*loc1);
+	RefCountedPtr<const Sector> sec2 = Pi::GetGalaxy()->GetSector(*loc2);
 
 	double dist = Sector::DistanceBetween(sec1, loc1->systemIndex, sec2, loc2->systemIndex);
 

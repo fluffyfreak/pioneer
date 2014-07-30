@@ -22,6 +22,7 @@ GameConfig::GameConfig(const std::map<std::string,std::string> &override_)
 	map["InvertMouseY"] = "0";
 	map["FOVVertical"] = "65";
 	map["DisplayNavTunnel"] = "0";
+	map["CompactScanner"] = "1";
 	map["MasterVolume"] = "0.8";
 	map["MusicVolume"] = "0.8";
 	map["MasterMuted"] = "0";
@@ -35,7 +36,7 @@ GameConfig::GameConfig(const std::map<std::string,std::string> &override_)
 	map["JoystickDeadzone"] = "0.1";
 	map["DefaultLowThrustPower"] = "0.25";
 	map["VSync"] = "0";
-	map["UseTextureCompression"] = "0";
+	map["UseTextureCompression"] = "1";
 	map["WorkerThreads"] = "0";
 	map["SpeedLines"] = "0";
 	map["EnableCockpit"] = "0";

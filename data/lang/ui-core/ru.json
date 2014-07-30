@@ -47,6 +47,10 @@
       "description" : "",
       "message" : "Служба объявлений"
    },
+   "BUY" : {
+      "description" : "Commodities and equipment prices",
+      "message" : "[+]"
+   },
    "BUY_SHIP" : {
       "description" : "",
       "message" : "Купить"
@@ -154,6 +158,10 @@
    "CONSTABLE" : {
       "description" : "",
       "message" : "Начальник охраны"
+   },
+   "CONTINUE_GAME" : {
+      "description" : "",
+      "message" : "Продолжить игру"
    },
    "CONTROLS" : {
       "description" : "",
@@ -799,10 +807,6 @@
       "description" : "",
       "message" : "Оценка квалификации"
    },
-   "QUICKLOAD" : {
-      "description" : "",
-      "message" : "Быстрая загрузка"
-   },
    "QUIT" : {
       "description" : "",
       "message" : "Выход"
@@ -882,6 +886,10 @@
    "SELECT_GAME_TO_LOAD" : {
       "description" : "",
       "message" : "Выберите файл для загрузки..."
+   },
+   "SELL" : {
+      "description" : "Commodities and equipment prices",
+      "message" : "[-]"
    },
    "SENSORS" : {
       "description" : "",

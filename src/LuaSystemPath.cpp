@@ -3,10 +3,12 @@
 
 #include "LuaObject.h"
 #include "LuaUtils.h"
+#include "Pi.h"
+#include "galaxy/Galaxy.h"
 #include "galaxy/SystemPath.h"
 #include "galaxy/StarSystem.h"
 #include "galaxy/Sector.h"
-#include "galaxy/SectorCache.h"
+#include "galaxy/GalaxyCache.h"
 
 /*
  * Class: SystemPath
@@ -110,7 +112,7 @@ static int l_sbodypath_new(lua_State *l)
 		path.systemIndex = luaL_checkinteger(l, 4);
 
 		// if this is a system path, then check that the system exists
-		RefCountedPtr<const Sector> s = Sector::cache.GetCached(path);
+		RefCountedPtr<const Sector> s = Pi::GetGalaxy()->GetSector(path);
 		if (size_t(path.systemIndex) >= s->m_systems.size())
 			luaL_error(l, "System %d in sector <%d,%d,%d> does not exist", path.systemIndex, sector_x, sector_y, sector_z);
 
@@ -118,7 +120,7 @@ static int l_sbodypath_new(lua_State *l)
 			path.bodyIndex = luaL_checkinteger(l, 5);
 
 			// and if it's a body path, check that the body exists
-			RefCountedPtr<StarSystem> sys = StarSystemCache::GetCached(path);
+			RefCountedPtr<StarSystem> sys = Pi::GetGalaxy()->GetStarSystem(path);
 			if (path.bodyIndex >= sys->GetNumBodies()) {
 				luaL_error(l, "Body %d in system <%d,%d,%d : %d ('%s')> does not exist",
 					path.bodyIndex, sector_x, sector_y, sector_z, path.systemIndex, sys->GetName().c_str());
@@ -156,6 +158,11 @@ static int l_sbodypath_is_same_system(lua_State *l)
 {
 	SystemPath *a = LuaObject<SystemPath>::CheckFromLua(1);
 	SystemPath *b = LuaObject<SystemPath>::CheckFromLua(2);
+
+	if (!a->HasValidSystem())
+		return luaL_error(l, "SystemPath:IsSameSystem() self argument does not refer to a system");
+	if (!b->HasValidSystem())
+		return luaL_error(l, "SystemPath:IsSameSystem() argument #1 does not refer to a system");
 
 	lua_pushboolean(l, a->IsSameSystem(b));
 	return 1;
@@ -215,6 +222,9 @@ static int l_sbodypath_is_same_sector(lua_State *l)
 static int l_sbodypath_system_only(lua_State *l)
 {
 	SystemPath *path = LuaObject<SystemPath>::CheckFromLua(1);
+	if (!path->HasValidSystem())
+		return luaL_error(l, "SystemPath:SystemOnly() self argument does not refer to a system");
+	if (path->IsSystemPath()) { return 1; }
 	const SystemPath sysOnly(path->SystemOnly());
 	LuaObject<SystemPath>::PushToLua(sysOnly);
 	return 1;
@@ -242,6 +252,7 @@ static int l_sbodypath_system_only(lua_State *l)
 static int l_sbodypath_sector_only(lua_State *l)
 {
 	SystemPath *path = LuaObject<SystemPath>::CheckFromLua(1);
+	if (path->IsSectorPath()) { return 1; }
 	LuaObject<SystemPath>::PushToLua(path->SectorOnly());
 	return 1;
 }
@@ -279,10 +290,16 @@ static int l_sbodypath_distance_to(lua_State *l)
 	if (!loc2) {
 		StarSystem *s2 = LuaObject<StarSystem>::CheckFromLua(2);
 		loc2 = &(s2->GetPath());
+		assert(loc2->HasValidSystem());
 	}
 
-	RefCountedPtr<const Sector> sec1 = Sector::cache.GetCached(*loc1);
-	RefCountedPtr<const Sector> sec2 = Sector::cache.GetCached(*loc2);
+	if (!loc1->HasValidSystem())
+		return luaL_error(l, "SystemPath:DistanceTo() self argument does not refer to a system");
+	if (!loc2->HasValidSystem())
+		return luaL_error(l, "SystemPath:DistanceTo() argument #1 does not refer to a system");
+
+	RefCountedPtr<const Sector> sec1 = Pi::GetGalaxy()->GetSector(*loc1);
+	RefCountedPtr<const Sector> sec2 = Pi::GetGalaxy()->GetSector(*loc2);
 
 	double dist = Sector::DistanceBetween(sec1, loc1->systemIndex, sec2, loc2->systemIndex);
 
@@ -314,7 +331,11 @@ static int l_sbodypath_distance_to(lua_State *l)
 static int l_sbodypath_get_star_system(lua_State *l)
 {
 	SystemPath *path = LuaObject<SystemPath>::CheckFromLua(1);
-	RefCountedPtr<StarSystem> s = StarSystemCache::GetCached(path);
+
+	if (path->IsSectorPath())
+		return luaL_error(l, "SystemPath:GetStarSystem() self argument does not refer to a system");
+
+	RefCountedPtr<StarSystem> s = Pi::GetGalaxy()->GetStarSystem(path);
 	// LuaObject<StarSystem> shares ownership of the StarSystem,
 	// because LuaAcquirer<LuaObject<StarSystem>> uses IncRefCount and DecRefCount
 	LuaObject<StarSystem>::PushToLua(s.Get());
@@ -349,7 +370,7 @@ static int l_sbodypath_get_system_body(lua_State *l)
 		return 0;
 	}
 
-	RefCountedPtr<StarSystem> sys = StarSystemCache::GetCached(path);
+	RefCountedPtr<StarSystem> sys = Pi::GetGalaxy()->GetStarSystem(path);
 	if (path->IsSystemPath()) {
 		luaL_error(l, "Path <%d,%d,%d : %d ('%s')> does not name a body", path->sectorX, path->sectorY, path->sectorZ, path->systemIndex, sys->GetName().c_str());
 		return 0;
@@ -444,7 +465,7 @@ static int l_sbodypath_attr_sector_z(lua_State *l)
 static int l_sbodypath_attr_system_index(lua_State *l)
 {
 	SystemPath *path = LuaObject<SystemPath>::CheckFromLua(1);
-	if (!path->IsSectorPath())
+	if (path->HasValidSystem())
 		lua_pushinteger(l, path->systemIndex);
 	else
 		lua_pushnil(l);
@@ -468,7 +489,7 @@ static int l_sbodypath_attr_system_index(lua_State *l)
 static int l_sbodypath_attr_body_index(lua_State *l)
 {
 	SystemPath *path = LuaObject<SystemPath>::CheckFromLua(1);
-	if (path->IsBodyPath())
+	if (path->HasValidBody())
 		lua_pushinteger(l, path->bodyIndex);
 	else
 		lua_pushnil(l);

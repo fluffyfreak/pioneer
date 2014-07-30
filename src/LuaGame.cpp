@@ -11,6 +11,8 @@
 #include "Lang.h"
 #include "StringF.h"
 #include "WorldView.h"
+#include "DeathView.h"
+#include "galaxy/Galaxy.h"
 
 /*
  * Interface: Game
@@ -54,7 +56,7 @@ static int l_game_start_game(lua_State *l)
 	SystemPath *path = LuaObject<SystemPath>::CheckFromLua(1);
 	const double start_time = luaL_optnumber(l, 2, 0.0);
 
-	RefCountedPtr<StarSystem> system(StarSystemCache::GetCached(*path));
+	RefCountedPtr<StarSystem> system(Pi::GetGalaxy()->GetStarSystem(*path));
 	SystemBody *sbody = system->GetBodyByPath(path);
 	if (sbody->GetSuperType() == SystemBody::SUPERTYPE_STARPORT)
 		Pi::game = new Game(*path, start_time);
@@ -139,10 +141,6 @@ static int l_game_save_game(lua_State *l)
 		return luaL_error(l, "can't save when no game is running");
 	}
 
-	if (Pi::game->IsHyperspace()) {
-		return luaL_error(l, "%s", Lang::CANT_SAVE_IN_HYPERSPACE);
-	}
-
 	const std::string filename(luaL_checkstring(l, 1));
 	const std::string path = FileSystem::JoinPathBelow(Pi::GetSaveDir(), filename);
 
@@ -150,6 +148,12 @@ static int l_game_save_game(lua_State *l)
 		Game::SaveGame(filename, Pi::game);
 		lua_pushlstring(l, path.c_str(), path.size());
 		return 1;
+	}
+	catch (CannotSaveInHyperspace) {
+		return luaL_error(l, "%s", Lang::CANT_SAVE_IN_HYPERSPACE);
+	}
+	catch (CannotSaveDeadPlayer) {
+		return luaL_error(l, "%s", Lang::CANT_SAVE_DEAD_PLAYER);
 	}
 	catch (CouldNotOpenFileException) {
 		const std::string message = stringf(Lang::COULD_NOT_OPEN_FILENAME, formatarg("path", path));
@@ -252,11 +256,14 @@ static int l_game_attr_time(lua_State *l)
 
 // XXX temporary to support StationView "Launch" button
 // remove once WorldView has been converted to the new UI
-static int l_game_switch_to_world_view(lua_State *l)
+static int l_game_switch_view(lua_State *l)
 {
 	if (!Pi::game)
 		return luaL_error(l, "can't switch view when no game is running");
-	Pi::SetView(Pi::worldView);
+	if (Pi::player->IsDead())
+		Pi::SetView(Pi::deathView);
+	else
+		Pi::SetView(Pi::worldView);
 	return 0;
 }
 
@@ -272,7 +279,7 @@ void LuaGame::Register()
 		{ "SaveGame",  l_game_save_game  },
 		{ "EndGame",   l_game_end_game   },
 
-		{ "SwitchToWorldView", l_game_switch_to_world_view },
+		{ "SwitchView", l_game_switch_view },
 
 		{ 0, 0 }
 	};

@@ -5,7 +5,6 @@
 #define _SHIPCPANELMULTIFUNCDISPLAYS_H
 
 #include "gui/Gui.h"
-#include "EquipType.h"
 #include "Serializer.h"
 #include "Object.h"
 
@@ -64,6 +63,7 @@ public:
 	virtual ~ScannerWidget();
 	void GetSizeRequested(float size[2]);
 	void ToggleMode();
+	void InitScaling(void);
 	void Draw();
 	virtual void Update();
 
@@ -98,6 +98,9 @@ private:
 	float m_y;
 
 	float m_lastRange;
+	bool isCompact;
+	float SCANNER_XSHRINK;
+	float SCANNER_YSHRINK;
 
 	std::vector<vector2f> m_circle;
 	std::vector<vector2f> m_spokes;

@@ -4,9 +4,9 @@
 local Engine = import("Engine")
 local Lang = import("Lang")
 local Game = import("Game")
-local EquipDef = import("EquipDef")
 local utils = import("utils")
 local Format = import("Format")
+local Equipment = import("Equipment")
 
 local MessageBox = import("ui/MessageBox")
 
@@ -17,44 +17,13 @@ local lcore = Lang.GetResource("core")
 
 local ui = Engine.ui
 
-local equipIcon = {
-	HYDROGEN =              "Hydrogen",
-	LIQUID_OXYGEN =         "Liquid_Oxygen",
-	METAL_ORE =             "Metal_ore",
-	CARBON_ORE =            "Carbon_ore",
-	METAL_ALLOYS =          "Metal_alloys",
-	PLASTICS =              "Plastics",
-	FRUIT_AND_VEG =         "Fruit_and_Veg",
-	ANIMAL_MEAT =           "Animal_Meat",
-	LIVE_ANIMALS =          "Live_Animals",
-	LIQUOR =                "Liquor",
-	GRAIN =                 "Grain",
-	TEXTILES =              "Textiles",
-	FERTILIZER =            "Fertilizer",
-	WATER =                 "Water",
-	MEDICINES =             "Medicines",
-	CONSUMER_GOODS =        "Consumer_goods",
-	COMPUTERS =             "Computers",
-	ROBOTS =                "Robots",
-	PRECIOUS_METALS =       "Precious_metals",
-	INDUSTRIAL_MACHINERY =  "Industrial_machinery",
-	FARM_MACHINERY =        "Farm_machinery",
-	MINING_MACHINERY =      "Mining_machinery",
-	AIR_PROCESSORS =        "Air_processors",
-	SLAVES =                "Slaves",
-	HAND_WEAPONS =          "Hand_weapons",
-	BATTLE_WEAPONS =        "Battle_weapons",
-	NERVE_GAS =             "Nerve_Gas",
-	NARCOTICS =             "Narcotics",
-	MILITARY_FUEL =         "Military_fuel",
-	RUBBISH =               "Rubbish",
-	RADIOACTIVES =          "Radioactive_waste",
-}
+-- loose money when you sell parts back to the station.
+local sellPriceReduction = 0.8
 
 local defaultFuncs = {
 	-- can we trade in this item
 	canTrade = function (e)
-		return EquipDef[e].purchasable and EquipDef[e].slot == "CARGO" and Game.system:IsCommodityLegal(e)
+		return e.purchasable and e:IsValidSlot("cargo") and Game.system:IsCommodityLegal(e)
 	end,
 
 	-- how much of this item do we have in stock?
@@ -62,9 +31,19 @@ local defaultFuncs = {
 		return Game.player:GetDockedWith():GetEquipmentStock(e)
 	end,
 
-	-- what do we charge for this item?
-	getPrice = function (e)
+	-- what do we charge for this item if we are buying
+	getBuyPrice = function (e)
 		return Game.player:GetDockedWith():GetEquipmentPrice(e)
+	end,
+
+	-- what do we get for this item if we are selling
+	getSellPrice = function (e)
+		basePrice = Game.player:GetDockedWith():GetEquipmentPrice(e)
+		if basePrice > 0 then
+			return sellPriceReduction * basePrice
+		else
+			return 1.0/sellPriceReduction * basePrice
+		end
 	end,
 
 	-- do something when a "buy" button is clicked
@@ -94,6 +73,8 @@ local defaultFuncs = {
 local stationColumnHeading = {
 	icon  = "",
 	name  = l.NAME_OBJECT,
+	buy   = l.BUY,
+	sell  = l.SELL,
 	price = l.PRICE,
 	stock = l.IN_STOCK,
 	mass  = l.MASS,
@@ -107,19 +88,21 @@ local shipColumnHeading = {
 }
 
 local defaultStationColumnValue = {
-	icon  = function (e, funcs) return equipIcon[e] and ui:Image("icons/goods/"..equipIcon[e]..".png") or "" end,
-	name  = function (e, funcs) return lcore[e] end,
-	price = function (e, funcs) return Format.Money(funcs.getPrice(e)) end,
+	icon  = function (e, funcs) return e.icon_name and ui:Image("icons/goods/"..e.icon_name..".png") or "" end,
+	name  = function (e, funcs) return e:GetName() end,
+	price = function (e, funcs) return Format.Money(funcs.getBuyPrice(e)) end,
+	buy   = function (e, funcs) return Format.Money(funcs.getBuyPrice(e)) end,
+	sell  = function (e, funcs) return Format.Money(funcs.getSellPrice(e)) end,
 	stock = function (e, funcs) return funcs.getStock(e) end,
-	mass  = function (e, funcs) return string.format("%dt", EquipDef[e].mass) end,
+	mass  = function (e, funcs) return string.format("%dt", e.capabilities.mass) end,
 }
 
 local defaultShipColumnValue = {
-	icon      = function (e, funcs) return equipIcon[e] and ui:Image("icons/goods/"..equipIcon[e]..".png") or "" end,
-	name      = function (e, funcs) return lcore[e] end,
-	amount    = function (e, funcs) return Game.player:GetEquipCount(EquipDef[e].slot, e) end,
-	mass      = function (e, funcs) return string.format("%dt", EquipDef[e].mass) end,
-	massTotal = function (e, funcs) return string.format("%dt", Game.player:GetEquipCount(EquipDef[e].slot,e)*EquipDef[e].mass) end,
+	icon      = function (e, funcs) return e.icon_name and ui:Image("icons/goods/"..e.icon_name..".png") or "" end,
+	name      = function (e, funcs) return e:GetName() end,
+	amount    = function (e, funcs) return Game.player:CountEquip(e) end,
+	mass      = function (e, funcs) return string.format("%dt", e.capabilities.mass) end,
+	massTotal = function (e, funcs) return string.format("%dt", Game.player:CountEquip(e)*e.capabilities.mass) end,
 }
 
 
@@ -129,7 +112,8 @@ function EquipmentTableWidgets.Pair (config)
 	local funcs = {
 		canTrade = config.canTrade or defaultFuncs.canTrade,
 		getStock = config.getStock or defaultFuncs.getStock,
-		getPrice = config.getPrice or defaultFuncs.getPrice,
+		getBuyPrice = config.getBuyPrice or defaultFuncs.getBuyPrice,
+		getSellPrice = config.getSellPrice or defaultFuncs.getSellPrice,
 		onClickBuy = config.onClickBuy or defaultFuncs.onClickBuy,
 		onClickSell = config.onClickSell or defaultFuncs.onClickSell,
 		bought = config.bought or defaultFuncs.bought,
@@ -140,6 +124,8 @@ function EquipmentTableWidgets.Pair (config)
 		icon  = config.icon  or defaultStationColumnValue.icon,
 		name  = config.name  or defaultStationColumnValue.name,
 		price = config.price or defaultStationColumnValue.price,
+		buy   = config.buy   or defaultStationColumnValue.buy,
+		sell  = config.sell  or defaultStationColumnValue.sell,
 		stock = config.stock or defaultStationColumnValue.stock,
 		mass  = config.mass  or defaultStationColumnValue.mass,
 	}
@@ -153,12 +139,35 @@ function EquipmentTableWidgets.Pair (config)
 	}
 
 	local equipTypes = {}
-	for k,v in pairs(EquipDef) do
-		if funcs.canTrade(v.id) and k ~= "NONE" then
-			table.insert(equipTypes, k)
+	for _,t in pairs({Equipment.cargo, Equipment.misc, Equipment.laser, Equipment.hyperspace}) do
+		for k,e in pairs(t) do
+			if funcs.canTrade(e) then
+				table.insert(equipTypes, e)
+			end
 		end
 	end
-	table.sort(equipTypes)
+
+	local sortingFunction = function(e1,e2)
+		if e1:GetDefaultSlot() == e2:GetDefaultSlot() then
+			if e1:GetDefaultSlot() == "cargo" then
+				return e1:GetName() < e2:GetName()        -- cargo sorted on translated name
+			else
+				if e1:GetDefaultSlot():find("laser") then -- can be laser_front or _back
+					if e1.l10n_key:find("PULSE") and e2.l10n_key:find("PULSE") or
+					e1.l10n_key:find("PLASMA") and e2.l10n_key:find("PLASMA") then
+						return e1.price < e2.price
+					else
+						return e1.l10n_key < e2.l10n_key
+					end
+				else
+					return e1.l10n_key < e2.l10n_key
+				end
+			end
+		else
+			return e1:GetDefaultSlot() < e2:GetDefaultSlot()
+		end
+	end
+	table.sort(equipTypes, sortingFunction)
 
 	local stationTable =
 		ui:Table()
@@ -173,12 +182,9 @@ function EquipmentTableWidgets.Pair (config)
 		stationTable:ClearRows()
 
 		local rowEquip = {}
-		local row = 1
-		for i=1,#equipTypes do
-			local e = equipTypes[i]
+		for i, e in ipairs(equipTypes) do
 			stationTable:AddRow(utils.build_table(utils.map(function (k,v) return k,stationColumnValue[v](e,funcs) end, ipairs(config.stationColumns))))
-			rowEquip[row] = e
-			row = row + 1
+			rowEquip[i] = e
 		end
 
 		return rowEquip
@@ -198,15 +204,11 @@ function EquipmentTableWidgets.Pair (config)
 		shipTable:ClearRows()
 
 		local rowEquip = {}
-		local row = 1
-		for i=1,#equipTypes do
-			local e = equipTypes[i]
-			local n = Game.player:GetEquipCount(EquipDef[e].slot, e)
+		for i,e in ipairs(equipTypes) do
+			local n = Game.player:CountEquip(e)
 			if n > 0 then
-				local icon = equipIcon[e] and ui:Image("icons/goods/"..equipIcon[e]..".png") or ""
 				shipTable:AddRow(utils.build_table(utils.map(function (k,v) return k,shipColumnValue[v](e, funcs) end, ipairs(config.shipColumns))))
-				rowEquip[row] = e
-				row = row + 1
+				table.insert(rowEquip, e)
 			end
 		end
 
@@ -225,31 +227,41 @@ function EquipmentTableWidgets.Pair (config)
 		local player = Game.player
 
 		-- if this ship model doesn't support fitting of this equip:
-		if player:GetEquipSlotCapacity(EquipDef[e].slot) < 1 then
+		if player:GetEquipSlotCapacity(e:GetDefaultSlot(player)) < 1 then
 			MessageBox.Message(string.interp(l.NOT_SUPPORTED_ON_THIS_SHIP,
-				 {equipment = EquipDef[e].name,}))
+				 {equipment = e:GetName(),}))
 			return
 		end
 
-		-- if ship maxed out in this slot
-		if player:GetEquipFree(EquipDef[e].slot) < 1 then
+		-- add to first free slot
+		local slot
+		for i=1,#e.slots do
+			if player:GetEquipFree(e.slots[i]) > 0 then
+				slot = e.slots[i]
+				break
+			end
+		end
+
+		-- if ship maxed out in any valid slot for e
+		if not slot then
 			MessageBox.Message(l.SHIP_IS_FULLY_EQUIPPED)
 			return
 		end
 
 		-- if ship too heavy to support more
-		if player.freeCapacity < EquipDef[e].mass then
+		if player.freeCapacity < e.capabilities.mass then
 			MessageBox.Message(l.SHIP_IS_FULLY_LADEN)
 			return
 		end
 
-		local price = funcs.getPrice(e)
-		if player:GetMoney() < funcs.getPrice(e) then
+
+		local price = funcs.getBuyPrice(e)
+		if player:GetMoney() < funcs.getBuyPrice(e) then
 			MessageBox.Message(l.YOU_NOT_ENOUGH_MONEY)
 			return
 		end
 
-		assert(player:AddEquip(e) == 1)
+		assert(player:AddEquip(e, 1, slot) == 1)
 		player:AddMoney(-price)
 
 		funcs.sold(e)
@@ -260,8 +272,17 @@ function EquipmentTableWidgets.Pair (config)
 
 		local player = Game.player
 
-		player:RemoveEquip(e)
-		player:AddMoney(funcs.getPrice(e))
+		-- remove from last free slot (reverse table)
+		local slot
+		for i=#e.slots,1,-1 do
+			if player:CountEquip(e, e.slots[i]) > 0 then
+				slot = e.slots[i]
+				break
+			end
+		end
+
+		player:RemoveEquip(e, 1, slot)
+		player:AddMoney(funcs.getSellPrice(e))
 
 		funcs.bought(e)
 	end

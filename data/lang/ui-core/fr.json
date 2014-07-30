@@ -47,6 +47,10 @@
       "description" : "",
       "message" : "Tableau d'affichage"
    },
+   "BUY" : {
+      "description" : "Commodities and equipment prices",
+      "message" : "Achat"
+   },
    "BUY_SHIP" : {
       "description" : "",
       "message" : "Acheter vaisseau"
@@ -154,6 +158,10 @@
    "CONSTABLE" : {
       "description" : "",
       "message" : "Agent de police"
+   },
+   "CONTINUE_GAME" : {
+      "description" : "",
+      "message" : "Continue game"
    },
    "CONTROLS" : {
       "description" : "",
@@ -799,10 +807,6 @@
       "description" : "",
       "message" : "Qualification"
    },
-   "QUICKLOAD" : {
-      "description" : "",
-      "message" : "Chargement rapide"
-   },
    "QUIT" : {
       "description" : "",
       "message" : "Quitter"
@@ -882,6 +886,10 @@
    "SELECT_GAME_TO_LOAD" : {
       "description" : "",
       "message" : "Selectionnez la partie a charger..."
+   },
+   "SELL" : {
+      "description" : "Commodities and equipment prices",
+      "message" : "Vente"
    },
    "SENSORS" : {
       "description" : "",
