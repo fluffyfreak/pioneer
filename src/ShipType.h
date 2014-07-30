@@ -55,10 +55,10 @@ struct ShipType {
 		DualLaserOrientation orient;
 	} gunMount[GUNMOUNT_MAX];
 	std::map<std::string, int> slots;
-	typedef std::map<std::string,std::pair<std::string, Equip::Type>> TTagTurretMap;
+	/*typedef std::map<std::string,std::pair<std::string, Equip::Type>> TTagTurretMap;
 	typedef TTagTurretMap::const_iterator TTagTurretMapIter;
 	TTagTurretMap turretsMap;
-	int equipSlotCapacity[Equip::SLOT_MAX];
+	int equipSlotCapacity[Equip::SLOT_MAX];*/
 	int capacity; // tonnes
 	int hullMass;
 	float effectiveExhaustVelocity; // velocity at which the propellant escapes the engines
