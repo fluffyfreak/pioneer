@@ -95,7 +95,7 @@ void PlayerShipController::StaticUpdate(const float timeStep)
 	// external camera mouselook
 	if (Pi::MouseButtonState(SDL_BUTTON_MIDDLE)) {
 		// not internal camera
-		if (Pi::worldView->GetCamType() != Pi::worldView->CAM_INTERNAL) {
+		if (Pi::worldView->GetCamType() != CameraController::INTERNAL) {
 			MoveableCameraController *mcc = static_cast<MoveableCameraController*>(Pi::worldView->GetCameraController());
 			const double accel = 0.01; // XXX configurable?
 			mcc->RotateLeft(mouseMotion[0] * accel);
