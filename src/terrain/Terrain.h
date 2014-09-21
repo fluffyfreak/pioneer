@@ -87,6 +87,7 @@ private:
 protected:
 	Terrain(const SystemBody *body);
 	void ExportHeightmap(const std::string& filename);
+	bool LoadHeightmap(const std::string& filename);
 
 	bool textures;
 	int m_fracnum;

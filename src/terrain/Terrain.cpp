@@ -20,7 +20,7 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 			InstanceGenerator<TerrainHeightMapped2,TerrainColorRock2>
 		};
 		assert(body->GetHeightMapFractal() < COUNTOF(choices));
-		return choices[body->GetHeightMapFractal()](body);
+		return choices[1/*body->GetHeightMapFractal()*/](body);
 	}
 
 	Random rand(body->GetSeed());
@@ -364,10 +364,13 @@ static size_t bufread_or_die(void *ptr, size_t size, size_t nmemb, ByteRange &bu
 #include "StringF.h"
 #include <sstream>
 // Attempt at version history:
-// 1: prototype - export only
-static const Uint32 HMAP_VERSION = 0;
-static const std::string HMAP_EXTENSION = ".hmap";
+// 0: prototype - export only
+// 1: loading added, switched back to Uint16 heights for export/load
+static const Uint32 HMAP_VERSION = 1;
+static const std::string HMAP_EXTENSION = ".map1";
 static const std::string SAVE_TARGET_DIR = "heightmaps";
+static bool s_earthHack = false;
+#pragma optimize("",off)
 void Terrain::ExportHeightmap(const std::string& filename)
 {
 	const int SizeX = (m_heightMapSizeX);
@@ -402,9 +405,6 @@ void Terrain::ExportHeightmap(const std::string& filename)
 	wr.Int16(SizeX);
 	wr.Int16(SizeY);
 
-	wr.Double(m_heightScaling);
-	wr.Double(m_minh);
-
 	// heightmap data
 	double minh = DBL_MAX, maxh = DBL_MIN;
 	{
@@ -412,12 +412,24 @@ void Terrain::ExportHeightmap(const std::string& filename)
 		float const *pHeightMap = m_heightMap.get();
 		for(Uint32 i=0; i<heightmapPixelArea; i++) {
 			const float heightVal = (*pHeightMap);
-			wr.Float(heightVal);
+			Uint32 val(heightVal);
+			if(s_earthHack) {
+				val += INT16_MAX;
+			}
+			wr.Int16(val);
 			minh = std::min(minh, double(heightVal));
 			maxh = std::max(maxh, double(heightVal));
 			++pHeightMap;
 		}
 		assert(pHeightMap == &m_heightMap[heightmapPixelArea]);
+	}
+
+	if(s_earthHack) {
+		wr.Double(0.3);
+		wr.Double(minh);
+	} else {
+		wr.Double(m_heightScaling);
+		wr.Double(m_minh);
 	}
 
 	// output a png of what we've just done.
@@ -449,6 +461,79 @@ void Terrain::ExportHeightmap(const std::string& filename)
 	if (nwritten != 1) 
 		throw CouldNotWriteToFileException();
 }
+#pragma optimize("",off)
+bool Terrain::LoadHeightmap(const std::string& filename)
+{
+	const std::string shortname(filename.substr(0, filename.length() - HMAP_EXTENSION.length()));
+	const std::string basepath(SAVE_TARGET_DIR);
+
+	FileSystem::FileSource &fileSource = FileSystem::gameDataFiles;
+	for (FileSystem::FileEnumerator files(fileSource, basepath, FileSystem::FileEnumerator::Recurse); !files.Finished(); files.Next()) {
+		const FileSystem::FileInfo &info = files.Current();
+		const std::string &fpath = info.GetPath();
+
+		//check it's the expected type
+		if (info.IsFile() && ends_with_ci(fpath, HMAP_EXTENSION)) {
+			//check it's the wanted name & load it
+			const std::string name = info.GetName();
+
+			if (shortname == name.substr(0, name.length() - HMAP_EXTENSION.length())) {
+				//curPath is used to find textures, patterns,
+				//possibly other data files for this model.
+				//Strip trailing slash
+				std::string curPath = info.GetDir();
+				if (curPath[curPath.length()-1] == '/')
+					curPath = curPath.substr(0, curPath.length()-1);
+
+				RefCountedPtr<FileSystem::FileData> binfile = info.Read();
+				if (binfile.Valid()) {
+					Serializer::Reader rd(binfile->AsByteRange());
+
+					//verify signature
+					const Uint32 sig = rd.Int32();
+					if (sig != 0x3150414d) { //'MAP1'
+						Output("Not a binary model file");
+						return false;
+					}
+
+					const Uint32 version = rd.Int32();
+					if (version != HMAP_VERSION) {
+						Output("Unsupported file version");
+						return false;
+					}
+
+					// header data
+					static const Uint8 vM('M');
+					static const Uint8 vA('A');
+					static const Uint8 vP('P');
+					static const Uint8 v1('1');
+
+					m_heightMapSizeX = rd.Int16();
+					m_heightMapSizeY = rd.Int16();
+
+					// heightmap data
+					const Uint32 heightmapPixelArea = (m_heightMapSizeX * m_heightMapSizeY);
+					m_heightMap.reset(new float[heightmapPixelArea]);
+					float *pHeightMap = m_heightMap.get();
+					for(Uint32 i=0; i<heightmapPixelArea; i++) {
+						const float heightVal = float(rd.Int16());
+						(*pHeightMap) = heightVal;
+						++pHeightMap;
+					}
+					assert(pHeightMap == &m_heightMap[heightmapPixelArea]);
+
+					// scaling values
+					m_heightScaling = rd.Double();
+					m_minh = rd.Double();
+
+					return true;
+				}
+			}
+		}
+	}
+
+	return false;
+}
 
 // XXX this sucks, but there isn't a reliable cross-platform way to get them
 #ifndef INT16_MIN
@@ -475,69 +560,76 @@ Terrain::Terrain(const SystemBody *body) : m_seed(body->GetSeed()), m_rand(body-
 
 		ByteRange databuf = fdata->AsByteRange();
 
-		Sint16 minHMap = INT16_MAX, maxHMap = INT16_MIN;
-		Uint16 minHMapScld = UINT16_MAX, maxHMapScld = 0;
+		const bool bLoadedHmap = LoadHeightmap(fullname);
 
-		// XXX unify heightmap types
-		switch (body->GetHeightMapFractal()) {
-			case 0: {
-				Uint16 v;
-				bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeX = v;
-				bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeY = v;
-				const Uint32 heightmapPixelArea = (m_heightMapSizeX * m_heightMapSizeY);
+		if(!bLoadedHmap)
+		{
+			Sint16 minHMap = INT16_MAX, maxHMap = INT16_MIN;
+			Uint16 minHMapScld = UINT16_MAX, maxHMapScld = 0;
 
-				std::unique_ptr<Sint16[]> heightMap(new Sint16[heightmapPixelArea]);
-				bufread_or_die(heightMap.get(), sizeof(Sint16), heightmapPixelArea, databuf);
-				m_heightMap.reset(new float[heightmapPixelArea]);
-				float *pHeightMap = m_heightMap.get();
-				for(Uint32 i=0; i<heightmapPixelArea; i++) {
-					const Sint16 val = heightMap.get()[i];
-					minHMap = std::min(minHMap, val);
-					maxHMap = std::max(maxHMap, val);
-					// store then increment pointer
-					(*pHeightMap) = val;
-					++pHeightMap;
+			// XXX unify heightmap types
+			switch (body->GetHeightMapFractal()) {
+				case 0: {
+					Uint16 v;
+					bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeX = v;
+					bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeY = v;
+					const Uint32 heightmapPixelArea = (m_heightMapSizeX * m_heightMapSizeY);
+
+					std::unique_ptr<Sint16[]> heightMap(new Sint16[heightmapPixelArea]);
+					bufread_or_die(heightMap.get(), sizeof(Sint16), heightmapPixelArea, databuf);
+					m_heightMap.reset(new float[heightmapPixelArea]);
+					float *pHeightMap = m_heightMap.get();
+					for(Uint32 i=0; i<heightmapPixelArea; i++) {
+						const Sint16 val = heightMap.get()[i];
+						minHMap = std::min(minHMap, val);
+						maxHMap = std::max(maxHMap, val);
+						// store then increment pointer
+						(*pHeightMap) = val;
+						++pHeightMap;
+					}
+					assert(pHeightMap == &m_heightMap[heightmapPixelArea]);
+					//Output("minHMap = (%hd), maxHMap = (%hd)\n", minHMap, maxHMap);
+					s_earthHack = true;
+					ExportHeightmap(heightmap_filename);
+					break;
 				}
-				assert(pHeightMap == &m_heightMap[heightmapPixelArea]);
-				//Output("minHMap = (%hd), maxHMap = (%hd)\n", minHMap, maxHMap);
-				ExportHeightmap(heightmap_filename);
-				break;
-			}
 
-			case 1: {
-				Uint16 v;
-				// XXX x and y reversed from above *sigh*
-				bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeY = v;
-				bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeX = v;
-				const Uint32 heightmapPixelArea = (m_heightMapSizeX * m_heightMapSizeY);
+				case 1: {
+					Uint16 v;
+					// XXX x and y reversed from above *sigh*
+					bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeY = v;
+					bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeX = v;
+					const Uint32 heightmapPixelArea = (m_heightMapSizeX * m_heightMapSizeY);
 
-				// read height scaling and min height which are doubles
-				double te;
-				bufread_or_die(&te, 8, 1, databuf);
-				m_heightScaling = te;
-				bufread_or_die(&te, 8, 1, databuf);
-				m_minh = te;
+					// read height scaling and min height which are doubles
+					double te;
+					bufread_or_die(&te, 8, 1, databuf);
+					m_heightScaling = te;
+					bufread_or_die(&te, 8, 1, databuf);
+					m_minh = te;
 
-				std::unique_ptr<Uint16[]> heightMapScaled(new Uint16[heightmapPixelArea]);
-				bufread_or_die(heightMapScaled.get(), sizeof(Uint16), heightmapPixelArea, databuf);
-				m_heightMap.reset(new float[heightmapPixelArea]);
-				float *pHeightMap = m_heightMap.get();
-				for(Uint32 i=0; i<heightmapPixelArea; i++) {
-					const Uint16 val = heightMapScaled[i];
-					minHMapScld = std::min(minHMapScld, val);
-					maxHMapScld = std::max(maxHMapScld, val);
-					// store then increment pointer
-					(*pHeightMap) = val;
-					++pHeightMap;
+					std::unique_ptr<Uint16[]> heightMapScaled(new Uint16[heightmapPixelArea]);
+					bufread_or_die(heightMapScaled.get(), sizeof(Uint16), heightmapPixelArea, databuf);
+					m_heightMap.reset(new float[heightmapPixelArea]);
+					float *pHeightMap = m_heightMap.get();
+					for(Uint32 i=0; i<heightmapPixelArea; i++) {
+						const Uint16 val = heightMapScaled[i];
+						minHMapScld = std::min(minHMapScld, val);
+						maxHMapScld = std::max(maxHMapScld, val);
+						// store then increment pointer
+						(*pHeightMap) = val;
+						++pHeightMap;
+					}
+					assert(pHeightMap == &m_heightMap[heightmapPixelArea]);
+					//Output("minHMapScld = (%hu), maxHMapScld = (%hu)\n", minHMapScld, maxHMapScld);
+					s_earthHack = false;
+					ExportHeightmap(heightmap_filename);
+					break;
 				}
-				assert(pHeightMap == &m_heightMap[heightmapPixelArea]);
-				//Output("minHMapScld = (%hu), maxHMapScld = (%hu)\n", minHMapScld, maxHMapScld);
-				ExportHeightmap(heightmap_filename);
-				break;
-			}
 
-			default:
-				assert(0);
+				default:
+					assert(0);
+			}
 		}
 
 	}
