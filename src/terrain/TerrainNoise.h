@@ -166,6 +166,12 @@ namespace TerrainNoise {
 
 }
 
+static inline int Wrap(const int kX, const int kLowerBound, const int kUpperBound)
+{
+    const int d = kUpperBound - kLowerBound + 1;
+    return kLowerBound + (kX >= 0 ? kX % d : -kX % d ? d - (-kX % d) : 0);
+}
+
 // common colours for earthlike worlds
 // XXX better way to do this?
 

@@ -19,6 +19,31 @@ struct fracdef_t {
 	int octaves;
 };
 
+template <typename T>
+T DoThisThing(const double dx, const double dy, const T map[4][4])
+{
+	T c[4];
+	for (int j=0; j<4; j++) {
+		const T d0 = map[0][j] - map[1][j];
+		const T d2 = map[2][j] - map[1][j];
+		const T d3 = map[3][j] - map[1][j];
+		const T a0 = map[1][j];
+		const T a1 = -(1/3.0)*d0 + d2 - (1/6.0)*d3;
+		const T a2 = 0.5*d0 + 0.5*d2;
+		const T a3 = -(1/6.0)*d0 - 0.5*d2 + (1/6.0)*d3;
+		c[j] = a0 + a1*dx + a2*dx*dx + a3*dx*dx*dx;
+	}
+
+	const T d0 = c[0] - c[1];
+	const T d2 = c[2] - c[1];
+	const T d3 = c[3] - c[1];
+	const T a0 = c[1];
+	const T a1 = -(1/3.0)*d0 + d2 - (1/6.0)*d3;
+	const T a2 = 0.5*d0 + 0.5*d2;
+	const T a3 = -(1/6.0)*d0 - 0.5*d2 + (1/6.0)*d3;
+	return T(0.1) + a0 + a1*dy + a2*dy*dy + a3*dy*dy*dy;
+}
+
 
 template <typename,typename> class TerrainGenerator;
 
@@ -61,6 +86,7 @@ private:
 
 protected:
 	Terrain(const SystemBody *body);
+	void ExportHeightmap(const std::string& filename);
 
 	bool textures;
 	int m_fracnum;
@@ -77,7 +103,7 @@ protected:
 
 	// heightmap stuff
 	// XXX unify heightmap types
-	std::unique_ptr<double[]> m_heightMap;
+	std::unique_ptr<float[]> m_heightMap;
 	double m_heightScaling, m_minh;
 
 	int m_heightMapSizeX;
@@ -88,6 +114,7 @@ protected:
 	double m_maxHeightInMeters;
 	double m_invMaxHeight;
 	double m_planetRadius;
+	double m_invPlanetRadius;
 	double m_planetEarthRadii;
 
 	double m_entropy[12];

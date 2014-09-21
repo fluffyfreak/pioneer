@@ -44,6 +44,7 @@ public:
 	vector3 &operator/=(const double a) { const T inva = T(1.0/a); x*=inva; y*=inva; z*=inva; return *this; }
 	vector3 operator-(const vector3 &a) const { return vector3(x-a.x, y-a.y, z-a.z); }
 	vector3 operator-() const { return vector3(-x, -y, -z); }
+	vector3 operator*(const vector3 &a) { return vector3(a.x*x, a.y*y, a.z*z); }
 
 	bool ExactlyEqual(const vector3 &a) const {
 		return is_equal_exact(a.x, x) && is_equal_exact(a.y, y) && is_equal_exact(a.z, z);
