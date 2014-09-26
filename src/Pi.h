@@ -20,25 +20,18 @@
 #include <vector>
 
 class GalaxyGenerator;
-class DeathView;
-class GalacticView;
 class Galaxy;
 class Intro;
 class LuaConsole;
 class LuaNameGen;
 class ModelCache;
 class Player;
-class SectorView;
 class Ship;
-class ShipCpanel;
 class SpaceStation;
 class StarSystem;
-class SystemInfoView;
-class SystemView;
 class TransferPlanner;
 class UIView;
 class View;
-class WorldView;
 class SDLGraphics;
 namespace Graphics { class Renderer; }
 namespace SceneGraph { class Model; }
@@ -138,6 +131,7 @@ public:
 
 	static Random rng;
 	static int statSceneTris;
+	static int statNumPatches;
 
 	static void SetView(View *v);
 	static View *GetView() { return currentView; }
@@ -152,27 +146,13 @@ public:
 #endif
 
 	static Player *player;
-	static SectorView *sectorView;
-	static GalacticView *galacticView;
-	static UIView *settingsView;
-	static SystemInfoView *systemInfoView;
-	static SystemView *systemView;
 	static TransferPlanner *planner;
-	static WorldView *worldView;
-	static DeathView *deathView;
-	static UIView *spaceStationView;
-	static UIView *infoView;
 	static LuaConsole *luaConsole;
-	static ShipCpanel *cpan;
 	static Sound::MusicPlayer &GetMusicPlayer() { return musicPlayer; }
 	static Graphics::Renderer *renderer;
 	static ModelCache *modelCache;
 	static Intro *intro;
 	static SDLGraphics *sdl;
-
-#if WITH_OBJECTVIEWER
-	static ObjectViewerView *objectViewerView;
-#endif
 
 	static Game *game;
 

@@ -4,6 +4,7 @@
 #include "libs.h"
 #include "gui/Gui.h"
 #include "Pi.h"
+#include "Game.h"
 #include "GalacticView.h"
 #include "SystemInfoView.h"
 #include "Player.h"
@@ -23,7 +24,7 @@ static const float ZOOM_IN_SPEED = 2;
 static const float ZOOM_OUT_SPEED = 1.f/ZOOM_IN_SPEED;
 static const float WHEEL_SENSITIVITY = .2f;		// Should be a variable in user settings.
 
-GalacticView::GalacticView() : UIView(),
+GalacticView::GalacticView(Game* game) : UIView(), m_game(game),
 	m_quad(Graphics::TextureBuilder::UI("galaxy_colour.png").CreateTexture(Gui::Screen::GetRenderer()))
 {
 
@@ -105,7 +106,7 @@ void GalacticView::PutLabels(vector3d offset)
 void GalacticView::Draw3D()
 {
 	PROFILE_SCOPED()
-	vector3f pos = Pi::sectorView->GetPosition();
+	vector3f pos = m_game->GetSectorView()->GetPosition();
 	float offset_x = (pos.x*Sector::SIZE + Pi::GetGalaxy()->SOL_OFFSET_X)/Pi::GetGalaxy()->GALAXY_RADIUS;
 	float offset_y = (-pos.y*Sector::SIZE + Pi::GetGalaxy()->SOL_OFFSET_Y)/Pi::GetGalaxy()->GALAXY_RADIUS;
 
@@ -130,13 +131,13 @@ void GalacticView::Draw3D()
 	// scale at the top
 	m_renderer->SetTransform(matrix4x4f::Identity());
 	//Color white(255);
-	const vector2f vts[] = {
-		vector2f(-0.25f,-0.93f),
-		vector2f(-0.25f,-0.94f),
-		vector2f(0.25f,-0.94f),
-		vector2f(0.25f,-0.93f)
+	const vector3f vts[] = {
+		vector3f(-0.25f,-0.93f, 0.0f),
+		vector3f(-0.25f,-0.94f, 0.0f),
+		vector3f(0.25f,-0.94f, 0.0f),
+		vector3f(0.25f,-0.93f, 0.0f)
 	};
-	m_renderer->DrawLines2D(4, vts, Color::WHITE, m_renderState, LINE_STRIP);
+	m_renderer->DrawLines(4, vts, Color::WHITE, m_renderState, LINE_STRIP);
 
 	m_labels->Clear();
 	PutLabels(-vector3d(offset_x, offset_y, 0.0));

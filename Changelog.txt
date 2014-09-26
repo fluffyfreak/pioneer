@@ -7,6 +7,9 @@ September 2014
      * Fix mismatch between saving/loading code (#3172)
      * Fix behaviour of autosave system (#3163, #3101)
      * Fix possible crash when accepting mission in paused (#2732, #3169)
+     * Fix compilation errors on Mac OS X (#3182,#3183)
+     * Fix the Line3D rendering issue (#3190)
+     * Fix the construction of the Circle drawables. (#3192)
 
    * Minor changes and tweaks
      * Show buy and sell prices in commodity market (#3153)
@@ -16,6 +19,8 @@ September 2014
      * Cap maximum number of police GoodsTraders (#3165)
      * Better background intensity calculation for Eclipse (#3171)
      * Randomize planet phase angle (#3135)
+     * Terrain detail / depth changes (#3184)
+     * Output SDL version on start (#3196)
 
    * Script and UI API changes
      * Allow to set lawlessness in custom systems (#3166)
@@ -30,6 +35,11 @@ September 2014
      * Easier to model docking - Part 1 (#3075)
      * Const-correctness in CustomSystems and Factions (#3174)
      * Restrict FreeType to a single translation unit (#3175, #1203)
+     * Game views refactoring (#3181)
+     * More drawable classes, minor fixes (#3187)
+     * More cache unification (#3193)
+     * Refactor face generator code to support some future changes (#3180)
+     * Shader Attributes and required refactoring (#3194)
 
 August 2014
 

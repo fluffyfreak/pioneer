@@ -45,7 +45,7 @@ enum DetailSelection {
 static const float ZOOM_SPEED = 15;
 static const float WHEEL_SENSITIVITY = .03f;		// Should be a variable in user settings.
 
-SectorView::SectorView() : UIView()
+SectorView::SectorView(Game* game) : UIView(), m_game(game)
 {
 	InitDefaults();
 
@@ -76,7 +76,7 @@ SectorView::SectorView() : UIView()
 	InitObject();
 }
 
-SectorView::SectorView(Serializer::Reader &rd) : UIView()
+SectorView::SectorView(Serializer::Reader &rd, Game* game) : UIView(), m_game(game)
 {
 	InitDefaults();
 
@@ -1068,7 +1068,6 @@ void SectorView::DrawNearSector(const int sx, const int sy, const int sz, const 
 			const matrix4x4f sphTrans = trans * matrix4x4f::Translation(i->GetPosition().x, i->GetPosition().y, i->GetPosition().z);
 			m_renderer->SetTransform(sphTrans * matrix4x4f::ScaleMatrix(m_playerHyperspaceRange));
 			m_jumpSphere->Draw(m_renderer);
-			m_jumpDisk->Draw(m_renderer);
 		}
 	}
 }
@@ -1374,9 +1373,9 @@ void SectorView::Update()
 
 		Graphics::MaterialDescriptor matdesc;
 		matdesc.effect = EFFECT_FRESNEL_SPHERE;
-		RefCountedPtr<Graphics::Material> fresnelMat(m_renderer->CreateMaterial(matdesc));
-		m_jumpSphere.reset( new Graphics::Drawables::Sphere3D(m_renderer, fresnelMat, m_jumpSphereState, 3, 1.0f) );
-		m_jumpDisk.reset( new Graphics::Drawables::Disk(fresnelMat, m_jumpSphereState, 72, 1.0f) );
+		m_fresnelMat.Reset(m_renderer->CreateMaterial(matdesc));
+		m_fresnelMat->diffuse = Color::WHITE;
+		m_jumpSphere.reset( new Graphics::Drawables::Sphere3D(m_renderer, m_fresnelMat, m_jumpSphereState, 4, 1.0f) );
 	}
 
 	UIView::Update();
