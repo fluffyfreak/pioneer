@@ -24,7 +24,7 @@ static const float ZOOM_IN_SPEED = 2;
 static const float ZOOM_OUT_SPEED = 1.f/ZOOM_IN_SPEED;
 static const float WHEEL_SENSITIVITY = .2f;		// Should be a variable in user settings.
 
-GalacticView::GalacticView(Game* game) : UIView(), m_game(game),
+GalacticView::GalacticView(Game* game) : UIView(), m_game(game), m_galaxy(game->GetGalaxy()),
 	m_quad(Graphics::TextureBuilder::UI("galaxy_colour.png").CreateTexture(Gui::Screen::GetRenderer()))
 {
 
@@ -77,11 +77,13 @@ struct galaclabel_t {
 	const char *label;
 	vector3d pos;
 } s_labels[] = {
-	{ Lang::NORMA_ARM, vector3d(0.0,-0.3,0.0) },
-	{ Lang::PERSEUS_ARM, vector3d(0.57,0.0,0.0) },
-	{ Lang::OUTER_ARM, vector3d(0.65,0.4,0.0) },
-	{ Lang::SAGITTARIUS_ARM, vector3d(-.3,0.2,0.0) },
-	{ Lang::SCUTUM_CENTAURUS_ARM, vector3d(-.45,-0.45,0.0) },
+	{ Lang::THREE_KPC_ARM, vector3d(-0.1,-0.3,0.0) },
+	{ Lang::NORMA_ARM, vector3d(-0.2,-0.45,0.0) },
+	{ Lang::PERSEUS_ARM, vector3d(0.65,-0.2,0.0) },
+	{ Lang::OUTER_ARM, vector3d(0.0,0.8,0.0) },
+	{ Lang::SAGITTARIUS_ARM, vector3d(-0.2,-0.7,0.0) },
+	{ Lang::SCUTUM_CENTAURUS_ARM, vector3d(-0.3,-0.575,0.0) },
+	{ Lang::LOCAL_ARM, vector3d(0.45,0.1,0.0) },
 	{ 0, vector3d(0.0, 0.0, 0.0) }
 };
 
@@ -107,8 +109,8 @@ void GalacticView::Draw3D()
 {
 	PROFILE_SCOPED()
 	vector3f pos = m_game->GetSectorView()->GetPosition();
-	float offset_x = (pos.x*Sector::SIZE + Pi::GetGalaxy()->SOL_OFFSET_X)/Pi::GetGalaxy()->GALAXY_RADIUS;
-	float offset_y = (-pos.y*Sector::SIZE + Pi::GetGalaxy()->SOL_OFFSET_Y)/Pi::GetGalaxy()->GALAXY_RADIUS;
+	float offset_x = (pos.x*Sector::SIZE + m_galaxy->SOL_OFFSET_X)/m_galaxy->GALAXY_RADIUS;
+	float offset_y = (-pos.y*Sector::SIZE + m_galaxy->SOL_OFFSET_Y)/m_galaxy->GALAXY_RADIUS;
 
 	const float aspect = m_renderer->GetDisplayAspect();
 	m_renderer->SetOrthographicProjection(-aspect, aspect, 1.f, -1.f, -1.f, 1.f);
@@ -160,7 +162,7 @@ void GalacticView::Update()
 	m_zoom = Clamp(m_zoom, 0.5f, 100.0f);
 	AnimationCurves::Approach(m_zoom, m_zoomTo, frameTime);
 
-	m_scaleReadout->SetText(stringf(Lang::INT_LY, formatarg("scale", int(0.5*Pi::GetGalaxy()->GALAXY_RADIUS/m_zoom))));
+	m_scaleReadout->SetText(stringf(Lang::INT_LY, formatarg("scale", int(0.5*m_galaxy->GALAXY_RADIUS/m_zoom))));
 
 	UIView::Update();
 }

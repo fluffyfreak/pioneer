@@ -216,6 +216,7 @@ public:
 
 	void SetLabel(const std::string &label);
 	const std::string &GetLabel() const;
+	void SetShipName(const std::string &shipName);
 
 	float GetPercentShields() const;
 	float GetPercentHull() const;
@@ -366,6 +367,8 @@ private:
 
 	std::unique_ptr<Sensors> m_sensors;
 	std::unordered_map<Body*, Uint8> m_relationsMap;
+
+	std::string m_shipName;
 };
 
 

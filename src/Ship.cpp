@@ -79,6 +79,8 @@ void Ship::Save(Serializer::Writer &wr, Space *space)
 	m_controller->Save(wr, space);
 
 	m_navLights->Save(wr);
+
+	wr.String(m_shipName);
 }
 
 void Ship::Load(Serializer::Reader &rd, Space *space)
@@ -151,6 +153,8 @@ void Ship::Load(Serializer::Reader &rd, Space *space)
 
 	m_navLights->Load(rd);
 
+	m_shipName = rd.String();
+	Properties().Set("shipName", m_shipName);
 }
 
 void Ship::InitEquipSet() {
@@ -224,6 +228,8 @@ void Ship::Init()
 	p.Set("hullPercent", 100.0f * (m_stats.hull_mass_left / float(m_type->hullMass)));
 	p.Set("shieldMassLeft", m_stats.shield_mass_left);
 	p.Set("fuelMassLeft", m_stats.fuel_tank_mass_left);
+
+	p.Set("shipName", m_shipName);
 
 	m_hyperspace.now = false;			// TODO: move this on next savegame change, maybe
 	m_hyperspaceCloud = 0;
@@ -1369,6 +1375,12 @@ void Ship::SetLabel(const std::string &label)
 const std::string &Ship::GetLabel() const 
 { 
 	return IsTransponderActive() ? (IsTransponderFaking() ? m_fakeLabel : Body::GetLabel()) : s_blankAISLabel;
+}
+
+void Ship::SetShipName(const std::string &shipName)
+{
+	m_shipName = shipName;
+	Properties().Set("shipName", shipName);
 }
 
 void Ship::SetSkin(const SceneGraph::ModelSkin &skin)
