@@ -25,6 +25,7 @@ std::string ShipType::MISSILE_GUIDED		= "missile_guided";
 std::string ShipType::MISSILE_NAVAL			= "missile_naval";
 std::string ShipType::MISSILE_SMART			= "missile_smart";
 std::string ShipType::MISSILE_UNGUIDED		= "missile_unguided";
+std::string ShipType::MISSILE_PROBE			= "missile_probe";
 
 float ShipType::GetFuelUseRate() const
 {

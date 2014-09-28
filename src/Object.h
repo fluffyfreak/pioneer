@@ -25,7 +25,8 @@ public:
 		CITYONPLANET,   // <enum skip>
 		PROJECTILE,     // <enum skip>
 		MISSILE,
-		HYPERSPACECLOUD // <enum skip>
+		HYPERSPACECLOUD,// <enum skip>
+		PROBE
 	};
 	virtual Type GetType() const { return OBJECT; }
 	virtual bool IsType(Type c) const { return GetType() == c; }

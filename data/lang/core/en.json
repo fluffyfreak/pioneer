@@ -1331,6 +1331,10 @@
       "description" : "",
       "message" : "Probability of arrival: %probability%%"
    },
+   "EXPLORATION_PROBE" : {
+      "description" : "",
+      "message" : "Exploration Probe"
+   },
    "PULSECANNON_10MW" : {
       "description" : "",
       "message" : "10MW pulse cannon"

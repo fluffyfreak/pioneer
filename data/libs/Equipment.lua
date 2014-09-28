@@ -268,6 +268,7 @@ end
 -- laser_cooler - laser cooling booster
 -- cargo_life_support - cargo bay life support
 -- autopilot - autopilot
+-- exploration_probe - exploration probe
 
 local cargo = {
 	hydrogen = EquipType.New({
@@ -545,6 +546,10 @@ misc.shield_energy_booster = EquipType.New({
 misc.hull_autorepair = EquipType.New({
 	l10n_key="HULL_AUTOREPAIR", slots="hull_autorepair", price=16000,
 	capabilities={mass=40, hull_autorepair=1}, purchasable=true
+})
+misc.exploration_probe = EquipType.New({
+	l10n_key="EXPLORATION_PROBE", slots="missile", price=500,
+	capabilities={mass=0, missile=1}, purchasable=true
 })
 
 local hyperspace = {}

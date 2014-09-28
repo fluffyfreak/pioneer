@@ -77,6 +77,7 @@ struct ShipType {
 	static std::string MISSILE_NAVAL;
 	static std::string MISSILE_SMART;
 	static std::string MISSILE_UNGUIDED;
+	static std::string MISSILE_PROBE;
 
 	static std::map<Id, ShipType> types;
 	static std::vector<Id> player_ships;
