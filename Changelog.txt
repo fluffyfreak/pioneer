@@ -1,5 +1,7 @@
 September 2014
-
+   * New Features
+     * System exploration (#3201)
+     
    * Fixes
      * Fix wrong reinitialization of random generator (#3156)
      * Fix crash at Daniel's Haven (#3157)
@@ -11,6 +13,8 @@ September 2014
      * Fix the Line3D rendering issue (#3190)
      * Fix the construction of the Circle drawables. (#3192)
      * Fix orientation of galaxy density map (#3197)
+     * Remove invalid asserts (#3206)
+     * Attributes for uv coords should be vec4 not vec2 (#3205)
 
    * Minor changes and tweaks
      * Show buy and sell prices in commodity market (#3153)
@@ -44,6 +48,7 @@ September 2014
      * Refactor face generator code to support some future changes (#3180)
      * Shader Attributes and required refactoring (#3194)
      * Refactoring: Get rid of global Galaxy object (#3198)
+     * Galaxy density map, factions, custom systems controlled by GalaxyGenerator (#3199)
 
 August 2014
 
