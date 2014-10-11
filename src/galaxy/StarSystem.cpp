@@ -721,7 +721,8 @@ void StarSystem::MakeShortDescription()
 	PROFILE_SCOPED()
 	if (GetExplored() == StarSystem::eUNEXPLORED)
 		SetShortDesc(Lang::UNEXPLORED_SYSTEM_NO_DATA);
-
+	else if (GetExplored() == StarSystem::ePARTIALLY_EXPLORED)
+		SetShortDesc(stringf(Lang::PARTIALLY_EXPLORED_SYSTEM, formatarg("date", format_date_only(GetExploredTime()))));
 	else if (GetExplored() == StarSystem::eEXPLORED_BY_PLAYER)
 		SetShortDesc(stringf(Lang::RECENTLY_EXPLORED_SYSTEM, formatarg("date", format_date_only(GetExploredTime()))));
 

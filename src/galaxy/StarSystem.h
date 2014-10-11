@@ -289,10 +289,12 @@ public:
 	friend class GalaxyObjectCache<StarSystem, SystemPath::LessSystemOnly>;
 	class GeneratorAPI; // Complete definition below
 
-	enum ExplorationState {
+	enum ExplorationState { // Order matters: completely unexplored --> completely explored
 		eUNEXPLORED = 0,
-		eEXPLORED_BY_PLAYER = 1,
-		eEXPLORED_AT_START = 2
+		ePARTIALLY_EXPLORED = 1,
+		eCOMPLETELY_EXPLORED = 2,
+		eEXPLORED_BY_PLAYER = eCOMPLETELY_EXPLORED,
+		eEXPLORED_AT_START = 3,
 	};
 
 	void ExportToLua(const char *filename);

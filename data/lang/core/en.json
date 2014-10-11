@@ -1247,6 +1247,10 @@
       "description" : "",
       "message" : "Over %population million"
    },
+   "PARTIALLY_EXPLORED_SYSTEM" : {
+      "description" : "",
+      "message" : "This system is still being explored since %date."
+   },
    "PASSENGER_CABIN" : {
       "description" : "",
       "message" : "Occupied Passenger Cabin"
@@ -1382,6 +1386,10 @@
    "REAR" : {
       "description" : "",
       "message" : "Rear"
+   },
+   "RECENTLY_EXPLORED_SYSTEM" : {
+      "description" : "",
+      "message" : "This system was explored on %date."
    },
    "REQUEST_DOCKING_CLEARANCE" : {
       "description" : "",
@@ -1926,10 +1934,6 @@
    "UNEXPLORED_SYSTEM_STAR_INFO_ONLY" : {
       "description" : "",
       "message" : "Unexplored System. Star information has been gathered by remote telescope, but no planetary information is available."
-   },
-   "RECENTLY_EXPLORED_SYSTEM" : {
-      "description" : "",
-      "message" : "This system was explored on %date."
    },
    "UNKNOWN" : {
       "description" : "",
