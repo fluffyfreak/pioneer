@@ -291,29 +291,31 @@ void SystemInfoView::PutBodies(SystemBody *body, Gui::Fixed *container, int dir,
 		return;
 	}
 	if (body->GetType() != SystemBody::TYPE_GRAVPOINT) {
-		BodyIcon *ib = new BodyIcon(body->GetIcon(), m_renderer);
-		if (body->GetSuperType() == SystemBody::SUPERTYPE_ROCKY_PLANET) {
-			for (const SystemBody* kid : body->GetChildren()) {
-				if (kid->GetType() == SystemBody::TYPE_STARPORT_SURFACE) {
-					ib->SetHasStarport();
-					break;
+		if (body->IsExplored()) {
+			BodyIcon *ib = new BodyIcon(body->GetIcon(), m_renderer);
+			if (body->GetSuperType() == SystemBody::SUPERTYPE_ROCKY_PLANET) {
+				for (const SystemBody* kid : body->GetChildren()) {
+					if (kid->GetType() == SystemBody::TYPE_STARPORT_SURFACE) {
+						ib->SetHasStarport();
+						break;
+					}
 				}
 			}
-		}
-		m_bodyIcons.push_back(std::pair<Uint32, BodyIcon*>(body->GetPath().bodyIndex, ib));
-		ib->GetSize(size);
-		if (prevSize < 0) prevSize = size[!dir];
-		ib->onSelect.connect(sigc::bind(sigc::mem_fun(this, &SystemInfoView::OnBodySelected), body));
-		ib->onMouseEnter.connect(sigc::bind(sigc::mem_fun(this, &SystemInfoView::OnBodyViewed), body));
-		ib->onMouseLeave.connect(sigc::mem_fun(this, &SystemInfoView::OnSwitchTo));
-		myPos[0] += (dir ? prevSize*0.5 - size[0]*0.5 : 0);
-		myPos[1] += (!dir ? prevSize*0.5 - size[1]*0.5 : 0);
-		container->Add(ib, myPos[0], myPos[1]);
+			m_bodyIcons.push_back(std::pair<Uint32, BodyIcon*>(body->GetPath().bodyIndex, ib));
+			ib->GetSize(size);
+			if (prevSize < 0) prevSize = size[!dir];
+			ib->onSelect.connect(sigc::bind(sigc::mem_fun(this, &SystemInfoView::OnBodySelected), body));
+			ib->onMouseEnter.connect(sigc::bind(sigc::mem_fun(this, &SystemInfoView::OnBodyViewed), body));
+			ib->onMouseLeave.connect(sigc::mem_fun(this, &SystemInfoView::OnSwitchTo));
+			myPos[0] += (dir ? prevSize*0.5 - size[0]*0.5 : 0);
+			myPos[1] += (!dir ? prevSize*0.5 - size[1]*0.5 : 0);
+			container->Add(ib, myPos[0], myPos[1]);
 
-		if (body->GetSuperType() != SystemBody::SUPERTYPE_STARPORT) majorBodies++;
-		pos[dir] += size[dir];
-		dir = !dir;
-		myPos[dir] += size[dir];
+			if (body->GetSuperType() != SystemBody::SUPERTYPE_STARPORT) majorBodies++;
+			pos[dir] += size[dir];
+			dir = !dir;
+			myPos[dir] += size[dir];
+		}
 	} else {
 		size[0] = -1;
 		size[1] = -1;
@@ -347,28 +349,18 @@ void SystemInfoView::SystemChanged(const SystemPath &path)
 	m_system = m_game->GetGalaxy()->GetStarSystem(path);
 	m_unexplored = m_system->GetUnexplored();
 	m_sbodyInfoTab = new Gui::Fixed(float(Gui::Screen::GetWidth()), float(Gui::Screen::GetHeight()-100));
+	Gui::Fixed *demographicsTab = nullptr;
+	m_tabs = new Gui::Tabbed();
+	m_tabs->AddPage(new Gui::Label(m_system->IsExplored() ? Lang::PLANETARY_INFO : Lang::STELLAR_INFO), m_sbodyInfoTab);
 
-	if (m_system->GetUnexplored()) {
-		Add(m_sbodyInfoTab, 0, 0);
+	if (m_system->IsExplored()) {
+		m_econInfoTab = new Gui::Fixed(float(Gui::Screen::GetWidth()), float(Gui::Screen::GetHeight()-100));
+		demographicsTab = new Gui::Fixed();
 
-		std::string _info =
-			Lang::UNEXPLORED_SYSTEM_STAR_INFO_ONLY;
-
-		Gui::Label *l = (new Gui::Label(_info))->Color(255,255,0);
-		m_sbodyInfoTab->Add(l, 35, 300);
-		m_selectedBodyPath = SystemPath();
-
-		ShowAll();
-		return;
+		m_tabs->AddPage(new Gui::Label(Lang::ECONOMIC_INFO), m_econInfoTab);
+		m_tabs->AddPage(new Gui::Label(Lang::DEMOGRAPHICS), demographicsTab);
 	}
 
-	m_econInfoTab = new Gui::Fixed(float(Gui::Screen::GetWidth()), float(Gui::Screen::GetHeight()-100));
-	Gui::Fixed *demographicsTab = new Gui::Fixed();
-
-	m_tabs = new Gui::Tabbed();
-	m_tabs->AddPage(new Gui::Label(Lang::PLANETARY_INFO), m_sbodyInfoTab);
-	m_tabs->AddPage(new Gui::Label(Lang::ECONOMIC_INFO), m_econInfoTab);
-	m_tabs->AddPage(new Gui::Label(Lang::DEMOGRAPHICS), demographicsTab);
 	Add(m_tabs, 0, 0);
 
 	m_sbodyInfoTab->onMouseButtonEvent.connect(sigc::mem_fun(this, &SystemInfoView::OnClickBackground));
@@ -377,30 +369,41 @@ void SystemInfoView::SystemChanged(const SystemPath &path)
 	{
 		float pos[2] = { 0, 0 };
 		float psize = -1;
-		majorBodies = starports = onSurface = 0;
-		PutBodies(m_system->GetRootBody().Get(), m_econInfoTab, 1, pos, majorBodies, starports, onSurface, psize);
+		if (m_system->IsExplored()) {
+			majorBodies = starports = onSurface = 0;
+			PutBodies(m_system->GetRootBody().Get(), m_econInfoTab, 1, pos, majorBodies, starports, onSurface, psize);
+		}
 
 		majorBodies = starports = onSurface = 0;
 		pos[0] = pos[1] = 0;
 		psize = -1;
 		PutBodies(m_system->GetRootBody().Get(), m_sbodyInfoTab, 1, pos, majorBodies, starports, onSurface, psize);
 
-		majorBodies = starports = onSurface = 0;
-		pos[0] = pos[1] = 0;
-		psize = -1;
-		PutBodies(m_system->GetRootBody().Get(), demographicsTab, 1, pos, majorBodies, starports, onSurface, psize);
+		if (m_system->IsExplored()) {
+			majorBodies = starports = onSurface = 0;
+			pos[0] = pos[1] = 0;
+			psize = -1;
+			PutBodies(m_system->GetRootBody().Get(), demographicsTab, 1, pos, majorBodies, starports, onSurface, psize);
+		}
 	}
 
-	std::string _info = stringf(
-		Lang::STABLE_SYSTEM_WITH_N_MAJOR_BODIES_STARPORTS,
-		formatarg("bodycount", majorBodies),
-		formatarg("body(s)", std::string(majorBodies == 1 ? Lang::BODY : Lang::BODIES)),
-		formatarg("portcount", starports),
-		formatarg("starport(s)", std::string(starports == 1 ? Lang::STARPORT : Lang::COUNT_STARPORTS)));
-	if (starports > 0)
-		_info += stringf(Lang::COUNT_ON_SURFACE, formatarg("surfacecount", onSurface));
-	_info += ".\n\n";
-	_info += m_system->GetLongDescription();
+	std::string info;
+	if (m_system->IsExplored()) {
+		info = stringf(
+			Lang::STABLE_SYSTEM_WITH_N_MAJOR_BODIES_STARPORTS,
+			formatarg("bodycount", majorBodies),
+			formatarg("body(s)", std::string(majorBodies == 1 ? Lang::BODY : Lang::BODIES)),
+			formatarg("portcount", starports),
+			formatarg("starport(s)", std::string(starports == 1 ? Lang::STARPORT : Lang::COUNT_STARPORTS)));
+		if (starports > 0)
+			info += stringf(Lang::COUNT_ON_SURFACE, formatarg("surfacecount", onSurface));
+		info += ".\n\n";
+		info += m_system->GetLongDescription();
+	} else {
+		info = Lang::UNEXPLORED_SYSTEM_STAR_INFO_ONLY;
+		info += "\n\n";
+		info += m_system->GetLongDescription();
+	}
 
 	{
 		// astronomical body info tab
@@ -414,14 +417,14 @@ void SystemInfoView::SystemChanged(const SystemPath &path)
 		Gui::VScrollPortal *portal = new Gui::VScrollPortal(730);
 		scroll->SetAdjustment(&portal->vscrollAdjust);
 
-		Gui::Label *l = (new Gui::Label(_info))->Color(255,255,0);
+		Gui::Label *l = (new Gui::Label(info))->Color(255,255,0);
 		m_infoBox->PackStart(l);
 		portal->Add(m_infoBox);
 		scrollBox->PackStart(scroll);
 		scrollBox->PackStart(portal);
 	}
 
-	{
+	if (m_system->IsExplored()) {
 		// economy tab
 		Gui::VBox *econbox = new Gui::VBox();
 		econbox->SetSpacing(5);
@@ -458,7 +461,7 @@ void SystemInfoView::SystemChanged(const SystemPath &path)
 		UpdateEconomyTab();
 	}
 
-	{
+	if (m_system->IsExplored()) {
 		Gui::Fixed *col1 = new Gui::Fixed();
 		demographicsTab->Add(col1, 200, 300);
 		Gui::Fixed *col2 = new Gui::Fixed();

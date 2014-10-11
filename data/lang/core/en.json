@@ -1791,6 +1791,10 @@
       "description" : "",
       "message" : "A stellar black hole"
    },
+   "STELLAR_INFO" : {
+      "description" : "",
+      "message" : "Stellar info"
+   },
    "SUGGESTED_RESPONSES" : {
       "description" : "",
       "message" : "Suggested responses:"
