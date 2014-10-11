@@ -38,6 +38,9 @@ public:
 	int                    heightMapFractal;
 	std::vector<CustomSystemBody*> children;
 
+	bool want_rand_explored;
+	bool explored;
+
 	/* composition */
 	fixed metallicity; // (crust) 0.0 = light (Al, SiO2, etc), 1.0 = heavy (Fe, heavy metals)
 	fixed volatileGas; // 1.0 = earth atmosphere density

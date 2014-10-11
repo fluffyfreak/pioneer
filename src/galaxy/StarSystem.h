@@ -102,6 +102,8 @@ public:
 	const SystemPath& GetPath() const { return m_path; }
 	SystemBody* GetParent() const { return m_parent; }
 
+	bool IsExplored() const { return m_explored; }
+
 	bool HasChildren() const { return !m_children.empty(); }
 	unsigned GetNumChildren() const { return m_children.size(); }
 	IterationProxy<std::vector<SystemBody*> > GetChildren() { return MakeIterationProxy(m_children); }
@@ -225,6 +227,8 @@ public:
 
 	StarSystem* GetStarSystem() const { return m_system; }
 
+	void ExploreBodyAndChildren();
+
 private:
 	friend class StarSystem;
 	friend class ObjectViewerView;
@@ -239,6 +243,7 @@ private:
 	std::vector<SystemBody*> m_children; // that create them still exists
 
 	SystemPath m_path;
+	bool m_explored;
 	Orbit m_orbit;
 	Uint32 m_seed; // Planet.cpp can use to generate terrain
 	std::string m_name;
@@ -336,6 +341,7 @@ public:
 	}
 
 	const Faction* GetFaction() const  { return m_faction; }
+	bool IsExplored() const { return m_explored != eUNEXPLORED; }
 	bool GetUnexplored() const { return m_explored == eUNEXPLORED; }
 	ExplorationState GetExplored() const { return m_explored; }
 	double GetExploredTime() const { return m_exploredTime; }

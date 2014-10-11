@@ -561,7 +561,7 @@ SystemPath StarSystem::GetPathOf(const SystemBody *sbody) const
 	return sbody->GetPath();
 }
 
-SystemBody::SystemBody(const SystemPath& path, StarSystem *system) : m_parent(nullptr), m_path(path), m_seed(0), m_aspectRatio(1,1), m_orbMin(0),
+SystemBody::SystemBody(const SystemPath& path, StarSystem *system) : m_parent(nullptr), m_path(path), m_explored(false), m_seed(0), m_aspectRatio(1,1), m_orbMin(0),
 	m_orbMax(0), m_rotationalPhaseAtStart(0), m_semiMajorAxis(0), m_eccentricity(0), m_orbitalOffset(0), m_axialTilt(0),
 	m_inclination(0), m_averageTemp(0), m_type(TYPE_GRAVPOINT), m_isCustomBody(false), m_heightMapFractal(0), m_atmosDensity(0.0), m_system(system)
 {
@@ -766,8 +766,16 @@ void StarSystem::ExploreSystem(double time)
 	RefCountedPtr<Sector> sec = m_galaxy->GetMutableSector(m_path);
 	Sector::System& secsys = sec->m_systems[m_path.systemIndex];
 	secsys.SetExplored(m_explored, m_exploredTime);
+	m_rootBody->ExploreBodyAndChildren();
 	MakeShortDescription();
 	LuaEvent::Queue("onSystemExplored", this);
+}
+
+void SystemBody::ExploreBodyAndChildren()
+{
+	m_explored = true;
+	for (auto& kid : m_children)
+		kid->ExploreBodyAndChildren();
 }
 
 void SystemBody::Dump(FILE* file, const char* indent) const

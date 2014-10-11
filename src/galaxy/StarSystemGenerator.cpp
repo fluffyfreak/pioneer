@@ -494,6 +494,9 @@ void StarSystemCustomGenerator::CustomGetKidsOf(RefCountedPtr<StarSystem::Genera
 		kid->m_name = csbody->name;
 		kid->m_isCustomBody = true;
 
+		kid->m_explored = csbody->want_rand_explored ?
+			(system->GetExplored() >= StarSystem::eCOMPLETELY_EXPLORED || kid->GetSuperType() <= SystemBody::SUPERTYPE_STAR) : csbody->explored;
+
 		kid->m_mass = csbody->mass;
 		if (kid->GetType() == SystemBody::TYPE_PLANET_ASTEROID) kid->m_mass /= 100000;
 
@@ -601,6 +604,8 @@ bool StarSystemCustomGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> galaxy,
 
 			rootBody->m_rotationalPhaseAtStart = csbody->rotationalPhaseAtStart;
 			rootBody->m_orbitalPhaseAtStart = csbody->orbitalPhaseAtStart;
+			rootBody->m_explored = csbody->want_rand_explored ?
+				(system->GetExplored() >= StarSystem::eCOMPLETELY_EXPLORED || rootBody->GetSuperType() <= SystemBody::SUPERTYPE_STAR) : csbody->explored;
 			system->SetRootBody(rootBody);
 
 			int humanInfestedness = 0;
@@ -1059,7 +1064,7 @@ void StarSystemRandomGenerator::MakePlanetsAround(RefCountedPtr<StarSystem::Gene
 		planet->m_parent = primary;
 		planet->m_mass = mass;
 		planet->m_rotationPeriod = fixed(rand.Int32(1,200), 24);
-
+		planet->m_explored = (system->GetExplored() >= StarSystem::eCOMPLETELY_EXPLORED);
 		const double e = ecc.ToDouble();
 
 		if(primary->m_type == SystemBody::TYPE_GRAVPOINT)
@@ -1087,7 +1092,10 @@ void StarSystemRandomGenerator::MakePlanetsAround(RefCountedPtr<StarSystem::Gene
 
 	for (std::vector<SystemBody*>::iterator i = primary->m_children.begin(); i != primary->m_children.end(); ++i) {
 		// planets around a binary pair [gravpoint] -- ignore the stars...
-		if ((*i)->GetSuperType() == SystemBody::SUPERTYPE_STAR) continue;
+		if ((*i)->GetSuperType() == SystemBody::SUPERTYPE_STAR) {
+			(*i)->m_explored = true;
+			continue;
+		}
 		// Turn them into something!!!!!!!
 		char buf[8];
 		if (superType <= SystemBody::SUPERTYPE_STAR) {
@@ -1099,6 +1107,8 @@ void StarSystemRandomGenerator::MakePlanetsAround(RefCountedPtr<StarSystem::Gene
 		}
 		(*i)->m_name = primary->GetName()+buf;
 		PickPlanetType(*i, rand);
+		if ((*i)->GetSuperType() == SystemBody::SUPERTYPE_STAR)
+			(*i)->m_explored = true;
 		if (make_moons) MakePlanetsAround(system, *i, rand);
 		idx++;
 	}
@@ -1237,6 +1247,7 @@ bool StarSystemRandomGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> galaxy,
 		star[0]->m_name = sec->m_systems[system->GetPath().systemIndex].GetName();
 		star[0]->m_orbMin = fixed();
 		star[0]->m_orbMax = fixed();
+		star[0]->m_explored = true;
 
 		MakeStarOfType(star[0], type, rng);
 		system->SetRootBody(star[0]);
@@ -1246,17 +1257,20 @@ bool StarSystemRandomGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> galaxy,
 		centGrav1->m_type = SystemBody::TYPE_GRAVPOINT;
 		centGrav1->m_parent = 0;
 		centGrav1->m_name = sec->m_systems[system->GetPath().systemIndex].GetName()+" A,B";
+		centGrav1->m_explored = true;
 		system->SetRootBody(centGrav1);
 
 		SystemBody::BodyType type = sec->m_systems[system->GetPath().systemIndex].GetStarType(0);
 		star[0] = system->NewBody();
 		star[0]->m_name = sec->m_systems[system->GetPath().systemIndex].GetName()+" A";
 		star[0]->m_parent = centGrav1;
+		star[0]->m_explored = true;
 		MakeStarOfType(star[0], type, rng);
 
 		star[1] = system->NewBody();
 		star[1]->m_name = sec->m_systems[system->GetPath().systemIndex].GetName()+" B";
 		star[1]->m_parent = centGrav1;
+		star[1]->m_explored = true;
 		MakeStarOfTypeLighterThan(star[1], sec->m_systems[system->GetPath().systemIndex].GetStarType(1), star[0]->GetMassAsFixed(), rng);
 
 		centGrav1->m_mass = star[0]->GetMassAsFixed() + star[1]->GetMassAsFixed();
@@ -1280,6 +1294,7 @@ try_that_again_guvnah:
 				star[2]->m_name = sec->m_systems[system->GetPath().systemIndex].GetName()+" C";
 				star[2]->m_orbMin = 0;
 				star[2]->m_orbMax = 0;
+				star[2]->m_explored = true;
 				MakeStarOfTypeLighterThan(star[2], sec->m_systems[system->GetPath().systemIndex].GetStarType(2), star[0]->GetMassAsFixed(), rng);
 				centGrav2 = star[2];
 				system->SetNumStars(3);
@@ -1288,15 +1303,18 @@ try_that_again_guvnah:
 				centGrav2->m_type = SystemBody::TYPE_GRAVPOINT;
 				centGrav2->m_name = sec->m_systems[system->GetPath().systemIndex].GetName()+" C,D";
 				centGrav2->m_orbMax = 0;
+				centGrav2->m_explored = true;
 
 				star[2] = system->NewBody();
 				star[2]->m_name = sec->m_systems[system->GetPath().systemIndex].GetName()+" C";
 				star[2]->m_parent = centGrav2;
+				star[2]->m_explored = true;
 				MakeStarOfTypeLighterThan(star[2], sec->m_systems[system->GetPath().systemIndex].GetStarType(2), star[0]->GetMassAsFixed(), rng);
 
 				star[3] = system->NewBody();
 				star[3]->m_name = sec->m_systems[system->GetPath().systemIndex].GetName()+" D";
 				star[3]->m_parent = centGrav2;
+				star[3]->m_explored = true;
 				MakeStarOfTypeLighterThan(star[3], sec->m_systems[system->GetPath().systemIndex].GetStarType(3), star[2]->GetMassAsFixed(), rng);
 
 				// Separate stars by 0.2 radii for each, so that their planets don't bump into the other star
@@ -1311,6 +1329,7 @@ try_that_again_guvnah:
 			superCentGrav->m_type = SystemBody::TYPE_GRAVPOINT;
 			superCentGrav->m_parent = 0;
 			superCentGrav->m_name = sec->m_systems[system->GetPath().systemIndex].GetName();
+			superCentGrav->m_explored = true;
 			centGrav1->m_parent = superCentGrav;
 			centGrav2->m_parent = superCentGrav;
 			system->SetRootBody(superCentGrav);
@@ -1565,6 +1584,7 @@ void PopulateStarSystemGenerator::PopulateAddStations(SystemBody* sbody, StarSys
 			sp->m_rotationPeriod = fixed(1,3600);
 			sp->m_averageTemp = sbody->GetAverageTemp();
 			sp->m_mass = 0;
+			sp->m_explored = sbody->m_explored;
 
 			// place stations between min and max orbits to reduce the number of extremely close/fast orbits
 			sp->m_semiMajorAxis = orbMinS + ((orbMaxS - orbMinS) / 4);
