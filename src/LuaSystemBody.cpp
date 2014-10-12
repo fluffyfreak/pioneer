@@ -31,6 +31,8 @@
  * Parameters:
  *
  *   recursive - optional, marks all descendent bodies as explored as well.
+ *   time - optional, if system was previously unexplored, set the systems
+ *          exploration time to that value (defaults to current game time)
  *
  * Availability:
  *
@@ -46,10 +48,15 @@ static int l_sbody_explore(lua_State *l)
 
 	SystemBody *sbody = LuaObject<SystemBody>::CheckFromLua(1);
 	bool recursive = lua_toboolean(l, 2);
-	if (recursive)
-		sbody->ExploreBodyAndChildren();
+	double time;
+	if (lua_isnumber(l, 3))
+		time = luaL_checknumber(l, 3);
 	else
-		sbody->ExploreBody();
+		time = Pi::game->GetTime();
+	if (recursive)
+		sbody->ExploreBodyAndChildren(time);
+	else
+		sbody->ExploreBody(time);
 
 	LUA_DEBUG_END(l,0);
 	return 0;

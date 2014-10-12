@@ -227,8 +227,8 @@ public:
 
 	StarSystem* GetStarSystem() const { return m_system; }
 
-	void ExploreBody(bool suppressSignal = false);
-	void ExploreBodyAndChildren(bool suppressSignal = false);
+	void ExploreBody(double time, bool suppressSignal = false);
+	bool ExploreBodyAndChildren(double time, bool suppressSignal = false);
 
 private:
 	friend class StarSystem;
@@ -377,6 +377,8 @@ protected:
 	void SetShortDesc(const std::string& desc) { m_shortDesc = desc; }
 
 private:
+	ExplorationState CheckPartialExplore();
+
 	void SetCache(StarSystemCache* cache) { assert(!m_cache); m_cache = cache; }
 
 	std::string ExportBodyToLua(FILE *f, SystemBody *body);

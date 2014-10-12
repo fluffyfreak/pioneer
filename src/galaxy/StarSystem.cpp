@@ -757,36 +757,60 @@ void StarSystem::MakeShortDescription()
 }
 
 
+StarSystem::ExplorationState StarSystem::CheckPartialExplore()
+{
+	return std::all_of(m_bodies.begin(), m_bodies.end(), [](RefCountedPtr<SystemBody> sbody) { return sbody->IsExplored(); }) ?
+		eEXPLORED_BY_PLAYER : ePARTIALLY_EXPLORED;
+}
+
 void StarSystem::ExploreSystem(double time, bool allBodies)
 {
-	if (m_explored != eUNEXPLORED)
+	if (m_explored == eEXPLORED_AT_START || m_explored == eEXPLORED_BY_PLAYER)
 		return;
-	m_explored = eEXPLORED_BY_PLAYER;
-	m_exploredTime = time;
+	bool wasExplored = IsExplored();
+	if (allBodies) {
+		m_rootBody->ExploreBodyAndChildren(time, true);
+		m_explored = eEXPLORED_BY_PLAYER;
+		m_exploredTime = time;
+	} else {
+		ExplorationState explored = CheckPartialExplore();
+		if (explored == m_explored)
+			return;
+		assert(explored > m_explored); // We don't support unexploring
+		if (m_explored == eUNEXPLORED)
+			m_exploredTime = time;
+		m_explored = explored;
+	}
 	RefCountedPtr<Sector> sec = m_galaxy->GetMutableSector(m_path);
 	Sector::System& secsys = sec->m_systems[m_path.systemIndex];
 	secsys.SetExplored(m_explored, m_exploredTime);
-	if (allBodies)
-		m_rootBody->ExploreBodyAndChildren(true);
 	MakeShortDescription();
 	onSystemChanged.emit();
-	LuaEvent::Queue("onSystemExplored", this);
+	if (!wasExplored)
+		LuaEvent::Queue("onSystemExplored", this);
 }
 
-void SystemBody::ExploreBody(bool suppressSignal)
+void SystemBody::ExploreBody(double time, bool suppressSignal)
 {
-	m_explored = true;
-	if (!suppressSignal)
-		m_system->onSystemChanged.emit();
+	if (!m_explored) {
+		m_explored = true;
+		if (!suppressSignal)
+			m_system->ExploreSystem(time, false);
+	}
 }
 
-void SystemBody::ExploreBodyAndChildren(bool suppressSignal)
+bool SystemBody::ExploreBodyAndChildren(double time, bool suppressSignal)
 {
-	m_explored = true;
+	bool changed = false;
+	if (!m_explored) {
+		m_explored = true;
+		changed = true;
+	}
 	for (auto& kid : m_children)
-		kid->ExploreBodyAndChildren(true);
-	if (!suppressSignal)
-		m_system->onSystemChanged.emit();
+		changed |= kid->ExploreBodyAndChildren(time, true);
+	if (changed && !suppressSignal)
+		m_system->ExploreSystem(time, false);
+	return changed;
 }
 
 void SystemBody::Dump(FILE* file, const char* indent) const
