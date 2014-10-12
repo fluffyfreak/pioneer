@@ -6,6 +6,7 @@
 
 #include "StarSystem.h"
 #include "GalaxyGenerator.h"
+#include "PersistSystemData.h"
 
 class StarSystemFromSectorGenerator : public StarSystemGeneratorStage {
 public:
@@ -64,6 +65,20 @@ private:
 	void PopulateAddStations(SystemBody* sbody, StarSystem::GeneratorAPI* system);
 	void PositionSettlementOnPlanet(SystemBody* sbody);
 	void PopulateStage1(SystemBody* sbody, StarSystem::GeneratorAPI* system, fixed &outTotalPop);
+};
+
+class StarSystemPersistenceGenerator : public StarSystemGeneratorStage {
+public:
+	StarSystemPersistenceGenerator(GalaxyGenerator::Version version) : m_version(version) { }
+	virtual bool Apply(Random& rng, RefCountedPtr<Galaxy> galaxy, RefCountedPtr<StarSystem::GeneratorAPI> system, GalaxyGenerator::StarSystemConfig* config);
+	virtual void Unserialize(Serializer::Reader &rd, RefCountedPtr<Galaxy> galaxy);
+	virtual void Serialize(Serializer::Writer &wr, RefCountedPtr<Galaxy> galaxy);
+
+private:
+	void SystemChanged(StarSystem::GeneratorAPI* system);
+
+	const GalaxyGenerator::Version m_version;
+	PersistSystemData<std::vector<bool>> m_exploredBodies;
 };
 
 #endif

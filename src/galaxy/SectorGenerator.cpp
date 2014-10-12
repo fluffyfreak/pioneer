@@ -334,7 +334,7 @@ void SectorPersistenceGenerator::SetExplored(Sector::System* sys, StarSystem::Ex
 		int year, month, day;
 		Time::DateTime dt = Time::DateTime(3200,1,1,0,0,0) + Time::TimeDelta(time, Time::Second);
 		dt.GetDateParts(&year, &month, &day);
-		date = day | month << 5 | year << 9;
+		date = day | month << 5 | (year & 8191) << 9 | (e == StarSystem::ePARTIALLY_EXPLORED ? 1 << 30 : 0);
 	}
 	m_exploredSystems.Set(SystemPath(sys->sx, sys->sy, sys->sz, sys->idx), (e == StarSystem::eUNEXPLORED) ? -1 : date);
 }
@@ -348,11 +348,17 @@ bool SectorPersistenceGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> galaxy
 				secsys.m_explored = StarSystem::eEXPLORED_AT_START;
 				secsys.m_exploredTime = 0.0;
 			} else if (exploredTime > 0) {
-				int year = exploredTime >> 9;
+				int year = (exploredTime >> 9);
 				int month = (exploredTime >> 5) & 0xf;
 				int day = exploredTime & 0x1f;
+				if (m_version >= 2) {
+					year &= 8191;
+					bool partiallyExplored = exploredTime & 0x40000000;
+					secsys.m_explored = partiallyExplored ? StarSystem::ePARTIALLY_EXPLORED : StarSystem::eEXPLORED_BY_PLAYER;
+				} else {
+					secsys.m_explored = StarSystem::eEXPLORED_BY_PLAYER;
+				}
 				Time::DateTime dt(year, month, day);
-				secsys.m_explored = StarSystem::eEXPLORED_BY_PLAYER;
 				secsys.m_exploredTime = dt.ToGameTime();
 			}
 		}

@@ -1776,3 +1776,48 @@ bool PopulateStarSystemGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> galax
 
 	return true;
 }
+
+void StarSystemPersistenceGenerator::SystemChanged(StarSystem::GeneratorAPI* system)
+{
+	if (system->GetExplored() != StarSystem::ePARTIALLY_EXPLORED) {
+		m_exploredBodies.Unset(system->GetPath());
+	} else {
+		std::vector<bool>& exploredBodies = m_exploredBodies.Modify(system->GetPath());
+		for (unsigned i = 0; i < system->GetNumBodies(); ++i) {
+			bool explored = system->GetBodyAtIndex(i)->IsExplored();
+			if (i < exploredBodies.size())
+				exploredBodies[i] = explored;
+			else if (explored) {
+				exploredBodies.resize(i+1);
+				exploredBodies[i] = explored;
+			}
+		}
+	}
+}
+
+bool StarSystemPersistenceGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> galaxy, RefCountedPtr<StarSystem::GeneratorAPI> system, GalaxyGenerator::StarSystemConfig* config)
+{
+	if (galaxy->IsInitialized()) {
+		std::vector<bool> exploredBodies = m_exploredBodies.Get(system->GetPath(), std::vector<bool>());
+		if (!exploredBodies.empty()) {
+			assert(system->GetExplored() == StarSystem::ePARTIALLY_EXPLORED);
+			for (unsigned i = 0; i < exploredBodies.size(); ++i)
+				if (exploredBodies[i])
+					system->GetBodyAtIndex(i)->ExploreBody(true);
+		}
+	}
+	system->onSystemChanged.connect(std::bind(std::mem_fn(&StarSystemPersistenceGenerator::SystemChanged), this, system.Get()));
+	return true;
+}
+
+void StarSystemPersistenceGenerator::Unserialize(Serializer::Reader &rd, RefCountedPtr<Galaxy> galaxy)
+{
+	m_exploredBodies.Clear();
+	if (m_version >= 2)
+		m_exploredBodies.Unserialize(rd, &m_exploredBodies);
+}
+
+void StarSystemPersistenceGenerator::Serialize(Serializer::Writer &wr, RefCountedPtr<Galaxy> galaxy)
+{
+	m_exploredBodies.Serialize(wr);
+}

@@ -19,8 +19,12 @@ public:
 		if (i == m_dict.end()) return defaultValIfNotExists;
 		else return (*i).second;
 	}
-	void Set(const SystemPath &path, T val) {
+	T& Modify(const SystemPath &path) { return m_dict[path]; }
+	void Set(const SystemPath &path, const T& val) {
 		m_dict[path.SystemOnly()] = val;
+	}
+	void Unset(const SystemPath &path) {
+		m_dict.erase(path.SystemOnly());
 	}
 	void Serialize(Serializer::Writer &wr) const {
 		wr.Int32(m_dict.size());

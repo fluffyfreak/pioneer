@@ -452,6 +452,8 @@ public:
 	using StarSystem::NewBody;
 	using StarSystem::MakeShortDescription;
 	using StarSystem::SetShortDesc;
+
+	SystemBody* GetBodyAtIndex(Uint32 i) { assert(i < m_bodies.size()); return m_bodies[i].Get(); }
 };
 
 #endif /* _STARSYSTEM_H */
