@@ -767,16 +767,26 @@ void StarSystem::ExploreSystem(double time, bool allBodies)
 	Sector::System& secsys = sec->m_systems[m_path.systemIndex];
 	secsys.SetExplored(m_explored, m_exploredTime);
 	if (allBodies)
-		m_rootBody->ExploreBodyAndChildren();
+		m_rootBody->ExploreBodyAndChildren(true);
 	MakeShortDescription();
+	onSystemChanged.emit();
 	LuaEvent::Queue("onSystemExplored", this);
 }
 
-void SystemBody::ExploreBodyAndChildren()
+void SystemBody::ExploreBody(bool suppressSignal)
+{
+	m_explored = true;
+	if (!suppressSignal)
+		m_system->onSystemChanged.emit();
+}
+
+void SystemBody::ExploreBodyAndChildren(bool suppressSignal)
 {
 	m_explored = true;
 	for (auto& kid : m_children)
-		kid->ExploreBodyAndChildren();
+		kid->ExploreBodyAndChildren(true);
+	if (!suppressSignal)
+		m_system->onSystemChanged.emit();
 }
 
 void SystemBody::Dump(FILE* file, const char* indent) const

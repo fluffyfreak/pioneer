@@ -22,8 +22,7 @@
 SystemInfoView::SystemInfoView(Game* game) : UIView(), m_game(game)
 {
 	SetTransparency(true);
-	m_refresh = REFRESH_NONE;
-	m_unexplored = true;
+	m_refresh = REFRESH_ALL;
 	int trade_analyzer = 0;
 	Pi::player->Properties().Get("trade_analyzer_cap", trade_analyzer);
 	m_hasTradeAnalyzer = bool(trade_analyzer);
@@ -337,6 +336,11 @@ void SystemInfoView::OnClickBackground(Gui::MouseButtonEvent *e)
 	}
 }
 
+void SystemInfoView::RefreshAll()
+{
+	m_refresh = REFRESH_ALL;
+}
+
 void SystemInfoView::SystemChanged(const SystemPath &path)
 {
 	DeleteAllChildren();
@@ -346,8 +350,13 @@ void SystemInfoView::SystemChanged(const SystemPath &path)
 	if (!path.HasValidSystem())
 		return;
 
-	m_system = m_game->GetGalaxy()->GetStarSystem(path);
-	m_unexplored = m_system->GetUnexplored();
+	bool differentSystem = !m_system || !path.IsSameSystem(m_system->GetPath());
+	if (m_system && differentSystem)
+		m_systemSlot->disconnect();
+	if (differentSystem) {
+		m_system = m_game->GetGalaxy()->GetStarSystem(path);
+		m_systemSlot = m_system->onSystemChanged.connect(sigc::mem_fun(this, &SystemInfoView::RefreshAll));
+	}
 	m_sbodyInfoTab = new Gui::Fixed(float(Gui::Screen::GetWidth()), float(Gui::Screen::GetHeight()-100));
 	Gui::Fixed *demographicsTab = nullptr;
 	m_tabs = new Gui::Tabbed();
@@ -511,6 +520,8 @@ void SystemInfoView::Draw3D()
 
 static bool IsShownInInfoView(const SystemBody* sb)
 {
+	if (!sb->IsExplored())
+		return false;
 	SystemBody::BodySuperType superType = sb->GetSuperType();
 	return superType == SystemBody::SUPERTYPE_STAR || superType == SystemBody::SUPERTYPE_GAS_GIANT ||
 		superType == SystemBody::SUPERTYPE_ROCKY_PLANET ||
@@ -522,17 +533,11 @@ SystemInfoView::RefreshType SystemInfoView::NeedsRefresh()
 	if (!m_system || !m_game->GetSectorView()->GetSelected().IsSameSystem(m_system->GetPath()))
 		return REFRESH_ALL;
 
-	if (m_system->GetUnexplored() != m_unexplored)
-		return REFRESH_ALL;
-
 	// If we changed equipment since last refresh
 	int trade_analyzer = 0;
 	Pi::player->Properties().Get("trade_analyzer_cap", trade_analyzer);
 	if (m_hasTradeAnalyzer != trade_analyzer)
 		return REFRESH_ALL;
-
-	if (m_system->GetUnexplored())
-		return REFRESH_NONE; // Nothing can be selected and we reset in SystemChanged
 
 	RefCountedPtr<StarSystem> currentSys = m_game->GetSpace()->GetStarSystem();
 	if (!currentSys || currentSys->GetPath() != m_system->GetPath()) {

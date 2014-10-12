@@ -227,8 +227,8 @@ public:
 
 	StarSystem* GetStarSystem() const { return m_system; }
 
-	void ExploreBody() { m_explored = true; }
-	void ExploreBodyAndChildren();
+	void ExploreBody(bool suppressSignal = false);
+	void ExploreBodyAndChildren(bool suppressSignal = false);
 
 private:
 	friend class StarSystem;
@@ -360,6 +360,8 @@ public:
 	void Dump(FILE* file, const char* indent = "", bool suppressSectorData = false) const;
 
 	const RefCountedPtr<Galaxy> m_galaxy;
+
+	sigc::signal<void> onSystemChanged;
 
 protected:
 	StarSystem(const SystemPath &path, RefCountedPtr<Galaxy> galaxy, StarSystemCache* cache, Random& rand);

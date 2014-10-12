@@ -53,6 +53,7 @@ public:
 	virtual void Draw3D();
 private:
 	static const double PICK_OBJECT_RECT_SIZE;
+	void Refresh();
 	void PutOrbit(const Orbit *orb, const vector3d &offset, const Color &color, double planetRadius = 0.0);
 	void PutBody(const SystemBody *b, const vector3d &offset, const matrix4x4f &trans);
 	void PutLabel(const SystemBody *b, const vector3d &offset);
@@ -73,8 +74,8 @@ private:
 
 	Game* m_game;
 	RefCountedPtr<StarSystem> m_system;
+	sigc::signal<void>::iterator m_systemSlot;
 	const SystemBody *m_selectedObject;
-	bool m_unexplored;
 	TransferPlanner *m_planner;
 	std::list<std::pair<Ship*, Orbit>> m_contacts;
 	Gui::LabelSet *m_shipLabels;

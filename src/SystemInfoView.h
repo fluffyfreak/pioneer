@@ -17,6 +17,7 @@ namespace Graphics { class Renderer; }
 class SystemInfoView: public UIView {
 public:
 	SystemInfoView(Game* game);
+	virtual ~SystemInfoView() { if (m_system) m_systemSlot->disconnect(); }
 	virtual void Update();
 	virtual void Draw3D();
 	void NextPage();
@@ -46,6 +47,7 @@ private:
 	};
 
 	RefreshType NeedsRefresh();
+	void RefreshAll();
 	void SystemChanged(const SystemPath &path);
 	void UpdateEconomyTab();
 	void OnBodyViewed(SystemBody *b);
@@ -66,11 +68,12 @@ private:
 	Gui::Label *m_commodityTradeLabel;
 	Gui::Tabbed *m_tabs;
 	RefCountedPtr<StarSystem> m_system;
+	sigc::signal<void>::iterator m_systemSlot;
+
 	SystemPath m_selectedBodyPath;
 	RefreshType m_refresh;
 	//map is not enough to associate icons as each tab has their own. First element is the body index of SystemPath (names are not unique)
 	std::vector<std::pair<Uint32, BodyIcon*> > m_bodyIcons;
-	bool m_unexplored;
 	bool m_hasTradeAnalyzer;
 
 	Graphics::RenderState *m_solidState;
