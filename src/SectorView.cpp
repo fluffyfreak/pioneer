@@ -24,6 +24,7 @@
 #include "gui/Gui.h"
 #include "KeyBindings.h"
 #include <algorithm>
+#include <functional>
 #include <sstream>
 #include <SDL_stdinc.h>
 
@@ -45,7 +46,9 @@ enum DetailSelection {
 static const float ZOOM_SPEED = 15;
 static const float WHEEL_SENSITIVITY = .03f;		// Should be a variable in user settings.
 
-SectorView::SectorView(Game* game) : UIView(), m_game(game), m_galaxy(game->GetGalaxy())
+SectorView::SectorView(Game* game) : UIView(), m_game(game), m_galaxy(game->GetGalaxy()),
+	m_currentSystemLabels(*this, m_current), m_selectedSystemLabels(*this, m_selected), m_targetSystemLabels(*this, m_hyperspaceTarget)
+
 {
 	InitDefaults();
 
@@ -76,7 +79,8 @@ SectorView::SectorView(Game* game) : UIView(), m_game(game), m_galaxy(game->GetG
 	InitObject();
 }
 
-SectorView::SectorView(Serializer::Reader &rd, Game* game) : UIView(), m_game(game), m_galaxy(game->GetGalaxy())
+SectorView::SectorView(Serializer::Reader &rd, Game* game) : UIView(), m_game(game), m_galaxy(game->GetGalaxy()),
+	m_currentSystemLabels(*this, m_current), m_selectedSystemLabels(*this, m_selected), m_targetSystemLabels(*this, m_hyperspaceTarget)
 {
 	InitDefaults();
 
@@ -327,9 +331,9 @@ void SectorView::InitObject()
 	m_onMouseWheelCon =
 		Pi::onMouseWheel.connect(sigc::mem_fun(this, &SectorView::MouseWheel));
 
-	UpdateSystemLabels(m_currentSystemLabels, m_current);
-	UpdateSystemLabels(m_targetSystemLabels, m_hyperspaceTarget);
-	UpdateSystemLabels(m_selectedSystemLabels, m_selected);
+	m_currentSystemLabels.Update();
+	m_targetSystemLabels.Update();
+	m_selectedSystemLabels.Update();
 	UpdateDistanceLabelAndLine(m_secondDistance, m_selected, m_hyperspaceTarget);
 	UpdateHyperspaceLockLabel();
 
@@ -520,7 +524,7 @@ void SectorView::SetHyperspaceTarget(const SystemPath &path)
 
 	UpdateDistanceLabelAndLine(m_secondDistance, m_selected, m_hyperspaceTarget);
 	UpdateHyperspaceLockLabel();
-	UpdateSystemLabels(m_targetSystemLabels, m_hyperspaceTarget);
+	m_targetSystemLabels.Update();
 }
 
 void SectorView::FloatHyperspaceTarget()
@@ -543,7 +547,7 @@ void SectorView::ResetHyperspaceTarget()
 	if (!old.IsSameSystem(m_hyperspaceTarget)) {
 		onHyperspaceTargetChanged.emit();
 		UpdateDistanceLabelAndLine(m_secondDistance, m_selected, m_hyperspaceTarget);
-		UpdateSystemLabels(m_targetSystemLabels, m_hyperspaceTarget);
+		m_targetSystemLabels.Update();
 	} else {
 		if (m_detailBoxVisible == DETAILBOX_INFO) m_infoBox->ShowAll();
 	}
@@ -580,11 +584,11 @@ void SectorView::SetSelected(const SystemPath &path)
 	if (m_matchTargetToSelection && m_selected != m_current) {
 		m_hyperspaceTarget = m_selected;
 		onHyperspaceTargetChanged.emit();
-		UpdateSystemLabels(m_targetSystemLabels, m_hyperspaceTarget);
+		m_targetSystemLabels.Update();
 	}
 
 	UpdateDistanceLabelAndLine(m_secondDistance, m_selected, m_hyperspaceTarget);
-	UpdateSystemLabels(m_selectedSystemLabels, m_selected);
+	m_selectedSystemLabels.Update();
 }
 
 void SectorView::OnClickSystem(const SystemPath &path)
@@ -783,11 +787,11 @@ void SectorView::UpdateDistanceLabelAndLine(DistanceIndicator &distance, const S
 	}
 }
 
-void SectorView::UpdateSystemLabels(SystemLabels &labels, const SystemPath &path)
+void SectorView::SystemLabels::Update()
 {
-	UpdateDistanceLabelAndLine(labels.distance, m_current, path);
+	m_secView.UpdateDistanceLabelAndLine(distance, m_secView.m_current, m_path);
 
-	RefCountedPtr<StarSystem> sys = m_galaxy->GetStarSystem(path);
+	RefCountedPtr<StarSystem> sys = m_secView.m_galaxy->GetStarSystem(m_path);
 
 	std::string desc;
 	if (sys->GetNumStars() == 4) {
@@ -799,20 +803,23 @@ void SectorView::UpdateSystemLabels(SystemLabels &labels, const SystemPath &path
 	} else {
 		desc = sys->GetRootBody()->GetAstroDescription();
 	}
-	labels.starType->SetText(desc);
+	starType->SetText(desc);
 
-	if (path.IsBodyPath()) {
-		labels.systemName->SetText(sys->GetBodyByPath(path)->GetName());
+	if (m_path.IsBodyPath()) {
+		systemName->SetText(sys->GetBodyByPath(m_path)->GetName());
 	} else {
-		labels.systemName->SetText(sys->GetName());
+		systemName->SetText(sys->GetName());
 	}
-	labels.sector->SetText(stringf("(%x,%y,%z)",
-		formatarg("x", int(path.sectorX)),
-		formatarg("y", int(path.sectorY)),
-		formatarg("z", int(path.sectorZ))));
-	labels.shortDesc->SetText(sys->GetShortDescription());
+	sector->SetText(stringf("(%x,%y,%z)",
+		formatarg("x", int(m_path.sectorX)),
+		formatarg("y", int(m_path.sectorY)),
+		formatarg("z", int(m_path.sectorZ))));
+	shortDesc->SetText(sys->GetShortDescription());
 
-	if (m_detailBoxVisible == DETAILBOX_INFO) m_infoBox->ShowAll();
+	if (m_secView.m_detailBoxVisible == DETAILBOX_INFO) m_secView.m_infoBox->ShowAll();
+
+	onChangeCon.disconnect();
+	onChangeCon = sys->onSystemChanged.connect(sigc::mem_fun(this, &SectorView::SystemLabels::Update));
 }
 
 void SectorView::OnToggleFaction(Gui::ToggleButton* button, bool pressed, const Faction* faction)
@@ -1146,8 +1153,8 @@ void SectorView::OnSwitchTo()
 
 	Update();
 
-	UpdateSystemLabels(m_targetSystemLabels, m_hyperspaceTarget);
-	UpdateSystemLabels(m_selectedSystemLabels, m_selected);
+	m_targetSystemLabels.Update();
+	m_selectedSystemLabels.Update();
 	UpdateDistanceLabelAndLine(m_secondDistance, m_selected, m_hyperspaceTarget);
 }
 
@@ -1247,9 +1254,9 @@ void SectorView::Update()
 	}
 
 	if (last_inSystem != m_inSystem || last_current != m_current) {
-		UpdateSystemLabels(m_currentSystemLabels, m_current);
-		UpdateSystemLabels(m_targetSystemLabels, m_hyperspaceTarget);
-		UpdateSystemLabels(m_selectedSystemLabels, m_selected);
+		m_currentSystemLabels.Update();
+		m_targetSystemLabels.Update();
+		m_selectedSystemLabels.Update();
 		UpdateDistanceLabelAndLine(m_secondDistance, m_selected, m_hyperspaceTarget);
 	}
 
