@@ -122,6 +122,22 @@ void Writer::Color4UB(const Color &c)
 	Byte(c.a);
 }
 
+void Writer::BitSet(const std::vector<bool> &v)
+{
+	Int32(v.size());
+	unsigned i;
+	for (i = 0; i+7 < v.size(); i += 8)
+		Byte(Uint8(v[i]) << 7 | Uint8(v[i+1]) << 6 | Uint8(v[i+2]) << 5 | Uint8(v[i+3]) << 4 |
+			Uint8(v[i+4]) << 3 | Uint8(v[i+5]) << 2 | Uint8(v[i+6]) << 1 | Uint8(v[i+7]));
+	if (i < v.size()) {
+		Uint8 b = 0;
+		for (; i < v.size(); ++i)
+			b = b << 1 | Uint8(v[i]);
+		b <<= 8 - (i & 7);
+		Byte(b);
+	}
+}
+
 Reader::Reader(const ByteRange &data):
 	m_data(data),
 	m_at(data.begin)
@@ -266,6 +282,33 @@ Color Reader::Color4UB()
 	c.b = Byte();
 	c.a = Byte();
 	return c;
+}
+
+std::vector<bool> Reader::BitSet()
+{
+	std::vector<bool> v;
+	Uint32 size = Int32();
+	v.resize(size);
+	unsigned i;
+	for (i = 0; i+7 < size; i += 8) {
+		Uint8 b = Byte();
+		v[i]   = b & (1 << 7);
+		v[i+1] = b & (1 << 6);
+		v[i+2] = b & (1 << 5);
+		v[i+3] = b & (1 << 4);
+		v[i+4] = b & (1 << 3);
+		v[i+5] = b & (1 << 2);
+		v[i+6] = b & (1 << 1);
+		v[i+7] = b & (1 << 0);
+	}
+	if (i < size) {
+		Uint8 b = Byte();
+		for (; i < size; ++i) {
+			v[i] = b & 0x80;
+			b <<= 1;
+		}
+	}
+	return v;
 }
 
 } /* end namespace Serializer */

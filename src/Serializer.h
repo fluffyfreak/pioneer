@@ -38,6 +38,7 @@ namespace Serializer {
 		void Vector3d(vector3d vec);
 		void WrQuaternionf(const Quaternionf &q);
 		void Color4UB(const Color&);
+		void BitSet(const std::vector<bool>&);
 		void WrSection(const std::string &section_label, const std::string &section_data) {
 			String(section_label);
 			String(section_data);
@@ -47,6 +48,7 @@ namespace Serializer {
 		void Auto(Sint64 x) { Int64(x); }
 		void Auto(float x) { Float(x); }
 		void Auto(double x) { Double(x); }
+		void Auto(const std::vector<bool>& x) { BitSet(x); }
 	private:
 		std::string m_str;
 	};
@@ -71,6 +73,7 @@ namespace Serializer {
 		vector3d Vector3d();
 		Quaternionf RdQuaternionf();
 		Color Color4UB();
+		std::vector<bool> BitSet();
 		Reader RdSection(const std::string &section_label_expected) {
 			if (section_label_expected != String()) {
 				throw SavedGameCorruptException();
@@ -84,6 +87,7 @@ namespace Serializer {
 		void Auto(Sint64 *x) { *x = Int64(); }
 		void Auto(float *x) { *x = Float(); }
 		void Auto(double *x) { *x = Double(); }
+		void Auto(std::vector<bool> *x) { *x = BitSet(); }
 		int StreamVersion() const { return m_streamVersion; }
 		void SetStreamVersion(int x) { m_streamVersion = x; }
 
