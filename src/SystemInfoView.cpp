@@ -398,12 +398,22 @@ void SystemInfoView::SystemChanged(const SystemPath &path)
 
 	std::string info;
 	if (m_system->IsExplored()) {
-		info = stringf(
-			Lang::STABLE_SYSTEM_WITH_N_MAJOR_BODIES_STARPORTS,
-			formatarg("bodycount", majorBodies),
-			formatarg("body(s)", std::string(majorBodies == 1 ? Lang::BODY : Lang::BODIES)),
-			formatarg("portcount", starports),
-			formatarg("starport(s)", std::string(starports == 1 ? Lang::STARPORT : Lang::COUNT_STARPORTS)));
+		if (m_system->GetExplored() == StarSystem::ePARTIALLY_EXPLORED) {
+			info = stringf(
+				Lang::SYSTEM_EXPLORATION_ONGOING,
+				formatarg("date", format_date_only(m_system->GetExploredTime())),
+				formatarg("bodycount", majorBodies),
+				formatarg("body(s)", std::string(majorBodies == 1 ? Lang::BODY : Lang::BODIES)),
+				formatarg("portcount", starports),
+				formatarg("starport(s)", std::string(starports == 1 ? Lang::STARPORT : Lang::COUNT_STARPORTS)));
+		} else {
+			info = stringf(
+				Lang::STABLE_SYSTEM_WITH_N_MAJOR_BODIES_STARPORTS,
+				formatarg("bodycount", majorBodies),
+				formatarg("body(s)", std::string(majorBodies == 1 ? Lang::BODY : Lang::BODIES)),
+				formatarg("portcount", starports),
+				formatarg("starport(s)", std::string(starports == 1 ? Lang::STARPORT : Lang::COUNT_STARPORTS)));
+		}
 		if (starports > 0)
 			info += stringf(Lang::COUNT_ON_SURFACE, formatarg("surfacecount", onSurface));
 		info += ".\n\n";

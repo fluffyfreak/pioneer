@@ -1811,6 +1811,10 @@
       "description" : "",
       "message" : "System"
    },
+   "SYSTEM_EXPLORATION_ONGOING" : {
+      "description" : "",
+      "message" : "System was first entered on %date and exploration is still ongoing.\nSo far, %bodycount major %{body(s)} and %portcount %{starport(s)} have been discovered"
+   },
    "SYSTEM_NUMBER" : {
       "description" : "",
       "message" : "System number:"
