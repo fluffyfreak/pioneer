@@ -391,6 +391,8 @@ static int l_starsystem_export_to_lua(lua_State *l)
  *
  *   time - optional, the game time at which the system was explored.
  *          Defaults to current game time.
+ *   hidden_bodies - optional, keep bodies of the system hidden. They can be
+ *          explored separately by calling sbody:ExploreBody() on them.
  *
  * Availability:
  *
@@ -410,8 +412,9 @@ static int l_starsystem_explore(lua_State *l)
 		time = luaL_checknumber(l, 2);
 	else
 		time = Pi::game->GetTime();
+	bool hiddenBodies = lua_toboolean(l, 3);
 
-	s->ExploreSystem(time);
+	s->ExploreSystem(time, !hiddenBodies);
 
 	LUA_DEBUG_END(l,0);
 	return 0;

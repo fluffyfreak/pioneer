@@ -227,6 +227,7 @@ public:
 
 	StarSystem* GetStarSystem() const { return m_system; }
 
+	void ExploreBody() { m_explored = true; }
 	void ExploreBodyAndChildren();
 
 private:
@@ -345,7 +346,7 @@ public:
 	bool GetUnexplored() const { return m_explored == eUNEXPLORED; }
 	ExplorationState GetExplored() const { return m_explored; }
 	double GetExploredTime() const { return m_exploredTime; }
-	void ExploreSystem(double time);
+	void ExploreSystem(double time, bool allBodies = true);
 
 	fixed GetMetallicity() const { return m_metallicity; }
 	fixed GetIndustrial() const { return m_industrial; }

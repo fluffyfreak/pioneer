@@ -22,6 +22,40 @@
  */
 
 /*
+ * Method: Explore
+ *
+ * Set the system body to be explored by the Player.
+ *
+ * > sbody:Explore()
+ *
+ * Parameters:
+ *
+ *   recursive - optional, marks all descendent bodies as explored as well.
+ *
+ * Availability:
+ *
+ *   tbd
+ *
+ * Status:
+ *
+ *   experimental
+ */
+static int l_sbody_explore(lua_State *l)
+{
+	LUA_DEBUG_START(l);
+
+	SystemBody *sbody = LuaObject<SystemBody>::CheckFromLua(1);
+	bool recursive = lua_toboolean(l, 2);
+	if (recursive)
+		sbody->ExploreBodyAndChildren();
+	else
+		sbody->ExploreBody();
+
+	LUA_DEBUG_END(l,0);
+	return 0;
+}
+
+/*
  * Attribute: index
  *
  * The body index of the body in its system
@@ -418,10 +452,18 @@ static int l_sbody_attr_is_scoopable(lua_State *l)
 	return 1;
 }
 
+
+
 template <> const char *LuaObject<SystemBody>::s_type = "SystemBody";
 
 template <> void LuaObject<SystemBody>::RegisterClass()
 {
+	static const luaL_Reg l_methods[] = {
+		{ "Explore", l_sbody_explore },
+
+		{ 0, 0 }
+	};
+
 	static const luaL_Reg l_attrs[] = {
 		{ "index",          l_sbody_attr_index           },
 		{ "name",           l_sbody_attr_name            },
@@ -445,5 +487,5 @@ template <> void LuaObject<SystemBody>::RegisterClass()
 		{ 0, 0 }
 	};
 
-	LuaObjectBase::CreateClass(s_type, 0, 0, l_attrs, 0);
+	LuaObjectBase::CreateClass(s_type, 0, l_methods, l_attrs, 0);
 }

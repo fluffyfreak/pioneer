@@ -757,7 +757,7 @@ void StarSystem::MakeShortDescription()
 }
 
 
-void StarSystem::ExploreSystem(double time)
+void StarSystem::ExploreSystem(double time, bool allBodies)
 {
 	if (m_explored != eUNEXPLORED)
 		return;
@@ -766,7 +766,8 @@ void StarSystem::ExploreSystem(double time)
 	RefCountedPtr<Sector> sec = m_galaxy->GetMutableSector(m_path);
 	Sector::System& secsys = sec->m_systems[m_path.systemIndex];
 	secsys.SetExplored(m_explored, m_exploredTime);
-	m_rootBody->ExploreBodyAndChildren();
+	if (allBodies)
+		m_rootBody->ExploreBodyAndChildren();
 	MakeShortDescription();
 	LuaEvent::Queue("onSystemExplored", this);
 }
