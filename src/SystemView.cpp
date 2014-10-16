@@ -461,6 +461,7 @@ void SystemView::OnClickShip(Ship *s) {
 
 void SystemView::PutBody(const SystemBody *b, const vector3d &offset, const matrix4x4f &trans)
 {
+	if (!b->IsExplored()) return;
 	if (b->GetType() == SystemBody::TYPE_STARPORT_SURFACE) return;
 	if (b->GetType() != SystemBody::TYPE_GRAVPOINT) {
 
@@ -507,6 +508,7 @@ void SystemView::PutBody(const SystemBody *b, const vector3d &offset, const matr
 
 	if (b->HasChildren()) {
 		for(const SystemBody* kid : b->GetChildren()) {
+			if (!kid->IsExplored()) continue;
 			if (is_zero_general(kid->GetOrbit().GetSemiMajorAxis())) continue;
 			if (kid->GetOrbit().GetSemiMajorAxis() * m_zoom < ROUGH_SIZE_OF_TURD) {
 				PutOrbit(&(kid->GetOrbit()), offset, Color(0, 255, 0, 255));
@@ -625,7 +627,7 @@ void SystemView::Draw3D()
 			if (m_game->GetSpace()->GetStarSystem() == m_system) {
 				const Body *navTarget = Pi::player->GetNavTarget();
 				const SystemBody *navTargetSystemBody = navTarget ? navTarget->GetSystemBody() : 0;
-				if (navTargetSystemBody)
+				if (navTargetSystemBody && navTargetSystemBody->IsExplored())
 					PutSelectionBox(navTargetSystemBody, pos, Color::GREEN);
 			}
 		}
