@@ -23,6 +23,10 @@
       "description" : "",
       "message" : "bases"
    },
+   "EXPLORING_BODY" : {
+      "description" : "",
+      "message" : "Exploring {name}."
+   },
    "EXPLORING_SYSTEM" : {
       "description" : "",
       "message" : "Exploring system with {bodycount} major {bodies}."

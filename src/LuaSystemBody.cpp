@@ -459,6 +459,27 @@ static int l_sbody_attr_is_scoopable(lua_State *l)
 	return 1;
 }
 
+/*
+ * Attribute: isExplored
+ *
+ * Returns true if the system body has been explored, false if not
+ *
+ * Availablility:
+ *
+ *   October 2014
+ *
+ * Status:
+ *
+ *  experimental
+ */
+
+static int l_sbody_attr_is_explored(lua_State *l)
+{
+	SystemBody * sbody = LuaObject<SystemBody>::CheckFromLua(1);
+	lua_pushboolean(l, sbody->IsExplored());
+	return 1;
+}
+
 
 
 template <> const char *LuaObject<SystemBody>::s_type = "SystemBody";
@@ -491,6 +512,7 @@ template <> void LuaObject<SystemBody>::RegisterClass()
 		{ "averageTemp",    l_sbody_attr_average_temp    },
 		{ "hasAtmosphere",  l_sbody_attr_has_atmosphere  },
 		{ "isScoopable",    l_sbody_attr_is_scoopable    },
+		{ "isExplored",     l_sbody_attr_is_explored     },
 		{ 0, 0 }
 	};
 
