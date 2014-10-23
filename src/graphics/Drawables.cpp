@@ -367,6 +367,7 @@ void PointSprites::CreateVertexBuffer(Graphics::Renderer *r, Material *mat, cons
 }
 //------------------------------------------------------------
 
+static const int MAX_SUBDIVS = 5;
 static const float ICOSX = 0.525731112119133f;
 static const float ICOSZ = 0.850650808352039f;
 
@@ -389,7 +390,7 @@ Sphere3D::Sphere3D(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 	m_material = mat;
 	m_renderState = state;
 
-	subdivs = Clamp(subdivs, 0, 4);
+	subdivs = Clamp(subdivs, 0, MAX_SUBDIVS);
 	scale = fabs(scale);
 	matrix4x4f trans = matrix4x4f::Identity();
 	trans.Scale(scale, scale, scale);
