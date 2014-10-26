@@ -18,6 +18,170 @@
 #include <deque>
 #include <algorithm>
 
+//------------------------------------------------------------
+
+static const int MAX_SUBDIVS = 5;
+static const float ICOSX = 0.525731112119133f;
+static const float ICOSZ = 0.850650808352039f;
+
+static const vector3f icosahedron_vertices[12] = {
+	vector3f(-ICOSX, 0.0, ICOSZ), vector3f(ICOSX, 0.0, ICOSZ), vector3f(-ICOSX, 0.0, -ICOSZ), vector3f(ICOSX, 0.0, -ICOSZ),
+	vector3f(0.0, ICOSZ, ICOSX), vector3f(0.0, ICOSZ, -ICOSX), vector3f(0.0, -ICOSZ, ICOSX), vector3f(0.0, -ICOSZ, -ICOSX),
+	vector3f(ICOSZ, ICOSX, 0.0), vector3f(-ICOSZ, ICOSX, 0.0), vector3f(ICOSZ, -ICOSX, 0.0), vector3f(-ICOSZ, -ICOSX, 0.0)
+};
+
+static const int icosahedron_faces[20][3] = {
+	{0,4,1}, {0,9,4}, {9,5,4}, {4,5,8}, {4,8,1},
+	{8,10,1}, {8,3,10},{5,3,8}, {5,2,3}, {2,7,3},
+	{7,10,3}, {7,6,10}, {7,11,6}, {11,0,6}, {0,1,6},
+	{6,1,10}, {9,0,11}, {9,11,2}, {9,2,5}, {7,2,11}
+};
+
+// XXX merge these with their fracdef versions
+inline double octavenoise(int octaves, const double persistence, const double lacunarity, const vector3d &p) {
+	//assert(persistence <= (1.0 / lacunarity));
+	double n = 0;
+	double amplitude = persistence;
+	double frequency = 1.0;
+	while (octaves--) {
+		n += amplitude * noise(frequency*p);
+		amplitude *= persistence;
+		frequency *= lacunarity;
+	}
+	return n;
+}
+
+//#define PERTURB_VERTICES
+Icosahedron::Icosahedron(Graphics::Renderer *renderer, RefCountedPtr<Graphics::Material> mat, Graphics::RenderState *state, int subdivs, float scale)
+{
+	using namespace Graphics;
+
+	PROFILE_SCOPED()
+	m_material = mat;
+	m_renderState = state;
+
+	subdivs = Clamp(subdivs, 0, MAX_SUBDIVS);
+	scale = fabs(scale);
+	matrix4x4f trans = matrix4x4f::Identity();
+	trans.Scale(scale, scale, scale);
+
+	//reserve some data
+	VertexArray vts(ATTRIB_POSITION | ATTRIB_NORMAL | ATTRIB_UV0, 256);
+	std::vector<Uint32> indices;
+
+#ifdef PERTURB_VERTICES
+	const vector3f v0 = trans * icosahedron_vertices[0];
+	const vector3f v1 = trans * icosahedron_vertices[1];
+	const float len = (v1 - v0).Length();
+
+	vector3f ico_verts[12];
+#endif // PERTURB_VERTICES
+
+	//initial vertices
+	int vi[12];
+	for (int i=0; i<12; i++) {
+		const vector3f &v = icosahedron_vertices[i];
+
+#ifdef PERTURB_VERTICES
+		// basis vectors
+		vector3f up(0.0f, 1.0f, 0.0f); // dummy initial value of up
+		const vector3f right(v.Cross(up));
+		up = v.Cross(right);
+
+		const float s = (len * octavenoise(8, 0.5, 2.0, vector3d(v))) * 0.3;
+
+		const vector3f fv = (v + (right * s) + (up * s)).Normalized();
+		ico_verts[i] = fv;
+		vi[i] = AddVertex(vts, trans * fv, fv);
+#endif // PERTURB_VERTICES
+		vi[i] = AddVertex(vts, trans * v, v);
+	}
+
+	//subdivide
+	for (int i=0; i<20; i++) {
+#ifdef PERTURB_VERTICES
+		Subdivide(vts, indices, trans, ico_verts[icosahedron_faces[i][0]],
+				ico_verts[icosahedron_faces[i][1]],
+				ico_verts[icosahedron_faces[i][2]],
+#endif // PERTURB_VERTICES
+		Subdivide(vts, indices, trans, icosahedron_vertices[icosahedron_faces[i][0]],
+				icosahedron_vertices[icosahedron_faces[i][1]],
+				icosahedron_vertices[icosahedron_faces[i][2]],
+				vi[icosahedron_faces[i][0]],
+				vi[icosahedron_faces[i][1]],
+				vi[icosahedron_faces[i][2]],
+				subdivs);
+	}
+
+	//Create vtx & index buffers and copy data
+	VertexBufferDesc vbd;
+	vbd.attrib[0].semantic = ATTRIB_POSITION;
+	vbd.attrib[0].format   = ATTRIB_FORMAT_FLOAT3;
+	vbd.attrib[1].semantic = ATTRIB_NORMAL;
+	vbd.attrib[1].format   = ATTRIB_FORMAT_FLOAT3;
+	vbd.attrib[2].semantic = ATTRIB_UV0;
+	vbd.attrib[2].format   = ATTRIB_FORMAT_FLOAT2;
+	vbd.numVertices = vts.GetNumVerts();
+	vbd.usage = BUFFER_USAGE_STATIC;
+	m_vertexBuffer.reset(renderer->CreateVertexBuffer(vbd));
+	m_vertexBuffer->Populate(vts);
+
+	m_indexBuffer.reset(renderer->CreateIndexBuffer(indices.size(), BUFFER_USAGE_STATIC));
+	Uint16 *idxPtr = m_indexBuffer->Map(Graphics::BUFFER_MAP_WRITE);
+	for (auto it : indices) {
+		*idxPtr = it;
+		idxPtr++;
+	}
+	m_indexBuffer->Unmap();
+}
+
+void Icosahedron::Draw(Graphics::Renderer *r)
+{
+	PROFILE_SCOPED()
+	r->DrawBufferIndexed(m_vertexBuffer.get(), m_indexBuffer.get(), m_renderState, m_material.Get());
+}
+
+int Icosahedron::AddVertex(Graphics::VertexArray &vts, const vector3f &v, const vector3f &n)
+{
+	PROFILE_SCOPED()
+	vts.position.push_back(v);
+	vts.normal.push_back(n);
+	//http://www.mvps.org/directx/articles/spheremap.htm
+	vts.uv0.push_back(vector2f(asinf(n.x)/M_PI+0.5f, asinf(n.y)/M_PI+0.5f));
+	return vts.GetNumVerts() - 1;
+}
+
+void Icosahedron::AddTriangle(std::vector<Uint32> &indices, int i1, int i2, int i3)
+{
+	PROFILE_SCOPED()
+	indices.push_back(i1);
+	indices.push_back(i2);
+	indices.push_back(i3);
+}
+
+void Icosahedron::Subdivide(Graphics::VertexArray &vts, std::vector<Uint32> &indices,
+		const matrix4x4f &trans, const vector3f &v1, const vector3f &v2, const vector3f &v3,
+		const int i1, const int i2, const int i3, const int depth)
+{
+	PROFILE_SCOPED()
+	if (depth == 0) {
+		AddTriangle(indices, i1, i3, i2);
+		return;
+	}
+
+	const vector3f v12 = (v1+v2).Normalized();
+	const vector3f v23 = (v2+v3).Normalized();
+	const vector3f v31 = (v3+v1).Normalized();
+	const int i12 = AddVertex(vts, trans * v12, v12);
+	const int i23 = AddVertex(vts, trans * v23, v23);
+	const int i31 = AddVertex(vts, trans * v31, v31);
+	Subdivide(vts, indices, trans, v1, v12, v31, i1, i12, i31, depth-1);
+	Subdivide(vts, indices, trans, v2, v23, v12, i2, i23, i12, depth-1);
+	Subdivide(vts, indices, trans, v3, v31, v23, i3, i31, i23, depth-1);
+	Subdivide(vts, indices, trans, v12, v23, v31, i12, i23, i31, depth-1);
+}
+//------------------------------------------------------------
+
 RefCountedPtr<GeoPatchContext> GeoSphere::s_patchContext;
 
 // must be odd numbers
@@ -360,7 +524,7 @@ void GeoSphere::Update()
 		break;
 	}
 }
-
+#pragma optimize("",off)
 void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView, vector3d campos, const float radius, const float scale, const std::vector<Camera::Shadow> &shadows)
 {
 	// store this for later usage in the update method.
@@ -407,6 +571,28 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView
 			DrawAtmosphereSurface(renderer, trans, campos,
 				m_materialParameters.atmosphere.atmosRadius*1.01,
 				m_atmosRenderState, m_atmosphereMaterial.get());
+		}
+	}
+
+	// display the terrain height control-mesh
+	{
+		const float rad = m_materialParameters.atmosphere.atmosRadius * 1.01f;
+
+		static std::unique_ptr<Icosahedron> m_ball;
+
+		{
+			renderer->SetTransform(trans * matrix4x4d::ScaleMatrix(rad, rad, rad));
+			Pi::renderer->SetWireFrameMode(true);
+			if( !m_ball.get() ) {
+				RefCountedPtr<Graphics::Material> mat(Pi::renderer->CreateMaterial(Graphics::MaterialDescriptor()));
+				mat->diffuse = Color4f(0.7f, 0.7f, 0.7f, 0.5f);
+				m_ball.reset( new Icosahedron(Pi::renderer, mat, Pi::renderer->CreateRenderState(Graphics::RenderStateDesc()), 5, 1.0) );
+			}
+
+			if( m_ball.get() ) {
+				m_ball->Draw( Pi::renderer );
+			}
+			Pi::renderer->SetWireFrameMode(false);
 		}
 	}
 

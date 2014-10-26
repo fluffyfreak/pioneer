@@ -26,6 +26,35 @@ class SQuadSplitRequest;
 class SQuadSplitResult;
 class SSingleSplitResult;
 
+//------------------------------------------------------------
+
+// Three dimensional sphere (subdivided icosahedron) with normals
+// and spherical texture coordinates.
+class Icosahedron {
+public:
+	//subdivisions must be 0-4
+	Icosahedron(Graphics::Renderer*, RefCountedPtr<Graphics::Material> material, Graphics::RenderState*, int subdivisions=0, float scale=1.f);
+	virtual void Draw(Graphics::Renderer *r);
+
+	RefCountedPtr<Graphics::Material> GetMaterial() const { return m_material; }
+
+private:
+	std::unique_ptr<Graphics::VertexBuffer> m_vertexBuffer;
+	std::unique_ptr<Graphics::IndexBuffer> m_indexBuffer;
+	RefCountedPtr<Graphics::Material> m_material;
+	Graphics::RenderState *m_renderState;
+
+	//std::unique_ptr<Surface> m_surface;
+	//add a new vertex, return the index
+	int AddVertex(Graphics::VertexArray&, const vector3f &v, const vector3f &n);
+	//add three vertex indices to form a triangle
+	void AddTriangle(std::vector<Uint32>&, int i1, int i2, int i3);
+	void Subdivide(Graphics::VertexArray&, std::vector<Uint32>&,
+		const matrix4x4f &trans, const vector3f &v1, const vector3f &v2, const vector3f &v3,
+		const int i1, const int i2, const int i3, const int depth);
+};
+//------------------------------------------------------------
+
 #define NUM_PATCHES 6
 
 class GeoSphere : public BaseSphere {
