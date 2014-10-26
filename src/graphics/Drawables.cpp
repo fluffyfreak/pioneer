@@ -466,7 +466,7 @@ void Sphere3D::AddTriangle(std::vector<Uint16> &indices, int i1, int i2, int i3)
 
 void Sphere3D::Subdivide(VertexArray &vts, std::vector<Uint16> &indices,
 		const matrix4x4f &trans, const vector3f &v1, const vector3f &v2, const vector3f &v3,
-		const int i1, const int i2, const int i3, int depth)
+		const int i1, const int i2, const int i3, const int depth)
 {
 	PROFILE_SCOPED()
 	if (depth == 0) {

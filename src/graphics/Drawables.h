@@ -130,7 +130,7 @@ private:
 	void AddTriangle(std::vector<Uint16>&, int i1, int i2, int i3);
 	void Subdivide(VertexArray&, std::vector<Uint16>&,
 		const matrix4x4f &trans, const vector3f &v1, const vector3f &v2, const vector3f &v3,
-		int i1, int i2, int i3, int depth);
+		const int i1, const int i2, const int i3, const int depth);
 };
 //------------------------------------------------------------
 
