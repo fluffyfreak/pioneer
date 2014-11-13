@@ -108,6 +108,7 @@ namespace KeyBindings {
 			Uint8 joystick;
 			Uint8 axis;
 			AxisDirection direction;
+			float defaultVal;
 	};
 
 	struct BindingPrototype {

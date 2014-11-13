@@ -369,16 +369,19 @@ AxisBinding::AxisBinding() {
 	this->joystick = JOYSTICK_DISABLED;
 	this->axis = 0;
 	this->direction = POSITIVE;
+	this->defaultVal = 0.0f;
 }
 
 AxisBinding::AxisBinding(Uint8 joystick_, Uint8 axis_, AxisDirection direction_) {
 	this->joystick = joystick_;
 	this->axis = axis_;
 	this->direction = direction_;
+	this->defaultVal = 0.0f;
 }
-
+#pragma optimize("",off)
 float AxisBinding::GetValue() {
-	if (!Enabled()) return 0.0f;
+	if (!Enabled()) 
+		return defaultVal;
 
 	float value = Pi::JoystickAxisState(joystick, axis);
 
@@ -403,7 +406,7 @@ std::string AxisBinding::Description() const {
 		formatarg("axis", axis >= 0 && axis < 3 ? axis_names[axis] : ossaxisnum.str())
 	);
 }
-
+#pragma optimize("",off)
 bool AxisBinding::FromString(const char *str, AxisBinding &ab) {
 	if (strcmp(str, "disabled") == 0) {
 		ab.Clear();
@@ -443,6 +446,9 @@ bool AxisBinding::FromString(const char *str, AxisBinding &ab) {
 
 	p += 4;
 	ab.axis = atoi(p);
+
+	// got a good joystick and axis so get it's current reading
+	ab.defaultVal = Pi::JoystickAxisPoke(ab.joystick, ab.axis);
 
 	return true;
 }

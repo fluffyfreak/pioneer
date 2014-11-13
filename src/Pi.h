@@ -68,9 +68,11 @@ public:
 	static bool KeyState(SDL_Keycode k) { return keyState[k]; }
 	static int KeyModState() { return keyModState; }
 	static bool IsConsoleActive();
+
 	static int JoystickButtonState(int joystick, int button);
 	static int JoystickHatState(int joystick, int hat);
 	static float JoystickAxisState(int joystick, int axis);
+	static float JoystickAxisPoke(int joystick, int axis);
 	static bool IsJoystickEnabled() { return joystickEnabled; }
 	static void SetJoystickEnabled(bool state) { joystickEnabled = state; }
 	// User display name for the joystick from the API/OS.
@@ -82,6 +84,7 @@ public:
 	static int JoystickFromGUID(SDL_JoystickGUID guid);
 	// fetch the GUID for the named joystick
 	static SDL_JoystickGUID JoystickGUID(int joystick);
+
 	static void SetMouseYInvert(bool state) { mouseYInvert = state; }
 	static bool IsMouseYInvert() { return mouseYInvert; }
 	static void SetCompactScanner(bool state) { compactScanner = state; }

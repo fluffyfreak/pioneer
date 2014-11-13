@@ -1411,6 +1411,23 @@ float Pi::JoystickAxisState(int joystick, int axis) {
 	return joysticks[joystick].axes[axis];
 }
 
+float Pi::JoystickAxisPoke(int joystick, int axis)
+{
+	if (joystick < 0 || joystick >= int(joysticks.size()))
+		return 0;
+
+	if (axis < 0 || axis >= int(joysticks[joystick].axes.size()))
+		return 0;
+
+	const Sint16 value = SDL_JoystickGetAxis( joysticks[joystick].joystick, axis );
+	if (value == -32768)
+		joysticks[joystick].axes[axis] = 1.f;
+	else
+		joysticks[joystick].axes[axis] = -value / 32767.f;
+
+	return joysticks[joystick].axes[axis];
+}
+
 void Pi::SetMouseGrab(bool on)
 {
 	if (!doingMouseGrab && on) {

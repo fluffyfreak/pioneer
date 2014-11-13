@@ -186,7 +186,7 @@ static double clipmouse(double cur, double inp)
 	if (inp < -0.2) return -0.2;
 	return inp;
 }
-
+#pragma optimize("",off)
 void PlayerShipController::PollControls(const float timeStep, const bool force_rotation_damping, int *mouseMotion)
 {
 	static bool stickySpeedKey = false;
