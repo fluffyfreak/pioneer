@@ -68,8 +68,8 @@ ui.templates.Settings = function (args)
 		end
 		local modeDropDown = optionDropDown(GetVideoMode, SetVideoMode, l.VIDEO_RESOLUTION, videoModeLabels, videoModeLabels)
 
-		local aaLabels = { l.OFF, "x2", "x4", "x8", "x16" }
-		local aaModes = { 0, 2, 4, 8, 16 }
+		local aaLabels = { l.OFF, "SMAA" }
+		local aaModes = { 0, 1 }
 		local aaDropDown = optionDropDown(Engine.GetMultisampling, Engine.SetMultisampling, l.MULTISAMPLING, aaLabels, aaModes)
 
 		local detailLevels = { 'VERY_LOW', 'LOW', 'MEDIUM', 'HIGH', 'VERY_HIGH' }
