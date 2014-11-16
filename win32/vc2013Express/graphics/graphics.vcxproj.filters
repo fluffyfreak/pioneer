@@ -156,6 +156,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\src\graphics\PostProcess.h" />
     <ClInclude Include="..\..\..\src\graphics\PostProcessing.h" />
+    <ClInclude Include="..\..\..\src\graphics\opengl\SMAAMaterial.h">
+      <Filter>opengl</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="win32">

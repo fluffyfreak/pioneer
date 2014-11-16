@@ -177,6 +177,7 @@
     <ClInclude Include="..\..\..\src\graphics\opengl\RingMaterial.h" />
     <ClInclude Include="..\..\..\src\graphics\opengl\ShieldMaterial.h" />
     <ClInclude Include="..\..\..\src\graphics\opengl\SkyboxMaterial.h" />
+    <ClInclude Include="..\..\..\src\graphics\opengl\SMAAMaterial.h" />
     <ClInclude Include="..\..\..\src\graphics\opengl\StarfieldMaterial.h" />
     <ClInclude Include="..\..\..\src\graphics\opengl\TexturedFullscreenQuad.h" />
     <ClInclude Include="..\..\..\src\graphics\opengl\TextureGL.h" />
