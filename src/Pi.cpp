@@ -553,7 +553,14 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 	KeyBindings::toggleLuaConsole.onPress.connect(sigc::mem_fun(Pi::luaConsole, &LuaConsole::Toggle));
 
 	// Define post processes
-	m_gamePP = new Graphics::PostProcess("Bloom", renderer->GetWindow());
+	m_gamePP = new Graphics::PostProcess("Game", renderer->GetWindow());
+	if (config->Int("AntiAliasingMode")==1) {
+		m_gamePP->AddPass(renderer, "Edge", Graphics::EFFECT_SMAA_EDGE);
+		m_gamePP->AddPass(renderer, "Blend", Graphics::EFFECT_SMAA_BLEND);
+		// we either pass-through of use the last step for compositing depending on bloom being enabled.
+		m_gamePP->AddPass(renderer, "Neighbourhood", Graphics::EFFECT_SMAA_NEIGHBOURHOOD, 
+			(config->Int("GFX_UseBloom")==0) ? Graphics::PP_PASS_COMPOSE : Graphics::PP_PASS_THROUGH);
+	}
 	if (config->Int("GFX_UseBloom")!=0) {
 		m_gamePP->AddPass(renderer, "HBlur", Graphics::EFFECT_HORIZONTAL_BLUR);
 		m_gamePP->AddPass(renderer, "VBlur", Graphics::EFFECT_VERTICAL_BLUR);

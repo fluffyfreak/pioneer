@@ -57,11 +57,16 @@ static bool check_glsl_errors(const char *filename, GLuint obj)
 }
 
 struct Shader {
+#pragma optimize("",off)
 	Shader(GLenum type, const std::string &filename, const std::string &defines) {
 		RefCountedPtr<FileSystem::FileData> code = FileSystem::gameDataFiles.ReadFile(filename);
 
 		if (!code)
 			Error("Could not load %s", filename.c_str());
+
+		std::string strCode(code->AsStringRange().StripUTF8BOM().ToString());
+		ProcessIncludes(filename, strCode);
+		const StringRange codeRange(strCode.c_str(), strCode.size());
 
 		// Load some common code
 		RefCountedPtr<FileSystem::FileData> attributesCode = FileSystem::gameDataFiles.ReadFile("shaders/opengl/attributes.glsl");
@@ -83,7 +88,7 @@ struct Shader {
 		AppendSource(attributesCode->AsStringRange().StripUTF8BOM());
 		AppendSource(logzCode->AsStringRange().StripUTF8BOM());
 		AppendSource(libsCode->AsStringRange().StripUTF8BOM());
-		AppendSource(code->AsStringRange().StripUTF8BOM());
+		AppendSource(codeRange);
 #if 0
 		static bool s_bDumpShaderSource = true;
 		if (s_bDumpShaderSource) {
@@ -133,6 +138,42 @@ private:
 	{
 		blocks.push_back(str.begin);
 		block_sizes.push_back(str.Size());
+	}
+
+	//this function adds #include functionality to GLSL
+#pragma optimize("",off)
+	void ProcessIncludes( const std::string& parentPath, std::string& shader )
+	{
+		size_t start_pos = 0;
+		const std::string include_token = "#include ";
+
+		while( ( start_pos = shader.find( include_token, start_pos ) ) != std::string::npos )
+		{
+			const int pos = start_pos + include_token.length() + 1;
+			const int length = shader.find( "\"", pos );
+			const std::string filename = shader.substr( pos, length - pos );
+			
+			if( !filename.empty() )
+			{
+				const int last = parentPath.rfind( "/" );
+				const std::string fullPath( (last==std::string::npos) ? filename : FileSystem::JoinPathBelow(parentPath.substr( 0, last ), filename) );
+				RefCountedPtr<FileSystem::FileData> text = FileSystem::gameDataFiles.ReadFile( fullPath );
+				if( text.Valid() && text->GetInfo().Exists() )
+				{
+					const std::string content = text->AsStringRange().StripUTF8BOM().ToString();
+					shader.replace( start_pos, ( length + 1 ) - start_pos, content );
+					start_pos += content.length();
+				}
+				else
+				{
+					Error("Couldn't include shader file: %s\n", filename.c_str());
+				}
+			}
+			else
+			{
+				Error("Couldn't include shader file: %s\n", filename.c_str());
+			}
+		}
 	}
 
 	void Compile(GLuint shader_id)

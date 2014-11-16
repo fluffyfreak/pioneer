@@ -33,6 +33,7 @@
 #include "BloomCompositorMaterial.h"
 #include "UIMaterial.h"
 #include "VtxColorMaterial.h"
+#include "SMAAMaterial.h"
 
 #include <stddef.h> //for offsetof
 #include <ostream>
@@ -711,9 +712,11 @@ Material *RendererOGL::CreateMaterial(const MaterialDescriptor &d)
 	case EFFECT_GASSPHERE_TERRAIN:
 		mat = new OGL::GasGiantSurfaceMaterial();
 		break;
+
 	case EFFECT_TEXTURED_FULLSCREEN_QUAD:
 		mat = new OGL::TexturedFullscreenQuad();
 		break;
+
 	case EFFECT_HORIZONTAL_BLUR:
 		mat = new OGL::HorizontalBlurMaterial();
 		break;
@@ -723,6 +726,17 @@ Material *RendererOGL::CreateMaterial(const MaterialDescriptor &d)
 	case EFFECT_BLOOM_COMPOSITOR:
 		mat = new OGL::BloomCompositorMaterial();
 		break;
+		
+	case EFFECT_SMAA_EDGE:
+		mat = new OGL::SMAAEdgeMaterial();
+		break;
+	case EFFECT_SMAA_BLEND:
+		mat = new OGL::SMAABlendMaterial();
+		break;
+	case EFFECT_SMAA_NEIGHBOURHOOD:
+		mat = new OGL::SMAANeighbourhoodMaterial();
+		break;
+
 	default:
 		if (desc.lighting)
 			mat = new OGL::LitMultiMaterial();
