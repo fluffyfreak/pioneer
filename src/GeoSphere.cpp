@@ -13,6 +13,7 @@
 #include "graphics/Renderer.h"
 #include "graphics/Frustum.h"
 #include "graphics/Graphics.h"
+#include "graphics/TextureBuilder.h"
 #include "graphics/VertexArray.h"
 #include "vcacheopt/vcacheopt.h"
 #include <deque>
@@ -386,6 +387,8 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView
 	if (!m_surfaceMaterial)
 		SetUpMaterials();
 
+	bool bHasAtmosphere = false;
+
 	{
 		//Update material parameters
 		//XXX no need to calculate AP every frame
@@ -397,16 +400,44 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView
 		m_materialParameters.shadows = shadows;
 
 		m_surfaceMaterial->specialParameter0 = &m_materialParameters;
-
-		if (m_materialParameters.atmosphere.atmosDensity > 0.0) {
+		
+		bHasAtmosphere = (m_materialParameters.atmosphere.atmosDensity > 0.0);
+		if (bHasAtmosphere) {
 			m_atmosphereMaterial->specialParameter0 = &m_materialParameters;
 
 			// make atmosphere sphere slightly bigger than required so
 			// that the edges of the pixel shader atmosphere jizz doesn't
 			// show ugly polygonal angles
-			DrawAtmosphereSurface(renderer, trans, campos,
-				m_materialParameters.atmosphere.atmosRadius*1.01,
-				m_atmosRenderState, m_atmosphereMaterial.get());
+			DrawAtmosphereSurface( renderer, trans, campos, 
+				m_materialParameters.atmosphere.atmosRadius*1.01, 
+				m_atmosRenderState, m_atmosphereMaterial.get() );
+		}
+	}
+
+	// display the terrain height control-mesh
+	static bool s_bDrawClouds = true;
+	static std::unique_ptr<Graphics::Drawables::Sphere3D> m_ball;
+	const float rad = m_materialParameters.atmosphere.atmosRadius;
+	const matrix4x4d cloudsTrans(trans * matrix4x4d::ScaleMatrix(rad, rad, rad));
+	if(s_bDrawClouds && bHasAtmosphere)
+	{
+		// bunny, ball ball!
+		if( !m_ball.get() ) {
+			Graphics::MaterialDescriptor matDesc;
+			matDesc.textures = 1;
+			RefCountedPtr<Graphics::Material> mat(Pi::renderer->CreateMaterial(matDesc));
+			mat->diffuse = Color4f(0.7f, 0.7f, 0.7f, 0.5f);
+#if 0
+			mat->texture0 = Graphics::TextureBuilder::Billboard("textures/tex_clouds.dds").GetOrCreateTexture(Pi::renderer, "billboard");
+#else
+			mat->texture0 = Graphics::TextureBuilder::Billboard("textures/tex694_hi.png").GetOrCreateTexture(Pi::renderer, "billboard");
+#endif
+			//blended
+			Graphics::RenderStateDesc rsd;
+			rsd.blendMode = Graphics::BLEND_ALPHA;//Graphics::BLEND_ADDITIVE;
+			rsd.depthWrite = false;
+			rsd.cullMode = Graphics::CULL_NONE;
+			m_ball.reset( new Graphics::Drawables::Sphere3D(Pi::renderer, mat, Pi::renderer->CreateRenderState(rsd), 5, 1.0) );
 		}
 	}
 
@@ -424,9 +455,7 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView
 		emission.g = StarSystem::starRealColors[GetSystemBody()->GetType()][1];
 		emission.b = StarSystem::starRealColors[GetSystemBody()->GetType()][2];
 		emission.a = 255;
-	}
-
-	else {
+	} else {
 		// give planet some ambient lighting if the viewer is close to it
 		double camdist = campos.Length();
 		camdist = 0.1 / (camdist*camdist);
@@ -446,6 +475,15 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView
 	}
 
 	renderer->SetAmbientColor(oldAmbient);
+	
+	if( s_bDrawClouds && bHasAtmosphere )
+	{
+		// draw it
+		renderer->SetTransform(cloudsTrans);
+		if( m_ball.get() ) {
+			m_ball->Draw( Pi::renderer );
+		}
+	}
 }
 
 void GeoSphere::SetUpMaterials()
