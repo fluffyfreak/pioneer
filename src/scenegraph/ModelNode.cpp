@@ -25,10 +25,7 @@ Node* ModelNode::Clone(NodeCopyCache *cache)
 
 void ModelNode::Render(const matrix4x4f &trans, const RenderData *rd)
 {
-	//slight hack here
-	RenderData newrd = *rd;
-	newrd.nodemask |= MASK_IGNORE;
-	m_model->Render(trans, &newrd);
+	m_model->RenderAsSubModel(trans, rd);
 }
 
 }

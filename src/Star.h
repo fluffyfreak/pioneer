@@ -16,7 +16,7 @@ public:
 	Star();
 	virtual ~Star() {};
 
-	virtual void Render(Graphics::Renderer *r, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform);
+	virtual void Render(Graphics::Renderer *r, Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform);
 protected:
 	void InitStar();
 	virtual void Load(Serializer::Reader &rd, Space *space);

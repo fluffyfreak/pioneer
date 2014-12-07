@@ -5,6 +5,7 @@
 #define _HYPERSPACECLOUD_H
 
 #include "Body.h"
+#include "Renderable.h"
 
 class Frame;
 class Ship;
@@ -23,7 +24,7 @@ public:
 	virtual ~HyperspaceCloud();
 	virtual void SetVelocity(const vector3d &v) { m_vel = v; }
 	virtual vector3d GetVelocity() const { return m_vel; }
-	virtual void Render(Graphics::Renderer *r, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform);
+	virtual void Render(Graphics::Renderer *r, Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform);
 	virtual void PostLoadFixup(Space *space);
 	virtual void TimeStepUpdate(const float timeStep);
 	Ship *GetShip() { return m_ship; }
@@ -46,12 +47,7 @@ private:
 	bool m_isArrival;
 	bool m_isBeingKilled;
 
-	struct Graphic {
-		std::unique_ptr<Graphics::VertexArray> vertices;
-		std::unique_ptr<Graphics::Material> material;
-		Graphics::RenderState *renderState;
-	};
-	Graphic m_graphic;
+	std::unique_ptr<TriangleGraphic> m_graphic;
 };
 
 #endif /* _HYPERSPACECLOUD_H */

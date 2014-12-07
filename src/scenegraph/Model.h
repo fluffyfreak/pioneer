@@ -103,7 +103,13 @@ public:
 	const std::string& GetName() const { return m_name; }
 
 	float GetDrawClipRadius() const { return m_boundingRadius; }
-	void Render(const matrix4x4f &trans, const RenderData *rd = 0); //ModelNode can override RD
+	bool ContainsNodeMask(unsigned int) const { return true; }
+
+	void Render(const matrix4x4f &trans, const RenderData *rd); //just one pass
+	void Render(const matrix4x4f &trans); //render solid & transparent (for modelviewer, intro etc.)
+	void RenderAsSubModel(const matrix4x4f &trans, const RenderData *parentModelParams);
+	void UpdateInstanceMaterials();
+
 	RefCountedPtr<CollMesh> CreateCollisionMesh();
 	RefCountedPtr<CollMesh> GetCollisionMesh() const { return m_collMesh; }
 	RefCountedPtr<Group> GetRoot() { return m_root; }

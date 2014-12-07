@@ -11,8 +11,6 @@
 
 #include "Node.h"
 
-namespace Graphics { class Surface; }
-
 class GeomTree;
 class Geom;
 

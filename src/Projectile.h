@@ -6,6 +6,7 @@
 
 #include "libs.h"
 #include "Body.h"
+#include "Renderable.h"
 #include "graphics/Material.h"
 #include "graphics/RenderState.h"
 
@@ -23,7 +24,7 @@ public:
 
 	Projectile();
 	virtual ~Projectile();
-	virtual void Render(Graphics::Renderer *r, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform);
+	virtual void Render(Graphics::Renderer *r, Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform);
 	void TimeStepUpdate(const float timeStep);
 	void StaticUpdate(const float timeStep);
 	virtual void NotifyRemoved(const Body* const removedBody);
@@ -31,6 +32,12 @@ public:
 	virtual void PostLoadFixup(Space *space);
 
 	static void FreeModel();
+
+	static Graphics::VertexArray* GetSideVerts() { return s_sideVerts.get(); }
+	static Graphics::VertexArray* GetGlowVerts() { return s_glowVerts.get(); }
+
+	static Graphics::Material* GetSideMat() { return s_sideMat.get(); }
+	static Graphics::Material* GetGlowMat() { return s_glowMat.get(); }
 
 protected:
 	virtual void Save(Serializer::Writer &wr, Space *space);
@@ -58,6 +65,7 @@ private:
 	static std::unique_ptr<Graphics::Material> s_sideMat;
 	static std::unique_ptr<Graphics::Material> s_glowMat;
 	static Graphics::RenderState *s_renderState;
+	std::unique_ptr<LaserGraphic> m_renderable;
 };
 
 #endif /* _PROJECTILE_H */

@@ -544,7 +544,7 @@ bool SpaceStation::IsGroundStation() const
 //            Lighting is done by manipulating global lights or setting uniforms in atmospheric models shader
 static const double SQRMAXCITYDIST = 1e5 * 1e5;
 
-void SpaceStation::Render(Graphics::Renderer *r, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform)
+void SpaceStation::Render(Graphics::Renderer *r, Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform)
 {
 	Body *b = GetFrame()->GetBody();
 	assert(b);
