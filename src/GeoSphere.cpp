@@ -417,27 +417,30 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView
 	// display the terrain height control-mesh
 	static bool s_bDrawClouds = true;
 	static std::unique_ptr<Graphics::Drawables::Sphere3D> m_ball;
-	const float rad = m_materialParameters.atmosphere.atmosRadius;
+	const float rad = 1.005f;//m_materialParameters.atmosphere.atmosRadius;
 	const matrix4x4d cloudsTrans(trans * matrix4x4d::ScaleMatrix(rad, rad, rad));
 	if(s_bDrawClouds && bHasAtmosphere)
 	{
 		// bunny, ball ball!
 		if( !m_ball.get() ) {
 			Graphics::MaterialDescriptor matDesc;
+			matDesc.effect = Graphics::EFFECT_CLOUD_SPHERE;
 			matDesc.textures = 1;
-			RefCountedPtr<Graphics::Material> mat(Pi::renderer->CreateMaterial(matDesc));
-			mat->diffuse = Color4f(0.7f, 0.7f, 0.7f, 0.5f);
-#if 0
-			mat->texture0 = Graphics::TextureBuilder::Billboard("textures/tex_clouds.dds").GetOrCreateTexture(Pi::renderer, "billboard");
+			m_cloudMaterial.Reset(Pi::renderer->CreateMaterial(matDesc));
+			m_cloudMaterial->diffuse = Color4f(0.7f, 0.7f, 0.7f, 0.5f);
+#if 1
+			m_cloudMaterial->texture0 = Graphics::TextureBuilder::Cube("textures/tex_clouds.dds").GetOrCreateTexture(Pi::renderer, "clouds");
 #else
-			mat->texture0 = Graphics::TextureBuilder::Billboard("textures/tex694_hi.png").GetOrCreateTexture(Pi::renderer, "billboard");
+			m_cloudMaterial->texture0 = Graphics::TextureBuilder::Billboard("textures/tex694_hi.png").GetOrCreateTexture(Pi::renderer, "billboard");
 #endif
+			m_cloudMaterial->specialParameter0 = &m_materialParameters;
+
 			//blended
 			Graphics::RenderStateDesc rsd;
-			rsd.blendMode = Graphics::BLEND_ALPHA;//Graphics::BLEND_ADDITIVE;
+			rsd.blendMode = Graphics::BLEND_ALPHA;//Graphics::BLEND_ADDITIVE;//
 			rsd.depthWrite = false;
 			rsd.cullMode = Graphics::CULL_NONE;
-			m_ball.reset( new Graphics::Drawables::Sphere3D(Pi::renderer, mat, Pi::renderer->CreateRenderState(rsd), 5, 1.0) );
+			m_ball.reset( new Graphics::Drawables::Sphere3D(Pi::renderer, m_cloudMaterial, Pi::renderer->CreateRenderState(rsd), 5, 1.0) );
 		}
 	}
 

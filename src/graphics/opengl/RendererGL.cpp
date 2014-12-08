@@ -25,6 +25,7 @@
 #include "ShieldMaterial.h"
 #include "SkyboxMaterial.h"
 #include "SphereImpostorMaterial.h"
+#include "CloudSphereMaterial.h"
 #include "UIMaterial.h"
 #include "VtxColorMaterial.h"
 
@@ -663,6 +664,9 @@ Material *RendererOGL::CreateMaterial(const MaterialDescriptor &d)
 		break;
 	case EFFECT_GASSPHERE_TERRAIN:
 		mat = new OGL::GasGiantSurfaceMaterial();
+		break;
+	case EFFECT_CLOUD_SPHERE:
+		mat = new OGL::CloudSphereMaterial();
 		break;
 	default:
 		if (desc.lighting)

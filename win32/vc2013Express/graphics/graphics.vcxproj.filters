@@ -68,6 +68,9 @@
     <ClCompile Include="..\..\..\src\graphics\opengl\gl_core_3_x.c">
       <Filter>opengl</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\graphics\opengl\CloudSphereMaterial.cpp">
+      <Filter>opengl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\graphics\Drawables.h" />
@@ -144,6 +147,9 @@
       <Filter>opengl</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\graphics\opengl\gl_core_3_x.h">
+      <Filter>opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\graphics\opengl\CloudSphereMaterial.h">
       <Filter>opengl</Filter>
     </ClInclude>
   </ItemGroup>

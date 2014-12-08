@@ -66,6 +66,7 @@ protected:
 	Graphics::RenderState *m_atmosRenderState;
 	std::unique_ptr<Graphics::Material> m_surfaceMaterial;
 	std::unique_ptr<Graphics::Material> m_atmosphereMaterial;
+	RefCountedPtr<Graphics::Material> m_cloudMaterial;
 
 	//special parameters for shaders
 	MaterialParameters m_materialParameters;
