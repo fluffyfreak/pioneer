@@ -109,7 +109,7 @@ void main(void)
 		(diff*atmosColor) +
 		  diff*sunset +	      //increase fog scatter				
 		  0.4*diff*atmosColor*sunset;  //distant fog.
-	frag_color.a = texColor.a;
+	frag_color.a = texColor.a - 0.5;
 #else
 	frag_color = texColor;
 #endif
