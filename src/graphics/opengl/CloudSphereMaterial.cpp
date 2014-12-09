@@ -59,8 +59,8 @@ Program *CloudSphereMaterial::CreateProgram(const MaterialDescriptor &desc)
 		ss << "#define TEXTURE0\n";
 	if (desc.quality & HAS_ATMOSPHERE)
 		ss << "#define ATMOSPHERE\n";
-	//if (desc.quality & HAS_ECLIPSES)
-	//	ss << "#define ECLIPSE\n";
+	if (desc.quality & HAS_ECLIPSES)
+		ss << "#define ECLIPSE\n";
 	return new Graphics::OGL::CloudSphereProgram("cloudSphere", ss.str());
 }
 
