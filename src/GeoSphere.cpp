@@ -361,7 +361,8 @@ void GeoSphere::Update()
 		break;
 	}
 }
-
+#pragma optimize("",off)
+static bool s_bDrawClouds = true;
 void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView, vector3d campos, const float radius, const float scale, const std::vector<Camera::Shadow> &shadows)
 {
 	// store this for later usage in the update method.
@@ -415,7 +416,6 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView
 	}
 
 	// display the terrain height control-mesh
-	static bool s_bDrawClouds = true;
 	static std::unique_ptr<Graphics::Drawables::Sphere3D> m_ball;
 	const float rad = 1.005f;//m_materialParameters.atmosphere.atmosRadius;
 	const matrix4x4d cloudsTrans(trans * matrix4x4d::ScaleMatrix(rad, rad, rad));
