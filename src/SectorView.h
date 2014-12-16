@@ -17,10 +17,13 @@
 #include "graphics/RenderState.h"
 #include <set>
 
+class Game;
+class Galaxy;
+
 class SectorView: public UIView {
 public:
-	SectorView();
-	SectorView(Serializer::Reader &rd);
+	SectorView(Game* game);
+	SectorView(Serializer::Reader &rd, Game* game);
 	virtual ~SectorView();
 
 	virtual void Update();
@@ -90,6 +93,9 @@ private:
 	void OnKeyPressed(SDL_Keysym *keysym);
 	void OnSearchBoxKeyPress(const SDL_Keysym *keysym);
 
+	Game* m_game;
+	RefCountedPtr<Galaxy> m_galaxy;
+
 	bool m_inSystem;
 
 	SystemPath m_current;
@@ -138,15 +144,15 @@ private:
 	Gui::Label *m_hyperspaceLockLabel;
 
 	Gui::VBox *m_factionBox;
-	std::set<Faction*>              m_visibleFactions;
-	std::set<Faction*>              m_hiddenFactions;
+	std::set<const Faction*>        m_visibleFactions;
+	std::set<const Faction*>        m_hiddenFactions;
 	std::vector<Gui::Label*>        m_visibleFactionLabels;
 	std::vector<Gui::HBox*>         m_visibleFactionRows;
 	std::vector<Gui::ToggleButton*> m_visibleFactionToggles;
 
 	Uint8 m_detailBoxVisible;
 
-	void OnToggleFaction(Gui::ToggleButton* button, bool pressed, Faction* faction);
+	void OnToggleFaction(Gui::ToggleButton* button, bool pressed, const Faction* faction);
 
 	sigc::connection m_onMouseWheelCon;
 	sigc::connection m_onKeyPressConnection;
@@ -181,8 +187,8 @@ private:
 
 	std::unique_ptr<Graphics::VertexArray> m_lineVerts;
 	std::unique_ptr<Graphics::VertexArray> m_secLineVerts;
+	RefCountedPtr<Graphics::Material> m_fresnelMat;
 	std::unique_ptr<Graphics::Drawables::Sphere3D> m_jumpSphere;
-	std::unique_ptr<Graphics::Drawables::Disk> m_jumpDisk;
 	std::unique_ptr<Graphics::VertexArray> m_starVerts;
 };
 

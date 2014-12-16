@@ -167,7 +167,7 @@ namespace
 		std::unique_ptr<STextureFaceRequest> mData;
 		STextureFaceResult *mpResults;
 	};
-};
+}
 
 
 class GasPatchContext : public RefCounted {
@@ -208,7 +208,7 @@ public:
 		indices.reset();
 	}
 
-	int getIndices(std::vector<unsigned short> &pl)
+	int GetIndices(std::vector<unsigned short> &pl)
 	{
 		// calculate how many tri's there are
 		const int tri_count = IDX_VBO_COUNT_ALL_IDX()/3;
@@ -250,7 +250,7 @@ public:
 
 		// populate the N indices lists from the arrays built during InitTerrainIndices()
 		// iterate over each index list and optimize it
-		unsigned int tri_count = getIndices(pl_short);
+		unsigned int tri_count = GetIndices(pl_short);
 		VertexCacheOptimizerUShort vco;
 		VertexCacheOptimizerUShort::Result res = vco.Optimize(&pl_short[0], tri_count);
 		assert(0 == res);
@@ -340,6 +340,7 @@ public:
 		renderer->SetTransform(modelView * matrix4x4d::Translation(relpos));
 
 		Pi::statSceneTris += 2*(ctx->edgeLen-1)*(ctx->edgeLen-1);
+		++Pi::statNumPatches;
 
 		renderer->DrawBufferIndexed(m_vertexBuffer.get(), ctx->indexBuffer.Get(), rs, mat);
 	}
@@ -522,7 +523,7 @@ void GasGiant::GenerateTexture()
 		assert(!m_job[i].HasJob());
 		m_hasJobRequest[i] = true;
 		STextureFaceRequest *ssrd = new STextureFaceRequest(&s_patchFaces[i][0], GetSystemBody()->GetPath(), i, UV_DIMS, GetTerrain());
-		m_job[i] = Pi::Jobs()->Queue(new SingleTextureFaceJob(ssrd));
+		m_job[i] = Pi::GetAsyncJobQueue()->Queue(new SingleTextureFaceJob(ssrd));
 	}
 }
 

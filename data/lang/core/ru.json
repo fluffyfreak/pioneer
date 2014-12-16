@@ -1,4 +1,12 @@
 {
+   "ADVANCED_RADAR_MAPPER" : {
+      "description" : "",
+      "message" : "Расширенный радарный топограф"
+   },
+   "ADVANCED_RADAR_MAPPER_DESCRIPTION" : {
+      "description" : "",
+      "message" : " Радарный топограф дальнего действия с системой широкой зоны покрытия."
+   },
    "AIR_PROCESSORS" : {
       "description" : "",
       "message" : "Воздушные процессоры"
@@ -151,6 +159,10 @@
       "description" : "",
       "message" : "Верхний экран"
    },
+   "CANT_SAVE_DEAD_PLAYER" : {
+      "description" : "",
+      "message" : "Нельзя сохранить игру после того, как игрок умер"
+   },
    "CANT_SAVE_IN_HYPERSPACE" : {
       "description" : "",
       "message" : "Невозможно сохранить игру в гиперпространстве "
@@ -195,6 +207,10 @@
       "description" : "",
       "message" : "Грузосборник сработал. Поймана 1 тонна %item."
    },
+   "CARGO_SCOOP_ATTEMPTED" : {
+      "description" : "",
+      "message" : "Неудачная попытка сбора. Не достаточно места в грузовом отсеке."
+   },
    "CARGO_SCOOP_DESCRIPTION" : {
       "description" : "",
       "message" : "Предназначен для сбора грузовых контейнеров в космическом пространстве."
@@ -222,6 +238,18 @@
    "COMMA_HIGHLY_VOLCANIC" : {
       "description" : "",
       "message" : ", с высокой вулканической активностью"
+   },
+   "COMMODITY_NONE" : {
+      "description" : "When no commodities exist",
+      "message" : "<отсутствует>"
+   },
+   "COMMODITY_TRADE_ANALYSIS_COMPARE" : {
+      "description" : "",
+      "message" : "Анализ торговли товарами системы #ff0%selected_system#fff (выбрана) в соотношении с системой #ff0%current_system#fff (текущая):"
+   },
+   "COMMODITY_TRADE_ANALYSIS_SELF" : {
+      "description" : "",
+      "message" : "Анализ торговли товарами системы #fff%system#fff"
    },
    "COMMS" : {
       "description" : "",
@@ -559,13 +587,33 @@
       "description" : "",
       "message" : "\" Hat\""
    },
+   "HEADING_LOCK_ANTINORMAL" : {
+      "description" : "Autopilot direction (perpendicular, down), relative to plane of orbit",
+      "message" : "Hold anti-normal"
+   },
    "HEADING_LOCK_BACKWARD" : {
-      "description" : "",
-      "message" : "Держать позицию (сзади)"
+      "description" : "Autopilot points/holds/faces you retrograde (backwards rel. orbital direction)",
+      "message" : "Hold retrograde"
    },
    "HEADING_LOCK_FORWARD" : {
+      "description" : "Autopilot points/holds/faces you prograde (tangent to the orbit, i.e. forward), http://wiki.kerbalspaceprogram.com/wiki/Maneuver_node",
+      "message" : "Hold prograde"
+   },
+   "HEADING_LOCK_KILLROT" : {
       "description" : "",
-      "message" : "Держать позицию (спереди)"
+      "message" : "Kill rotation"
+   },
+   "HEADING_LOCK_NORMAL" : {
+      "description" : "Autopilot direction (perpendicular, up), relative to plane of orbit. ",
+      "message" : "Hold normal"
+   },
+   "HEADING_LOCK_RADIALLY_INWARD" : {
+      "description" : "Autopilot direction, relative to orbit (face towards planet)",
+      "message" : "Hold radially in"
+   },
+   "HEADING_LOCK_RADIALLY_OUTWARD" : {
+      "description" : "Autopilot direction, relative to orbit (face away from palent)",
+      "message" : "Hold radially out"
    },
    "HEAVY_INDUSTRY" : {
       "description" : "",
@@ -655,6 +703,10 @@
       "description" : "",
       "message" : "\" с ледяным миром\""
    },
+   "ILLEGAL_CURRENT_SYSTEM" : {
+      "description" : "Short (tooltip) description of commodity (singular) status in the system the player is currently in",
+      "message" : "Нелегальный товар (текущая система):"
+   },
    "ILLEGAL_GOODS" : {
       "description" : "",
       "message" : "Нелегальные товары:"
@@ -709,7 +761,7 @@
    },
    "JOY_AXIS" : {
       "description" : "",
-      "message" : "%{sign}Joy%joynum %axis Ось"
+      "message" : "%{sign}%joyname %axis Ось"
    },
    "KM_S_RELATIVE_TO" : {
       "description" : "",
@@ -747,6 +799,10 @@
       "description" : "",
       "message" : "Внимание! Ваш корабль под атакой!"
    },
+   "LEGAL_CURRENT_SYSTEM" : {
+      "description" : "Short (tooltip) description of commodity (singular) status in the system the player is currently in",
+      "message" : "Легальный товар (текущая система):"
+   },
    "LIBERAL_DEMOCRACY" : {
       "description" : "",
       "message" : "Либеральная демократия"
@@ -767,6 +823,10 @@
       "description" : "",
       "message" : "Животные"
    },
+   "LOCAL_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Рукав Ориона"
+   },
    "LOCKED" : {
       "description" : "",
       "message" : "закрыто"
@@ -775,9 +835,17 @@
       "description" : "",
       "message" : "Основной экспорт:"
    },
+   "MAJOR_EXPORT_CURRENT_SYSTEM" : {
+      "description" : "Short (tooltip) description of how much one commodity trades in the system the player is currently in",
+      "message" : "Основной экспорт (текущая система)"
+   },
    "MAJOR_IMPORTS" : {
       "description" : "",
       "message" : "Основной импорт:"
+   },
+   "MAJOR_IMPORT_CURRENT_SYSTEM" : {
+      "description" : "Short (tooltip) description of how much one commodity trades in the system the player is currently in",
+      "message" : "Основной импорт (текущая система)"
    },
    "MANUAL_CONTROL" : {
       "description" : "",
@@ -915,9 +983,17 @@
       "description" : "",
       "message" : "Вторичный экспорт:"
    },
+   "MINOR_EXPORT_CURRENT_SYSTEM" : {
+      "description" : "Short (tooltip) description of how much one commodity trades in the system the player is currently in",
+      "message" : "Вторичный экспорт (текущая система)"
+   },
    "MINOR_IMPORTS" : {
       "description" : "",
       "message" : "Вторичный импорт:"
+   },
+   "MINOR_IMPORT_CURRENT_SYSTEM" : {
+      "description" : "Short (tooltip) description of how much one commodity trades in the system the player is currently in",
+      "message" : "Вторичный импорт (текущая система)"
    },
    "MISCELLANEOUS" : {
       "description" : "",
@@ -995,6 +1071,14 @@
       "description" : "",
       "message" : "Сен"
    },
+   "MULTI_SCOOP" : {
+      "description" : "A ship equipment: a cargo scoop and fuel scoop combined to one",
+      "message" : "Универсальный "
+   },
+   "MULTI_SCOOP_DESCRIPTION" : {
+      "description" : "",
+      "message" : "Although less effective than a fuel scoop it permits scooping of both cargo and fuel"
+   },
    "MURDER" : {
       "description" : "",
       "message" : "Убийство"
@@ -1028,11 +1112,11 @@
       "message" : "Парализующий газ"
    },
    "NONE" : {
-      "description" : "",
+      "description" : "used for no allegiance, and no rank, and no missions",
       "message" : "<отсутствует>"
    },
    "NORMA_ARM" : {
-      "description" : "",
+      "description" : "Arm of the Milky Way galaxy",
       "message" : "Рукав Лебедя"
    },
    "NOT_FOUND" : {
@@ -1160,7 +1244,7 @@
       "message" : "Открытый сельскохозяйственный мир."
    },
    "OUTER_ARM" : {
-      "description" : "",
+      "description" : "Arm of the Milky Way galaxy",
       "message" : "Внешний рукав"
    },
    "OVER_N_BILLION" : {
@@ -1188,7 +1272,7 @@
       "message" : "Расстояние периапсида"
    },
    "PERSEUS_ARM" : {
-      "description" : "",
+      "description" : "Arm of the Milky Way galaxy",
       "message" : "Рукав Персея"
    },
    "PIONEER" : {
@@ -1226,6 +1310,22 @@
    "PLANNED_ECONOMY" : {
       "description" : "",
       "message" : "Централизованная плановая экономика"
+   },
+   "PLANNER_RESET_FACTOR" : {
+      "description" : "",
+      "message" : "Rate of increase of delta-v values. Click to reset to default."
+   },
+   "PLANNER_RESET_NORMAL" : {
+      "description" : "",
+      "message" : "Normal delta-v. Click to reset to zero."
+   },
+   "PLANNER_RESET_PROGRADE" : {
+      "description" : "",
+      "message" : "Prograde delta-v. Click to reset to zero."
+   },
+   "PLANNER_RESET_RADIAL" : {
+      "description" : "",
+      "message" : "Radial delta-v. Click to reset to zero."
    },
    "PLASTICS" : {
       "description" : "",
@@ -1307,6 +1407,10 @@
       "description" : "",
       "message" : "Зад"
    },
+   "RECENTLY_EXPLORED_SYSTEM" : {
+      "description" : "",
+      "message" : "Эта система была исследована %date."
+   },
    "REQUEST_DOCKING_CLEARANCE" : {
       "description" : "",
       "message" : "Отправить запрос на посадку"
@@ -1376,7 +1480,7 @@
       "message" : "Мусор"
    },
    "SAGITTARIUS_ARM" : {
-      "description" : "",
+      "description" : "Arm of the Milky Way galaxy",
       "message" : "Рукав Стрельца"
    },
    "SCANNER" : {
@@ -1391,12 +1495,16 @@
       "description" : "",
       "message" : "Формирует на дисплее объемную схему расположения значимых объектов в околокорабельном пространстве."
    },
+   "SCOOP" : {
+      "description" : "A general word for cargo scoop or fuel scoop; used to scoop up cargo or fuel",
+      "message" : "Scoop"
+   },
    "SCREENSHOT_FILENAME_TEMPLATE" : {
       "description" : "",
       "message" : "screenshot%index{d08}.png"
    },
    "SCUTUM_CENTAURUS_ARM" : {
-      "description" : "",
+      "description" : "Arm of the Milky Way galaxy",
       "message" : "Рукав Центавра"
    },
    "SEARCH" : {
@@ -1447,6 +1555,10 @@
       "description" : "",
       "message" : "Зафиксировать тягу на уровне %power%%."
    },
+   "SET_NAVTARGET_TO" : {
+      "description" : "",
+      "message" : "Установка навигационной цели:"
+   },
    "SET_SPEED_KM_S" : {
       "description" : "",
       "message" : "Скорость: %speed{f.2} км/с"
@@ -1486,6 +1598,10 @@
    "SHIP" : {
       "description" : "",
       "message" : "Корабль"
+   },
+   "SHIPS_DISPLAY_MODE_TOGGLE" : {
+      "description" : "Either show no ships, show ships, or show ships + their orbits",
+      "message" : "Переключение между режимами отображения корабля."
    },
    "SHIP_ALTITUDE_ABOVE_TERRAIN" : {
       "description" : "",
@@ -1719,6 +1835,14 @@
       "description" : "",
       "message" : "Температура на поверхности"
    },
+   "SWITCHED_TO_PARENT" : {
+      "description" : "Show ship's heading, coordinates are on the celestial sphere (defined by the ecliptic).",
+      "message" : "Switched heading display to system-wide coordinates."
+   },
+   "SWITCHED_TO_ROTATIONAL" : {
+      "description" : "Show ship's heading in planetary coordinates. heading 0 = north, 90 = east, 180 = south, 270 = west.",
+      "message" : "Switched heading display to planetary coordinates."
+   },
    "SYSTEM" : {
       "description" : "",
       "message" : "Система"
@@ -1762,6 +1886,10 @@
    "THIN" : {
       "description" : "",
       "message" : "тонкой"
+   },
+   "THREE_KPC_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Рукав в 3 кпк от центра"
    },
    "THRIVING_OUTDOOR_WORLD" : {
       "description" : "",
@@ -1819,6 +1947,14 @@
       "description" : "",
       "message" : "ПОКОЙСЯ С МИРОМ, СТАРИНА"
    },
+   "TRADE_ANALYZER" : {
+      "description" : "Ship equipment computing profitable commodities to trade between two systems",
+      "message" : "Анализатор торговли"
+   },
+   "TRADE_ANALYZER_DESCRIPTION" : {
+      "description" : "",
+      "message" : "Shows profitable commodities to trade between selected and current system"
+   },
    "TRADING_ILLEGAL_GOODS" : {
       "description" : "",
       "message" : "Торговая нелегальными товарами"
@@ -1854,6 +1990,10 @@
    "UNOCCUPIED_CABIN_DESCRIPTION" : {
       "description" : "",
       "message" : "Для перевозки каждого дополнительного пассажира требуется отдельная каюта."
+   },
+   "UNSET_NAVTARGET" : {
+      "description" : "",
+      "message" : "Сброс навигационной цели."
    },
    "USE_LOW_THRUST" : {
       "description" : "",

@@ -5,7 +5,6 @@ local Engine = import("Engine")
 local Lang = import("Lang")
 local Game = import("Game")
 local ShipDef = import("ShipDef")
-local EquipDef = import("EquipDef")
 
 local EquipmentTableWidgets = import("EquipmentTableWidgets")
 
@@ -17,6 +16,9 @@ local commodityMarket = function (args)
 	local stationTable, shipTable = EquipmentTableWidgets.Pair({
 		stationColumns = { "icon", "name", "price", "stock" },
 		shipColumns = { "icon", "name", "amount" },
+		getSellPrice = function (e)
+			return Game.player:GetDockedWith():GetEquipmentPrice(e)
+		end,
 	})
 
 	return

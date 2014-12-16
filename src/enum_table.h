@@ -10,10 +10,9 @@
 struct EnumItem { const char *name; int value; };
 struct EnumTable { const char *name; const EnumItem *first; };
 
-extern const struct EnumItem ENUM_EquipSlot[];
-extern const struct EnumItem ENUM_EquipType[];
 extern const struct EnumItem ENUM_DetailLevel[];
 extern const struct EnumItem ENUM_FileSystemRoot[];
+extern const struct EnumItem ENUM_PhysicsObjectType[];
 extern const struct EnumItem ENUM_PolitCrime[];
 extern const struct EnumItem ENUM_PolitEcon[];
 extern const struct EnumItem ENUM_PolitGovType[];
@@ -26,6 +25,7 @@ extern const struct EnumItem ENUM_ShipTypeThruster[];
 extern const struct EnumItem ENUM_DualLaserOrientation[];
 extern const struct EnumItem ENUM_ShipTypeTag[];
 extern const struct EnumItem ENUM_EconType[];
+extern const struct EnumItem ENUM_CommodityType[];
 extern const struct EnumItem ENUM_BodyType[];
 extern const struct EnumItem ENUM_BodySuperType[];
 extern const struct EnumItem ENUM_GameUIFaceFlags[];

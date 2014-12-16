@@ -44,7 +44,7 @@ namespace
 		}
 		return num_matching;
 	}
-};
+}
 
 namespace Background
 {
@@ -364,7 +364,7 @@ Container::Container(Graphics::Renderer *renderer, Random &rand)
 	rsd.depthWrite = false;
 	m_renderState = renderer->CreateRenderState(rsd);
 	Refresh(rand);
-};
+}
 
 void Container::Refresh(Random &rand)
 {
@@ -394,6 +394,7 @@ void Container::Draw(const matrix4x4d &transform)
 void Container::SetIntensity(float intensity)
 {
 	PROFILE_SCOPED()
+	intensity = Clamp(intensity, 0.0f, 1.0f);
 	m_universeBox.SetIntensity(intensity);
 	m_starField.SetIntensity(intensity);
 	m_milkyWay.SetIntensity(intensity);

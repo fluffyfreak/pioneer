@@ -1,4 +1,12 @@
 {
+   "ADVANCED_RADAR_MAPPER" : {
+      "description" : "",
+      "message" : "Fejlett Radartérképező"
+   },
+   "ADVANCED_RADAR_MAPPER_DESCRIPTION" : {
+      "description" : "",
+      "message" : "Nagy hatótávú Radar térképező rendszerszintű lefedettséggel."
+   },
    "AIR_PROCESSORS" : {
       "description" : "",
       "message" : "Levegőfeldolgozók"
@@ -151,6 +159,10 @@
       "description" : "",
       "message" : "Felső kamera"
    },
+   "CANT_SAVE_DEAD_PLAYER" : {
+      "description" : "",
+      "message" : "Nem lehet menteni, mert a játékos halott"
+   },
    "CANT_SAVE_IN_HYPERSPACE" : {
       "description" : "",
       "message" : "Nem lehet hiperűrugrás alatt menteni"
@@ -195,6 +207,10 @@
       "description" : "",
       "message" : "Rakományszívó aktív. Begyűjtve 1 tonna %item."
    },
+   "CARGO_SCOOP_ATTEMPTED" : {
+      "description" : "",
+      "message" : "Rakomány szívása sikertelen, nincs hely a raktérben."
+   },
    "CARGO_SCOOP_DESCRIPTION" : {
       "description" : "",
       "message" : "Lehetővé teszi rakománytartály felszedését az űrből."
@@ -222,6 +238,18 @@
    "COMMA_HIGHLY_VOLCANIC" : {
       "description" : "",
       "message" : ", erősen vulkanikus"
+   },
+   "COMMODITY_NONE" : {
+      "description" : "When no commodities exist",
+      "message" : "Semmi"
+   },
+   "COMMODITY_TRADE_ANALYSIS_COMPARE" : {
+      "description" : "",
+      "message" : "#ff0%selected_system#fff (kijelölt) és #ff0%current_system#fff (jelenlegi) rendszerek kereskedelmi összehasonlító elemzése:"
+   },
+   "COMMODITY_TRADE_ANALYSIS_SELF" : {
+      "description" : "",
+      "message" : "#fff%system#fff rendszer kereskedelmi elemzése"
    },
    "COMMS" : {
       "description" : "",
@@ -559,13 +587,33 @@
       "description" : "",
       "message" : "\" Hat\""
    },
+   "HEADING_LOCK_ANTINORMAL" : {
+      "description" : "Autopilot direction (perpendicular, down), relative to plane of orbit",
+      "message" : "Antinormál irány tartása"
+   },
    "HEADING_LOCK_BACKWARD" : {
-      "description" : "",
-      "message" : "Iránykövetés (retrográd)"
+      "description" : "Autopilot points/holds/faces you retrograde (backwards rel. orbital direction)",
+      "message" : "Retrográd irány tartása"
    },
    "HEADING_LOCK_FORWARD" : {
+      "description" : "Autopilot points/holds/faces you prograde (tangent to the orbit, i.e. forward), http://wiki.kerbalspaceprogram.com/wiki/Maneuver_node",
+      "message" : "Prográd irány tartása"
+   },
+   "HEADING_LOCK_KILLROT" : {
       "description" : "",
-      "message" : "Iránykövetés (prográd)"
+      "message" : "Forgás megállítása"
+   },
+   "HEADING_LOCK_NORMAL" : {
+      "description" : "Autopilot direction (perpendicular, up), relative to plane of orbit. ",
+      "message" : "Normál irány tartása"
+   },
+   "HEADING_LOCK_RADIALLY_INWARD" : {
+      "description" : "Autopilot direction, relative to orbit (face towards planet)",
+      "message" : "Kifelé sugárirány tartása"
+   },
+   "HEADING_LOCK_RADIALLY_OUTWARD" : {
+      "description" : "Autopilot direction, relative to orbit (face away from palent)",
+      "message" : "Befelé sugárirány tartása"
    },
    "HEAVY_INDUSTRY" : {
       "description" : "",
@@ -655,6 +703,10 @@
       "description" : "",
       "message" : "\" jégvilág\""
    },
+   "ILLEGAL_CURRENT_SYSTEM" : {
+      "description" : "Short (tooltip) description of commodity (singular) status in the system the player is currently in",
+      "message" : "Illegális (jelenlegi rendszer):"
+   },
    "ILLEGAL_GOODS" : {
       "description" : "",
       "message" : "Illegális áruk:"
@@ -709,7 +761,7 @@
    },
    "JOY_AXIS" : {
       "description" : "",
-      "message" : "%{sign}Joy%joynum %axis tengely"
+      "message" : "%{sign}%joyname %axis tengely"
    },
    "KM_S_RELATIVE_TO" : {
       "description" : "",
@@ -747,6 +799,10 @@
       "description" : "",
       "message" : "Lézerlövés érzékelve."
    },
+   "LEGAL_CURRENT_SYSTEM" : {
+      "description" : "Short (tooltip) description of commodity (singular) status in the system the player is currently in",
+      "message" : "Legális (jelenlegi rendszer):"
+   },
    "LIBERAL_DEMOCRACY" : {
       "description" : "",
       "message" : "Liberális demokrácia"
@@ -767,6 +823,10 @@
       "description" : "",
       "message" : "Élőállat"
    },
+   "LOCAL_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Helyi kar"
+   },
    "LOCKED" : {
       "description" : "",
       "message" : "zárolt"
@@ -775,9 +835,17 @@
       "description" : "",
       "message" : "Főbb export:"
    },
+   "MAJOR_EXPORT_CURRENT_SYSTEM" : {
+      "description" : "Short (tooltip) description of how much one commodity trades in the system the player is currently in",
+      "message" : "Főbb export (jelenlegi rendszer):"
+   },
    "MAJOR_IMPORTS" : {
       "description" : "",
       "message" : "Főbb import:"
+   },
+   "MAJOR_IMPORT_CURRENT_SYSTEM" : {
+      "description" : "Short (tooltip) description of how much one commodity trades in the system the player is currently in",
+      "message" : "Főbb import (jelenlegi rendszer):"
    },
    "MANUAL_CONTROL" : {
       "description" : "",
@@ -915,9 +983,17 @@
       "description" : "",
       "message" : "További export:"
    },
+   "MINOR_EXPORT_CURRENT_SYSTEM" : {
+      "description" : "Short (tooltip) description of how much one commodity trades in the system the player is currently in",
+      "message" : "További export (jelenlegi rendszer):"
+   },
    "MINOR_IMPORTS" : {
       "description" : "",
       "message" : "További import:"
+   },
+   "MINOR_IMPORT_CURRENT_SYSTEM" : {
+      "description" : "Short (tooltip) description of how much one commodity trades in the system the player is currently in",
+      "message" : "További import (jelenlegi rendszer)"
    },
    "MISCELLANEOUS" : {
       "description" : "",
@@ -995,6 +1071,14 @@
       "description" : "",
       "message" : "Szep"
    },
+   "MULTI_SCOOP" : {
+      "description" : "A ship equipment: a cargo scoop and fuel scoop combined to one",
+      "message" : "Kombinált szívó"
+   },
+   "MULTI_SCOOP_DESCRIPTION" : {
+      "description" : "",
+      "message" : "Bár kevésbé hatékony üzemanyagszívó üzemmódban, mint a hagyományos üzemanyagszívó de lehetővé teszi rakomány befogását is."
+   },
    "MURDER" : {
       "description" : "",
       "message" : "Gyilkosság"
@@ -1028,11 +1112,11 @@
       "message" : "Ideggáz"
    },
    "NONE" : {
-      "description" : "",
+      "description" : "used for no allegiance, and no rank, and no missions",
       "message" : "Nincs"
    },
    "NORMA_ARM" : {
-      "description" : "",
+      "description" : "Arm of the Milky Way galaxy",
       "message" : "Norma kar"
    },
    "NOT_FOUND" : {
@@ -1160,7 +1244,7 @@
       "message" : "Szabadföldi agrikulturális világ"
    },
    "OUTER_ARM" : {
-      "description" : "",
+      "description" : "Arm of the Milky Way galaxy",
       "message" : "Külső kar"
    },
    "OVER_N_BILLION" : {
@@ -1188,7 +1272,7 @@
       "message" : "Periapszis"
    },
    "PERSEUS_ARM" : {
-      "description" : "",
+      "description" : "Arm of the Milky Way galaxy",
       "message" : "Perseus kar"
    },
    "PIONEER" : {
@@ -1226,6 +1310,22 @@
    "PLANNED_ECONOMY" : {
       "description" : "",
       "message" : "Központi tervgazdálkodás"
+   },
+   "PLANNER_RESET_FACTOR" : {
+      "description" : "",
+      "message" : "Delta-V lépték. Vissza alapértékre."
+   },
+   "PLANNER_RESET_NORMAL" : {
+      "description" : "",
+      "message" : "Normálirányú delta-v. Vissza alapértékre."
+   },
+   "PLANNER_RESET_PROGRADE" : {
+      "description" : "",
+      "message" : "Prográd delta-v. Vissza alapértékre."
+   },
+   "PLANNER_RESET_RADIAL" : {
+      "description" : "",
+      "message" : "Sugárirányú delta-v. Vissza alapértékre."
    },
    "PLASTICS" : {
       "description" : "",
@@ -1307,6 +1407,10 @@
       "description" : "",
       "message" : "Hátsó"
    },
+   "RECENTLY_EXPLORED_SYSTEM" : {
+      "description" : "",
+      "message" : "Felderítve: "
+   },
    "REQUEST_DOCKING_CLEARANCE" : {
       "description" : "",
       "message" : "Dokkolási engedély kérése"
@@ -1376,7 +1480,7 @@
       "message" : "Hulladék"
    },
    "SAGITTARIUS_ARM" : {
-      "description" : "",
+      "description" : "Arm of the Milky Way galaxy",
       "message" : "Sagittarius kar"
    },
    "SCANNER" : {
@@ -1391,12 +1495,16 @@
       "description" : "",
       "message" : "Egy 3D térképet jelenít meg a közeli hajókról."
    },
+   "SCOOP" : {
+      "description" : "A general word for cargo scoop or fuel scoop; used to scoop up cargo or fuel",
+      "message" : "Szívó"
+   },
    "SCREENSHOT_FILENAME_TEMPLATE" : {
       "description" : "",
       "message" : "screenshot%index{d08}.png"
    },
    "SCUTUM_CENTAURUS_ARM" : {
-      "description" : "",
+      "description" : "Arm of the Milky Way galaxy",
       "message" : "Scutum-Centaurus kar"
    },
    "SEARCH" : {
@@ -1447,6 +1555,10 @@
       "description" : "",
       "message" : "Tolóerő korlátozása %power%%-ra."
    },
+   "SET_NAVTARGET_TO" : {
+      "description" : "",
+      "message" : "Navigációs cél:"
+   },
    "SET_SPEED_KM_S" : {
       "description" : "",
       "message" : "Seb: %speed{f.2} km/s"
@@ -1486,6 +1598,10 @@
    "SHIP" : {
       "description" : "",
       "message" : "Hajó"
+   },
+   "SHIPS_DISPLAY_MODE_TOGGLE" : {
+      "description" : "Either show no ships, show ships, or show ships + their orbits",
+      "message" : "Hajó kijelzési mód váltása."
    },
    "SHIP_ALTITUDE_ABOVE_TERRAIN" : {
       "description" : "",
@@ -1719,6 +1835,14 @@
       "description" : "",
       "message" : "Felszíni hőmérséklet"
    },
+   "SWITCHED_TO_PARENT" : {
+      "description" : "Show ship's heading, coordinates are on the celestial sphere (defined by the ecliptic).",
+      "message" : "Irányszög kijelző a rendszer koordinátarendszeréhez állítva."
+   },
+   "SWITCHED_TO_ROTATIONAL" : {
+      "description" : "Show ship's heading in planetary coordinates. heading 0 = north, 90 = east, 180 = south, 270 = west.",
+      "message" : "Irányszög kijelző a bolygó koordinátarendszeréhez állítva."
+   },
    "SYSTEM" : {
       "description" : "",
       "message" : "Rendszer"
@@ -1762,6 +1886,10 @@
    "THIN" : {
       "description" : "",
       "message" : "vékony"
+   },
+   "THREE_KPC_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "3kpsz kar"
    },
    "THRIVING_OUTDOOR_WORLD" : {
       "description" : "",
@@ -1819,6 +1947,14 @@
       "description" : "",
       "message" : "Ég veled barátom!"
    },
+   "TRADE_ANALYZER" : {
+      "description" : "Ship equipment computing profitable commodities to trade between two systems",
+      "message" : "Piacelemző"
+   },
+   "TRADE_ANALYZER_DESCRIPTION" : {
+      "description" : "",
+      "message" : "Kiemeli a jelenlegi és a cél rendszer között várhatóan profittal értékesíthető termékeket."
+   },
    "TRADING_ILLEGAL_GOODS" : {
       "description" : "",
       "message" : "Illegális termékek kereskedelme"
@@ -1854,6 +1990,10 @@
    "UNOCCUPIED_CABIN_DESCRIPTION" : {
       "description" : "",
       "message" : "Szükséges egy személy szállításához"
+   },
+   "UNSET_NAVTARGET" : {
+      "description" : "",
+      "message" : "Navigációs cél törlése"
    },
    "USE_LOW_THRUST" : {
       "description" : "",

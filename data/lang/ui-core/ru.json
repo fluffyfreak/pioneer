@@ -47,6 +47,10 @@
       "description" : "",
       "message" : "Служба объявлений"
    },
+   "BUY" : {
+      "description" : "Commodities and equipment prices",
+      "message" : "[+]"
+   },
    "BUY_SHIP" : {
       "description" : "",
       "message" : "Купить"
@@ -80,6 +84,10 @@
       "message" : "Трюм"
    },
    "CARGO_SPACE" : {
+      "description" : "",
+      "message" : "Грузоподъёмность"
+   },
+   "CARGO_SPACE_USED" : {
       "description" : "",
       "message" : "Грузовой отсек"
    },
@@ -139,6 +147,10 @@
       "description" : "",
       "message" : "Торговый центр"
    },
+   "COMPACT_SCANNER" : {
+      "description" : "",
+      "message" : "Компактный сканер"
+   },
    "COMPETENT" : {
       "description" : "",
       "message" : "Квалифицированный"
@@ -154,6 +166,10 @@
    "CONSTABLE" : {
       "description" : "",
       "message" : "Начальник охраны"
+   },
+   "CONTINUE_GAME" : {
+      "description" : "",
+      "message" : "Продолжить игру"
    },
    "CONTROLS" : {
       "description" : "",
@@ -799,10 +815,6 @@
       "description" : "",
       "message" : "Оценка квалификации"
    },
-   "QUICKLOAD" : {
-      "description" : "",
-      "message" : "Быстрая загрузка"
-   },
    "QUIT" : {
       "description" : "",
       "message" : "Выход"
@@ -882,6 +894,10 @@
    "SELECT_GAME_TO_LOAD" : {
       "description" : "",
       "message" : "Выберите файл для загрузки..."
+   },
+   "SELL" : {
+      "description" : "Commodities and equipment prices",
+      "message" : "[-]"
    },
    "SENSORS" : {
       "description" : "",

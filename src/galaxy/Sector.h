@@ -8,15 +8,17 @@
 #include "galaxy/SystemPath.h"
 #include "galaxy/StarSystem.h"
 #include "galaxy/CustomSystem.h"
-#include "SectorCache.h"
+#include "GalaxyCache.h"
 #include "RefCounted.h"
 #include <string>
 #include <vector>
 
 class Faction;
+class Galaxy;
 
 class Sector : public RefCounted {
-	friend class SectorCache;
+	friend class GalaxyObjectCache<Sector, SystemPath::LessSectorOnly>;
+	friend class GalaxyGenerator;
 
 public:
 	// lightyears
@@ -24,60 +26,87 @@ public:
 	~Sector();
 
 	static float DistanceBetween(RefCountedPtr<const Sector> a, int sysIdxA, RefCountedPtr<const Sector> b, int sysIdxB);
-	static void Init();
-
-	static SectorCache cache;
 
 	// Sector is within a bounding rectangle - used for SectorView m_sectorCache pruning.
 	bool WithinBox(const int Xmin, const int Xmax, const int Ymin, const int Ymax, const int Zmin, const int Zmax) const;
 	bool Contains(const SystemPath &sysPath) const;
 
 	// get the SystemPath for this sector
-	SystemPath GetSystemPath() const { return SystemPath(sx, sy, sz); }
+	SystemPath GetPath() const { return SystemPath(sx, sy, sz); }
 
 	class System {
 	public:
-		System(int x, int y, int z, Uint32 si): numStars(0), seed(0), customSys(nullptr), faction(nullptr), population(-1),
-			explored(false), sx(x), sy(y), sz(z), idx(si) {};
-		~System() {};
+		System(Sector* sector, int x, int y, int z, Uint32 si) : sx(x), sy(y), sz(z), idx(si), m_sector(sector),
+			m_numStars(0), m_seed(0), m_customSys(nullptr), m_faction(nullptr), m_population(-1),
+			m_explored(StarSystem::eUNEXPLORED), m_exploredTime(0.0) {}
+
+		static float DistanceBetween(const System* a, const System* b);
 
 		// Check that we've had our habitation status set
 
-		// public members
-		std::string name;
-		vector3f p;
-		int numStars;
-		SystemBody::BodyType starType[4];
-		Uint32 seed;
-		const CustomSystem *customSys;
-		Faction *faction;
-		fixed population;
-		bool explored;
+		const std::string& GetName() const { return m_name; }
+		const vector3f& GetPosition() const { return m_pos; }
+		vector3f GetFullPosition() const { return Sector::SIZE*vector3f(float(sx), float(sy), float(sz)) + m_pos; };
+		unsigned GetNumStars() const { return m_numStars; }
+		SystemBody::BodyType GetStarType(unsigned i) const { assert(i < m_numStars); return m_starType[i]; }
+		Uint32 GetSeed() const { return m_seed; }
+		const CustomSystem* GetCustomSystem() const { return m_customSys; }
+		const Faction* GetFaction() const { if (!m_faction) AssignFaction(); return m_faction; }
+		fixed GetPopulation() const { return m_population; }
+		void SetPopulation(fixed pop) { m_population = pop; }
+		StarSystem::ExplorationState GetExplored() const { return m_explored; }
+		double GetExploredTime() const { return m_exploredTime; }
+		bool IsExplored() const { return m_explored != StarSystem::eUNEXPLORED; }
+		void SetExplored(StarSystem::ExplorationState e, double time);
 
-		vector3f FullPosition() { return Sector::SIZE*vector3f(float(sx), float(sy), float(sz)) + p; };
 		bool IsSameSystem(const SystemPath &b) const {
 			return sx == b.sectorX && sy == b.sectorY && sz == b.sectorZ && idx == b.systemIndex;
+		}
+		bool InSameSector(const SystemPath &b) const {
+			return sx == b.sectorX && sy == b.sectorY && sz == b.sectorZ;
 		}
 
 		const int sx, sy, sz;
 		const Uint32 idx;
+
+	private:
+		friend class Sector;
+		friend class SectorCustomSystemsGenerator;
+		friend class SectorRandomSystemsGenerator;
+		friend class SectorPersistenceGenerator;
+
+		void AssignFaction() const;
+
+		Sector* m_sector;
+		std::string m_name;
+		vector3f m_pos;
+		unsigned m_numStars;
+		SystemBody::BodyType m_starType[4];
+		Uint32 m_seed;
+		const CustomSystem* m_customSys;
+		mutable const Faction* m_faction; // mutable because we only calculate on demand
+		fixed m_population;
+		StarSystem::ExplorationState m_explored;
+		double m_exploredTime;
 	};
 	std::vector<System> m_systems;
+	const int sx, sy, sz;
 
 	void Dump(FILE* file, const char* indent = "") const;
+
+	sigc::signal<void, Sector::System*, StarSystem::ExplorationState, double> onSetExplorationState;
 
 private:
 	Sector(const Sector&); // non-copyable
 	Sector& operator=(const Sector&); // non-assignable
 
-	int sx, sy, sz;
-	bool m_factionsAssigned;
+	RefCountedPtr<Galaxy> m_galaxy;
+	SectorCache* m_cache;
 
-	Sector(const SystemPath& path); // Only SectorCache(Job) are allowed to create sectors
-	void GetCustomSystems(Random& rng);
-	const std::string GenName(System &sys, int si, Random &rand);
+	// Only SectorCache(Job) are allowed to create sectors
+	Sector(RefCountedPtr<Galaxy> galaxy, const SystemPath& path, SectorCache* cache);
+	void SetCache(SectorCache* cache) { assert(!m_cache); m_cache = cache; }
 	// sets appropriate factions for all systems in the sector
-	void AssignFactions();
 };
 
 #endif /* _SECTOR_H */

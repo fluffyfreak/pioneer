@@ -13,6 +13,10 @@ debian/*.debhelper.log
 debian/*.substvars
 debian/pioneer*/
 autom4te.cache/
+codedoc/
+nd/Data/
+doxygen/html
+doxygen/latex
 *.vcxproj.user
 *.user
 *.ncb
@@ -35,6 +39,8 @@ pioneer
 pioneer.exe
 modelviewer
 modelviewer.exe
+modelcompiler
+modelcompiler.exe
 aclocal.m4
 config.guess
 config.log
@@ -56,3 +62,4 @@ gmon.out
 .project
 .cproject
 .dirstamp
+result

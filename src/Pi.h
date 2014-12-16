@@ -14,27 +14,22 @@
 #include "CargoBody.h"
 #include "Space.h"
 #include "JobQueue.h"
+#include "galaxy/Galaxy.h"
 #include <map>
 #include <string>
 #include <vector>
 
-class DeathView;
-class GalacticView;
 class Intro;
 class LuaConsole;
 class LuaNameGen;
 class ModelCache;
 class Player;
-class SectorView;
 class Ship;
-class ShipCpanel;
 class SpaceStation;
 class StarSystem;
-class SystemInfoView;
-class SystemView;
+class TransferPlanner;
 class UIView;
 class View;
-class WorldView;
 class SDLGraphics;
 namespace Graphics { class Renderer; }
 namespace SceneGraph { class Model; }
@@ -52,11 +47,6 @@ struct DetailLevel {
 	int cities;
 };
 
-enum MsgLevel {
-	MSG_NORMAL,
-	MSG_IMPORTANT
-};
-
 class Frame;
 class Game;
 
@@ -66,6 +56,7 @@ public:
 	static void InitGame();
 	static void StarportStart(Uint32 starport);
 	static void StartGame();
+	static void RequestEndGame(); // request that the game is ended as soon as safely possible
 	static void EndGame();
 	static void Start();
 	static void MainLoop();
@@ -82,8 +73,19 @@ public:
 	static float JoystickAxisState(int joystick, int axis);
 	static bool IsJoystickEnabled() { return joystickEnabled; }
 	static void SetJoystickEnabled(bool state) { joystickEnabled = state; }
-    static void SetMouseYInvert(bool state) { mouseYInvert = state; }
-    static bool IsMouseYInvert() { return mouseYInvert; }
+	// User display name for the joystick from the API/OS.
+	static std::string JoystickName(int joystick);
+	static std::string JoystickGUIDString(int joystick);
+	// reverse map a JoystickGUID to the actual internal ID.
+	static int JoystickFromGUIDString(const std::string &guid);
+	static int JoystickFromGUIDString(const char *guid);
+	static int JoystickFromGUID(SDL_JoystickGUID guid);
+	// fetch the GUID for the named joystick
+	static SDL_JoystickGUID JoystickGUID(int joystick);
+	static void SetMouseYInvert(bool state) { mouseYInvert = state; }
+	static bool IsMouseYInvert() { return mouseYInvert; }
+	static void SetCompactScanner(bool state) { compactScanner = state; }
+	static bool IsScannerCompact() { return compactScanner; }
 	static bool IsNavTunnelDisplayed() { return navTunnelDisplayed; }
 	static void SetNavTunnelDisplayed(bool state) { navTunnelDisplayed = state; }
 	static bool AreSpeedLinesDisplayed() { return speedLinesDisplayed; }
@@ -100,11 +102,6 @@ public:
 	static void SetMouseGrab(bool on);
 	static void FlushCaches();
 	static void BoinkNoise();
-	static float CalcHyperspaceRangeMax(int hyperclass, int total_mass_in_tonnes);
-	static float CalcHyperspaceRange(int hyperclass, float total_mass_in_tonnes, int fuel);
-	static float CalcHyperspaceDuration(int hyperclass, int total_mass_in_tonnes, float dist);
-	static float CalcHyperspaceFuelOut(int hyperclass, float dist, float hyperspace_range_max);
-	static void Message(const std::string &message, const std::string &from = "", enum MsgLevel level = MSG_NORMAL);
 	static std::string GetSaveDir();
 	static SceneGraph::Model *FindModel(const std::string&, bool allowPlaceholder = true);
 
@@ -122,7 +119,6 @@ public:
 	static sigc::signal<void, bool> onMouseWheel;
 	static sigc::signal<void> onPlayerChangeTarget; // navigation or combat
 	static sigc::signal<void> onPlayerChangeFlightControlState;
-	static sigc::signal<void> onPlayerChangeEquipment;
 
 	static LuaSerializer *luaSerializer;
 	static LuaTimer *luaTimer;
@@ -133,6 +129,7 @@ public:
 
 	static Random rng;
 	static int statSceneTris;
+	static int statNumPatches;
 
 	static void SetView(View *v);
 	static View *GetView() { return currentView; }
@@ -147,33 +144,21 @@ public:
 #endif
 
 	static Player *player;
-	static SectorView *sectorView;
-	static GalacticView *galacticView;
-	static UIView *settingsView;
-	static SystemInfoView *systemInfoView;
-	static SystemView *systemView;
-	static WorldView *worldView;
-	static DeathView *deathView;
-	static UIView *spaceStationView;
-	static UIView *infoView;
+	static TransferPlanner *planner;
 	static LuaConsole *luaConsole;
-	static ShipCpanel *cpan;
 	static Sound::MusicPlayer &GetMusicPlayer() { return musicPlayer; }
-	static Graphics::Renderer *renderer; // blargh
+	static Graphics::Renderer *renderer;
 	static ModelCache *modelCache;
 	static Intro *intro;
 	static SDLGraphics *sdl;
-
-#if WITH_OBJECTVIEWER
-	static ObjectViewerView *objectViewerView;
-#endif
 
 	static Game *game;
 
 	static struct DetailLevel detail;
 	static GameConfig *config;
 
-	static JobQueue *Jobs() { return jobQueue.get();}
+	static JobQueue *GetAsyncJobQueue() { return asyncJobQueue.get();}
+	static JobQueue *GetSyncJobQueue() { return syncJobQueue.get();}
 
 	static bool DrawGUI;
 
@@ -181,7 +166,9 @@ private:
 	static void HandleEvents();
 	static void InitJoysticks();
 
-	static std::unique_ptr<JobQueue> jobQueue;
+	static const Uint32 SYNC_JOBS_PER_LOOP = 1;
+	static std::unique_ptr<AsyncJobQueue> asyncJobQueue;
+	static std::unique_ptr<SyncJobQueue> syncJobQueue;
 
 	static bool menuDone;
 
@@ -192,9 +179,6 @@ private:
 	  * factor between one physics tick and another [0.0-1.0]
 	  */
 	static float gameTickAlpha;
-	static int timeAccelIdx;
-	static int requestedTimeAccelIdx;
-	static bool forceTimeAccel;
 	static float frameTime;
 	static std::map<SDL_Keycode,bool> keyState;
 	static int keyModState;
@@ -203,12 +187,13 @@ private:
 	static bool doingMouseGrab;
 	static bool warpAfterMouseGrab;
 	static int mouseGrabWarpPos[2];
-	static const float timeAccelRates[];
 
 	static bool joystickEnabled;
 	static bool mouseYInvert;
+	static bool compactScanner;
 	struct JoystickState {
 		SDL_Joystick *joystick;
+		SDL_JoystickGUID guid;
 		std::vector<bool> buttons;
 		std::vector<int> hats;
 		std::vector<float> axes;
@@ -226,6 +211,8 @@ private:
 	static RefCountedPtr<Graphics::Texture> renderTexture;
 	static std::unique_ptr<Graphics::Drawables::TexturedQuad> renderQuad;
 	static Graphics::RenderState *quadRenderState;
+
+	static bool bRequestEndGame;
 };
 
 #endif /* _PI_H */

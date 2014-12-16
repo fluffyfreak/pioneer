@@ -47,6 +47,10 @@
       "description" : "",
       "message" : "Bulletin Board"
    },
+   "BUY" : {
+      "description" : "Commodities and equipment prices",
+      "message" : "Buy"
+   },
    "BUY_SHIP" : {
       "description" : "",
       "message" : "Buy Ship"
@@ -77,11 +81,15 @@
    },
    "CARGO" : {
       "description" : "",
-      "message" : "Cargo"
+      "message" : "Φορτίο"
    },
    "CARGO_SPACE" : {
       "description" : "",
       "message" : "Cargo space"
+   },
+   "CARGO_SPACE_USED" : {
+      "description" : "",
+      "message" : "Cargo space used"
    },
    "CARGO_T_FREE" : {
       "description" : "",
@@ -139,6 +147,10 @@
       "description" : "",
       "message" : "Commodity Market"
    },
+   "COMPACT_SCANNER" : {
+      "description" : "",
+      "message" : "Compact scanner"
+   },
    "COMPETENT" : {
       "description" : "",
       "message" : "Competent"
@@ -154,6 +166,10 @@
    "CONSTABLE" : {
       "description" : "",
       "message" : "Constable"
+   },
+   "CONTINUE_GAME" : {
+      "description" : "",
+      "message" : "Continue game"
    },
    "CONTROLS" : {
       "description" : "",
@@ -365,7 +381,7 @@
    },
    "HANG_UP" : {
       "description" : "",
-      "message" : "Hang up."
+      "message" : "Αποσύνδεση"
    },
    "HARMLESS" : {
       "description" : "",
@@ -405,7 +421,7 @@
    },
    "HULL_INTEGRITY" : {
       "description" : "",
-      "message" : "Hull integrity"
+      "message" : "Ακεραιότητα κύτους"
    },
    "HULL_REPAIRED_BY_NAME_NOW_AT_N_PERCENT" : {
       "description" : "",
@@ -557,7 +573,7 @@
    },
    "MASS" : {
       "description" : "",
-      "message" : "Mass"
+      "message" : "Μάζα"
    },
    "MASTER" : {
       "description" : "For player reputation",
@@ -605,7 +621,7 @@
    },
    "METAL_ALLOYS" : {
       "description" : "",
-      "message" : "Metal alloys"
+      "message" : "Κράματα Μετάλλου"
    },
    "MILITARY" : {
       "description" : "",
@@ -799,10 +815,6 @@
       "description" : "",
       "message" : "Qualification scores"
    },
-   "QUICKLOAD" : {
-      "description" : "",
-      "message" : "Quickload"
-   },
    "QUIT" : {
       "description" : "",
       "message" : "Quit"
@@ -882,6 +894,10 @@
    "SELECT_GAME_TO_LOAD" : {
       "description" : "",
       "message" : "Select game to load..."
+   },
+   "SELL" : {
+      "description" : "Commodities and equipment prices",
+      "message" : "Sell"
    },
    "SENSORS" : {
       "description" : "",

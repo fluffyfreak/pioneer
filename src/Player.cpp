@@ -19,9 +19,35 @@
 static Sound::Event s_soundUndercarriage;
 static Sound::Event s_soundHyperdrive;
 
+static int onEquipChangeListener(lua_State *l) {
+	Player *p = LuaObject<Player>::GetFromLua(lua_upvalueindex(1));
+	p->onChangeEquipment.emit();
+	return 0;
+}
+
+static void registerEquipChangeListener(Player *player) {
+	lua_State *l = Lua::manager->GetLuaState();
+	LUA_DEBUG_START(l);
+
+	LuaObject<Player>::PushToLua(player);
+	lua_pushcclosure(l, onEquipChangeListener, 1);
+	LuaRef lr(Lua::manager->GetLuaState(), -1);
+	ScopedTable(player->GetEquipSet()).CallMethod("AddListener", lr);
+	lua_pop(l, 1);
+
+	LUA_DEBUG_END(l, 0);
+}
+
 Player::Player(ShipType::Id shipId): Ship(shipId)
 {
 	SetController(new PlayerShipController());
+	InitCockpit();
+	registerEquipChangeListener(this);
+}
+
+void Player::SetShipType(const ShipType::Id &shipId) {
+	Ship::SetShipType(shipId);
+	registerEquipChangeListener(this);
 	InitCockpit();
 }
 
@@ -35,6 +61,7 @@ void Player::Load(Serializer::Reader &rd, Space *space)
 	Pi::player = this;
 	Ship::Load(rd, space);
 	InitCockpit();
+	registerEquipChangeListener(this);
 }
 
 void Player::InitCockpit()
@@ -106,24 +133,24 @@ void Player::SetAlertState(Ship::AlertState as)
 	switch (as) {
 		case ALERT_NONE:
 			if (prev != ALERT_NONE)
-				Pi::cpan->MsgLog()->Message("", Lang::ALERT_CANCELLED);
+				Pi::game->log->Add(Lang::ALERT_CANCELLED);
 			break;
 
 		case ALERT_SHIP_NEARBY:
 			if (prev == ALERT_NONE)
-				Pi::cpan->MsgLog()->ImportantMessage("", Lang::SHIP_DETECTED_NEARBY);
+				Pi::game->log->Add(Lang::SHIP_DETECTED_NEARBY);
 			else
-				Pi::cpan->MsgLog()->ImportantMessage("", Lang::DOWNGRADING_ALERT_STATUS);
+				Pi::game->log->Add(Lang::DOWNGRADING_ALERT_STATUS);
 			Sound::PlaySfx("OK");
 			break;
 
 		case ALERT_SHIP_FIRING:
-			Pi::cpan->MsgLog()->ImportantMessage("", Lang::LASER_FIRE_DETECTED);
+			Pi::game->log->Add(Lang::LASER_FIRE_DETECTED);
 			Sound::PlaySfx("warning", 0.2f, 0.2f, 0);
 			break;
 	}
 
-	Pi::cpan->SetAlertState(as);
+	Pi::game->GetCpan()->SetAlertState(as);
 
 	Ship::SetAlertState(as);
 }
@@ -150,7 +177,7 @@ void Player::OnEnterHyperspace()
 	SetNavTarget(0);
 	SetCombatTarget(0);
 
-	Pi::worldView->HideTargetActions(); // hide the comms menu
+	Pi::game->GetWorldView()->HideTargetActions(); // hide the comms menu
 	m_controller->SetFlightControlState(CONTROL_MANUAL); //could set CONTROL_HYPERDRIVE
 	ClearThrusterState();
 	Pi::game->WantHyperspace();
@@ -160,7 +187,7 @@ void Player::OnEnterSystem()
 {
 	m_controller->SetFlightControlState(CONTROL_MANUAL);
 	//XXX don't call sectorview from here, use signals instead
-	Pi::sectorView->ResetHyperspaceTarget();
+	Pi::game->GetSectorView()->ResetHyperspaceTarget();
 }
 
 //temporary targeting stuff
@@ -206,26 +233,10 @@ Ship::HyperjumpStatus Player::InitiateHyperjumpTo(const SystemPath &dest, int wa
 	return status;
 }
 
-Ship::HyperjumpStatus Player::StartHyperspaceCountdown(const SystemPath &dest)
-{
-	HyperjumpStatus status = Ship::StartHyperspaceCountdown(dest);
-
-	if (status == HYPERJUMP_OK)
-		s_soundHyperdrive.Play("Hyperdrive_Charge");
-
-	return status;
-}
-
 void Player::AbortHyperjump()
 {
 	s_soundHyperdrive.Play("Hyperdrive_Abort");
 	Ship::AbortHyperjump();
-}
-
-void Player::ResetHyperspaceCountdown()
-{
-	s_soundHyperdrive.Play("Hyperdrive_Abort");
-	Ship::ResetHyperspaceCountdown();
 }
 
 void Player::OnCockpitActivated()

@@ -1,4 +1,12 @@
 {
+   "ADVANCED_RADAR_MAPPER" : {
+      "description" : "",
+      "message" : "Radar cartographique avancé"
+   },
+   "ADVANCED_RADAR_MAPPER_DESCRIPTION" : {
+      "description" : "",
+      "message" : "Radar cartographique avancé, avec couverture large du système"
+   },
    "AIR_PROCESSORS" : {
       "description" : "",
       "message" : "Processeurs d'air"
@@ -61,7 +69,7 @@
    },
    "AUTOMATIC_SYSTEM_SELECTION" : {
       "description" : "",
-      "message" : "Automatic system selection"
+      "message" : "Sélection automatique de système"
    },
    "AUTOPILOT" : {
       "description" : "",
@@ -151,6 +159,10 @@
       "description" : "",
       "message" : "Vue de dessus"
    },
+   "CANT_SAVE_DEAD_PLAYER" : {
+      "description" : "",
+      "message" : "Impossible de sauvegarder une fois que le joueur est mort."
+   },
    "CANT_SAVE_IN_HYPERSPACE" : {
       "description" : "",
       "message" : "Impossible de sauvegarder en hyperspace"
@@ -195,6 +207,10 @@
       "description" : "",
       "message" : "Récupérateur de cargaison actif: 1t de %item récupérée"
    },
+   "CARGO_SCOOP_ATTEMPTED" : {
+      "description" : "",
+      "message" : "Tentative de récupération de cargo avortée. Pas assez de place dans la soute."
+   },
    "CARGO_SCOOP_DESCRIPTION" : {
       "description" : "",
       "message" : "Permet de récupérer des conteneurs dans l'espace."
@@ -222,6 +238,18 @@
    "COMMA_HIGHLY_VOLCANIC" : {
       "description" : "",
       "message" : ", hautement volcanique"
+   },
+   "COMMODITY_NONE" : {
+      "description" : "When no commodities exist",
+      "message" : "Aucun"
+   },
+   "COMMODITY_TRADE_ANALYSIS_COMPARE" : {
+      "description" : "",
+      "message" : "Comparaison des marchés des systèmes #ff0%selected_system#fff (sélectionné) et #ff0%current_system#fff (actuel):"
+   },
+   "COMMODITY_TRADE_ANALYSIS_SELF" : {
+      "description" : "",
+      "message" : "Analyse du marché du système #fff%system#fff"
    },
    "COMMS" : {
       "description" : "",
@@ -559,13 +587,33 @@
       "description" : "",
       "message" : "\"Couv\""
    },
+   "HEADING_LOCK_ANTINORMAL" : {
+      "description" : "Autopilot direction (perpendicular, down), relative to plane of orbit",
+      "message" : "Hold anti-normal"
+   },
    "HEADING_LOCK_BACKWARD" : {
-      "description" : "",
-      "message" : "Trajectoire vérouillée (AV)"
+      "description" : "Autopilot points/holds/faces you retrograde (backwards rel. orbital direction)",
+      "message" : "Maintenir rétropoussée"
    },
    "HEADING_LOCK_FORWARD" : {
+      "description" : "Autopilot points/holds/faces you prograde (tangent to the orbit, i.e. forward), http://wiki.kerbalspaceprogram.com/wiki/Maneuver_node",
+      "message" : "Maintenir poussée"
+   },
+   "HEADING_LOCK_KILLROT" : {
       "description" : "",
-      "message" : "Trajectoire vérouillée (AR)"
+      "message" : "Stop la rotation"
+   },
+   "HEADING_LOCK_NORMAL" : {
+      "description" : "Autopilot direction (perpendicular, up), relative to plane of orbit. ",
+      "message" : "Maintenir cap"
+   },
+   "HEADING_LOCK_RADIALLY_INWARD" : {
+      "description" : "Autopilot direction, relative to orbit (face towards planet)",
+      "message" : "Hold radially in"
+   },
+   "HEADING_LOCK_RADIALLY_OUTWARD" : {
+      "description" : "Autopilot direction, relative to orbit (face away from palent)",
+      "message" : "Hold radially out"
    },
    "HEAVY_INDUSTRY" : {
       "description" : "",
@@ -655,6 +703,10 @@
       "description" : "",
       "message" : "\" Monde glacé\""
    },
+   "ILLEGAL_CURRENT_SYSTEM" : {
+      "description" : "Short (tooltip) description of commodity (singular) status in the system the player is currently in",
+      "message" : "Illégal (système actuel):"
+   },
    "ILLEGAL_GOODS" : {
       "description" : "",
       "message" : "Contrebande:"
@@ -709,7 +761,7 @@
    },
    "JOY_AXIS" : {
       "description" : "",
-      "message" : "%{sign}Joy%joynum %axis Axe"
+      "message" : "%{sign}%joyname Axe %axis"
    },
    "KM_S_RELATIVE_TO" : {
       "description" : "",
@@ -747,6 +799,10 @@
       "description" : "",
       "message" : "Détection de tirs laser."
    },
+   "LEGAL_CURRENT_SYSTEM" : {
+      "description" : "Short (tooltip) description of commodity (singular) status in the system the player is currently in",
+      "message" : "Légal (système actuel)"
+   },
    "LIBERAL_DEMOCRACY" : {
       "description" : "",
       "message" : "Démocratie libérale"
@@ -767,6 +823,10 @@
       "description" : "",
       "message" : "Animaux vivants"
    },
+   "LOCAL_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Bras de la voie lactée local"
+   },
    "LOCKED" : {
       "description" : "",
       "message" : "verrouillé"
@@ -775,9 +835,17 @@
       "description" : "",
       "message" : "Exportations majeures :"
    },
+   "MAJOR_EXPORT_CURRENT_SYSTEM" : {
+      "description" : "Short (tooltip) description of how much one commodity trades in the system the player is currently in",
+      "message" : "Exportations principales (système actuel)"
+   },
    "MAJOR_IMPORTS" : {
       "description" : "",
       "message" : "Importations majeures :"
+   },
+   "MAJOR_IMPORT_CURRENT_SYSTEM" : {
+      "description" : "Short (tooltip) description of how much one commodity trades in the system the player is currently in",
+      "message" : "Importations principales (système actuel)"
    },
    "MANUAL_CONTROL" : {
       "description" : "",
@@ -915,9 +983,17 @@
       "description" : "",
       "message" : "Exportations mineures :"
    },
+   "MINOR_EXPORT_CURRENT_SYSTEM" : {
+      "description" : "Short (tooltip) description of how much one commodity trades in the system the player is currently in",
+      "message" : "Exportations secondaires (système actuel)"
+   },
    "MINOR_IMPORTS" : {
       "description" : "",
       "message" : "Importations mineures :"
+   },
+   "MINOR_IMPORT_CURRENT_SYSTEM" : {
+      "description" : "Short (tooltip) description of how much one commodity trades in the system the player is currently in",
+      "message" : "Importations secondaires (système actuel)"
    },
    "MISCELLANEOUS" : {
       "description" : "",
@@ -995,6 +1071,14 @@
       "description" : "",
       "message" : "Sept"
    },
+   "MULTI_SCOOP" : {
+      "description" : "A ship equipment: a cargo scoop and fuel scoop combined to one",
+      "message" : "Multi Scoop"
+   },
+   "MULTI_SCOOP_DESCRIPTION" : {
+      "description" : "",
+      "message" : "Although less effective than a fuel scoop it permits scooping of both cargo and fuel"
+   },
    "MURDER" : {
       "description" : "",
       "message" : "Meurtre"
@@ -1028,11 +1112,11 @@
       "message" : "Gaz neurotox."
    },
    "NONE" : {
-      "description" : "",
+      "description" : "used for no allegiance, and no rank, and no missions",
       "message" : "Aucun"
    },
    "NORMA_ARM" : {
-      "description" : "",
+      "description" : "Arm of the Milky Way galaxy",
       "message" : "Bras de la Règle"
    },
    "NOT_FOUND" : {
@@ -1160,7 +1244,7 @@
       "message" : "Monde agricole à l'air libre."
    },
    "OUTER_ARM" : {
-      "description" : "",
+      "description" : "Arm of the Milky Way galaxy",
       "message" : "Bras externe"
    },
    "OVER_N_BILLION" : {
@@ -1188,7 +1272,7 @@
       "message" : "Distance de périhélie"
    },
    "PERSEUS_ARM" : {
-      "description" : "",
+      "description" : "Arm of the Milky Way galaxy",
       "message" : "Bras de Persée"
    },
    "PIONEER" : {
@@ -1226,6 +1310,22 @@
    "PLANNED_ECONOMY" : {
       "description" : "",
       "message" : "Économie planifiée et centralisée"
+   },
+   "PLANNER_RESET_FACTOR" : {
+      "description" : "",
+      "message" : "Rate of increase of delta-v values. Click to reset to default."
+   },
+   "PLANNER_RESET_NORMAL" : {
+      "description" : "",
+      "message" : "Normal delta-v. Click to reset to zero."
+   },
+   "PLANNER_RESET_PROGRADE" : {
+      "description" : "",
+      "message" : "Prograde delta-v. Click to reset to zero."
+   },
+   "PLANNER_RESET_RADIAL" : {
+      "description" : "",
+      "message" : "Radial delta-v. Click to reset to zero."
    },
    "PLASTICS" : {
       "description" : "",
@@ -1307,6 +1407,10 @@
       "description" : "",
       "message" : "Arrière"
    },
+   "RECENTLY_EXPLORED_SYSTEM" : {
+      "description" : "",
+      "message" : "Ce système a été exploré le %date"
+   },
    "REQUEST_DOCKING_CLEARANCE" : {
       "description" : "",
       "message" : "Demander une autorisation d'atterrissage"
@@ -1376,7 +1480,7 @@
       "message" : "Détritus"
    },
    "SAGITTARIUS_ARM" : {
-      "description" : "",
+      "description" : "Arm of the Milky Way galaxy",
       "message" : "Bras du Sagittaire"
    },
    "SCANNER" : {
@@ -1391,12 +1495,16 @@
       "description" : "",
       "message" : "Donne une représentation 3D des vaisseaux environnants."
    },
+   "SCOOP" : {
+      "description" : "A general word for cargo scoop or fuel scoop; used to scoop up cargo or fuel",
+      "message" : "Scoop"
+   },
    "SCREENSHOT_FILENAME_TEMPLATE" : {
       "description" : "",
       "message" : "capture_d_ecran%index{d08}.png"
    },
    "SCUTUM_CENTAURUS_ARM" : {
-      "description" : "",
+      "description" : "Arm of the Milky Way galaxy",
       "message" : "Bras Écu-Croix"
    },
    "SEARCH" : {
@@ -1447,6 +1555,10 @@
       "description" : "",
       "message" : "Regl. vitesse mini sur  %power%%"
    },
+   "SET_NAVTARGET_TO" : {
+      "description" : "",
+      "message" : "Régler la destination sur : "
+   },
    "SET_SPEED_KM_S" : {
       "description" : "",
       "message" : "Vit. ét.: %speed{f.2} km/s"
@@ -1486,6 +1598,10 @@
    "SHIP" : {
       "description" : "",
       "message" : "Vaisseau"
+   },
+   "SHIPS_DISPLAY_MODE_TOGGLE" : {
+      "description" : "Either show no ships, show ships, or show ships + their orbits",
+      "message" : "Bascule entre les modes d'affichage vaisseau"
    },
    "SHIP_ALTITUDE_ABOVE_TERRAIN" : {
       "description" : "",
@@ -1719,6 +1835,14 @@
       "description" : "",
       "message" : "Température de surface"
    },
+   "SWITCHED_TO_PARENT" : {
+      "description" : "Show ship's heading, coordinates are on the celestial sphere (defined by the ecliptic).",
+      "message" : "Cap du vaisseau, coordonnées célestes"
+   },
+   "SWITCHED_TO_ROTATIONAL" : {
+      "description" : "Show ship's heading in planetary coordinates. heading 0 = north, 90 = east, 180 = south, 270 = west.",
+      "message" : "Cap du vaisseau, coordonnées planétaires"
+   },
    "SYSTEM" : {
       "description" : "",
       "message" : "Système"
@@ -1762,6 +1886,10 @@
    "THIN" : {
       "description" : "",
       "message" : "fine"
+   },
+   "THREE_KPC_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Bras de la voie lactée 3kpc"
    },
    "THRIVING_OUTDOOR_WORLD" : {
       "description" : "",
@@ -1817,7 +1945,15 @@
    },
    "TOMBSTONE_EPITAPH" : {
       "description" : "",
-      "message" : "Paix à ton âme!"
+      "message" : "Reposes en paix"
+   },
+   "TRADE_ANALYZER" : {
+      "description" : "Ship equipment computing profitable commodities to trade between two systems",
+      "message" : "Analyseur de profit commercial"
+   },
+   "TRADE_ANALYZER_DESCRIPTION" : {
+      "description" : "",
+      "message" : "Montre les profits générés par les échanges commerciaux entre le système actuel et le système sélectionné"
    },
    "TRADING_ILLEGAL_GOODS" : {
       "description" : "",
@@ -1854,6 +1990,10 @@
    "UNOCCUPIED_CABIN_DESCRIPTION" : {
       "description" : "",
       "message" : "Requis pour le transport d'un passager."
+   },
+   "UNSET_NAVTARGET" : {
+      "description" : "",
+      "message" : "Aucune destination définie."
    },
    "USE_LOW_THRUST" : {
       "description" : "",
