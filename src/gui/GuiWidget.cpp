@@ -9,7 +9,7 @@ namespace Gui {
 Widget::Widget()
 {
 	m_parent = 0;
-	m_size.w = m_size.h = 0.0f;
+	m_size.x = m_size.y = 0.0f;
 	m_enabled = true;
 	m_visible = false;
 	m_mouseOver = false;
@@ -44,8 +44,8 @@ void Widget::SetScissor(bool enabled)
 		float scale[2];
 		Gui::Screen::GetCoords2Pixels(scale);
 
-		vector2f scissorPos(pos[0]/scale[0],(float(Gui::Screen::GetHeight())-(pos[1]+m_size.h))/scale[1]);
-		vector2f scissorSize(m_size.w/scale[0],m_size.h/scale[1]);
+		vector2f scissorPos(pos[0]/scale[0],(float(Gui::Screen::GetHeight())-(pos[1]+m_size.y))/scale[1]);
+		vector2f scissorSize(m_size.x/scale[0],m_size.y/scale[1]);
 
 		assert(scissorPos.x >= 0.0f && scissorPos.y >= 0.0f);
 		assert(scissorSize.x >= 0.0f && scissorSize.y >= 0.0f);
@@ -133,10 +133,10 @@ void Widget::OnToolTip()
 		float pos[2];
 		GetAbsolutePosition(pos);
 		m_tooltipWidget = new ToolTip(this, text);
-		if (m_tooltipWidget->m_size.w + pos[0] > Screen::GetWidth())
-			pos[0] = Screen::GetWidth() - m_tooltipWidget->m_size.w;
-		if (m_tooltipWidget->m_size.h + pos[1] > Screen::GetHeight())
-			pos[1] = Screen::GetHeight() - m_tooltipWidget->m_size.h;
+		if (m_tooltipWidget->m_size.x + pos[0] > Screen::GetWidth())
+			pos[0] = Screen::GetWidth() - m_tooltipWidget->m_size.x;
+		if (m_tooltipWidget->m_size.y + pos[1] > Screen::GetHeight())
+			pos[1] = Screen::GetHeight() - m_tooltipWidget->m_size.y;
 
 		Screen::AddBaseWidget(m_tooltipWidget, int(pos[0]), int(pos[1]));
 		m_tooltipWidget->Show();

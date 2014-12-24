@@ -174,6 +174,7 @@ bool RendererOGL::SwapBuffers()
 
 bool RendererOGL::SetRenderState(RenderState *rs)
 {
+	PROFILE_SCOPED()
 	if (m_activeRenderState != rs) {
 		static_cast<OGL::RenderState*>(rs)->Apply();
 		m_activeRenderState = rs;
@@ -198,6 +199,7 @@ bool RendererOGL::SetRenderTarget(RenderTarget *rt)
 
 bool RendererOGL::ClearScreen()
 {
+	PROFILE_SCOPED()
 	m_activeRenderState = nullptr;
 	glDepthMask(GL_TRUE);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -208,6 +210,7 @@ bool RendererOGL::ClearScreen()
 
 bool RendererOGL::ClearDepthBuffer()
 {
+	PROFILE_SCOPED()
 	m_activeRenderState = nullptr;
 	glDepthMask(GL_TRUE);
 	glClear(GL_DEPTH_BUFFER_BIT);
@@ -224,6 +227,7 @@ bool RendererOGL::SetClearColor(const Color &c)
 
 bool RendererOGL::SetViewport(int x, int y, int width, int height)
 {
+	PROFILE_SCOPED()
 	assert(!m_viewportStack.empty());
 	Viewport& currentViewport = m_viewportStack.top();
 	currentViewport.x = x;
@@ -295,6 +299,7 @@ bool RendererOGL::SetWireFrameMode(bool enabled)
 
 bool RendererOGL::SetLights(int numlights, const Light *lights)
 {
+	PROFILE_SCOPED()
 	if (numlights < 1) return false;
 
 	const int NumLights = std::min(numlights, int(TOTAL_NUM_LIGHTS));
@@ -336,6 +341,7 @@ bool RendererOGL::SetScissor(bool enabled, const vector2f &pos, const vector2f &
 
 void RendererOGL::SetMaterialShaderTransforms(Material *m)
 {
+	PROFILE_SCOPED()
 	m->SetCommonUniforms(m_modelViewStack.top(), m_projectionStack.top());
 	CheckRenderErrors();
 }
@@ -360,6 +366,7 @@ bool RendererOGL::DrawLines(int count, const vector3f *v, const Color &c, Render
 
 bool RendererOGL::DrawPoints(int count, const vector3f *points, const Color *colors, Graphics::RenderState *state, float size)
 {
+	PROFILE_SCOPED()
 	struct TPos {
 		vector3f pos;
 		Color4ub col;
@@ -698,6 +705,7 @@ bool RendererOGL::ReloadShaders()
 
 OGL::Program* RendererOGL::GetOrCreateProgram(OGL::Material *mat)
 {
+	PROFILE_SCOPED()
 	CheckRenderErrors();
 	const MaterialDescriptor &desc = mat->GetDescriptor();
 	OGL::Program *p = 0;
@@ -722,12 +730,14 @@ OGL::Program* RendererOGL::GetOrCreateProgram(OGL::Material *mat)
 
 Texture *RendererOGL::CreateTexture(const TextureDescriptor &descriptor)
 {
+	PROFILE_SCOPED()
 	CheckRenderErrors();
 	return new TextureGL(descriptor, m_useCompressedTextures);
 }
 
 RenderState *RendererOGL::CreateRenderState(const RenderStateDesc &desc)
 {
+	PROFILE_SCOPED()
 	CheckRenderErrors();
 	const uint32_t hash = lookup3_hashlittle(&desc, sizeof(RenderStateDesc), 0);
 	auto it = m_renderStates.find(hash);
@@ -744,6 +754,7 @@ RenderState *RendererOGL::CreateRenderState(const RenderStateDesc &desc)
 
 RenderTarget *RendererOGL::CreateRenderTarget(const RenderTargetDesc &desc)
 {
+	PROFILE_SCOPED()
 	CheckRenderErrors();
 	OGL::RenderTarget* rt = new OGL::RenderTarget(desc);
 	rt->Bind();
@@ -781,11 +792,13 @@ RenderTarget *RendererOGL::CreateRenderTarget(const RenderTargetDesc &desc)
 
 VertexBuffer *RendererOGL::CreateVertexBuffer(const VertexBufferDesc &desc)
 {
+	PROFILE_SCOPED()
 	return new OGL::VertexBuffer(desc);
 }
 
 IndexBuffer *RendererOGL::CreateIndexBuffer(Uint32 size, BufferUsage usage)
 {
+	PROFILE_SCOPED()
 	return new OGL::IndexBuffer(size, usage);
 }
 
@@ -794,6 +807,7 @@ IndexBuffer *RendererOGL::CreateIndexBuffer(Uint32 size, BufferUsage usage)
 // only restoring the things that have changed
 void RendererOGL::PushState()
 {
+	PROFILE_SCOPED()
 	SetMatrixMode(MatrixMode::PROJECTION);
 	PushMatrix();
 	SetMatrixMode(MatrixMode::MODELVIEW);
@@ -803,6 +817,7 @@ void RendererOGL::PushState()
 
 void RendererOGL::PopState()
 {
+	PROFILE_SCOPED()
 	m_viewportStack.pop();
 	assert(!m_viewportStack.empty());
 	const Viewport& cvp = m_viewportStack.top();

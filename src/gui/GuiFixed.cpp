@@ -8,12 +8,14 @@ namespace Gui {
 
 Fixed::Fixed(): Container()
 {
+	PROFILE_SCOPED()
 	_Init();
 	SetSize(float(Gui::Screen::GetWidth()), float(Gui::Screen::GetHeight()));
 }
 
 Fixed::Fixed(float w, float h): Container()
 {
+	PROFILE_SCOPED()
 	float s[2] = { w, h };
 	_Init();
 	SetSize(w, h);
@@ -22,23 +24,27 @@ Fixed::Fixed(float w, float h): Container()
 
 void Fixed::_Init()
 {
+	PROFILE_SCOPED()
 	m_userWantedSize[0] = m_userWantedSize[1] = 0;
 	m_eventMask = EVENT_ALL;
 }
 
 void Fixed::SetSizeRequest(float x, float y)
 {
+	PROFILE_SCOPED()
 	m_userWantedSize[0] = x;
 	m_userWantedSize[1] = y;
 }
 
 void Fixed::SetSizeRequest(float size[2])
 {
+	PROFILE_SCOPED()
 	SetSizeRequest(size[0], size[1]);
 }
 
 void Fixed::GetSizeRequested(float size[2])
 {
+	PROFILE_SCOPED()
 	if (m_userWantedSize[0] > 0.0f && m_userWantedSize[1] > 0.0f) {
 		size[0] = m_userWantedSize[0];
 		size[1] = m_userWantedSize[1];
@@ -65,6 +71,7 @@ Fixed::~Fixed()
 
 void Fixed::UpdateAllChildSizes()
 {
+	PROFILE_SCOPED()
 	float size[2];
 	GetSize(size);
 	for (WidgetList::iterator i = m_children.begin(), itEnd = m_children.end(); i != itEnd; ++i) {
@@ -79,6 +86,7 @@ void Fixed::UpdateAllChildSizes()
 
 void Fixed::OnChildResizeRequest(Widget *child)
 {
+	PROFILE_SCOPED()
 	float size[2];
 	GetSize(size);
 	for (WidgetList::iterator i = m_children.begin(), itEnd = m_children.end(); i != itEnd; ++i) {
@@ -95,6 +103,7 @@ void Fixed::OnChildResizeRequest(Widget *child)
 
 void Fixed::Add(Widget *child, float x, float y)
 {
+	PROFILE_SCOPED()
 	float size[2];
 	GetSize(size);
 	AppendChild(child, x, y);
@@ -107,6 +116,7 @@ void Fixed::Add(Widget *child, float x, float y)
 
 void Fixed::Remove(Widget *child)
 {
+	PROFILE_SCOPED()
 	Container::RemoveChild(child);
 }
 

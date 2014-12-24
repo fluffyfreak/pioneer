@@ -8,6 +8,7 @@
 
 void UIView::OnSwitchTo()
 {
+	PROFILE_SCOPED()
 	UI::VBox *box = Pi::ui->VBox();
 	UI::Expand *expander = Pi::ui->Expand();
 	BuildUI(expander);
@@ -20,16 +21,19 @@ void UIView::OnSwitchTo()
 
 void UIView::OnSwitchFrom()
 {
+	PROFILE_SCOPED()
 	Pi::ui->DropAllLayers();
 	Pi::ui->Layout(); // UI does important things on layout, like updating keyboard shortcuts
 }
 
 void UIView::BuildUI(UI::Single *container) {
+	PROFILE_SCOPED()
 	UI::Widget *w = BuildTemplateUI();
 	if (w) container->SetInnerWidget(w);
 }
 
 UI::Widget *UIView::BuildTemplateUI() {
+	PROFILE_SCOPED()
 	if (m_templateName)
 		return Pi::ui->CallTemplate(m_templateName);
 	else

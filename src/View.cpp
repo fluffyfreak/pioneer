@@ -7,7 +7,8 @@
 
 ShipCpanel* View::s_cpan = nullptr;
 
-View::View(): Gui::Fixed(float(Gui::Screen::GetWidth()), float(Gui::Screen::GetHeight()-64)) {
+View::View() : Gui::Fixed(float(Gui::Screen::GetWidth()), float(Gui::Screen::GetHeight() - 64)) {
+	PROFILE_SCOPED()
 	m_rightButtonBar = new Gui::Fixed(128, 26);
 	m_rightButtonBar->SetBgColor(Color(160,160,160,255));
 
@@ -19,6 +20,7 @@ View::View(): Gui::Fixed(float(Gui::Screen::GetWidth()), float(Gui::Screen::GetH
 }
 
 View::~View() {
+	PROFILE_SCOPED()
 	Gui::Screen::RemoveBaseWidget(m_rightButtonBar);
 	Gui::Screen::RemoveBaseWidget(m_rightRegion2);
 	Gui::Screen::RemoveBaseWidget(m_rightRegion1);
@@ -30,6 +32,7 @@ View::~View() {
 }
 
 void View::Attach() {
+	PROFILE_SCOPED()
 	OnSwitchTo();
 
 	const float w = float(Gui::Screen::GetWidth());
@@ -52,6 +55,7 @@ void View::Attach() {
 }
 
 void View::Detach() {
+	PROFILE_SCOPED()
 	Gui::Screen::RemoveBaseWidget(m_rightButtonBar);
 	Gui::Screen::RemoveBaseWidget(m_rightRegion2);
 	Gui::Screen::RemoveBaseWidget(m_rightRegion1);

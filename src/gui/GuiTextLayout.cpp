@@ -11,6 +11,7 @@ namespace Gui {
 
 TextLayout::TextLayout(const char *_str, RefCountedPtr<Text::TextureFont> font, ColourMarkupMode markup)
 {
+	PROFILE_SCOPED()
 	// XXX ColourMarkupSkip not correctly implemented yet
 	assert(markup != ColourMarkupSkip);
 
@@ -61,6 +62,7 @@ TextLayout::TextLayout(const char *_str, RefCountedPtr<Text::TextureFont> font, 
 
 void TextLayout::MeasureSize(const float width, float outSize[2]) const
 {
+	PROFILE_SCOPED()
 	float fontScale[2];
 	Gui::Screen::GetCoords2Pixels(fontScale);
 	_MeasureSizeRaw(width / fontScale[0], outSize);
@@ -151,6 +153,7 @@ void TextLayout::_RenderRaw(float maxWidth, const Color &color) const
 
 void TextLayout::_MeasureSizeRaw(const float layoutWidth, float outSize[2]) const
 {
+	PROFILE_SCOPED()
 	outSize[0] = 0;
 	outSize[1] = 0;
 

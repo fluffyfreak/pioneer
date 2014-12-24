@@ -21,6 +21,7 @@ static const Color s_hudTextColor(0,255,0,204);
 
 ShipCpanel::ShipCpanel(Graphics::Renderer *r, Game* game): Gui::Fixed(float(Gui::Screen::GetWidth()), 80), m_game(game)
 {
+	PROFILE_SCOPED()
 	m_scanner = new ScannerWidget(r);
 
 	InitObject();
@@ -29,6 +30,7 @@ ShipCpanel::ShipCpanel(Graphics::Renderer *r, Game* game): Gui::Fixed(float(Gui:
 ShipCpanel::ShipCpanel(Serializer::Reader &rd, Graphics::Renderer *r, Game* game): Gui::Fixed(float(Gui::Screen::GetWidth()), 80),
 	m_game(game)
 {
+	PROFILE_SCOPED()
 	m_scanner = new ScannerWidget(r, rd);
 
 	InitObject();
@@ -38,6 +40,7 @@ ShipCpanel::ShipCpanel(Serializer::Reader &rd, Graphics::Renderer *r, Game* game
 
 void ShipCpanel::InitObject()
 {
+	PROFILE_SCOPED()
 	SetTransparency(true);
 
 	Gui::Image *img = new Gui::Image("icons/cpanel.png");
@@ -219,6 +222,7 @@ void ShipCpanel::InitObject()
 
 ShipCpanel::~ShipCpanel()
 {
+	PROFILE_SCOPED()
 	View::SetCpanel(nullptr);
 	delete m_leftButtonGroup;
 	delete m_rightButtonGroup;
@@ -233,12 +237,14 @@ ShipCpanel::~ShipCpanel()
 
 void ShipCpanel::OnUserChangeMultiFunctionDisplay(multifuncfunc_t f)
 {
+	PROFILE_SCOPED()
 	m_userSelectedMfuncWidget = f;
 	ChangeMultiFunctionDisplay(f);
 }
 
 void ShipCpanel::ChangeMultiFunctionDisplay(multifuncfunc_t f)
 {
+	PROFILE_SCOPED()
 	Gui::Widget *selected = 0;
 	if (f == MFUNC_SCANNER) selected = m_scanner;
 	if (f == MFUNC_EQUIPMENT) selected = m_useEquipWidget;
@@ -254,11 +260,13 @@ void ShipCpanel::ChangeMultiFunctionDisplay(multifuncfunc_t f)
 
 void ShipCpanel::OnMultiFuncGrabFocus(multifuncfunc_t f)
 {
+	PROFILE_SCOPED()
 	ChangeMultiFunctionDisplay(f);
 }
 
 void ShipCpanel::OnMultiFuncUngrabFocus(multifuncfunc_t f)
 {
+	PROFILE_SCOPED()
 	ChangeMultiFunctionDisplay(m_userSelectedMfuncWidget);
 }
 
@@ -288,6 +296,7 @@ void ShipCpanel::Update()
 
 void ShipCpanel::Draw()
 {
+	PROFILE_SCOPED()
 	std::string time = format_date(m_game->GetTime());
 	m_clock->SetText(time);
 
@@ -296,6 +305,7 @@ void ShipCpanel::Draw()
 
 void ShipCpanel::OnChangeCamView(Gui::MultiStateImageButton *b)
 {
+	PROFILE_SCOPED()
 	Pi::BoinkNoise();
 	const int newState = b->GetState();
 	b->SetActiveState(newState);
@@ -305,6 +315,7 @@ void ShipCpanel::OnChangeCamView(Gui::MultiStateImageButton *b)
 
 void ShipCpanel::OnChangeInfoView(Gui::MultiStateImageButton *b)
 {
+	PROFILE_SCOPED()
 	Pi::BoinkNoise();
 	if (Pi::GetView() != m_game->GetInfoView())
 		Pi::SetView(m_game->GetInfoView());
@@ -312,12 +323,14 @@ void ShipCpanel::OnChangeInfoView(Gui::MultiStateImageButton *b)
 
 void ShipCpanel::OnChangeToMapView(Gui::MultiStateImageButton *b)
 {
+	PROFILE_SCOPED()
 	Pi::BoinkNoise();
 	OnChangeMapView(m_currentMapView);
 }
 
 void ShipCpanel::OnChangeMapView(enum MapView view)
 {
+	PROFILE_SCOPED()
 	m_currentMapView = view;
 	switch (m_currentMapView) {
 		case MAP_SECTOR: Pi::SetView(m_game->GetSectorView()); break;
@@ -336,11 +349,13 @@ void ShipCpanel::OnChangeMapView(enum MapView view)
 
 void ShipCpanel::HideMapviewButtons()
 {
+	PROFILE_SCOPED()
 	for (int i=0; i<4; i++) m_mapViewButtons[i]->Hide();
 }
 
 void ShipCpanel::OnClickTimeaccel(Game::TimeAccel val)
 {
+	PROFILE_SCOPED()
 	Pi::BoinkNoise();
 	if ((m_game->GetTimeAccel() == val) && (val == Game::TIMEACCEL_PAUSED)) {
 		if (Pi::GetView() != m_game->GetSettingsView())
@@ -357,6 +372,7 @@ void ShipCpanel::OnClickTimeaccel(Game::TimeAccel val)
 
 void ShipCpanel::OnClickComms(Gui::MultiStateImageButton *b)
 {
+	PROFILE_SCOPED()
 	Pi::BoinkNoise();
 	if (Pi::player->GetFlightState() == Ship::DOCKED) Pi::SetView(m_game->GetSpaceStationView());
 	else {
@@ -367,16 +383,19 @@ void ShipCpanel::OnClickComms(Gui::MultiStateImageButton *b)
 
 void ShipCpanel::OnClickRotationDamping(Gui::MultiStateImageButton *b)
 {
+	PROFILE_SCOPED()
 	Pi::player->GetPlayerController()->ToggleRotationDamping();
 }
 
 void ShipCpanel::OnRotationDampingChanged()
 {
+	PROFILE_SCOPED()
 	m_rotationDampingButton->SetActiveState(Pi::player->GetPlayerController()->GetRotationDamping());
 }
 
 void ShipCpanel::SetAlertState(Ship::AlertState as)
 {
+	PROFILE_SCOPED()
 	switch (as) {
 		case Ship::ALERT_NONE:
 			m_alertLights[0]->Show();
@@ -404,12 +423,14 @@ void ShipCpanel::TimeStepUpdate(float step)
 
 void ShipCpanel::Save(Serializer::Writer &wr)
 {
+	PROFILE_SCOPED()
 	m_scanner->Save(wr);
 	wr.Int32(m_camButton->GetState());
 }
 
 void ShipCpanel::SetOverlayText(OverlayTextPos pos, const std::string &text)
 {
+	PROFILE_SCOPED()
 	m_overlay[pos]->SetText(text);
 	if (text.length() == 0)
 		m_overlay[pos]->Hide();
@@ -419,11 +440,13 @@ void ShipCpanel::SetOverlayText(OverlayTextPos pos, const std::string &text)
 
 void ShipCpanel::SetOverlayToolTip(OverlayTextPos pos, const std::string &text)
 {
+	PROFILE_SCOPED()
 	m_overlay[pos]->SetToolTip(text);
 }
 
 void ShipCpanel::ClearOverlay()
 {
+	PROFILE_SCOPED()
 	for (int i = 0; i < 4; i++) {
 		m_overlay[i]->SetText("");
 		m_overlay[i]->SetToolTip("");

@@ -21,8 +21,9 @@ namespace Gui {
 		// the minimum size the widget requires to operate effectively
 		virtual void GetMinimumSize(float size[2]) { GetSizeRequested(size); }
 		void GetAbsolutePosition(float pos[2]) const;
-		void GetSize(float size[2]) { size[0] = m_size.w; size[1] = m_size.h; }
-		void SetSize(float w, float h) { m_size.w = w; m_size.h = h; onSetSize.emit(); }
+		void GetSize(float size[2]) { size[0] = m_size.x; size[1] = m_size.y; }
+		const vector2f& GetSize() const { return m_size; }
+		void SetSize(float w, float h) { m_size.x = w; m_size.y = h; onSetSize.emit(); }
 		void ResizeRequest();
 		void SetShortcut(SDL_Keycode key, SDL_Keymod mod);
 		void SetScissor(bool enabled);
@@ -77,9 +78,7 @@ namespace Gui {
 		virtual std::string GetOverrideTooltip() { return ""; }
 		void UpdateOverriddenTooltip();
 	private:
-		struct {
-			float w,h;
-		} m_size;
+		vector2f m_size;
 		bool m_visible;
 		bool m_mouseOver;
 		bool m_enabled;

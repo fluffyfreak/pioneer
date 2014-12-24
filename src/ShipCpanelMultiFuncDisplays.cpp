@@ -46,6 +46,7 @@ static const Color scannerCloudColour         = Color( 128, 128, 255 );
 ScannerWidget::ScannerWidget(Graphics::Renderer *r) :
 	m_renderer(r)
 {
+	PROFILE_SCOPED()
 	m_mode = SCANNER_MODE_AUTO;
 	m_currentRange = m_manualRange = m_targetRange = SCANNER_RANGE_MIN;
 
@@ -55,6 +56,7 @@ ScannerWidget::ScannerWidget(Graphics::Renderer *r) :
 ScannerWidget::ScannerWidget(Graphics::Renderer *r, Serializer::Reader &rd) :
 	m_renderer(r)
 {
+	PROFILE_SCOPED()
 	m_mode = ScannerMode(rd.Int32());
 	m_currentRange = rd.Float();
 	m_manualRange = rd.Float();
@@ -65,6 +67,7 @@ ScannerWidget::ScannerWidget(Graphics::Renderer *r, Serializer::Reader &rd) :
 
 void ScannerWidget::InitObject()
 {
+	PROFILE_SCOPED()
 	InitScaling();
 
 	m_toggleScanModeConnection = KeyBindings::toggleScanMode.onPress.connect(sigc::mem_fun(this, &ScannerWidget::ToggleMode));
@@ -86,12 +89,14 @@ ScannerWidget::~ScannerWidget()
 
 void ScannerWidget::GetSizeRequested(float size[2])
 {
+	PROFILE_SCOPED()
 	size[0] = 400;
 	size[1] = 62;
 }
 
 void ScannerWidget::ToggleMode()
 {
+	PROFILE_SCOPED()
 	if (IsVisible() && Pi::game->GetTimeAccel() != Game::TIMEACCEL_PAUSED) {
 		if (m_mode == SCANNER_MODE_AUTO) m_mode = SCANNER_MODE_MANUAL;
 		else m_mode = SCANNER_MODE_AUTO;
@@ -100,6 +105,7 @@ void ScannerWidget::ToggleMode()
 
 void ScannerWidget::Draw()
 {
+	PROFILE_SCOPED()
 	int scanner_cap = 0;
 	Pi::player->Properties().Get("scanner_cap", scanner_cap);
 	if (scanner_cap <= 0) return;
@@ -149,6 +155,7 @@ void ScannerWidget::Draw()
 }
 
 void ScannerWidget::InitScaling(void) {
+	PROFILE_SCOPED()
 	isCompact = Pi::IsScannerCompact();
 	if(isCompact) {
 		SCANNER_XSHRINK = 4.0f;
@@ -162,6 +169,7 @@ void ScannerWidget::InitScaling(void) {
 
 void ScannerWidget::Update()
 {
+	PROFILE_SCOPED()
 	if(Pi::IsScannerCompact() != isCompact) {
 		InitScaling();
 		GenerateBaseGeometry();
@@ -296,6 +304,7 @@ void ScannerWidget::Update()
 
 void ScannerWidget::DrawBlobs(bool below)
 {
+	PROFILE_SCOPED()
 	for (std::list<Contact>::iterator i = m_contacts.begin(); i != m_contacts.end(); ++i) {
 		ScannerBlobWeight weight = WEIGHT_LIGHT;
 
@@ -375,6 +384,7 @@ void ScannerWidget::DrawBlobs(bool below)
 
 void ScannerWidget::GenerateBaseGeometry()
 {
+	PROFILE_SCOPED()
 	static const float circle = float(2 * M_PI);
 	static const float step = circle / SCANNER_STEPS;
 
@@ -398,6 +408,7 @@ void ScannerWidget::GenerateBaseGeometry()
 
 void ScannerWidget::GenerateRingsAndSpokes()
 {
+	PROFILE_SCOPED()
 	int csize = m_circle.size();
 	int ssize = m_spokes.size();
 	m_vts.clear();
@@ -447,6 +458,7 @@ void ScannerWidget::GenerateRingsAndSpokes()
 
 void ScannerWidget::DrawRingsAndSpokes(bool blend)
 {
+	PROFILE_SCOPED()
 	Color col(0, 102, 0, 128);
 	m_renderer->DrawLines(m_vts.size(), &m_vts[0], col, m_renderState);
 	m_renderer->DrawLines(m_edgeVts.size(), &m_edgeVts[0], &m_edgeCols[0], m_renderState);
@@ -475,12 +487,14 @@ void ScannerWidget::Save(Serializer::Writer &wr)
 
 UseEquipWidget::UseEquipWidget(): Gui::Fixed(400,100)
 {
+	PROFILE_SCOPED()
 	m_onPlayerEquipChangedCon = Pi::player->onChangeEquipment.connect(sigc::mem_fun(this, &UseEquipWidget::UpdateEquip));
 	UpdateEquip();
 }
 
 UseEquipWidget::~UseEquipWidget()
 {
+	PROFILE_SCOPED()
 	m_onPlayerEquipChangedCon.disconnect();
 }
 
@@ -492,6 +506,7 @@ void UseEquipWidget::GetSizeRequested(float size[2])
 
 void UseEquipWidget::FireMissile(int idx)
 {
+	PROFILE_SCOPED()
 	if (!Pi::player->GetCombatTarget()) {
 		Pi::game->log->Add(Lang::SELECT_A_TARGET);
 		return;
@@ -501,11 +516,13 @@ void UseEquipWidget::FireMissile(int idx)
 
 static void FireECM()
 {
+	PROFILE_SCOPED()
 	Pi::player->UseECM();
 }
 
 void UseEquipWidget::UpdateEquip()
 {
+	PROFILE_SCOPED()
 	DeleteAllChildren();
 	lua_State *l = Lua::manager->GetLuaState();
 	LuaObject<Ship>::CallMethod<LuaRef>(Pi::player, "GetEquip", "missile").PushCopyToStack();
@@ -550,6 +567,7 @@ void UseEquipWidget::UpdateEquip()
 
 MultiFuncSelectorWidget::MultiFuncSelectorWidget(): Gui::Fixed(144, 17)
 {
+	PROFILE_SCOPED()
 	m_active = 0;
 	m_rg = new Gui::RadioGroup();
 
@@ -571,11 +589,13 @@ MultiFuncSelectorWidget::MultiFuncSelectorWidget(): Gui::Fixed(144, 17)
 
 MultiFuncSelectorWidget::~MultiFuncSelectorWidget()
 {
+	PROFILE_SCOPED()
 	delete m_rg;
 }
 
 void MultiFuncSelectorWidget::OnClickButton(multifuncfunc_t f)
 {
+	PROFILE_SCOPED()
 	m_active = int(f);
 	UpdateButtons();
 	onSelect.emit(f);
@@ -583,6 +603,7 @@ void MultiFuncSelectorWidget::OnClickButton(multifuncfunc_t f)
 
 void MultiFuncSelectorWidget::UpdateButtons()
 {
+	PROFILE_SCOPED()
 	RemoveAllChildren();
 
 	for (int i = 0; i < MFUNC_MAX; ++i) {

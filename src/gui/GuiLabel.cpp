@@ -7,21 +7,25 @@ namespace Gui {
 
 Label::Label(const char *text, TextLayout::ColourMarkupMode colourMarkupMode)
 {
+	PROFILE_SCOPED()
 	Init(std::string(text), colourMarkupMode);
 }
 
 Label::Label(const std::string &text, TextLayout::ColourMarkupMode colourMarkupMode)
 {
+	PROFILE_SCOPED()
 	Init(text, colourMarkupMode);
 }
 
 Label::~Label()
 {
+	PROFILE_SCOPED()
 	delete m_layout;
 }
 
 void Label::Init(const std::string &text, TextLayout::ColourMarkupMode colourMarkupMode)
 {
+	PROFILE_SCOPED()
 	m_colourMarkupMode = colourMarkupMode;
 	m_shadow = false;
 	m_layout = 0;
@@ -33,12 +37,14 @@ void Label::Init(const std::string &text, TextLayout::ColourMarkupMode colourMar
 
 void Label::UpdateLayout()
 {
+	PROFILE_SCOPED()
 	if (m_layout) delete m_layout;
 	m_layout = new TextLayout(m_text.c_str(), m_font, m_colourMarkupMode);
 }
 
 void Label::RecalcSize()
 {
+	PROFILE_SCOPED()
 //	float size[2];
 //	Screen::MeasureLayout(m_text, FLT_MAX, size);
 	ResizeRequest();
@@ -46,23 +52,27 @@ void Label::RecalcSize()
 
 Label *Label::Color(Uint8 r, Uint8 g, Uint8 b)
 {
+	PROFILE_SCOPED()
 	m_color = ::Color(r, g, b);
 	return this;
 }
 
 Label *Label::Color(const ::Color &c)
 {
+	PROFILE_SCOPED()
 	m_color = c;
 	return this;
 }
 
 void Label::SetText(const char *text)
 {
+	PROFILE_SCOPED()
 	SetText(std::string(text));
 }
 
 void Label::SetText(const std::string &text)
 {
+	PROFILE_SCOPED()
 	m_text = text;
 	UpdateLayout();
 	RecalcSize();
@@ -84,6 +94,7 @@ void Label::Draw()
 
 void Label::GetSizeRequested(float size[2])
 {
+	PROFILE_SCOPED()
 	m_layout->MeasureSize(size[0], size);
 }
 

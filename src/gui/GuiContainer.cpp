@@ -10,6 +10,7 @@ namespace Gui {
 
 Container::Container()
 {
+	PROFILE_SCOPED()
 	m_transparent = true;
 	SetBgColor(Theme::Colors::bg);
 	onMouseLeave.connect(sigc::mem_fun(this, &Container::_OnMouseLeave));
@@ -18,16 +19,19 @@ Container::Container()
 
 Container::~Container()
 {
+	PROFILE_SCOPED()
 	DeleteAllChildren();
 }
 
 void Container::_OnSetSize()
 {
+	PROFILE_SCOPED()
 	if (IsVisible()) UpdateAllChildSizes();
 }
 
 void Container::_OnMouseLeave()
 {
+	PROFILE_SCOPED()
 	for (WidgetList::iterator i = m_children.begin(), itEnd = m_children.end(); i != itEnd; ++i) {
 		if ((*i).w->IsMouseOver() == true)
 			(*i).w->OnMouseLeave();
@@ -36,6 +40,7 @@ void Container::_OnMouseLeave()
 
 bool Container::OnMouseMotion(MouseMotionEvent *e)
 {
+	PROFILE_SCOPED()
 	float x = e->x;
 	float y = e->y;
 	for (WidgetList::iterator i = m_children.begin(), itEnd = m_children.end(); i != itEnd; ++i) {
@@ -70,6 +75,7 @@ bool Container::OnMouseMotion(MouseMotionEvent *e)
 
 bool Container::HandleMouseEvent(MouseButtonEvent *e)
 {
+	PROFILE_SCOPED()
 	float x = e->x;
 	float y = e->y;
 	for (WidgetList::iterator i = m_children.begin(), itEnd = m_children.end(); i != itEnd; ++i) {
@@ -191,17 +197,15 @@ void Container::Draw()
 	Graphics::Renderer *r = Gui::Screen::GetRenderer();
 	r->SetRenderState(Gui::Screen::alphaBlendState);
 
-	float size[2];
-	GetSize(size);
 	if (!m_transparent) {
-		PROFILE_SCOPED_RAW("Container::Draw - !m_transparent")
-		Theme::DrawRect(vector2f(0.f), vector2f(size[0], size[1]), m_bgcol, Screen::alphaBlendState);
+		PROFILE_SCOPED_RAW("!m_transparent")
+		Theme::DrawRect(vector2f(0.f), GetSize(), m_bgcol, Screen::alphaBlendState);
 	}
 
 	for (WidgetList::iterator i = m_children.begin(), itEnd = m_children.end(); i != itEnd; ++i) {
 		if (!(*i).w->IsVisible()) continue;
 
-		PROFILE_SCOPED_RAW("Container::Draw - Child Loop")
+		PROFILE_SCOPED_RAW("Child Loop")
 
 		Graphics::Renderer::MatrixTicket ticket(r, Graphics::MatrixMode::MODELVIEW);
 		r->Translate((*i).pos[0], (*i).pos[1], 0);
@@ -237,6 +241,7 @@ void Container::HideChildren()
 
 void Container::GetChildPosition(const Widget *child, float outPos[2]) const
 {
+	PROFILE_SCOPED()
 	WidgetList::const_iterator it = FindChild(child);
 	assert(it != m_children.end());
 	outPos[0] = it->pos[0];
