@@ -2,10 +2,19 @@ December 2014
    * New Features
      * New Multi Scoop equipment, and merge cargo and fuel scoop slots
        to a single one (#3267)
+     * New OPLI ship Storeria (#3257)
 
    * Fixes
      * Fix string "NONE" in ShipInfo not using the translated version (#3268)
      * Require OpenGL 3.1 context when opening the SDL window (#3269)
+
+   * Minor changes and tweaks
+     * Switch font texture U/V coordinates to unsigned int (#3273)
+     * README updated to markdown format (#3276)
+
+   * Internal Changes
+     * Fix spelling error in DeliverPackage
+     * Better descriptions for translation strings in ui-/core (#3272)
 
 November 2014
    * New Features
