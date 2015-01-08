@@ -518,10 +518,17 @@ void ModelViewer::DrawModel()
 
 	if (m_options.showGrid)
 		DrawGrid(mv, m_model->GetDrawClipRadius());
+
+	m_renderer->SetTransform(mv * matrix4x4f::ScaleMatrix(40.0f));
+	m_marcher->Update();
+	m_marcher->Draw();
 }
 
 void ModelViewer::MainLoop()
 {
+	m_marcher.reset(new MarchingGeometry(m_renderer));
+	m_marcher->Init();
+
 	double lastTime = SDL_GetTicks() * 0.001;
 	while (!m_done)
 	{

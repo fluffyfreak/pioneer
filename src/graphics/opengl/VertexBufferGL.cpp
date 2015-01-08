@@ -187,6 +187,12 @@ struct PosNormUVVert {
 	vector3f norm;
 	vector2f uv;
 };
+
+struct PosColNormVert {
+	vector3f pos;
+	vector3f norm;
+	Color4ub col;
+};
 #pragma pack(pop)
 
 void CopyPosUV0(Graphics::VertexBuffer *vb, const Graphics::VertexArray &va)
@@ -250,18 +256,33 @@ void CopyPosNormUV0(Graphics::VertexBuffer *vb, const Graphics::VertexArray &va)
 	vb->Unmap();
 }
 
+void CopyPosColNorm(Graphics::VertexBuffer *vb, const Graphics::VertexArray &va)
+{
+	PosColNormVert* vtxPtr = vb->Map<PosColNormVert>(Graphics::BUFFER_MAP_WRITE);
+	assert(vb->GetDesc().stride == sizeof(PosColNormVert));
+	for (Uint32 i = 0; i<va.GetNumVerts(); i++)
+	{
+		vtxPtr[i].pos = va.position[i];
+		vtxPtr[i].norm = va.normal[i];
+		vtxPtr[i].col = va.diffuse[i];
+	}
+	vb->Unmap();
+}
+
 // copies the contents of the VertexArray into the buffer
 bool VertexBuffer::Populate(const VertexArray &va)
 {
 	assert(va.GetNumVerts()>0);
+	assert(va.GetNumVerts() == m_desc.numVertices);
 	bool result = false;
 	const Graphics::AttributeSet as = va.GetAttributeSet();
 	switch( as ) {
-	case Graphics::ATTRIB_POSITION:														CopyPos(this, va);			result = true;	break;
-	case Graphics::ATTRIB_POSITION | Graphics::ATTRIB_DIFFUSE:							CopyPosCol(this, va);		result = true;	break;
-	case Graphics::ATTRIB_POSITION | Graphics::ATTRIB_UV0:								CopyPosUV0(this, va);		result = true;	break;
-	case Graphics::ATTRIB_POSITION | Graphics::ATTRIB_DIFFUSE | Graphics::ATTRIB_UV0:	CopyPosColUV0(this, va);	result = true;	break;
-	case Graphics::ATTRIB_POSITION | Graphics::ATTRIB_NORMAL | Graphics::ATTRIB_UV0:	CopyPosNormUV0(this, va);	result = true;	break;
+	case Graphics::ATTRIB_POSITION:															CopyPos(this, va);			result = true;	break;
+	case Graphics::ATTRIB_POSITION | Graphics::ATTRIB_DIFFUSE:								CopyPosCol(this, va);		result = true;	break;
+	case Graphics::ATTRIB_POSITION | Graphics::ATTRIB_UV0:									CopyPosUV0(this, va);		result = true;	break;
+	case Graphics::ATTRIB_POSITION | Graphics::ATTRIB_DIFFUSE | Graphics::ATTRIB_UV0:		CopyPosColUV0(this, va);	result = true;	break;
+	case Graphics::ATTRIB_POSITION | Graphics::ATTRIB_NORMAL | Graphics::ATTRIB_UV0:		CopyPosNormUV0(this, va);	result = true;	break;
+	case Graphics::ATTRIB_POSITION | Graphics::ATTRIB_DIFFUSE | Graphics::ATTRIB_NORMAL:	CopyPosColNorm(this, va);	result = true;	break;
 	}
 	return result;
 }

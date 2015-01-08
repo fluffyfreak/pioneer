@@ -12,6 +12,7 @@
 #include "graphics/Drawables.h"
 #include "scenegraph/SceneGraph.h"
 #include "ui/Context.h"
+#include "MarchingGeom.h"
 
 class ModelViewer {
 public:
@@ -128,6 +129,9 @@ private:
 	UI::Slider *thrustSliders[2*3]; //thruster sliders 2*xyz (linear & angular)
 
 	sigc::signal<void> onModelChanged;
+
+	//std::unique_ptr<MarchedObject> m_MarchedObject;
+	std::unique_ptr<MarchingGeometry> m_marcher;
 };
 
 #endif

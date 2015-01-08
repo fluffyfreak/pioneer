@@ -258,6 +258,7 @@
     <ClCompile Include="..\..\src\LuaUtils.cpp" />
     <ClCompile Include="..\..\src\LuaVector.cpp" />
     <ClCompile Include="..\..\src\main.cpp" />
+    <ClCompile Include="..\..\src\MarchingGeom.cpp" />
     <ClCompile Include="..\..\src\MathUtil.cpp" />
     <ClCompile Include="..\..\src\Missile.cpp" />
     <ClCompile Include="..\..\src\ModelBody.cpp" />
@@ -406,6 +407,8 @@
     <ClInclude Include="..\..\src\LuaUtils.h" />
     <ClInclude Include="..\..\src\LuaVector.h" />
     <ClInclude Include="..\..\src\LuaWrappable.h" />
+    <ClInclude Include="..\..\src\MarchingGeom.h" />
+    <ClInclude Include="..\..\src\MarchingGeomData.h" />
     <ClInclude Include="..\..\src\MathUtil.h" />
     <ClInclude Include="..\..\src\matrix3x3.h" />
     <ClInclude Include="..\..\src\matrix4x4.h" />
