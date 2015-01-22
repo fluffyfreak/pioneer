@@ -130,6 +130,8 @@ private:
 
 	sigc::signal<void> onModelChanged;
 
+	Graphics::Drawables::Lines m_gridLines;
+
 	//std::unique_ptr<MarchedObject> m_MarchedObject;
 	std::unique_ptr<MarchingGeometry> m_marcher;
 };
