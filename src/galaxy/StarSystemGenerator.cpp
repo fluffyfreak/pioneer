@@ -387,6 +387,33 @@ static const unsigned char RANDOM_RING_COLORS[][4] = {
 	{ 207, 122,  98, 217 }  // brown dwarf-like
 };
 
+double CalculateRocheLimit(const SystemBody* sbody)
+{
+	// from wikipedia: http://en.wikipedia.org/wiki/Roche_limit
+	// basic Roche limit calculation assuming a rigid satellite
+	// d = R (2 p_M / p_m)^{1/3}
+	//
+	// where R is the radius of the primary, p_M is the density of
+	// the primary and p_m is the density of the satellite
+	//
+	// I assume a satellite density of 500 kg/m^3
+	// (which Wikipedia says is an average comet density)
+	//
+	// also, I can't be bothered to think about unit conversions right now,
+	// so I'm going to ignore the real density of the primary and take it as 1100 kg/m^3
+	// (note: density of Saturn is ~687, Jupiter ~1,326, Neptune ~1,638, Uranus ~1,318)
+	// (note: density of Earth is ~5514
+	
+	const double radius = sbody->GetRadius();
+	const double volume = (4.0/3.0) * M_PI * (radius * radius * radius);
+	const double mass = sbody->GetMass();
+	const double p_M = mass/volume;
+	const double p_m(500.0);
+	const double kapow = pow(((2.0*p_M) / p_m), 1.0/3.0);
+	const double dd = radius * kapow;
+	return dd;
+}
+
 void StarSystemLegacyGeneratorBase::PickRings(SystemBody* sbody, bool forceRings)
 {
 	PROFILE_SCOPED()
@@ -431,12 +458,14 @@ void StarSystemLegacyGeneratorBase::PickRings(SystemBody* sbody, bool forceRings
 		// also, I can't be bothered to think about unit conversions right now,
 		// so I'm going to ignore the real density of the primary and take it as 1100 kg/m^3
 		// (note: density of Saturn is ~687, Jupiter ~1,326, Neptune ~1,638, Uranus ~1,318)
+		// (note: density of Earth is ~5514
 		//
 		// This gives: d = 1.638642 * R
-		fixed innerMin = fixed(110, 100);
-		fixed innerMax = fixed(145, 100);
-		fixed outerMin = fixed(150, 100);
-		fixed outerMax = fixed(168642, 100000);
+
+		static const fixed innerMin(110, 100);
+		static const fixed innerMax(145, 100);
+		static const fixed outerMin(150, 100);
+		static const fixed outerMax(168642, 100000);
 
 		sbody->m_rings.minRadius = innerMin + (innerMax - innerMin)*ringRng.Fixed();
 		sbody->m_rings.maxRadius = outerMin + (outerMax - outerMin)*ringRng.Fixed();
