@@ -405,10 +405,10 @@ void StarSystemLegacyGeneratorBase::PickRings(SystemBody* sbody, bool forceRings
 		} else if (sbody->GetType() == SystemBody::TYPE_PLANET_TERRESTRIAL) { 
 			// 1:100 (1%) chance of rings
 			bHasRings = ringRng.Double() < 0.01;
-		} else if (sbody->GetType() == SystemBody::TYPE_PLANET_ASTEROID) { 
+		} /*else if (sbody->GetType() == SystemBody::TYPE_PLANET_ASTEROID) { 
 			// 1:10 (10%) chance of rings
 			bHasRings = ringRng.Double() < 0.1;
-		}
+		}*/
 	}
 
 	if (bHasRings) {
