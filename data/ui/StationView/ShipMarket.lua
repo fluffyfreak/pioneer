@@ -1,4 +1,4 @@
--- Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local Engine = import("Engine")
@@ -8,6 +8,7 @@ local Event = import("Event")
 local Format = import("Format")
 local Lang = import("Lang")
 local ShipDef = import("ShipDef")
+local Equipment = import("Equipment")
 
 local Model = import("SceneGraph.Model")
 local ModelSkin = import("SceneGraph.ModelSkin")
@@ -19,9 +20,6 @@ local MessageBox = import("ui/MessageBox")
 local ui = Engine.ui
 
 local l = Lang.GetResource("ui-core")
-
--- XXX equipment strings are in core. this sucks
-local lcore = Lang.GetResource("core")
 
 local shipClassString = {
 	light_cargo_shuttle        = l.LIGHT_CARGO_SHUTTLE,
@@ -87,6 +85,12 @@ local function buyShip (sos)
 		MessageBox.Message(l.YOU_NOT_ENOUGH_MONEY)
 		return
 	end
+
+	if player:CrewNumber() > def.maxCrew then
+		MessageBox.Message(l.TOO_SMALL_FOR_CURRENT_CREW)
+		return
+    end
+
 	player:AddMoney(-cost)
 
 	station:ReplaceShipOnSale(sos, {
@@ -100,7 +104,9 @@ local function buyShip (sos)
 	player:SetSkin(sos.skin)
 	if sos.pattern then player.model:SetPattern(sos.pattern) end
 	player:SetLabel(sos.label)
-	player:AddEquip(def.defaultHyperdrive)
+	if def.hyperdriveClass > 0 then
+		player:AddEquip(Equipment.hyperspace["hyperdrive_" .. def.hyperdriveClass])
+	end
 	player:SetFuelPercent(100)
 
 	shipInfo:SetInnerWidget(
@@ -109,12 +115,24 @@ local function buyShip (sos)
 
 end
 
+local yes_no = function (binary)
+	if binary == 1 then
+		return l.YES
+	elseif binary == 0 then
+		return l.NO
+	else error("argument to yes_no not 0 or 1")
+	end
+end
+
 local currentShipOnSale
 
 shipTable.onRowClicked:Connect(function (row)
 	local station = Game.player:GetDockedWith()
 	currentShipOnSale = station:GetShipsOnSale()[row+1]
 	local def = currentShipOnSale.def
+
+	local hyperdrive_str = def.hyperdriveClass > 0 and
+		Equipment.hyperspace["hyperdrive_" .. def.hyperdriveClass]:GetName() or l.NONE
 
 	local forwardAccelEmpty =  def.linearThrust.FORWARD / (-9.81*1000*(def.hullMass+def.fuelTankMass))
 	local forwardAccelFull  =  def.linearThrust.FORWARD / (-9.81*1000*(def.hullMass+def.capacity+def.fuelTankMass))
@@ -144,7 +162,7 @@ shipTable.onRowClicked:Connect(function (row)
 				ui:Expand("HORIZONTAL", ui:Align("RIGHT", buyButton)),
 			}),
 			ModelSpinner.New(ui, def.modelName, currentShipOnSale.skin, currentShipOnSale.pattern),
-			ui:Label(l.HYPERDRIVE_FITTED.." "..lcore[def.defaultHyperdrive]):SetFont("SMALL"),
+			ui:Label(l.HYPERDRIVE_FITTED.." "..hyperdrive_str):SetFont("SMALL"),
 			ui:Margin(10, "TOP",
 				ui:Grid(2,1)
 					:SetFont("SMALL")
@@ -166,6 +184,9 @@ shipTable.onRowClicked:Connect(function (row)
 							:AddRow({l.MAXIMUM_CREW,        def.maxCrew})
 							:AddRow({l.WEIGHT_FULLY_LOADED, Format.MassTonnes(def.hullMass+def.capacity+def.fuelTankMass)})
 							:AddRow({l.FUEL_WEIGHT,         Format.MassTonnes(def.fuelTankMass)})
+							:AddRow({l.MISSILE_MOUNTS,      def.equipSlotCapacity["missile"]})
+							:AddRow({l.ATMOSPHERIC_SHIELDING, yes_no(def.equipSlotCapacity["atmo_shield"])})
+							:AddRow({l.SCOOP_MOUNTS,        def.equipSlotCapacity["scoop"]})
 					})
 			),
 		})

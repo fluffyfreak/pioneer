@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _CUSTOMSYSTEM_H
@@ -11,6 +11,7 @@
 #include "Color.h"
 
 class Faction;
+class Galaxy;
 
 class CustomSystemBody {
 public:
@@ -64,30 +65,49 @@ public:
 
 class CustomSystem {
 public:
-	typedef std::vector<CustomSystem*> SystemList;
-	static void Init();
-	static void Uninit();
-	// XXX this is not as const-safe as it should be
-	static const SystemList &GetCustomSystemsForSector(int sectorX, int sectorY, int sectorZ);
-
+	static const int CUSTOM_ONLY_RADIUS = 4;
 	CustomSystem();
 	~CustomSystem();
 
 	std::string            name;
     CustomSystemBody*      sBody;
 	SystemBody::BodyType   primaryType[4];
-	int                    numStars;
+	unsigned               numStars;
 	int                    sectorX, sectorY, sectorZ;
 	vector3f               pos;
 	Uint32                 seed;
 	bool                   want_rand_explored;
 	bool                   explored;
-	Faction*               faction;
+	const Faction*         faction;
 	Polit::GovType         govType;
+	bool                   want_rand_lawlessness;
+	fixed                  lawlessness; // 0.0 = lawful, 1.0 = totally lawless
 	std::string            shortDesc;
 	std::string            longDesc;
 
 	bool IsRandom() const { return !sBody; }
+};
+
+class CustomSystemsDatabase {
+public:
+	CustomSystemsDatabase(Galaxy* galaxy, const std::string& customSysDir) : m_galaxy(galaxy), m_customSysDirectory(customSysDir) { }
+	~CustomSystemsDatabase();
+
+	void Init();
+
+	typedef std::vector<const CustomSystem*> SystemList;
+	// XXX this is not as const-safe as it should be
+	const SystemList &GetCustomSystemsForSector(int sectorX, int sectorY, int sectorZ) const;
+	void AddCustomSystem(const SystemPath& path, CustomSystem* csys);
+	Galaxy* GetGalaxy() const { return m_galaxy; }
+
+private:
+	typedef std::map<SystemPath, CustomSystemsDatabase::SystemList> SectorMap;
+
+	Galaxy* const m_galaxy;
+	const std::string m_customSysDirectory;
+	SectorMap m_sectorMap;
+	static const CustomSystemsDatabase::SystemList s_emptySystemList; // see: Null Object pattern
 };
 
 #endif /* _CUSTOMSYSTEM_H */

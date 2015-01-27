@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _SPACE_H
@@ -9,7 +9,7 @@
 #include "vector3.h"
 #include "Serializer.h"
 #include "RefCounted.h"
-#include "galaxy/SectorCache.h"
+#include "galaxy/GalaxyCache.h"
 #include "galaxy/StarSystem.h"
 #include "Background.h"
 #include "IterationProxy.h"
@@ -23,13 +23,13 @@ class Game;
 class Space {
 public:
 	// empty space (eg for hyperspace)
-	Space(Game *game);
+	Space(Game *game, RefCountedPtr<Galaxy> galaxy, Space* oldSpace = nullptr);
 
 	// initalise with system bodies
-	Space(Game *game, const SystemPath &path);
+	Space(Game *game, RefCountedPtr<Galaxy> galaxy, const SystemPath &path, Space* oldSpace = nullptr);
 
 	// initialise from save file
-	Space(Game *game, Serializer::Reader &rd, double at_time);
+	Space(Game *game, RefCountedPtr<Galaxy> galaxy, Serializer::Reader &rd, double at_time);
 
 	virtual ~Space();
 
@@ -81,7 +81,8 @@ public:
 
 
 private:
-	void GenSectorCache(const SystemPath* here);
+	void GenSectorCache(RefCountedPtr<Galaxy> galaxy, const SystemPath* here);
+	void UpdateStarSystemCache(const SystemPath* here);
 	void GenBody(double at_time, SystemBody *b, Frame *f);
 	// make sure SystemBody* is in Pi::currentSystem
 	Frame *GetFrameWithSystemBody(const SystemBody *b) const;
@@ -93,6 +94,7 @@ private:
 	std::unique_ptr<Frame> m_rootFrame;
 
 	RefCountedPtr<SectorCache::Slave> m_sectorCache;
+	RefCountedPtr<StarSystemCache::Slave> m_starSystemCache;
 
 	RefCountedPtr<StarSystem> m_starSystem;
 

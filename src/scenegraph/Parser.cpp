@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Parser.h"
@@ -183,6 +183,8 @@ bool Parser::parseLine(const std::string &line)
 					return checkTexture(ss, m_curMat->tex_spec);
 				else if (match(token, "tex_glow"))
 					return checkTexture(ss, m_curMat->tex_glow);
+				else if (match(token, "tex_ambi"))
+					return checkTexture(ss, m_curMat->tex_ambi);
 				else if (match(token, "diffuse"))
 					return checkColor(ss, m_curMat->diffuse);
 				else if (match(token, "specular"))

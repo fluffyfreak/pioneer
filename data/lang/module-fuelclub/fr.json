@@ -17,7 +17,7 @@
    },
    "FLAVOUR_0_NONMEMBER_INTRO" : {
       "description" : "",
-      "message" : "{clubname} est une organisation indépendante créée afin de fournir a ses membres du carburant de vaisseau a prix discount. Des agences sont présentes dans toute la galaxie. Avantages inclus pour les membres:\n\n * Nos propres stocks de carburant, indépendants du marché de la bourse\n *  {hydrogen} a prix reduits\n *  {military_fuel} a prix reduits\n *  {water} a prix reduits\n *  {radioactives}, dépot gratuit (sous conditions)\n *  Remplissage des reservoirs en cas de besoin\n\nRejoignez nous! La cotisation annuelle ne coute que {membership_fee}"
+      "message" : "{clubname} est une organisation indépendante dont le but est de fournir à ses membre du carburant au meilleur prix. Elle possède des succursales dans toute la galaxie. Les membres bénéficient des avantages suivants :"
    },
    "FLAVOUR_0_WELCOME" : {
       "description" : "",
@@ -27,25 +27,25 @@
       "description" : "",
       "message" : "Retour"
    },
-   "HANG_UP" : {
+   "LIST_BENEFITS_DISPOSAL" : {
       "description" : "",
-      "message" : "Raccrochez."
+      "message" : "{radioactives}, élimination gratuite (selon conditions)"
    },
-   "HYDROGEN" : {
+   "LIST_BENEFITS_FUEL" : {
       "description" : "",
-      "message" : "Hydrogène"
+      "message" : "{fuel} à prix cassés"
    },
-   "MILITARY_FUEL" : {
+   "LIST_BENEFITS_FUEL_INTRO" : {
       "description" : "",
-      "message" : "Carburant militaire"
+      "message" : "Nos propres réserves de carburant, en dehors du marché officiel."
    },
-   "RADIOACTIVES" : {
+   "LIST_BENEFITS_FUEL_TANK" : {
       "description" : "",
-      "message" : "Déchets radioactifs"
+      "message" : "Remplissage du réservoir de carburant, à l'endroit où c'est nécessaire."
    },
-   "WATER" : {
+   "LIST_BENEFITS_JOIN" : {
       "description" : "",
-      "message" : "Eau"
+      "message" : "Inscrivez-vous! Notre cotisation annuelle ne revient qu'à {membership_fee}"
    },
    "WE_WILL_ONLY_DISPOSE_OF" : {
       "description" : "",

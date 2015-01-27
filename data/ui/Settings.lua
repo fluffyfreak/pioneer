@@ -1,14 +1,15 @@
--- Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local Game = import("Game")
 local Engine = import("Engine")
 local Lang = import("Lang")
 local utils = import("utils")
-local TabGroup = import("ui/TabGroup")
+local TabView = import("ui/TabView")
 local SmallLabeledButton = import("ui/SmallLabeledButton")
 local KeyBindingCapture = import("UI.Game.KeyBindingCapture")
 local AxisBindingCapture = import("UI.Game.AxisBindingCapture")
+local ErrorScreen = import("ErrorScreen")
 
 local ui = Engine.ui
 local l = Lang.GetResource("ui-core");
@@ -95,6 +96,10 @@ ui.templates.Settings = function (args)
 			Engine.GetDisplayNavTunnels, Engine.SetDisplayNavTunnels,
 			l.DISPLAY_NAV_TUNNELS)
 
+		local compactScannerCheckBox = optionCheckBox(
+			Engine.GetCompactScanner, Engine.SetCompactScanner,
+			l.COMPACT_SCANNER)
+
 		local speedLinesCheckBox = optionCheckBox(
 			Engine.GetDisplaySpeedLines, Engine.SetDisplaySpeedLines,
 			l.DISPLAY_SPEED_LINES)
@@ -110,9 +115,6 @@ ui.templates.Settings = function (args)
 		local fullScreenCheckBox = optionCheckBox(
 			Engine.GetFullscreen, Engine.SetFullscreen,
 			l.FULL_SCREEN)
-		local compressionCheckBox = optionCheckBox(
-			Engine.GetTextureCompressionEnabled, Engine.SetTextureCompressionEnabled,
-			l.COMPRESS_TEXTURES)
 
 		return ui:Grid({1,1}, 1)
 			:SetCell(0,0, ui:Margin(5, 'ALL', ui:VBox(5):PackEnd({
@@ -120,7 +122,6 @@ ui.templates.Settings = function (args)
 				modeDropDown,
 				aaDropDown,
 				fullScreenCheckBox,
-				compressionCheckBox,
 			})))
 			:SetCell(1,0, ui:Margin(5, 'ALL', ui:VBox(5):PackEnd({
 				planetDetailDropDown,
@@ -131,6 +132,7 @@ ui.templates.Settings = function (args)
 				speedLinesCheckBox,
 				hudTrailsCheckBox,
 				cockpitCheckBox,
+				compactScannerCheckBox,
 			})))
 	end
 
@@ -284,7 +286,7 @@ ui.templates.Settings = function (args)
 		button.button.onClick:Connect(function ()
 			local dialog = captureAxisDialog(info.label, function (new_binding, new_binding_description)
 				Engine.SetKeyBinding(info.id, new_binding)
-				button.label:SetText(new_binding_description)
+				button.label:SetText(new_binding_description or '')
 			end)
 			ui:NewLayer(dialog)
 		end)
@@ -333,7 +335,7 @@ ui.templates.Settings = function (args)
 	end
 
 	local setTabs = nil
-	setTabs = TabGroup.New()
+	setTabs = TabView.New()
 	setTabs:AddTab({ id = "Video",    title = l.VIDEO,    icon = "VideoCamera", template = wrapWithScroller(videoTemplate)    })
 	setTabs:AddTab({ id = "Sound",    title = l.SOUND,    icon = "Speaker",     template = wrapWithScroller(soundTemplate)    })
 	setTabs:AddTab({ id = "Language", title = l.LANGUAGE, icon = "Globe1",      template = wrapWithScroller(languageTemplate) })
@@ -346,6 +348,9 @@ ui.templates.Settings = function (args)
 			local btn = ui:Button():SetInnerWidget(ui:Label(items[i].text))
 			btn.onClick:Connect(items[i].onClick)
 			close_buttons[i] = btn
+			if (items[i].toDisable and items[i].toDisable()) then
+				btn:Disable()
+			end
 		end
 	end
 
@@ -361,25 +366,35 @@ end
 ui.templates.SettingsInGame = function ()
 	return ui.templates.Settings({
 		closeButtons = {
-			{ text = l.SAVE, onClick = function ()
-				local settings_view = ui.layer.innerWidget
-				ui:NewLayer(
-					ui.templates.FileDialog({
-						title        = l.SAVE,
-						helpText     = l.SELECT_A_FILE_TO_SAVE_TO_OR_ENTER_A_NEW_FILENAME,
-						path         = "savefiles",
-						allowNewFile = true,
-						selectLabel  = l.SAVE,
-						onSelect     = function (filename)
-							Game.SaveGame(filename)
-							ui:DropLayer()
-						end,
-						onCancel    = function ()
-							ui:DropLayer()
-						end
-					})
-				)
-			end },
+			{
+				text = l.SAVE,
+				onClick = function ()
+					local settings_view = ui.layer.innerWidget
+					ui:NewLayer(
+						ui.templates.FileDialog({
+							title        = l.SAVE,
+							helpText     = l.SELECT_A_FILE_TO_SAVE_TO_OR_ENTER_A_NEW_FILENAME,
+							path         = "savefiles",
+							allowNewFile = true,
+							selectLabel  = l.SAVE,
+							onSelect     = function (filename)
+								local ok, err = pcall(Game.SaveGame, filename)
+								if not ok then
+									ErrorScreen.ShowError(err)
+								end
+								ui:DropLayer()
+							end,
+							onCancel    = function ()
+								ui:DropLayer()
+							end
+						})
+					)
+				end,
+				toDisable = function()
+					return Game.player.flightState == "HYPERSPACE"
+				end
+			},
+			{ text = l.RETURN_TO_GAME, onClick = Game.SwitchView },
 			{ text = l.EXIT_THIS_GAME, onClick = Game.EndGame }
 		}
 	})

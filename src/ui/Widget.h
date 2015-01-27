@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef UI_WIDGET_H
@@ -205,10 +205,6 @@ public:
 	virtual Widget *SetFont(Font font);
 	Font GetFont() const;
 
-	// widget id. used for queries/searches
-	const std::string &GetId() const { return m_id; }
-	Widget *SetId(const std::string &id) { m_id = id; return this; }
-
 	// bind an object property to a widget bind point
 	void Bind(const std::string &bindName, PropertiedObject *object, const std::string &propertyName);
 
@@ -258,6 +254,8 @@ public:
 	// synthesised when keyboard shortcut is used
 	sigc::signal<bool>::accumulated<EventHandlerResultAccumulator> onClick;
 
+	// Widget events
+	sigc::signal<void,bool> onVisibilityChanged;
 
 protected:
 
@@ -333,6 +331,11 @@ protected:
 
 	void RegisterBindPoint(const std::string &bindName, sigc::slot<void,PropertyMap &,const std::string &> method);
 
+
+	float GetAnimatedOpacity() const { return m_animatedOpacity; }
+	float GetAnimatedPositionX() const { return m_animatedPositionX; }
+	float GetAnimatedPositionY() const { return m_animatedPositionY; }
+
 private:
 
 	// EventDispatcher needs to give us events
@@ -372,6 +375,7 @@ private:
 	void TriggerSelect();
 	void TriggerDeselect();
 
+	void TriggerVisibilityChanged();
 
 	// let container set our attributes. none of them make any sense if
 	// we're not in a container
@@ -392,6 +396,15 @@ private:
 	// and size directly
 	friend class Context;
 	void SetSize(const Point &size) { m_size = size; SetActiveArea(size); }
+
+
+	// Animation needs to change our animation attributes
+	friend class Animation;
+
+	void SetAnimatedOpacity(float opacity) { m_animatedOpacity = opacity; }
+	void SetAnimatedPositionX(float pos) { m_animatedPositionX = pos; }
+	void SetAnimatedPositionY(float pos) { m_animatedPositionY = pos; }
+
 
 	Context *m_context;
 	Container *m_container;
@@ -415,10 +428,12 @@ private:
 
 	std::set<KeySym> m_shortcuts;
 
-	std::string m_id;
-
 	std::map< std::string,sigc::slot<void,PropertyMap &,const std::string &> > m_bindPoints;
 	std::map< std::string,sigc::connection > m_binds;
+
+	float m_animatedOpacity;
+	float m_animatedPositionX;
+	float m_animatedPositionY;
 };
 
 }

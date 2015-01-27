@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _TERRAIN_H
@@ -89,9 +89,6 @@ protected:
 	double m_invMaxHeight;
 	double m_planetRadius;
 	double m_planetEarthRadii;
-	double m_noise1;
-	double m_noise2;
-	double m_noise3;
 
 	double m_entropy[12];
 

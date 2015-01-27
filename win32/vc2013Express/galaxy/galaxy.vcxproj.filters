@@ -9,7 +9,11 @@
     <ClCompile Include="..\..\..\src\win32\pch.cpp">
       <Filter>win32</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\galaxy\SectorCache.cpp" />
+    <ClCompile Include="..\..\..\src\galaxy\GalaxyCache.cpp" />
+    <ClCompile Include="..\..\..\src\galaxy\Economy.cpp" />
+    <ClCompile Include="..\..\..\src\galaxy\GalaxyGenerator.cpp" />
+    <ClCompile Include="..\..\..\src\galaxy\SectorGenerator.cpp" />
+    <ClCompile Include="..\..\..\src\galaxy\StarSystemGenerator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\galaxy\CustomSystem.h" />
@@ -20,7 +24,11 @@
     <ClInclude Include="..\..\..\src\win32\pch.h">
       <Filter>win32</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\galaxy\SectorCache.h" />
+    <ClInclude Include="..\..\..\src\galaxy\GalaxyCache.h" />
+    <ClInclude Include="..\..\..\src\galaxy\Economy.h" />
+    <ClInclude Include="..\..\..\src\galaxy\GalaxyGenerator.h" />
+    <ClInclude Include="..\..\..\src\galaxy\SectorGenerator.h" />
+    <ClInclude Include="..\..\..\src\galaxy\StarSystemGenerator.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="win32">

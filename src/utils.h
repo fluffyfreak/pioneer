@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _UTILS_H
@@ -30,6 +30,7 @@
 void Error(const char *format, ...) __attribute((format(printf,1,2))) __attribute((noreturn));
 void Warning(const char *format, ...)  __attribute((format(printf,1,2)));
 void Output(const char *format, ...)  __attribute((format(printf,1,2)));
+void OpenGLDebugMsg(const char *format, ...)  __attribute((format(printf,1,2)));
 
 // Helper for timing functions with multiple stages
 // Used on a branch to help time loading.
@@ -51,7 +52,7 @@ std::string string_join(std::vector<std::string> &v, std::string sep);
 std::string format_date(double time);
 std::string format_date_only(double time);
 std::string format_distance(double dist, int precision = 2);
-std::string format_money(Sint64 cents, bool showCents=true);
+std::string format_money(double cents, bool showCents=true);
 
 
 static inline Sint64 isqrt(Sint64 a)
@@ -71,7 +72,11 @@ static inline Sint64 isqrt(Sint64 a)
 	return ret;
 }
 
-void Screendump(const char* destFile, const int w, const int h);
+namespace Graphics {
+    struct ScreendumpState;
+}
+
+void write_screenshot(const Graphics::ScreendumpState &sd, const char* destFile);
 
 // find string in bigger string, ignoring case
 const char *pi_strcasestr(const char *haystack, const char *needle);

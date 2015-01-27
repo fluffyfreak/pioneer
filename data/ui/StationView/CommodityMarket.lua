@@ -1,11 +1,10 @@
--- Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local Engine = import("Engine")
 local Lang = import("Lang")
 local Game = import("Game")
 local ShipDef = import("ShipDef")
-local EquipDef = import("EquipDef")
 
 local EquipmentTableWidgets = import("EquipmentTableWidgets")
 
@@ -17,6 +16,9 @@ local commodityMarket = function (args)
 	local stationTable, shipTable = EquipmentTableWidgets.Pair({
 		stationColumns = { "icon", "name", "price", "stock" },
 		shipColumns = { "icon", "name", "amount" },
+		getSellPrice = function (e)
+			return Game.player:GetDockedWith():GetEquipmentPrice(e)
+		end,
 	})
 
 	return

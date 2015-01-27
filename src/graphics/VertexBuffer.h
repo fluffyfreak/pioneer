@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef GRAPHICS_VERTEXBUFFER_H
@@ -22,6 +22,9 @@
 #include "graphics/Types.h"
 
 namespace Graphics {
+
+// fwd declaration
+class VertexArray;
 
 const Uint32 MAX_ATTRIBS = 8;
 
@@ -65,6 +68,7 @@ protected:
 
 class VertexBuffer : public RefCounted, public Mappable {
 public:
+	VertexBuffer(const VertexBufferDesc &desc) : m_desc(desc) {}
 	virtual ~VertexBuffer();
 	const VertexBufferDesc &GetDesc() const { return m_desc; }
 
@@ -77,6 +81,12 @@ public:
 	//you may set a smaller count for partial rendering
 	Uint32 GetVertexCount() const;
 	void SetVertexCount(Uint32);
+
+	// copies the contents of the VertexArray into the buffer
+	virtual bool Populate(const VertexArray &) = 0;
+
+	virtual void Bind() = 0;
+	virtual void Release() = 0;
 
 protected:
 	virtual Uint8 *MapInternal(BufferMapMode) = 0;

@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Terrain.h"
@@ -23,9 +23,7 @@ double TerrainHeightFractal<TerrainHeightRuggedDesert>::GetHeight(const vector3d
 	double hills = hill_distrib * GetFracDef(3).amplitude * billow_octavenoise(GetFracDef(3), 0.5, p);
 	double dunes = hill_distrib * GetFracDef(5).amplitude * dunes_octavenoise(GetFracDef(5), 0.5, p);
 	double n = continents * GetFracDef(0).amplitude * 2 ;//+ (cliff_function(GetFracDef(6), p)*0.5);
-	double m = n * 0.5;
-	m = (n<0.0 ? 0.0 : n);
-	n += m;
+	n += (n<0.0 ? 0.0 : n);
 
 	// makes larger dunes at lower altitudes, flat ones at high altitude.
 	mountains = mountain_distrib * GetFracDef(3).amplitude * mountains*mountains*mountains;

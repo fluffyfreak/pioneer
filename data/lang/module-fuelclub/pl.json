@@ -17,7 +17,7 @@
    },
    "FLAVOUR_0_NONMEMBER_INTRO" : {
       "description" : "",
-      "message" : "{clubname} jest niezależną organizacją, udostępniającą swoim członkom własne zapasy paliwa, posiadamy filie w całej galaktyce. Korzyści płynące z członkostwa:\n\n\t* Posiadamy własne zapasy paliwa, niezależne od zapasów na wolnym rynku.\n\t* {hydrogen} w atrakcyjnej cenie.\n\t* {military_fuel} w atrakcyjnej cenie.\n\t* {water} w atrakcyjnej cenie.\n\t* {radioactives} - darmowa utylizacja (pod pewnymi warunkami).\n\t* Uzupełnienie zbiornika z paliwem, kiedy to konieczne.\n\nPrzyłącz się! Członkostwo kosztuje tylko {membership_fee} rocznie"
+      "message" : "{clubname} jest niezależną organizacją, udostępniającą swoim członkom własne zapasy paliwa, posiadamy filie w całej galaktyce. Korzyści płynące z członkostwa:"
    },
    "FLAVOUR_0_WELCOME" : {
       "description" : "",
@@ -27,25 +27,25 @@
       "description" : "",
       "message" : "Powrót"
    },
-   "HANG_UP" : {
+   "LIST_BENEFITS_DISPOSAL" : {
       "description" : "",
-      "message" : "Rozłącz się."
+      "message" : "{radioactives} - darmowa utylizacja (pod pewnymi warunkami)"
    },
-   "HYDROGEN" : {
+   "LIST_BENEFITS_FUEL" : {
       "description" : "",
-      "message" : "Wodór"
+      "message" : "{fuel} w atrakcyjnej cenie"
    },
-   "MILITARY_FUEL" : {
+   "LIST_BENEFITS_FUEL_INTRO" : {
       "description" : "",
-      "message" : "Paliwo wojskowe"
+      "message" : "Posiadamy własne zapasy paliwa, niezależne od zapasów na wolnym rynku"
    },
-   "RADIOACTIVES" : {
+   "LIST_BENEFITS_FUEL_TANK" : {
       "description" : "",
-      "message" : "Odpady radioaktywne"
+      "message" : "Uzupełnienie zbiornika z paliwem, kiedy to konieczne"
    },
-   "WATER" : {
+   "LIST_BENEFITS_JOIN" : {
       "description" : "",
-      "message" : "Woda"
+      "message" : "Przyłącz się! Roczne członkostwo kosztuje tylko {membership_fee}"
    },
    "WE_WILL_ONLY_DISPOSE_OF" : {
       "description" : "",

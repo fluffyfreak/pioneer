@@ -1,3 +1,374 @@
+January 2015
+   * Fixes
+     * Fix 3310 (#3312)
+     * Fix 3313 (#3316)
+     * Fix Ship:onShipEquipmentChanged (#3326)
+     * Ship launch thrust timer fix (#3330)
+     * Fix the UI strange rendering (#3332)
+     * Update the ToolTip text layout (#3334)
+
+   * Internal Chnages
+     * Remove DrawPoints & DrawLines methods (#3303)
+     * Dummy renderer for headless tools (#3306)
+     * Fix scanner drawing post-load (#3309)
+     * Faster text buffer rendering (#3304)
+     * Ignore any sgm files in the repository (#3315)
+     * Faster deduplication of collision data (#3319)
+     * Stop vs2013 using the whole program optimisation (#3333)
+     * Equipment strings moved to new translation module (#3295)
+
+   * Optimisation
+     * Animation interpolation optimisation (#3327)
+     * Ship nearby optimise (#3328)
+
+December 2014
+   * New Features
+     * New Multi Scoop equipment, and merge cargo and fuel scoop slots
+       to a single one (#3267)
+     * New OPLI ship Storeria (#3257)
+     * Our two space stations decommissioned (hoop and big_crappy) and three new jaw
+       dropping amazing ones enter service! (#3099)
+
+   * Fixes
+     * Fix string "NONE" in ShipInfo not using the translated version (#3268)
+     * Require OpenGL 3.1 context when opening the SDL window (#3269)
+     * Move parentheses to correct position for ATLAS_SIZE test (#3299)
+
+   * Minor changes and tweaks
+     * Switch font texture U/V coordinates to unsigned int (#3273)
+     * README updated to markdown format (#3276)
+     * Ship and station labels can now include line breaks (#3188)
+     * Changed to compile as c++ for all build configurations (#3288)
+     * Handle non-core strings for lua equipment (#3279)
+     * Use counter not named bays for stations (#3291)
+
+   * Internal Changes
+     * Fix spelling error in DeliverPackage
+     * Better descriptions for translation strings in ui-/core (#3272)
+     * Change the Star Color structures to use Color instead of Uint8 (#3285)
+     * Remove the Colours.h/cpp files (#3289)
+     * Several bugfixes to the Lua serializer triggered by recent code (#3279)
+     * Remove redundant code and translation strings (#3294)
+     * Optimise VertexBuffer usage for SG Nodes (#3300)
+     * Bundle Collision with SGM file (#3297)
+
+November 2014
+   * New Features
+     * Update to use OpenGL 3.2 (#3219)
+
+   * Script and UI API changes
+     * Added random number from Poisson distribution (#3242)
+
+   * Minor changes and tweaks
+     * Introduce special footer when player is in equipment market,
+       fixes #3117 (#3238)
+     * A smarter ShipMarket in SpaceStation (#3243)
+     * Fix Anti-Aliasing (#3246)
+     * Remove defunct shader programs (#3258)
+     * Extra checking for program creation (#3253)
+     * Fix (unnoticeable) logical error in cargo code (#3261)
+     * Add CppCheck file. (#3266)
+
+   * Fixes
+     * Update deprecated gun tag on Lunar shuttle (#3245)
+     * Fix Open GL errors causing MXE build not working (#3251)
+
+   * Internal Changes
+     * The OSX build showed these might be shadowed (#3248)
+     * Json ship definitions (#3252)
+     * Disable shader validation due to OSX bug (#3260)
+     * Remove GLEW, use glLoadGen, downgrade to OpenGL 3.1 (#3265)
+
+October 2014
+   * Art
+     * Lunar Shuttle facelift (#3230)
+     * Apsis icon and crosshair polish (#3223)
+
+   * Minor changes and tweaks
+     * More variation in city size / dimension (#3227)
+
+   * New Features
+     * We now have a build script for NixOS Linux (#3208)
+     * Flying with gears down increases drag (#2509, #3207)
+     * New Trade Analyzer ship component (#3200)
+     * Added Horizon Culling for planets (#3216)
+     * Second Hand ship equipment advert for BBS (#3220)
+     * Google Breakpad (MSVC only) (#3211)
+
+   * Fixes
+     * Remove detail changes (#3213)
+     * Replace #pragma once by traditional include guards. (#3215)
+     * Fix #3224 (#3225)
+     * Re-init the cockpit when we buy a new ship (#3226)
+     * Fix ObjectViewer crash for non-planets (#3228)
+     * Fix alpha blending and render to texture (#3229)
+     * Fix the crosshair rendering (#3232)
+     * Match the BeginFrame with an EndFrame (#3235)
+     * Deadzone (#3236)
+
+September 2014
+   * New Features
+     * System exploration (#3201)
+
+   * Fixes
+     * Fix wrong reinitialization of random generator (#3156)
+     * Fix crash at Daniel's Haven (#3157)
+     * Cargo body needs to save/load its self destruct timer (#3170)
+     * Fix mismatch between saving/loading code (#3172)
+     * Fix behaviour of autosave system (#3163, #3101)
+     * Fix possible crash when accepting mission in paused (#2732, #3169)
+     * Fix compilation errors on Mac OS X (#3182,#3183)
+     * Fix the Line3D rendering issue (#3190)
+     * Fix the construction of the Circle drawables. (#3192)
+     * Fix orientation of galaxy density map (#3197)
+     * Remove invalid asserts (#3206)
+     * Attributes for uv coords should be vec4 not vec2 (#3205)
+
+   * Minor changes and tweaks
+     * Show buy and sell prices in commodity market (#3153)
+     * Add new author's names to name generator (#3155)
+     * Commodity sell price too low (#3161)
+     * Make Stars visible during eclipse (#3100)
+     * Cap maximum number of police GoodsTraders (#3165)
+     * Better background intensity calculation for Eclipse (#3171)
+     * Randomize planet phase angle (#3135)
+     * Terrain detail / depth changes (#3184)
+     * Output SDL version on start (#3196)
+     * Player defined Ship names (#3176)
+     * Update galaxy colour image (#3197)
+
+   * Script and UI API changes
+     * Allow to set lawlessness in custom systems (#3166)
+     * FileSystem.ReadDirectory now includes timestamps for files (#3163)
+     * Expose pause/unpause events to Lua (#3169)
+
+   * Internal Changes
+     * Improve galaxy image handling (#3154)
+     * Refactor galaxy generation code (#2773, #3167)
+     * Recreate folder structure for sgm batch export (#3162)
+     * Cargo body improvement (#3168)
+     * Easier to model docking - Part 1 (#3075)
+     * Const-correctness in CustomSystems and Factions (#3174)
+     * Restrict FreeType to a single translation unit (#3175, #1203)
+     * Game views refactoring (#3181)
+     * More drawable classes, minor fixes (#3187)
+     * More cache unification (#3193)
+     * Refactor face generator code to support some future changes (#3180)
+     * Shader Attributes and required refactoring (#3194)
+     * Refactoring: Get rid of global Galaxy object (#3198)
+     * Galaxy density map, factions, custom systems controlled by GalaxyGenerator (#3199)
+
+August 2014
+
+   * New features
+     * Bring Luomu's game msg log over from the SSP fork (#2527)
+     * Display ships in system view (#3115)
+     * Display ship heading and pitch (#3108)
+     * Advanced radar mapper works in system orbital view (#3122)
+     * Draw periapsis/apoapsis as icons on system view orbits (#3133)
+     * Improved Joystick Binding (#3141)
+
+   * Minor changes and tweaks
+     * Consistent set nav target on click in SystemView (#3125)
+     * Write opengl.txt earlier to help debugging (#3138, #3137, #3132)
+     * Bigger font for msg log (3143)
+     * Add support for patterns to space stations (#3151)
+
+   * Script and UI API changes
+     * Ship:UseECM() returns recharge time and success state.
+     * Update COMPILING.txt, and add Doxygen support (#3136)
+
+   * Fixes
+     * Fix trade ship without atmoshield causing crash in system with only
+       stations on worlds with atmosphere (#3107)
+     * Fix crash when clicking a view change button (F1-F4) while a new-ui
+       message box is being displayed (#3111, #3110)
+     * Zoom out button before zoom in in system,sector,galactic view (#3112)
+     * Fix an Exit Game widget crash. (#3106)
+     * Fix bad faction colour only being applied to uninhabited (#3116)
+     * Destroy Hyperspace clouds after 2 days of ingame time (#3118)
+     * Fix system view ship crash (#3119)
+     * Fix refreshing assertion in SystemInfoView (#3120)
+     * Fix unnecessary limit on ship base price (#3129, #3130)
+     * Fix crash from TradeShips trying to serialize dead ships (#3126, #3123)
+     * Fix Fuel club discount not being applied (#3140)
+     * Fix system information updating during hyperjump (#3150)
+
+July 2014
+
+   * New features
+     * New ship AC33 (Military version of venturestar), and updated meshes for
+       other ALBR ships, Deneb and Venturestar, and updated textures (#3008)
+     * Attitude-hold flight modes, accessed from the in-flight F4 menu (#3014)
+     * NewUI graphics for the cpanel (#3084)
+     * Economy screen improvements (#3081)
+     * Add orbital transfer planner to system view (#3079)
+
+   * Minor changes and tweaks
+     * Include the Lua stack top in the debug overlay.
+     * Don't list lasers under "Equipment" in InfoView, since already listed
+       under forward/read mounts (#3010)
+     * Minor cpanel widget spacing adjustment (#3094)
+     * General cleanup (#3086)
+     * added ship:UseECM() (#3092)
+     * Life Emergence Respects Stellar Lifespans (#3015)
+     * Resize scanner (#3093)
+     * Add hud icons (#3096)
+
+   * Fixes
+     * Fix potential Lua stack overflows when calling Lua methods (#3003)
+     * Fix Lua stack leaks when triggering Lua UI templates from C++
+       (#3004, #2996, #2997, #2999, #3000, #3001)
+     * Fix crash on game start on Mac OS X builds (#2995, #2993)
+     * Fix hyperrange bug (#3007, #3017)
+     * Fix invalid orbital plane for lone orbital stations (#3022, #3018, #3026)
+     * Fix use of fuel when hyperjumping (#3024, #3019, #3028)
+     * Fix directory enumeration on POSIX systems when built with a
+       PIONEER_DATA_DIR value that contains a trailing slash (#3031, #2545)
+     * Fix hyperspace details shown in the Sector View (#3037, #3033)
+     * Fix crash when the player collides with floating cargo (#3043, #3041)
+     * Fix incorrect usedCargo values (#3036, #3035, #3020, #3044)
+     * Fix incorrect cargo/free space values on game load (#3052, #3049)
+     * Fix empty cargo lists (#3044, #3039, #3040)
+     * Fix crash and skipped updates when firing missiles (#3044, #3038)
+     * Fix internal tank refuelling from cargo (#3044, #3046)
+     * Fix cargo scooping so it only works if you have the equipment (#3053, #3045)
+     * Fix equipment remaining available after buying a new ship (#3052, #3027)
+     * Fix missing ship total mass limit when adding equipment/cargo (#3052)
+     * Fix Lua error in some circumstances when using Ship:SetEquip (#3052)
+     * Fix warning about missing icons/goods/missile_*.png (#3059, #3057)
+     * Don't attempt to autosave after the player has died (#3060, #3056, #2895)
+     * Bring back the facility to install a rear laser (#3067, #3064)
+     * Fix misplaced ECM blast effect (#3087, #3082)
+     * Fix misplaced text on HUD gauges for fuel, hull temp, etc (#3090, #3088)
+     * Fix bugs when you completely clear a key binding (#3085, #3083)
+     * Fix for faulty temperature calculation for multiple systems (#2984)
+
+   * Internal Changes
+     * Internal clean-up to remove unnecessary equipment code (#3058)
+
+June 2014
+
+   * New features
+     * New light and fast shuttle "Varada" (#2975)
+
+   * Minor changes and tweaks
+     * Don't allow fuel scoop on Kanara civ (#2929)
+     * Faction update to match wiki (#2930)
+     * Proper rocketship icon by Evarchart (#2942)
+     * DDS for all models (#2945)
+     * Support SGM files, disable texture options, new modelcompiler tool (#2962)
+     * Change the default orbit of space station, allowing for more around a
+       single planet (#2973)
+     * Savefile version bump (#1719, #2969, #2973)
+     * Grow the Lua stack as needed when saving to avoid stack overflows (#2978)
+     * Add retro velocity indicator to worldview (#2974)
+     * Mouselook for external cameras (#2976)
+     * Remove domainname printout when under Mac OS
+     * Add the modelcompiler exec to the gitignore file (#2994)
+
+   * Script and UI API changes
+     * Added scripts to parse ship stats to wiki
+     * Rewrite the equipment handling in Lua. See the PR for details. (#1719)
+
+   * Fixes
+     * Fix bug/typo that let player fit hyperdrive on lunarshuttle
+     * Fixing (#2656) landing meshes (#2943)
+     * Fix money format overflow (#2939)
+     * New ground cleanup (#2950)
+     * Fix problem with multiple assassination missions not being cleared
+       properly (#2952)
+     * Always at least ONE starport (#2968)
+     * Enable different sell/buy for ship equipment (#2955)
+     * Fix bad scaling of space stations (exposed since assimp 3.1.1) (#2923)
+     * Fix a Lua stack leak when saving a LuaRef (#2977, 2978)
+     * Fix crash (#2979)
+     * Fix pirate ships with default drive 0 causing crash
+     * Extend the stack when unpickling (#2989)
+     * Fix crash from spawned enemy ships Pirates, Taxi, Delivery (#2998)
+     * Fix crash from spawned Assassination mission ship
+
+   * Internal Changes
+     * Compress default (#2940)
+     * Added lua attribute to get faction->idx as an faction id (#2949)
+
+May 2014
+
+   * Minor changes and tweaks
+     * In ship repair, since printing reported hull damage with precision
+       "%.1f", cap it at 99.9% instead of 100% (#2901)
+     * Fix Wave texture problems & missing ModelViewer pointer (#2903)
+     * Hoop station door collision (#2916)
+     * New cursor and mouse flight indicator (#2922)
+
+   * Script and UI API changes
+     * Added onShipFiring
+
+   * Internal changes
+     * Update the 3rd party libraries to ones built with vs2013 (#2899)
+     * Encapsulate custom systems, factions, caches in a Galaxy class (#2893)
+     * Fix ill-formed API documentation for Engine (#2757)
+     * No GLU dependency (#2918)
+
+   * Fixes
+     * Fix cockpit glass opacity (#2907)
+
+April 2014
+
+   * New features
+     * UI animations (#2830)
+     * Explosions (#2831)
+     * Support Fake Baked Ambient Occlusion texture (#2872)
+     * New Wave Skins (#2822)
+     * Soft mouse (#2883)
+     * Autosave when docking/undocking/landing/takeoff and on game exit (#2814)
+
+   * Minor changes and tweaks
+     * Add a Return to Game button in the pause/options screen (#2841)
+     * Disable the Save button when in hyperspace.
+     * More specific warning message in ship market if trying to buy
+       equipment that the current ship model doesn't support
+     * More stat on ship in ship market and ship info view (#1733,#2838)
+     * The autopilot now faces toward its destination during
+       the coasting phase (#2846)
+     * A "Refuel full" button added next to the refuel button (#2855,#2853)
+     * Balance - Exhaust velocity increase (#2835)
+     * Slightly bigger chat forms (#2856)
+
+   * Script and UI API changes
+     * Animation object, UI.Context.Animate and AddAnimation methods (#2830)
+     * Improve TradeShips.lua (#2851)
+     * Ship.SetShipType doesn't equip the default hyperdrive anymore
+     * ShipDef.defaultHyperdrive has been removed in favour of
+       ShipDef.hyperdriveClass (#2859)
+     * New attribute SpaceStation.numShipsDocked to get number of occupied ports
+     * Body.FindNearestTo to find bodies near this body
+
+   * Internal changes
+     * Emit Lua events and timers in hyperspace
+     * Output some system info for debugging purposes (#2832)
+     * Add serialization support for LuaRef objects (#2849)
+     * Add facilities to easily call arbitrary Lua methods from C++ (#2854, #2869)
+     * Address some warnings from cppcheck and GCC (#2871)
+     * Add possibility for synchronous jobs (#2879)
+     * Assign factions to systems when first needing it (#2887)
+     * Merge Sector and StarSystem caches in a common template class (#2880)
+
+   * Fixes
+     * Fix duplication of cargo during cargo scooping (#2644, #2828)
+     * Fix extra crew lingering after sale of ship (#2122, #2837)
+     * Fix taking off with wrong number of crew (#2837)
+     * Fix taking off with unpaid fines (#2359)
+     * Fix zero duration and fuel display in sector view after load (#2847)
+     * Fix water still sold in fuel club (#2852)
+     * Fix duplicated HANG_UP button in crew bulletin boards (#2858)
+     * Fix assertion in system info view when starport on planet with same
+       name was selected (#2848)
+     * Fix crash when Nerodia selected in shipyard (#2865, #2864)
+     * Fix internal bug in multi-threading queue (#2874)
+     * Fix crash due to ships spawning with default hyperdrive 0 (#2875,2877)
+     * Fix "return to game" crash if player is dead (#2909)
+
 March 2014
 
    * New features
@@ -10,6 +381,7 @@ March 2014
      * Money format with language specific thousand separator and
        decimal delimiter (#2810)
      * Add button to sector view to toggle auto selection mode
+     * Move sector view search results to a text area under the search box
 
    * Fixes
      * Fix volume control layout (#2798)
@@ -25,6 +397,7 @@ March 2014
      * New `inherits` function in the `utils` module to quickly implement
        class hierarchies in Lua (#2767)
      * MessageBox.Message and MessageBox.OK for modal alerts
+     * Renamed TabGroup to TabView, better explains its purpose
 
    * Internal changes
      * Update terrain to use the new VertexBuffer (#2795)

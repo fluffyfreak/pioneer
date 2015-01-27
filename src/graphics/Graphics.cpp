@@ -1,13 +1,25 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Graphics.h"
 #include "FileSystem.h"
 #include "Material.h"
-#include "RendererGL2.h"
+#include "opengl/RendererGL.h"
+#include "dummy/RendererDummy.h"
 #include "OS.h"
+#include "StringF.h"
+#include <sstream>
+#include <iterator>
 
 namespace Graphics {
+
+static RendererCreateFunc rendererCreateFunc[MAX_RENDERER_TYPE] = {};
+
+void RegisterRenderer(RendererType type, RendererCreateFunc fn) {
+	assert(type < MAX_RENDERER_TYPE);
+	assert(fn);
+	rendererCreateFunc[type] = fn;
+}
 
 static bool initted = false;
 Material *vtxColorMaterial;
@@ -59,23 +71,33 @@ Renderer* Init(Settings vs)
 	width = window->GetWidth();
 	height = window->GetHeight();
 
-	glewInit();
+	// We deliberately ignore the value from GL_NUM_COMPRESSED_TEXTURE_FORMATS, because some drivers
+	// choose not to list any formats (despite supporting texture compression). See issue #3132.
+	// This is (probably) allowed by the spec, which states that only formats which are "suitable
+	// for general-purpose usage" should be enumerated.
 
-	if (!glewIsSupported("GL_ARB_vertex_buffer_object"))
-		Error("OpenGL extension ARB_vertex_buffer_object not supported. Pioneer can not run on your graphics card.");
-
-	Renderer *renderer = 0;
-
-	if (!glewIsSupported("GL_VERSION_2_0") )
-		Error("OpenGL Version 2.0 is not supported. Pioneer cannot run on your graphics card.");
-	
-	renderer = new RendererGL2(window, vs);
+	assert(vs.rendererType < MAX_RENDERER_TYPE);
+	assert(rendererCreateFunc[vs.rendererType]);
+	Renderer *renderer = rendererCreateFunc[vs.rendererType](window, vs);
 
 	Output("Initialized %s\n", renderer->GetName());
+
+	{
+		std::ostringstream buf;
+		renderer->WriteRendererInfo(buf);
+
+		FILE *f = FileSystem::userFiles.OpenWriteStream("opengl.txt", FileSystem::FileSourceFS::WRITE_TEXT);
+		if (!f)
+			Output("Could not open 'opengl.txt'\n");
+		const std::string &s = buf.str();
+		fwrite(s.c_str(), 1, s.size(), f);
+		fclose(f);
+	}
 
 	initted = true;
 
 	MaterialDescriptor desc;
+	desc.effect = EFFECT_VTXCOLOR;
 	desc.vertexColors = true;
 	vtxColorMaterial = renderer->CreateMaterial(desc);
 	vtxColorMaterial->IncRefCount();

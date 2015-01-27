@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _SCENEGRAPH_ASSIMPLOADER_H
@@ -20,7 +20,7 @@ namespace SceneGraph {
 
 class Loader : public BaseLoader {
 public:
-	Loader(Graphics::Renderer *r, bool logWarnings = false);
+	Loader(Graphics::Renderer *r, bool logWarnings = false, bool loadSGMfiles = true);
 
 	//find & attempt to load a model, based on filename (without path or .model suffix)
 	Model *LoadModel(const std::string &name);
@@ -30,6 +30,7 @@ public:
 
 protected:
 	bool m_doLog;
+	bool m_loadSGMs;
 	bool m_mostDetailedLod;
 	std::vector<std::string> m_logMessages;
 	std::string m_curMeshDef; //for logging

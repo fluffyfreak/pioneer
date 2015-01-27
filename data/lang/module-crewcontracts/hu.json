@@ -5,7 +5,7 @@
    },
    "CREWDETAILSHEETBB" : {
       "description" : "",
-      "message" : "Legénységi posztot keres\n\nNév: {name}\nTapasztalat: {experience}\nFizetési igény: {wage} hetente\n\n{response}\n"
+      "message" : "Név: {name} \nTapasztalat: {experience} \nBér igény: {wage} hetente.\n{response}\n"
    },
    "CREWMEMBER_WAGE_PER_WEEK" : {
       "description" : "",
@@ -22,10 +22,6 @@
    "GO_BACK" : {
       "description" : "",
       "message" : "Vissza"
-   },
-   "HANG_UP" : {
-      "description" : "",
-      "message" : "Kapcsolat megszakítása."
    },
    "IM_SORRY_IM_NOT_PREPARED_TO_GO_ANY_LOWER" : {
       "description" : "",

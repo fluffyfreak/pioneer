@@ -9,7 +9,7 @@
    },
    "AFTER_TRADE_IN" : {
       "description" : "",
-      "message" : "Nach Inzahlungnahme"
+      "message" : "Nach Inzahlungsnahme"
    },
    "ALLEGIANCE" : {
       "description" : "",
@@ -27,13 +27,17 @@
       "description" : "",
       "message" : "Es ist ein Fehler aufgetreten"
    },
+   "ATMOSPHERIC_SHIELDING" : {
+      "description" : "Used in ShipInfo view, followed by a yes/no depending on if the ship can carry atmospheric shields",
+      "message" : "Atmosphärische Abschirmung"
+   },
    "ATTEMPT_TO_REPAIR_HULL" : {
       "description" : "",
       "message" : "Versuch, den Rumpf zu reparieren"
    },
    "AVAILABLE_FOR_PURCHASE" : {
       "description" : "",
-      "message" : "Zu Kaufen"
+      "message" : "Zu kaufen"
    },
    "AVERAGE" : {
       "description" : "",
@@ -47,20 +51,24 @@
       "description" : "",
       "message" : "Nachrichten und Missionen"
    },
+   "BUY" : {
+      "description" : "Commodities and equipment prices",
+      "message" : "Kaufen"
+   },
    "BUY_SHIP" : {
       "description" : "",
       "message" : "Dieses Schiff kaufen"
    },
    "CABINS" : {
-      "description" : "",
+      "description" : "For passengers",
       "message" : "Kabinen"
    },
    "CABIN_FREE" : {
-      "description" : "",
+      "description" : "Free capacity for passengers",
       "message" : "{amount} frei"
    },
    "CABIN_USED" : {
-      "description" : "",
+      "description" : "Passengers using cabins",
       "message" : "{amount} benutzt"
    },
    "CANCEL" : {
@@ -68,7 +76,7 @@
       "message" : "Abbrechen"
    },
    "CAPACITY" : {
-      "description" : "",
+      "description" : "Capacity of ship to fit more equipment",
       "message" : "Kapazität"
    },
    "CAPACITY_USED" : {
@@ -83,12 +91,16 @@
       "description" : "",
       "message" : "Laderaum"
    },
-   "CARGO_T_FREE" : {
+   "CARGO_SPACE_USED" : {
       "description" : "",
+      "message" : "Laderaum in Verwendung"
+   },
+   "CARGO_T_FREE" : {
+      "description" : "t for tonne",
       "message" : "{amount}t frei"
    },
    "CARGO_T_USED" : {
-      "description" : "",
+      "description" : "t for tonne",
       "message" : "{amount}t benutzt"
    },
    "CASH" : {
@@ -100,7 +112,7 @@
       "message" : "Geld: {money}"
    },
    "CHANGE_BINDING" : {
-      "description" : "",
+      "description" : "Key binding option",
       "message" : "Anbindung ändern"
    },
    "CHIEF_MECHANIC" : {
@@ -112,15 +124,15 @@
       "message" : "Kreisbahn-Geschwindigkeit"
    },
    "CITY_DETAIL_LEVEL" : {
-      "description" : "",
+      "description" : "Game graphics option",
       "message" : "Detailstufe für Städte"
    },
    "CLEAN" : {
-      "description" : "",
+      "description" : "Legal status of player",
       "message" : "Sauber"
    },
    "CLEAR" : {
-      "description" : "",
+      "description" : "Clear an option in game settings/options menu",
       "message" : "löschen"
    },
    "CLIENT" : {
@@ -128,7 +140,7 @@
       "message" : "Auftraggeber"
    },
    "COMBAT" : {
-      "description" : "",
+      "description" : "Headline for kills and combat rating",
       "message" : "Kampf"
    },
    "COMMANDER" : {
@@ -139,8 +151,12 @@
       "description" : "",
       "message" : "Warenbörse"
    },
+   "COMPACT_SCANNER" : {
+      "description" : "Game settings option",
+      "message" : "Kompakter Scanner"
+   },
    "COMPETENT" : {
-      "description" : "",
+      "description" : "Combat rating",
       "message" : "Kompetent"
    },
    "COMPLETED" : {
@@ -148,12 +164,16 @@
       "message" : "Abgeschlossen"
    },
    "COMPRESS_TEXTURES" : {
-      "description" : "",
+      "description" : "graphics option in game settings menu ",
       "message" : "Texturen komprimieren"
    },
    "CONSTABLE" : {
       "description" : "",
       "message" : "Polizist"
+   },
+   "CONTINUE_GAME" : {
+      "description" : "",
+      "message" : "Spiel fortsetzen"
    },
    "CONTROLS" : {
       "description" : "",
@@ -165,7 +185,7 @@
    },
    "COULD_NOT_LOAD_GAME" : {
       "description" : "",
-      "message" : "Kann Spiel nicht laden:"
+      "message" : "Spielstand konnte nicht geladen werden: "
    },
    "CREDIBLE" : {
       "description" : "For player reputation",
@@ -184,11 +204,11 @@
       "message" : "Strafregister"
    },
    "DANGEROUS" : {
-      "description" : "",
+      "description" : "Player combat rating",
       "message" : "Gefährlich"
    },
    "DEADLY" : {
-      "description" : "",
+      "description" : "Player combat rating",
       "message" : "Tödlich"
    },
    "DELTA_V" : {
@@ -205,7 +225,7 @@
    },
    "DELTA_V_MAX" : {
       "description" : "Delta-v capacity of a ship with cargo bay fully loaded with propellant",
-      "message" : "Delta-v (max)"
+      "message" : "Delta-v (max.)"
    },
    "DESCENT_TO_GROUND_SPEED" : {
       "description" : "",
@@ -216,27 +236,27 @@
       "message" : "Feindliches Schiff zerstören"
    },
    "DISMISS" : {
-      "description" : "",
+      "description" : "Terminate crew memeber's contract",
       "message" : "Entlassen"
    },
    "DISPLAY_HUD_TRAILS" : {
       "description" : "",
-      "message" : "Zeige Schiffsspuren"
+      "message" : "Schiffsspuren zeigen"
    },
    "DISPLAY_NAV_TUNNELS" : {
-      "description" : "",
+      "description" : "Settings option: hyperspace tunnel effect",
       "message" : "Navigationstunnel anzeigen"
    },
    "DISPLAY_SPEED_LINES" : {
-      "description" : "",
+      "description" : "Settings option: effect when travelling in space",
       "message" : "Geschwindigkeitslinien anzeigen"
    },
    "DOCK_AT_CURRENT_TARGET" : {
       "description" : "",
-      "message" : "An aktuellen Ziel anlegen"
+      "message" : "An aktuelles Ziel andocken"
    },
    "DUE" : {
-      "description" : "",
+      "description" : "mission deadline date",
       "message" : "Fällig"
    },
    "D_DAYS_LEFT" : {
@@ -245,14 +265,14 @@
    },
    "ECONOMY_TRADE" : {
       "description" : "",
-      "message" : "Wirtschaft & Handel"
+      "message" : "Wirtschaft und Handel"
    },
    "EFFECTS" : {
       "description" : "",
       "message" : "Effekte:"
    },
    "ELITE" : {
-      "description" : "",
+      "description" : "Player combat rating",
       "message" : "ELITE"
    },
    "EMPLOYMENT" : {
@@ -260,7 +280,7 @@
       "message" : "Anstellung"
    },
    "ENABLE_COCKPIT" : {
-      "description" : "",
+      "description" : "Game settings option: to use a cockpit 3D model",
       "message" : "Cockpit aktivieren (EXPERIMENTELL)"
    },
    "ENABLE_JOYSTICK" : {
@@ -268,7 +288,7 @@
       "message" : "Joystick-Steuerung aktivieren"
    },
    "ENGINEERING" : {
-      "description" : "",
+      "description" : "Engineering skills of crew",
       "message" : "Technik:"
    },
    "EQUIPMENT" : {
@@ -304,7 +324,7 @@
       "message" : "Experte"
    },
    "FAILED" : {
-      "description" : "",
+      "description" : "When failed mission",
       "message" : "Gescheitert"
    },
    "FEMALE" : {
@@ -317,11 +337,11 @@
    },
    "FORWARD_ACCEL_EMPTY" : {
       "description" : "",
-      "message" : "Vorwärts Beschleunigung (unbeladen)"
+      "message" : "Vorwärts-Beschleunigung (unbeladen)"
    },
    "FORWARD_ACCEL_FULL" : {
       "description" : "",
-      "message" : "Vorwärts Beschleunigung (beladen)"
+      "message" : "Vorwärts-Beschleunigung (beladen)"
    },
    "FRACTAL_DETAIL" : {
       "description" : "",
@@ -357,23 +377,23 @@
    },
    "GIVE_ORDERS_TO_CREW" : {
       "description" : "",
-      "message" : "Gib der Crew Anweisungen"
+      "message" : "Der Crew Anweisungen geben"
    },
    "GOOD_RIDDANCE_TO_YOU_TOO" : {
       "description" : "",
-      "message" : "Dir auch auf Nimmerwiedersehen!"
+      "message" : "Ihnen auch auf Nimmerwiedersehen!"
    },
    "HANG_UP" : {
       "description" : "",
       "message" : "Auflegen."
    },
    "HARMLESS" : {
-      "description" : "",
+      "description" : "Player combat rating",
       "message" : "Harmlos"
    },
    "HEAVY_CARGO_SHUTTLE" : {
       "description" : "",
-      "message" : "Schweres Transportshuttle"
+      "message" : "Schwerer Transportshuttle"
    },
    "HEAVY_COURIER" : {
       "description" : "",
@@ -389,14 +409,14 @@
    },
    "HEAVY_PASSENGER_SHUTTLE" : {
       "description" : "",
-      "message" : "Schweres Passagiershuttle"
+      "message" : "Schwerer Passagiershuttle"
    },
    "HEAVY_PASSENGER_TRANSPORT" : {
       "description" : "",
       "message" : "Schwerer Passagiertransporter"
    },
    "HIGH" : {
-      "description" : "",
+      "description" : "Game settings option: for graphics resolution",
       "message" : "Hoch"
    },
    "HULL_DOES_NOT_REQUIRE_REPAIR" : {
@@ -421,15 +441,15 @@
    },
    "HYPERDRIVE_FITTED" : {
       "description" : "",
-      "message" : "Hyperraumantrieb installiert:"
+      "message" : "Installierter Hyperraumantrieb:"
    },
    "HYPERSPACE_RANGE" : {
       "description" : "",
-      "message" : "Hyperraum Reichweite"
+      "message" : "Hyperraum-Reichweite"
    },
    "IM_TIRED_OF_WORKING_FOR_NOTHING_DONT_YOU_KNOW_WHAT_A_CONTRACT_IS" : {
       "description" : "",
-      "message" : "Ich bin es leid für nichts zu arbeiten. Wissen sie nicht, was ein Vertrag ist?"
+      "message" : "Ich bin es leid, für nichts zu arbeiten. Wissen sie nicht, was ein Vertrag ist?"
    },
    "INACTIVE" : {
       "description" : "",
@@ -445,7 +465,7 @@
    },
    "INVERT_MOUSE_Y" : {
       "description" : "",
-      "message" : "Maus Y-Achse invertieren"
+      "message" : "Maus-Y-Achse invertieren"
    },
    "IN_CARGO_HOLD" : {
       "description" : "",
@@ -479,13 +499,25 @@
       "description" : "",
       "message" : "Sprachauswahl (Programm muss neu gestartet werden)"
    },
+   "LAUNCH_PERMISSION_DENIED_BUSY" : {
+      "description" : "",
+      "message" : "Starterlaubnis verweigert: Das Dockingsystem ist belegt."
+   },
+   "LAUNCH_PERMISSION_DENIED_CREW" : {
+      "description" : "",
+      "message" : "Starterlaubnis verweigert: Das Schiff ist unterbesetzt."
+   },
+   "LAUNCH_PERMISSION_DENIED_FINED" : {
+      "description" : "",
+      "message" : "Starterlaubnis verweigert: Sie haben noch ausstehende Strafzahlungen."
+   },
    "LEGAL_STATUS" : {
       "description" : "",
       "message" : "Rechtlicher Status"
    },
    "LIGHT_CARGO_SHUTTLE" : {
       "description" : "",
-      "message" : "Leichtes Transportshuttle"
+      "message" : "Leichter Transportshuttle"
    },
    "LIGHT_COURIER" : {
       "description" : "",
@@ -513,7 +545,7 @@
    },
    "LOAD_GAME" : {
       "description" : "",
-      "message" : "Lade Spiel"
+      "message" : "Spiel laden"
    },
    "LOBBY" : {
       "description" : "",
@@ -521,7 +553,7 @@
    },
    "LOCATED_N_KM_FROM_THE_CENTRE_OF_NAME" : {
       "description" : "",
-      "message" : "{distance}km vom Zentrum von {name} lokalisiert:"
+      "message" : "{distance} km vom Zentrum von {name} lokalisiert:"
    },
    "LOCATION" : {
       "description" : "",
@@ -532,7 +564,7 @@
       "message" : "Niedrig"
    },
    "LY" : {
-      "description" : "",
+      "description" : "Light year",
       "message" : "Lj"
    },
    "MAKE_NEW_FACE" : {
@@ -564,32 +596,32 @@
       "message" : "Maximalbesatzung"
    },
    "MEDIUM" : {
-      "description" : "",
+      "description" : "Game settings option: graphics resolution",
       "message" : "Mittel"
    },
    "MEDIUM_CARGO_SHUTTLE" : {
       "description" : "",
-      "message" : "Mittleres Transportshuttle"
+      "message" : "Mitellgroßer Transportshuttle"
    },
    "MEDIUM_COURIER" : {
       "description" : "",
-      "message" : " Mittleres Kurierschiff"
+      "message" : " Mittelgroßes Kurierschiff"
    },
    "MEDIUM_FIGHTER" : {
       "description" : "",
-      "message" : "Mittleres Kampfschiff"
+      "message" : "Mittelgroßes Kampfschiff"
    },
    "MEDIUM_FREIGHTER" : {
       "description" : "",
-      "message" : "Mittlerer Frachter"
+      "message" : "Mittelgroßer Frachter"
    },
    "MEDIUM_PASSENGER_SHUTTLE" : {
       "description" : "",
-      "message" : "Mittleres Passagiershuttle"
+      "message" : "Mittelgroßer Passagiershuttle"
    },
    "MEDIUM_PASSENGER_TRANSPORT" : {
       "description" : "",
-      "message" : "Mittlerer Passagiertransporter"
+      "message" : "Mittelgroßer Passagiertransporter"
    },
    "METAL_ALLOYS" : {
       "description" : "",
@@ -602,6 +634,10 @@
    "MINIMUM_CREW" : {
       "description" : "",
       "message" : "Minimalbesatzung"
+   },
+   "MISSILE_MOUNTS" : {
+      "description" : "",
+      "message" : "Raketenhalterungen"
    },
    "MISSIONS" : {
       "description" : "",
@@ -637,7 +673,7 @@
    },
    "NAME_OBJECT" : {
       "description" : "For an item or object",
-      "message" : "Name"
+      "message" : "Bezeichnung"
    },
    "NAME_PERSON" : {
       "description" : "For a person",
@@ -653,7 +689,11 @@
    },
    "NEXT_PAID" : {
       "description" : "",
-      "message" : "Nächster Bezahlter"
+      "message" : "Nächster Zahltermin"
+   },
+   "NO" : {
+      "description" : "Negative answer to a question",
+      "message" : "Nein"
    },
    "NOBODY" : {
       "description" : "For player reputation",
@@ -669,7 +709,11 @@
    },
    "NOT_ENOUGH_ALLOY_TO_ATTEMPT_A_REPAIR" : {
       "description" : "",
-      "message" : "Nicht genig {alloy} um eine Reparatur durchzuführen"
+      "message" : "Nicht genig {alloy}, um eine Reparatur durchzuführen"
+   },
+   "NOT_SUPPORTED_ON_THIS_SHIP" : {
+      "description" : "",
+      "message" : "{equipment} wird von diesem Schiff nicht unterstützt."
    },
    "NO_MISSIONS" : {
       "description" : "",
@@ -677,11 +721,11 @@
    },
    "N_LIGHT_YEARS_N_MAX" : {
       "description" : "",
-      "message" : "{range} Lichtjahre ({maxRange} max)"
+      "message" : "{range} Lichtjahre ({maxRange} max.)"
    },
    "N_OCCUPIED_PASSENGER_CABINS" : {
       "description" : "",
-      "message" : "{quantity} Belegte Passagierkabinen"
+      "message" : "{quantity} belegte Passagierkabinen"
    },
    "N_SHIELD_GENERATORS" : {
       "description" : "",
@@ -689,7 +733,7 @@
    },
    "N_UNOCCUPIED_PASSENGER_CABINS" : {
       "description" : "",
-      "message" : "{quantity} Unbelegte Passagierkabinen"
+      "message" : "{quantity} unbelegte Passagierkabinen"
    },
    "OFF" : {
       "description" : "",
@@ -697,7 +741,7 @@
    },
    "OK" : {
       "description" : "",
-      "message" : "Ok"
+      "message" : "OK"
    },
    "OPTIONS" : {
       "description" : "",
@@ -713,15 +757,15 @@
    },
    "ORBITAL_ANALYSIS_NOTES" : {
       "description" : "",
-      "message" : "Die Kreisbahn-Geschwindigkeit wird für eine tangentiale Geschwindigkeit angegeben. Das schiff sollte in einem 90°-Winkel zur Schiff/{name}-Achse stehen.\n\nDie Landegeschwindigkeit ist ein absolutes Minimum und ist auch tangential. Eine geringere Geschwindigkeit und ein kleinerer Winkel wird in einem Kurs resultieren, der die Oberfläche von {name} schneidet.\n\nDie Fluchtgeschwindigkeit funktioniert theoretisch gesehen in alle Richtungen, solange das Schiff auf dem Weg mit {name} kollidiert.\n\t\t"
+      "message" : "Die Kreisbahn-Geschwindigkeit wird für eine tangentiale Geschwindigkeit angegeben. Das schiff sollte in einem 90°-Winkel zur Schiff/{name}-Achse stehen.\n\nDie Landegeschwindigkeit ist ein absolutes Minimum und ist auch tangential. Eine geringere Geschwindigkeit und ein kleinerer Winkel wird in einem Kurs, der die Oberfläche von {name} schneidet, resultieren.\n\nDie Fluchtgeschwindigkeit funktioniert theoretisch gesehen in alle Richtungen, solange das Schiff auf dem Weg mit {name} kollidiert.\n\t\t"
    },
    "OWED" : {
-      "description" : "",
+      "description" : "Player owing money to crew members",
       "message" : "Schuld"
    },
    "PAY_FINE_OF_N" : {
       "description" : "",
-      "message" : "Bezahle {amount} Strafe"
+      "message" : "Strafgeld von {amount} bezahlen"
    },
    "PERSONAL_INFORMATION" : {
       "description" : "",
@@ -733,7 +777,7 @@
    },
    "PILOT_SEAT_IS_NOW_OCCUPIED_BY_NAME" : {
       "description" : "",
-      "message" : "Der Pilotensessel ist besetzt von {name}"
+      "message" : "Der Pilotensitz ist von {name} besetzt"
    },
    "PIRACY" : {
       "description" : "",
@@ -745,14 +789,14 @@
    },
    "PLANET_TEXTURES" : {
       "description" : "",
-      "message" : "Planeten Texturen"
+      "message" : "Planeten-Texturen"
    },
    "POLICE" : {
       "description" : "",
       "message" : "Polizei"
    },
    "POOR" : {
-      "description" : "",
+      "description" : "Player combat rating",
       "message" : "Schlecht"
    },
    "POSITION" : {
@@ -775,10 +819,6 @@
       "description" : "",
       "message" : "Qualifizierungspunkte"
    },
-   "QUICKLOAD" : {
-      "description" : "",
-      "message" : "Schnelladen"
-   },
    "QUIT" : {
       "description" : "",
       "message" : "Beenden"
@@ -799,6 +839,10 @@
       "description" : "",
       "message" : "Auftanken"
    },
+   "REFUEL_FULL" : {
+      "description" : "",
+      "message" : "Treibstoff auffüllen"
+   },
    "RELIABLE" : {
       "description" : "For player reputation",
       "message" : "Zuverlässig"
@@ -815,17 +859,21 @@
       "description" : "",
       "message" : "Starterlaubnis anfordern"
    },
+   "RETURN_TO_GAME" : {
+      "description" : "",
+      "message" : "Zurück zum Spiel"
+   },
    "RETURN_TO_MENU" : {
       "description" : "",
       "message" : "Zurück zum Menü"
    },
    "REVERSE_ACCEL_EMPTY" : {
       "description" : "",
-      "message" : "Rückwärts Beschleunigung (unbeladen)"
+      "message" : "Rückwärts-Beschleunigung (unbeladen)"
    },
    "REVERSE_ACCEL_FULL" : {
       "description" : "",
-      "message" : "Rückwärts Beschleunigung (beladen)"
+      "message" : "Rückwärts-Beschleunigung (beladen)"
    },
    "REWARD" : {
       "description" : "",
@@ -834,6 +882,10 @@
    "SAVE" : {
       "description" : "",
       "message" : "Speichern"
+   },
+   "SCOOP_MOUNTS" : {
+      "description" : "How many slots or mounts exist on the ship for fitting SCOOPS (e.g. cargo scoop, fuel scoop, multi-scoop) ",
+      "message" : "Schaufel-Slots"
    },
    "SELECT" : {
       "description" : "",
@@ -845,11 +897,15 @@
    },
    "SELECT_FILE" : {
       "description" : "",
-      "message" : "Datei auswählen..."
+      "message" : "Datei auswählen …"
    },
    "SELECT_GAME_TO_LOAD" : {
       "description" : "",
-      "message" : "Spiel zum Laden auswählen..."
+      "message" : "Spiel zum Laden auswählen …"
+   },
+   "SELL" : {
+      "description" : "Commodities and equipment prices",
+      "message" : "Verkaufen"
    },
    "SENSORS" : {
       "description" : "",
@@ -866,6 +922,10 @@
    "SHIP_IS_ALREADY_FULLY_REPAIRED" : {
       "description" : "",
       "message" : "Ihr Schiff ist in voll funktionsfähigem Zustand."
+   },
+   "SHIP_IS_FULLY_EQUIPPED" : {
+      "description" : "",
+      "message" : "Ihr Schiff ist voll ausgerüstet."
    },
    "SHIP_IS_FULLY_LADEN" : {
       "description" : "",
@@ -889,15 +949,15 @@
    },
    "START_AT_BARNARDS_STAR" : {
       "description" : "",
-      "message" : "Starte auf Barnard's Star"
+      "message" : "Auf Barnard's Star starten"
    },
    "START_AT_EARTH" : {
       "description" : "",
-      "message" : "Starte auf der Erde"
+      "message" : "Auf der Erde starten"
    },
    "START_AT_NEW_HOPE" : {
-      "description" : "",
-      "message" : "Starte auf New Hope"
+      "description" : "New Hope is an in game location",
+      "message" : "Auf New Hope starten"
    },
    "STATION_MANAGER" : {
       "description" : "",
@@ -917,11 +977,15 @@
    },
    "THE_SHIP_IS_UNDER_STATION_CONTROL_COMMANDER" : {
       "description" : "",
-      "message" : "Das Schiff ist unter Kontrolle der Station, Commander"
+      "message" : "Das Schiff ist unter Kontrolle der Station, Kommandant."
    },
    "TOGGLE_MALE_FEMALE" : {
-      "description" : "",
+      "description" : "player gender",
       "message" : "Zwischen männlich/weiblich umschalten"
+   },
+   "TOO_SMALL_FOR_CURRENT_CREW" : {
+      "description" : "",
+      "message" : "Das Schiff ist zu klein für die aktuelle Anzahl an Crewmitgliedern."
    },
    "TOTAL" : {
       "description" : "",
@@ -960,11 +1024,11 @@
       "message" : "Benutzt"
    },
    "VERY_HIGH" : {
-      "description" : "",
+      "description" : "Game settings option: graphic resolution",
       "message" : "Sehr hoch"
    },
    "VERY_LOW" : {
-      "description" : "",
+      "description" : "Game settings option: graphic resolution",
       "message" : "Sehr niedrig"
    },
    "VIDEO" : {
@@ -980,7 +1044,7 @@
       "message" : "Grafikauflösung"
    },
    "WAGE" : {
-      "description" : "",
+      "description" : "Salary of crew shown in crew roster",
       "message" : "Gehalt"
    },
    "WEIGHT_EMPTY" : {
@@ -999,9 +1063,13 @@
       "description" : "",
       "message" : "Im Moment haben wir mit Ihnen keine offenen Angelegenheiten."
    },
+   "YES" : {
+      "description" : "Positive answer to a question",
+      "message" : "Ja"
+   },
    "YOURE_GOING_TO_REGRET_SACKING_ME" : {
       "description" : "",
-      "message" : "Du wirst meinen Rauswurf bedauern"
+      "message" : "Sie werden meinen Rauswurf bedauern."
    },
    "YOUR_HULL_IS_AT_X_INTEGRITY" : {
       "description" : "",

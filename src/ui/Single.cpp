@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Single.h"
@@ -22,6 +22,9 @@ void Single::Layout()
 Single *Single::SetInnerWidget(Widget *widget)
 {
 	assert(widget);
+
+	if (m_innerWidget == widget)
+		return this;
 
 	RemoveAllWidgets();
 

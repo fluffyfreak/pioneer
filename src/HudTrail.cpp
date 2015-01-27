@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "HudTrail.h"
@@ -28,6 +28,12 @@ void HudTrail::Update(float time)
 	if (m_updateTime > UPDATE_INTERVAL) {
 		m_updateTime = 0.f;
 		const Frame *bodyFrame = m_body->GetFrame();
+		
+		if( !m_currentFrame ) {
+			m_currentFrame = bodyFrame;
+			m_trailPoints.clear();
+		}
+		
 		if( bodyFrame==m_currentFrame )
 			m_trailPoints.push_back(m_body->GetInterpPosition());
 	}
@@ -51,6 +57,8 @@ void HudTrail::Render(Graphics::Renderer *r)
 		tvts.clear();
 		colors.clear();
 		const vector3d curpos = m_body->GetInterpPosition();
+		tvts.reserve(MAX_POINTS);
+		colors.reserve(MAX_POINTS);
 		tvts.push_back(vector3f(0.f));
 		colors.push_back(Color(0.f));
 		float alpha = 1.f;
@@ -64,7 +72,8 @@ void HudTrail::Render(Graphics::Renderer *r)
 		}
 
 		r->SetTransform(m_transform);
-		r->DrawLines(tvts.size(), &tvts[0], &colors[0], m_renderState, Graphics::LINE_STRIP);
+		m_lines.SetData(tvts.size(), &tvts[0], &colors[0]);
+		m_lines.Draw(r, m_renderState, Graphics::LINE_STRIP);
 	}
 }
 

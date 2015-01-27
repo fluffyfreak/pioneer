@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "utils.h"
@@ -8,12 +8,13 @@
 #include "gui/Gui.h"
 #include "Lang.h"
 #include "FileSystem.h"
+#include "DateTime.h"
 #include "PngWriter.h"
 #include <sstream>
 #include <cmath>
 #include <cstdio>
 
-std::string format_money(Sint64 cents, bool showCents){
+std::string format_money(double cents, bool showCents){
 	char *end;                                   // for  error checking
 	size_t groupDigits = strtol(Lang::NUMBER_GROUP_NUM, &end, 10);
 	assert(*end == 0);
@@ -49,21 +50,7 @@ std::string format_money(Sint64 cents, bool showCents){
 	return result;
 }
 
-class timedate {
-public:
-	timedate() : hour(0), minute(0), second(0), day(0), month(0), year(3200) {}
-	timedate(int stamp) { *this = stamp; }
-	timedate &operator=(int stamp);
-	std::string fmt_time_date();
-	std::string fmt_date();
-private:
-	int hour, minute, second, day, month, year;
-
-	static const char * const months[12];
-	static const unsigned char days[2][12];
-};
-
-const char * const timedate::months[] = {
+static const char * const MONTH_NAMES[] = {
 	Lang::MONTH_JAN,
 	Lang::MONTH_FEB,
 	Lang::MONTH_MAR,
@@ -78,63 +65,28 @@ const char * const timedate::months[] = {
 	Lang::MONTH_DEC
 };
 
-const unsigned char timedate::days[2][12] = {
-	{31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
-	{31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}
-};
-
-timedate &timedate::operator=(int stamp)
-{
-	int i = int(stamp) % 86400;
-
-	hour   = (i / 3600 + 24)%24; i %= 3600;
-	minute = (i /   60 + 60)%60; i %=   60;
-	second = (i+60)%60;
-
-	i = int(stamp) / 86400 + 1168410 - ((stamp < 0)?1:0); // days since "year 0"
-
-	int n400 = i / 146097; i %= 146097;
-	int n100 = i /  36524; i %=  36524;
-	int n4   = i /   1461; i %=   1461;
-	int n1   = i /    365;
-
-	year = n1 + n4 * 4 + n100 * 100 + n400 * 400 + !(n100 == 4 || n1 == 4);
-	day = i % 365 + (n100 == 4 || n1 == 4) * 365;
-	int leap = (year % 4 == 0 && year % 100) || (year % 400 == 0);
-
-	month = 0;
-	while (day >= days[leap][month])
-		day -= days[leap][month++];
-
-	return *this;
-}
-
-std::string timedate::fmt_time_date()
-{
-	char buf[32];
-	snprintf(buf, sizeof (buf), "%02d:%02d:%02d %d %s %d",
-	         hour, minute, second, day + 1, months[month], year);
-	return buf;
-}
-
-std::string timedate::fmt_date()
-{
-	char buf[16];
-	snprintf(buf, sizeof (buf), "%d %s %d",
-	         day + 1, months[month], year);
-	return buf;
-}
-
 std::string format_date(double t)
 {
-	timedate stamp = int(t);
-	return stamp.fmt_time_date();
+	const Time::DateTime dt(t);
+	int year, month, day, hour, minute, second;
+	dt.GetDateParts(&year, &month, &day);
+	dt.GetTimeParts(&hour, &minute, &second);
+
+	char buf[32];
+	snprintf(buf, sizeof (buf), "%02d:%02d:%02d %d %s %d",
+	         hour, minute, second, day, MONTH_NAMES[month - 1], year);
+	return buf;
 }
 
 std::string format_date_only(double t)
 {
-	timedate stamp = int(t);
-	return stamp.fmt_date();
+	const Time::DateTime dt(t);
+	int year, month, day;
+	dt.GetDateParts(&year, &month, &day);
+
+	char buf[16];
+	snprintf(buf, sizeof (buf), "%d %s %d", day, MONTH_NAMES[month - 1], year);
+	return buf;
 }
 
 std::string string_join(std::vector<std::string> &v, std::string sep)
@@ -187,6 +139,17 @@ void Output(const char *format, ...)
 	fputs(buf, stderr);
 }
 
+void OpenGLDebugMsg(const char *format, ...)
+{
+	char buf[1024];
+	va_list ap;
+	va_start(ap, format);
+	vsnprintf(buf, sizeof(buf), format, ap);
+	va_end(ap);
+
+	fputs(buf, stderr);
+}
+
 std::string format_distance(double dist, int precision)
 {
 	std::ostringstream ss;
@@ -205,23 +168,13 @@ std::string format_distance(double dist, int precision)
 	return ss.str();
 }
 
-void Screendump(const char* destFile, const int width, const int height)
+void write_screenshot(const Graphics::ScreendumpState &sd, const char* destFile)
 {
 	const std::string dir = "screenshots";
 	FileSystem::userFiles.MakeDirectory(dir);
 	const std::string fname = FileSystem::JoinPathBelow(dir, destFile);
 
-	// pad rows to 4 bytes, which is the default row alignment for OpenGL
-	const int stride = (3*width + 3) & ~3;
-
-	std::vector<Uint8> pixel_data(stride * height);
-	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-	glPixelStorei(GL_PACK_ALIGNMENT, 4); // never trust defaults
-	glReadBuffer(GL_FRONT);
-	glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, &pixel_data[0]);
-	glFinish();
-
-	write_png(FileSystem::userFiles, fname, &pixel_data[0], width, height, stride, 3);
+	write_png(FileSystem::userFiles, fname, sd.pixels.get(), sd.width, sd.height, sd.stride, sd.bpp);
 
 	Output("Screenshot %s saved\n", fname.c_str());
 }

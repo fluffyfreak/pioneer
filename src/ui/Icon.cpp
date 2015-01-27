@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Icon.h"
@@ -90,6 +90,7 @@ void Icon::Draw()
 
 	Graphics::Renderer *r = GetContext()->GetRenderer();
 	s_material->diffuse = m_color;
+	s_material->diffuse = Color(m_color.r, m_color.g, m_color.b, GetContext()->GetOpacity()*m_color.a);
 	auto renderState = GetContext()->GetSkin().GetAlphaBlendState();
 	r->DrawTriangles(&va, renderState, s_material.Get(), Graphics::TRIANGLE_STRIP);
 }

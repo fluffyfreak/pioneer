@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _WORLDVIEW_H
@@ -11,7 +11,6 @@
 #include "Serializer.h"
 #include "SpeedLines.h"
 #include "Background.h"
-#include "EquipType.h"
 #include "Camera.h"
 #include "CameraController.h"
 
@@ -20,13 +19,33 @@ class Frame;
 class LabelSet;
 class Ship;
 class NavTunnelWidget;
+class Game;
+
+enum VelIconType {
+	V_PROGRADE,
+	V_RETROGRADE,
+	V_BURN
+};
+
+enum PlaneType {
+	NONE,
+	ROTATIONAL,
+	PARENT
+};
+
 namespace Gui { class TexturedQuad; }
+
+namespace UI {
+	class Widget;
+	class Single;
+	class Label;
+}
 
 class WorldView: public UIView {
 public:
 	friend class NavTunnelWidget;
-	WorldView();
-	WorldView(Serializer::Reader &reader);
+	WorldView(Game* game);
+	WorldView(Serializer::Reader &reader, Game* game);
 	virtual ~WorldView();
 	virtual void ShowAll();
 	virtual void Update();
@@ -51,6 +70,7 @@ public:
 	sigc::signal<void> onChangeCamType;
 
 protected:
+	virtual void BuildUI(UI::Single *container);
 	virtual void OnSwitchTo();
 	virtual void OnSwitchFrom();
 private:
@@ -87,15 +107,14 @@ private:
 
 	void OnToggleLabels();
 
-	void DrawCrosshair(float px, float py, float sz, const Color &c);
 	void DrawCombatTargetIndicator(const Indicator &target, const Indicator &lead, const Color &c);
 	void DrawTargetSquare(const Indicator &marker, const Color &c);
-	void DrawVelocityIndicator(const Indicator &marker, const Color &c);
+	void DrawVelocityIndicator(const Indicator &marker, VelIconType d, const Color &c);
 	void DrawImageIndicator(const Indicator &marker, Gui::TexturedQuad *quad, const Color &c);
 	void DrawEdgeMarker(const Indicator &marker, const Color &c);
 
-	Gui::Button *AddCommsOption(const std::string msg, int ypos, int optnum);
-	void AddCommsNavOption(const std::string msg, Body *target);
+	Gui::Button *AddCommsOption(const std::string &msg, int ypos, int xoffset, int optnum);
+	void AddCommsNavOption(const std::string &msg, Body *target);
 	void OnClickCommsNavOption(Body *target);
 	void BuildCommsNavOptions();
 
@@ -114,7 +133,12 @@ private:
 	void SelectBody(Body *, bool reselectIsDeselect);
 	Body* PickBody(const double screenX, const double screenY) const;
 	void MouseWheel(bool up);
+	bool OnClickHeadingLabel(void);
+	void RefreshHeadingPitch(void);
 
+	Game* m_game;
+
+	PlaneType m_curPlane;
 	NavTunnelWidget *m_navTunnel;
 	std::unique_ptr<SpeedLines> m_speedLines;
 
@@ -140,7 +164,18 @@ private:
 	Gui::Label *m_debugInfo;
 #endif
 
-	Gui::Label *m_hudVelocity, *m_hudTargetDist, *m_hudAltitude, *m_hudPressure, *m_hudHyperspaceInfo, *m_hudTargetInfo;
+	// useful docking locations for new-ui widgets in the HUD
+	RefCountedPtr<UI::Widget> m_hudRoot;
+	RefCountedPtr<UI::Single> m_hudDockTop;
+	RefCountedPtr<UI::Single> m_hudDockLeft;
+	RefCountedPtr<UI::Single> m_hudDockRight;
+	RefCountedPtr<UI::Single> m_hudDockBottom;
+	RefCountedPtr<UI::Single> m_hudDockCentre;
+	// new-ui HUD components
+	RefCountedPtr<UI::Label> m_headingInfo, m_pitchInfo;
+
+	Gui::Label *m_hudVelocity, *m_hudTargetDist, *m_hudAltitude, *m_hudPressure,
+		   *m_hudHyperspaceInfo, *m_hudTargetInfo;
 	Gui::MeterBar *m_hudHullTemp, *m_hudWeaponTemp, *m_hudHullIntegrity, *m_hudShieldIntegrity;
 	Gui::MeterBar *m_hudTargetHullIntegrity, *m_hudTargetShieldIntegrity;
 	Gui::MeterBar *m_hudFuelGauge;
@@ -162,15 +197,27 @@ private:
 
 	Indicator m_velIndicator;
 	Indicator m_navVelIndicator;
+	Indicator m_burnIndicator;
+	Indicator m_retroVelIndicator;
 	Indicator m_navTargetIndicator;
 	Indicator m_combatTargetIndicator;
 	Indicator m_targetLeadIndicator;
 	Indicator m_mouseDirIndicator;
 
 	std::unique_ptr<Gui::TexturedQuad> m_indicatorMousedir;
+	std::unique_ptr<Gui::TexturedQuad> m_frontCrosshair;
+	std::unique_ptr<Gui::TexturedQuad> m_rearCrosshair;
+	std::unique_ptr<Gui::TexturedQuad> m_progradeIcon;
+	std::unique_ptr<Gui::TexturedQuad> m_retrogradeIcon;
+	std::unique_ptr<Gui::TexturedQuad> m_burnIcon;
+	std::unique_ptr<Gui::TexturedQuad> m_targetIcon;
 	vector2f m_indicatorMousedirSize;
 
 	Graphics::RenderState *m_blendState;
+
+	Graphics::Drawables::Line3D m_edgeMarker;
+	Graphics::Drawables::Lines m_crossHair;
+	Graphics::Drawables::Lines m_indicator;
 };
 
 class NavTunnelWidget: public Gui::Widget {
@@ -181,8 +228,12 @@ public:
 	void DrawTargetGuideSquare(const vector2f &pos, const float size, const Color &c);
 
 private:
+	void CreateVertexBuffer(const Uint32 size);
+
 	WorldView *m_worldView;
 	Graphics::RenderState *m_renderState;
+	RefCountedPtr<Graphics::Material> m_material;
+	std::unique_ptr<Graphics::VertexBuffer> m_vbuffer;
 };
 
 #endif /* _WORLDVIEW_H */

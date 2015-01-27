@@ -1,8 +1,9 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "ModelViewer.h"
 #include "FileSystem.h"
+#include "graphics/opengl/RendererGL.h"
 #include "graphics/Graphics.h"
 #include "graphics/Light.h"
 #include "graphics/TextureBuilder.h"
@@ -99,9 +100,11 @@ ModelViewer::ModelViewer(Graphics::Renderer *r, LuaManager *lm)
 , m_modelName("")
 {
 	m_ui.Reset(new UI::Context(lm, r, Graphics::GetScreenWidth(), Graphics::GetScreenHeight()));
+	m_ui->SetMousePointer("icons/cursors/mouse_cursor_2.png", UI::Point(15, 8));
 
 	m_log = m_ui->MultiLineText("");
 	m_log->SetFont(UI::Widget::FONT_SMALLEST);
+	
 	m_logScroller.Reset(m_ui->Scroller());
 	m_logScroller->SetInnerWidget(m_ui->ColorBackground(Color(0x0,0x0,0x0,0x40))->SetInnerWidget(m_log));
 
@@ -129,20 +132,21 @@ void ModelViewer::Run(const std::string &modelName)
 {
 	std::unique_ptr<GameConfig> config(new GameConfig);
 
-	Graphics::Renderer *renderer;
-	ModelViewer *viewer;
-
 	//init components
 	FileSystem::Init();
 	FileSystem::userFiles.MakeDirectory(""); // ensure the config directory exists
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 		Error("SDL initialization failed: %s\n", SDL_GetError());
+
 	Lua::Init();
 
 	ModManager::Init();
 
+	Graphics::RendererOGL::RegisterRenderer();
+
 	//video
 	Graphics::Settings videoSettings = {};
+	videoSettings.rendererType = Graphics::RENDERER_OPENGL;
 	videoSettings.width = config->Int("ScrWidth");
 	videoSettings.height = config->Int("ScrHeight");
 	videoSettings.fullscreen = (config->Int("StartFullscreen") != 0);
@@ -152,13 +156,13 @@ void ModelViewer::Run(const std::string &modelName)
 	videoSettings.useTextureCompression = (config->Int("UseTextureCompression") != 0);
 	videoSettings.iconFile = OS::GetIconFilename();
 	videoSettings.title = "Model viewer";
-	renderer = Graphics::Init(videoSettings);
+	Graphics::Renderer *renderer = Graphics::Init(videoSettings);
 
 	NavLights::Init(renderer);
 	Shields::Init(renderer);
 
 	//run main loop until quit
-	viewer = new ModelViewer(renderer, Lua::manager);
+	ModelViewer *viewer = new ModelViewer(renderer, Lua::manager);
 	viewer->SetModel(modelName);
 	viewer->ResetCamera();
 	viewer->MainLoop();
@@ -449,42 +453,19 @@ void ModelViewer::DrawGrid(const matrix4x4f &trans, float radius)
 	}
 
 	m_renderer->SetTransform(trans);
-	m_renderer->DrawLines(points.size(), &points[0], Color(128), m_bgState);//Color(0.0f,0.2f,0.0f,1.0f));
+	m_gridLines.SetData(points.size(), &points[0], Color(128));
+	m_gridLines.Draw(m_renderer, m_bgState);
 
-	//industry-standard red/green/blue XYZ axis indiactor
-	const int numAxVerts = 6;
-	const vector3f vts[numAxVerts] = {
-		//X
-		vector3f(0.f, 0.f, 0.f),
-		vector3f(radius, 0.f, 0.f),
-
-		//Y
-		vector3f(0.f, 0.f, 0.f),
-		vector3f(0.f, radius, 0.f),
-
-		//Z
-		vector3f(0.f, 0.f, 0.f),
-		vector3f(0.f, 0.f, radius),
-	};
-	const Color col[numAxVerts] = {
-		Color(255, 0, 0),
-		Color(255, 0, 0),
-
-		Color(0, 0, 255),
-		Color(0, 0, 255),
-
-		Color(0, 255, 0),
-		Color(0, 255, 0)
-	};
-
-	m_renderer->DrawLines(numAxVerts, &vts[0], &col[0], m_bgState);
+	// industry-standard red/green/blue XYZ axis indiactor
+	m_renderer->SetTransform(trans * matrix4x4f::ScaleMatrix(radius));
+	Graphics::Drawables::GetAxes3DDrawable(m_renderer)->Draw(m_renderer);
 }
 
 void ModelViewer::DrawModel()
 {
 	assert(m_model);
 
-	m_renderer->SetPerspectiveProjection(85, Graphics::GetScreenWidth()/float(Graphics::GetScreenHeight()), 0.1f, 10000.f);
+	m_renderer->SetPerspectiveProjection(85, Graphics::GetScreenWidth()/float(Graphics::GetScreenHeight()), 0.1f, 100000.f);
 	m_renderer->SetTransform(matrix4x4f::Identity());
 	UpdateLights();
 
@@ -810,7 +791,9 @@ void ModelViewer::Screenshot()
 	const time_t t = time(0);
 	const struct tm *_tm = localtime(&t);
 	strftime(buf, sizeof(buf), "modelviewer-%Y%m%d-%H%M%S.png", _tm);
-	Screendump(buf, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
+	Graphics::ScreendumpState sd;
+	m_renderer->Screendump(sd);
+	write_screenshot(sd, buf);
 	AddLog(stringf("Screenshot %0 saved", buf));
 }
 

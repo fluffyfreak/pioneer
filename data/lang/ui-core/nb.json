@@ -27,6 +27,10 @@
       "description" : "",
       "message" : "En feil har oppstått"
    },
+   "ATMOSPHERIC_SHIELDING" : {
+      "description" : "Used in ShipInfo view, followed by a yes/no depending on if the ship can carry atmospheric shields",
+      "message" : "Atmospheric shielding"
+   },
    "ATTEMPT_TO_REPAIR_HULL" : {
       "description" : "",
       "message" : "Attempt to repair hull"
@@ -47,20 +51,24 @@
       "description" : "",
       "message" : "Bulletin Board"
    },
+   "BUY" : {
+      "description" : "Commodities and equipment prices",
+      "message" : "Buy"
+   },
    "BUY_SHIP" : {
       "description" : "",
       "message" : "Buy Ship"
    },
    "CABINS" : {
-      "description" : "",
+      "description" : "For passengers",
       "message" : "Cabins"
    },
    "CABIN_FREE" : {
-      "description" : "",
+      "description" : "Free capacity for passengers",
       "message" : "{amount} free"
    },
    "CABIN_USED" : {
-      "description" : "",
+      "description" : "Passengers using cabins",
       "message" : "{amount} used"
    },
    "CANCEL" : {
@@ -68,7 +76,7 @@
       "message" : "Cancel"
    },
    "CAPACITY" : {
-      "description" : "",
+      "description" : "Capacity of ship to fit more equipment",
       "message" : "Capacity"
    },
    "CAPACITY_USED" : {
@@ -83,12 +91,16 @@
       "description" : "",
       "message" : "Cargo space"
    },
-   "CARGO_T_FREE" : {
+   "CARGO_SPACE_USED" : {
       "description" : "",
+      "message" : "Cargo space used"
+   },
+   "CARGO_T_FREE" : {
+      "description" : "t for tonne",
       "message" : "{amount}t free"
    },
    "CARGO_T_USED" : {
-      "description" : "",
+      "description" : "t for tonne",
       "message" : "{amount}t used"
    },
    "CASH" : {
@@ -100,7 +112,7 @@
       "message" : "Cash: {money}"
    },
    "CHANGE_BINDING" : {
-      "description" : "",
+      "description" : "Key binding option",
       "message" : "Change Binding"
    },
    "CHIEF_MECHANIC" : {
@@ -112,15 +124,15 @@
       "message" : "Circular orbit speed"
    },
    "CITY_DETAIL_LEVEL" : {
-      "description" : "",
+      "description" : "Game graphics option",
       "message" : "City detail level"
    },
    "CLEAN" : {
-      "description" : "",
+      "description" : "Legal status of player",
       "message" : "Clean"
    },
    "CLEAR" : {
-      "description" : "",
+      "description" : "Clear an option in game settings/options menu",
       "message" : "Clear"
    },
    "CLIENT" : {
@@ -128,7 +140,7 @@
       "message" : "Klient"
    },
    "COMBAT" : {
-      "description" : "",
+      "description" : "Headline for kills and combat rating",
       "message" : "Combat"
    },
    "COMMANDER" : {
@@ -139,8 +151,12 @@
       "description" : "",
       "message" : "Commodity Market"
    },
+   "COMPACT_SCANNER" : {
+      "description" : "Game settings option",
+      "message" : "Compact scanner"
+   },
    "COMPETENT" : {
-      "description" : "",
+      "description" : "Combat rating",
       "message" : "Komptetent"
    },
    "COMPLETED" : {
@@ -148,12 +164,16 @@
       "message" : "Completed"
    },
    "COMPRESS_TEXTURES" : {
-      "description" : "",
+      "description" : "graphics option in game settings menu ",
       "message" : "Compress Textures"
    },
    "CONSTABLE" : {
       "description" : "",
       "message" : "Constable"
+   },
+   "CONTINUE_GAME" : {
+      "description" : "",
+      "message" : "Continue game"
    },
    "CONTROLS" : {
       "description" : "",
@@ -184,11 +204,11 @@
       "message" : "Criminal record"
    },
    "DANGEROUS" : {
-      "description" : "",
+      "description" : "Player combat rating",
       "message" : "Dangerous"
    },
    "DEADLY" : {
-      "description" : "",
+      "description" : "Player combat rating",
       "message" : "Dødelig"
    },
    "DELTA_V" : {
@@ -216,7 +236,7 @@
       "message" : "Destroy enemy ship"
    },
    "DISMISS" : {
-      "description" : "",
+      "description" : "Terminate crew memeber's contract",
       "message" : "Dismiss"
    },
    "DISPLAY_HUD_TRAILS" : {
@@ -224,11 +244,11 @@
       "message" : "Display HUD trails"
    },
    "DISPLAY_NAV_TUNNELS" : {
-      "description" : "",
+      "description" : "Settings option: hyperspace tunnel effect",
       "message" : "Display nav tunnels"
    },
    "DISPLAY_SPEED_LINES" : {
-      "description" : "",
+      "description" : "Settings option: effect when travelling in space",
       "message" : "Display speed lines"
    },
    "DOCK_AT_CURRENT_TARGET" : {
@@ -236,7 +256,7 @@
       "message" : "Dock at current target"
    },
    "DUE" : {
-      "description" : "",
+      "description" : "mission deadline date",
       "message" : "Due"
    },
    "D_DAYS_LEFT" : {
@@ -252,7 +272,7 @@
       "message" : "Effects:"
    },
    "ELITE" : {
-      "description" : "",
+      "description" : "Player combat rating",
       "message" : "ELITE"
    },
    "EMPLOYMENT" : {
@@ -260,7 +280,7 @@
       "message" : "Employment"
    },
    "ENABLE_COCKPIT" : {
-      "description" : "",
+      "description" : "Game settings option: to use a cockpit 3D model",
       "message" : "Enable cockpit (EXPERIMENTAL)"
    },
    "ENABLE_JOYSTICK" : {
@@ -268,7 +288,7 @@
       "message" : "Enable joystick"
    },
    "ENGINEERING" : {
-      "description" : "",
+      "description" : "Engineering skills of crew",
       "message" : "Engineering:"
    },
    "EQUIPMENT" : {
@@ -304,7 +324,7 @@
       "message" : "Expert"
    },
    "FAILED" : {
-      "description" : "",
+      "description" : "When failed mission",
       "message" : "Failed"
    },
    "FEMALE" : {
@@ -368,7 +388,7 @@
       "message" : "Legg på."
    },
    "HARMLESS" : {
-      "description" : "",
+      "description" : "Player combat rating",
       "message" : "Harmless"
    },
    "HEAVY_CARGO_SHUTTLE" : {
@@ -396,7 +416,7 @@
       "message" : "Heavy passenger transport"
    },
    "HIGH" : {
-      "description" : "",
+      "description" : "Game settings option: for graphics resolution",
       "message" : "Høy"
    },
    "HULL_DOES_NOT_REQUIRE_REPAIR" : {
@@ -479,6 +499,18 @@
       "description" : "",
       "message" : "Language (restart game to apply)"
    },
+   "LAUNCH_PERMISSION_DENIED_BUSY" : {
+      "description" : "",
+      "message" : "Permission to launch denied: docking bay busy."
+   },
+   "LAUNCH_PERMISSION_DENIED_CREW" : {
+      "description" : "",
+      "message" : "Permission to launch denied: not enough crew too handle this ship."
+   },
+   "LAUNCH_PERMISSION_DENIED_FINED" : {
+      "description" : "",
+      "message" : "Permission to launch denied: you have outstanding fines."
+   },
    "LEGAL_STATUS" : {
       "description" : "",
       "message" : "Legal status"
@@ -532,7 +564,7 @@
       "message" : "Low"
    },
    "LY" : {
-      "description" : "",
+      "description" : "Light year",
       "message" : "lysår"
    },
    "MAKE_NEW_FACE" : {
@@ -564,7 +596,7 @@
       "message" : "Maximum crew"
    },
    "MEDIUM" : {
-      "description" : "",
+      "description" : "Game settings option: graphics resolution",
       "message" : "Medium"
    },
    "MEDIUM_CARGO_SHUTTLE" : {
@@ -602,6 +634,10 @@
    "MINIMUM_CREW" : {
       "description" : "",
       "message" : "Minimum crew"
+   },
+   "MISSILE_MOUNTS" : {
+      "description" : "",
+      "message" : "Missile mounts"
    },
    "MISSIONS" : {
       "description" : "",
@@ -655,6 +691,10 @@
       "description" : "",
       "message" : "Next paid"
    },
+   "NO" : {
+      "description" : "Negative answer to a question",
+      "message" : "No"
+   },
    "NOBODY" : {
       "description" : "For player reputation",
       "message" : "Nobody"
@@ -670,6 +710,10 @@
    "NOT_ENOUGH_ALLOY_TO_ATTEMPT_A_REPAIR" : {
       "description" : "",
       "message" : "Not enough {alloy} to attempt a repair"
+   },
+   "NOT_SUPPORTED_ON_THIS_SHIP" : {
+      "description" : "",
+      "message" : "{equipment} is not supported on this ship model"
    },
    "NO_MISSIONS" : {
       "description" : "",
@@ -716,7 +760,7 @@
       "message" : "Circular orbit speed is given for a tangential velocity. The ship should be moving in a direction at 90° to the ship/{name} axis.\n\nDescent speed is an absolute minimum, and is also tangential. A slower speed or a lower angle will result in a course which intersects with the surface of {name}.\n\nEscape speed will in theory work in any direction, as long as the ship does not collide with {name} on the way.\n\t\t"
    },
    "OWED" : {
-      "description" : "",
+      "description" : "Player owing money to crew members",
       "message" : "Owed"
    },
    "PAY_FINE_OF_N" : {
@@ -752,7 +796,7 @@
       "message" : "Police"
    },
    "POOR" : {
-      "description" : "",
+      "description" : "Player combat rating",
       "message" : "Poor"
    },
    "POSITION" : {
@@ -775,10 +819,6 @@
       "description" : "",
       "message" : "Qualification scores"
    },
-   "QUICKLOAD" : {
-      "description" : "",
-      "message" : "Quickload"
-   },
    "QUIT" : {
       "description" : "",
       "message" : "Quit"
@@ -799,6 +839,10 @@
       "description" : "",
       "message" : "Refuel"
    },
+   "REFUEL_FULL" : {
+      "description" : "",
+      "message" : "Refuel full"
+   },
    "RELIABLE" : {
       "description" : "For player reputation",
       "message" : "Reliable"
@@ -814,6 +858,10 @@
    "REQUEST_LAUNCH" : {
       "description" : "",
       "message" : "Request Launch"
+   },
+   "RETURN_TO_GAME" : {
+      "description" : "",
+      "message" : "Return to game"
    },
    "RETURN_TO_MENU" : {
       "description" : "",
@@ -835,6 +883,10 @@
       "description" : "",
       "message" : "Lagre"
    },
+   "SCOOP_MOUNTS" : {
+      "description" : "How many slots or mounts exist on the ship for fitting SCOOPS (e.g. cargo scoop, fuel scoop, multi-scoop) ",
+      "message" : "Scoop mounts"
+   },
    "SELECT" : {
       "description" : "",
       "message" : "Velg"
@@ -851,6 +903,10 @@
       "description" : "",
       "message" : "Select game to load..."
    },
+   "SELL" : {
+      "description" : "Commodities and equipment prices",
+      "message" : "Sell"
+   },
    "SENSORS" : {
       "description" : "",
       "message" : "Sensorer:"
@@ -866,6 +922,10 @@
    "SHIP_IS_ALREADY_FULLY_REPAIRED" : {
       "description" : "",
       "message" : "Your ship is in perfect working condition."
+   },
+   "SHIP_IS_FULLY_EQUIPPED" : {
+      "description" : "",
+      "message" : "Your ship is fully equipped."
    },
    "SHIP_IS_FULLY_LADEN" : {
       "description" : "",
@@ -896,7 +956,7 @@
       "message" : "Start at Earth"
    },
    "START_AT_NEW_HOPE" : {
-      "description" : "",
+      "description" : "New Hope is an in game location",
       "message" : "Start på New Hope"
    },
    "STATION_MANAGER" : {
@@ -920,8 +980,12 @@
       "message" : "The ship is under station control, Commander."
    },
    "TOGGLE_MALE_FEMALE" : {
-      "description" : "",
+      "description" : "player gender",
       "message" : "Toggle male/female"
+   },
+   "TOO_SMALL_FOR_CURRENT_CREW" : {
+      "description" : "",
+      "message" : "Ship is too small for the current crew."
    },
    "TOTAL" : {
       "description" : "",
@@ -960,11 +1024,11 @@
       "message" : "Used"
    },
    "VERY_HIGH" : {
-      "description" : "",
+      "description" : "Game settings option: graphic resolution",
       "message" : "Very high"
    },
    "VERY_LOW" : {
-      "description" : "",
+      "description" : "Game settings option: graphic resolution",
       "message" : "Veldig lav"
    },
    "VIDEO" : {
@@ -980,7 +1044,7 @@
       "message" : "Skjermoppløsning"
    },
    "WAGE" : {
-      "description" : "",
+      "description" : "Salary of crew shown in crew roster",
       "message" : "Lønn"
    },
    "WEIGHT_EMPTY" : {
@@ -998,6 +1062,10 @@
    "WE_HAVE_NO_BUSINESS_WITH_YOU" : {
       "description" : "",
       "message" : "We have no business with you at the moment."
+   },
+   "YES" : {
+      "description" : "Positive answer to a question",
+      "message" : "Yes"
    },
    "YOURE_GOING_TO_REGRET_SACKING_ME" : {
       "description" : "",

@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Shields.h"
@@ -20,7 +20,7 @@ namespace {
 	{
 		return s_matShield;
 	}
-};
+}
 
 //used to find the accumulated transform of a MatrixTransform
 class MatrixAccumVisitor : public SceneGraph::NodeVisitor {
@@ -55,7 +55,7 @@ typedef std::vector<Shields::Shield>::iterator ShieldIterator;
 //static
 bool Shields::s_initialised = false;
 
-Shields::Shield::Shield(Color3ub _colour, const matrix4x4f &matrix, SceneGraph::StaticGeometry *_sg)
+Shields::Shield::Shield(const Color3ub &_colour, const matrix4x4f &matrix, SceneGraph::StaticGeometry *_sg)
 	: m_colour(_colour), m_matrix(matrix), m_mesh(_sg)
 { }
 
@@ -304,7 +304,7 @@ void Shields::Update(const float coolDown, const float shieldStrength)
 	}
 }
 
-void Shields::SetColor(const Color3ub inCol)
+void Shields::SetColor(const Color3ub &inCol)
 {
 	for (ShieldIterator it = m_shields.begin(); it != m_shields.end(); ++it) {
 		it->m_colour = inCol;

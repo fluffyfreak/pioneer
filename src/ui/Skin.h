@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef UI_SKIN_H
@@ -18,6 +18,8 @@ namespace UI {
 class Skin {
 public:
 	Skin(const std::string &filename, Graphics::Renderer *renderer, float scale);
+
+	void SetOpacity(float o) { m_opacity = o; }
 
 	void DrawBackgroundNormal(const Point &pos, const Point &size) const {
 		DrawBorderedRectElement(m_backgroundNormal, pos, size);
@@ -217,6 +219,8 @@ private:
 	RefCountedPtr<Graphics::Texture> m_texture;
 	RefCountedPtr<Graphics::Material> m_textureMaterial;
 	RefCountedPtr<Graphics::Material> m_colorMaterial;
+
+	float m_opacity;
 
 	Graphics::RenderState *m_alphaBlendState;
 	Graphics::RenderState *m_alphaSetState;

@@ -1,10 +1,46 @@
--- Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local Engine = import("Engine")
 local ui = Engine.ui
 
 local MessageBox = {}
+
+local function setupLayerAnim (clickWidget)
+	local layer = ui.layer
+
+	local anim = ui:NewAnimation({
+		widget = layer,
+		type = "IN",
+		easing = "LINEAR",
+		target = "OPACITY",
+		duration = 0.1,
+	})
+	ui:Animate(anim)
+
+	local clicked = false
+	clickWidget.onClick:Connect(function ()
+		if clicked then return end
+		clicked = true
+
+		anim:Finish()
+
+		ui:Animate({
+			widget = layer,
+			type = "OUT",
+			easing = "LINEAR",
+			target = "OPACITY",
+			duration = 0.1,
+			callback = function ()
+				-- XXX mostly a hack to fix #3110
+				-- something may have dropped our messagebox layer before we get here
+				if ui.layer == layer then
+					ui:DropLayer()
+				end
+			end,
+		})
+	end)
+end
 
 function MessageBox.Message (args)
 	if type(args) == 'string' then
@@ -23,8 +59,9 @@ function MessageBox.Message (args)
 		)
 	)
 
-	layer.onClick:Connect(function () ui:DropLayer() end)
 	layer:AddShortcut("enter")
+
+	setupLayerAnim(layer)
 end
 
 function MessageBox.OK (args)
@@ -35,9 +72,6 @@ function MessageBox.OK (args)
 	local text = ui:MultiLineText(args.message)
 
 	local okButton = ui:Button("OK")
-	okButton.onClick:Connect(function ()
-		ui:DropLayer()
-	end)
 	okButton:AddShortcut("enter")
 
 	ui:NewLayer(
@@ -51,6 +85,8 @@ function MessageBox.OK (args)
 			)
 		)
 	)
+
+	setupLayerAnim (okButton)
 end
 
 return MessageBox

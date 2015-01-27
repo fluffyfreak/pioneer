@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _GASGIANT_H
@@ -62,7 +62,7 @@ private:
 	RefCountedPtr<Graphics::Texture> m_surfaceTexture;
 	
 	std::unique_ptr<Color[]> m_jobColorBuffers[NUM_PATCHES];
-	JobHandle m_job[NUM_PATCHES];
+	Job::Handle m_job[NUM_PATCHES];
 	bool m_hasJobRequest[NUM_PATCHES];
 	float m_timeDelay;
 };

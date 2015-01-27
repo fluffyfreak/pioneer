@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Sensors.h"
@@ -127,8 +127,13 @@ void Sensors::Update(float time)
 		if (!it->fresh) {
 			m_radarContacts.erase(it++);
 		} else {
-			it->distance = m_owner->GetPositionRelTo(it->body).Length();
-			it->trail->Update(time);
+			const Ship* ship =dynamic_cast<Ship*>(it->body);
+			if (ship && Ship::FLYING==ship->GetFlightState()) {
+				it->distance = m_owner->GetPositionRelTo(it->body).Length();
+				it->trail->Update(time);
+			} else {
+				it->trail->Reset(nullptr);
+			}
 			it->fresh = false;
 			++it;
 		}

@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -17,7 +17,7 @@
 #include "EnumStrings.h"
 
 
-void Ship::AIModelCoordsMatchAngVel(vector3d desiredAngVel, double softness)
+void Ship::AIModelCoordsMatchAngVel(const vector3d &desiredAngVel, double softness)
 {
 	double angAccel = m_type->angThrust / GetAngularInertia();
 	const double softTimeStep = Pi::game->GetTimeStep() * softness;
@@ -35,7 +35,7 @@ void Ship::AIModelCoordsMatchAngVel(vector3d desiredAngVel, double softness)
 }
 
 
-void Ship::AIModelCoordsMatchSpeedRelTo(const vector3d v, const Ship *other)
+void Ship::AIModelCoordsMatchSpeedRelTo(const vector3d &v, const Ship *other)
 {
 	vector3d relToVel = other->GetVelocity() * GetOrient() + v;
 	AIAccelToModelRelativeVelocity(relToVel);
@@ -45,7 +45,7 @@ void Ship::AIModelCoordsMatchSpeedRelTo(const vector3d v, const Ship *other)
 // Try to reach this model-relative velocity.
 // (0,0,-100) would mean going 100m/s forward.
 
-void Ship::AIAccelToModelRelativeVelocity(const vector3d v)
+void Ship::AIAccelToModelRelativeVelocity(const vector3d &v)
 {
 	vector3d difVel = v - GetVelocity() * GetOrient();		// required change in velocity
 	vector3d maxThrust = GetMaxThrust(difVel);
@@ -315,15 +315,15 @@ double Ship::AIFaceDirection(const vector3d &dir, double av)
 vector3d Ship::AIGetLeadDir(const Body *target, const vector3d& targaccel, int gunindex)
 {
 	assert(target);
-	if (m_equipment.Get(Equip::SLOT_LASER) == Equip::NONE)
+	if (ScopedTable(m_equipSet).CallMethod<int>("OccupiedSpace", "laser_front") == 0)
 		return target->GetPositionRelTo(this).Normalized();
 
 	const vector3d targpos = target->GetPositionRelTo(this);
 	const vector3d targvel = target->GetVelocityRelTo(this);
 	// todo: should adjust targpos for gunmount offset
 
-	const int laser = Equip::types[m_equipment.Get(Equip::SLOT_LASER, gunindex)].tableIndex;
-	const double projspeed = Equip::lasers[laser].speed;
+	double projspeed = 0;
+	Properties().Get(gunindex?"laser_rear_speed":"laser_front_speed", projspeed);
 
 	vector3d leadpos;
 	// avoid a divide-by-zero floating point exception (very nearly zero is ok)

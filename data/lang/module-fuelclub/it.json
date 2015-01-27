@@ -17,7 +17,7 @@
    },
    "FLAVOUR_0_NONMEMBER_INTRO" : {
       "description" : "",
-      "message" : "{clubname} è un'organizzazione indipendente che ha lo scopo di fornire ai propri membi carburante per astronavi scontato. Si possono trovare succursali in tutta la galassia. L'iscrizione porta i seguenti vantaggi:\n\n* Le nostre scorte di combustibile, indipendenti dal mercato generale\n* {hydrogen} a prezzi scontati\n* {military_fuel} a prezzi scontati\n* {water} a prezzi scontati\n* {radioactives}, smaltimento gratuito (si applicano delle condizioni)\n* Rabbocco di carburante, se necessario\n\nIscriviti ora! La quota d'iscrizione annuale è di soli {membership_fee}"
+      "message" : "{clubname} è un'organizzazione indipendente che ha lo scopo di fornire carburante per astronavi scontato ai propri membi. Si possono trovare succursali in tutta la galassia. L'iscrizione porta i seguenti vantaggi:"
    },
    "FLAVOUR_0_WELCOME" : {
       "description" : "",
@@ -27,25 +27,25 @@
       "description" : "",
       "message" : "Indietro"
    },
-   "HANG_UP" : {
+   "LIST_BENEFITS_DISPOSAL" : {
       "description" : "",
-      "message" : "Riaggancia."
+      "message" : "{radioactives}, smaltimento gratuito (si applicano delle condizioni)"
    },
-   "HYDROGEN" : {
+   "LIST_BENEFITS_FUEL" : {
       "description" : "",
-      "message" : "Idrogeno"
+      "message" : "{fuel} a prezzi scontati"
    },
-   "MILITARY_FUEL" : {
+   "LIST_BENEFITS_FUEL_INTRO" : {
       "description" : "",
-      "message" : "Carburante militare"
+      "message" : "Le nostre scorte di combustibile, indipendenti dal mercato generale"
    },
-   "RADIOACTIVES" : {
+   "LIST_BENEFITS_FUEL_TANK" : {
       "description" : "",
-      "message" : "Scorie Radioattive"
+      "message" : "Rabbocco di carburante, se necessario"
    },
-   "WATER" : {
+   "LIST_BENEFITS_JOIN" : {
       "description" : "",
-      "message" : "Acqua"
+      "message" : "Iscriviti ora! La quota d'iscrizione annuale è di soli {membership_fee}"
    },
    "WE_WILL_ONLY_DISPOSE_OF" : {
       "description" : "",

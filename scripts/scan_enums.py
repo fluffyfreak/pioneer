@@ -264,7 +264,7 @@ class EnumData:
             if item.skip:
                 continue
             id = item.name if item.name is not None else item.identifier
-            fl.write('\t{ "' + id + '", ' + scope_prefix + item.identifier + ' },\n')
+            fl.write('\t{ "' + id + '", int(' + scope_prefix + item.identifier + ') },\n')
         fl.write('\t{ 0, 0 },\n')
         fl.write('};\n')
 
@@ -360,7 +360,7 @@ def parse_enum(toktype, toktext, tokens, preceding_comment=None):
         return None
 
 def write_license_header(fl):
-    fl.write('/* Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details */\n')
+    fl.write('/* Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details */\n')
     fl.write('/* Licensed under the terms of the GPL v3. See licenses/GPL-3.txt        */\n')
     fl.write('\n')
 

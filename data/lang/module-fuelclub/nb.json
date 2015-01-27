@@ -17,7 +17,7 @@
    },
    "FLAVOUR_0_NONMEMBER_INTRO" : {
       "description" : "",
-      "message" : "{clubname} en en uavhengig organisasjon som jobber for å skaffe rabbatert drivstoff til sine medlemmer. Deler av organisasjonen finnes over hele galaksen.\nFordelene med medlemskap inkluderer:\n\n⇥* Vår egen forsyning av drivstoff, uavhengig av det offentlige markedet\n⇥* {hydrogen} til rabbaterte priser\n⇥ {military_fuel} til rabbaterte priser\n⇥*{water} til rabbaterte priser\n⇥* {radioactives}, gratis avheding (noen vilkår gjelder)\n⇥* Fylling av drivstoff, når nødvendig\n\nBli medlem nå! Årlig medlemskap koster kun  {membership_fee}"
+      "message" : "{clubname} is an independent organisation dedicated to providing discounted starship fuel to its members. Branches can be found throughout the galaxy. Benefits of membership include:"
    },
    "FLAVOUR_0_WELCOME" : {
       "description" : "",
@@ -27,25 +27,25 @@
       "description" : "",
       "message" : "Gå tilbake"
    },
-   "HANG_UP" : {
+   "LIST_BENEFITS_DISPOSAL" : {
       "description" : "",
-      "message" : "Legg på."
+      "message" : "{radioactives}, free disposal (conditions apply)"
    },
-   "HYDROGEN" : {
+   "LIST_BENEFITS_FUEL" : {
       "description" : "",
-      "message" : "Hydrogen"
+      "message" : "{fuel} at discount prices"
    },
-   "MILITARY_FUEL" : {
+   "LIST_BENEFITS_FUEL_INTRO" : {
       "description" : "",
-      "message" : "Millitært drivstoff"
+      "message" : "Our own stocks of fuel, independent of the general market"
    },
-   "RADIOACTIVES" : {
+   "LIST_BENEFITS_FUEL_TANK" : {
       "description" : "",
-      "message" : "Radioaktivt avfall"
+      "message" : "Fuel tank refilling, where necessary"
    },
-   "WATER" : {
+   "LIST_BENEFITS_JOIN" : {
       "description" : "",
-      "message" : "Vann"
+      "message" : "Join now! Annual membership costs only {membership_fee}"
    },
    "WE_WILL_ONLY_DISPOSE_OF" : {
       "description" : "",

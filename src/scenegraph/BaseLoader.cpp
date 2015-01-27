@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "BaseLoader.h"
@@ -22,6 +22,7 @@ void BaseLoader::ConvertMaterialDefinition(const MaterialDefinition &mdef)
 	const std::string &diffTex = mdef.tex_diff;
 	const std::string &specTex = mdef.tex_spec;
 	const std::string &glowTex = mdef.tex_glow;
+	const std::string &ambiTex = mdef.tex_ambi;
 
 	Graphics::MaterialDescriptor matDesc;
 	matDesc.lighting = !mdef.unlit;
@@ -33,6 +34,7 @@ void BaseLoader::ConvertMaterialDefinition(const MaterialDefinition &mdef)
 	matDesc.textures = 1;
 	matDesc.specularMap = !specTex.empty();
 	matDesc.glowMap = !glowTex.empty();
+	matDesc.ambientMap = !ambiTex.empty();
 	matDesc.quality = Graphics::HAS_HEAT_GRADIENT;
 
 	//Create material and set parameters
@@ -56,8 +58,11 @@ void BaseLoader::ConvertMaterialDefinition(const MaterialDefinition &mdef)
 		mat->texture1 = Graphics::TextureBuilder::Model(specTex).GetOrCreateTexture(m_renderer, "model");
 	if (!glowTex.empty())
 		mat->texture2 = Graphics::TextureBuilder::Model(glowTex).GetOrCreateTexture(m_renderer, "model");
-	//texture3 is reserved for pattern
-	//texture4 is reserved for color gradient
+	if (!ambiTex.empty())
+		mat->texture3 = Graphics::TextureBuilder::Model(ambiTex).GetOrCreateTexture(m_renderer, "model");
+	
+	//texture4 is reserved for pattern
+	//texture5 is reserved for color gradient
 
 	m_model->m_materials.push_back(std::make_pair(mdef.name, mat));
 }
@@ -84,8 +89,10 @@ void BaseLoader::FindPatterns(PatternContainer &output)
 		const FileSystem::FileInfo &info = files.Current();
 		if (info.IsFile()) {
 			const std::string &name = info.GetName();
-			if (ends_with_ci(name, ".png") && starts_with(name, "pattern"))
-				output.push_back(Pattern(name, m_curPath, m_renderer));
+			if (starts_with(name, "pattern")) {
+				if (ends_with_ci(name, ".png") || ends_with_ci(name, ".dds"))
+					output.push_back(Pattern(name, m_curPath, m_renderer));
+			}
 		}
 	}
 }

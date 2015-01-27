@@ -1,4 +1,4 @@
--- Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local Engine = import("Engine")
@@ -12,9 +12,9 @@ local NameGen = import("NameGen")
 local Format = import("Format")
 local Serializer = import("Serializer")
 local Character = import("Character")
-local EquipDef = import("EquipDef")
 local ShipDef = import("ShipDef")
 local Ship = import("Ship")
+local eq = import("Equipment")
 local utils = import("utils")
 
 local InfoFace = import("ui/InfoFace")
@@ -113,14 +113,14 @@ local missions = {}
 local passengers = 0
 
 local add_passengers = function (group)
-	Game.player:RemoveEquip('UNOCCUPIED_CABIN', group)
-	Game.player:AddEquip('PASSENGER_CABIN', group)
+	Game.player:RemoveEquip(eq.misc.cabin,  group)
+	Game.player:AddEquip(eq.misc.cabin_occupied, group)
 	passengers = passengers + group
 end
 
 local remove_passengers = function (group)
-	Game.player:RemoveEquip('PASSENGER_CABIN', group)
-	Game.player:AddEquip('UNOCCUPIED_CABIN', group)
+	Game.player:RemoveEquip(eq.misc.cabin_occupied,  group)
+	Game.player:AddEquip(eq.misc.cabin, group)
 	passengers = passengers - group
 end
 
@@ -183,8 +183,7 @@ local onChat = function (form, ref, option)
 		form:SetMessage(howmany)
 
 	elseif option == 3 then
-		local capacity = ShipDef[Game.player.shipId].equipSlotCapacity.CABIN
-		if capacity < ad.group or Game.player:GetEquipCount('CABIN', 'UNOCCUPIED_CABIN') < ad.group then
+		if not Game.player.cabin_cap or Game.player.cabin_cap < ad.group then
 			form:SetMessage(l.YOU_DO_NOT_HAVE_ENOUGH_CABIN_SPACE_ON_YOUR_SHIP)
 			return
 		end
@@ -327,7 +326,8 @@ local onEnterSystem = function (player)
 			if ships < 1 and risk > 0 and Engine.rand:Integer(math.ceil(1/risk)) == 1 then ships = 1 end
 
 			-- XXX hull mass is a bad way to determine suitability for role
-			local shipdefs = utils.build_array(utils.filter(function (k,def) return def.tag == 'SHIP' and def.hullMass > 10 and def.hullMass <= 200 end, pairs(ShipDef)))
+			local shipdefs = utils.build_array(utils.filter(function (k,def) return def.tag == 'SHIP'
+				and def.hyperdriveClass > 0 and def.hullMass > 10 and def.hullMass <= 200 end, pairs(ShipDef)))
 			if #shipdefs == 0 then return end
 
 			local ship
@@ -337,25 +337,25 @@ local onEnterSystem = function (player)
 
 				if Engine.rand:Number(1) <= risk then
 					local shipdef = shipdefs[Engine.rand:Integer(1,#shipdefs)]
-					local default_drive = shipdef.defaultHyperdrive
+					local default_drive = eq.hyperspace['hyperdrive_'..tostring(shipdef.hyperdriveClass)]
 
-					local max_laser_size = shipdef.capacity - EquipDef[default_drive].mass
+					local max_laser_size = shipdef.capacity - default_drive.capabilities.mass
 					local laserdefs = utils.build_array(utils.filter(
-                        function (k,def) return def.slot == 'LASER' and def.mass <= max_laser_size and string.sub(def.id,0,11) == 'PULSECANNON' end,
-                        pairs(EquipDef)
-                    ))
+						function (k,l) return l:IsValidSlot('laser_front') and l.capabilities.mass <= max_laser_size and l.l10n_key:find("PULSECANNON") end,
+						pairs(eq.laser)
+					))
 					local laserdef = laserdefs[Engine.rand:Integer(1,#laserdefs)]
 
 					ship = Space.SpawnShipNear(shipdef.id, Game.player, 50, 100)
 					ship:SetLabel(Ship.MakeRandomLabel())
 					ship:AddEquip(default_drive)
-					ship:AddEquip(laserdef.id)
-					ship:AddEquip('SHIELD_GENERATOR', math.ceil(risk * 3))
+					ship:AddEquip(laserdef)
+					ship:AddEquip(eq.misc.shield_generator, math.ceil(risk * 3))
 					if Engine.rand:Number(2) <= risk then
-						ship:AddEquip('LASER_COOLING_BOOSTER')
+						ship:AddEquip(eq.misc.laser_cooling_booster)
 					end
 					if Engine.rand:Number(3) <= risk then
-						ship:AddEquip('SHIELD_ENERGY_BOOSTER')
+						ship:AddEquip(eq.misc.shield_energy_booster)
 					end
 					ship:AIKill(Game.player)
 				end
@@ -407,7 +407,7 @@ end
 
 local onShipUndocked = function (player, station)
 	if not player:IsPlayer() then return end
-	local current_passengers = Game.player:GetEquipCount('CABIN', 'PASSENGER_CABIN')
+	local current_passengers = Game.player:GetEquipCountOccupied("cabin")-(Game.player.cabin_cap or 0)
 	if current_passengers >= passengers then return end -- nothing changed, good
 
 	for ref,mission in pairs(missions) do

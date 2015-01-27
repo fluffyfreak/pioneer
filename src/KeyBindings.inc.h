@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef KEY_BINDING
@@ -31,6 +31,7 @@ KEY_BINDING(yawLeft, "BindYawLeft", Lang::YAW_LEFT, SDLK_a, 0)
 KEY_BINDING(yawRight, "BindYawRight", Lang::YAW_RIGHT, SDLK_d, 0)
 KEY_BINDING(rollLeft, "BindRollLeft", Lang::ROLL_LEFT, SDLK_q, 0)
 KEY_BINDING(rollRight, "BindRollRight", Lang::ROLL_RIGHT, SDLK_e, 0)
+KEY_BINDING(killRot, "BindKillRot", Lang::HEADING_LOCK_KILLROT, SDLK_p, 0)
 
 BINDING_GROUP(Lang::MANUAL_CONTROL_MODE)
 KEY_BINDING(thrustForward, "BindThrustForward", Lang::THRUSTER_MAIN, SDLK_i, 0)
@@ -56,9 +57,9 @@ KEY_BINDING(toggleLuaConsole, "BindToggleLuaConsole", Lang::TOGGLE_LUA_CONSOLE, 
 KEY_BINDING(toggleRotationDamping, "BindToggleRotationDamping", Lang::TOGGLE_ROTATION_DAMPING, SDLK_r, 0)
 
 BINDING_GROUP(Lang::JOYSTICK_INPUT)
-AXIS_BINDING(pitchAxis, "BindAxisPitch", Lang::PITCH, "-Joy0Axis1")
-AXIS_BINDING(rollAxis, "BindAxisRoll", Lang::ROLL, "Joy0Axis2")
-AXIS_BINDING(yawAxis, "BindAxisYaw", Lang::YAW, "Joy0Axis0")
+AXIS_BINDING(pitchAxis, "BindAxisPitch", Lang::PITCH, "")
+AXIS_BINDING(rollAxis, "BindAxisRoll", Lang::ROLL, "")
+AXIS_BINDING(yawAxis, "BindAxisYaw", Lang::YAW, "")
 
 BINDING_PAGE_END()
 

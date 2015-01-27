@@ -1,70 +1,70 @@
 {
    "APPLY_FOR_MEMBERSHIP" : {
       "description" : "",
-      "message" : "Apply for membership"
+      "message" : "Aplică pentru a deveni membru"
    },
    "BEGIN_TRADE" : {
       "description" : "",
-      "message" : "Begin trade"
+      "message" : "Începe negoțul"
    },
    "FLAVOUR_0_CLUBNAME" : {
       "description" : "",
-      "message" : "Interstellar Pilots' Fuel Co-operative"
+      "message" : "Cooperativa Combustibilului Piloților Interstelari"
    },
    "FLAVOUR_0_MEMBER_INTRO" : {
       "description" : "",
-      "message" : "You may purhase fuel and dispose of {radioactives} here."
+      "message" : "Puteți cumpăra combustibil și evacua {radioactives} aici."
    },
    "FLAVOUR_0_NONMEMBER_INTRO" : {
       "description" : "",
-      "message" : "{clubname} is an independent organisation dedicated to providing discounted starship fuel to its members. Branches can be found throughout the galaxy. Benefits of membership include:\n\n\t* Our own stocks of fuel, independent of the general market\n\t* {hydrogen} at discount prices\n\t* {military_fuel} at discount prices\n\t* {water} at discount prices\n\t* {radioactives}, free disposal (conditions apply)\n\t* Fuel tank refilling, where necessary\n\nJoin now! Annual membership costs only {membership_fee}"
+      "message" : "{clubname} este o organizație independenta dedicată aprovizionării de combustibil naval mai ieftin membrilor ei. Filiale pot fi găsite de-a lungul galaxiei. Beneficii ale apartenenței includ:"
    },
    "FLAVOUR_0_WELCOME" : {
       "description" : "",
-      "message" : "Welcome to {clubname}"
+      "message" : "Bine ați venit în {clubname}"
    },
    "GO_BACK" : {
       "description" : "",
       "message" : "Înapoi"
    },
-   "HANG_UP" : {
+   "LIST_BENEFITS_DISPOSAL" : {
       "description" : "",
-      "message" : "Închide."
+      "message" : "{radioactives}, evacuare gratuită (condiții se aplică)"
    },
-   "HYDROGEN" : {
+   "LIST_BENEFITS_FUEL" : {
       "description" : "",
-      "message" : "Hidrogen"
+      "message" : "{fuel} la prețuri reduse"
    },
-   "MILITARY_FUEL" : {
+   "LIST_BENEFITS_FUEL_INTRO" : {
       "description" : "",
-      "message" : "Combustibil militar"
+      "message" : "Stocurile noastre de combustibil, independente de piața generală"
    },
-   "RADIOACTIVES" : {
+   "LIST_BENEFITS_FUEL_TANK" : {
       "description" : "",
-      "message" : "Deşeuri radioactive"
+      "message" : "Reumplere rezervor, la nevoie"
    },
-   "WATER" : {
+   "LIST_BENEFITS_JOIN" : {
       "description" : "",
-      "message" : "Apă"
+      "message" : "Alăturați-vă acum! Parteneriatul anual costă doar {membership_fee}"
    },
    "WE_WILL_ONLY_DISPOSE_OF" : {
       "description" : "",
-      "message" : "We will only dispose of as many tonnes of {radioactives} as you have bought tonnes of {military_fuel} from us."
+      "message" : "Vom evacua doar atâtea tone de {radioactives} câte tone de {military_fuel} ați cumpărat de la noi."
    },
    "WHAT_CONDITIONS_APPLY" : {
       "description" : "",
-      "message" : "What conditions apply to {radioactives} disposal?"
+      "message" : "Ce condiții se aplică pentru evacuarea de {radioactives}?"
    },
    "YOUR_MEMBERSHIP_APPLICATION_HAS_BEEN_DECLINED" : {
       "description" : "",
-      "message" : "Your membership application has been declined."
+      "message" : "Cererea dvs. de înscriere a fost refuzată."
    },
    "YOU_ARE_NOW_A_MEMBER" : {
       "description" : "",
-      "message" : "You are now a member. Your membership will expire on {expiry_date}."
+      "message" : "Acum sunteți membru. Contractul va expira pe {expiry_date}."
    },
    "YOU_MUST_BUY" : {
       "description" : "",
-      "message" : "You must buy our {military_fuel} before we will take your {radioactives}"
+      "message" : "Trebuie să cumpărați {military_fuel} de la noi înainte să luăm {radioactives} de la dvs"
    }
 }

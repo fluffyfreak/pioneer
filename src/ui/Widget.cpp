@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Widget.h"
@@ -19,7 +19,10 @@ Widget::Widget(Context *context) :
 	m_font(FONT_INHERIT),
 	m_disabled(false),
 	m_mouseOver(false),
-	m_visible(false)
+	m_visible(false),
+	m_animatedOpacity(1.0f),
+	m_animatedPositionX(1.0f),
+	m_animatedPositionY(1.0f)
 {
 	assert(m_context);
 }
@@ -77,6 +80,7 @@ void Widget::NotifyVisible(bool visible)
 {
 	if (m_visible != visible) {
 		m_visible = visible;
+		TriggerVisibilityChanged();
 		if (m_visible) { HandleVisible(); } else { HandleInvisible(); }
 	}
 }
@@ -325,6 +329,11 @@ void Widget::TriggerSelect()
 void Widget::TriggerDeselect()
 {
 	HandleDeselect();
+}
+
+void Widget::TriggerVisibilityChanged()
+{
+	onVisibilityChanged.emit(m_visible);
 }
 
 void Widget::RegisterBindPoint(const std::string &bindName, sigc::slot<void,PropertyMap &,const std::string &> method)

@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _FRAME_H
@@ -21,7 +21,7 @@ class Space;
 
 class Frame {
 public:
-	enum { FLAG_ROTATING=(1<<1), FLAG_HAS_ROT=(1<<2) };
+	enum { FLAG_DEFAULT=(0), FLAG_ROTATING=(1<<1), FLAG_HAS_ROT=(1<<2) };
 
 	Frame();
 	Frame(Frame *parent, const char *label);

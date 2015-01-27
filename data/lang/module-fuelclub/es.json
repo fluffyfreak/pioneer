@@ -17,7 +17,7 @@
    },
    "FLAVOUR_0_NONMEMBER_INTRO" : {
       "description" : "",
-      "message" : "{clubname} es una organización independiente dedicada a proveer descuentos en combustible a sus miembros. Sus sedes se encuentran por toda la galaxia. Los beneficios de afiliación incluyen:\n\n\t* Existencias de combustible propias, independientes del mercado general\n\t* Descuento de precios en {hydrogen}\n\t* Descuento de precios en {military_fuel}\n\t* Descuento de precios en {water}\n\t* {radioactives}, disponibilidad libre (bajo condiciones)\n\t* Rellenado de su depósito cuando sea necesario\n\n¡Apúntese! Afiliación anual por solo {membership_fee}"
+      "message" : "{clubname} es una organización independiente dedicada a proveer descuentos en combustible a sus miembros. Sus sedes se encuentran por toda la galaxia. Los beneficios de afiliación incluyen:"
    },
    "FLAVOUR_0_WELCOME" : {
       "description" : "",
@@ -27,25 +27,25 @@
       "description" : "",
       "message" : "Atrás"
    },
-   "HANG_UP" : {
+   "LIST_BENEFITS_DISPOSAL" : {
       "description" : "",
-      "message" : "Colgar."
+      "message" : "{radioactives}, libre disposición (se aplican condiciones)"
    },
-   "HYDROGEN" : {
+   "LIST_BENEFITS_FUEL" : {
       "description" : "",
-      "message" : "Hidrógeno"
+      "message" : "descuento de precios en {fuel}"
    },
-   "MILITARY_FUEL" : {
+   "LIST_BENEFITS_FUEL_INTRO" : {
       "description" : "",
-      "message" : "Combustible militar"
+      "message" : "Stock propio de fuel, independiente del mercado general"
    },
-   "RADIOACTIVES" : {
+   "LIST_BENEFITS_FUEL_TANK" : {
       "description" : "",
-      "message" : "Residuos radioactivos"
+      "message" : "Repostaje cuando sea necesario"
    },
-   "WATER" : {
+   "LIST_BENEFITS_JOIN" : {
       "description" : "",
-      "message" : "Agua"
+      "message" : "¡Hágase socio! Cuota anual de solo {membership_fee}"
    },
    "WE_WILL_ONLY_DISPOSE_OF" : {
       "description" : "",

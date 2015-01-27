@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _SHIPCPANEL_H
@@ -18,12 +18,11 @@ namespace Graphics { class Renderer; }
 
 class ShipCpanel: public Gui::Fixed {
 public:
-	ShipCpanel(Graphics::Renderer *r);
-    ShipCpanel(Serializer::Reader &rd, Graphics::Renderer *r);
+	ShipCpanel(Graphics::Renderer *r, Game* game);
+    ShipCpanel(Serializer::Reader &rd, Graphics::Renderer *r, Game* game);
 	virtual ~ShipCpanel();
 	virtual void Draw();
 	void Update();
-	MsgLogWidget *MsgLog() { return m_msglog; }
 	void SetAlertState(Ship::AlertState as);
 
 	void TimeStepUpdate(float step);
@@ -52,7 +51,6 @@ private:
 	void OnChangeInfoView(Gui::MultiStateImageButton *b);
 	void OnClickTimeaccel(Game::TimeAccel val);
 	void OnClickComms(Gui::MultiStateImageButton *b);
-	void OnDockingClearanceExpired(const SpaceStation *);
 	void OnClickRotationDamping(Gui::MultiStateImageButton *b);
 
 	void OnUserChangeMultiFunctionDisplay(multifuncfunc_t f);
@@ -61,16 +59,16 @@ private:
 	void OnMultiFuncUngrabFocus(multifuncfunc_t);
 	void HideMapviewButtons();
 
+	Game* m_game;
+
 	enum MapView m_currentMapView;
 	multifuncfunc_t m_userSelectedMfuncWidget;
 	Gui::Label *m_clock;
 
-	sigc::connection m_connOnDockingClearanceExpired;
 	sigc::connection m_connOnRotationDampingChanged;
 
 	MultiFuncSelectorWidget *m_mfsel;
 	ScannerWidget *m_scanner;
-	MsgLogWidget *m_msglog;
 	UseEquipWidget *m_useEquipWidget;
 	Gui::MultiStateImageButton *m_camButton;
 	Gui::RadioGroup *m_leftButtonGroup, *m_rightButtonGroup;

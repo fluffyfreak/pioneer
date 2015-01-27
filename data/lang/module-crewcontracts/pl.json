@@ -5,7 +5,7 @@
    },
    "CREWDETAILSHEETBB" : {
       "description" : "",
-      "message" : "Załoga do wynajęcia\n\nNazwisko: {name}\nDoświadczenie: {experience}\nOczekiwana stawka: {wage} na tydzień\n\n{response}\n"
+      "message" : "Nazwisko: {name}\nDoświadczenie: {experience}\nOczekiwana stawka: {wage} na tydzień\n\n{response}\n"
    },
    "CREWMEMBER_WAGE_PER_WEEK" : {
       "description" : "",
@@ -22,10 +22,6 @@
    "GO_BACK" : {
       "description" : "",
       "message" : "Powrót"
-   },
-   "HANG_UP" : {
-      "description" : "",
-      "message" : "Rozłącz się."
    },
    "IM_SORRY_IM_NOT_PREPARED_TO_GO_ANY_LOWER" : {
       "description" : "",

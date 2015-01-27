@@ -5,7 +5,7 @@
    },
    "CREWDETAILSHEETBB" : {
       "description" : "",
-      "message" : "Ledig besætning\n\nNavn: {name}\nErfaring: {experience}\nEfterspurgt løn: {wage}/uge\n\n{response}\n"
+      "message" : "Name: {name}\nExperience: {experience}\nAsking wage: {wage} per week\n\n{response}\n"
    },
    "CREWMEMBER_WAGE_PER_WEEK" : {
       "description" : "",
@@ -22,10 +22,6 @@
    "GO_BACK" : {
       "description" : "",
       "message" : "Gå tilbage"
-   },
-   "HANG_UP" : {
-      "description" : "",
-      "message" : "Afbryd linjen."
    },
    "IM_SORRY_IM_NOT_PREPARED_TO_GO_ANY_LOWER" : {
       "description" : "",

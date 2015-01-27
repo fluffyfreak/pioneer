@@ -1,4 +1,4 @@
--- Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local Engine = import("Engine")
@@ -47,7 +47,7 @@ local shipRepairs = function (args)
 		local shipDef = ShipDef[Game.player.shipId]
 		local hullPercent = Game.player.hullPercent
 
-		if hullPercent >= 100 then
+		if hullPercent > 99.9 then
 			messageLabel:SetText(l.SHIP_IS_ALREADY_FULLY_REPAIRED)
 			feedbackLabel:SetText(feedbackText)
 			repairButtons:Clear()

@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _SCENEGRAPH_BINARYCONVERTER_H
@@ -26,6 +26,7 @@ class BinaryConverter : public BaseLoader
 public:
 	BinaryConverter(Graphics::Renderer*);
 	void Save(const std::string& filename, Model* m);
+	void Save(const std::string& filename, const std::string& savepath, Model* m, const bool bInPlace);
 	Model *Load(const std::string &filename);
 	Model *Load(const std::string &filename, const std::string &path);
 

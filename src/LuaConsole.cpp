@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaConsole.h"
@@ -397,7 +397,7 @@ void LuaConsole::ExecOrContinue(const std::string &stmt) {
 				const char *s = 0;
 				if (result == 0)
 					s = lua_tolstring(L, -1, &len);
-				ss << s ? std::string(s, len) : "<internal error when converting result to string>";
+				ss << (s ? std::string(s, len) : "<internal error when converting result to string>");
 
 				// pop the result
 				lua_pop(L, 1);

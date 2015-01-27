@@ -5,7 +5,7 @@
    },
    "CREWDETAILSHEETBB" : {
       "description" : "",
-      "message" : "Candidati per l'equipaggio\n\nNome: {name}\nEsperienza: {experience}\nStipendio richiesto: {wage} la settimana\n\n{response}\n"
+      "message" : "Nome: {name}\nEsperienza: {experience}\nStipendio richiesto: {wage} la settimana\n\n{response}\n"
    },
    "CREWMEMBER_WAGE_PER_WEEK" : {
       "description" : "",
@@ -22,10 +22,6 @@
    "GO_BACK" : {
       "description" : "",
       "message" : "Indietro"
-   },
-   "HANG_UP" : {
-      "description" : "",
-      "message" : "Riaggancia."
    },
    "IM_SORRY_IM_NOT_PREPARED_TO_GO_ANY_LOWER" : {
       "description" : "",

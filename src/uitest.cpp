@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include <cstdlib>
@@ -105,6 +105,11 @@ static bool remove_floating_widget(UI::Context *c, UI::Widget *widget)
 }
 #endif
 
+static void animation_callback(int n)
+{
+	printf("%d animation completed\n", n);
+}
+
 int main(int argc, char **argv)
 {
 	FileSystem::Init();
@@ -115,6 +120,7 @@ int main(int argc, char **argv)
 	}
 
 	Graphics::Settings videoSettings;
+	videoSettings.rendererType = Graphics::RENDERER_OPENGL;
 	videoSettings.width = WIDTH;
 	videoSettings.height = HEIGHT;
 	videoSettings.fullscreen = false;
@@ -132,6 +138,51 @@ int main(int argc, char **argv)
 
 	RefCountedPtr<UI::Context> c(new UI::Context(Lua::manager, r, WIDTH, HEIGHT));
 
+	UI::Grid *g = c->Grid(3,3);
+	UI::Image *img[9];
+	for (int y = 0; y < 3; y++)
+		for (int x = 0; x < 3; x++) {
+			int i = y*3+x;
+			img[i] = c->Image("textures/background.jpg");
+			g->SetCell(x, y, img[i]);
+			c->Animate(
+				new UI::Animation(img[i], UI::Animation::TYPE_IN, UI::Animation::EASING_ZERO, UI::Animation::TARGET_POSITION_X, 0.0f, false,
+				new UI::Animation(img[i], UI::Animation::TYPE_IN, UI::Animation::EASING_ZERO, UI::Animation::TARGET_PAUSE, float(i)*0.2, false,
+				new UI::Animation(img[i], UI::Animation::TYPE_IN, UI::Animation::EASING_LINEAR, UI::Animation::TARGET_POSITION_X, 0.2f, false, nullptr, sigc::bind(sigc::ptr_fun(&animation_callback), i)))));
+			c->Animate(
+				new UI::Animation(img[i], UI::Animation::TYPE_IN, UI::Animation::EASING_ZERO, UI::Animation::TARGET_POSITION_Y, 0.0f, false,
+				new UI::Animation(img[i], UI::Animation::TYPE_IN, UI::Animation::EASING_ZERO, UI::Animation::TARGET_PAUSE, float(i)*0.2, false,
+				new UI::Animation(img[i], UI::Animation::TYPE_IN, UI::Animation::EASING_LINEAR, UI::Animation::TARGET_POSITION_Y, 0.2f, false))));
+		}
+	c->GetTopLayer()->SetInnerWidget(g);
+
+	/*
+	c->GetAnimationController().Add(new UI::Animation(img, UI::Animation::TYPE_IN, UI::Animation::EASING_LINEAR, UI::Animation::TARGET_POSITION_X, 1.3f, false));
+	c->GetAnimationController().Add(new UI::Animation(img, UI::Animation::TYPE_IN, UI::Animation::EASING_QUAD, UI::Animation::TARGET_POSITION_Y_REV, 1.0f, false,
+		new UI::Animation(img, UI::Animation::TYPE_OUT, UI::Animation::EASING_QUINT, UI::Animation::TARGET_OPACITY, 1.0f, false)));
+	*/
+
+#if 0
+	UI::Background *cb = c->Background();
+	cb->SetInnerWidget(
+		c->Margin(10)->SetInnerWidget(
+			c->Background()->SetInnerWidget(
+				c->Margin(10)->SetInnerWidget(
+					c->Image("textures/background.jpg")
+				)
+			)
+		)
+	);
+	c->GetTopLayer()->SetInnerWidget(
+		c->Margin(10)->SetInnerWidget(
+			cb
+		)
+	);
+
+	c->GetAnimationController().Add(UI::Animation(cb, UI::Animation::TYPE_IN_OUT, UI::Animation::EASING_SINE, UI::Animation::TARGET_OPACITY, 4.0f, true));
+#endif
+
+#if 0
 	UI::VBox *box = c->VBox();
 	for (int i = 0; i < 2; i++) {
 		box->PackEnd(UI::WidgetSet(
@@ -143,6 +194,7 @@ int main(int argc, char **argv)
 		);
 	}
 	c->GetTopLayer()->SetInnerWidget(box);
+#endif
 
 #if 0
 	UI::Gauge *gauge;
