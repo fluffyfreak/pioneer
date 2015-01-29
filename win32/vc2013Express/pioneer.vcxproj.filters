@@ -423,6 +423,9 @@
     <ClCompile Include="..\..\src\Plane.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\Asteroid.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Aabb.h">
@@ -855,6 +858,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CollMesh.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Asteroid.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
