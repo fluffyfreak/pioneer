@@ -526,7 +526,10 @@ void ModelViewer::GenerateAsteroid()
 		deformations.push_back(def);
 	}
 	// build the asteroid itself
-	RefCountedPtr<Graphics::Material> mat(m_renderer->CreateMaterial(Graphics::MaterialDescriptor()));
+	Graphics::MaterialDescriptor matDesc;
+	matDesc.lighting = true;
+	matDesc.alphaTest = false;
+	RefCountedPtr<Graphics::Material> mat(m_renderer->CreateMaterial(matDesc));
 	m_asteroid.reset(new Asteroid(m_renderer, mat, m_renderer->CreateRenderState(Graphics::RenderStateDesc()), deformations, 5, m_model->GetDrawClipRadius()));
 }
 
