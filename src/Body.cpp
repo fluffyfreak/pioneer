@@ -4,6 +4,7 @@
 #include "libs.h"
 #include "Body.h"
 #include "Frame.h"
+#include "AsteroidBody.h"
 #include "Star.h"
 #include "Planet.h"
 #include "CargoBody.h"
@@ -77,6 +78,7 @@ void Body::Serialize(Serializer::Writer &_wr, Space *space)
 		case Object::CARGOBODY:
 		case Object::PROJECTILE:
 		case Object::HYPERSPACECLOUD:
+		case Object::ASTEROIDBODY:
 			Save(wr, space);
 			break;
 		default:
@@ -110,6 +112,8 @@ Body *Body::Unserialize(Serializer::Reader &_rd, Space *space)
 			b = new CargoBody(); break;
 		case Object::HYPERSPACECLOUD:
 			b = new HyperspaceCloud(); break;
+		case Object::ASTEROIDBODY:
+			b = new AsteroidBody(); break;
 		default:
 			assert(0);
 	}

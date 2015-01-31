@@ -31,8 +31,9 @@ static const Sint32 icosahedron_faces[20][3] = {
 Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::RenderState *state,
 	const TDeformations &deformations, const Sint32 subdivs, const float scale)
 {
-	PROFILE_SCOPED()
-		m_material = mat;
+	PROFILE_SCOPED();
+	
+	m_material = mat;
 	m_renderState = state;
 
 	const Sint32 subdivsLocal = Clamp(subdivs, 0, MAX_SUBDIVS);
@@ -73,7 +74,6 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 	};
 	std::vector<PosNormUVVert> vertices;
 	vertices.resize(vts.GetNumVerts());
-	assert(vb->GetDesc().stride == sizeof(PosNormUVVert));
 	for (Uint32 i = 0; i < vts.GetNumVerts(); i++)
 	{
 		vertices[i].pos = vts.position[i];
@@ -142,7 +142,7 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 	
 	// vertices
 	PosNormUVVert* vtxPtr = m_vertexBuffer->Map<PosNormUVVert>(Graphics::BUFFER_MAP_WRITE);
-	assert(vb->GetDesc().stride == sizeof(PosNormUVVert));
+	assert(m_vertexBuffer->GetDesc().stride == sizeof(PosNormUVVert));
 	for (size_t i = 0; i<vertices.size(); i++)
 	{
 		vtxPtr[i].pos = vertices[i].pos;
