@@ -5,6 +5,7 @@
 #include "Graphics/Texture.h"
 #include "collider/Weld.h"
 #include "gameconsts.h"
+#include <set>
 
 using namespace Graphics;
 using namespace Graphics::Drawables;
@@ -112,10 +113,16 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 	Random rand(&_init[0], s);
 
 	// radius, depth, and the number of impacts
+	std::set<Uint16> usedIndices;
 	const size_t num_indices = indices.size();
 	for (auto i : deformations) {
 		// get the vertex that forms the basis of our deformation
-		const Uint16 idx = indices[(rand.Int32() % num_indices)];
+		Uint16 prospective = indices[(rand.Int32() % num_indices)];
+		while (usedIndices.find(prospective) != usedIndices.end()) {
+			prospective = indices[(rand.Int32() % num_indices)];
+		}
+		const Uint16 idx = prospective;
+		usedIndices.insert(idx);
 		const PosNormUVVert &vert = vertices[idx];
 
 		// find all vertices within the target radius
@@ -133,6 +140,8 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 				idxDistSqr.push_back(std::make_pair(vi, distSqr));
 			}
 		}
+		// add the current verteex too of course
+		idxDistSqr.push_back(std::make_pair(idx, 0.0f));
 
 		// move the vertices by the offset amount in the direction of the "vert" normal, scaled by distance from centre of the radius
 		for (auto vi : idxDistSqr) {
