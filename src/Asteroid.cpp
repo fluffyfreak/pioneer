@@ -142,6 +142,25 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 		}
 	}
 
+	// regenerate vertex normals
+	const size_t faceCount = indices.size() / 3;
+	for (size_t verti = 0; verti < vertices.size(); verti++)
+	{
+		vector3f sumNorm(0.0f);
+		// Calcaulte and add the normal of every face that contains this vertex
+		for (size_t f = 0; f < faceCount; f++)
+		{
+			const size_t idx = (f * 3);
+			if (indices[idx + 0] == verti || indices[idx + 1] == verti || indices[idx + 2] == verti)
+			{
+				const vector3f v01 = (vertices[indices[idx + 0]].pos - vertices[indices[idx + 1]].pos).Normalized();
+				const vector3f v02 = (vertices[indices[idx + 0]].pos - vertices[indices[idx + 2]].pos).Normalized();
+				sumNorm += v01.Cross(v02);
+			}
+		}
+		vertices[verti].norm = sumNorm.Normalized();
+	}
+
 	//Create vtx & index buffers and copy data
 	VertexBufferDesc vbd;
 	vbd.attrib[0].semantic = ATTRIB_POSITION;
