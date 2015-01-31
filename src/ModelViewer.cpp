@@ -529,11 +529,14 @@ void ModelViewer::GenerateAsteroid()
 		def.offset = ((rar.Double() * 2.0) - 1.0) * (def.radius * 0.7);
 		deformations.push_back(def);
 	}
-	// lit material, with no alpha
+	// lit material, with no alpha, 1 texture
 	Graphics::MaterialDescriptor matDesc;
 	matDesc.lighting = true;
 	matDesc.alphaTest = false;
+	matDesc.textures = 1;
 	RefCountedPtr<Graphics::Material> mat(m_renderer->CreateMaterial(matDesc));
+	m_asteroidMap.reset(Graphics::TextureBuilder::Model("textures/rock.png").CreateTexture(m_renderer));
+	mat->texture0 = m_asteroidMap.get();
 	// build the asteroid itself
 	m_asteroid.reset(new Asteroid(m_renderer, mat, m_renderer->CreateRenderState(Graphics::RenderStateDesc()), deformations, 5, m_model->GetDrawClipRadius()));
 }

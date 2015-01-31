@@ -99,6 +99,7 @@ private:
 	SceneGraph::Model *m_model;
 	void GenerateAsteroid();
 	std::unique_ptr<Asteroid> m_asteroid;
+	std::unique_ptr<Graphics::Texture> m_asteroidMap;
 	Options m_options;
 	float m_landingMinOffset;
 	std::unique_ptr<NavLights> m_navLights;
