@@ -500,6 +500,8 @@ void ModelViewer::DrawModel()
 	static bool bShowAsteroid = true;
 	if (bShowAsteroid) {
 		if (m_asteroid.get()) {
+			// reset the position we draw this at, so it's not inheriting the ships transformations
+			m_renderer->SetTransform(mv * matrix4x4f::Translation(0.f, 0.f, 0.f));
 			m_asteroid->Draw(m_renderer);
 		} else {
 			// make an asteroid
@@ -511,25 +513,28 @@ void ModelViewer::DrawModel()
 		DrawGrid(mv, m_model->GetDrawClipRadius());
 }
 
-
 void ModelViewer::GenerateAsteroid()
 {
 	// Create some deformaties
 	Asteroid::TDeformations deformations;
-	//Uint32 ticks = SDL_GetTicks();
+	static Uint32 MIN_BUMPS(64);
+	static Uint32 MAX_BUMPS(256);
 	Random rar(2670);
-	const Uint32 numBumps = std::max(6U, rar.Int32() % 64);
+	const Uint32 numBumps = std::max(MIN_BUMPS, rar.Int32() % MAX_BUMPS);
 	for (Uint32 b = 0; b < numBumps; b++) {
 		Asteroid::TDeform def;
-		def.radius = rar.Double() * 0.5;
-		def.offset = def.radius * 0.5;
+		// at least 5% but never more than 50% of the width of the asteroid itself
+		def.radius = std::max(0.05, rar.Double() * 0.5);
+		// offset should be = (-1.0 ... 1.0) * def.radius
+		def.offset = ((rar.Double() * 2.0) - 1.0) * (def.radius * 0.7);
 		deformations.push_back(def);
 	}
-	// build the asteroid itself
+	// lit material, with no alpha
 	Graphics::MaterialDescriptor matDesc;
 	matDesc.lighting = true;
 	matDesc.alphaTest = false;
 	RefCountedPtr<Graphics::Material> mat(m_renderer->CreateMaterial(matDesc));
+	// build the asteroid itself
 	m_asteroid.reset(new Asteroid(m_renderer, mat, m_renderer->CreateRenderState(Graphics::RenderStateDesc()), deformations, 5, m_model->GetDrawClipRadius()));
 }
 
