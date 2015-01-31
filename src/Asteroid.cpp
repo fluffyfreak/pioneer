@@ -112,6 +112,24 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 	_init.push_back(UNIVERSE_SEED);
 	Random rand(&_init[0], s);
 
+
+	std::vector < std::vector<size_t> > faceIndices;
+	faceIndices.resize(vertices.size());
+	// Create vertex to face listing
+	const size_t faceCount = indices.size() / 3;
+	for (size_t verti = 0; verti < vertices.size(); verti++)
+	{
+		// Find all of the faces that use this vertex
+		for (size_t f = 0; f < faceCount; f++)
+		{
+			const size_t idx = (f * 3);
+			if ((indices[idx + 0] == verti) || (indices[idx + 1] == verti) || (indices[idx + 2] == verti))
+			{
+				faceIndices[verti].push_back(f);
+			}
+		}
+	}
+
 	// radius, depth, and the number of impacts
 	std::set<Uint16> usedIndices;
 	const size_t num_indices = indices.size();
@@ -149,23 +167,32 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 			const vector3f dirOffset = (vert.norm * sclOffset);
 			vertices[vi.first].pos += dirOffset;
 		}
-	}
 
-	// regenerate vertex normals
-	const size_t faceCount = indices.size() / 3;
-	for (size_t verti = 0; verti < vertices.size(); verti++)
-	{
-		vector3f sumNorm(0.0f);
-		// Calcaulte and add the normal of every face that contains this vertex
-		for (size_t f = 0; f < faceCount; f++)
+		// regenerate vertex normals after each deformation so the new normals affect future iterations
+		for (size_t verti = 0; verti < vertices.size(); verti++)
 		{
-			const size_t idx = (f * 3);
-			if (indices[idx + 0] == verti || indices[idx + 1] == verti || indices[idx + 2] == verti)
-			{
+			vector3f sumNorm(0.0f);
+			// Calculate and add the normal of every face that contains this vertex
+			for (auto fi : faceIndices[verti]) {
+				const size_t idx = (fi * 3);
 				const vector3f v01 = (vertices[indices[idx + 0]].pos - vertices[indices[idx + 1]].pos).Normalized();
 				const vector3f v02 = (vertices[indices[idx + 0]].pos - vertices[indices[idx + 2]].pos).Normalized();
 				sumNorm += v01.Cross(v02);
 			}
+			vertices[verti].norm = sumNorm.Normalized();
+		}
+	}
+
+	// regenerate vertex normals a final time
+	for (size_t verti = 0; verti < vertices.size(); verti++)
+	{
+		vector3f sumNorm(0.0f);
+		// Calculate and add the normal of every face that contains this vertex
+		for (auto fi : faceIndices[verti]) {
+			const size_t idx = (fi * 3);
+			const vector3f v01 = (vertices[indices[idx + 0]].pos - vertices[indices[idx + 1]].pos).Normalized();
+			const vector3f v02 = (vertices[indices[idx + 0]].pos - vertices[indices[idx + 2]].pos).Normalized();
+			sumNorm += v01.Cross(v02);
 		}
 		vertices[verti].norm = sumNorm.Normalized();
 	}
