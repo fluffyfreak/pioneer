@@ -497,8 +497,37 @@ void ModelViewer::DrawModel()
 		m_scaleModel->Render(mv * matrix4x4f::Translation(0.f, m_landingMinOffset, 0.f));
 	}
 
+	static bool bShowAsteroid = true;
+	if (bShowAsteroid) {
+		if (m_asteroid.get()) {
+			m_asteroid->Draw(m_renderer);
+		} else {
+			// make an asteroid
+			GenerateAsteroid();
+		}
+	}
+
 	if (m_options.showGrid)
 		DrawGrid(mv, m_model->GetDrawClipRadius());
+}
+
+
+void ModelViewer::GenerateAsteroid()
+{
+	// Create some deformaties
+	Asteroid::TDeformations deformations;
+	//Uint32 ticks = SDL_GetTicks();
+	Random rar(2670);
+	const Uint32 numBumps = std::max(6U, rar.Int32() % 64);
+	for (Uint32 b = 0; b < numBumps; b++) {
+		Asteroid::TDeform def;
+		def.radius = rar.Double() * 0.5;
+		def.offset = def.radius * 0.5;
+		deformations.push_back(def);
+	}
+	// build the asteroid itself
+	RefCountedPtr<Graphics::Material> mat(m_renderer->CreateMaterial(Graphics::MaterialDescriptor()));
+	m_asteroid.reset(new Asteroid(m_renderer, mat, m_renderer->CreateRenderState(Graphics::RenderStateDesc()), deformations, 5, m_model->GetDrawClipRadius()));
 }
 
 void ModelViewer::MainLoop()

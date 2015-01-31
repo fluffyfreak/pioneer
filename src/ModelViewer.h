@@ -7,6 +7,7 @@
 #include "LuaManager.h"
 #include "NavLights.h"
 #include "Shields.h"
+#include "Asteroid.h"
 #include "graphics/Renderer.h"
 #include "graphics/Texture.h"
 #include "graphics/Drawables.h"
@@ -96,6 +97,8 @@ private:
 	Random m_rng;
 	SceneGraph::Animation *m_currentAnimation;
 	SceneGraph::Model *m_model;
+	void GenerateAsteroid();
+	std::unique_ptr<Asteroid> m_asteroid;
 	Options m_options;
 	float m_landingMinOffset;
 	std::unique_ptr<NavLights> m_navLights;
