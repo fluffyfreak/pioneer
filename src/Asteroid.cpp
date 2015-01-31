@@ -119,14 +119,28 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 		const PosNormUVVert &vert = vertices[idx];
 
 		// find all vertices within the target radius
-		i.radius;
+		const float squareRad = (i.radius * scaleLocal) * (i.radius * scaleLocal);
+		std::vector<std::pair<Uint32, float>> idxDistSqr;
+		for (Uint32 vi = 0; vi < vertices.size(); vi++) {
+			// skip the current vertex
+			if (vi == idx)
+				continue;
 
-		// move the by the offset amount in the direction of the "vert" normal
-		vert.norm;
-		i.radius;
-		i.offset;
+			// test, store
+			const PosNormUVVert &cur = vertices[vi];
+			const float distSqr = (vert.pos - cur.pos).LengthSqr();
+			if (distSqr < squareRad) {
+				idxDistSqr.push_back(std::make_pair(vi, distSqr));
+			}
+		}
+
+		// move the vertices by the offset amount in the direction of the "vert" normal, scaled by distance from centre of the radius
+		for (auto vi : idxDistSqr) {
+			const float sclOffset = (i.offset * scaleLocal) * (1.0f - (vi.second / squareRad));
+			const vector3f dirOffset = (vert.norm * sclOffset);
+			vertices[vi.first].pos += dirOffset;
+		}
 	}
-
 
 	//Create vtx & index buffers and copy data
 	VertexBufferDesc vbd;
