@@ -29,6 +29,7 @@ ModelViewer::Options::Options()
 , showGrid(false)
 , showLandingPad(false)
 , showUI(true)
+, showAsteroid(false)
 , wireframe(false)
 , mouselookEnabled(false)
 , gridInterval(10.f)
@@ -490,15 +491,16 @@ void ModelViewer::DrawModel()
 		(m_options.wireframe           ? SceneGraph::Model::DEBUG_WIREFRAME : 0x0)
 	);
 
-	m_model->Render(mv);
+	if (!m_options.showAsteroid) {
+		m_model->Render(mv);
+	}
 
 	if (m_options.showLandingPad) {
 		if (!m_scaleModel) CreateTestResources();
 		m_scaleModel->Render(mv * matrix4x4f::Translation(0.f, m_landingMinOffset, 0.f));
 	}
 
-	static bool bShowAsteroid = true;
-	if (bShowAsteroid) {
+	if (m_options.showAsteroid) {
 		if (m_asteroid.get()) {
 			// reset the position we draw this at, so it's not inheriting the ships transformations
 			m_renderer->SetTransform(mv * matrix4x4f::Translation(0.f, 0.f, 0.f));
@@ -519,7 +521,7 @@ void ModelViewer::GenerateAsteroid()
 	Asteroid::TDeformations deformations;
 	static Uint32 MIN_BUMPS(64);
 	static Uint32 MAX_BUMPS(256);
-	Random rar(2670);
+	Random rar(SDL_GetTicks());
 	const Uint32 numBumps = std::max(MIN_BUMPS, rar.Int32() % MAX_BUMPS);
 	for (Uint32 b = 0; b < numBumps; b++) {
 		Asteroid::TDeform def;
@@ -723,6 +725,12 @@ void ModelViewer::PollEvents()
 				break;
 			case SDLK_TAB:
 				m_options.showUI = !m_options.showUI;
+				break;
+			case SDLK_a:
+				m_options.showAsteroid = !m_options.showAsteroid;
+				if (m_keyStates[SDLK_LSHIFT]) {
+					m_asteroid.reset();
+				}
 				break;
 			case SDLK_t:
 				m_options.showTags = !m_options.showTags;

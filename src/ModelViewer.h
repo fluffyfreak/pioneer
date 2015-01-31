@@ -76,6 +76,7 @@ private:
 		bool showGrid;
 		bool showLandingPad;
 		bool showUI;
+		bool showAsteroid;
 		bool wireframe;
 		bool mouselookEnabled;
 		float gridInterval;
