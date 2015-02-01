@@ -189,7 +189,7 @@ void Model::CreateAabbVB()
 		for(unsigned int i = 0; i < 7; i++) {
 			va.Add(verts[i]);
 			va.Add(verts[i+1]);
-}
+		}
 
 		for(unsigned int i = 8; i < 15; i++) {
 			va.Add(verts[i]);
