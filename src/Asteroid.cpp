@@ -254,9 +254,9 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 			vector3f sumNorm(0.0f);
 			// Calculate and add the normal of every face that contains this vertex
 			for (auto fi : faceIndices[verti]) {
-				const size_t idx = (fi * 3);
-				const vector3f v01 = (vertices[indices[idx + 0]].pos - vertices[indices[idx + 1]].pos).Normalized();
-				const vector3f v02 = (vertices[indices[idx + 0]].pos - vertices[indices[idx + 2]].pos).Normalized();
+				const size_t faceidx = (fi * 3);
+				const vector3f v01 = (vertices[indices[faceidx + 0]].pos - vertices[indices[faceidx + 1]].pos).Normalized();
+				const vector3f v02 = (vertices[indices[faceidx + 0]].pos - vertices[indices[faceidx + 2]].pos).Normalized();
 				sumNorm += v01.Cross(v02);
 			}
 			vertices[verti].norm = sumNorm.Normalized();
