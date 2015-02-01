@@ -2,7 +2,7 @@
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Asteroid.h"
-#include "Graphics/Texture.h"
+#include "graphics/Texture.h"
 #include "collider/Weld.h"
 #include "gameconsts.h"
 #include <set>
@@ -34,7 +34,8 @@ namespace
 		const size_t vertexCount = vertices.size();
 		vector3f *tan1 = new vector3f[vertexCount * 2];
 		vector3f *tan2 = tan1 + vertexCount;
-		ZeroMemory(tan1, vertexCount * sizeof(vector3f) * 2);
+		//ZeroMemory(tan1, vertexCount * sizeof(vector3f) * 2);
+		memset(tan1, 0, vertexCount * sizeof(vector3f) * 2);
 
 		const size_t triangleCount = indices.size() / 3;
 		for (size_t a = 0; a < triangleCount; a++)
@@ -65,7 +66,7 @@ namespace
 
 			// handle the divide by zero case!
 			const float div(s1 * t2 - s2 * t1);
-			const float r = (div==0.0f) ? 1.0 : (1.0F / div);
+			const float r = (is_equal_exact(div,0.0f)) ? 1.0 : (1.0F / div);
 
 			const vector3f sdir(
 				(t2 * x1 - t1 * x2) * r,

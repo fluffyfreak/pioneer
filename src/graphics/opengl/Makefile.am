@@ -25,6 +25,7 @@ noinst_HEADERS = \
 	StarfieldMaterial.h \
 	SkyboxMaterial.h \
 	TextureGL.h \
+	TriplanarMaterial.h \
 	UIMaterial.h \
 	Uniform.h \
 	VtxColorMaterial.h
@@ -44,6 +45,7 @@ libgraphicsopengl_a_SOURCES = \
 	RendererGL.cpp \
 	RingMaterial.cpp \
 	TextureGL.cpp \
+	TriplanarMaterial.cpp\
 	UIMaterial.cpp \
 	Uniform.cpp \
 	VtxColorMaterial.cpp
