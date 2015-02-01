@@ -98,7 +98,7 @@ struct Shader {
 		AppendSource(logzCode->AsStringRange().StripUTF8BOM());
 		AppendSource(libsCode->AsStringRange().StripUTF8BOM());
 		AppendSource(code->AsStringRange().StripUTF8BOM());
-#if 0
+#if 1
 		static bool s_bDumpShaderSource = true;
 		if (s_bDumpShaderSource) {
 			const char SHADER_OUT_DIR_NAME[] = "shaders";
@@ -228,6 +228,7 @@ void Program::LoadShaders(const std::string &name, const std::string &defines)
 	glBindAttribLocation(m_program, 1, "a_normal");
 	glBindAttribLocation(m_program, 2, "a_color");
 	glBindAttribLocation(m_program, 3, "a_uv0");
+	glBindAttribLocation(m_program, 4, "a_tangent");
 
 	glBindFragDataLocation(m_program, 0, "frag_color");
 

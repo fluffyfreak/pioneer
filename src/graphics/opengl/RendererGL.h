@@ -36,6 +36,7 @@ namespace OGL {
 	class FresnelColourMaterial;
 	class ShieldMaterial;
 	class UIMaterial;
+	class TriplanarMaterial;
 }
 
 class RendererOGL : public Renderer
@@ -148,6 +149,7 @@ protected:
 	friend class OGL::RingMaterial;
 	friend class OGL::FresnelColourMaterial;
 	friend class OGL::ShieldMaterial;
+	friend class OGL::TriplanarMaterial;
 	std::vector<std::pair<MaterialDescriptor, OGL::Program*> > m_programs;
 	std::unordered_map<Uint32, OGL::RenderState*> m_renderStates;
 	float m_invLogZfarPlus1;

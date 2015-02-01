@@ -29,5 +29,6 @@ in vec4 a_vertex;
 in vec3 a_normal;
 in vec4 a_color;
 in vec2 a_uv0;
+in vec3 a_tangent;
 
 #endif // VERTEX_SHADER

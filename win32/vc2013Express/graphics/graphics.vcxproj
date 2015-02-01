@@ -144,6 +144,7 @@
     <ClCompile Include="..\..\..\src\graphics\opengl\RingMaterial.cpp" />
     <ClCompile Include="..\..\..\src\graphics\opengl\ShieldMaterial.cpp" />
     <ClCompile Include="..\..\..\src\graphics\opengl\TextureGL.cpp" />
+    <ClCompile Include="..\..\..\src\graphics\opengl\TriplanarMaterial.cpp" />
     <ClCompile Include="..\..\..\src\graphics\opengl\UIMaterial.cpp" />
     <ClCompile Include="..\..\..\src\graphics\opengl\Uniform.cpp" />
     <ClCompile Include="..\..\..\src\graphics\opengl\VertexBufferGL.cpp" />
@@ -189,6 +190,7 @@
     <ClInclude Include="..\..\..\src\graphics\opengl\SkyboxMaterial.h" />
     <ClInclude Include="..\..\..\src\graphics\opengl\StarfieldMaterial.h" />
     <ClInclude Include="..\..\..\src\graphics\opengl\TextureGL.h" />
+    <ClInclude Include="..\..\..\src\graphics\opengl\TriplanarMaterial.h" />
     <ClInclude Include="..\..\..\src\graphics\opengl\UIMaterial.h" />
     <ClInclude Include="..\..\..\src\graphics\opengl\Uniform.h" />
     <ClInclude Include="..\..\..\src\graphics\opengl\VertexBufferGL.h" />

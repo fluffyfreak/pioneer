@@ -39,6 +39,7 @@ public:
 	void Add(const vector3f &v, const Color &c, const vector2f &uv);
 	void Add(const vector3f &v, const vector2f &uv);
 	void Add(const vector3f &v, const vector3f &normal, const vector2f &uv);
+	void Add(const vector3f &v, const vector3f &normal, const vector3f &tangent);
 	//virtual void Reserve(unsigned int howmuch)
 
 	// don't mix these
@@ -48,6 +49,7 @@ public:
 	void Set(const Uint32 idx, const vector3f &v, const Color &c, const vector2f &uv);
 	void Set(const Uint32 idx, const vector3f &v, const vector2f &uv);
 	void Set(const Uint32 idx, const vector3f &v, const vector3f &normal, const vector2f &uv);
+	void Set(const Uint32 idx, const vector3f &v, const vector3f &normal, const vector3f &tangent);
 
 	//could make these private, but it is nice to be able to
 	//add attributes separately...
@@ -55,6 +57,7 @@ public:
 	std::vector<vector3f> normal;
 	std::vector<Color> diffuse;
 	std::vector<vector2f> uv0;
+	std::vector<vector3f> tangent;
 
 private:
 	AttributeSet m_attribs;

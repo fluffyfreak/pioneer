@@ -8,6 +8,7 @@
 #include "graphics/Drawables.h"
 
 //------------------------------------------------------------
+//#define DEBUG_RENDER_NORMALS
 
 // Three dimensional sphere (subdivided icosahedron) with normals
 // and spherical texture coordinates.
@@ -27,9 +28,14 @@ public:
 	RefCountedPtr<Graphics::Material> GetMaterial() const { return m_material; }
 
 private:
+#ifdef DEBUG_RENDER_NORMALS
+	std::unique_ptr<Graphics::Drawables::Lines> m_normLines;
+	std::unique_ptr<Graphics::Drawables::Lines> m_tangentLines;
+	std::unique_ptr<Graphics::Drawables::Lines> m_bitangentLines;
+#endif // DEBUG_RENDER_NORMALS
 	std::unique_ptr<Graphics::VertexBuffer> m_vertexBuffer;
 	std::unique_ptr<Graphics::IndexBuffer> m_indexBuffer;
-	RefCountedPtr<Graphics::Material> m_material;
+	RefCountedPtr<Graphics::Material> m_material;;
 	Graphics::RenderState *m_renderState;
 
 	//std::unique_ptr<Surface> m_surface;

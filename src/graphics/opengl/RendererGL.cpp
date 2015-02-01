@@ -27,6 +27,7 @@
 #include "SphereImpostorMaterial.h"
 #include "UIMaterial.h"
 #include "VtxColorMaterial.h"
+#include "TriplanarMaterial.h"
 
 #include <stddef.h> //for offsetof
 #include <ostream>
@@ -641,6 +642,7 @@ void RendererOGL::EnableVertexAttributes(const VertexBuffer* gvb)
 		case ATTRIB_NORMAL:			glEnableVertexAttribArray(1);		break;
 		case ATTRIB_DIFFUSE:		glEnableVertexAttribArray(2);		break;
 		case ATTRIB_UV0:			glEnableVertexAttribArray(3);		break;
+		case ATTRIB_TANGENT:		glEnableVertexAttribArray(4);		break;
 		case ATTRIB_NONE:
 		default:
 			return;
@@ -662,6 +664,7 @@ void RendererOGL::DisableVertexAttributes(const VertexBuffer* gvb)
 		case ATTRIB_NORMAL:			glDisableVertexAttribArray(1);			break;
 		case ATTRIB_DIFFUSE:		glDisableVertexAttribArray(2);			break;
 		case ATTRIB_UV0:			glDisableVertexAttribArray(3);			break;
+		case ATTRIB_TANGENT:		glDisableVertexAttribArray(4);			break;
 		case ATTRIB_NONE:
 		default:
 			return;
@@ -770,6 +773,9 @@ Material *RendererOGL::CreateMaterial(const MaterialDescriptor &d)
 		break;
 	case EFFECT_GASSPHERE_TERRAIN:
 		mat = new OGL::GasGiantSurfaceMaterial();
+		break;
+	case EFFECT_TRIPLANAR:
+		mat = new OGL::TriplanarMaterial();
 		break;
 	default:
 		if (desc.lighting)

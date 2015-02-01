@@ -93,6 +93,14 @@ void VertexArray::Add(const vector3f &v, const vector3f &n, const vector2f &uv)
 	uv0.push_back(uv);
 }
 
+void VertexArray::Add(const vector3f &v, const vector3f &n, const vector3f &t)
+{
+	PROFILE_SCOPED()
+	position.push_back(v);
+	normal.push_back(n);
+	tangent.push_back(t);
+}
+
 void VertexArray::Set(const Uint32 idx, const vector3f &v)
 {
 	PROFILE_SCOPED()
@@ -135,6 +143,14 @@ void VertexArray::Set(const Uint32 idx, const vector3f &v, const vector3f &n, co
 	position[idx] = v;
 	normal[idx] = n;
 	uv0[idx] = uv;
+}
+
+void VertexArray::Set(const Uint32 idx, const vector3f &v, const vector3f &n, const vector3f &t)
+{
+	PROFILE_SCOPED()
+	position[idx] = v;
+	normal[idx] = n;
+	tangent[idx] = t;
 }
 
 }

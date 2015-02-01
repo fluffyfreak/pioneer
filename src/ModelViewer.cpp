@@ -533,14 +533,27 @@ void ModelViewer::GenerateAsteroid()
 	}
 	// lit material, with no alpha, 1 texture
 	Graphics::MaterialDescriptor matDesc;
+	matDesc.effect = Graphics::EFFECT_TRIPLANAR;
 	matDesc.lighting = true;
 	matDesc.alphaTest = false;
-	matDesc.textures = 1;
+	matDesc.ambientMap = true;
+	matDesc.specularMap = true;
+	matDesc.normalMap = true;
+	matDesc.textures = 4;
 	RefCountedPtr<Graphics::Material> mat(m_renderer->CreateMaterial(matDesc));
-	m_asteroidMap.reset(Graphics::TextureBuilder::Model("textures/rock.png").CreateTexture(m_renderer));
-	mat->texture0 = m_asteroidMap.get();
+	m_asteroidMap[0].reset(Graphics::TextureBuilder::Model("textures/asteroid/Stones-Diffuse.png").CreateTexture(m_renderer));
+	m_asteroidMap[1].reset(Graphics::TextureBuilder::Model("textures/asteroid/Stones-Specular.png").CreateTexture(m_renderer));
+	m_asteroidMap[2].reset(Graphics::TextureBuilder::Model("textures/asteroid/Stones-AO.png").CreateTexture(m_renderer));
+	m_asteroidMap[3].reset(Graphics::TextureBuilder::Model("textures/asteroid/Stones-Normal.png").CreateTexture(m_renderer));
+	mat->texture0 = m_asteroidMap[0].get();
+	mat->texture1 = m_asteroidMap[1].get();
+	mat->texture3 = m_asteroidMap[2].get(); // NB: texture 3 not 2
+	mat->texture4 = m_asteroidMap[3].get(); // NB: texture 4 not 3
 	// build the asteroid itself
-	m_asteroid.reset(new Asteroid(m_renderer, mat, m_renderer->CreateRenderState(Graphics::RenderStateDesc()), deformations, 5, m_model->GetDrawClipRadius()));
+	Graphics::RenderStateDesc rsDesc;
+	//rsDesc.cullMode = Graphics::CULL_NONE;
+	m_asteroid.reset(new Asteroid(m_renderer, mat, m_renderer->CreateRenderState(rsDesc), deformations, 4, m_model->GetDrawClipRadius()));
+	m_renderer->CheckRenderErrors();
 }
 
 void ModelViewer::MainLoop()
@@ -727,9 +740,11 @@ void ModelViewer::PollEvents()
 				m_options.showUI = !m_options.showUI;
 				break;
 			case SDLK_a:
-				m_options.showAsteroid = !m_options.showAsteroid;
-				if (m_keyStates[SDLK_LSHIFT]) {
-					m_asteroid.reset();
+				if (!m_options.mouselookEnabled) {
+					m_options.showAsteroid = !m_options.showAsteroid;
+					if (m_keyStates[SDLK_LSHIFT]) {
+						m_asteroid.reset();
+					}
 				}
 				break;
 			case SDLK_t:

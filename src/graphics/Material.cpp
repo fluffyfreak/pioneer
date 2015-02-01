@@ -27,6 +27,7 @@ MaterialDescriptor::MaterialDescriptor()
 , glowMap(false)
 , ambientMap(false)
 , lighting(false)
+, normalMap(false)
 , specularMap(false)
 , usePatterns(false)
 , vertexColors(false)
@@ -44,6 +45,7 @@ bool operator==(const MaterialDescriptor &a, const MaterialDescriptor &b)
 		a.glowMap == b.glowMap &&
 		a.ambientMap == b.ambientMap &&
 		a.lighting == b.lighting &&
+		a.normalMap == b.normalMap &&
 		a.specularMap == b.specularMap &&
 		a.usePatterns == b.usePatterns &&
 		a.vertexColors == b.vertexColors &&

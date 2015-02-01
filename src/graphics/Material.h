@@ -37,7 +37,8 @@ enum EffectType {
 	EFFECT_FRESNEL_SPHERE,
 	EFFECT_SHIELD,
 	EFFECT_SKYBOX,
-	EFFECT_SPHEREIMPOSTOR
+	EFFECT_SPHEREIMPOSTOR,
+	EFFECT_TRIPLANAR
 };
 
 
@@ -58,6 +59,7 @@ public:
 	bool glowMap;
 	bool ambientMap;
 	bool lighting;
+	bool normalMap;
 	bool specularMap;
 	bool usePatterns; //pattern/color system
 	bool vertexColors;
