@@ -225,26 +225,26 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 		// find all vertices within the target radius
 		const float squareRad = (i.radius * scaleLocal) * (i.radius * scaleLocal);
 		std::vector<std::pair<Uint32, float>> idxDistSqr;
-		for (Uint32 vi = 0; vi < vertices.size(); vi++) {
+		for (Uint32 vidx = 0; vidx < vertices.size(); vidx++) {
 			// skip the current vertex
-			if (vi == idx)
+			if (vidx == idx)
 				continue;
 
 			// test, store
-			const PosNormTangentUVVert &cur = vertices[vi];
+			const PosNormTangentUVVert &cur = vertices[vidx];
 			const float distSqr = (vert.pos - cur.pos).LengthSqr();
 			if (distSqr < squareRad) {
-				idxDistSqr.push_back(std::make_pair(vi, distSqr));
+				idxDistSqr.push_back(std::make_pair(vidx, distSqr));
 			}
 		}
 		// add the current verteex too of course
 		idxDistSqr.push_back(std::make_pair(idx, 0.0f));
 
 		// move the vertices by the offset amount in the direction of the "vert" normal, scaled by distance from centre of the radius
-		for (auto vi : idxDistSqr) {
-			const float sclOffset = (i.offset * scaleLocal) * (1.0f - (vi.second / squareRad));
+		for (auto vipair : idxDistSqr) {
+			const float sclOffset = (i.offset * scaleLocal) * (1.0f - (vipair.second / squareRad));
 			const vector3f dirOffset = (vert.norm * sclOffset);
-			vertices[vi.first].pos += dirOffset;
+			vertices[vipair.first].pos += dirOffset;
 		}
 
 		// regenerate vertex normals after each deformation so the new normals affect future iterations
