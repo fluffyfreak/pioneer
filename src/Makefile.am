@@ -18,6 +18,8 @@ noinst_HEADERS = \
 	Aabb.h \
 	AmbientSounds.h \
 	AnimationCurves.h \
+	Asteroid.h \
+	AsteroidBody.h \
 	Background.h \
 	BaseSphere.h \
 	Body.h \
@@ -154,6 +156,8 @@ noinst_HEADERS = \
 
 pioneer_SOURCES	= \
 	AmbientSounds.cpp \
+	Asteroid.cpp \
+	AsteroidBody.cpp \
 	Background.cpp \
 	BaseSphere.cpp \
 	Body.cpp \
