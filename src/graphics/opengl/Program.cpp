@@ -98,7 +98,7 @@ struct Shader {
 		AppendSource(logzCode->AsStringRange().StripUTF8BOM());
 		AppendSource(libsCode->AsStringRange().StripUTF8BOM());
 		AppendSource(code->AsStringRange().StripUTF8BOM());
-#if 1
+#if 0
 		static bool s_bDumpShaderSource = true;
 		if (s_bDumpShaderSource) {
 			const char SHADER_OUT_DIR_NAME[] = "shaders";
