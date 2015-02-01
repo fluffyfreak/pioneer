@@ -553,7 +553,7 @@ void ModelViewer::GenerateAsteroid()
 	// build the asteroid itself
 	Graphics::RenderStateDesc rsDesc;
 	//rsDesc.cullMode = Graphics::CULL_NONE;
-	m_asteroid.reset(new Asteroid(m_renderer, mat, m_renderer->CreateRenderState(rsDesc), deformations, 4, m_model->GetDrawClipRadius()));
+	m_asteroid.reset(new Asteroid(m_renderer, mat, m_renderer->CreateRenderState(rsDesc), deformations, 5, m_model->GetDrawClipRadius()));
 	m_renderer->CheckRenderErrors();
 }
 
