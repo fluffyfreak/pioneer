@@ -521,7 +521,8 @@ void ModelViewer::GenerateAsteroid()
 	Asteroid::TDeformations deformations;
 	static Uint32 MIN_BUMPS(64);
 	static Uint32 MAX_BUMPS(256);
-	Random rar(SDL_GetTicks());
+	Uint32 _init[2] = { SDL_GetTicks(), UNIVERSE_SEED };
+	Random rar(_init, 2);
 	const Uint32 numBumps = std::max(MIN_BUMPS, rar.Int32() % MAX_BUMPS);
 	for (Uint32 b = 0; b < numBumps; b++) {
 		Asteroid::TDeform def;
