@@ -548,14 +548,14 @@ void ModelViewer::GenerateAsteroid()
 	matDesc.normalMap = true;
 	matDesc.textures = 4;
 	RefCountedPtr<Graphics::Material> mat(m_renderer->CreateMaterial(matDesc));
-	m_asteroidMap[0].reset(Graphics::TextureBuilder::Model("textures/asteroid/Stones-Diffuse.png").CreateTexture(m_renderer));
-	m_asteroidMap[1].reset(Graphics::TextureBuilder::Model("textures/asteroid/Stones-Specular.png").CreateTexture(m_renderer));
-	m_asteroidMap[2].reset(Graphics::TextureBuilder::Model("textures/asteroid/Stones-AO.png").CreateTexture(m_renderer));
-	m_asteroidMap[3].reset(Graphics::TextureBuilder::Model("textures/asteroid/Stones-Normal.png").CreateTexture(m_renderer));
+	m_asteroidMap[0].reset(Graphics::TextureBuilder::Model("textures/asteroid/Pumice-diffusePacked.png").CreateTexture(m_renderer));
+	m_asteroidMap[1].reset(Graphics::TextureBuilder::Model("textures/asteroid/Pumice-nsAOPacked.png").CreateTexture(m_renderer));
+	m_asteroidMap[2].reset(Graphics::TextureBuilder::Model("textures/asteroid/Stones-diffusePacked.png").CreateTexture(m_renderer));
+	m_asteroidMap[3].reset(Graphics::TextureBuilder::Model("textures/asteroid/Stones-nsAOPacked.png").CreateTexture(m_renderer));
 	mat->texture0 = m_asteroidMap[0].get();
 	mat->texture1 = m_asteroidMap[1].get();
-	mat->texture3 = m_asteroidMap[2].get(); // NB: texture 3 not 2
-	mat->texture4 = m_asteroidMap[3].get(); // NB: texture 4 not 3
+	mat->texture2 = m_asteroidMap[2].get();
+	mat->texture3 = m_asteroidMap[3].get();
 	// build the asteroid itself
 	Graphics::RenderStateDesc rsDesc;
 	//rsDesc.cullMode = Graphics::CULL_NONE;
