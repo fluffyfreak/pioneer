@@ -504,7 +504,13 @@ void ModelViewer::DrawModel()
 		if (m_asteroid.get()) {
 			// reset the position we draw this at, so it's not inheriting the ships transformations
 			m_renderer->SetTransform(mv * matrix4x4f::Translation(0.f, 0.f, 0.f));
+			if(m_options.wireframe) {
+				m_renderer->SetWireFrameMode(true);
+			}
 			m_asteroid->Draw(m_renderer);
+			if(m_options.wireframe) {
+				m_renderer->SetWireFrameMode(false);
+			}
 		} else {
 			// make an asteroid
 			GenerateAsteroid();
