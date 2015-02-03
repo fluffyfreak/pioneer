@@ -152,12 +152,12 @@ bool LoadImageData(const std::string &imageName, TImgData &imgData)
 			imgData.h = im->h;
 
 			// copy every pixel value from the red channel (image is greyscale, channel is irrelevant)
-			for (int x = 0; x<im->w; x++) {
-				for (int y = 0; y<im->h; y++) {
+			for (int y = 0; y<im->h; y++) {
+				for (int x = 0; x<im->w; x++) {
 					const unsigned char v0 = static_cast<unsigned char*>(im->pixels)[((x * 3) + 0) + (y*im->pitch)];
 					const unsigned char v1 = static_cast<unsigned char*>(im->pixels)[((x * 3) + 1) + (y*im->pitch)];
 					const unsigned char v2 = static_cast<unsigned char*>(im->pixels)[((x * 3) + 2) + (y*im->pitch)];
-					pimg[x + y*im->w] = vector3f(v0 / 255.0f, v1 / 255.0f, v2 / 255.0f);
+					pimg[x + (y*im->w)] = vector3f(v0 / 255.0f, v1 / 255.0f, v2 / 255.0f);
 				}
 			}
 
@@ -181,8 +181,8 @@ bool LoadImageData(const std::string &imageName, TImgData &imgData)
 void EncodeNormalData(vector2f *outNormal, const TImgData imgData) {
 	const int xmax = imgData.w;
 	const int ymax = imgData.h;
-	for (int x = 0; x < xmax; x++) {
-		for (int y = 0; y < ymax; y++) {
+	for (int y = 0; y < ymax; y++) {
+		for (int x = 0; x < xmax; x++) {
 			const vector3f val = imgData.data[(x + (y * xmax))].Normalized();
 			const vector2f enc = encode(val);
 			//const vector3f dec = decode(vector4f(enc.x, enc.y, 0.0f, 0.0f));
@@ -195,8 +195,8 @@ void EncodeNormalData(vector2f *outNormal, const TImgData imgData) {
 void AverageRGBData(float *outIntensity, const TImgData imgData) {
 	const int xmax = imgData.w;
 	const int ymax = imgData.h;
-	for (int x = 0; x < xmax; x++) {
-		for (int y = 0; y < ymax; y++) {
+	for (int y = 0; y < ymax; y++) {
+		for (int x = 0; x < xmax; x++) {
 			const vector3f val = imgData.data[(x + (y * xmax))];
 			// average the RGB value to get a greyscale "Intensity" like value
 			outIntensity[(x + (y * xmax))] = (val.x + val.y + val.z) / 3.0f;
@@ -224,7 +224,7 @@ void PackRGandBandA(vector4f *outRGBAf, const vector2f *rg, const float *b, cons
 	}
 }
 
-void RunCompiler(const std::string &diffuseName, const std::string &normalName, const std::string &specularName, const std::string &AOName)
+void RunCompiler(const std::string &diffuseName, const std::string &normalName, const std::string &specularName, const std::string &AOName, const std::string &prepend)
 {
 	Profiler::Timer timer;
 	timer.Start();
@@ -276,10 +276,12 @@ void RunCompiler(const std::string &diffuseName, const std::string &normalName, 
 			const int w = diffuseImg.w;
 			const int h = diffuseImg.h;
 			std::unique_ptr<Uint8> pixels(new Uint8[(w * h) * 4]);
-			for(int x=0; x<w; x++) {
-				for(int y=0; y<h; y++) {
-					const int idx((x*4) + (y * w));
-					const vector4f &v4 = packedDiffuse.get()[x + (y * w)];
+			// pad rows to 4 bytes, which is the default row alignment for OpenGL
+			const int stride = (4*w + 3) & ~3;
+			for(int y=0; y<h; y++) {
+				for(int x=0; x<w; x++) {
+					const int idx((x*4) + (y * stride));
+					const vector4f &v4 = packedDiffuse.get()[x + (((h-1)-y) * w)];
 					pixels.get()[idx+0] = Uint8(v4.x * 255.0f);
 					pixels.get()[idx+1] = Uint8(v4.y * 255.0f);
 					pixels.get()[idx+2] = Uint8(v4.z * 255.0f);
@@ -287,8 +289,8 @@ void RunCompiler(const std::string &diffuseName, const std::string &normalName, 
 				}
 			}
 			// write to png file
-			const std::string fname = FileSystem::JoinPathBelow(dir, "diffusePacked.png");
-			write_png(FileSystem::userFiles, fname, pixels.get(), w, h, w, 4);
+			const std::string fname = FileSystem::JoinPathBelow(dir, prepend+"diffusePacked.png");
+			write_png(FileSystem::userFiles, fname, pixels.get(), w, h, stride, 4);
 		}
 		
 		{
@@ -296,10 +298,12 @@ void RunCompiler(const std::string &diffuseName, const std::string &normalName, 
 			const int w = normalImg.w;
 			const int h = normalImg.h;
 			std::unique_ptr<Uint8> pixels(new Uint8[(w * h) * 4]);
-			for(int x=0; x<w; x++) {
-				for(int y=0; y<h; y++) {
-					const int idx((x*4) + (y * w));
-					const vector4f &v4 = packedNSAO.get()[x + (y * w)];
+			// pad rows to 4 bytes, which is the default row alignment for OpenGL
+			const int stride = (4*w + 3) & ~3;
+			for(int y=0; y<h; y++) {
+				for(int x=0; x<w; x++) {
+					const int idx((x*4) + (y * stride));
+					const vector4f &v4 = packedNSAO.get()[x + (((h-1)-y) * w)];
 					pixels.get()[idx+0] = Uint8(v4.x * 255.0f);
 					pixels.get()[idx+1] = Uint8(v4.y * 255.0f);
 					pixels.get()[idx+2] = Uint8(v4.z * 255.0f);
@@ -307,8 +311,8 @@ void RunCompiler(const std::string &diffuseName, const std::string &normalName, 
 				}
 			}
 			// write to png file
-			const std::string fname = FileSystem::JoinPathBelow(dir, "nsAOPacked.png");
-			write_png(FileSystem::userFiles, fname, pixels.get(), w, h, w, 4);
+			const std::string fname = FileSystem::JoinPathBelow(dir, prepend+"nsAOPacked.png");
+			write_png(FileSystem::userFiles, fname, pixels.get(), w, h, stride, 4);
 		}
 	} 
 
@@ -316,6 +320,17 @@ void RunCompiler(const std::string &diffuseName, const std::string &normalName, 
 	Output("Compiling took: %lf\n", timer.millicycles());
 }
 
+void DisplayUsage() {
+	// -compile textures/asteroid/Stones-Diffuse.png textures/asteroid/Stones-Normal.png textures/asteroid/Stones-Specular.png textures/asteroid/Stones-AO.png Stones-
+	// -compile textures/asteroid/Pumice-Diffuse.png textures/asteroid/Pumice-Normal.png textures/asteroid/Pumice-Specular.png textures/asteroid/Pumice-AO.png Pumice-
+	Output(
+		"usage: texturecompiler [mode] [options...]\n"
+		"available modes:\n"
+		"    -compile          [-c ...]          texture compiler\n"
+		"    -version          [-v]              show version\n"
+		"    -help             [-h,-?]           this help\n"
+	);
+}
 
 enum RunMode {
 	MODE_TEXTURECOMPILER=0,
@@ -357,14 +372,18 @@ int main(int argc, char** argv)
 			std::string normalName;
 			std::string specularName;
 			std::string AOName;
-			if (argc > 5) {
+			std::string prepend;
+			if (argc > 6) {
 				SetupBasics();
 				//SetupRenderer();
 				diffuseName = argv[2];
 				normalName = argv[3];
 				specularName = argv[4];
 				AOName = argv[5];
-				RunCompiler(diffuseName, normalName, specularName, AOName);
+				prepend = argv[6];
+				RunCompiler(diffuseName, normalName, specularName, AOName, prepend);
+			} else {
+				DisplayUsage();
 			}
 			break;
 		}
@@ -381,13 +400,7 @@ int main(int argc, char** argv)
 			// fall through
 
 		case MODE_USAGE:
-			Output(
-				"usage: texturecompiler [mode] [options...]\n"
-				"available modes:\n"
-				"    -compile          [-c ...]          texture compiler\n"
-				"    -version          [-v]              show version\n"
-				"    -help             [-h,-?]           this help\n"
-			);
+			DisplayUsage();
 			break;
 	}
 
