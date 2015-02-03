@@ -2,11 +2,10 @@
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifdef TEXTURE0
-uniform sampler2D texture0; //diffuse
-uniform sampler2D texture1; //specular
-uniform sampler2D texture2; //glow
-uniform sampler2D texture3; //ambient
-uniform sampler2D texture4; //normal
+uniform sampler2D texture0; //diffuse + intensity
+uniform sampler2D texture1; //normal(enc) + specular + AO
+uniform sampler2D texture2; //diffuse + intensity
+uniform sampler2D texture3; //normal(enc) + specular + AO
 #endif
 
 #ifdef VERTEXCOLOR
@@ -46,15 +45,14 @@ vec4 getTriplanarTex(in vec3 blending, in sampler2D sampler)
 #if (NUM_LIGHTS > 0)
 //ambient, diffuse, specular
 //would be a good idea to make specular optional
-void ads(in vec3 blending, in int lightNum, in vec3 pos, in vec3 n, inout vec4 light, inout vec4 specular)
+void ads(in vec3 blending, in int lightNum, in vec3 pos, in vec3 n, inout vec4 light, inout vec4 specular, in float spec)
 {
 	vec3 s = normalize(vec3(uLight[lightNum].position)); //directional light
 	vec3 v = normalize(vec3(-pos));
 	vec3 h = normalize(v + s);
 	light += uLight[lightNum].diffuse * material.diffuse * max(dot(s, n), 0.0);
 #ifdef MAP_SPECULAR
-	vec4 specTex = getTriplanarTex(blending, texture1);
-	specular += specTex * material.specular * uLight[lightNum].diffuse * pow(max(dot(h, n), 0.0), material.shininess);
+	specular += vec4(spec) * material.specular * uLight[lightNum].diffuse * pow(max(dot(h, n), 0.0), material.shininess);
 #else
 	specular += material.specular * uLight[lightNum].diffuse * pow(max(dot(h, n), 0.0), material.shininess);
 #endif
@@ -62,6 +60,33 @@ void ads(in vec3 blending, in int lightNum, in vec3 pos, in vec3 n, inout vec4 l
 	light.a = 1.0;
 }
 #endif
+
+/*vec3 decode(in vec4 enc)
+{
+    float scale = 1.7777;
+    vec3 nn = enc.xyz * vec3(2*scale, 2*scale, 0) + vec3(-scale, -scale, 1);
+    float g = 2.0 / dot(nn.xyz, nn.xyz);
+    vec3 n;
+    n.xy = g * nn.xy;
+    n.z = g - 1;
+    return n;
+}*/
+
+void sincos(in float x, inout float sinval, inout float cosval)
+{
+	sinval = sin(x);
+	cosval = sqrt(1.0 - sinval * sinval);
+}
+
+#define kPI 3.1415926536
+vec3 decode(in vec4 enc)
+{
+	vec2 ang = (enc.xy * 2.0f) - 1.0f;
+	vec2 scth;
+	sincos(ang.x * kPI, scth.x, scth.y);
+	vec2 scphi = vec2(sqrt(1.0 - ang.y*ang.y), ang.y);
+	return vec3(scth.y*scphi.x, scth.x*scphi.x, scphi.y);
+}
 
 void main(void)
 {
@@ -78,19 +103,23 @@ void main(void)
 	float b = (blending.x + blending.y + blending.z);
 	blending /= vec3(b, b, b);
 	
-	vec4 tex = getTriplanarTex(blending, texture0);
-	color *= tex;
+	//diffuse + intensity
+	vec4 tex0 = getTriplanarTex(blending, texture0);
+	color *= vec4(tex0.xyz, 1.0);
+	
+	//normal(enc) + specular + AO
+	vec4 tex1 = getTriplanarTex(blending, texture1);
+	vec3 decNormal = normalize(decode(vec4(tex1.x, tex1.y, 0.0, 0.0)));
+	float spec = tex1.w;
 #endif
 
 //directional lighting
 #if (NUM_LIGHTS > 0)
-#ifdef MAP_NORMAL
-	vec3 bump = (getTriplanarTex(blending, texture4).xyz * 2.0) - vec3(1.0);
+	vec3 bump = decNormal - vec3(1.0);
 	mat3 tangentFrame = mat3(tangent, bitangent, normal);
 	vec3 v_normal = tangentFrame * bump;
-#else
-	vec3 v_normal = normal;
-#endif
+	//vec3 v_normal = normal;
+
 	//ambient only make sense with lighting
 	vec4 light = scene.ambient;
 	vec4 specular = vec4(0.0);
@@ -98,21 +127,14 @@ void main(void)
 		ads(blending, 0, eyePos, v_normal, light, specular);
 	#else
 		for (int i=0; i<NUM_LIGHTS; ++i) {
-			ads(blending, i, eyePos, v_normal, light, specular);
+			ads(blending, i, eyePos, v_normal, light, specular, spec);
 		}
 	#endif
 	
 #ifdef MAP_AMBIENT
 	// this is crude "baked ambient occulsion" - basically multiply everything by the ambient texture
 	// scaling whatever we've decided the lighting contribution is by 0.0 to 1.0 to account for sheltered/hidden surfaces
-	light *= getTriplanarTex(blending, texture3);
-#endif
-
-	//emissive only make sense with lighting
-#ifdef MAP_EMISSIVE
-	light += getTriplanarTex(blending, texture2); //glow map
-#else
-	light += material.emission; //just emissive parameter
+	light *= vec4(tex1.z, tex1.z, tex1.z, 1.0);
 #endif
 #endif //NUM_LIGHTS
 

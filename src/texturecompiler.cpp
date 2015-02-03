@@ -28,6 +28,110 @@
 #include "PngWriter.h"
 #include <sstream>
 
+namespace encodings 
+{
+	class EncDec {
+	public:
+		virtual vector2f encode(const vector3f&) = 0;
+		virtual vector3f decode(const vector4f&) = 0;
+	};
+
+	class SpheremapTransform : public EncDec {
+	public:
+		virtual vector2f encode(const vector3f& n) override
+		{
+			const vector2f nxy(n.x, n.y);
+			vector2f enc = nxy.Normalized() * (sqrt(-n.z*0.5 + 0.5));
+			enc = (enc * 0.5f) + vector2f(0.5f);
+			return enc;
+		}
+
+		virtual vector3f decode(const vector4f& enc) override
+		{
+			const vector4f enc2 = enc * vector4f(2, 2, 0, 0);
+			vector4f nn = enc2 + vector4f(-1, -1, 1, -1);
+			const float l = nn.xyz().Dot(-vector3f(nn.x, nn.y, nn.w));
+			nn.z = l;
+			nn.xy() *= sqrt(l);
+			return (nn.xyz() * 2.0f) + vector3f(0, 0, -1);
+
+			//vector4f nn = enc*vector4f(2,2,0,0) + vector4f(-1,-1,1,-1);
+			//const float l = dot(nn.xyz,-nn.xyw);
+			//nn.z = l;
+			//nn.xy *= sqrt(l);
+			//return nn.xyz * 2 + vector3f(0,0,-1);
+		}
+	};
+
+	class LambertAzimuthalEqualAreaProjection : public EncDec {
+	public:
+		virtual vector2f encode(const vector3f& n) override
+		{
+			const float f = sqrt(8.0f * n.z + 8.0f);
+			return n.xy() / f + 0.5f;
+		}
+		virtual vector3f decode(const vector4f& enc) override
+		{
+			vector2f fenc = (enc.xy() * 4.0f) - 2.0f;
+			float f = fenc.Dot(fenc);
+			float g = sqrt(1.0f - f / 4.0f);
+			vector3f n;
+			n.xy() = fenc*g;
+			n.z = 1.0f - f / 2.0f;
+			return n;
+		}
+	};
+
+	class SphericalCoordinates : public EncDec {
+	public:
+		#define kPI 3.1415926536f
+		virtual vector2f encode(const vector3f& n) override
+		{
+			return (vector2f(atan2(n.y, n.x) / kPI, n.z) + 1.0f) * 0.5f;
+		}
+
+		virtual vector3f decode(const vector4f& enc) override
+		{
+			vector2f ang = (enc.xy() * 2.0f) - 1.0f;
+			vector2f scth;
+			sincos(ang.x * kPI, scth.x, scth.y);
+			vector2f scphi = vector2f(sqrt(1.0 - ang.y*ang.y), ang.y);
+			return vector3f(scth.y*scphi.x, scth.x*scphi.x, scphi.y);
+		}
+	private:
+		void sincos(const float x, float &sinval, float &cosval)
+		{
+			sinval = sin(x);
+			cosval = sqrt(1.0 - sinval * sinval);
+		}
+	};
+
+	class StereographicProjection : public EncDec {
+	public:
+		virtual vector2f encode(const vector3f& n) override
+		{
+			const float scale = 1.7777f;
+			vector2f enc = vector2f(n.x, n.y) / (n.z + 1.0f);
+			enc /= scale;
+			enc = (enc * 0.5f) + 0.5f;
+			return enc;
+		}
+
+		virtual vector3f decode(const vector4f& enc) override
+		{
+			const float scale = 1.7777f;
+			const vector3f nn = enc.xyz() * vector3f(2.0f * scale, 2.0f * scale, 0.0f) + vector3f(-scale, -scale, 1.0f);
+			const float g = 2.0f / nn.Dot(nn);
+			vector3f n;
+			n.x = g * nn.x;
+			n.y = g * nn.y;
+			n.z = g - 1.0f;
+			return n;
+		}
+	};
+}
+using namespace encodings;
+
 std::unique_ptr<GameConfig> s_config;
 //std::unique_ptr<Graphics::Renderer> s_renderer;
 
@@ -77,51 +181,6 @@ void SetupBasics()
 	videoSettings.title = "Texture Compiler";
 	s_renderer.reset(Graphics::Init(videoSettings));
 }*/
-
-/*vector2f encode(const vector3f& n)
-{
-	const vector2f nxy(n.x, n.y);
-	vector2f enc = nxy.Normalized() * (sqrt(-n.z*0.5 + 0.5));
-	enc = (enc * 0.5f) + vector2f(0.5f);
-	return enc;
-}
-
-vector3f decode(const vector4f& enc)
-{
-	const vector4f enc2 = enc * vector4f(2, 2, 0, 0);
-	vector4f nn = enc2 + vector4f(-1, -1, 1, -1);
-	const float l = nn.xyz().Dot(-vector3f(nn.x, nn.y, nn.w));
-	nn.z = l;
-	nn.xy() *= sqrt(l);
-	return (nn.xyz() * 2.0f) + vector3f(0, 0, -1);
-
-	//vector4f nn = enc*vector4f(2,2,0,0) + vector4f(-1,-1,1,-1);
-	//const float l = dot(nn.xyz,-nn.xyw);
-	//nn.z = l;
-	//nn.xy *= sqrt(l);
-	//return nn.xyz * 2 + vector3f(0,0,-1);
-}*/
-
-vector2f encode(const vector3f& n)
-{
-	const float scale = 1.7777f;
-	vector2f enc = vector2f(n.x, n.y) / (n.z + 1.0f);
-	enc /= scale;
-	enc = (enc * 0.5f) + 0.5f;
-	return enc;
-}
-
-vector3f decode(const vector4f& enc)
-{
-	const float scale = 1.7777f;
-	const vector3f nn = enc.xyz() * vector3f(2.0f * scale, 2.0f * scale, 0.0f) + vector3f(-scale, -scale, 1.0f);
-	const float g = 2.0f / nn.Dot(nn);
-	vector3f n;
-	n.x = g * nn.x;
-	n.y = g * nn.y;
-	n.z = g - 1.0f;
-	return n;
-}
 
 struct TImgData {
 	TImgData() : data(nullptr), w(-1), h(-1) {}
@@ -179,12 +238,13 @@ bool LoadImageData(const std::string &imageName, TImgData &imgData)
 }
 
 void EncodeNormalData(vector2f *outNormal, const TImgData imgData) {
+	SphericalCoordinates encoder;
 	const int xmax = imgData.w;
 	const int ymax = imgData.h;
 	for (int y = 0; y < ymax; y++) {
 		for (int x = 0; x < xmax; x++) {
 			const vector3f val = imgData.data[(x + (y * xmax))].Normalized();
-			const vector2f enc = encode(val);
+			const vector2f enc = encoder.encode(val);
 			//const vector3f dec = decode(vector4f(enc.x, enc.y, 0.0f, 0.0f));
 			//const vector3f decN = dec.Normalized();
 			outNormal[(x + (y * xmax))] = enc;
