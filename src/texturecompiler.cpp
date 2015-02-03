@@ -224,6 +224,29 @@ void PackRGandBandA(vector4f *outRGBAf, const vector2f *rg, const float *b, cons
 	}
 }
 
+static const std::string dir("textures-compiled");
+void SaveData(const std::string &filename, vector4f *packed, const int w, const int h)
+{
+	FileSystem::userFiles.MakeDirectory(dir);
+	// copy data into pixel friendly format / values
+	std::unique_ptr<Uint8> pixels(new Uint8[(w * h) * 4]);
+	// pad rows to 4 bytes, which is the default row alignment for OpenGL
+	const int stride = (4 * w + 3) & ~3;
+	for (int y = 0; y<h; y++) {
+		for (int x = 0; x<w; x++) {
+			const int idx((x * 4) + (y * stride));
+			const vector4f &v4 = packed[x + (((h - 1) - y) * w)];
+			pixels.get()[idx + 0] = Uint8(v4.x * 255.0f);
+			pixels.get()[idx + 1] = Uint8(v4.y * 255.0f);
+			pixels.get()[idx + 2] = Uint8(v4.z * 255.0f);
+			pixels.get()[idx + 3] = Uint8(v4.w * 255.0f);
+		}
+	}
+	// write to png file
+	const std::string fname = FileSystem::JoinPathBelow(dir, filename);
+	write_png(FileSystem::userFiles, fname, pixels.get(), w, h, stride, 4);
+}
+
 void RunCompiler(const std::string &diffuseName, const std::string &normalName, const std::string &specularName, const std::string &AOName, const std::string &prepend)
 {
 	Profiler::Timer timer;
@@ -269,51 +292,8 @@ void RunCompiler(const std::string &diffuseName, const std::string &normalName, 
 		PackRGandBandA( packedNSAO.get(), encNormalData.get(), avgSpecData.get(), avgAOData.get(), normalImg.w, normalImg.h);
 
 		// save out the data
-		static const std::string dir("textures-compiled");
-		FileSystem::userFiles.MakeDirectory(dir);
-		{
-			// copy data into pixel friendly format / values
-			const int w = diffuseImg.w;
-			const int h = diffuseImg.h;
-			std::unique_ptr<Uint8> pixels(new Uint8[(w * h) * 4]);
-			// pad rows to 4 bytes, which is the default row alignment for OpenGL
-			const int stride = (4*w + 3) & ~3;
-			for(int y=0; y<h; y++) {
-				for(int x=0; x<w; x++) {
-					const int idx((x*4) + (y * stride));
-					const vector4f &v4 = packedDiffuse.get()[x + (((h-1)-y) * w)];
-					pixels.get()[idx+0] = Uint8(v4.x * 255.0f);
-					pixels.get()[idx+1] = Uint8(v4.y * 255.0f);
-					pixels.get()[idx+2] = Uint8(v4.z * 255.0f);
-					pixels.get()[idx+3] = Uint8(v4.w * 255.0f);
-				}
-			}
-			// write to png file
-			const std::string fname = FileSystem::JoinPathBelow(dir, prepend+"diffusePacked.png");
-			write_png(FileSystem::userFiles, fname, pixels.get(), w, h, stride, 4);
-		}
-		
-		{
-			// copy data into pixel friendly format / values
-			const int w = normalImg.w;
-			const int h = normalImg.h;
-			std::unique_ptr<Uint8> pixels(new Uint8[(w * h) * 4]);
-			// pad rows to 4 bytes, which is the default row alignment for OpenGL
-			const int stride = (4*w + 3) & ~3;
-			for(int y=0; y<h; y++) {
-				for(int x=0; x<w; x++) {
-					const int idx((x*4) + (y * stride));
-					const vector4f &v4 = packedNSAO.get()[x + (((h-1)-y) * w)];
-					pixels.get()[idx+0] = Uint8(v4.x * 255.0f);
-					pixels.get()[idx+1] = Uint8(v4.y * 255.0f);
-					pixels.get()[idx+2] = Uint8(v4.z * 255.0f);
-					pixels.get()[idx+3] = Uint8(v4.w * 255.0f);
-				}
-			}
-			// write to png file
-			const std::string fname = FileSystem::JoinPathBelow(dir, prepend+"nsAOPacked.png");
-			write_png(FileSystem::userFiles, fname, pixels.get(), w, h, stride, 4);
-		}
+		SaveData(prepend + "diffusePacked.png", packedDiffuse.get(), diffuseImg.w, diffuseImg.h);
+		SaveData(prepend + "nsAOPacked.png", packedNSAO.get(), normalImg.w, normalImg.h);
 	} 
 
 	timer.Stop();
