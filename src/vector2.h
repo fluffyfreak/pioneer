@@ -20,8 +20,9 @@ public:
 	explicit vector2f(const float v[2]) : x(v[0]), y(v[1]) {}
 
 	vector2f operator+(const float a) const { return vector2f(x + a, y + a); }
-	vector2f operator+(const vector2f &v) const { return vector2f(x+v.x,y+v.y); }
-	vector2f operator-(const vector2f &v) const { return vector2f(x-v.x,y-v.y); }
+	vector2f operator+(const vector2f &v) const { return vector2f(x + v.x, y + v.y); }
+	vector2f operator-(const float a) const { return vector2f(x - a, y - a); }
+	vector2f operator-(const vector2f &v) const { return vector2f(x - v.x, y - v.y); }
 	vector2f &operator+=(const vector2f &v) { x+=v.x; y+=v.y; return *this; }
 	vector2f &operator-=(const vector2f &v) { x -= v.x; y -= v.y; return *this; }
 	vector2f &operator/=(const float a) { const float inva = (1.0f / a); x *= inva; y *= inva; return *this; }
@@ -40,6 +41,7 @@ public:
 	friend vector2f operator*(const float &a, const vector2f &v) { return v*a; }
 	friend vector2f operator/(const vector2f &v, const float &a) { return vector2f(v.x/a, v.y/a); }
 
+	float Dot(const vector2f &b) const { return x*b.x + y*b.y; }
 	float Length() const { return sqrt(x*x + y*y); }
 	float LengthSqr() const { return x*x + y*y; }
 	vector2f Normalized() const { const float invlen = 1.0f / sqrt(x*x + y*y); return vector2f(x*invlen, y*invlen); }

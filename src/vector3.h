@@ -123,6 +123,8 @@ public:
 		t.z *= inv_poo;
 		*this = t;
 	}
+
+	vector2f& xy() const { return (vector2f&)x; }
 };
 
 // These are here in this manner to enforce that only float and double versions are possible.
