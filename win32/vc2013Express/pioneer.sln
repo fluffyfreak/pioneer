@@ -75,6 +75,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "modelcompiler", "modelcompi
 		{F604C1BC-C921-4468-8F09-427705AD9D29} = {F604C1BC-C921-4468-8F09-427705AD9D29}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "texturecompiler", "texturecompiler.vcxproj", "{F92175E2-14D8-404B-A117-87DA65D9AF56}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -203,6 +205,14 @@ Global
 		{8006A44D-1877-42EE-99A6-214E8B328AEE}.Profile|Win32.Build.0 = Profile|Win32
 		{8006A44D-1877-42EE-99A6-214E8B328AEE}.Release|Win32.ActiveCfg = Release|Win32
 		{8006A44D-1877-42EE-99A6-214E8B328AEE}.Release|Win32.Build.0 = Release|Win32
+		{F92175E2-14D8-404B-A117-87DA65D9AF56}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F92175E2-14D8-404B-A117-87DA65D9AF56}.Debug|Win32.Build.0 = Debug|Win32
+		{F92175E2-14D8-404B-A117-87DA65D9AF56}.PreRelease|Win32.ActiveCfg = PreRelease|Win32
+		{F92175E2-14D8-404B-A117-87DA65D9AF56}.PreRelease|Win32.Build.0 = PreRelease|Win32
+		{F92175E2-14D8-404B-A117-87DA65D9AF56}.Profile|Win32.ActiveCfg = Profile|Win32
+		{F92175E2-14D8-404B-A117-87DA65D9AF56}.Profile|Win32.Build.0 = Profile|Win32
+		{F92175E2-14D8-404B-A117-87DA65D9AF56}.Release|Win32.ActiveCfg = Release|Win32
+		{F92175E2-14D8-404B-A117-87DA65D9AF56}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

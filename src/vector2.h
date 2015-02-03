@@ -19,10 +19,13 @@ public:
 	vector2f(const vector2f &v) : x(v.x), y(v.y) {}
 	explicit vector2f(const float v[2]) : x(v[0]), y(v[1]) {}
 
+	vector2f operator+(const float a) const { return vector2f(x + a, y + a); }
 	vector2f operator+(const vector2f &v) const { return vector2f(x+v.x,y+v.y); }
 	vector2f operator-(const vector2f &v) const { return vector2f(x-v.x,y-v.y); }
 	vector2f &operator+=(const vector2f &v) { x+=v.x; y+=v.y; return *this; }
-	vector2f &operator-=(const vector2f &v) { x-=v.x; y-=v.y; return *this; }
+	vector2f &operator-=(const vector2f &v) { x -= v.x; y -= v.y; return *this; }
+	vector2f &operator/=(const float a) { const float inva = (1.0f / a); x *= inva; y *= inva; return *this; }
+	vector2f &operator*=(const vector2f &v) { x *= v.x; y *= v.y; return *this; }
 	vector2f &operator*=(const float &a) { x*=a; y*=a; return *this; }
 	vector2f operator-() const { return vector2f(-x,-y); }
 
