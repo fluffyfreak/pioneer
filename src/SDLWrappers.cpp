@@ -8,7 +8,7 @@
 
 SDLSurfacePtr LoadSurfaceFromFile(const std::string &fname, FileSystem::FileSource &source)
 {
-	RefCountedPtr<FileSystem::FileData> filedata = FileSystem::gameDataFiles.ReadFile(fname);
+	RefCountedPtr<FileSystem::FileData> filedata = source.ReadFile(fname);
 	if (!filedata) {
 		Output("LoadSurfaceFromFile: %s: could not read file\n", fname.c_str());
 		return SDLSurfacePtr();
