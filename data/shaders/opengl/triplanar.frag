@@ -61,31 +61,19 @@ void ads(in vec3 blending, in int lightNum, in vec3 pos, in vec3 n, inout vec4 l
 }
 #endif
 
-/*vec3 decode(in vec4 enc)
+vec2 sincos(in float x)
 {
-    float scale = 1.7777;
-    vec3 nn = enc.xyz * vec3(2*scale, 2*scale, 0) + vec3(-scale, -scale, 1);
-    float g = 2.0 / dot(nn.xyz, nn.xyz);
-    vec3 n;
-    n.xy = g * nn.xy;
-    n.z = g - 1;
-    return n;
-}*/
-
-void sincos(in float x, inout float sinval, inout float cosval)
-{
-	sinval = sin(x);
-	cosval = sqrt(1.0 - sinval * sinval);
+	float s = sin(x);
+	return vec2(s, sqrt(1.0 - (s * s)));
 }
 
 #define kPI 3.1415926536
-vec3 decode(in vec4 enc)
+vec3 decode(in vec2 enc)
 {
-	vec2 ang = (enc.xy * 2.0f) - 1.0f;
-	vec2 scth;
-	sincos(ang.x * kPI, scth.x, scth.y);
+	vec2 ang = (enc * vec2(2.0)) - vec2(1.0);
+	vec2 scth = sincos(ang.x * kPI);
 	vec2 scphi = vec2(sqrt(1.0 - ang.y*ang.y), ang.y);
-	return vec3(scth.y*scphi.x, scth.x*scphi.x, scphi.y);
+	return normalize(vec3(scth.y*scphi.x, scth.x*scphi.x, scphi.y));
 }
 
 void main(void)
@@ -109,16 +97,18 @@ void main(void)
 	
 	//normal(enc) + specular + AO
 	vec4 tex1 = getTriplanarTex(blending, texture1);
-	vec3 decNormal = normalize(decode(vec4(tex1.x, tex1.y, 0.0, 0.0)));
-	float spec = tex1.w;
+	float spec = tex1.z;
 #endif
 
 //directional lighting
 #if (NUM_LIGHTS > 0)
-	vec3 bump = decNormal - vec3(1.0);
+#ifdef MAP_NORMAL
+	vec3 bump = decode(tex1.xy) - vec3(1.0);
 	mat3 tangentFrame = mat3(tangent, bitangent, normal);
 	vec3 v_normal = tangentFrame * bump;
-	//vec3 v_normal = normal;
+#else
+	vec3 v_normal = normal;
+#endif // MAP_NORMAL
 
 	//ambient only make sense with lighting
 	vec4 light = scene.ambient;
@@ -132,9 +122,9 @@ void main(void)
 	#endif
 	
 #ifdef MAP_AMBIENT
-	// this is crude "baked ambient occulsion" - basically multiply everything by the ambient texture
+	// this is crude "baked ambient occlusion" - basically multiply everything by the ambient texture
 	// scaling whatever we've decided the lighting contribution is by 0.0 to 1.0 to account for sheltered/hidden surfaces
-	light *= vec4(tex1.z, tex1.z, tex1.z, 1.0);
+	light *= vec4(tex1.w, tex1.w, tex1.w, 1.0);
 #endif
 #endif //NUM_LIGHTS
 

@@ -70,6 +70,7 @@ namespace encodings
 			const float f = sqrt(8.0f * n.z + 8.0f);
 			return n.xy() / f + 0.5f;
 		}
+
 		virtual vector3f decode(const vector4f& enc) override
 		{
 			vector2f fenc = (enc.xy() * 4.0f) - 2.0f;
@@ -87,7 +88,8 @@ namespace encodings
 		#define kPI 3.1415926536f
 		virtual vector2f encode(const vector3f& n) override
 		{
-			return (vector2f(atan2(n.y, n.x) / kPI, n.z) + 1.0f) * 0.5f;
+			// convert to spherical coordinates, adjust range to 0..1 from -1..1
+			return (vector2f(atan2(n.y, n.x) / kPI, n.z) + vector2f(1.0f)) * vector2f(0.5f);
 		}
 
 		virtual vector3f decode(const vector4f& enc) override
@@ -95,7 +97,7 @@ namespace encodings
 			vector2f ang = (enc.xy() * 2.0f) - 1.0f;
 			vector2f scth;
 			sincos(ang.x * kPI, scth.x, scth.y);
-			vector2f scphi = vector2f(sqrt(1.0 - ang.y*ang.y), ang.y);
+			vector2f scphi = vector2f(sqrt(1.0f - ang.y*ang.y), ang.y);
 			return vector3f(scth.y*scphi.x, scth.x*scphi.x, scphi.y);
 		}
 	private:
@@ -120,7 +122,7 @@ namespace encodings
 		virtual vector3f decode(const vector4f& enc) override
 		{
 			const float scale = 1.7777f;
-			const vector3f nn = enc.xyz() * vector3f(2.0f * scale, 2.0f * scale, 0.0f) + vector3f(-scale, -scale, 1.0f);
+			const vector3f nn = vector3f(enc.x, enc.y, 0.0f) * vector3f(2.0f * scale, 2.0f * scale, 0.0f) + vector3f(-scale, -scale, 1.0f);
 			const float g = 2.0f / nn.Dot(nn);
 			vector3f n;
 			n.x = g * nn.x;
@@ -182,62 +184,66 @@ void SetupBasics()
 	s_renderer.reset(Graphics::Init(videoSettings));
 }*/
 
+template <typename T>
 struct TImgData {
 	TImgData() : data(nullptr), w(-1), h(-1) {}
 	~TImgData() {}
-	vector3f* data;
+
+	bool LoadImageData(const std::string &imageName, FileSystem::FileSource &fs = FileSystem::gameDataFiles)
+	{
+		Profiler::Timer timer;
+		timer.Start();
+		Output("\n---\nLoading image (%s)\n", imageName.c_str());
+		try {
+			SDLSurfacePtr im = LoadSurfaceFromFile(imageName, fs);
+			if (im) {
+				// now that we have our raw image loaded
+				// allocate the space for our processed representation
+				data = new T[(im->w * im->h)];
+				T* pimg = data;
+
+				// lock the image once so we can read from it
+				SDL_LockSurface(im.Get());
+
+				// setup our map dimensions for later
+				w = im->w;
+				h = im->h;
+				const int bpp = (im->pitch / im->w);
+
+				// copy every pixel value from the red channel (image is greyscale, channel is irrelevant)
+				for (int y = 0; y<im->h; y++) {
+					for (int x = 0; x<im->w; x++) {
+						for(int b = 0; b<bpp; b++) {
+							const unsigned char v = static_cast<unsigned char*>(im->pixels)[((x * bpp) + b) + (y*im->pitch)];
+							pimg[x + (y*im->w)][b] = v / 255.0f;
+						}
+					}
+				}
+
+				// unlock the surface and then release it
+				SDL_UnlockSurface(im.Get());
+			} else {
+				Output("Failed to load image.\n");
+			}
+		} catch (...) {
+			//minimal error handling, this is not expected to happen since we got this far.
+			timer.Stop();
+			return false;
+		}
+
+		timer.Stop();
+		Output("Loading \"%s\" took: %lf\n", imageName.c_str(), timer.millicycles());
+
+		return true;
+	}
+	T* data;
 	int w;
 	int h;
 };
+typedef TImgData<vector3f> TImgData3f;
+typedef TImgData<vector4f> TImgData4f;
 
-bool LoadImageData(const std::string &imageName, TImgData &imgData)
-{
-	Profiler::Timer timer;
-	timer.Start();
-	Output("\n---\nLoading image (%s)\n", imageName.c_str());
-	try {
-		SDLSurfacePtr im = LoadSurfaceFromFile(imageName);
-		if (im) {
-			// now that we have our raw image loaded
-			// allocate the space for our processed representation
-			imgData.data = new vector3f[(im->w * im->h)];
-			vector3f* pimg = imgData.data;
-
-			// lock the image once so we can read from it
-			SDL_LockSurface(im.Get());
-
-			// setup our map dimensions for later
-			imgData.w = im->w;
-			imgData.h = im->h;
-
-			// copy every pixel value from the red channel (image is greyscale, channel is irrelevant)
-			for (int y = 0; y<im->h; y++) {
-				for (int x = 0; x<im->w; x++) {
-					const unsigned char v0 = static_cast<unsigned char*>(im->pixels)[((x * 3) + 0) + (y*im->pitch)];
-					const unsigned char v1 = static_cast<unsigned char*>(im->pixels)[((x * 3) + 1) + (y*im->pitch)];
-					const unsigned char v2 = static_cast<unsigned char*>(im->pixels)[((x * 3) + 2) + (y*im->pitch)];
-					pimg[x + (y*im->w)] = vector3f(v0 / 255.0f, v1 / 255.0f, v2 / 255.0f);
-				}
-			}
-
-			// unlock the surface and then release it
-			SDL_UnlockSurface(im.Get());
-		} else {
-			Output("Failed to load image.\n");
-		}
-	} catch (...) {
-		//minimal error handling, this is not expected to happen since we got this far.
-		timer.Stop();
-		return false;
-	}
-
-	timer.Stop();
-	Output("Loading \"%s\" took: %lf\n", imageName.c_str(), timer.millicycles());
-
-	return true;
-}
-
-void EncodeNormalData(vector2f *outNormal, const TImgData imgData) {
+void EncodeNormalData(vector2f *outNormal, const TImgData3f imgData) {
 	SphericalCoordinates encoder;
 	const int xmax = imgData.w;
 	const int ymax = imgData.h;
@@ -245,14 +251,25 @@ void EncodeNormalData(vector2f *outNormal, const TImgData imgData) {
 		for (int x = 0; x < xmax; x++) {
 			const vector3f val = imgData.data[(x + (y * xmax))].Normalized();
 			const vector2f enc = encoder.encode(val);
-			//const vector3f dec = decode(vector4f(enc.x, enc.y, 0.0f, 0.0f));
-			//const vector3f decN = dec.Normalized();
 			outNormal[(x + (y * xmax))] = enc;
 		}
 	}
 }
 
-void AverageRGBData(float *outIntensity, const TImgData imgData) {
+void DecodeNormalData(vector3f *outNormal, const TImgData4f imgData) {
+	SphericalCoordinates encoder;
+	const int xmax = imgData.w;
+	const int ymax = imgData.h;
+	for (int y = 0; y < ymax; y++) {
+		for (int x = 0; x < xmax; x++) {
+			const vector4f val = imgData.data[(x + (y * xmax))];
+			const vector3f dec = encoder.decode(val);
+			outNormal[(x + (y * xmax))] = dec.Normalized();
+		}
+	}
+}
+
+void AverageRGBData(float *outIntensity, const TImgData3f imgData) {
 	const int xmax = imgData.w;
 	const int ymax = imgData.h;
 	for (int y = 0; y < ymax; y++) {
@@ -279,7 +296,7 @@ void PackRGandBandA(vector4f *outRGBAf, const vector2f *rg, const float *b, cons
 	for(int x=0; x<w; x++) {
 		for(int y=0; y<h; y++) {
 			const int idx(x + (y * w));
-			outRGBAf[idx] = vector4f(rg[idx].x, rg[idx].y, b[idx], a[idx]);
+			outRGBAf[idx] = vector4f(rg[idx].x, rg[idx].y,  b[idx],  a[idx]);
 		}
 	}
 }
@@ -296,6 +313,8 @@ void SaveData(const std::string &filename, vector4f *packed, const int w, const 
 		for (int x = 0; x<w; x++) {
 			const int idx((x * 4) + (y * stride));
 			const vector4f &v4 = packed[x + (((h - 1) - y) * w)];
+			assert(0.0f <= v4.x && 0.0f <= v4.y);
+			assert(1.0f >= v4.x && 1.0f >= v4.y);
 			pixels.get()[idx + 0] = Uint8(v4.x * 255.0f);
 			pixels.get()[idx + 1] = Uint8(v4.y * 255.0f);
 			pixels.get()[idx + 2] = Uint8(v4.z * 255.0f);
@@ -307,21 +326,21 @@ void SaveData(const std::string &filename, vector4f *packed, const int w, const 
 	write_png(FileSystem::userFiles, fname, pixels.get(), w, h, stride, 4);
 }
 
-void RunCompiler(const std::string &diffuseName, const std::string &normalName, const std::string &specularName, const std::string &AOName, const std::string &prepend)
+void RunCompiler(const std::string &srcFolder, const std::string &diffuseName, const std::string &normalName, const std::string &specularName, const std::string &AOName, const std::string &prepend)
 {
 	Profiler::Timer timer;
 	timer.Start();
 	Output("\n---\nStarting texture compiler for (%s, %s, %s, %s)\n", diffuseName.c_str(), normalName.c_str(), specularName.c_str(), AOName.c_str());
 
 	//load the images, encode & pack them, save the resulting versions
-	TImgData diffuseImg;
-	TImgData normalImg;
-	TImgData specularImg;
-	TImgData aoImg;
-	const bool resDif = LoadImageData(diffuseName, diffuseImg);
-	const bool resNor = LoadImageData(normalName, normalImg);
-	const bool resSpe = LoadImageData(specularName, specularImg);
-	const bool resAmb = LoadImageData(AOName, aoImg);
+	TImgData3f diffuseImg;
+	TImgData3f normalImg;
+	TImgData3f specularImg;
+	TImgData3f aoImg;
+	const bool resDif = diffuseImg.LoadImageData(FileSystem::JoinPathBelow(srcFolder,diffuseName));
+	const bool resNor = normalImg.LoadImageData(FileSystem::JoinPathBelow(srcFolder,normalName));
+	const bool resSpe = specularImg.LoadImageData(FileSystem::JoinPathBelow(srcFolder,specularName));
+	const bool resAmb = aoImg.LoadImageData(FileSystem::JoinPathBelow(srcFolder,AOName));
 
 	const bool equalDims = (diffuseImg.w && normalImg.w && specularImg.w && aoImg.w)
 		&& (diffuseImg.h && normalImg.h && specularImg.h && aoImg.h);
@@ -354,6 +373,24 @@ void RunCompiler(const std::string &diffuseName, const std::string &normalName, 
 		// save out the data
 		SaveData(prepend + "diffusePacked.png", packedDiffuse.get(), diffuseImg.w, diffuseImg.h);
 		SaveData(prepend + "nsAOPacked.png", packedNSAO.get(), normalImg.w, normalImg.h);
+#if 0 
+		// test normal map decoding
+		TImgData4f nsAO;
+		const std::string fname = FileSystem::JoinPathBelow(dir, prepend + "nsAOPacked.png");
+		nsAO.LoadImageData(fname, FileSystem::userFiles);
+		std::unique_ptr<vector3f[]> decNormalData( new vector3f[(nsAO.w * nsAO.h)] );
+		DecodeNormalData(decNormalData.get(), nsAO);
+		for (int y = 0; y < normalImg.h; y++) {
+			for (int x = 0; x < normalImg.w; x++) {
+				const vector3f val = normalImg.data[(x + (y * normalImg.w))].Normalized();
+				const vector3f dec = decNormalData[(x + (y * normalImg.w))];
+				const float diff = val.Dot(dec);
+				if( diff < 0.9f ) {
+					Output("Big diff (%f)\n", diff);
+				}
+			}
+		}
+#endif
 	} 
 
 	timer.Stop();
@@ -408,20 +445,22 @@ int main(int argc, char** argv)
 	// what mode are we in?
 	switch (mode) {
 		case MODE_TEXTURECOMPILER: {
+			std::string srcFolder;
 			std::string diffuseName;
 			std::string normalName;
 			std::string specularName;
 			std::string AOName;
 			std::string prepend;
-			if (argc > 6) {
+			if (argc > 7) {
 				SetupBasics();
 				//SetupRenderer();
-				diffuseName = argv[2];
-				normalName = argv[3];
-				specularName = argv[4];
-				AOName = argv[5];
-				prepend = argv[6];
-				RunCompiler(diffuseName, normalName, specularName, AOName, prepend);
+				srcFolder = argv[2];
+				diffuseName = argv[3];
+				normalName = argv[4];
+				specularName = argv[5];
+				AOName = argv[6];
+				prepend = argv[7];
+				RunCompiler(srcFolder, diffuseName, normalName, specularName, AOName, prepend);
 			} else {
 				DisplayUsage();
 			}
