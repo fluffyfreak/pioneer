@@ -97,6 +97,21 @@ namespace
 
 		delete[] tan1;
 	}
+
+	void CalculatePerVertexNormals(std::vector<PosNormTangentUVVert> &vertices, std::vector<Uint16> &indices, std::vector < std::vector<size_t> > &faceIndices) {
+		for (size_t verti = 0; verti < vertices.size(); verti++)
+		{
+			vector3f sumNorm(0.0f);
+			// Calculate and add the normal of every face that contains this vertex
+			for (auto fi : faceIndices[verti]) {
+				const size_t faceidx = (fi * 3);
+				const vector3f v01 = (vertices[indices[faceidx + 0]].pos - vertices[indices[faceidx + 1]].pos).Normalized();
+				const vector3f v02 = (vertices[indices[faceidx + 0]].pos - vertices[indices[faceidx + 2]].pos).Normalized();
+				sumNorm += v01.Cross(v02);
+			}
+			vertices[verti].norm = sumNorm.Normalized();
+		}
+	}
 }
 
 static const Sint32 MAX_SUBDIVS = 5;
@@ -249,33 +264,11 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 		}
 
 		// regenerate vertex normals after each deformation so the new normals affect future iterations
-		for (size_t verti = 0; verti < vertices.size(); verti++)
-		{
-			vector3f sumNorm(0.0f);
-			// Calculate and add the normal of every face that contains this vertex
-			for (auto fi : faceIndices[verti]) {
-				const size_t faceidx = (fi * 3);
-				const vector3f v01 = (vertices[indices[faceidx + 0]].pos - vertices[indices[faceidx + 1]].pos).Normalized();
-				const vector3f v02 = (vertices[indices[faceidx + 0]].pos - vertices[indices[faceidx + 2]].pos).Normalized();
-				sumNorm += v01.Cross(v02);
-			}
-			vertices[verti].norm = sumNorm.Normalized();
-		}
+		CalculatePerVertexNormals(vertices, indices, faceIndices);
 	}
 
 	// regenerate vertex normals a final time
-	for (size_t verti = 0; verti < vertices.size(); verti++)
-	{
-		vector3f sumNorm(0.0f);
-		// Calculate and add the normal of every face that contains this vertex
-		for (auto fi : faceIndices[verti]) {
-			const size_t idx = (fi * 3);
-			const vector3f v01 = (vertices[indices[idx + 0]].pos - vertices[indices[idx + 1]].pos).Normalized();
-			const vector3f v02 = (vertices[indices[idx + 0]].pos - vertices[indices[idx + 2]].pos).Normalized();
-			sumNorm += v01.Cross(v02);
-		}
-		vertices[verti].norm = sumNorm.Normalized();
-	}
+	CalculatePerVertexNormals(vertices, indices, faceIndices);
 
 	CalculateTangentArray(vertices, indices);
 
