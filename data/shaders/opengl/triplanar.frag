@@ -103,7 +103,7 @@ void main(void)
 //directional lighting
 #if (NUM_LIGHTS > 0)
 #ifdef MAP_NORMAL
-	vec3 bump = decode(tex1.xy) - vec3(1.0);
+	vec3 bump = (decode(tex1.xy) * 2.0) - vec3(1.0);
 	mat3 tangentFrame = mat3(tangent, bitangent, normal);
 	vec3 v_normal = tangentFrame * bump;
 #else

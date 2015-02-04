@@ -545,7 +545,7 @@ void ModelViewer::GenerateAsteroid()
 	matDesc.alphaTest = false;
 	matDesc.ambientMap = true;
 	matDesc.specularMap = true;
-	matDesc.normalMap = false;//true;
+	matDesc.normalMap = true;
 	matDesc.textures = 4;
 	RefCountedPtr<Graphics::Material> mat(m_renderer->CreateMaterial(matDesc));
 	m_asteroidMap[0].reset(Graphics::TextureBuilder::Model("textures/asteroid/Pumice-diffusePacked.png").CreateTexture(m_renderer));
