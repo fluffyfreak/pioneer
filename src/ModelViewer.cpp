@@ -523,6 +523,9 @@ void ModelViewer::DrawModel()
 
 void ModelViewer::GenerateAsteroid()
 {
+#ifdef PIONEER_PROFILER
+	Profiler::reset();
+#endif
 	// Create some deformaties
 	Asteroid::TDeformations deformations;
 	static Uint32 MIN_BUMPS(64);
@@ -561,6 +564,14 @@ void ModelViewer::GenerateAsteroid()
 	//rsDesc.cullMode = Graphics::CULL_NONE;
 	m_asteroid.reset(new Asteroid(m_renderer, mat, m_renderer->CreateRenderState(rsDesc), deformations, 5, m_model->GetDrawClipRadius()));
 	m_renderer->CheckRenderErrors();
+
+#ifdef PIONEER_PROFILER
+	FileSystem::userFiles.MakeDirectory("profiler");
+	std::string profilerPath = FileSystem::JoinPathBelow(FileSystem::userFiles.GetRoot(), "profiler");
+
+	Output("dumping profile data\n");
+	Profiler::dumphtml(profilerPath.c_str());
+#endif
 }
 
 void ModelViewer::MainLoop()

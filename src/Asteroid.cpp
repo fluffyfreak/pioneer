@@ -31,6 +31,7 @@ namespace
 		std::vector<PosNormTangentUVVert> &vertices,
 		const std::vector<Uint16> &indices)
 	{
+		PROFILE_SCOPED()
 		const size_t vertexCount = vertices.size();
 		vector3f *tan1 = new vector3f[vertexCount * 2];
 		vector3f *tan2 = tan1 + vertexCount;
@@ -98,7 +99,9 @@ namespace
 		delete[] tan1;
 	}
 
-	void CalculatePerVertexNormals(std::vector<PosNormTangentUVVert> &vertices, std::vector<Uint16> &indices, std::vector < std::vector<size_t> > &faceIndices) {
+	void CalculatePerVertexNormals(std::vector<PosNormTangentUVVert> &vertices, std::vector<Uint16> &indices, std::vector < std::vector<size_t> > &faceIndices) 
+	{
+		PROFILE_SCOPED()
 		for (size_t verti = 0; verti < vertices.size(); verti++)
 		{
 			vector3f sumNorm(0.0f);
