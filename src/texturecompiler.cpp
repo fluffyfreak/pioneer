@@ -398,8 +398,8 @@ void RunCompiler(const std::string &srcFolder, const std::string &diffuseName, c
 }
 
 void DisplayUsage() {
-	// -compile textures/asteroid/Stones-Diffuse.png textures/asteroid/Stones-Normal.png textures/asteroid/Stones-Specular.png textures/asteroid/Stones-AO.png Stones-
-	// -compile textures/asteroid/Pumice-Diffuse.png textures/asteroid/Pumice-Normal.png textures/asteroid/Pumice-Specular.png textures/asteroid/Pumice-AO.png Pumice-
+	// -c textures/asteroid/src Stones-Diffuse.png Stones-Normal.png Stones-Specular.png Stones-AO.png Stones-
+	// -c textures/asteroid/src Pumice-Diffuse.png Pumice-Normal.png Pumice-Specular.png Pumice-AO.png Pumice-
 	Output(
 		"usage: texturecompiler [mode] [options...]\n"
 		"available modes:\n"
