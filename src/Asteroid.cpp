@@ -5,6 +5,7 @@
 #include "graphics/Texture.h"
 #include "collider/Weld.h"
 #include "gameconsts.h"
+#include "utils.h"
 #include <set>
 
 using namespace Graphics;
@@ -133,7 +134,7 @@ static const Sint32 icosahedron_faces[20][3] = {
 	{7,10,3}, {7,6,10}, {7,11,6}, {11,0,6}, {0,1,6},
 	{6,1,10}, {9,0,11}, {9,11,2}, {9,2,5}, {7,2,11}
 };
-
+#pragma optimize("",off)
 Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::RenderState *state,
 	const TDeformations &deformations, const Sint32 subdivs, const float scale)
 {
@@ -274,6 +275,21 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 	CalculatePerVertexNormals(vertices, indices, faceIndices);
 
 	CalculateTangentArray(vertices, indices);
+
+	// calculate the slope and "height"
+	float min = 2.0f;
+	float max = 0.0f;
+	for (size_t verti = 0; verti < vertices.size(); verti++)
+	{
+		const vector3f pos = vertices[verti].pos.Normalized();
+		const float dot = 1.0f - pos.Dot(vertices[verti].norm.Normalized());
+		min = std::min(min, dot);
+		max = std::max(max, dot);
+		vertices[verti].uv0.x = Clamp(dot, 0.0f, 1.0f);
+		vertices[verti].uv0.y = Clamp(pos.Length() - scale, 0.0f, 1.0f);
+	}
+	assert(min <= max);
+	Output("min (%5.2f), max (%5.2f)\n", min, max);
 
 	//Create vtx & index buffers and copy data
 	VertexBufferDesc vbd;

@@ -6,6 +6,7 @@ uniform sampler2D texture0; //diffuse + intensity
 uniform sampler2D texture1; //normal(enc) + specular + AO
 uniform sampler2D texture2; //diffuse + intensity
 uniform sampler2D texture3; //normal(enc) + specular + AO
+in vec2 texCoord0;
 #endif
 
 #ifdef VERTEXCOLOR
@@ -93,17 +94,30 @@ void main(void)
 	
 	//diffuse + intensity
 	vec4 tex0 = getTriplanarTex(blending, texture0);
-	color *= vec4(tex0.xyz, 1.0);
 	
 	//normal(enc) + specular + AO
 	vec4 tex1 = getTriplanarTex(blending, texture1);
-	float spec = tex1.z;
+	
+	//diffuse + intensity
+	vec4 tex2 = getTriplanarTex(blending, texture2);
+	
+	//normal(enc) + specular + AO
+	vec4 tex3 = getTriplanarTex(blending, texture3);
+	
+	color *= vec4(mix(tex0.xyz, tex2.xyz, texCoord0.x), 1.0);
+	float spec = mix(tex1.z, tex3.z, texCoord0.x);
+	float ambi = mix(tex1.w, tex3.w, texCoord0.x);
+	
+	
 #endif
 
 //directional lighting
 #if (NUM_LIGHTS > 0)
 #ifdef MAP_NORMAL
-	vec3 bump = (decode(tex1.xy) * 2.0) - vec3(1.0);
+	vec3 bump0 = (decode(tex1.xy) * 2.0) - vec3(1.0);
+	vec3 bump1 = (decode(tex3.xy) * 2.0) - vec3(1.0);
+	vec3 bump = mix(bump0, bump1, texCoord0.x);
+	
 	mat3 tangentFrame = mat3(tangent, bitangent, normal);
 	vec3 v_normal = tangentFrame * bump;
 #else
@@ -124,7 +138,7 @@ void main(void)
 #ifdef MAP_AMBIENT
 	// this is crude "baked ambient occlusion" - basically multiply everything by the ambient texture
 	// scaling whatever we've decided the lighting contribution is by 0.0 to 1.0 to account for sheltered/hidden surfaces
-	light *= vec4(tex1.w, tex1.w, tex1.w, 1.0);
+	light *= vec4(ambi, ambi, ambi, 1.0);
 #endif
 #endif //NUM_LIGHTS
 

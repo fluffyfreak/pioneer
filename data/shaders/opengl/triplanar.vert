@@ -4,6 +4,7 @@
 #ifdef VERTEXCOLOR
 out vec4 vertexColor;
 #endif
+out vec2 texCoord0;
 #if (NUM_LIGHTS > 0)
 out vec3 eyePos;
 out vec3 normal;
@@ -27,6 +28,7 @@ void main(void)
 #ifdef VERTEXCOLOR
 	vertexColor = a_color;
 #endif
+	texCoord0 = a_uv0.xy;
 #if (NUM_LIGHTS > 0)
 	eyePos = vec3(uViewMatrix * a_vertex);
 	normal = normalize(uNormalMatrix * vec4(a_normal, 1.0)).xyz;
