@@ -27,7 +27,16 @@ namespace
 	};
 
 	struct VertFaces {
+		VertFaces() : count(0) {}
+		void Add(const size_t idx) {
+			for (size_t i = 0; i < count; i++) {
+				if (faces[i] == idx)
+					return;
+			}
+			faces[count++] = idx;
+		}
 		size_t faces[6];
+		size_t count;
 	};
 	typedef std::vector<VertFaces> TFaceIndices;
 
@@ -113,7 +122,7 @@ namespace
 		{
 			vector3f sumNorm(0.0f);
 			// Calculate and add the normal of every face that contains this vertex
-			for (size_t fi = 0; fi < 6; fi++) {
+			for (size_t fi = 0; fi < faceIndices[verti].count; fi++) {
 				const size_t faceidx = (faceIndices[verti].faces[fi] * 3);
 				const vector3f v01 = (vertices[indices[faceidx + 0]].pos - vertices[indices[faceidx + 1]].pos).Normalized();
 				const vector3f v02 = (vertices[indices[faceidx + 0]].pos - vertices[indices[faceidx + 2]].pos).Normalized();
@@ -136,25 +145,22 @@ namespace
 			}
 		}
 	}
-	void CreateVertexToFaceList(const std::vector<PosNormTangentUVVert> &verts, const std::vector<Uint16> &indices, TFaceIndices &faceIndices)
+
+	void CreateVertexToFaceList(const size_t numverts, const std::vector<Uint16> &indices, TFaceIndices &faceIndices)
 	{
 		PROFILE_SCOPED()
-		faceIndices.resize(verts.size());
+
 		// Create vertex to face listing
 		const size_t faceCount = indices.size() / 3;
-		for (size_t verti = 0; verti < verts.size(); verti++)
+		
+		// Find all of the faces that use this vertex
+		faceIndices.resize(numverts);
+		for (size_t f = 0; f < faceCount; f++)
 		{
-			size_t face = 0;
-			// Find all of the faces that use this vertex
-			for (size_t f = 0; f < faceCount; f++)
-			{
-				const size_t idx = (f * 3);
-				if ((indices[idx + 0] == verti) || (indices[idx + 1] == verti) || (indices[idx + 2] == verti))
-				{
-					faceIndices[verti].faces[face] = f;
-					++face;
-				}
-			}
+			const size_t idx = (f * 3);
+			faceIndices[indices[idx + 0]].Add(f);
+			faceIndices[indices[idx + 1]].Add(f);
+			faceIndices[indices[idx + 2]].Add(f);
 		}
 	}
 
@@ -292,7 +298,7 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 
 
 	TFaceIndices faceIndices;
-	CreateVertexToFaceList(vertices, indices, faceIndices);
+	CreateVertexToFaceList(vertices.size(), indices, faceIndices);
 
 	// radius, depth, and the number of impacts
 	std::set<Uint16> usedIndices;
