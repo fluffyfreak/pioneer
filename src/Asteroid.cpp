@@ -14,7 +14,7 @@ using namespace Graphics::Drawables;
 
 //------------------------------------------------------------
 
-namespace
+namespace AsteroidFunctions
 {
 	struct PosNormTangentUVVert {
 		vector3f pos;
@@ -208,12 +208,12 @@ namespace
 		}
 	}
 
-	void EliminateDuplicateVertices(std::vector<PosNormTangentUVVert> &vIn, std::vector<Uint16> &indices)
+	Uint32 EliminateDuplicateVertices(std::vector<PosNormTangentUVVert> &vIn, std::vector<Uint16> &indices)
 	{
 		PROFILE_SCOPED();
 		std::vector<Uint32> xrefs;
 		nv::Weld<PosNormTangentUVVert> weld;
-		weld(vIn, xrefs);
+		const Uint32 outCount = weld(vIn, xrefs);
 
 		// Remap faces.
 		const size_t faceCount = indices.size() / 3;
@@ -224,6 +224,8 @@ namespace
 			indices[idx + 1] = xrefs.at(indices[idx + 1]);
 			indices[idx + 2] = xrefs.at(indices[idx + 2]);
 		}
+
+		return outCount;
 	}
 
 	// Where should this live?
@@ -231,6 +233,8 @@ namespace
 		return (start * (1.0f - n)) + (end * n);
 	}
 }
+
+using namespace AsteroidFunctions;
 
 static const Sint32 MAX_SUBDIVS = 5;
 static const float ICOSX = 0.525731112119133f;
@@ -293,11 +297,12 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 	GenerateInitialMesh(vts, indices, trans, subdivsLocal);
 
 	{
+		PROFILE_SCOPED_DESC("Weld");
 		// convert vts (SOA) to vertex format (AOS)
 		std::vector<PosNormTangentUVVert> vertices;
 		ConvertSOAToAOS(vts, vertices);
 		// eliminate duplicate vertices
-		EliminateDuplicateVertices(vertices, indices);
+		const Uint32 outCount = EliminateDuplicateVertices(vertices, indices);
 		// convert back to vts (SOA) from vertex format (AOS)
 		ConvertAOSToSOA(vertices, vts);
 	}
@@ -306,26 +311,33 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 	const size_t num_deformations = deformations.size();
 	const size_t s = (num_deformations * 2) + 2;
 	std::vector<Uint32> _init;
-	_init.reserve(s);
-	_init.push_back(num_deformations);
-	for (auto i : deformations) {
-		_init.push_back(Uint32(i.radius * 100.0f));
-		_init.push_back(Uint32(i.offset * 100.0f));
+	{
+		PROFILE_SCOPED_DESC("_init Random");
+		_init.reserve(s);
+		_init.push_back(num_deformations);
+		for (auto i : deformations) {
+			_init.push_back(Uint32(i.radius * 100.0f));
+			_init.push_back(Uint32(i.offset * 100.0f));
+		}
+		_init.push_back(UNIVERSE_SEED);
 	}
-	_init.push_back(UNIVERSE_SEED);
 	Random rand(&_init[0], s);
 
-
+	// This saves a lot of time later on by building the mapping now
 	TFaceIndices faceIndices;
 	CreateVertexToFaceList(vts.GetNumVerts(), indices, faceIndices);
 
 	// radius, depth, and the number of impacts
 	std::set<Uint16> usedIndices;
 	const size_t num_indices = indices.size();
+	float minScl = scaleLocal * 2.0f;
+	float maxScl = 0.0f;
 	for (auto i : deformations) {
+		PROFILE_SCOPED_DESC("Deformation");
 		// get the vertex that forms the basis of our deformation
 		Uint16 prospective = indices[(rand.Int32() % num_indices)];
 		while (usedIndices.find(prospective) != usedIndices.end()) {
+			PROFILE_SCOPED_DESC("Prospective");
 			prospective = indices[(rand.Int32() % num_indices)];
 		}
 		const Uint16 idx = prospective;
@@ -340,11 +352,16 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 
 		// move the vertices by the offset amount in the direction of the "vert" normal, scaled by distance from centre of the radius
 		for (auto vipair : idxDistSqr) {
+			PROFILE_SCOPED_DESC("Modify");
 			const float sclOffset = (i.offset * scaleLocal) * (1.0f - (vipair.second / squareRad));
 			// blend between the centre -> vertex normal and the surface normal to reduce chance of interpenetrating geometry
 			const vector3f dirOffset = (norm * sclOffset);
 			const vector3f pos = (vts.position[vipair.first].Normalized() * sclOffset);;
 			vts.position[vipair.first] += lerp(pos, dirOffset, 0.75f);
+			
+			const float scl = vts.position[vipair.first].Length() - scaleLocal;
+			minScl = std::min(minScl, scl);
+			maxScl = std::max(maxScl, scl);
 		}
 
 		// regenerate vertex normals after each deformation so the new normals affect future iterations
@@ -359,39 +376,43 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 	// calculate the slope and "height"
 	float minDot = 2.0f;
 	float maxDot = 0.0f;
-	float minScl = 2.0f;
-	float maxScl = 0.0f;
 	for (size_t verti = 0; verti < vts.GetNumVerts(); verti++)
 	{
+		PROFILE_SCOPED_DESC("UVSlopeHeight");
 		const vector3f pos = vts.position[verti].Normalized();
 		const vector3f nrm = vts.normal[verti].Normalized();
 		const float dot = pos.Dot(nrm);
 		assert(dot >= -1.0f && dot <= 1.0f);
-		const float scl = pos.Length() - scale;
+		const float scl = (((pos.Length() - scale) - minScl) / (minScl - maxScl));
 		minDot = std::min(minDot, dot);
 		maxDot = std::max(maxDot, dot);
-		minScl = std::min(minScl, scl);
-		maxScl = std::max(maxScl, scl);
 		vts.uv0[verti].x = 1.0f - Clamp(dot, 0.0f, 1.0f);
 		vts.uv0[verti].y = Clamp(scl, 0.0f, 1.0f);
 	}
 	Output("min dot (%5.2f), max dot (%5.2f)\n", minDot, maxDot);
 	Output("min scl (%5.2f), max scl (%5.2f)\n", minScl, maxScl);
 
+	CreateAndPopulateRenderBuffers(vts, indices, renderer);
+}
+
+void Asteroid::CreateAndPopulateRenderBuffers(const VertexArray &vts, std::vector<Uint16> &indices, Renderer *r)
+{
+	PROFILE_SCOPED();
+
 	//Create vtx & index buffers and copy data
 	VertexBufferDesc vbd;
 	vbd.attrib[0].semantic = ATTRIB_POSITION;
-	vbd.attrib[0].format   = ATTRIB_FORMAT_FLOAT3;
+	vbd.attrib[0].format = ATTRIB_FORMAT_FLOAT3;
 	vbd.attrib[1].semantic = ATTRIB_NORMAL;
-	vbd.attrib[1].format   = ATTRIB_FORMAT_FLOAT3;
+	vbd.attrib[1].format = ATTRIB_FORMAT_FLOAT3;
 	vbd.attrib[2].semantic = ATTRIB_UV0;
-	vbd.attrib[2].format   = ATTRIB_FORMAT_FLOAT2;
+	vbd.attrib[2].format = ATTRIB_FORMAT_FLOAT2;
 	vbd.attrib[3].semantic = ATTRIB_TANGENT;
-	vbd.attrib[3].format   = ATTRIB_FORMAT_FLOAT3;
+	vbd.attrib[3].format = ATTRIB_FORMAT_FLOAT3;
 	vbd.numVertices = vts.GetNumVerts();
 	vbd.usage = BUFFER_USAGE_STATIC;
-	m_vertexBuffer.reset(renderer->CreateVertexBuffer(vbd));
-	
+	m_vertexBuffer.reset(r->CreateVertexBuffer(vbd));
+
 	// vertices
 	PosNormTangentUVVert* vtxPtr = m_vertexBuffer->Map<PosNormTangentUVVert>(Graphics::BUFFER_MAP_WRITE);
 	assert(m_vertexBuffer->GetDesc().stride == sizeof(PosNormTangentUVVert));
@@ -405,7 +426,7 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 	m_vertexBuffer->Unmap();
 
 	// indices
-	m_indexBuffer.reset(renderer->CreateIndexBuffer(indices.size(), BUFFER_USAGE_STATIC));
+	m_indexBuffer.reset(r->CreateIndexBuffer(indices.size(), BUFFER_USAGE_STATIC));
 	Uint16 *idxPtr = m_indexBuffer->Map(Graphics::BUFFER_MAP_WRITE);
 	for (auto it : indices) {
 		*idxPtr = it;
