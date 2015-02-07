@@ -43,12 +43,10 @@ namespace
 	// Lengyel, Eric. “Computing Tangent Space Basis Vectors for an Arbitrary Mesh”. 
 	// Terathon Software 3D Graphics Library, 2001. 
 	// http://www.terathon.com/code/tangent.html
-	static void CalculateTangentArray(
-		std::vector<PosNormTangentUVVert> &vertices,
-		const std::vector<Uint16> &indices)
+	static void CalculateTangentArray(VertexArray &vts, const std::vector<Uint16> &indices)
 	{
-		PROFILE_SCOPED()
-		const size_t vertexCount = vertices.size();
+		PROFILE_SCOPED();
+		const size_t vertexCount = vts.GetNumVerts();
 		vector3f *tan1 = new vector3f[vertexCount * 2];
 		vector3f *tan2 = tan1 + vertexCount;
 		//ZeroMemory(tan1, vertexCount * sizeof(vector3f) * 2);
@@ -61,13 +59,13 @@ namespace
 			const size_t i2 = indices[(a * 3) + 1];
 			const size_t i3 = indices[(a * 3) + 2];
 
-			const vector3f& v1 = vertices[i1].pos;
-			const vector3f& v2 = vertices[i2].pos;
-			const vector3f& v3 = vertices[i3].pos;
+			const vector3f& v1 = vts.position[i1];
+			const vector3f& v2 = vts.position[i2];
+			const vector3f& v3 = vts.position[i3];
 
-			const vector2f& w1 = vertices[i1].uv0;
-			const vector2f& w2 = vertices[i2].uv0;
-			const vector2f& w3 = vertices[i3].uv0;
+			const vector2f& w1 = vts.uv0[i1];
+			const vector2f& w2 = vts.uv0[i2];
+			const vector2f& w3 = vts.uv0[i3];
 
 			const float x1 = v2.x - v1.x;
 			const float x2 = v3.x - v1.x;
@@ -105,41 +103,59 @@ namespace
 
 		for (size_t a = 0; a < vertexCount; a++)
 		{
-			const vector3f& n = vertices[a].norm;
+			const vector3f& n = vts.normal[a];
 			const vector3f& t = tan1[a];
 
 			// Gram-Schmidt orthogonalize
-			vertices[a].tangent = (t - n * n.Dot(t)).Normalized();
+			vts.tangent[a] = (t - n * n.Dot(t)).Normalized();
 		}
 
 		delete[] tan1;
 	}
 
-	void CalculatePerVertexNormals(std::vector<PosNormTangentUVVert> &vertices, std::vector<Uint16> &indices, TFaceIndices &faceIndices)
+	void CalculatePerVertexNormals(VertexArray &vts, std::vector<Uint16> &indices, TFaceIndices &faceIndices)
 	{
-		PROFILE_SCOPED()
-		for (size_t verti = 0; verti < vertices.size(); verti++)
+		PROFILE_SCOPED();
+		for (size_t verti = 0; verti < vts.GetNumVerts(); verti++)
 		{
 			vector3f sumNorm(0.0f);
 			// Calculate and add the normal of every face that contains this vertex
 			for (size_t fi = 0; fi < faceIndices[verti].count; fi++) {
 				const size_t faceidx = (faceIndices[verti].faces[fi] * 3);
-				const vector3f v01 = (vertices[indices[faceidx + 0]].pos - vertices[indices[faceidx + 1]].pos).Normalized();
-				const vector3f v02 = (vertices[indices[faceidx + 0]].pos - vertices[indices[faceidx + 2]].pos).Normalized();
+				const vector3f v01 = (vts.position[indices[faceidx + 0]] - vts.position[indices[faceidx + 1]]).Normalized();
+				const vector3f v02 = (vts.position[indices[faceidx + 0]] - vts.position[indices[faceidx + 2]]).Normalized();
 				sumNorm += v01.Cross(v02);
 			}
-			vertices[verti].norm = sumNorm.Normalized();
+			vts.normal[verti] = sumNorm.Normalized();
 		}
 	}
 
-	void findIndexAndDistFrom(const float sqrRad, const vector3f &pos, std::vector<PosNormTangentUVVert> &verts, std::vector<std::pair<Uint32, float>> &idxDistSqr)
+	void CalculatePerVertexNormalsLimited(VertexArray &vts, std::vector<Uint16> &indices, TFaceIndices &faceIndices, std::vector<std::pair<Uint32, float>> &idxDistSqr)
 	{
-		PROFILE_SCOPED()
+		PROFILE_SCOPED();
+		for (size_t idx = 0; idx < idxDistSqr.size(); idx++)
+		{
+			const size_t verti = idxDistSqr[idx].first;
+			vector3f sumNorm(0.0f);
+			// Calculate and add the normal of every face that contains this vertex
+			for (size_t fi = 0; fi < faceIndices[verti].count; fi++) {
+				const size_t faceidx = (faceIndices[verti].faces[fi] * 3);
+				const vector3f v01 = (vts.position[indices[faceidx + 0]] - vts.position[indices[faceidx + 1]]).Normalized();
+				const vector3f v02 = (vts.position[indices[faceidx + 0]] - vts.position[indices[faceidx + 2]]).Normalized();
+				sumNorm += v01.Cross(v02);
+			}
+			vts.normal[verti] = sumNorm.Normalized();
+		}
+	}
+
+	void findIndexAndDistFrom(const float sqrRad, const vector3f &pos, std::vector<vector3f> &verts, std::vector<std::pair<Uint32, float>> &idxDistSqr)
+	{
+		PROFILE_SCOPED();
 		// find all vertices within the target radius
 		for (Uint32 vidx = 0; vidx < verts.size(); vidx++) {
 			// test, store
-			const PosNormTangentUVVert &cur = verts[vidx];
-			const float distSqr = (pos - cur.pos).LengthSqr();
+			const vector3f &cur = verts[vidx];
+			const float distSqr = (pos - cur).LengthSqr();
 			if (distSqr < sqrRad) {
 				idxDistSqr.push_back(std::make_pair(vidx, distSqr));
 			}
@@ -148,7 +164,7 @@ namespace
 
 	void CreateVertexToFaceList(const size_t numverts, const std::vector<Uint16> &indices, TFaceIndices &faceIndices)
 	{
-		PROFILE_SCOPED()
+		PROFILE_SCOPED();
 
 		// Create vertex to face listing
 		const size_t faceCount = indices.size() / 3;
@@ -167,7 +183,7 @@ namespace
 	// convert vts (SOA) to vertex format (AOS)
 	void ConvertSOAToAOS(const VertexArray &vtsIn, std::vector<PosNormTangentUVVert> &vOut)
 	{
-		PROFILE_SCOPED()
+		PROFILE_SCOPED();
 		// convert vts (SOA) to vertex format (AOS)
 		vOut.resize(vtsIn.GetNumVerts());
 		for (Uint32 i = 0; i < vtsIn.GetNumVerts(); i++)
@@ -182,7 +198,7 @@ namespace
 	// convert vts (SOA) to vertex format (AOS)
 	void ConvertAOSToSOA(const std::vector<PosNormTangentUVVert> &vIn, VertexArray &vtsOut)
 	{
-		PROFILE_SCOPED()
+		PROFILE_SCOPED();
 		// convert vertex format (AOS) to vts (SOA)
 		vtsOut.Clear();
 		for (Uint32 i = 0; i < vIn.size(); i++)
@@ -194,7 +210,7 @@ namespace
 
 	void EliminateDuplicateVertices(std::vector<PosNormTangentUVVert> &vIn, std::vector<Uint16> &indices)
 	{
-		PROFILE_SCOPED()
+		PROFILE_SCOPED();
 		std::vector<Uint32> xrefs;
 		nv::Weld<PosNormTangentUVVert> weld;
 		weld(vIn, xrefs);
@@ -276,12 +292,15 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 
 	GenerateInitialMesh(vts, indices, trans, subdivsLocal);
 
-	// convert vts (SOA) to vertex format (AOS)
-	std::vector<PosNormTangentUVVert> vertices;
-	ConvertSOAToAOS(vts, vertices);
-
-	// eliminate duplicate vertices
-	EliminateDuplicateVertices(vertices, indices);
+	{
+		// convert vts (SOA) to vertex format (AOS)
+		std::vector<PosNormTangentUVVert> vertices;
+		ConvertSOAToAOS(vts, vertices);
+		// eliminate duplicate vertices
+		EliminateDuplicateVertices(vertices, indices);
+		// convert back to vts (SOA) from vertex format (AOS)
+		ConvertAOSToSOA(vertices, vts);
+	}
 
 	// setup a random number generator to choose the indices
 	const size_t num_deformations = deformations.size();
@@ -298,7 +317,7 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 
 
 	TFaceIndices faceIndices;
-	CreateVertexToFaceList(vertices.size(), indices, faceIndices);
+	CreateVertexToFaceList(vts.GetNumVerts(), indices, faceIndices);
 
 	// radius, depth, and the number of impacts
 	std::set<Uint16> usedIndices;
@@ -311,40 +330,41 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 		}
 		const Uint16 idx = prospective;
 		usedIndices.insert(idx);
-		const PosNormTangentUVVert &vert = vertices[idx];
+		const vector3f &vert = vts.position[idx];
+		const vector3f &norm = vts.normal[idx];
 
 		// find all vertices within the target radius
 		const float squareRad = (i.radius * scaleLocal) * (i.radius * scaleLocal);
 		std::vector<std::pair<Uint32, float>> idxDistSqr;
-		findIndexAndDistFrom(squareRad, vert.pos, vertices, idxDistSqr);
+		findIndexAndDistFrom(squareRad, vert, vts.position, idxDistSqr);
 
 		// move the vertices by the offset amount in the direction of the "vert" normal, scaled by distance from centre of the radius
 		for (auto vipair : idxDistSqr) {
 			const float sclOffset = (i.offset * scaleLocal) * (1.0f - (vipair.second / squareRad));
 			// blend between the centre -> vertex normal and the surface normal to reduce chance of interpenetrating geometry
-			const vector3f dirOffset = (vert.norm * sclOffset);
-			const vector3f pos = (vertices[vipair.first].pos.Normalized() * sclOffset);;
-			vertices[vipair.first].pos += lerp(pos, dirOffset, 0.75f);
+			const vector3f dirOffset = (norm * sclOffset);
+			const vector3f pos = (vts.position[vipair.first].Normalized() * sclOffset);;
+			vts.position[vipair.first] += lerp(pos, dirOffset, 0.75f);
 		}
 
 		// regenerate vertex normals after each deformation so the new normals affect future iterations
-		CalculatePerVertexNormals(vertices, indices, faceIndices);
+		CalculatePerVertexNormalsLimited(vts, indices, faceIndices, idxDistSqr);
 	}
 
-	// regenerate vertex normals a final time
-	CalculatePerVertexNormals(vertices, indices, faceIndices);
+	// regenerate all of the vertex normals
+	CalculatePerVertexNormals(vts, indices, faceIndices);
 
-	CalculateTangentArray(vertices, indices);
+	CalculateTangentArray(vts, indices);
 
 	// calculate the slope and "height"
 	float minDot = 2.0f;
 	float maxDot = 0.0f;
 	float minScl = 2.0f;
 	float maxScl = 0.0f;
-	for (size_t verti = 0; verti < vertices.size(); verti++)
+	for (size_t verti = 0; verti < vts.GetNumVerts(); verti++)
 	{
-		const vector3f pos = vertices[verti].pos.Normalized();
-		const vector3f nrm = vertices[verti].norm.Normalized();
+		const vector3f pos = vts.position[verti].Normalized();
+		const vector3f nrm = vts.normal[verti].Normalized();
 		const float dot = pos.Dot(nrm);
 		assert(dot >= -1.0f && dot <= 1.0f);
 		const float scl = pos.Length() - scale;
@@ -352,8 +372,8 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 		maxDot = std::max(maxDot, dot);
 		minScl = std::min(minScl, scl);
 		maxScl = std::max(maxScl, scl);
-		vertices[verti].uv0.x = 1.0f - Clamp(dot, 0.0f, 1.0f);
-		vertices[verti].uv0.y = Clamp(scl, 0.0f, 1.0f);
+		vts.uv0[verti].x = 1.0f - Clamp(dot, 0.0f, 1.0f);
+		vts.uv0[verti].y = Clamp(scl, 0.0f, 1.0f);
 	}
 	Output("min dot (%5.2f), max dot (%5.2f)\n", minDot, maxDot);
 	Output("min scl (%5.2f), max scl (%5.2f)\n", minScl, maxScl);
@@ -375,12 +395,12 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 	// vertices
 	PosNormTangentUVVert* vtxPtr = m_vertexBuffer->Map<PosNormTangentUVVert>(Graphics::BUFFER_MAP_WRITE);
 	assert(m_vertexBuffer->GetDesc().stride == sizeof(PosNormTangentUVVert));
-	for (size_t i = 0; i<vertices.size(); i++)
+	for (size_t i = 0; i<vts.GetNumVerts(); i++)
 	{
-		vtxPtr[i].pos = vertices[i].pos;
-		vtxPtr[i].norm = vertices[i].norm;
-		vtxPtr[i].tangent = vertices[i].tangent;
-		vtxPtr[i].uv0 = vertices[i].uv0;
+		vtxPtr[i].pos = vts.position[i];
+		vtxPtr[i].norm = vts.normal[i];
+		vtxPtr[i].tangent = vts.tangent[i];
+		vtxPtr[i].uv0 = vts.uv0[i];
 	}
 	m_vertexBuffer->Unmap();
 
@@ -397,31 +417,31 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 	static float s_lineScale(0.125f);
 	m_normLines.reset(new Graphics::Drawables::Lines());
 	std::vector<vector3f> lines;
-	lines.reserve(vertices.size() * 2);
-	for (size_t i = 0; i<vertices.size(); i++)
+	lines.reserve(vts.GetNumVerts() * 2);
+	for (size_t i = 0; i<vts.GetNumVerts(); i++)
 	{
-		lines.push_back(vertices[i].pos);
-		lines.push_back(vertices[i].pos + (vertices[i].norm * s_lineScale));
+		lines.push_back(vts.position[i]);
+		lines.push_back(vts.position[i] + (vts.normal[i] * s_lineScale));
 	}
-	m_normLines->SetData(vertices.size() * 2, &lines[0], Color::GREEN);
+	m_normLines->SetData(vts.GetNumVerts() * 2, &lines[0], Color::GREEN);
 
 	m_tangentLines.reset(new Graphics::Drawables::Lines());
 	lines.clear();
-	for (size_t i = 0; i<vertices.size(); i++)
+	for (size_t i = 0; i<vts.GetNumVerts(); i++)
 	{
-		lines.push_back(vertices[i].pos);
-		lines.push_back(vertices[i].pos + (vertices[i].tangent * s_lineScale));
+		lines.push_back(vts.position[i]);
+		lines.push_back(vts.position[i] + (vts.tangent[i] * s_lineScale));
 	}
-	m_tangentLines->SetData(vertices.size() * 2, &lines[0], Color::RED);
+	m_tangentLines->SetData(vts.GetNumVerts() * 2, &lines[0], Color::RED);
 
 	m_bitangentLines.reset(new Graphics::Drawables::Lines());
 	lines.clear();
-	for (size_t i = 0; i<vertices.size(); i++)
+	for (size_t i = 0; i<vts.GetNumVerts(); i++)
 	{
-		lines.push_back(vertices[i].pos);
-		lines.push_back(vertices[i].pos + (vertices[i].norm.Cross(vertices[i].tangent) * s_lineScale));
+		lines.push_back(vts.position[i]);
+		lines.push_back(vts.position[i] + (vts.normal[i].Cross(vts.tangent[i]) * s_lineScale));
 	}
-	m_bitangentLines->SetData(vertices.size() * 2, &lines[0], Color::BLUE);
+	m_bitangentLines->SetData(vts.GetNumVerts() * 2, &lines[0], Color::BLUE);
 #endif // DEBUG_RENDER_NORMALS
 }
 
