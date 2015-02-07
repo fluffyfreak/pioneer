@@ -101,6 +101,15 @@ void VertexArray::Add(const vector3f &v, const vector3f &n, const vector3f &t)
 	tangent.push_back(t);
 }
 
+void  VertexArray::Add(const vector3f &v, const vector3f &n, const vector2f &uv, const vector3f &t)
+{
+	PROFILE_SCOPED()
+	position.push_back(v);
+	normal.push_back(n);
+	uv0.push_back(uv);
+	tangent.push_back(t);
+}
+
 void VertexArray::Set(const Uint32 idx, const vector3f &v)
 {
 	PROFILE_SCOPED()

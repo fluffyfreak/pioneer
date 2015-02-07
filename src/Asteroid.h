@@ -38,7 +38,8 @@ private:
 	RefCountedPtr<Graphics::Material> m_material;;
 	Graphics::RenderState *m_renderState;
 
-	//std::unique_ptr<Surface> m_surface;
+	// Starts the icoshedron generation
+	void GenerateInitialMesh(Graphics::VertexArray &vts, std::vector<Uint16> &indices, const matrix4x4f &trans, const Sint32 subdivsLocal);
 	//add a new vertex, return the index
 	Sint32 AddVertex(Graphics::VertexArray&, const vector3f &v, const vector3f &n);
 	//add three vertex indices to form a triangle

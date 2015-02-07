@@ -528,10 +528,15 @@ void ModelViewer::GenerateAsteroid()
 #endif
 	// Create some deformaties
 	Asteroid::TDeformations deformations;
-	static Uint32 MIN_BUMPS(64);
-	static Uint32 MAX_BUMPS(256);
+	static Uint32 MIN_BUMPS(128);
+	static Uint32 MAX_BUMPS(384);
+#if 1
+	Uint32 _init[2] = { 12040, UNIVERSE_SEED };
+#else
 	Uint32 _init[2] = { SDL_GetTicks(), UNIVERSE_SEED };
+#endif
 	Random rar(_init, 2);
+	AddLog(stringf("Asteroid seed value (%0)", to_string(_init[0])));
 	const Uint32 numBumps = std::max(MIN_BUMPS, rar.Int32() % MAX_BUMPS);
 	for (Uint32 b = 0; b < numBumps; b++) {
 		Asteroid::TDeform def;

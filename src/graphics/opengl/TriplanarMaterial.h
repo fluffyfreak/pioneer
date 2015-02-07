@@ -17,7 +17,8 @@ namespace Graphics {
 		class TriplanarProgram : public Program {
 		public:
 			TriplanarProgram(const MaterialDescriptor &, int numLights = 0);
-			Uniform scale;
+			Uniform texScale01;
+			Uniform texScale23;
 		protected:
 			virtual void InitUniforms();
 		};

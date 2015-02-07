@@ -40,6 +40,7 @@ public:
 	void Add(const vector3f &v, const vector2f &uv);
 	void Add(const vector3f &v, const vector3f &normal, const vector2f &uv);
 	void Add(const vector3f &v, const vector3f &normal, const vector3f &tangent);
+	void Add(const vector3f &v, const vector3f &normal, const vector2f &uv, const vector3f &tangent);
 	//virtual void Reserve(unsigned int howmuch)
 
 	// don't mix these

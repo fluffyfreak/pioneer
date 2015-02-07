@@ -9,7 +9,8 @@ out vec2 texCoord0;
 out vec3 eyePos;
 out vec3 normal;
 out vec3 wNormal;
-out vec3 wCoords;
+out vec3 wCoords01;
+out vec3 wCoords23;
 #ifdef MAP_NORMAL
 out vec3 tangent;
 out vec3 bitangent;
@@ -20,7 +21,8 @@ uniform vec3 heatingNormal; // normalised
 out vec3 heatingDir;
 #endif // HEAT_COLOURING
 #endif // (NUM_LIGHTS > 0)
-uniform float scale;
+uniform float texScale01;
+uniform float texScale23;
 
 void main(void)
 {
@@ -33,7 +35,8 @@ void main(void)
 	eyePos = vec3(uViewMatrix * a_vertex);
 	normal = normalize(uNormalMatrix * vec4(a_normal, 1.0)).xyz;
 	wNormal = a_normal;
-	wCoords = a_vertex.xyz * scale;
+	wCoords01 = a_vertex.xyz * texScale01;
+	wCoords23 = a_vertex.xyz * texScale23;
 #ifdef MAP_NORMAL
 	tangent = normalize(uNormalMatrix * vec4(a_tangent, 1.0)).xyz;
 	bitangent = normalize(uNormalMatrix * vec4(cross(a_normal, a_tangent), 1.0)).xyz;

@@ -50,7 +50,8 @@ void TriplanarProgram::InitUniforms()
 {
 	Program::InitUniforms();
 
-	scale.Init("scale", m_program);
+	texScale01.Init("texScale01", m_program);
+	texScale23.Init("texScale23", m_program);
 }
 
 TriplanarMaterial::TriplanarMaterial()
@@ -87,7 +88,8 @@ void TriplanarMaterial::Apply()
 
 	TriplanarProgram *p = static_cast<TriplanarProgram*>(m_program);
 
-	p->scale.Set(1.0f/4.0f);
+	p->texScale01.Set(1.0f/4.0f);
+	p->texScale23.Set(1.0f/4.0f);
 
 	p->diffuse.Set(this->diffuse);
 	p->emission.Set(this->emissive);

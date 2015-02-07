@@ -6,6 +6,7 @@
 #include "collider/Weld.h"
 #include "gameconsts.h"
 #include "utils.h"
+#include "Easing.h"
 #include <set>
 
 using namespace Graphics;
@@ -24,6 +25,11 @@ namespace
 			return (pos == a.pos) && (norm == a.norm) && (uv0 == a.uv0) && (tangent == a.tangent);
 		}
 	};
+
+	struct VertFaces {
+		size_t faces[6];
+	};
+	typedef std::vector<VertFaces> TFaceIndices;
 
 	// Lengyel, Eric. “Computing Tangent Space Basis Vectors for an Arbitrary Mesh”. 
 	// Terathon Software 3D Graphics Library, 2001. 
@@ -100,21 +106,107 @@ namespace
 		delete[] tan1;
 	}
 
-	void CalculatePerVertexNormals(std::vector<PosNormTangentUVVert> &vertices, std::vector<Uint16> &indices, std::vector < std::vector<size_t> > &faceIndices) 
+	void CalculatePerVertexNormals(std::vector<PosNormTangentUVVert> &vertices, std::vector<Uint16> &indices, TFaceIndices &faceIndices)
 	{
 		PROFILE_SCOPED()
 		for (size_t verti = 0; verti < vertices.size(); verti++)
 		{
 			vector3f sumNorm(0.0f);
 			// Calculate and add the normal of every face that contains this vertex
-			for (auto fi : faceIndices[verti]) {
-				const size_t faceidx = (fi * 3);
+			for (size_t fi = 0; fi < 6; fi++) {
+				const size_t faceidx = (faceIndices[verti].faces[fi] * 3);
 				const vector3f v01 = (vertices[indices[faceidx + 0]].pos - vertices[indices[faceidx + 1]].pos).Normalized();
 				const vector3f v02 = (vertices[indices[faceidx + 0]].pos - vertices[indices[faceidx + 2]].pos).Normalized();
 				sumNorm += v01.Cross(v02);
 			}
 			vertices[verti].norm = sumNorm.Normalized();
 		}
+	}
+
+	void findIndexAndDistFrom(const float sqrRad, const vector3f &pos, std::vector<PosNormTangentUVVert> &verts, std::vector<std::pair<Uint32, float>> &idxDistSqr)
+	{
+		PROFILE_SCOPED()
+		// find all vertices within the target radius
+		for (Uint32 vidx = 0; vidx < verts.size(); vidx++) {
+			// test, store
+			const PosNormTangentUVVert &cur = verts[vidx];
+			const float distSqr = (pos - cur.pos).LengthSqr();
+			if (distSqr < sqrRad) {
+				idxDistSqr.push_back(std::make_pair(vidx, distSqr));
+			}
+		}
+	}
+	void CreateVertexToFaceList(const std::vector<PosNormTangentUVVert> &verts, const std::vector<Uint16> &indices, TFaceIndices &faceIndices)
+	{
+		PROFILE_SCOPED()
+		faceIndices.resize(verts.size());
+		// Create vertex to face listing
+		const size_t faceCount = indices.size() / 3;
+		for (size_t verti = 0; verti < verts.size(); verti++)
+		{
+			size_t face = 0;
+			// Find all of the faces that use this vertex
+			for (size_t f = 0; f < faceCount; f++)
+			{
+				const size_t idx = (f * 3);
+				if ((indices[idx + 0] == verti) || (indices[idx + 1] == verti) || (indices[idx + 2] == verti))
+				{
+					faceIndices[verti].faces[face] = f;
+					++face;
+				}
+			}
+		}
+	}
+
+	// convert vts (SOA) to vertex format (AOS)
+	void ConvertSOAToAOS(const VertexArray &vtsIn, std::vector<PosNormTangentUVVert> &vOut)
+	{
+		PROFILE_SCOPED()
+		// convert vts (SOA) to vertex format (AOS)
+		vOut.resize(vtsIn.GetNumVerts());
+		for (Uint32 i = 0; i < vtsIn.GetNumVerts(); i++)
+		{
+			vOut[i].pos = vtsIn.position[i];
+			vOut[i].norm = vtsIn.normal[i];
+			vOut[i].tangent = vtsIn.tangent[i];
+			vOut[i].uv0 = vtsIn.uv0[i];
+		}
+	}
+
+	// convert vts (SOA) to vertex format (AOS)
+	void ConvertAOSToSOA(const std::vector<PosNormTangentUVVert> &vIn, VertexArray &vtsOut)
+	{
+		PROFILE_SCOPED()
+		// convert vertex format (AOS) to vts (SOA)
+		vtsOut.Clear();
+		for (Uint32 i = 0; i < vIn.size(); i++)
+		{
+			const PosNormTangentUVVert &v = vIn[i];
+			vtsOut.Add(v.pos, v.norm, v.uv0, v.tangent);
+		}
+	}
+
+	void EliminateDuplicateVertices(std::vector<PosNormTangentUVVert> &vIn, std::vector<Uint16> &indices)
+	{
+		PROFILE_SCOPED()
+		std::vector<Uint32> xrefs;
+		nv::Weld<PosNormTangentUVVert> weld;
+		weld(vIn, xrefs);
+
+		// Remap faces.
+		const size_t faceCount = indices.size() / 3;
+		for (size_t f = 0; f < faceCount; f++)
+		{
+			const size_t idx = (f * 3);
+			indices[idx + 0] = xrefs.at(indices[idx + 0]);
+			indices[idx + 1] = xrefs.at(indices[idx + 1]);
+			indices[idx + 2] = xrefs.at(indices[idx + 2]);
+		}
+	}
+
+	// Where should this live?
+	inline vector3f lerp(const vector3f &start, const vector3f &end, const float n) {
+		return (start * (1.0f - n)) + (end * n);
 	}
 }
 
@@ -134,24 +226,11 @@ static const Sint32 icosahedron_faces[20][3] = {
 	{7,10,3}, {7,6,10}, {7,11,6}, {11,0,6}, {0,1,6},
 	{6,1,10}, {9,0,11}, {9,11,2}, {9,2,5}, {7,2,11}
 };
-#pragma optimize("",off)
-Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::RenderState *state,
-	const TDeformations &deformations, const Sint32 subdivs, const float scale)
+
+
+void Asteroid::GenerateInitialMesh(VertexArray &vts, std::vector<Uint16> &indices, const matrix4x4f &trans, const Sint32 subdivsLocal)
 {
 	PROFILE_SCOPED();
-	
-	m_material = mat;
-	m_renderState = state;
-
-	const Sint32 subdivsLocal = Clamp(subdivs, 0, MAX_SUBDIVS);
-	const float scaleLocal = fabs(scale);
-	matrix4x4f trans = matrix4x4f::Identity();
-	trans.Scale(scaleLocal, scaleLocal, scaleLocal);
-
-	//reserve some data
-	VertexArray vts(ATTRIB_POSITION | ATTRIB_NORMAL | ATTRIB_UV0 | ATTRIB_TANGENT, 65536);
-	std::vector<Uint16> indices;
-
 	//initial vertices
 	Sint32 vi[12];
 	for (Sint32 i = 0; i < 12; i++) {
@@ -170,33 +249,33 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 			vi[icosahedron_faces[i][2]],
 			subdivsLocal);
 	}
+}
 
+Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::RenderState *state,
+	const TDeformations &deformations, const Sint32 subdivs, const float scale)
+{
+	PROFILE_SCOPED();
+	
+	m_material = mat;
+	m_renderState = state;
+
+	const Sint32 subdivsLocal = Clamp(subdivs, 0, MAX_SUBDIVS);
+	const float scaleLocal = fabs(scale);
+	matrix4x4f trans = matrix4x4f::Identity();
+	trans.Scale(scaleLocal, scaleLocal, scaleLocal);
+
+	//reserve some data
+	VertexArray vts(ATTRIB_POSITION | ATTRIB_NORMAL | ATTRIB_UV0 | ATTRIB_TANGENT, 65536);
+	std::vector<Uint16> indices;
+
+	GenerateInitialMesh(vts, indices, trans, subdivsLocal);
+
+	// convert vts (SOA) to vertex format (AOS)
 	std::vector<PosNormTangentUVVert> vertices;
-	vertices.resize(vts.GetNumVerts());
-	for (Uint32 i = 0; i < vts.GetNumVerts(); i++)
-	{
-		vertices[i].pos = vts.position[i];
-		vertices[i].norm = vts.normal[i];
-		vertices[i].tangent = vts.tangent[i];
-		vertices[i].uv0 = vts.uv0[i];
-	}
+	ConvertSOAToAOS(vts, vertices);
 
 	// eliminate duplicate vertices
-	{
-		std::vector<Uint32> xrefs;
-		nv::Weld<PosNormTangentUVVert> weld;
-		weld(vertices, xrefs);
-
-		// Remap faces.
-		const size_t faceCount = indices.size() / 3;
-		for (size_t f = 0; f < faceCount; f++)
-		{
-			const size_t idx = (f * 3);
-			indices[idx + 0] = xrefs.at(indices[idx + 0]);
-			indices[idx + 1] = xrefs.at(indices[idx + 1]);
-			indices[idx + 2] = xrefs.at(indices[idx + 2]);
-		}
-	}
+	EliminateDuplicateVertices(vertices, indices);
 
 	// setup a random number generator to choose the indices
 	const size_t num_deformations = deformations.size();
@@ -212,22 +291,8 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 	Random rand(&_init[0], s);
 
 
-	std::vector < std::vector<size_t> > faceIndices;
-	faceIndices.resize(vertices.size());
-	// Create vertex to face listing
-	const size_t faceCount = indices.size() / 3;
-	for (size_t verti = 0; verti < vertices.size(); verti++)
-	{
-		// Find all of the faces that use this vertex
-		for (size_t f = 0; f < faceCount; f++)
-		{
-			const size_t idx = (f * 3);
-			if ((indices[idx + 0] == verti) || (indices[idx + 1] == verti) || (indices[idx + 2] == verti))
-			{
-				faceIndices[verti].push_back(f);
-			}
-		}
-	}
+	TFaceIndices faceIndices;
+	CreateVertexToFaceList(vertices, indices, faceIndices);
 
 	// radius, depth, and the number of impacts
 	std::set<Uint16> usedIndices;
@@ -245,26 +310,15 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 		// find all vertices within the target radius
 		const float squareRad = (i.radius * scaleLocal) * (i.radius * scaleLocal);
 		std::vector<std::pair<Uint32, float>> idxDistSqr;
-		for (Uint32 vidx = 0; vidx < vertices.size(); vidx++) {
-			// skip the current vertex
-			if (vidx == idx)
-				continue;
-
-			// test, store
-			const PosNormTangentUVVert &cur = vertices[vidx];
-			const float distSqr = (vert.pos - cur.pos).LengthSqr();
-			if (distSqr < squareRad) {
-				idxDistSqr.push_back(std::make_pair(vidx, distSqr));
-			}
-		}
-		// add the current verteex too of course
-		idxDistSqr.push_back(std::make_pair(idx, 0.0f));
+		findIndexAndDistFrom(squareRad, vert.pos, vertices, idxDistSqr);
 
 		// move the vertices by the offset amount in the direction of the "vert" normal, scaled by distance from centre of the radius
 		for (auto vipair : idxDistSqr) {
 			const float sclOffset = (i.offset * scaleLocal) * (1.0f - (vipair.second / squareRad));
+			// blend between the centre -> vertex normal and the surface normal to reduce chance of interpenetrating geometry
 			const vector3f dirOffset = (vert.norm * sclOffset);
-			vertices[vipair.first].pos += dirOffset;
+			const vector3f pos = (vertices[vipair.first].pos.Normalized() * sclOffset);;
+			vertices[vipair.first].pos += lerp(pos, dirOffset, 0.75f);
 		}
 
 		// regenerate vertex normals after each deformation so the new normals affect future iterations
@@ -277,19 +331,26 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 	CalculateTangentArray(vertices, indices);
 
 	// calculate the slope and "height"
-	float min = 2.0f;
-	float max = 0.0f;
+	float minDot = 2.0f;
+	float maxDot = 0.0f;
+	float minScl = 2.0f;
+	float maxScl = 0.0f;
 	for (size_t verti = 0; verti < vertices.size(); verti++)
 	{
 		const vector3f pos = vertices[verti].pos.Normalized();
-		const float dot = 1.0f - pos.Dot(vertices[verti].norm.Normalized());
-		min = std::min(min, dot);
-		max = std::max(max, dot);
-		vertices[verti].uv0.x = Clamp(dot, 0.0f, 1.0f);
-		vertices[verti].uv0.y = Clamp(pos.Length() - scale, 0.0f, 1.0f);
+		const vector3f nrm = vertices[verti].norm.Normalized();
+		const float dot = pos.Dot(nrm);
+		assert(dot >= -1.0f && dot <= 1.0f);
+		const float scl = pos.Length() - scale;
+		minDot = std::min(minDot, dot);
+		maxDot = std::max(maxDot, dot);
+		minScl = std::min(minScl, scl);
+		maxScl = std::max(maxScl, scl);
+		vertices[verti].uv0.x = 1.0f - Clamp(dot, 0.0f, 1.0f);
+		vertices[verti].uv0.y = Clamp(scl, 0.0f, 1.0f);
 	}
-	assert(min <= max);
-	Output("min (%5.2f), max (%5.2f)\n", min, max);
+	Output("min dot (%5.2f), max dot (%5.2f)\n", minDot, maxDot);
+	Output("min scl (%5.2f), max scl (%5.2f)\n", minScl, maxScl);
 
 	//Create vtx & index buffers and copy data
 	VertexBufferDesc vbd;

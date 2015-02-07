@@ -16,7 +16,8 @@ in vec4 vertexColor;
 in vec3 eyePos;
 in vec3 normal;
 in vec3 wNormal;
-in vec3 wCoords;
+in vec3 wCoords01;
+in vec3 wCoords23;
 #ifdef MAP_NORMAL
 in vec3 tangent;
 in vec3 bitangent;
@@ -33,11 +34,22 @@ uniform Material material;
 
 out vec4 frag_color;
 
-vec4 getTriplanarTex(in vec3 blending, in sampler2D sampler)
+vec3 blend(in vec4 texB, in vec4 texA, in float t)
 {
-	vec4 xaxis = texture2D( sampler, wCoords.yz);
-	vec4 yaxis = texture2D( sampler, wCoords.xz);
-	vec4 zaxis = texture2D( sampler, wCoords.xy);
+    float depth = 0.2;
+    float ma = max(texA.w + t, texB.w + (1.0 - t)) - depth;
+
+    float b1 = max(texA.w + t - ma, 0);
+    float b2 = max(texB.w + (1.0 - t) - ma, 0);
+
+    return (texA.xyz * b1 + texB.xyz * b2) / (b1 + b2);
+}
+
+vec4 getTriplanarTex(in vec3 blending, in vec3 coords, in sampler2D sampler)
+{
+	vec4 xaxis = texture2D( sampler, coords.yz);
+	vec4 yaxis = texture2D( sampler, coords.xz);
+	vec4 zaxis = texture2D( sampler, coords.xy);
 	// blend the results of the 3 planar projections.
 	vec4 tex = (xaxis * blending.x) + (yaxis * blending.y) + (zaxis * blending.z);
 	return tex;
@@ -93,16 +105,19 @@ void main(void)
 	blending /= vec3(b, b, b);
 	
 	//diffuse + intensity
-	vec4 tex0 = getTriplanarTex(blending, texture0);
+	vec4 tex0 = getTriplanarTex(blending, wCoords01, texture0);
 	
 	//normal(enc) + specular + AO
-	vec4 tex1 = getTriplanarTex(blending, texture1);
+	vec4 tex1 = getTriplanarTex(blending, wCoords01, texture1);
 	
 	//diffuse + intensity
-	vec4 tex2 = getTriplanarTex(blending, texture2);
+	vec4 tex2 = getTriplanarTex(blending, wCoords23, texture2);
 	
 	//normal(enc) + specular + AO
-	vec4 tex3 = getTriplanarTex(blending, texture3);
+	vec4 tex3 = getTriplanarTex(blending, wCoords23, texture3);
+	
+	//mix(0.33, 0.66, texCoord0.x)
+	//color *= vec4(blend(tex0, tex2, texCoord0.x), 1.0);
 	
 	color *= vec4(mix(tex0.xyz, tex2.xyz, texCoord0.x), 1.0);
 	float spec = mix(tex1.z, tex3.z, texCoord0.x);
