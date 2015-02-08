@@ -20,6 +20,7 @@ struct BVHNode;
 class GeomTree {
 public:
 	GeomTree(const int numVerts, const int numTris, const std::vector<vector3f> &vertices, const Uint16 *indices, const unsigned int *triflags);
+	GeomTree(const std::vector<vector3f> &vertices, const std::vector<Uint16> &indices, const std::vector<Uint32> &triflags);
 	GeomTree(Serializer::Reader &rd);
 	~GeomTree();
 
@@ -75,6 +76,7 @@ public:
 	void Save(Serializer::Writer &wr) const;
 
 private:
+	void BuildTreeData();
 	void RayTriIntersect(int numRays, const vector3f &origin, const vector3f *dirs, int triIdx, isect_t *isects) const;
 
 	int m_numVertices;
