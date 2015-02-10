@@ -118,6 +118,7 @@ namespace AsteroidFunctions
 		PROFILE_SCOPED();
 		for (size_t verti = 0; verti < vts.GetNumVerts(); verti++)
 		{
+			assert(faceIndices[verti].count > 0);
 			vector3f sumNorm(0.0f);
 			// Calculate and add the normal of every face that contains this vertex
 			for (size_t fi = 0; fi < faceIndices[verti].count; fi++) {
@@ -168,7 +169,7 @@ namespace AsteroidFunctions
 
 		// Create vertex to face listing
 		const size_t faceCount = indices.size() / 3;
-		
+	
 		// Find all of the faces that use this vertex
 		faceIndices.resize(numverts);
 		for (size_t f = 0; f < faceCount; f++)
@@ -178,6 +179,45 @@ namespace AsteroidFunctions
 			faceIndices[indices[idx + 1]].Add(f);
 			faceIndices[indices[idx + 2]].Add(f);
 		}
+#if 0
+		TFaceIndices localIndices;
+		localIndices.resize(numverts);
+		// Create vertex to face listing
+		for (size_t verti = 0; verti < numverts; verti++)
+		{
+			// Find all of the faces that use this vertex
+			for (size_t f = 0; f < faceCount; f++)
+			{
+				const size_t idx = (f * 3);
+				if ((indices[idx + 0] == verti) || (indices[idx + 1] == verti) || (indices[idx + 2] == verti))
+				{
+					localIndices[verti].Add(f);
+				}
+			}
+		}
+
+		// compare
+		if( localIndices.size() == faceIndices.size() ) {
+			for(size_t ic = 0; ic<localIndices.size(); ic++) {
+				if( localIndices[ic].count == faceIndices[ic].count ) {
+					for(size_t il=0; il<localIndices[ic].count; il++ ) {
+						if(localIndices[ic].faces[il] == faceIndices[ic].faces[il]) {
+							Output("ok\n");
+						} else {
+							assert(false);
+							Output("bad\n");
+						}
+					}
+				} else {
+					assert(false);
+					Output("bad\n");
+				}
+			}
+		} else {
+			assert(false);
+			Output("bad\n");
+		}
+#endif
 	}
 
 	// convert vts (SOA) to vertex format (AOS)
@@ -382,7 +422,7 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 		const vector3f pos = vts.position[verti].Normalized();
 		const vector3f nrm = vts.normal[verti].Normalized();
 		const float dot = pos.Dot(nrm);
-		assert(dot >= -1.0f && dot <= 1.0f);
+		//assert(dot >= -1.0f && dot <= 1.0f);
 		const float scl = (((pos.Length() - scale) - minScl) / (minScl - maxScl));
 		minDot = std::min(minDot, dot);
 		maxDot = std::max(maxDot, dot);
