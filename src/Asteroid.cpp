@@ -392,6 +392,33 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 	Output("min dot (%5.2f), max dot (%5.2f)\n", minDot, maxDot);
 	Output("min scl (%5.2f), max scl (%5.2f)\n", minScl, maxScl);
 
+	{
+		m_collMesh.Reset(new CollMesh());
+		//copy vertex positions from buffer
+		std::vector<vector3f> pos;
+		pos.reserve(vts.GetNumVerts());
+		for (size_t i = 0; i < vts.GetNumVerts(); i++) {
+			pos.push_back(vts.position[i]);
+		}
+		const size_t numTris = indices.size() / 3;
+		std::vector<Uint32> triFlags;
+		triFlags.resize(numTris);
+		memset(&triFlags[0], 0, sizeof(Uint32) * numTris);
+
+		//create geomtree takes ownership (copy) of data
+		GeomTree *gt = new GeomTree(pos, indices, triFlags);
+		m_collMesh->SetGeomTree(gt);
+		m_collMesh->SetNumTriangles(numTris);
+		const double maxRadius = m_collMesh->GetAabb().GetRadius();
+
+		//static geom
+		m_geom.reset(new Geom(m_collMesh->GetGeomTree()));
+		m_geom->SetUserData(static_cast<void*>(this));
+		//m_geom->MoveTo(GetOrient(), GetPosition());
+
+		//SetPhysRadius(maxRadius);
+	}
+
 	CreateAndPopulateRenderBuffers(vts, indices, renderer);
 }
 

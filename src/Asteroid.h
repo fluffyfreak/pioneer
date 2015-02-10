@@ -5,6 +5,8 @@
 #define _ASTEROID_H
 
 #include "libs.h"
+#include "CollMesh.h"
+#include "collider/Geom.h"
 #include "graphics/Drawables.h"
 
 //------------------------------------------------------------
@@ -37,6 +39,9 @@ private:
 	std::unique_ptr<Graphics::IndexBuffer> m_indexBuffer;
 	RefCountedPtr<Graphics::Material> m_material;
 	Graphics::RenderState *m_renderState;
+
+	RefCountedPtr<CollMesh> m_collMesh;
+	std::unique_ptr<Geom> m_geom; //static geom
 
 	// Starts the icoshedron generation
 	void GenerateInitialMesh(Graphics::VertexArray &vts, std::vector<Uint16> &indices, const matrix4x4f &trans, const Sint32 subdivsLocal);
