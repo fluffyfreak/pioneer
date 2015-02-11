@@ -268,7 +268,7 @@ namespace AsteroidFunctions
 		}
 	}
 
-	Uint32 EliminateDuplicateVertices(std::vector<PosNormTangentUVVert> &vIn, std::vector<Uint16> &indices)
+	Uint32 EliminateDuplicateVertices(std::vector<PosNormTangentUVVert> &vIn, std::vector<Uint32> &indices)
 	{
 		PROFILE_SCOPED();
 		std::vector<Uint32> xrefs;
@@ -296,7 +296,7 @@ namespace AsteroidFunctions
 
 using namespace AsteroidFunctions;
 
-static const Sint32 MAX_SUBDIVS = 5;
+static const Sint32 MAX_SUBDIVS = 6;
 static const float ICOSX = 0.525731112119133f;
 static const float ICOSZ = 0.850650808352039f;
 
@@ -314,7 +314,7 @@ static const Sint32 icosahedron_faces[20][3] = {
 };
 
 
-void Asteroid::GenerateInitialMesh(VertexArray &vts, std::vector<Uint16> &indices, const matrix4x4f &trans, const Sint32 subdivsLocal)
+void Asteroid::GenerateInitialMesh(VertexArray &vts, std::vector<Uint32> &indices, const matrix4x4f &trans, const Sint32 subdivsLocal)
 {
 	PROFILE_SCOPED();
 	//initial vertices
@@ -351,20 +351,31 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 	trans.Scale(scaleLocal, scaleLocal, scaleLocal);
 
 	//reserve some data
-	VertexArray vts(ATTRIB_POSITION | ATTRIB_NORMAL | ATTRIB_UV0 | ATTRIB_TANGENT, 65536);
-	std::vector<Uint16> indices;
-
-	GenerateInitialMesh(vts, indices, trans, subdivsLocal);
+	VertexArray vts(ATTRIB_POSITION | ATTRIB_NORMAL | ATTRIB_UV0 | ATTRIB_TANGENT, 131072);
+	std::vector<Uint16> indices; // we only allow 16bit indices ingame so this will hold the final indices
 
 	{
-		PROFILE_SCOPED_DESC("Weld");
-		// convert vts (SOA) to vertex format (AOS)
-		std::vector<PosNormTangentUVVert> vertices;
-		ConvertSOAToAOS(vts, vertices);
-		// eliminate duplicate vertices
-		const Uint32 outCount = EliminateDuplicateVertices(vertices, indices);
-		// convert back to vts (SOA) from vertex format (AOS)
-		ConvertAOSToSOA(vertices, vts);
+		PROFILE_SCOPED_DESC("Generation");
+		// 32-bit indices during generation, before the number of vertices is reduced via welding	
+		std::vector<Uint32> indices32;
+		indices32.reserve(250000);
+		GenerateInitialMesh(vts, indices32, trans, subdivsLocal);
+
+		{
+			PROFILE_SCOPED_DESC("Weld");
+			// convert vts (SOA) to vertex format (AOS)
+			std::vector<PosNormTangentUVVert> vertices;
+			ConvertSOAToAOS(vts, vertices);
+			// eliminate duplicate vertices
+			const Uint32 outCount = EliminateDuplicateVertices(vertices, indices32);
+			indices.resize(indices32.size());
+			for(size_t i32 = 0; i32<indices32.size(); i32++) {
+				assert(indices32[i32]<USHRT_MAX);
+				indices[i32] = indices32[i32];
+			}
+			// convert back to vts (SOA) from vertex format (AOS)
+			ConvertAOSToSOA(vertices, vts);
+		}
 	}
 
 	// setup a random number generator to choose the indices
@@ -429,7 +440,7 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 	}
 
 	// Deform the surface using some wapring noise
-	float offsetScaling = (scaleLocal * 0.1f); // TODO: this shoud be dependent on the size of the asteroid being generated
+	float offsetScaling = (scaleLocal * 0.1f); // TODO: this shoud be dependent on the size of the asteroid being generated?
 	for (size_t verti = 0; verti < vts.GetNumVerts(); verti++)
 	{
 		PROFILE_SCOPED_DESC("Warping");
@@ -437,7 +448,7 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 		const vector3f nrm = vts.normal[verti].Normalized();
 		const float dot = Clamp(1.0f - pos.Dot(nrm), 0.0f, 1.0f);
 		// Scale the deformation according the slope flat surafces should be smooth, vertical get all the noise.
-		const float offset = (dot * Warp(pos)) * offsetScaling;
+		const float offset = (dot * Clamp(Warp(pos), 0.0f, 1.0f)) * offsetScaling;
 		vts.position[verti] = vts.position[verti] + (nrm * offset);
 	}
 
@@ -567,7 +578,7 @@ Sint32 Asteroid::AddVertex(VertexArray &vts, const vector3f &v, const vector3f &
 	return vts.GetNumVerts() - 1;
 }
 
-void Asteroid::AddTriangle(std::vector<Uint16> &indices, const Sint32 i1, const Sint32 i2, const Sint32 i3)
+void Asteroid::AddTriangle(std::vector<Uint32> &indices, const Sint32 i1, const Sint32 i2, const Sint32 i3)
 {
 	PROFILE_SCOPED()
 	indices.push_back(i1);
@@ -575,7 +586,7 @@ void Asteroid::AddTriangle(std::vector<Uint16> &indices, const Sint32 i1, const 
 	indices.push_back(i3);
 }
 
-void Asteroid::Subdivide(VertexArray &vts, std::vector<Uint16> &indices,
+void Asteroid::Subdivide(VertexArray &vts, std::vector<Uint32> &indices,
 	const matrix4x4f &trans, const vector3f &v1, const vector3f &v2, const vector3f &v3,
 	const Sint32 i1, const Sint32 i2, const Sint32 i3, const Sint32 depth)
 {

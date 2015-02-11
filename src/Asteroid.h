@@ -39,12 +39,12 @@ private:
 	Graphics::RenderState *m_renderState;
 
 	// Starts the icoshedron generation
-	void GenerateInitialMesh(Graphics::VertexArray &vts, std::vector<Uint16> &indices, const matrix4x4f &trans, const Sint32 subdivsLocal);
+	void GenerateInitialMesh(Graphics::VertexArray &vts, std::vector<Uint32> &indices, const matrix4x4f &trans, const Sint32 subdivsLocal);
 	// add a new vertex, return the index
 	Sint32 AddVertex(Graphics::VertexArray&, const vector3f &v, const vector3f &n);
 	// add three vertex indices to form a triangle
-	void AddTriangle(std::vector<Uint16>&, const Sint32 i1, const Sint32 i2, const Sint32 i3);
-	void Subdivide(Graphics::VertexArray&, std::vector<Uint16>&,
+	void AddTriangle(std::vector<Uint32>&, const Sint32 i1, const Sint32 i2, const Sint32 i3);
+	void Subdivide(Graphics::VertexArray&, std::vector<Uint32>&,
 		const matrix4x4f &trans, const vector3f &v1, const vector3f &v2, const vector3f &v3,
 		const Sint32 i1, const Sint32 i2, const Sint32 i3, const Sint32 depth);
 	// create the render buffers
