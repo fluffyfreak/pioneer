@@ -7,6 +7,7 @@
 #include "gameconsts.h"
 #include "utils.h"
 #include "Easing.h"
+#include "perlin.h"
 #include <set>
 
 using namespace Graphics;
@@ -16,6 +17,25 @@ using namespace Graphics::Drawables;
 
 namespace AsteroidFunctions
 {
+	static const vector3d v2(2.0f, 2.0f, 2.0f);
+	float fbm(const vector3f &pIN)
+	{
+		vector3d p(pIN);
+		float n = 0.0;
+		float scale = 1.0;
+		for (int i = 0; i<8; i++) {
+			n += noise(p) * scale;
+			p *= v2;
+			scale *= 0.5;
+		}
+		return n;
+	}
+
+	float Warp(const vector3f &p)
+	{
+		return fbm(p + vector3f(fbm(p + vector3f(fbm(p)))));
+	}
+
 	struct PosNormTangentUVVert {
 		vector3f pos;
 		vector3f norm;
@@ -408,12 +428,25 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 		CalculatePerVertexNormalsLimited(vts, indices, faceIndices, idxDistSqr);
 	}
 
+	// Deform the surface using some wapring noise
+	float offsetScaling = (scaleLocal * 0.1f); // TODO: this shoud be dependent on the size of the asteroid being generated
+	for (size_t verti = 0; verti < vts.GetNumVerts(); verti++)
+	{
+		PROFILE_SCOPED_DESC("Warping");
+		const vector3f pos = vts.position[verti].Normalized();
+		const vector3f nrm = vts.normal[verti].Normalized();
+		const float dot = Clamp(1.0f - pos.Dot(nrm), 0.0f, 1.0f);
+		// Scale the deformation according the slope flat surafces should be smooth, vertical get all the noise.
+		const float offset = (dot * Warp(pos)) * offsetScaling;
+		vts.position[verti] = vts.position[verti] + (nrm * offset);
+	}
+
 	// regenerate all of the vertex normals
 	CalculatePerVertexNormals(vts, indices, faceIndices);
 
 	CalculateTangentArray(vts, indices);
 
-	// calculate the slope and "height"
+	// calculate the final slope and "height"
 	float minDot = 2.0f;
 	float maxDot = 0.0f;
 	for (size_t verti = 0; verti < vts.GetNumVerts(); verti++)
@@ -422,7 +455,7 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 		const vector3f pos = vts.position[verti].Normalized();
 		const vector3f nrm = vts.normal[verti].Normalized();
 		const float dot = pos.Dot(nrm);
-		//assert(dot >= -1.0f && dot <= 1.0f);
+		//assert(dot >= -1.0f && dot <= 1.0f); - commented out because the fast normalise sometimes produces values greater than 1.0f
 		const float scl = (((pos.Length() - scale) - minScl) / (minScl - maxScl));
 		minDot = std::min(minDot, dot);
 		maxDot = std::max(maxDot, dot);
@@ -431,6 +464,12 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 	}
 	Output("min dot (%5.2f), max dot (%5.2f)\n", minDot, maxDot);
 	Output("min scl (%5.2f), max scl (%5.2f)\n", minScl, maxScl);
+
+	// TODO: decorate
+	
+	// TODO: generate LODs
+
+	// TODO: create collision mesh/GoemTree etc
 
 	CreateAndPopulateRenderBuffers(vts, indices, renderer);
 }
