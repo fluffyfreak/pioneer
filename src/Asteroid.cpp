@@ -15,6 +15,160 @@ using namespace Graphics::Drawables;
 
 //------------------------------------------------------------
 
+typedef std::pair<Uint32, float> TIdxDist;
+typedef std::vector<TIdxDist> TIdxDistSqr;
+
+//------------------------------------------------------------
+
+namespace Spatial
+{
+	static const size_t kNUM_CHILDREN = 8;
+	class Octree {
+	public:
+		struct OctNode;
+		typedef bool(*callback)(OctNode &o, const float sqrRad, const vector3f &pos, TIdxDistSqr &idxDistSqr, const bool bRemove);
+
+		Octree(const float dimensions, const size_t maxDepth) : m_maxDepth(maxDepth) {
+			PROFILE_SCOPED();
+			m_root.reset(new OctNode(vector3f(0.0f), dimensions, 0, maxDepth));
+		}
+
+		void Build(std::vector<vector3f> &verts) {
+			PROFILE_SCOPED();
+			const size_t numVerts = verts.size();
+			for (size_t i = 0; i < numVerts; i++) {
+				m_root->Insert(verts[i], i);
+			}
+		}
+
+		void Insert(const vector3f &pos, const size_t idx) {
+			PROFILE_SCOPED();
+			m_root->Insert(pos, idx);
+		}
+
+		bool Traverse(callback proc, const float sqrRad, const vector3f &pos, TIdxDistSqr &idxDistSqr, const bool bRemove) {
+			PROFILE_SCOPED();
+			return m_root->Traverse(proc, sqrRad, pos, idxDistSqr, bRemove);
+		}
+
+		void Clear() {
+			PROFILE_SCOPED();
+			m_root->Clear();
+		}
+
+		struct OctNode {
+			OctNode(const vector3f &centre, const float radius, const size_t depth, const size_t maxDepth)
+				: m_centre(centre), m_radius(radius), m_depth(depth), m_maxDepth(maxDepth)
+			{
+				PROFILE_SCOPED();
+				if (m_depth < m_maxDepth) {
+					const float half_rad = (radius * 0.5f);
+					const size_t nextDepth = (depth + 1);
+					for (size_t i = 0; i < kNUM_CHILDREN; i++) {
+						m_children[i] = new OctNode(centre + (s_boundsOffsetTable[i] * radius), half_rad, nextDepth, m_maxDepth);
+					}
+				} else {
+					for (size_t i = 0; i < kNUM_CHILDREN; i++) {
+						m_children[i] = nullptr;
+					}
+				}
+			}
+
+			~OctNode() {
+				PROFILE_SCOPED();
+				for (size_t i = 0; i < kNUM_CHILDREN; i++) {
+					delete m_children[i];
+					m_children[i] = nullptr;
+				}
+			}
+
+			void Insert(const vector3f &pos, const size_t idx)
+			{
+				PROFILE_SCOPED();
+
+				if (m_children[0]) {
+					// pass onto children
+					// calculate the points determinant
+					size_t code = 0;
+					if (pos.x > m_centre.x) code |= 1;
+					if (pos.y > m_centre.y) code |= 2;
+					if (pos.z > m_centre.z) code |= 4;
+					// pass
+					m_children[code]->Insert(pos, idx);
+				} else {
+					// leaf node
+					m_points.push_back(TPoint(pos, idx));
+				}
+			}
+
+			bool Traverse(callback proc, const float sqrRad, const vector3f &pos, TIdxDistSqr &idxDistSqr, const bool bRemove)
+			{
+				PROFILE_SCOPED();
+
+				// recursively traverse my children
+				if (m_children[0]) {
+					for (size_t i = 0; i < kNUM_CHILDREN; i++) {
+						m_children[i]->Traverse(proc, sqrRad, pos, idxDistSqr, bRemove);
+					}
+				} else {
+					// Call the callback on this node
+					return proc(*this, sqrRad, pos, idxDistSqr, bRemove);
+				}
+
+				return true;
+			}
+
+			void Clear()
+			{
+				PROFILE_SCOPED();
+
+				m_points.clear();
+				if (m_depth < m_maxDepth) {
+					for (size_t i = 0; i < kNUM_CHILDREN; i++) {
+						m_children[i]->Clear();
+					}
+				}
+			}
+
+			// once set nothing changes these
+			const vector3f m_centre;
+			const float m_radius;
+			const size_t m_depth;
+			const size_t m_maxDepth;
+
+			OctNode *m_children[kNUM_CHILDREN];
+
+			struct TPoint {
+				TPoint(const vector3f &pos, const size_t idx) : m_pos(pos), m_idx(idx) {}
+				vector3f m_pos;
+				size_t m_idx;
+			};
+			std::vector<TPoint> m_points; // the actual data
+		};
+
+	private:
+		std::unique_ptr<OctNode> m_root;
+		const size_t m_maxDepth;
+
+		static const vector3f s_boundsOffsetTable[kNUM_CHILDREN];
+	};
+
+	// define the offset table
+	const vector3f Octree::s_boundsOffsetTable[kNUM_CHILDREN] =
+	{
+		{ -0.5, -0.5, -0.5 },
+		{ +0.5, -0.5, -0.5 },
+		{ -0.5, +0.5, -0.5 },
+		{ +0.5, +0.5, -0.5 },
+		{ -0.5, -0.5, +0.5 },
+		{ +0.5, -0.5, +0.5 },
+		{ -0.5, +0.5, +0.5 },
+		{ +0.5, +0.5, +0.5 }
+	};
+}
+
+//------------------------------------------------------------
+
 namespace AsteroidFunctions
 {
 	static const vector3d v2(2.0f, 2.0f, 2.0f);
@@ -169,11 +323,45 @@ namespace AsteroidFunctions
 		}
 	}
 
-	void findIndexAndDistFrom(const float sqrRad, const vector3f &pos, std::vector<vector3f> &verts, std::vector<std::pair<Uint32, float>> &idxDistSqr)
+	bool ProcessNode(Spatial::Octree::OctNode &o, const float sqrRad, const vector3f &pos, TIdxDistSqr &idxDistSqr, const bool bRemove)
 	{
 		PROFILE_SCOPED();
+		if (((pos - o.m_centre).Length() - (o.m_radius * 2.0f)) < sqrRad) {
+			// push back all verts within this node - process them later
+			std::vector<Spatial::Octree::OctNode::TPoint>::iterator i = o.m_points.begin();
+			while(i != o.m_points.end()) 
+			{
+				const float distSqr = (pos - i->m_pos).LengthSqr();
+				if (distSqr < sqrRad) {
+					idxDistSqr.push_back(std::make_pair(i->m_idx, distSqr));
+					if (bRemove) {
+						o.m_points.erase(i);
+					} else {
+						++i;
+					}
+				} else {
+					++i;
+				}
+			}
+			return true;
+		} 
+		return false;
+	}
+
+	void findIndexAndDistFrom(Spatial::Octree *pOctree, const float sqrRad, const vector3f &pos, TIdxDistSqr &idxDistSqr, const bool bRemove = true)
+	{
+		PROFILE_SCOPED();
+		assert(pOctree);
+		pOctree->Traverse(&ProcessNode, sqrRad, pos, idxDistSqr, bRemove);
+	}
+
+	void findIndexAndDistFromBrute(const float sqrRad, const vector3f &pos, const std::vector<vector3f> &verts, TIdxDistSqr &idxDistSqr)
+	{
+		PROFILE_SCOPED();
+
 		// find all vertices within the target radius
-		for (Uint32 vidx = 0; vidx < verts.size(); vidx++) {
+		const size_t numVerts = verts.size();
+		for (Uint32 vidx = 0; vidx < numVerts; vidx++) {
 			// test, store
 			const vector3f &cur = verts[vidx];
 			const float distSqr = (pos - cur).LengthSqr();
@@ -245,8 +433,9 @@ namespace AsteroidFunctions
 	{
 		PROFILE_SCOPED();
 		// convert vts (SOA) to vertex format (AOS)
-		vOut.resize(vtsIn.GetNumVerts());
-		for (Uint32 i = 0; i < vtsIn.GetNumVerts(); i++)
+		const size_t numVerts = vtsIn.GetNumVerts();
+		vOut.resize(numVerts);
+		for (size_t i = 0; i < numVerts; i++)
 		{
 			vOut[i].pos = vtsIn.position[i];
 			vOut[i].norm = vtsIn.normal[i];
@@ -261,7 +450,8 @@ namespace AsteroidFunctions
 		PROFILE_SCOPED();
 		// convert vertex format (AOS) to vts (SOA)
 		vtsOut.Clear();
-		for (Uint32 i = 0; i < vIn.size(); i++)
+		const size_t numVerts = vIn.size();
+		for (size_t i = 0; i < numVerts; i++)
 		{
 			const PosNormTangentUVVert &v = vIn[i];
 			vtsOut.Add(v.pos, v.norm, v.uv0, v.tangent);
@@ -314,6 +504,18 @@ static const Sint32 icosahedron_faces[20][3] = {
 };
 
 
+Asteroid::TLOD::TLOD() : m_pOctree(nullptr) 
+{
+}
+
+Asteroid::TLOD::~TLOD() 
+{ 
+	if (m_pOctree) { 
+		delete m_pOctree; 
+	} 
+}
+
+
 void Asteroid::GenerateInitialMesh(VertexArray &vts, std::vector<Uint32> &indices, const matrix4x4f &trans, const Sint32 subdivsLocal)
 {
 	PROFILE_SCOPED();
@@ -337,6 +539,82 @@ void Asteroid::GenerateInitialMesh(VertexArray &vts, std::vector<Uint32> &indice
 	}
 }
 
+void Asteroid::BuildLods(const size_t subdivsLocal, const matrix4x4f &trans, std::vector<TLOD*> &lods)
+{
+	PROFILE_SCOPED_DESC("LOD Generation");
+	lods.resize(subdivsLocal);
+	for (Sint32 s = subdivsLocal; s > 0; s--)
+	{
+		PROFILE_SCOPED_DESC("LOD");
+		TLOD *pLOD = new TLOD;
+		pLOD->m_pva.reset(new VertexArray(ATTRIB_POSITION | ATTRIB_NORMAL | ATTRIB_UV0 | ATTRIB_TANGENT, 131072));
+		lods[s - 1] = pLOD;
+
+		// 32-bit indices during generation, before the number of vertices is reduced via welding	
+		std::vector<Uint32> indices32;
+		indices32.reserve(250000);
+		GenerateInitialMesh(*(pLOD->m_pva), indices32, trans, s);
+
+		{
+			PROFILE_SCOPED_DESC("LOD Weld");
+			// convert vts (SOA) to vertex format (AOS)
+			std::vector<PosNormTangentUVVert> vertices;
+			ConvertSOAToAOS(*(pLOD->m_pva), vertices);
+			// eliminate duplicate vertices
+			const Uint32 outCount = EliminateDuplicateVertices(vertices, indices32);
+			const size_t numIndices = indices32.size();
+			pLOD->m_indices.resize(numIndices);
+			for (size_t i32 = 0; i32 < numIndices; i32++) {
+				pLOD->m_indices[i32] = indices32[i32];
+			}
+			// convert back to vts (SOA) from vertex format (AOS)
+			ConvertAOSToSOA(vertices, *(pLOD->m_pva));
+		}
+
+		if (nullptr == pLOD->m_pOctree) {
+			const size_t count = pLOD->m_pva->GetNumVerts();
+			const size_t maxDepth = (count < 20000) ? 1 : (count < 60000) ? 2 : 3;
+			pLOD->m_pOctree = new Spatial::Octree(m_scale * 4.0f, maxDepth);
+		}
+
+		if (s != subdivsLocal && lods[s])
+		{
+			PROFILE_SCOPED_DESC("LOD Calculate weights");
+
+			// Sorty-McSorty-pants
+			struct DistSortStruct{
+				static bool DistSortPredicate(const TIdxDist &a, const TIdxDist &b)
+				{
+					return a.second < b.second;
+				}
+			};
+
+			const Graphics::VertexArray *va = pLOD->m_pva.get();
+			const size_t numVerts = va->GetNumVerts();
+			pLOD->m_mappedIdx.reserve(numVerts);
+			for (size_t n = 0; n < numVerts; n++) {
+				// get position of current vertex
+				const vector3f &pos = va->position[n];
+
+				// find all of the closest indices - in the next LOD up (more detail) than us
+				TIdxDistSqr idxDistSqr; idxDistSqr.reserve(256);
+#if 1
+				const bool bRemove = false;
+				findIndexAndDistFrom(lods[s]->m_pOctree, 0.05f, pos, idxDistSqr, bRemove);
+#else
+				findIndexAndDistFromBrute(0.05f, pos, lods[s]->m_pva->position, idxDistSqr);
+#endif
+				std::sort(idxDistSqr.begin(), idxDistSqr.end(), DistSortStruct::DistSortPredicate);
+
+				// calculate closest weights
+				const Uint16 mappedIdx = idxDistSqr[0].first;
+				assert(idxDistSqr[0].second < 0.0001f);
+				pLOD->m_mappedIdx.push_back(mappedIdx);
+			}
+		}
+	}
+}
+
 Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::RenderState *state,
 	const TDeformations &deformations, const Sint32 subdivs, const float scale)
 {
@@ -349,34 +627,15 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 	const float scaleLocal = fabs(scale);
 	matrix4x4f trans = matrix4x4f::Identity();
 	trans.Scale(scaleLocal, scaleLocal, scaleLocal);
+	m_scale = scaleLocal;
 
-	//reserve some data
-	VertexArray vts(ATTRIB_POSITION | ATTRIB_NORMAL | ATTRIB_UV0 | ATTRIB_TANGENT, 131072);
-	std::vector<Uint16> indices; // we only allow 16bit indices ingame so this will hold the final indices
+	// build each LOD mesh, weld it to reduce vertices
+	std::vector<TLOD*> lods;
+	BuildLods(subdivsLocal, trans, lods);
 
-	{
-		PROFILE_SCOPED_DESC("Generation");
-		// 32-bit indices during generation, before the number of vertices is reduced via welding	
-		std::vector<Uint32> indices32;
-		indices32.reserve(250000);
-		GenerateInitialMesh(vts, indices32, trans, subdivsLocal);
-
-		{
-			PROFILE_SCOPED_DESC("Weld");
-			// convert vts (SOA) to vertex format (AOS)
-			std::vector<PosNormTangentUVVert> vertices;
-			ConvertSOAToAOS(vts, vertices);
-			// eliminate duplicate vertices
-			const Uint32 outCount = EliminateDuplicateVertices(vertices, indices32);
-			indices.resize(indices32.size());
-			for(size_t i32 = 0; i32<indices32.size(); i32++) {
-				assert(indices32[i32]<USHRT_MAX);
-				indices[i32] = indices32[i32];
-			}
-			// convert back to vts (SOA) from vertex format (AOS)
-			ConvertAOSToSOA(vertices, vts);
-		}
-	}
+	// reserve some data
+	VertexArray &vts = *(lods[subdivsLocal-1]->m_pva);
+	std::vector<Uint16> &indices(lods[subdivsLocal - 1]->m_indices); // we only allow 16bit indices ingame so this will hold the final indices
 
 	// setup a random number generator to choose the indices
 	const size_t num_deformations = deformations.size();
@@ -398,28 +657,38 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 	TFaceIndices faceIndices;
 	CreateVertexToFaceList(vts.GetNumVerts(), indices, faceIndices);
 
+	Spatial::Octree *pOct = lods[subdivsLocal - 1]->m_pOctree;
+	assert(pOct);
+	pOct->Build(vts.position);
+
 	// radius, depth, and the number of impacts
-	std::set<Uint16> usedIndices;
 	const size_t num_indices = indices.size();
+	std::set<Uint16> unusedIndices;
+	for (auto i : indices) {
+		unusedIndices.insert(i);
+	}
 	float minScl = scaleLocal * 2.0f;
 	float maxScl = 0.0f;
 	for (auto i : deformations) {
 		PROFILE_SCOPED_DESC("Deformation");
+
 		// get the vertex that forms the basis of our deformation
-		Uint16 prospective = indices[(rand.Int32() % num_indices)];
-		while (usedIndices.find(prospective) != usedIndices.end()) {
-			PROFILE_SCOPED_DESC("Prospective");
-			prospective = indices[(rand.Int32() % num_indices)];
-		}
-		const Uint16 idx = prospective;
-		usedIndices.insert(idx);
+		std::set<Uint16>::iterator it(unusedIndices.begin());
+		std::advance(it, (rand.Int32() % unusedIndices.size()));
+		const Uint16 idx = *it;
+		unusedIndices.erase(it);
+
 		const vector3f &vert = vts.position[idx];
 		const vector3f &norm = vts.normal[idx];
 
 		// find all vertices within the target radius
 		const float squareRad = (i.radius * scaleLocal) * (i.radius * scaleLocal);
-		std::vector<std::pair<Uint32, float>> idxDistSqr;
-		findIndexAndDistFrom(squareRad, vert, vts.position, idxDistSqr);
+		TIdxDistSqr idxDistSqr; idxDistSqr.reserve(256);
+#if 1
+		findIndexAndDistFrom(pOct, squareRad, vert, idxDistSqr);
+#else
+		findIndexAndDistFromBrute(squareRad, vert, vts.position, idxDistSqr);
+#endif
 
 		// move the vertices by the offset amount in the direction of the "vert" normal, scaled by distance from centre of the radius
 		for (auto vipair : idxDistSqr) {
@@ -433,15 +702,19 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 			const float scl = vts.position[vipair.first].Length() - scaleLocal;
 			minScl = std::min(minScl, scl);
 			maxScl = std::max(maxScl, scl);
+
+			// update the octree
+			pOct->Insert(vts.position[vipair.first], vipair.first);
 		}
 
 		// regenerate vertex normals after each deformation so the new normals affect future iterations
 		CalculatePerVertexNormalsLimited(vts, indices, faceIndices, idxDistSqr);
 	}
 
-	// Deform the surface using some wapring noise
+	// Deform the surface using some warping noise
 	float offsetScaling = (scaleLocal * 0.1f); // TODO: this shoud be dependent on the size of the asteroid being generated?
-	for (size_t verti = 0; verti < vts.GetNumVerts(); verti++)
+	const size_t numVerts = vts.GetNumVerts();
+	for (size_t verti = 0; verti < numVerts; verti++)
 	{
 		PROFILE_SCOPED_DESC("Warping");
 		const vector3f pos = vts.position[verti].Normalized();
@@ -460,7 +733,7 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 	// calculate the final slope and "height"
 	float minDot = 2.0f;
 	float maxDot = 0.0f;
-	for (size_t verti = 0; verti < vts.GetNumVerts(); verti++)
+	for (size_t verti = 0; verti < numVerts; verti++)
 	{
 		PROFILE_SCOPED_DESC("UVSlopeHeight");
 		const vector3f pos = vts.position[verti].Normalized();
@@ -477,8 +750,29 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 	Output("min scl (%5.2f), max scl (%5.2f)\n", minScl, maxScl);
 
 	// TODO: decorate
-	
+
 	// TODO: generate LODs
+	{
+		PROFILE_SCOPED_DESC("Update the LOD meshes");
+		for (Sint32 s = 0; s < subdivsLocal - 1; s++)
+		{
+			PROFILE_SCOPED_DESC("Mesh Update");
+			if (s != subdivsLocal && lods[s])
+			{
+				TLOD *pLODCurr = lods[s];
+				TLOD *pLODNext = lods[s + 1];
+				const size_t numMap = pLODCurr->m_mappedIdx.size();
+				for (size_t mi = 0; mi < numMap; mi++)
+				{
+					const size_t mIdx = pLODCurr->m_mappedIdx[mi];
+					pLODCurr->m_pva->position[mi] = pLODNext->m_pva->position[mIdx];
+					pLODCurr->m_pva->normal[mi] = pLODNext->m_pva->normal[mIdx];
+					pLODCurr->m_pva->uv0[mi] = pLODNext->m_pva->uv0[mIdx];
+					pLODCurr->m_pva->tangent[mi] = pLODNext->m_pva->tangent[mIdx];
+				}
+			}
+		}
+	}
 
 	// TODO: create collision mesh/GoemTree etc
 
@@ -506,7 +800,8 @@ void Asteroid::CreateAndPopulateRenderBuffers(const VertexArray &vts, std::vecto
 	// vertices
 	PosNormTangentUVVert* vtxPtr = m_vertexBuffer->Map<PosNormTangentUVVert>(Graphics::BUFFER_MAP_WRITE);
 	assert(m_vertexBuffer->GetDesc().stride == sizeof(PosNormTangentUVVert));
-	for (size_t i = 0; i<vts.GetNumVerts(); i++)
+	const size_t numVerts = vts.GetNumVerts();
+	for (size_t i = 0; i<numVerts; i++)
 	{
 		vtxPtr[i].pos = vts.position[i];
 		vtxPtr[i].norm = vts.normal[i];
