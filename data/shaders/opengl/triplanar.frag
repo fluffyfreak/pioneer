@@ -47,9 +47,9 @@ vec3 blend(in vec4 texB, in vec4 texA, in float t)
 
 vec4 getTriplanarTex(in vec3 blending, in vec3 coords, in sampler2D sampler)
 {
-	vec4 xaxis = texture2D( sampler, coords.yz);
-	vec4 yaxis = texture2D( sampler, coords.xz);
-	vec4 zaxis = texture2D( sampler, coords.xy);
+	vec4 xaxis = texture( sampler, coords.yz);
+	vec4 yaxis = texture( sampler, coords.xz);
+	vec4 zaxis = texture( sampler, coords.xy);
 	// blend the results of the 3 planar projections.
 	vec4 tex = (xaxis * blending.x) + (yaxis * blending.y) + (zaxis * blending.z);
 	return tex;
