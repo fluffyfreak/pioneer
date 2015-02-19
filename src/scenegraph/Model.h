@@ -116,6 +116,7 @@ public:
 	RefCountedPtr<Graphics::Material> GetMaterialByName(const std::string &name) const;
 	RefCountedPtr<Graphics::Material> GetMaterialByIndex(int) const;
 	unsigned int GetNumMaterials() const { return m_materials.size(); }
+	void AddMaterial(const std::string &, RefCountedPtr<Graphics::Material>);
 
 	unsigned int GetNumTags() const { return m_tags.size(); }
 	MatrixTransform *const GetTagByIndex(unsigned int index) const;

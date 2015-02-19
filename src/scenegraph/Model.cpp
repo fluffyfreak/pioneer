@@ -299,6 +299,11 @@ RefCountedPtr<Graphics::Material> Model::GetMaterialByIndex(const int i) const
 	return m_materials.at(Clamp(i, 0, int(m_materials.size())-1)).second;
 }
 
+void Model::AddMaterial(const std::string &name, RefCountedPtr<Graphics::Material> mat)
+{
+	m_materials.push_back(std::make_pair(name, mat));
+}
+
 MatrixTransform * const Model::GetTagByIndex(const unsigned int i) const
 {
 	if (m_tags.empty() || i > m_tags.size()-1) return 0;

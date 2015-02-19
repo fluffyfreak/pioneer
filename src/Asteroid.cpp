@@ -5,9 +5,14 @@
 #include "graphics/Texture.h"
 #include "collider/Weld.h"
 #include "gameconsts.h"
+#include "StringF.h"
 #include "utils.h"
 #include "Easing.h"
 #include "perlin.h"
+#include "scenegraph/LOD.h"
+#include "scenegraph/Model.h"
+#include "scenegraph/Node.h"
+#include "scenegraph/StaticGeometry.h"
 #include <set>
 
 using namespace Graphics;
@@ -35,6 +40,7 @@ namespace Spatial
 
 		void Build(std::vector<vector3f> &verts) {
 			PROFILE_SCOPED();
+			Clear();
 			const size_t numVerts = verts.size();
 			for (size_t i = 0; i < numVerts; i++) {
 				m_root->Insert(verts[i], i);
@@ -539,16 +545,16 @@ void Asteroid::GenerateInitialMesh(VertexArray &vts, std::vector<Uint32> &indice
 	}
 }
 
-void Asteroid::BuildLods(const size_t subdivsLocal, const matrix4x4f &trans, std::vector<TLOD*> &lods)
+void Asteroid::BuildLods(const size_t subdivsLocal, const matrix4x4f &trans)
 {
 	PROFILE_SCOPED_DESC("LOD Generation");
-	lods.resize(subdivsLocal);
+	m_lods.resize(subdivsLocal);
 	for (Sint32 s = subdivsLocal; s > 0; s--)
 	{
 		PROFILE_SCOPED_DESC("LOD");
 		TLOD *pLOD = new TLOD;
 		pLOD->m_pva.reset(new VertexArray(ATTRIB_POSITION | ATTRIB_NORMAL | ATTRIB_UV0 | ATTRIB_TANGENT, 131072));
-		lods[s - 1] = pLOD;
+		m_lods[s - 1] = pLOD;
 
 		// 32-bit indices during generation, before the number of vertices is reduced via welding	
 		std::vector<Uint32> indices32;
@@ -576,8 +582,10 @@ void Asteroid::BuildLods(const size_t subdivsLocal, const matrix4x4f &trans, std
 			const size_t maxDepth = (count < 20000) ? 1 : (count < 60000) ? 2 : 3;
 			pLOD->m_pOctree = new Spatial::Octree(m_scale * 4.0f, maxDepth);
 		}
+		assert(pLOD->m_pOctree);
+		pLOD->m_pOctree->Build(pLOD->m_pva->position);
 
-		if (s != subdivsLocal && lods[s])
+		if (s != subdivsLocal && m_lods[s])
 		{
 			PROFILE_SCOPED_DESC("LOD Calculate weights");
 
@@ -600,9 +608,9 @@ void Asteroid::BuildLods(const size_t subdivsLocal, const matrix4x4f &trans, std
 				TIdxDistSqr idxDistSqr; idxDistSqr.reserve(256);
 #if 1
 				const bool bRemove = false;
-				findIndexAndDistFrom(lods[s]->m_pOctree, 0.05f, pos, idxDistSqr, bRemove);
+				findIndexAndDistFrom(m_lods[s]->m_pOctree, 0.05f, pos, idxDistSqr, bRemove);
 #else
-				findIndexAndDistFromBrute(0.05f, pos, lods[s]->m_pva->position, idxDistSqr);
+				findIndexAndDistFromBrute(0.05f, pos, m_lods[s]->m_pva->position, idxDistSqr);
 #endif
 				std::sort(idxDistSqr.begin(), idxDistSqr.end(), DistSortStruct::DistSortPredicate);
 
@@ -630,12 +638,11 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 	m_scale = scaleLocal;
 
 	// build each LOD mesh, weld it to reduce vertices
-	std::vector<TLOD*> lods;
-	BuildLods(subdivsLocal, trans, lods);
+	BuildLods(subdivsLocal, trans);
 
 	// reserve some data
-	VertexArray &vts = *(lods[subdivsLocal-1]->m_pva);
-	std::vector<Uint16> &indices(lods[subdivsLocal - 1]->m_indices); // we only allow 16bit indices ingame so this will hold the final indices
+	VertexArray &vts = *(m_lods[subdivsLocal-1]->m_pva);
+	std::vector<Uint16> &indices(m_lods[subdivsLocal - 1]->m_indices); // we only allow 16bit indices ingame so this will hold the final indices
 
 	// setup a random number generator to choose the indices
 	const size_t num_deformations = deformations.size();
@@ -657,7 +664,7 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 	TFaceIndices faceIndices;
 	CreateVertexToFaceList(vts.GetNumVerts(), indices, faceIndices);
 
-	Spatial::Octree *pOct = lods[subdivsLocal - 1]->m_pOctree;
+	Spatial::Octree *pOct = m_lods[subdivsLocal - 1]->m_pOctree;
 	assert(pOct);
 	pOct->Build(vts.position);
 
@@ -712,7 +719,7 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 	}
 
 	// Deform the surface using some warping noise
-	float offsetScaling = (scaleLocal * 0.1f); // TODO: this shoud be dependent on the size of the asteroid being generated?
+	float offsetScaling = (scaleLocal * 0.05f); // TODO: this shoud be dependent on the size of the asteroid being generated?
 	const size_t numVerts = vts.GetNumVerts();
 	for (size_t verti = 0; verti < numVerts; verti++)
 	{
@@ -751,37 +758,101 @@ Asteroid::Asteroid(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 
 	// TODO: decorate
 
-	// TODO: generate LODs
+	// TODO: generate/copy data for LODs
+	CopyLODsData(subdivsLocal);
+
+	// TODO: create collision mesh/GoemTree etc
+	BuildModels(renderer);
+}
+
+void Asteroid::CopyLODsData(const size_t subdivs)
+{
+	PROFILE_SCOPED();
+	for (Sint32 s = subdivs - 2; s >= 0; s--)
 	{
-		PROFILE_SCOPED_DESC("Update the LOD meshes");
-		for (Sint32 s = 0; s < subdivsLocal - 1; s++)
+		PROFILE_SCOPED_DESC("Mesh Update");
+		if (s != subdivs && m_lods[s])
 		{
-			PROFILE_SCOPED_DESC("Mesh Update");
-			if (s != subdivsLocal && lods[s])
+			TLOD *pLODCurr = m_lods[s];
+			TLOD *pLODNext = m_lods[s + 1];
+			const size_t numMap = pLODCurr->m_mappedIdx.size();
+			for (size_t mi = 0; mi < numMap; mi++)
 			{
-				TLOD *pLODCurr = lods[s];
-				TLOD *pLODNext = lods[s + 1];
-				const size_t numMap = pLODCurr->m_mappedIdx.size();
-				for (size_t mi = 0; mi < numMap; mi++)
-				{
-					const size_t mIdx = pLODCurr->m_mappedIdx[mi];
-					pLODCurr->m_pva->position[mi] = pLODNext->m_pva->position[mIdx];
-					pLODCurr->m_pva->normal[mi] = pLODNext->m_pva->normal[mIdx];
-					pLODCurr->m_pva->uv0[mi] = pLODNext->m_pva->uv0[mIdx];
-					pLODCurr->m_pva->tangent[mi] = pLODNext->m_pva->tangent[mIdx];
-				}
+				const size_t mIdx = pLODCurr->m_mappedIdx[mi];
+				pLODCurr->m_pva->position[mi] = pLODNext->m_pva->position[mIdx];
+				pLODCurr->m_pva->normal[mi] = pLODNext->m_pva->normal[mIdx];
+				pLODCurr->m_pva->uv0[mi] = pLODNext->m_pva->uv0[mIdx];
+				pLODCurr->m_pva->tangent[mi] = pLODNext->m_pva->tangent[mIdx];
 			}
 		}
 	}
 
-	// TODO: create collision mesh/GoemTree etc
-
-	CreateAndPopulateRenderBuffers(vts, indices, renderer);
 }
 
-void Asteroid::CreateAndPopulateRenderBuffers(const VertexArray &vts, std::vector<Uint16> &indices, Renderer *r)
+void Asteroid::BuildModels(Graphics::Renderer *renderer)
 {
 	PROFILE_SCOPED();
+	using namespace SceneGraph;
+	m_model.reset( new Model(renderer, "Asteroid") );
+
+	LOD *lodNode = new LOD(renderer);
+	m_model->GetRoot()->AddChild(lodNode);
+
+	// material
+	m_model->AddMaterial("AsteroidMat", m_material);
+
+	size_t pixelLod = 50;
+
+	for (std::vector<TLOD*>::const_iterator lod = m_lods.begin(); lod != m_lods.end(); ++lod)
+	{
+		CreateAndPopulateRenderBuffers(*lod, renderer);
+
+		// multiple lods might use the same mesh
+		std::vector<RefCountedPtr<StaticGeometry> > geoms;
+		RefCountedPtr<StaticGeometry> geom(new StaticGeometry(renderer));
+		geom->SetName(stringf("sgMesh%0{u}", 0));
+		geom->AddMesh((*lod)->m_vb, (*lod)->m_ib, m_material);
+
+		Graphics::RenderStateDesc rsd;
+		geom->SetRenderState(renderer->CreateRenderState(rsd));
+		geoms.push_back(geom);
+
+		if (lodNode) {
+			lodNode->AddLevel(pixelLod, geom.Get());
+			pixelLod += 50;
+		}
+	}
+
+	// Load collision meshes
+	// They are added at the top level of the model root as CollisionGeometry nodes
+	/*for (std::vector<std::string>::const_iterator it = def.collisionDefs.begin();
+	it != def.collisionDefs.end(); ++it)
+	{
+	try {
+	LoadCollision(*it);
+	}
+	catch (LoadingError &err) {
+	throw (LoadingError(stringf("%0:\n%1", *it, err.what())));
+	}
+	}
+
+	// Run CollisionVisitor to create the initial CM and its GeomTree.
+	// If no collision mesh is defined, a simple bounding box will be generated
+	Output("CreateCollisionMesh for : (%s)\n", m_model->m_name.c_str());
+	m_model->CreateCollisionMesh();*/
+
+	// Do an initial animation update to get all the animation transforms correct
+	m_model->UpdateAnimations();
+}
+
+void Asteroid::CreateAndPopulateRenderBuffers(TLOD *pLOD, Graphics::Renderer *r)
+{
+	PROFILE_SCOPED();
+
+	RefCountedPtr<Graphics::VertexBuffer> &vb = pLOD->m_vb;
+	RefCountedPtr<Graphics::IndexBuffer> &ib = pLOD->m_ib;
+	const Graphics::VertexArray &vts = *(pLOD->m_pva);
+	const size_t numVerts = vts.GetNumVerts();
 
 	//Create vtx & index buffers and copy data
 	VertexBufferDesc vbd;
@@ -793,14 +864,13 @@ void Asteroid::CreateAndPopulateRenderBuffers(const VertexArray &vts, std::vecto
 	vbd.attrib[2].format = ATTRIB_FORMAT_FLOAT2;
 	vbd.attrib[3].semantic = ATTRIB_TANGENT;
 	vbd.attrib[3].format = ATTRIB_FORMAT_FLOAT3;
-	vbd.numVertices = vts.GetNumVerts();
+	vbd.numVertices = numVerts;
 	vbd.usage = BUFFER_USAGE_STATIC;
-	m_vertexBuffer.reset(r->CreateVertexBuffer(vbd));
+	vb.Reset(r->CreateVertexBuffer(vbd));
 
 	// vertices
-	PosNormTangentUVVert* vtxPtr = m_vertexBuffer->Map<PosNormTangentUVVert>(Graphics::BUFFER_MAP_WRITE);
-	assert(m_vertexBuffer->GetDesc().stride == sizeof(PosNormTangentUVVert));
-	const size_t numVerts = vts.GetNumVerts();
+	PosNormTangentUVVert* vtxPtr = vb->Map<PosNormTangentUVVert>(Graphics::BUFFER_MAP_WRITE);
+	assert(vb->GetDesc().stride == sizeof(PosNormTangentUVVert));
 	for (size_t i = 0; i<numVerts; i++)
 	{
 		vtxPtr[i].pos = vts.position[i];
@@ -808,58 +878,63 @@ void Asteroid::CreateAndPopulateRenderBuffers(const VertexArray &vts, std::vecto
 		vtxPtr[i].tangent = vts.tangent[i];
 		vtxPtr[i].uv0 = vts.uv0[i];
 	}
-	m_vertexBuffer->Unmap();
+	vb->Unmap();
 
 	// indices
-	m_indexBuffer.reset(r->CreateIndexBuffer(indices.size(), BUFFER_USAGE_STATIC));
-	Uint16 *idxPtr = m_indexBuffer->Map(Graphics::BUFFER_MAP_WRITE);
-	for (auto it : indices) {
+	ib.Reset(r->CreateIndexBuffer(pLOD->m_indices.size(), BUFFER_USAGE_STATIC));
+	Uint16 *idxPtr = ib->Map(Graphics::BUFFER_MAP_WRITE);
+	for (auto it : pLOD->m_indices) {
 		*idxPtr = it;
 		idxPtr++;
 	}
-	m_indexBuffer->Unmap();
+	ib->Unmap();
 
 #ifdef DEBUG_RENDER_NORMALS
 	static float s_lineScale(0.125f);
-	m_normLines.reset(new Graphics::Drawables::Lines());
+	pLOD->m_normLines.reset(new Graphics::Drawables::Lines());
 	std::vector<vector3f> lines;
-	lines.reserve(vts.GetNumVerts() * 2);
+	lines.reserve(numVerts * 2);
 	for (size_t i = 0; i<vts.GetNumVerts(); i++)
 	{
 		lines.push_back(vts.position[i]);
 		lines.push_back(vts.position[i] + (vts.normal[i] * s_lineScale));
 	}
-	m_normLines->SetData(vts.GetNumVerts() * 2, &lines[0], Color::GREEN);
+	pLOD->m_normLines->SetData(numVerts * 2, &lines[0], Color::GREEN);
 
-	m_tangentLines.reset(new Graphics::Drawables::Lines());
+	pLOD->m_tangentLines.reset(new Graphics::Drawables::Lines());
 	lines.clear();
-	for (size_t i = 0; i<vts.GetNumVerts(); i++)
+	for (size_t i = 0; i<numVerts; i++)
 	{
 		lines.push_back(vts.position[i]);
 		lines.push_back(vts.position[i] + (vts.tangent[i] * s_lineScale));
 	}
-	m_tangentLines->SetData(vts.GetNumVerts() * 2, &lines[0], Color::RED);
+	pLOD->m_tangentLines->SetData(numVerts * 2, &lines[0], Color::RED);
 
-	m_bitangentLines.reset(new Graphics::Drawables::Lines());
+	pLOD->m_bitangentLines.reset(new Graphics::Drawables::Lines());
 	lines.clear();
-	for (size_t i = 0; i<vts.GetNumVerts(); i++)
+	for (size_t i = 0; i<numVerts; i++)
 	{
 		lines.push_back(vts.position[i]);
 		lines.push_back(vts.position[i] + (vts.normal[i].Cross(vts.tangent[i]) * s_lineScale));
 	}
-	m_bitangentLines->SetData(vts.GetNumVerts() * 2, &lines[0], Color::BLUE);
+	pLOD->m_bitangentLines->SetData(numVerts * 2, &lines[0], Color::BLUE);
 #endif // DEBUG_RENDER_NORMALS
 }
 
-void Asteroid::Draw(Renderer *r)
+void Asteroid::Draw(Renderer *r, const matrix4x4f &trans)
 {
-	PROFILE_SCOPED()
-	r->DrawBufferIndexed(m_vertexBuffer.get(), m_indexBuffer.get(), m_renderState, m_material.Get());
+	PROFILE_SCOPED();
+	static const size_t idx = m_lods.size() - 1;
+	const TLOD *pLOD = m_lods[idx];
+	if (pLOD) {
+		m_model->Render(trans);
+		//r->DrawBufferIndexed(pLOD->m_vb.Get(), pLOD->m_ib.Get(), m_renderState, m_material.Get());
 #ifdef DEBUG_RENDER_NORMALS
-	m_normLines->Draw(r, m_renderState, Graphics::LINE_SINGLE);
-	m_tangentLines->Draw(r, m_renderState, Graphics::LINE_SINGLE);
-	m_bitangentLines->Draw(r, m_renderState, Graphics::LINE_SINGLE);
+		pLOD->m_normLines->Draw(r, m_renderState, Graphics::LINE_SINGLE);
+		pLOD->m_tangentLines->Draw(r, m_renderState, Graphics::LINE_SINGLE);
+		pLOD->m_bitangentLines->Draw(r, m_renderState, Graphics::LINE_SINGLE);
 #endif // DEBUG_RENDER_NORMALS
+	}
 }
 
 Sint32 Asteroid::AddVertex(VertexArray &vts, const vector3f &v, const vector3f &n)
