@@ -73,7 +73,7 @@ static bool check_glsl_errors(const char *filename, GLuint obj)
 }
 
 struct Shader {
-	Shader(GLenum type, const std::string &filename, const std::string &defines) {
+	Shader(GLenum type, const std::string &filename, const std::string &defines, const Uint32 libs) {
 		RefCountedPtr<FileSystem::FileData> code = FileSystem::gameDataFiles.ReadFile(filename);
 
 		if (!code.Valid())
@@ -86,6 +86,11 @@ struct Shader {
 		assert(logzCode.Valid());
 		RefCountedPtr<FileSystem::FileData> libsCode = FileSystem::gameDataFiles.ReadFile("shaders/opengl/lib.glsl");
 		assert(libsCode.Valid());
+		RefCountedPtr<FileSystem::FileData> noiseCode;
+		if (NOISE & libs) {
+			noiseCode = FileSystem::gameDataFiles.ReadFile("shaders/opengl/noise.glsl");
+			assert(noiseCode);
+		}
 
 		AppendSource(s_glslVersion);
 		AppendSource(defines.c_str());
@@ -97,6 +102,9 @@ struct Shader {
 		AppendSource(attributesCode->AsStringRange().StripUTF8BOM());
 		AppendSource(logzCode->AsStringRange().StripUTF8BOM());
 		AppendSource(libsCode->AsStringRange().StripUTF8BOM());
+		if(NOISE & libs) {
+			AppendSource(noiseCode->AsStringRange().StripUTF8BOM());
+		}
 		AppendSource(code->AsStringRange().StripUTF8BOM());
 #if 0
 		static bool s_bDumpShaderSource = true;
@@ -167,13 +175,17 @@ Program::Program()
 : m_name("")
 , m_defines("")
 , m_program(0)
+, m_libs(LOGZ | LIBS)
+, success(false)
 {
 }
 
-Program::Program(const std::string &name, const std::string &defines)
+Program::Program(const std::string &name, const std::string &defines, const Uint32 libs /*= LOGZ | LIBS*/)
 : m_name(name)
 , m_defines(defines)
 , m_program(0)
+, m_libs(libs)
+, success(false)
 {
 	LoadShaders(name, defines);
 	InitUniforms();
@@ -211,8 +223,8 @@ void Program::LoadShaders(const std::string &name, const std::string &defines)
 	const std::string filename = std::string("shaders/opengl/") + name;
 
 	//load, create and compile shaders
-	Shader vs(GL_VERTEX_SHADER, filename + ".vert", defines);
-	Shader fs(GL_FRAGMENT_SHADER, filename + ".frag", defines);
+	Shader vs(GL_VERTEX_SHADER, filename + ".vert", defines, m_libs);
+	Shader fs(GL_FRAGMENT_SHADER, filename + ".frag", defines, m_libs);
 
 	//create program, attach shaders and link
 	m_program = glCreateProgram();
@@ -233,7 +245,7 @@ void Program::LoadShaders(const std::string &name, const std::string &defines)
 
 	glLinkProgram(m_program);
 
-	check_glsl_errors(name.c_str(), m_program);
+	success = check_glsl_errors(name.c_str(), m_program);
 
 	//shaders may now be deleted by Shader destructor
 }

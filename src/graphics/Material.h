@@ -37,7 +37,8 @@ enum EffectType {
 	EFFECT_FRESNEL_SPHERE,
 	EFFECT_SHIELD,
 	EFFECT_SKYBOX,
-	EFFECT_SPHEREIMPOSTOR
+	EFFECT_SPHEREIMPOSTOR,
+	EFFECT_GEN_GASGIANT_TEXTURE
 };
 
 
@@ -91,6 +92,8 @@ public:
 
 	virtual void Apply() { }
 	virtual void Unapply() { }
+
+	virtual bool IsProgramLoaded() const { return false; }
 
 	virtual void SetCommonUniforms(const matrix4x4f& mv, const matrix4x4f& proj) = 0;
 

@@ -18,14 +18,22 @@ namespace Graphics {
 
 		struct ProgramException { };
 
+		// Libraries that can be added to a shader program before it is built.
+		enum ShaderLibs {
+			LOGZ = 0,
+			LIBS = 1,
+			NOISE= 2
+		};
+
 		class Program {
 		public:
 			Program();
-			Program(const std::string &name, const std::string &defines);
+			Program(const std::string &name, const std::string &defines, const Uint32 libs = LOGZ | LIBS);
 			virtual ~Program();
 			void Reload();
 			virtual void Use();
 			virtual void Unuse();
+			bool Loaded() const { return success; }
 
 			// Uniforms.
 			Uniform uProjectionMatrix;
@@ -68,6 +76,8 @@ namespace Graphics {
 			std::string m_name;
 			std::string m_defines;
 			GLuint m_program;
+			Uint32 m_libs;
+			bool success;
 		};
 
 	}
