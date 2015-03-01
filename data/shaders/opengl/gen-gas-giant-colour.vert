@@ -7,6 +7,6 @@ out vec2 uv;
 void main(void)
 {
 	gl_Position = logarithmicTransform();
-	vertex = vec3(uViewMatrix * a_vertex);
+	vertex = (uViewMatrix * a_vertex).xyz;
 	uv = a_uv0.xy;
 }

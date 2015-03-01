@@ -219,7 +219,9 @@ void main(void)
 	vec3 p = GetSpherePoint(xfrac, yfrac);
 	
 	// call the GetColour function implemented for this shader type
-	frag_color = GetColour(p);
+	vec4 colour = vec4(1.0, 1.0, 0.0, 1.0); //GetColour(p);
+	
+	frag_color = colour;
 	
 	SetFragDepth();
 }

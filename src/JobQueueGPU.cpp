@@ -7,6 +7,7 @@
 
 void JobGPU::UnlinkHandle()
 {
+	PROFILE_SCOPED()
 	if (m_handle)
 		m_handle->Unlink();
 }
@@ -36,6 +37,7 @@ JobRunnerGPU::~JobRunnerGPU()
 
 void JobRunnerGPU::Process()
 {
+	PROFILE_SCOPED()
 	JobGPU *job;
 
 	// Lock to prevent destruction of the queue while calling GetGPUJob.
@@ -94,12 +96,14 @@ void JobRunnerGPU::SetQueueDestroyed()
 
 JobHandleGPU::JobHandleGPU(JobGPU* job, JobQueueGPU* queue) : m_job(job), m_queue(queue)
 {
+	PROFILE_SCOPED()
 	assert(!m_job->GetHandle());
 	m_job->SetHandle(this);
 }
 
 void JobHandleGPU::Unlink()
 {
+	PROFILE_SCOPED()
 	if (m_job) {
 		assert(m_job->GetHandle() == this);
 		m_job->ClearHandle();
@@ -110,6 +114,7 @@ void JobHandleGPU::Unlink()
 
 JobHandleGPU::JobHandleGPU(JobHandleGPU&& other) : m_job(other.m_job), m_queue(other.m_queue)
 {
+	PROFILE_SCOPED()
 	if (m_job) {
 		assert(m_job->GetHandle() == &other);
 		m_job->SetHandle(this);
@@ -120,6 +125,7 @@ JobHandleGPU::JobHandleGPU(JobHandleGPU&& other) : m_job(other.m_job), m_queue(o
 
 JobHandleGPU& JobHandleGPU::operator=(JobHandleGPU&& other)
 {
+	PROFILE_SCOPED()
 	if (m_job && m_queue)
 		m_queue->Cancel(m_job);
 	m_job = other.m_job;
@@ -146,6 +152,7 @@ JobHandleGPU::~JobHandleGPU()
 JobQueueGPU::JobQueueGPU() :
 	m_shutdown(false)
 {
+	PROFILE_SCOPED()
 	m_runner.reset( new JobRunnerGPU(this) );
 }
 
@@ -170,6 +177,7 @@ JobQueueGPU::~JobQueueGPU()
 
 JobHandleGPU JobQueueGPU::Queue(JobGPU *job)
 {
+	PROFILE_SCOPED()
 	JobHandleGPU handle(job, this);
 
 	// push the job onto the queue
@@ -180,6 +188,7 @@ JobHandleGPU JobQueueGPU::Queue(JobGPU *job)
 // called by the runner to get a new job
 JobGPU *JobQueueGPU::GetGPUJob()
 {
+	PROFILE_SCOPED()
 	// loop until a new job is available
 	JobGPU *job = nullptr;
 	while (!job) {
@@ -205,6 +214,7 @@ JobGPU *JobQueueGPU::GetGPUJob()
 // called by the runner when a job completes
 void JobQueueGPU::Finish(JobGPU *job)
 {
+	PROFILE_SCOPED()
 	m_finished.push_back(job);
 }
 
@@ -236,7 +246,9 @@ Uint32 JobQueueGPU::ProcessGPUJobs()
 	return finished;
 }
 
-void JobQueueGPU::Cancel(JobGPU *job) {
+void JobQueueGPU::Cancel(JobGPU *job) 
+{
+	PROFILE_SCOPED()
 
 	// check the waiting list. if its there then it hasn't run yet. just forget about it
 	for (std::deque<JobGPU*>::iterator i = m_queue.begin(); i != m_queue.end(); ++i) {
