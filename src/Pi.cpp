@@ -122,9 +122,10 @@ bool Pi::joystickEnabled;
 bool Pi::mouseYInvert;
 bool Pi::compactScanner;
 std::map<SDL_JoystickID,Pi::JoystickState> Pi::joysticks;
-bool Pi::navTunnelDisplayed;
+bool Pi::navTunnelDisplayed = false;
 bool Pi::speedLinesDisplayed = false;
 bool Pi::hudTrailsDisplayed = false;
+bool Pi::supportsGPUJobs = false;
 Gui::Fixed *Pi::menu;
 bool Pi::DrawGUI = true;
 Graphics::Renderer *Pi::renderer;
@@ -141,6 +142,7 @@ bool Pi::bRequestEndGame = false;
 Sound::MusicPlayer Pi::musicPlayer;
 std::unique_ptr<AsyncJobQueue> Pi::asyncJobQueue;
 std::unique_ptr<SyncJobQueue> Pi::syncJobQueue;
+std::unique_ptr<JobQueueGPU> Pi::gpuJobQueue;
 
 // Leaving define in place in case of future rendering problems.
 #define USE_RTT 0
@@ -427,6 +429,8 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 	speedLinesDisplayed = (config->Int("SpeedLines")) ? true : false;
 	hudTrailsDisplayed = (config->Int("HudTrails")) ? true : false;
 
+	supportsGPUJobs = (Pi::config->Int("EnableGPUJobs") == 1);
+
 	EnumStrings::Init();
 
 	// get threads up
@@ -437,6 +441,9 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 	asyncJobQueue.reset(new AsyncJobQueue(numThreads));
 	Output("started %d worker threads\n", numThreads);
 	syncJobQueue.reset(new SyncJobQueue);
+	Output("started syncronhous CPU Job Queue\n", numThreads);
+	gpuJobQueue.reset(new JobQueueGPU());
+	Output("started GPU Job Queue\n");
 	
 	Output("ShipType::Init()\n");
 	// XXX early, Lua init needs it
@@ -1313,6 +1320,7 @@ void Pi::MainLoop()
 		syncJobQueue->RunJobs(SYNC_JOBS_PER_LOOP);
 		asyncJobQueue->FinishJobs();
 		syncJobQueue->FinishJobs();
+		gpuJobQueue->ProcessGPUJobs();
 
 #if WITH_DEVKEYS
 		if (Pi::showDebugInfo && SDL_GetTicks() - last_stats > 1000) {

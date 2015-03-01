@@ -49,6 +49,7 @@ GameConfig::GameConfig(const std::map<std::string,std::string> &override_)
 	map["RedirectStdio"] = "0";
 #endif
 	map["EnableGLDebug"] = "0";
+	map["EnableGPUJobs"] = "0";
 
 	Load();
 

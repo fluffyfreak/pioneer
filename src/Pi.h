@@ -14,6 +14,7 @@
 #include "CargoBody.h"
 #include "Space.h"
 #include "JobQueue.h"
+#include "JobQueueGPU.h"
 #include "galaxy/Galaxy.h"
 #include <map>
 #include <string>
@@ -161,7 +162,8 @@ public:
 	static GameConfig *config;
 
 	static JobQueue *GetAsyncJobQueue() { return asyncJobQueue.get();}
-	static JobQueue *GetSyncJobQueue() { return syncJobQueue.get();}
+	static JobQueue *GetSyncJobQueue() { return syncJobQueue.get(); }
+	static JobQueueGPU* GpuJobs() { return gpuJobQueue.get(); }
 
 	static bool DrawGUI;
 
@@ -172,6 +174,7 @@ private:
 	static const Uint32 SYNC_JOBS_PER_LOOP = 1;
 	static std::unique_ptr<AsyncJobQueue> asyncJobQueue;
 	static std::unique_ptr<SyncJobQueue> syncJobQueue;
+	static std::unique_ptr<JobQueueGPU> gpuJobQueue;
 
 	static bool menuDone;
 
@@ -207,6 +210,7 @@ private:
 	static bool navTunnelDisplayed;
 	static bool speedLinesDisplayed;
 	static bool hudTrailsDisplayed;
+	static bool supportsGPUJobs;
 
 	static Gui::Fixed *menu;
 
