@@ -56,6 +56,8 @@ GenGasGiantColourProgram::GenGasGiantColourProgram(const MaterialDescriptor &des
 
 void GenGasGiantColourProgram::InitUniforms()
 {
+	Program::InitUniforms();
+
 	v0.Init("v0", m_program);
 	v1.Init("v1", m_program);
 	v2.Init("v2", m_program);
@@ -85,8 +87,9 @@ Program *GenGasGiantColourMaterial::CreateProgram(const MaterialDescriptor &desc
 
 void GenGasGiantColourMaterial::Apply()
 {
+	OGL::Material::Apply();
+
 	GenGasGiantColourProgram *p = static_cast<GenGasGiantColourProgram*>(m_program);
-	p->Use();
 
 	const Graphics::GenGasGiantColourMaterialParameters params = *static_cast<Graphics::GenGasGiantColourMaterialParameters*>(this->specialParameter0);
 	assert(params.v);
@@ -126,6 +129,15 @@ void GenGasGiantColourMaterial::Apply()
 	p->entropy.Set(float(params.pTerrain->GetEntropy(0)));
 	p->planetEarthRadii.Set(float(params.planetRadius / EARTH_RADIUS));
 	// XXX omg hacking galore
+
+	//Light uniform parameters
+	for (Uint32 i = 0; i<m_renderer->GetNumLights(); i++) {
+		const Light& Light = m_renderer->GetLight(i);
+		p->lights[i].diffuse.Set(Light.GetDiffuse());
+		p->lights[i].specular.Set(Light.GetSpecular());
+		const vector3f& pos = Light.GetPosition();
+		p->lights[i].position.Set(pos.x, pos.y, pos.z, (Light.GetType() == Light::LIGHT_DIRECTIONAL ? 0.f : 1.f));
+	}
 
 	p->diffuse.Set(this->diffuse);
 
