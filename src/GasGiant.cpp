@@ -664,6 +664,28 @@ bool GasGiant::OnAddGPUGenResult(const SystemPath &path, SGPUGenResult *res)
 	return false;
 }
 
+#define DUMP_TO_TEXTURE 0
+
+#if DUMP_TO_TEXTURE
+#include "FileSystem.h"
+#include "PngWriter.h"
+#include "graphics/opengl/TextureGL.h"
+void textureDump(const char* destFile, const int width, const int height, const Color* buf)
+{
+	const std::string dir = "generated_textures";
+	FileSystem::userFiles.MakeDirectory(dir);
+	const std::string fname = FileSystem::JoinPathBelow(dir, destFile);
+
+	// pad rows to 4 bytes, which is the default row alignment for OpenGL
+	//const int stride = (3*width + 3) & ~3;
+	const int stride = width * 4;
+
+	write_png(FileSystem::userFiles, fname, &buf[0].r, width, height, stride, 4);
+
+	printf("texture %s saved\n", fname.c_str());
+}
+#endif
+
 bool GasGiant::AddTextureFaceResult(STextureFaceResult *res)
 {
 	bool result = false;
@@ -702,6 +724,14 @@ bool GasGiant::AddTextureFaceResult(STextureFaceResult *res)
 		tcd.negZ = m_jobColorBuffers[5].get();
 		m_surfaceTexture->Update(tcd, dataSize, Graphics::TEXTURE_RGBA_8888);
 
+#if DUMP_TO_TEXTURE
+		for (int iFace = 0; iFace<NUM_PATCHES; iFace++) {
+			char filename[1024];
+			snprintf(filename, 1024, "%s%d.png", GetSystemBody()->GetName().c_str(), iFace);
+			textureDump(filename, uvDims, uvDims, m_jobColorBuffers[iFace].get());
+		}
+#endif
+
 		// cleanup the temporary color buffer storage
 		for(int i=0; i<NUM_PATCHES; i++) {
 			m_jobColorBuffers[i].reset();
@@ -716,27 +746,6 @@ bool GasGiant::AddTextureFaceResult(STextureFaceResult *res)
 
 	return result;
 }
-#define DUMP_TO_TEXTURE 0
-
-#if DUMP_TO_TEXTURE
-#include "FileSystem.h"
-#include "PngWriter.h"
-#include "graphics/opengl/TextureGL.h"
-void textureDump(const char* destFile, const int width, const int height, const Color* buf)
-{
-	const std::string dir = "generated_textures";
-	FileSystem::userFiles.MakeDirectory(dir);
-	const std::string fname = FileSystem::JoinPathBelow(dir, destFile);
-
-	// pad rows to 4 bytes, which is the default row alignment for OpenGL
-	//const int stride = (3*width + 3) & ~3;
-	const int stride = width * 4;
-
-	write_png(FileSystem::userFiles, fname, &buf[0].r, width, height, stride, 4);
-
-	printf("texture %s saved\n", fname.c_str());
-}
-#endif
 
 bool GasGiant::AddGPUGenResult(SGPUGenResult *res)
 {
