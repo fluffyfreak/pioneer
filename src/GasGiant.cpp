@@ -716,7 +716,7 @@ bool GasGiant::AddTextureFaceResult(STextureFaceResult *res)
 
 	return result;
 }
-#define DUMP_TO_TEXTURE 1
+#define DUMP_TO_TEXTURE 0
 
 #if DUMP_TO_TEXTURE
 #include "FileSystem.h"
@@ -737,7 +737,7 @@ void textureDump(const char* destFile, const int width, const int height, const 
 	printf("texture %s saved\n", fname.c_str());
 }
 #endif
-#pragma optimize("",off)
+
 bool GasGiant::AddGPUGenResult(SGPUGenResult *res)
 {
 	bool result = false;
@@ -764,7 +764,7 @@ bool GasGiant::AddGPUGenResult(SGPUGenResult *res)
 	// tidyup
 	delete res;
 
-	if( !m_hasGpuJobRequest ) {
+	if (m_builtTexture.Valid()) {
 		m_surfaceTexture = m_builtTexture;
 		m_builtTexture.Reset();
 
@@ -999,9 +999,6 @@ void GasGiant::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView,
 	m_surfaceMaterial->Unapply();
 
 	renderer->SetAmbientColor(oldAmbient);
-
-	// HACK - regenerate each frame
-	GenerateTexture();
 }
 
 void GasGiant::SetUpMaterials()
