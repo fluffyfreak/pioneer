@@ -133,7 +133,7 @@
     <ClCompile />
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>profiler.lib;glew.lib;json.lib;assimp.lib;lua.lib;jenkins.lib;shlwapi.lib;libogg_static_vc2012_release.lib;libvorbis_static_vc2012_release.lib;libvorbisfile_static_vc2012_release.lib;sdl2.lib;sdl2main.lib;opengl32.lib;glu32.lib;SDL2_image.lib;freetype2312MT.lib;glew32.lib;sigc-vc2012-2_2_8.lib;libpng15_static.lib;zlib.lib;text.lib;galaxy.lib;collider.lib;graphics.lib;terrain.lib;gui.lib;ui.lib;scenegraph.lib;gameui.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>profiler.lib;glew.lib;json.lib;assimp.lib;lua.lib;jenkins.lib;shlwapi.lib;libogg_static_vc2013_release.lib;libvorbis_static_vc2013_release.lib;libvorbisfile_static_vc2013_release.lib;sdl2.lib;sdl2main.lib;opengl32.lib;glu32.lib;SDL2_image.lib;freetype2312MT.lib;glew32.lib;sigc-vc120-2_0.lib;libpng15.lib;zlib.lib;text.lib;galaxy.lib;collider.lib;graphics.lib;terrain.lib;gui.lib;ui.lib;scenegraph.lib;gameui.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>../../win32/lib;../../../pioneer-thirdparty/win32/lib;$(SolutionDir)$(Configuration)</AdditionalLibraryDirectories>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
