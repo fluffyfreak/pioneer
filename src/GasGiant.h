@@ -15,6 +15,7 @@
 #include "BaseSphere.h"
 #include "JobQueue.h"
 #include "JobQueueGPU.h"
+#include "GasGiantJobs.h"
 
 #include <deque>
 
@@ -45,8 +46,8 @@ public:
 
 	virtual void Reset() {};
 
-	static bool OnAddTextureFaceResult(const SystemPath &path, STextureFaceResult *res);
-	static bool OnAddGPUGenResult(const SystemPath &path, SGPUGenResult *res);
+	static bool OnAddTextureFaceResult(const SystemPath &path, GasGiantJobs::STextureFaceResult *res);
+	static bool OnAddGPUGenResult(const SystemPath &path, GasGiantJobs::SGPUGenResult *res);
 	static void Init();
 	static void Uninit();
 	static void UpdateAllGasGiants();
@@ -59,8 +60,8 @@ public:
 private:
 	void BuildFirstPatches();
 	void GenerateTexture();
-	bool AddTextureFaceResult(STextureFaceResult *res);
-	bool AddGPUGenResult(SGPUGenResult *res);
+	bool AddTextureFaceResult(GasGiantJobs::STextureFaceResult *res);
+	bool AddGPUGenResult(GasGiantJobs::SGPUGenResult *res);
 
 	static RefCountedPtr<GasPatchContext> s_patchContext;
 

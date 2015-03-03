@@ -29,388 +29,6 @@ namespace
 	static const float s_initialCPUDelayTime = 60.0f; // (perhaps) 60 seconds seems like a reasonable default
 	static const float s_initialGPUDelayTime = 5.0f; // (perhaps) 60 seconds seems like a reasonable default
 	static std::vector<GasGiant*> s_allGasGiants;
-
-	// generate root face patches of the cube/sphere
-	static const vector3d p1 = (vector3d( 1, 1, 1)).Normalized();
-	static const vector3d p2 = (vector3d(-1, 1, 1)).Normalized();
-	static const vector3d p3 = (vector3d(-1,-1, 1)).Normalized();
-	static const vector3d p4 = (vector3d( 1,-1, 1)).Normalized();
-	static const vector3d p5 = (vector3d( 1, 1,-1)).Normalized();
-	static const vector3d p6 = (vector3d(-1, 1,-1)).Normalized();
-	static const vector3d p7 = (vector3d(-1,-1,-1)).Normalized();
-	static const vector3d p8 = (vector3d( 1,-1,-1)).Normalized();
-
-	static const vector3d s_patchFaces[NUM_PATCHES][4] = 
-	{ 
-		{p5, p1, p4, p8}, // +x
-		{p2, p6, p7, p3}, // -x
-	
-		{p2, p1, p5, p6}, // +y
-		{p7, p8, p4, p3}, // -y
-
-		{p6, p5, p8, p7}, // +z - NB: these are actually reversed!
-		{p1, p2, p3, p4}  // -z
-	};
-
-	class STextureFaceRequest {
-	public:
-		STextureFaceRequest(const vector3d *v_, const SystemPath &sysPath_, const Sint32 face_, const Sint32 uvDIMs_, Terrain *pTerrain_) :
-			corners(v_), sysPath(sysPath_), face(face_), uvDIMs(uvDIMs_), pTerrain(pTerrain_)
-		{
-			colors = new Color[NumTexels()];
-		}
-
-		 // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
-		// Use only data local to this object
-		void OnRun()
-		{
-			PROFILE_SCOPED()
-			MsgTimer timey;
-
-			assert( corners != nullptr );
-			double fracStep = 1.0 / double(UVDims()-1);
-			for( Sint32 v=0; v<UVDims(); v++ ) {
-				for( Sint32 u=0; u<UVDims(); u++ ) {
-					// where in this row & colum are we now.
-					const double ustep = double(u) * fracStep;
-					const double vstep = double(v) * fracStep;
-
-					// get point on the surface of the sphere
-					const vector3d p = GetSpherePoint(ustep, vstep);
-					// get colour using `p`
-					const vector3d colour = pTerrain->GetColor(p, 0.0, p);
-
-					// convert to ubyte and store
-					Color* col = colors + (u + (v * UVDims()));
-					col[0].r = Uint8(colour.x * 255.0);
-					col[0].g = Uint8(colour.y * 255.0);
-					col[0].b = Uint8(colour.z * 255.0);
-					col[0].a = 255;
-				}
-			}
-
-			timey.Mark("SingleTextureFaceCPUJob::OnRun");
-		}
-
-		Sint32 Face() const { return face; }
-		inline Sint32 UVDims() const { return uvDIMs; }
-		Color* Colors() const { return colors; }
-		const SystemPath& SysPath() const { return sysPath; }
-
-	protected:
-		// deliberately prevent copy constructor access
-		STextureFaceRequest(const STextureFaceRequest &r);
-
-		inline Sint32 NumTexels() const { return uvDIMs*uvDIMs; }
-
-		// in patch surface coords, [0,1]
-		inline vector3d GetSpherePoint(const double x, const double y) const {
-			return (corners[0] + x*(1.0-y)*(corners[1]-corners[0]) + x*y*(corners[2]-corners[0]) + (1.0-x)*y*(corners[3]-corners[0])).Normalized();
-		}
-
-		// these are created with the request and are given to the resulting patches
-		Color *colors;
-
-		const vector3d *corners;
-		const SystemPath sysPath;
-		const Sint32 face;
-		const Sint32 uvDIMs;
-		RefCountedPtr<Terrain> pTerrain;
-	};
-
-	class STextureFaceResult {
-	public:
-		struct STextureFaceData {
-			STextureFaceData() {}
-			STextureFaceData(Color *c_, Sint32 uvDims_) : colors(c_), uvDims(uvDims_) {}
-			STextureFaceData(const STextureFaceData &r) : colors(r.colors), uvDims(r.uvDims) {}
-			Color *colors;
-			Sint32 uvDims;
-		};
-
-		STextureFaceResult(const int32_t face_) : mFace(face_) {}
-
-		void addResult(Color *c_, Sint32 uvDims_) {
-			PROFILE_SCOPED()
-			mData = STextureFaceData(c_, uvDims_);
-		}
-
-		inline const STextureFaceData& data() const { return mData; }
-		inline int32_t face() const { return mFace; }
-
-		void OnCancel()	{
-			if( mData.colors ) {delete [] mData.colors; mData.colors = NULL;}
-		}
-
-	protected:
-		// deliberately prevent copy constructor access
-		STextureFaceResult(const STextureFaceResult &r);
-
-		const int32_t mFace;
-		STextureFaceData mData;
-	};
-
-	// ********************************************************************************
-	// Overloaded PureJob class to handle generating the mesh for each patch
-	// ********************************************************************************
-	class SingleTextureFaceJob : public Job
-	{
-	public:
-		SingleTextureFaceJob(STextureFaceRequest *data) : mData(data), mpResults(nullptr) { /* empty */ }
-		virtual ~SingleTextureFaceJob()
-		{
-			PROFILE_SCOPED()
-			if(mpResults) {
-				mpResults->OnCancel();
-				delete mpResults;
-				mpResults = nullptr;
-			}
-		}
-
-		virtual void OnRun() // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
-		{
-			PROFILE_SCOPED()
-			mData->OnRun();
-
-			// add this patches data
-			STextureFaceResult *sr = new STextureFaceResult(mData->Face());
-			sr->addResult(mData->Colors(), mData->UVDims());
-
-			// store the result
-			mpResults = sr;
-		}
-		virtual void OnFinish() // runs in primary thread of the context
-		{
-			PROFILE_SCOPED()
-			GasGiant::OnAddTextureFaceResult( mData->SysPath(), mpResults );
-			mpResults = nullptr;
-		}
-		virtual void OnCancel() {}
-
-	private:
-		// deliberately prevent copy constructor access
-		SingleTextureFaceJob(const SingleTextureFaceJob &r);
-
-		std::unique_ptr<STextureFaceRequest> mData;
-		STextureFaceResult *mpResults;
-	};
-
-	// ********************************************************************************
-	// a quad with reversed winding
-	class GenFaceQuad {
-	public:
-		GenFaceQuad(Graphics::Renderer *r, const vector2f &pos, const vector2f &size, Graphics::RenderState *state, const Uint32 GGQuality)
-		{
-			PROFILE_SCOPED()
-			assert(state);
-			m_renderState = state;
-
-			Graphics::MaterialDescriptor desc;
-			desc.effect = Graphics::EFFECT_GEN_GASGIANT_TEXTURE;
-			desc.quality = GGQuality;
-			m_material.reset(r->CreateMaterial(desc));
-			
-			// these might need to be reversed
-			const vector2f texPos = vector2f(0.0f);
-			const vector2f texSize(size);
-
-			Graphics::VertexArray vertices(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_UV0);
-			vertices.Add(vector3f(pos.x,          pos.y,          0.0f), vector2f(texPos.x,             texPos.y + texSize.y));
-			vertices.Add(vector3f(pos.x,          pos.y + size.y, 0.0f), vector2f(texPos.x,             texPos.y));
-			vertices.Add(vector3f(pos.x + size.x, pos.y,          0.0f), vector2f(texPos.x + texSize.x, texPos.y + texSize.y));
-			vertices.Add(vector3f(pos.x + size.x, pos.y + size.y, 0.0f), vector2f(texPos.x + texSize.x, texPos.y));
-
-			//Create vtx & index buffers and copy data
-			Graphics::VertexBufferDesc vbd;
-			vbd.attrib[0].semantic = Graphics::ATTRIB_POSITION;
-			vbd.attrib[0].format = Graphics::ATTRIB_FORMAT_FLOAT3;
-			vbd.attrib[1].semantic = Graphics::ATTRIB_UV0;
-			vbd.attrib[1].format = Graphics::ATTRIB_FORMAT_FLOAT2;
-			vbd.numVertices = vertices.GetNumVerts();
-			vbd.usage = Graphics::BUFFER_USAGE_STATIC;
-			m_vertexBuffer.reset(r->CreateVertexBuffer(vbd));
-			m_vertexBuffer->Populate(vertices);
-		}
-		virtual void Draw(Graphics::Renderer *r) {
-			PROFILE_SCOPED()
-			r->DrawBuffer(m_vertexBuffer.get(), m_renderState, m_material.get(), Graphics::TRIANGLE_STRIP);
-		}
-
-		void SetMaterial(Graphics::Material *mat) { assert(mat); m_material.reset(mat); }
-		Graphics::Material* GetMaterial() const { return m_material.get(); }
-	private:
-		std::unique_ptr<Graphics::Material> m_material;
-		std::unique_ptr<Graphics::VertexBuffer> m_vertexBuffer;
-		Graphics::RenderState *m_renderState;
-	};
-
-	// ********************************************************************************
-	class SGPUGenRequest {
-	public:
-		SGPUGenRequest(const SystemPath &sysPath_, const Sint32 uvDIMs_, Terrain *pTerrain_, const float planetRadius_, GenFaceQuad* pQuad_, Graphics::Texture *pTex_) :
-			m_texture(pTex_), sysPath(sysPath_), uvDIMs(uvDIMs_), pTerrain(pTerrain_), planetRadius(planetRadius_), pQuad(pQuad_)
-		{
-			PROFILE_SCOPED()
-			assert(m_texture.Valid());
-		}
-
-		inline Sint32 UVDims() const { return uvDIMs; }
-		Graphics::Texture* Texture() const { return m_texture.Get(); }
-		GenFaceQuad* Quad() const { return pQuad; }
-		const SystemPath& SysPath() const { return sysPath; }
-
-		void SetupMaterialParams(const int face)
-		{
-			PROFILE_SCOPED()
-			m_specialParams.v = &s_patchFaces[face][0];
-			m_specialParams.fracStep = 1.0f / float(uvDIMs);
-			m_specialParams.planetRadius = planetRadius;
-			m_specialParams.time = 0.0f;
-			m_specialParams.pTerrain = pTerrain;
-			pQuad->GetMaterial()->specialParameter0 = &m_specialParams;
-		}
-
-	protected:
-		// deliberately prevent copy constructor access
-		SGPUGenRequest(const SGPUGenRequest &r);
-
-		inline Sint32 NumTexels() const { return uvDIMs*uvDIMs; }
-
-		// this is created with the request and are given to the resulting patches
-		RefCountedPtr<Graphics::Texture> m_texture;
-
-		const SystemPath sysPath;
-		const Sint32 uvDIMs;
-		Terrain *pTerrain;
-		const float planetRadius;
-		GenFaceQuad* pQuad;
-		Graphics::GenGasGiantColourMaterialParameters m_specialParams;
-	};
-
-	// ********************************************************************************
-	class SGPUGenResult {
-	public:
-		struct SGPUGenData {
-			SGPUGenData() {}
-			SGPUGenData(Graphics::Texture *t_, Sint32 uvDims_) : texture(t_), uvDims(uvDims_) {}
-			SGPUGenData(const SGPUGenData &r) : texture(r.texture), uvDims(r.uvDims) {}
-			RefCountedPtr<Graphics::Texture> texture;
-			Sint32 uvDims;
-		};
-
-		SGPUGenResult() {}
-
-		void addResult(Graphics::Texture *t_, Sint32 uvDims_) {
-			PROFILE_SCOPED()
-			mData = SGPUGenData(t_, uvDims_);
-		}
-
-		inline const SGPUGenData& data() const { return mData; }
-
-		void OnCancel()	{
-			if( mData.texture ) { mData.texture.Reset(); }
-		}
-
-	protected:
-		// deliberately prevent copy constructor access
-		SGPUGenResult(const SGPUGenResult &r);
-
-		SGPUGenData mData;
-	};
-
-	//static matrix3x3f LookAt (const vector3f &eye, const vector3f &target, const vector3f &up) {
-	//	const vector3f viewDir  = (target - eye).Normalized();
-	//	const vector3f viewUp   = (up - up.Dot(viewDir) * viewDir).Normalized();
-	//	const vector3f viewSide = viewDir.Cross(viewUp);
-	//
-	//	return matrix3x3f::FromVectors(viewSide, viewUp, -viewDir);
-	//}
-
-	// ********************************************************************************
-	// Overloaded JobGPU class to handle generating the mesh for each patch
-	// ********************************************************************************
-	class SingleGPUGenJob : public JobGPU
-	{
-	public:
-		SingleGPUGenJob(SGPUGenRequest *data) : mData(data), mpResults(nullptr) { /* empty */ }
-		virtual ~SingleGPUGenJob()
-		{
-			PROFILE_SCOPED()
-			if(mpResults) {
-				mpResults->OnCancel();
-				delete mpResults;
-				mpResults = nullptr;
-			}
-		}
-
-		virtual void OnRun() // Runs in the main thread, may trash the GPU state
-		{
-			PROFILE_SCOPED()
-			MsgTimer timey;
-
-			for( Uint32 iFace=0; iFace<NUM_PATCHES; iFace++ )
-			{
-				// render the scene
-				GasGiant::SetRenderTargetCubemap( iFace, mData->Texture() );
-				GasGiant::BeginRenderTarget();
-				Pi::renderer->BeginFrame();
-				Pi::renderer->SetViewport( 0, 0, UV_DIMS, UV_DIMS );
-				Pi::renderer->SetTransform(matrix4x4f::Identity());
-
-				// enter ortho
-				{
-					Pi::renderer->SetMatrixMode(Graphics::MatrixMode::PROJECTION);
-					Pi::renderer->PushMatrix();
-					Pi::renderer->SetOrthographicProjection(0, UV_DIMS, UV_DIMS, 0, -1, 1);
-					Pi::renderer->SetMatrixMode(Graphics::MatrixMode::MODELVIEW);
-					Pi::renderer->PushMatrix();
-					Pi::renderer->LoadIdentity();
-				}
-
-				// draw to the texture here
-				mData->SetupMaterialParams( iFace );
-				mData->Quad()->Draw( Pi::renderer );
-
-				// leave ortho?
-				{
-					Pi::renderer->SetMatrixMode(Graphics::MatrixMode::PROJECTION);
-					Pi::renderer->PopMatrix();
-					Pi::renderer->SetMatrixMode(Graphics::MatrixMode::MODELVIEW);
-					Pi::renderer->PopMatrix();
-				}
-			
-				Pi::renderer->EndFrame();
-				GasGiant::EndRenderTarget();
-				GasGiant::SetRenderTargetCubemap( iFace, nullptr );
-			}
-
-			// add this patches data
-			SGPUGenResult *sr = new SGPUGenResult();
-			sr->addResult( mData->Texture(), mData->UVDims() );
-
-			// store the result
-			mpResults = sr;
-
-			timey.Mark("SingleGPUGenJob::OnRun");
-		}
-
-		virtual void OnFinish() // runs in primary thread of the context
-		{
-			PROFILE_SCOPED()
-			GasGiant::OnAddGPUGenResult( mData->SysPath(), mpResults );
-			mpResults = nullptr;
-		}
-
-		virtual void OnCancel() {}
-
-	private:
-		SingleGPUGenJob() {}
-		// deliberately prevent copy constructor access
-		SingleGPUGenJob(const SingleGPUGenJob &r);
-
-		std::unique_ptr<SGPUGenRequest> mData;
-		SGPUGenResult *mpResults;
-	};
 };
 
 
@@ -629,7 +247,7 @@ GasGiant::~GasGiant()
 }
 
 //static
-bool GasGiant::OnAddTextureFaceResult(const SystemPath &path, STextureFaceResult *res)
+bool GasGiant::OnAddTextureFaceResult(const SystemPath &path, GasGiantJobs::STextureFaceResult *res)
 {
 	// Find the correct GeoSphere via it's system path, and give it the split result
 	for(std::vector<GasGiant*>::iterator i=s_allGasGiants.begin(), iEnd=s_allGasGiants.end(); i!=iEnd; ++i) {
@@ -647,7 +265,7 @@ bool GasGiant::OnAddTextureFaceResult(const SystemPath &path, STextureFaceResult
 }
 
 //static
-bool GasGiant::OnAddGPUGenResult(const SystemPath &path, SGPUGenResult *res)
+bool GasGiant::OnAddGPUGenResult(const SystemPath &path, GasGiantJobs::SGPUGenResult *res)
 {
 	// Find the correct GeoSphere via it's system path, and give it the split result
 	for(std::vector<GasGiant*>::iterator i=s_allGasGiants.begin(), iEnd=s_allGasGiants.end(); i!=iEnd; ++i) {
@@ -686,7 +304,7 @@ void textureDump(const char* destFile, const int width, const int height, const 
 }
 #endif
 
-bool GasGiant::AddTextureFaceResult(STextureFaceResult *res)
+bool GasGiant::AddTextureFaceResult(GasGiantJobs::STextureFaceResult *res)
 {
 	bool result = false;
 	assert(res);
@@ -747,7 +365,7 @@ bool GasGiant::AddTextureFaceResult(STextureFaceResult *res)
 	return result;
 }
 
-bool GasGiant::AddGPUGenResult(SGPUGenResult *res)
+bool GasGiant::AddGPUGenResult(GasGiantJobs::SGPUGenResult *res)
 {
 	bool result = false;
 	assert(res);
@@ -797,6 +415,7 @@ inline vector3d GetSpherePointFromCorners(const double x, const double y, const 
 
 void GasGiant::GenerateTexture()
 {
+	using namespace GasGiantJobs;
 	for(int i=0; i<NUM_PATCHES; i++) {
 		if (m_hasGpuJobRequest || m_hasJobRequest[i])
 			return;
@@ -858,8 +477,8 @@ void GasGiant::GenerateTexture()
 			assert(!m_hasJobRequest[i]);
 			assert(!m_job[i].HasJob());
 			m_hasJobRequest[i] = true;
-			STextureFaceRequest *ssrd = new STextureFaceRequest(&s_patchFaces[i][0], GetSystemBody()->GetPath(), i, UV_DIMS, GetTerrain());
-			m_job[i] = Pi::GetAsyncJobQueue()->Queue(new SingleTextureFaceJob(ssrd));
+			GasGiantJobs::STextureFaceRequest *ssrd = new GasGiantJobs::STextureFaceRequest(&s_patchFaces[i][0], GetSystemBody()->GetPath(), i, UV_DIMS, GetTerrain());
+			m_job[i] = Pi::GetAsyncJobQueue()->Queue(new GasGiantJobs::SingleTextureFaceJob(ssrd));
 		}
 	}
 	else
@@ -899,12 +518,12 @@ void GasGiant::GenerateTexture()
 		assert(!m_hasGpuJobRequest);
 		assert(!m_gpuJob.HasGPUJob());
 
-		GenFaceQuad *pQuad = new GenFaceQuad( Pi::renderer, 
+		GasGiantJobs::GenFaceQuad *pQuad = new GasGiantJobs::GenFaceQuad(Pi::renderer,
 			vector2f(0.0f, 0.0f), vector2f(UV_DIMS, UV_DIMS), 
 			s_quadRenderState, GasGiantType );
 			
-		SGPUGenRequest *pGPUReq = new SGPUGenRequest( GetSystemBody()->GetPath(), UV_DIMS, GetTerrain(), GetSystemBody()->GetRadius(), pQuad, m_builtTexture.Get() );
-		m_gpuJob = Pi::GpuJobs()->Queue( new SingleGPUGenJob(pGPUReq) );
+		GasGiantJobs::SGPUGenRequest *pGPUReq = new GasGiantJobs::SGPUGenRequest(GetSystemBody()->GetPath(), UV_DIMS, GetTerrain(), GetSystemBody()->GetRadius(), pQuad, m_builtTexture.Get());
+		m_gpuJob = Pi::GpuJobs()->Queue(new GasGiantJobs::SingleGPUGenJob(pGPUReq));
 		m_hasGpuJobRequest = true;
 	}
 }
@@ -1061,6 +680,7 @@ void GasGiant::BuildFirstPatches()
 		s_patchContext.Reset(new GasPatchContext(127));
 	}
 
+	using namespace GasGiantJobs;
 	m_patches[0].reset(new GasPatch(s_patchContext, this, p1, p2, p3, p4));
 	m_patches[1].reset(new GasPatch(s_patchContext, this, p4, p3, p7, p8));
 	m_patches[2].reset(new GasPatch(s_patchContext, this, p1, p4, p8, p5));

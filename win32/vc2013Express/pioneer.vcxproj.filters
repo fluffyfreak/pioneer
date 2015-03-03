@@ -432,6 +432,9 @@
     <ClCompile Include="..\..\src\JobQueueGPU.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\GasGiantJobs.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Aabb.h">
@@ -873,6 +876,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\JobQueueGPU.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\GasGiantJobs.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
