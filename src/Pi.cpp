@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Pi.h"
@@ -31,6 +31,7 @@
 #include "LuaMusic.h"
 #include "LuaNameGen.h"
 #include "LuaRef.h"
+#include "LuaServerAgent.h"
 #include "LuaShipDef.h"
 #include "LuaSpace.h"
 #include "LuaTimer.h"
@@ -62,10 +63,12 @@
 #include "UIView.h"
 #include "KeyBindings.h"
 #include "EnumStrings.h"
+#include "ServerAgent.h"
 #include "galaxy/CustomSystem.h"
 #include "galaxy/GalaxyGenerator.h"
 #include "galaxy/StarSystem.h"
 #include "gameui/Lua.h"
+#include "graphics/opengl/RendererGL.h"
 #include "graphics/Graphics.h"
 #include "graphics/Light.h"
 #include "graphics/Renderer.h"
@@ -88,6 +91,7 @@ sigc::signal<void> Pi::onPlayerChangeFlightControlState;
 LuaSerializer *Pi::luaSerializer;
 LuaTimer *Pi::luaTimer;
 LuaNameGen *Pi::luaNameGen;
+ServerAgent *Pi::serverAgent;
 int Pi::keyModState;
 std::map<SDL_Keycode,bool> Pi::keyState; // XXX SDL2 SDLK_LAST
 char Pi::mouseButton[6];
@@ -268,6 +272,7 @@ static void LuaInit()
 	LuaLang::Register();
 	LuaEngine::Register();
 	LuaFileSystem::Register();
+	LuaServerAgent::Register();
 	LuaGame::Register();
 	LuaComms::Register();
 	LuaFormat::Register();
@@ -386,8 +391,11 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 	SDL_GetVersion(&ver);
 	Output("SDL Version %d.%d.%d\n", ver.major, ver.minor, ver.patch);
 
+	Graphics::RendererOGL::RegisterRenderer();
+
 	// Do rest of SDL video initialization and create Renderer
 	Graphics::Settings videoSettings = {};
+	videoSettings.rendererType = Graphics::RENDERER_OPENGL;
 	videoSettings.width = config->Int("ScrWidth");
 	videoSettings.height = config->Int("ScrHeight");
 	videoSettings.fullscreen = (config->Int("StartFullscreen") != 0);
@@ -440,6 +448,19 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 	Lua::Init();
 
 	Pi::ui.Reset(new UI::Context(Lua::manager, Pi::renderer, Graphics::GetScreenWidth(), Graphics::GetScreenHeight()));
+
+	Pi::serverAgent = 0;
+	if (config->Int("EnableServerAgent")) {
+		const std::string endpoint(config->String("ServerEndpoint"));
+		if (endpoint.size() > 0) {
+			Output("Server agent enabled, endpoint: %s\n", endpoint.c_str());
+			Pi::serverAgent = new HTTPServerAgent(endpoint);
+		}
+	}
+	if (!Pi::serverAgent) {
+		Output("Server agent disabled\n");
+		Pi::serverAgent = new NullServerAgent();
+	}
 
 	LuaInit();
 
@@ -777,7 +798,9 @@ void Pi::HandleEvents()
 							const time_t t = time(0);
 							struct tm *_tm = localtime(&t);
 							strftime(buf, sizeof(buf), "screenshot-%Y%m%d-%H%M%S.png", _tm);
-							Screendump(buf, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
+							Graphics::ScreendumpState sd;
+							Pi::renderer->Screendump(sd);
+							write_screenshot(sd, buf);
 							break;
 						}
 #if WITH_DEVKEYS
@@ -1063,6 +1086,8 @@ void Pi::Start()
 		Pi::frameTime = 0.001f*(SDL_GetTicks() - last_time);
 		_time += Pi::frameTime;
 		last_time = SDL_GetTicks();
+
+		Pi::serverAgent->ProcessResponses();
 	}
 
 	ui->DropAllLayers();
@@ -1138,6 +1163,8 @@ void Pi::MainLoop()
 #ifdef PIONEER_PROFILER
 		Profiler::reset();
 #endif
+
+		Pi::serverAgent->ProcessResponses();
 
 		const Uint32 newTicks = SDL_GetTicks();
 		double newTime = 0.001 * double(newTicks);
@@ -1218,6 +1245,8 @@ void Pi::MainLoop()
 		SetMouseGrab(Pi::MouseButtonState(SDL_BUTTON_RIGHT));
 
 		Pi::renderer->EndFrame();
+
+		Pi::renderer->ClearDepthBuffer();
 		if( DrawGUI ) {
 			Gui::Draw();
 			if (game)
@@ -1235,7 +1264,8 @@ void Pi::MainLoop()
 				// display pathStr
 				Gui::Screen::EnterOrtho();
 				Gui::Screen::PushFont("ConsoleFont");
-				Gui::Screen::RenderString(pathStr.str(), 0, 0);
+				static RefCountedPtr<Graphics::VertexBuffer> s_pathvb;
+				Gui::Screen::RenderStringBuffer(s_pathvb, pathStr.str(), 0, 0);
 				Gui::Screen::PopFont();
 				Gui::Screen::LeaveOrtho();
 			}
@@ -1254,7 +1284,8 @@ void Pi::MainLoop()
 		if (Pi::showDebugInfo) {
 			Gui::Screen::EnterOrtho();
 			Gui::Screen::PushFont("ConsoleFont");
-			Gui::Screen::RenderString(fps_readout, 0, 0);
+			static RefCountedPtr<Graphics::VertexBuffer> s_debugInfovb;
+			Gui::Screen::RenderStringBuffer(s_debugInfovb, fps_readout, 0, 0);
 			Gui::Screen::PopFont();
 			Gui::Screen::LeaveOrtho();
 		}

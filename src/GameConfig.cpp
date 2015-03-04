@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "GameConfig.h"
@@ -41,6 +41,7 @@ GameConfig::GameConfig(const std::map<std::string,std::string> &override_)
 	map["SpeedLines"] = "0";
 	map["EnableCockpit"] = "0";
 	map["HudTrails"] = "0";
+	map["EnableServerAgent"] = "0";
 
 #ifdef _WIN32
 	map["RedirectStdio"] = "1";

@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _LUAREF_H
@@ -22,11 +22,10 @@ public:
 
 	lua_State * GetLua() const { return m_lua; }
 
+	bool IsValid() const { return m_lua && m_id != LUA_NOREF; }
+
 	void Save(Serializer::Writer &wr);
 	void Load(Serializer::Reader &rd);
-
-	static void InitLoad();
-	static void UninitLoad();
 
 private:
 	lua_State * m_lua;

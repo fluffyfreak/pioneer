@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Game.h"
@@ -129,7 +129,6 @@ Game::Game(Serializer::Reader &rd) :
 	Serializer::Reader section;
 
 	// Preparing the Lua stuff
-	LuaRef::InitLoad();
 	Pi::luaSerializer->InitTableRefs();
 
 	// galaxy generator
@@ -175,7 +174,6 @@ Game::Game(Serializer::Reader &rd) :
 	Pi::luaSerializer->Unserialize(section);
 
 	Pi::luaSerializer->UninitTableRefs();
-	LuaRef::UninitLoad();
 	// signature check
 	for (Uint32 i = 0; i < strlen(s_saveEnd)+1; i++)
 		if (rd.Byte() != s_saveEnd[i]) throw SavedGameCorruptException();

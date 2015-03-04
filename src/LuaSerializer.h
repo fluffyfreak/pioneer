@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _LUASERIALIZER_H
@@ -18,6 +18,10 @@ class LuaSerializer : public DeleteEmitter {
 public:
 	void Serialize(Serializer::Writer &wr);
 	void Unserialize(Serializer::Reader &rd);
+
+	void WrLuaRef(LuaRef &ref, Serializer::Writer &wr);
+	void RdLuaRef(LuaRef &ref, Serializer::Reader &rd);
+
 	void InitTableRefs();
 	void UninitTableRefs();
 
