@@ -13,6 +13,7 @@
 namespace Graphics {
 namespace OGL {
 
+#pragma optimize("",off)
 GenGasGiantColourProgram::GenGasGiantColourProgram(const MaterialDescriptor &desc)
 {
 	//build some defines
@@ -70,6 +71,7 @@ void GenGasGiantColourProgram::InitUniforms()
 	octaves.Init("octaves", m_program);
 	lacunarity.Init("lacunarity", m_program);
 	frequency.Init("frequency", m_program);
+	amplitude.Init("amplitude", m_program);
 
 	ggdarkColor.Init("ggdarkColor", m_program);
 	gglightColor.Init("gglightColor", m_program);
@@ -84,7 +86,7 @@ Program *GenGasGiantColourMaterial::CreateProgram(const MaterialDescriptor &desc
 	assert(desc.dirLights < 5);
 	return new GenGasGiantColourProgram(desc);
 }
-
+#pragma optimize("",off)
 void GenGasGiantColourMaterial::Apply()
 {
 	OGL::Material::Apply();
@@ -106,14 +108,17 @@ void GenGasGiantColourMaterial::Apply()
 	int octaves[10];
 	float lacunarity[10];
 	float frequency[10];
+	float amplitude[10];
 	for(Uint32 i=0; i<10; i++) {
 		octaves[i]		= Clamp(params.pTerrain->GetFracDef(i).octaves, 1, 3);
 		lacunarity[i]	= params.pTerrain->GetFracDef(i).lacunarity;
 		frequency[i]	= params.pTerrain->GetFracDef(i).frequency;
+		amplitude[i]	= params.pTerrain->GetFracDef(i).amplitude;
 	}
 	p->octaves.Set(octaves, 10);
 	p->lacunarity.Set(lacunarity, 10);
 	p->frequency.Set(frequency, 10);
+	p->amplitude.Set(amplitude, 10);
 
 	vector3f darkColor[8];
 	vector3f lightColor[8];

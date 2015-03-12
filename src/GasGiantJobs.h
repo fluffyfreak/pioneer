@@ -11,6 +11,8 @@
 #include "Camera.h"
 #include "graphics/Drawables.h"
 #include "graphics/Material.h"
+#include "graphics/opengl/GenGasGiantColourMaterial.h"
+#include "graphics/TextureBuilder.h"
 #include "terrain/Terrain.h"
 #include "BaseSphere.h"
 #include "JobQueue.h"
@@ -20,6 +22,8 @@
 
 namespace GasGiantJobs
 {
+	//#define DUMP_PARAMS 1
+
 	// generate root face patches of the cube/sphere
 	static const vector3d p1 = (vector3d(1, 1, 1)).Normalized();
 	static const vector3d p2 = (vector3d(-1, 1, 1)).Normalized();
@@ -54,6 +58,43 @@ namespace GasGiantJobs
 		inline Sint32 UVDims() const { return uvDIMs; }
 		Color* Colors() const { return colors; }
 		const SystemPath& SysPath() const { return sysPath; }
+#ifdef DUMP_PARAMS
+		void DumpParams()
+		{
+			//
+			Output("--face-%d------------\n", face);
+			const vector3d *v = corners;
+			for (int i = 0; i < 4; i++)
+				Output("v(%.4f,%.4f,%.4f)\n", v[i].x, v[i].y, v[i].z);
+
+			Output("fracStep = %.4f\n", 1.0f / float(uvDIMs));
+			//Output("planetRadius = %.4f\n", planetRadius);
+			Output("time = 0.0f\n");
+
+			for (Uint32 i = 0; i<10; i++) {
+				const fracdef_t &fd = pTerrain->GetFracDef(i);
+				Output("octaves[%u] = %d\n", i, Clamp(fd.octaves, 1, 3));
+				Output("lacunarity[%u] = %.4f\n", i, fd.lacunarity);
+				Output("frequency[%u] = %.4f\n", i, fd.frequency);
+				Output("amplitude[%u] = %.4f\n", i, fd.amplitude);
+			}
+
+			vector3f darkColor[8];
+			vector3f lightColor[8];
+			for (Uint32 i = 0; i<8; i++) {
+				const vector3d &dc = pTerrain->GetColorValue(Terrain::eGGDARKCOLOR, i);
+				const vector3d &lc = pTerrain->GetColorValue(Terrain::eGGLIGHTCOLOR, i);
+				darkColor[i] = vector3f(dc.x, dc.y, dc.z);
+				lightColor[i] = vector3f(lc.x, lc.y, lc.z);
+				Output("darkColor[%u](%.4f,%.4f,%.4f)\n", i, darkColor[i].x, darkColor[i].y, darkColor[i].z);
+				Output("lightColor[%u](%.4f,%.4f,%.4f)\n", i, lightColor[i].x, lightColor[i].y, lightColor[i].z);
+			}
+
+			Output("entropy = %.4f\n", float(pTerrain->GetEntropy(0)));
+			//Output("planetEarthRadii = %.4f\n", float(planetRadius / EARTH_RADIUS));
+			// XXX omg hacking galore
+		}
+#endif
 
 	protected:
 		// deliberately prevent copy constructor access
@@ -133,42 +174,8 @@ namespace GasGiantJobs
 	// a quad with reversed winding
 	class GenFaceQuad {
 	public:
-		GenFaceQuad(Graphics::Renderer *r, const vector2f &pos, const vector2f &size, Graphics::RenderState *state, const Uint32 GGQuality)
-		{
-			PROFILE_SCOPED()
-				assert(state);
-			m_renderState = state;
-
-			Graphics::MaterialDescriptor desc;
-			desc.effect = Graphics::EFFECT_GEN_GASGIANT_TEXTURE;
-			desc.quality = GGQuality;
-			m_material.reset(r->CreateMaterial(desc));
-
-			// these might need to be reversed
-			const vector2f texPos = vector2f(0.0f);
-			const vector2f texSize(size);
-
-			Graphics::VertexArray vertices(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_UV0);
-			vertices.Add(vector3f(pos.x, pos.y, 0.0f), vector2f(texPos.x, texPos.y + texSize.y));
-			vertices.Add(vector3f(pos.x, pos.y + size.y, 0.0f), vector2f(texPos.x, texPos.y));
-			vertices.Add(vector3f(pos.x + size.x, pos.y, 0.0f), vector2f(texPos.x + texSize.x, texPos.y + texSize.y));
-			vertices.Add(vector3f(pos.x + size.x, pos.y + size.y, 0.0f), vector2f(texPos.x + texSize.x, texPos.y));
-
-			//Create vtx & index buffers and copy data
-			Graphics::VertexBufferDesc vbd;
-			vbd.attrib[0].semantic = Graphics::ATTRIB_POSITION;
-			vbd.attrib[0].format = Graphics::ATTRIB_FORMAT_FLOAT3;
-			vbd.attrib[1].semantic = Graphics::ATTRIB_UV0;
-			vbd.attrib[1].format = Graphics::ATTRIB_FORMAT_FLOAT2;
-			vbd.numVertices = vertices.GetNumVerts();
-			vbd.usage = Graphics::BUFFER_USAGE_STATIC;
-			m_vertexBuffer.reset(r->CreateVertexBuffer(vbd));
-			m_vertexBuffer->Populate(vertices);
-		}
-		virtual void Draw(Graphics::Renderer *r) {
-			PROFILE_SCOPED()
-			r->DrawBuffer(m_vertexBuffer.get(), m_renderState, m_material.get(), Graphics::TRIANGLE_STRIP);
-		}
+		GenFaceQuad(Graphics::Renderer *r, const vector2f &pos, const vector2f &size, Graphics::RenderState *state, const Uint32 GGQuality);
+		virtual void Draw(Graphics::Renderer *r);
 
 		void SetMaterial(Graphics::Material *mat) { assert(mat); m_material.reset(mat); }
 		Graphics::Material* GetMaterial() const { return m_material.get(); }
@@ -198,6 +205,44 @@ namespace GasGiantJobs
 			m_specialParams.pTerrain = pTerrain;
 			pQuad->GetMaterial()->specialParameter0 = &m_specialParams;
 		}
+
+#ifdef DUMP_PARAMS
+		void DumpParams(const int face)
+		{
+			//
+			Output("--face-%d------------\n", face);
+			const vector3d *v = &s_patchFaces[face][0];
+			for (int i = 0; i < 4;i++)
+				Output("v(%.4f,%.4f,%.4f)\n", v[i].x, v[i].y, v[i].z);
+
+			Output("fracStep = %.4f\n", 1.0f / float(uvDIMs));
+			Output("planetRadius = %.4f\n", planetRadius);
+			Output("time = 0.0f\n");
+
+			for (Uint32 i = 0; i<10; i++) {
+				const fracdef_t &fd = pTerrain->GetFracDef(i);
+				Output("octaves[%u] = %d\n", i, Clamp(fd.octaves, 1, 3));
+				Output("lacunarity[%u] = %.4f\n", i, fd.lacunarity);
+				Output("frequency[%u] = %.4f\n", i, fd.frequency);
+				Output("amplitude[%u] = %.4f\n", i, fd.amplitude);
+			}
+
+			vector3f darkColor[8];
+			vector3f lightColor[8];
+			for (Uint32 i = 0; i<8; i++) {
+				const vector3d &dc = pTerrain->GetColorValue(Terrain::eGGDARKCOLOR, i);
+				const vector3d &lc = pTerrain->GetColorValue(Terrain::eGGLIGHTCOLOR, i);
+				darkColor[i] = vector3f(dc.x, dc.y, dc.z);
+				lightColor[i] = vector3f(lc.x, lc.y, lc.z);
+				Output("darkColor[%u](%.4f,%.4f,%.4f)\n", i, darkColor[i].x, darkColor[i].y, darkColor[i].z);
+				Output("lightColor[%u](%.4f,%.4f,%.4f)\n", i, lightColor[i].x, lightColor[i].y, lightColor[i].z);
+			}
+
+			Output("entropy = %.4f\n", float(pTerrain->GetEntropy(0)));
+			Output("planetEarthRadii = %.4f\n", float(planetRadius / EARTH_RADIUS));
+			// XXX omg hacking galore
+		}
+#endif
 
 	protected:
 		// deliberately prevent copy constructor access

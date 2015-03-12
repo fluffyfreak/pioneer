@@ -35,7 +35,13 @@ namespace GasGiantJobs
 	void STextureFaceRequest::OnRun()
 	{
 		PROFILE_SCOPED()
-		MsgTimer timey;
+		//MsgTimer timey;
+
+#ifdef DUMP_PARAMS
+		if (0 == face) {
+			DumpParams();
+		}
+#endif
 
 		assert( corners != nullptr );
 		double fracStep = 1.0 / double(UVDims()-1);
@@ -59,7 +65,7 @@ namespace GasGiantJobs
 			}
 		}
 
-		timey.Mark("SingleTextureFaceCPUJob::OnRun");
+		//timey.Mark("SingleTextureFaceCPUJob::OnRun");
 	}
 
 	// ********************************************************************************
@@ -93,6 +99,66 @@ namespace GasGiantJobs
 		PROFILE_SCOPED()
 		GasGiant::OnAddTextureFaceResult( mData->SysPath(), mpResults );
 		mpResults = nullptr;
+	}
+
+	// ********************************************************************************
+	GenFaceQuad::GenFaceQuad(Graphics::Renderer *r, const vector2f &pos, const vector2f &size, Graphics::RenderState *state, const Uint32 GGQuality)
+	{
+		PROFILE_SCOPED()
+			assert(state);
+		m_renderState = state;
+
+		Graphics::MaterialDescriptor desc;
+		desc.effect = Graphics::EFFECT_GEN_GASGIANT_TEXTURE;
+		desc.quality = GGQuality;
+		desc.textures = 1;
+		m_material.reset(r->CreateMaterial(desc));
+		switch (GGQuality) {
+		case Graphics::OGL::GEN_JUPITER_TEXTURE:
+			m_material->texture0 = Graphics::TextureBuilder::Decal("textures/gasgiants/jupiterramp.png").GetOrCreateTexture(Pi::renderer, "model");
+			break;
+		case Graphics::OGL::GEN_SATURN_TEXTURE:
+			m_material->texture0 = Graphics::TextureBuilder::Decal("textures/gasgiants/saturnramp.png").GetOrCreateTexture(Pi::renderer, "model");
+			break;
+		case Graphics::OGL::GEN_SATURN2_TEXTURE:
+			m_material->texture0 = Graphics::TextureBuilder::Decal("textures/gasgiants/saturnramp.png").GetOrCreateTexture(Pi::renderer, "model");
+			break;
+		case Graphics::OGL::GEN_NEPTUNE_TEXTURE:
+			m_material->texture0 = Graphics::TextureBuilder::Decal("textures/gasgiants/neptuneramp.png").GetOrCreateTexture(Pi::renderer, "model");
+			break;
+		case Graphics::OGL::GEN_NEPTUNE2_TEXTURE:
+			m_material->texture0 = Graphics::TextureBuilder::Decal("textures/gasgiants/neptuneramp.png").GetOrCreateTexture(Pi::renderer, "model");
+			break;
+		case Graphics::OGL::GEN_URANUS_TEXTURE:
+			m_material->texture0 = Graphics::TextureBuilder::Decal("textures/gasgiants/uranusramp.png").GetOrCreateTexture(Pi::renderer, "model");
+			break;
+		}
+
+		// these might need to be reversed
+		const vector2f texPos = vector2f(0.0f);
+		const vector2f texSize(size);
+
+		Graphics::VertexArray vertices(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_UV0);
+		vertices.Add(vector3f(pos.x, pos.y, 0.0f), vector2f(texPos.x, texPos.y + texSize.y));
+		vertices.Add(vector3f(pos.x, pos.y + size.y, 0.0f), vector2f(texPos.x, texPos.y));
+		vertices.Add(vector3f(pos.x + size.x, pos.y, 0.0f), vector2f(texPos.x + texSize.x, texPos.y + texSize.y));
+		vertices.Add(vector3f(pos.x + size.x, pos.y + size.y, 0.0f), vector2f(texPos.x + texSize.x, texPos.y));
+
+		//Create vtx & index buffers and copy data
+		Graphics::VertexBufferDesc vbd;
+		vbd.attrib[0].semantic = Graphics::ATTRIB_POSITION;
+		vbd.attrib[0].format = Graphics::ATTRIB_FORMAT_FLOAT3;
+		vbd.attrib[1].semantic = Graphics::ATTRIB_UV0;
+		vbd.attrib[1].format = Graphics::ATTRIB_FORMAT_FLOAT2;
+		vbd.numVertices = vertices.GetNumVerts();
+		vbd.usage = Graphics::BUFFER_USAGE_STATIC;
+		m_vertexBuffer.reset(r->CreateVertexBuffer(vbd));
+		m_vertexBuffer->Populate(vertices);
+	}
+
+	void GenFaceQuad::Draw(Graphics::Renderer *r) {
+		PROFILE_SCOPED()
+		r->DrawBuffer(m_vertexBuffer.get(), m_renderState, m_material.get(), Graphics::TRIANGLE_STRIP);
 	}
 
 	// ********************************************************************************
@@ -138,7 +204,7 @@ namespace GasGiantJobs
 	void SingleGPUGenJob::OnRun() // Runs in the main thread, may trash the GPU state
 	{
 		PROFILE_SCOPED()
-		MsgTimer timey;
+		//MsgTimer timey;
 
 		for( Uint32 iFace=0; iFace<NUM_PATCHES; iFace++ )
 		{
@@ -158,6 +224,13 @@ namespace GasGiantJobs
 				Pi::renderer->PushMatrix();
 				Pi::renderer->LoadIdentity();
 			}
+
+#ifdef DUMP_PARAMS
+			if (0 == iFace) {
+				// dump the params
+				mData->DumpParams(iFace);
+			}
+#endif
 
 			// draw to the texture here
 			mData->SetupMaterialParams( iFace );
@@ -183,7 +256,7 @@ namespace GasGiantJobs
 		// store the result
 		mpResults = sr;
 
-		timey.Mark("SingleGPUGenJob::OnRun");
+		//timey.Mark("SingleGPUGenJob::OnRun");
 	}
 
 	void SingleGPUGenJob::OnFinish() // runs in primary thread of the context

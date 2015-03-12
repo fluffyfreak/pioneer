@@ -436,6 +436,7 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 			Graphics::MaterialDescriptor desc;
 			desc.effect = Graphics::EFFECT_GEN_GASGIANT_TEXTURE;
 			desc.quality = i;
+			desc.textures = 1;
 			material.reset(Pi::renderer->CreateMaterial(desc));
 			supportsGPUJobs |= material->IsProgramLoaded();
 		}

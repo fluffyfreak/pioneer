@@ -35,6 +35,7 @@ namespace Graphics {
 			Uniform octaves;
 			Uniform lacunarity;
 			Uniform frequency;
+			Uniform amplitude;
 
 			Uniform ggdarkColor;
 			Uniform gglightColor;
