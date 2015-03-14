@@ -26,7 +26,7 @@ namespace
 {
 	static const Uint32 UV_DIMS_SMALL = 16;
 	static const Uint32 UV_DIMS = 1024;
-	static const float s_initialCPUDelayTime = 5.0f; // (perhaps) 60 seconds seems like a reasonable default
+	static const float s_initialCPUDelayTime = 60.0f; // (perhaps) 60 seconds seems like a reasonable default
 	static const float s_initialGPUDelayTime = 5.0f; // (perhaps) 60 seconds seems like a reasonable default
 	static std::vector<GasGiant*> s_allGasGiants;
 

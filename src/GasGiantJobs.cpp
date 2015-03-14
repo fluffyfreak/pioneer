@@ -115,22 +115,22 @@ namespace GasGiantJobs
 		m_material.reset(r->CreateMaterial(desc));
 		switch (GGQuality) {
 		case Graphics::OGL::GEN_JUPITER_TEXTURE:
-			m_material->texture0 = Graphics::TextureBuilder::Decal("textures/gasgiants/jupiterramp.png").GetOrCreateTexture(Pi::renderer, "model");
+			m_material->texture0 = Graphics::TextureBuilder::Model("textures/gasgiants/jupiterramp.DDS").GetOrCreateTexture(Pi::renderer, "model");
 			break;
 		case Graphics::OGL::GEN_SATURN_TEXTURE:
-			m_material->texture0 = Graphics::TextureBuilder::Decal("textures/gasgiants/saturnramp.png").GetOrCreateTexture(Pi::renderer, "model");
+			m_material->texture0 = Graphics::TextureBuilder::Model("textures/gasgiants/saturnramp.DDS").GetOrCreateTexture(Pi::renderer, "model");
 			break;
 		case Graphics::OGL::GEN_SATURN2_TEXTURE:
-			m_material->texture0 = Graphics::TextureBuilder::Decal("textures/gasgiants/saturnramp.png").GetOrCreateTexture(Pi::renderer, "model");
+			m_material->texture0 = Graphics::TextureBuilder::Model("textures/gasgiants/saturnramp.DDS").GetOrCreateTexture(Pi::renderer, "model");
 			break;
 		case Graphics::OGL::GEN_NEPTUNE_TEXTURE:
-			m_material->texture0 = Graphics::TextureBuilder::Decal("textures/gasgiants/neptuneramp.png").GetOrCreateTexture(Pi::renderer, "model");
+			m_material->texture0 = Graphics::TextureBuilder::Model("textures/gasgiants/neptuneramp.DDS").GetOrCreateTexture(Pi::renderer, "model");
 			break;
 		case Graphics::OGL::GEN_NEPTUNE2_TEXTURE:
-			m_material->texture0 = Graphics::TextureBuilder::Decal("textures/gasgiants/neptuneramp.png").GetOrCreateTexture(Pi::renderer, "model");
+			m_material->texture0 = Graphics::TextureBuilder::Model("textures/gasgiants/neptuneramp.DDS").GetOrCreateTexture(Pi::renderer, "model");
 			break;
 		case Graphics::OGL::GEN_URANUS_TEXTURE:
-			m_material->texture0 = Graphics::TextureBuilder::Decal("textures/gasgiants/uranusramp.png").GetOrCreateTexture(Pi::renderer, "model");
+			m_material->texture0 = Graphics::TextureBuilder::Model("textures/gasgiants/uranusramp.DDS").GetOrCreateTexture(Pi::renderer, "model");
 			break;
 		}
 
@@ -222,10 +222,10 @@ namespace GasGiantJobs
 			Pi::renderer->LoadIdentity();
 		}
 
+		GasGiant::BeginRenderTarget();
 		for( Uint32 iFace=0; iFace<NUM_PATCHES; iFace++ )
 		{
 			// render the scene
-			GasGiant::BeginRenderTarget();
 			GasGiant::SetRenderTargetCubemap(iFace, mData->Texture());
 			Pi::renderer->BeginFrame();
 
@@ -240,9 +240,10 @@ namespace GasGiantJobs
 			mData->SetupMaterialParams( iFace );
 			mData->Quad()->Draw(Pi::renderer);
 
+			Pi::renderer->EndFrame();
 			GasGiant::SetRenderTargetCubemap(iFace, nullptr);
-			GasGiant::EndRenderTarget();
 		}
+		GasGiant::EndRenderTarget();
 
 		// leave ortho?
 		{
