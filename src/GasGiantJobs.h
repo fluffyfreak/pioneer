@@ -68,30 +68,12 @@ namespace GasGiantJobs
 				Output("v(%.4f,%.4f,%.4f)\n", v[i].x, v[i].y, v[i].z);
 
 			Output("fracStep = %.4f\n", 1.0f / float(uvDIMs));
-			//Output("planetRadius = %.4f\n", planetRadius);
 			Output("time = 0.0f\n");
 
-			for (Uint32 i = 0; i<10; i++) {
+			for (Uint32 i = 0; i<3; i++) {
 				const fracdef_t &fd = pTerrain->GetFracDef(i);
-				Output("octaves[%u] = %d\n", i, Clamp(fd.octaves, 1, 3));
-				Output("lacunarity[%u] = %.4f\n", i, fd.lacunarity);
 				Output("frequency[%u] = %.4f\n", i, fd.frequency);
-				Output("amplitude[%u] = %.4f\n", i, fd.amplitude);
 			}
-
-			vector3f darkColor[8];
-			vector3f lightColor[8];
-			for (Uint32 i = 0; i<8; i++) {
-				const vector3d &dc = pTerrain->GetColorValue(Terrain::eGGDARKCOLOR, i);
-				const vector3d &lc = pTerrain->GetColorValue(Terrain::eGGLIGHTCOLOR, i);
-				darkColor[i] = vector3f(dc.x, dc.y, dc.z);
-				lightColor[i] = vector3f(lc.x, lc.y, lc.z);
-				Output("darkColor[%u](%.4f,%.4f,%.4f)\n", i, darkColor[i].x, darkColor[i].y, darkColor[i].z);
-				Output("lightColor[%u](%.4f,%.4f,%.4f)\n", i, lightColor[i].x, lightColor[i].y, lightColor[i].z);
-			}
-
-			Output("entropy = %.4f\n", float(pTerrain->GetEntropy(0)));
-			//Output("planetEarthRadii = %.4f\n", float(planetRadius / EARTH_RADIUS));
 			// XXX omg hacking galore
 		}
 #endif
@@ -174,7 +156,7 @@ namespace GasGiantJobs
 	// a quad with reversed winding
 	class GenFaceQuad {
 	public:
-		GenFaceQuad(Graphics::Renderer *r, const vector2f &pos, const vector2f &size, Graphics::RenderState *state, const Uint32 GGQuality);
+		GenFaceQuad(Graphics::Renderer *r, const vector2f &size, Graphics::RenderState *state, const Uint32 GGQuality);
 		virtual void Draw(Graphics::Renderer *r);
 
 		void SetMaterial(Graphics::Material *mat) { assert(mat); m_material.reset(mat); }
@@ -216,30 +198,12 @@ namespace GasGiantJobs
 				Output("v(%.4f,%.4f,%.4f)\n", v[i].x, v[i].y, v[i].z);
 
 			Output("fracStep = %.4f\n", 1.0f / float(uvDIMs));
-			Output("planetRadius = %.4f\n", planetRadius);
 			Output("time = 0.0f\n");
 
 			for (Uint32 i = 0; i<10; i++) {
 				const fracdef_t &fd = pTerrain->GetFracDef(i);
-				Output("octaves[%u] = %d\n", i, Clamp(fd.octaves, 1, 3));
-				Output("lacunarity[%u] = %.4f\n", i, fd.lacunarity);
 				Output("frequency[%u] = %.4f\n", i, fd.frequency);
-				Output("amplitude[%u] = %.4f\n", i, fd.amplitude);
 			}
-
-			vector3f darkColor[8];
-			vector3f lightColor[8];
-			for (Uint32 i = 0; i<8; i++) {
-				const vector3d &dc = pTerrain->GetColorValue(Terrain::eGGDARKCOLOR, i);
-				const vector3d &lc = pTerrain->GetColorValue(Terrain::eGGLIGHTCOLOR, i);
-				darkColor[i] = vector3f(dc.x, dc.y, dc.z);
-				lightColor[i] = vector3f(lc.x, lc.y, lc.z);
-				Output("darkColor[%u](%.4f,%.4f,%.4f)\n", i, darkColor[i].x, darkColor[i].y, darkColor[i].z);
-				Output("lightColor[%u](%.4f,%.4f,%.4f)\n", i, lightColor[i].x, lightColor[i].y, lightColor[i].z);
-			}
-
-			Output("entropy = %.4f\n", float(pTerrain->GetEntropy(0)));
-			Output("planetEarthRadii = %.4f\n", float(planetRadius / EARTH_RADIUS));
 			// XXX omg hacking galore
 		}
 #endif

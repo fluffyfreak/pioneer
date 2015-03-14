@@ -32,15 +32,7 @@ namespace Graphics {
 
 			Uniform time;
 
-			Uniform octaves;
-			Uniform lacunarity;
 			Uniform frequency;
-			Uniform amplitude;
-
-			Uniform ggdarkColor;
-			Uniform gglightColor;
-			Uniform entropy;
-			Uniform planetEarthRadii;
 
 		protected:
 			virtual void InitUniforms();

@@ -13,7 +13,7 @@
 namespace Graphics {
 namespace OGL {
 
-#pragma optimize("",off)
+
 GenGasGiantColourProgram::GenGasGiantColourProgram(const MaterialDescriptor &desc)
 {
 	//build some defines
@@ -68,15 +68,7 @@ void GenGasGiantColourProgram::InitUniforms()
 	// XXX omg hacking galore
 	time.Init("time", m_program);
 	
-	octaves.Init("octaves", m_program);
-	lacunarity.Init("lacunarity", m_program);
 	frequency.Init("frequency", m_program);
-	amplitude.Init("amplitude", m_program);
-
-	ggdarkColor.Init("ggdarkColor", m_program);
-	gglightColor.Init("gglightColor", m_program);
-	entropy.Init("entropy", m_program);
-	planetEarthRadii.Init("planetEarthRadii", m_program);
 	// XXX omg hacking galore
 }
 
@@ -86,9 +78,10 @@ Program *GenGasGiantColourMaterial::CreateProgram(const MaterialDescriptor &desc
 	assert(desc.dirLights < 5);
 	return new GenGasGiantColourProgram(desc);
 }
-#pragma optimize("",off)
+
 void GenGasGiantColourMaterial::Apply()
 {
+	PROFILE_SCOPED()
 	OGL::Material::Apply();
 
 	GenGasGiantColourProgram *p = static_cast<GenGasGiantColourProgram*>(m_program);
@@ -105,34 +98,11 @@ void GenGasGiantColourMaterial::Apply()
 	p->time.Set(params.time);
 
 	assert(params.pTerrain);
-	int octaves[10];
-	float lacunarity[10];
-	float frequency[10];
-	float amplitude[10];
-	for(Uint32 i=0; i<10; i++) {
-		octaves[i]		= Clamp(params.pTerrain->GetFracDef(i).octaves, 1, 3);
-		lacunarity[i]	= params.pTerrain->GetFracDef(i).lacunarity;
-		frequency[i]	= params.pTerrain->GetFracDef(i).frequency;
-		amplitude[i]	= params.pTerrain->GetFracDef(i).amplitude;
+	vector3f frequency;
+	for(Uint32 i=0; i<3; i++) {
+		frequency[i] = (float)params.pTerrain->GetFracDef(i).frequency;
 	}
-	p->octaves.Set(octaves, 10);
-	p->lacunarity.Set(lacunarity, 10);
-	p->frequency.Set(frequency, 10);
-	p->amplitude.Set(amplitude, 10);
-
-	vector3f darkColor[8];
-	vector3f lightColor[8];
-	for(Uint32 i=0; i<8; i++) {
-		const vector3d &dc = params.pTerrain->GetColorValue(Terrain::eGGDARKCOLOR, i);
-		const vector3d &lc = params.pTerrain->GetColorValue(Terrain::eGGLIGHTCOLOR, i);
-		darkColor[i] = vector3f(dc.x, dc.y, dc.z);
-		lightColor[i] = vector3f(lc.x, lc.y, lc.z);
-	}
-		
-	p->ggdarkColor.Set(&darkColor[0], 8);
-	p->gglightColor.Set(&lightColor[0], 8);
-	p->entropy.Set(float(params.pTerrain->GetEntropy(0)));
-	p->planetEarthRadii.Set(float(params.planetRadius / EARTH_RADIUS));
+	p->frequency.Set(frequency);
 	// XXX omg hacking galore
 
 	//Light uniform parameters
@@ -158,6 +128,7 @@ void GenGasGiantColourMaterial::Apply()
 
 void GenGasGiantColourMaterial::Unapply()
 {
+	PROFILE_SCOPED()
 	// Might not be necessary to unbind textures, but let's not old graphics code (eg, old-UI)
 	if (texture4) {
 		static_cast<TextureGL*>(texture4)->Unbind();

@@ -25,6 +25,7 @@ bool Material::IsProgramLoaded() const
 
 void Material::SetCommonUniforms(const matrix4x4f& mv, const matrix4x4f& proj)
 {
+	PROFILE_SCOPED()
 	const matrix4x4f ViewProjection = proj * mv;
 	const matrix3x3f orient(mv.GetOrient());
 	const matrix4x4f NormalMatrix(orient.Inverse().Transpose());

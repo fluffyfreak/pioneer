@@ -102,7 +102,7 @@ namespace GasGiantJobs
 	}
 
 	// ********************************************************************************
-	GenFaceQuad::GenFaceQuad(Graphics::Renderer *r, const vector2f &pos, const vector2f &size, Graphics::RenderState *state, const Uint32 GGQuality)
+	GenFaceQuad::GenFaceQuad(Graphics::Renderer *r, const vector2f &size, Graphics::RenderState *state, const Uint32 GGQuality)
 	{
 		PROFILE_SCOPED()
 			assert(state);
@@ -139,10 +139,13 @@ namespace GasGiantJobs
 		const vector2f texSize(size);
 
 		Graphics::VertexArray vertices(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_UV0);
-		vertices.Add(vector3f(pos.x, pos.y, 0.0f), vector2f(texPos.x, texPos.y + texSize.y));
-		vertices.Add(vector3f(pos.x, pos.y + size.y, 0.0f), vector2f(texPos.x, texPos.y));
-		vertices.Add(vector3f(pos.x + size.x, pos.y, 0.0f), vector2f(texPos.x + texSize.x, texPos.y + texSize.y));
-		vertices.Add(vector3f(pos.x + size.x, pos.y + size.y, 0.0f), vector2f(texPos.x + texSize.x, texPos.y));
+		vertices.Add(vector3f(0.0f, 0.0f, 0.0f),	vector2f(0.0f,  texSize.y));
+		vertices.Add(vector3f(0.0f, size.y, 0.0f),	vector2f(0.0f,  0.0f));
+		vertices.Add(vector3f(size.x, 0.0f, 0.0f), vector2f(texSize.x, texSize.y));
+
+		vertices.Add(vector3f(0.0f, size.y, 0.0f), vector2f(0.0f, 0.0f));
+		vertices.Add(vector3f(size.x, 0.0f, 0.0f), vector2f(texSize.x, texSize.y));
+		vertices.Add(vector3f(size.x, size.y, 0.0f), vector2f(texSize.x, 0.0f));
 
 		//Create vtx & index buffers and copy data
 		Graphics::VertexBufferDesc vbd;
@@ -206,24 +209,25 @@ namespace GasGiantJobs
 		PROFILE_SCOPED()
 		//MsgTimer timey;
 
+		Pi::renderer->SetViewport(0, 0, mData->UVDims(), mData->UVDims());
+		Pi::renderer->SetTransform(matrix4x4f::Identity());
+
+		// enter ortho
+		{
+			Pi::renderer->SetMatrixMode(Graphics::MatrixMode::PROJECTION);
+			Pi::renderer->PushMatrix();
+			Pi::renderer->SetOrthographicProjection(0, mData->UVDims(), mData->UVDims(), 0, -1, 1);
+			Pi::renderer->SetMatrixMode(Graphics::MatrixMode::MODELVIEW);
+			Pi::renderer->PushMatrix();
+			Pi::renderer->LoadIdentity();
+		}
+
 		for( Uint32 iFace=0; iFace<NUM_PATCHES; iFace++ )
 		{
 			// render the scene
-			GasGiant::SetRenderTargetCubemap( iFace, mData->Texture() );
 			GasGiant::BeginRenderTarget();
-			Pi::renderer->BeginFrame(); 
-			Pi::renderer->SetViewport(0, 0, mData->UVDims(), mData->UVDims());
-			Pi::renderer->SetTransform(matrix4x4f::Identity());
-
-			// enter ortho
-			{
-				Pi::renderer->SetMatrixMode(Graphics::MatrixMode::PROJECTION);
-				Pi::renderer->PushMatrix();
-				Pi::renderer->SetOrthographicProjection(0, mData->UVDims(), mData->UVDims(), 0, -1, 1);
-				Pi::renderer->SetMatrixMode(Graphics::MatrixMode::MODELVIEW);
-				Pi::renderer->PushMatrix();
-				Pi::renderer->LoadIdentity();
-			}
+			GasGiant::SetRenderTargetCubemap(iFace, mData->Texture());
+			Pi::renderer->BeginFrame();
 
 #ifdef DUMP_PARAMS
 			if (0 == iFace) {
@@ -234,19 +238,18 @@ namespace GasGiantJobs
 
 			// draw to the texture here
 			mData->SetupMaterialParams( iFace );
-			mData->Quad()->Draw( Pi::renderer );
+			mData->Quad()->Draw(Pi::renderer);
 
-			// leave ortho?
-			{
-				Pi::renderer->SetMatrixMode(Graphics::MatrixMode::PROJECTION);
-				Pi::renderer->PopMatrix();
-				Pi::renderer->SetMatrixMode(Graphics::MatrixMode::MODELVIEW);
-				Pi::renderer->PopMatrix();
-			}
-			
-			Pi::renderer->EndFrame();
+			GasGiant::SetRenderTargetCubemap(iFace, nullptr);
 			GasGiant::EndRenderTarget();
-			GasGiant::SetRenderTargetCubemap( iFace, nullptr );
+		}
+
+		// leave ortho?
+		{
+			Pi::renderer->SetMatrixMode(Graphics::MatrixMode::PROJECTION);
+			Pi::renderer->PopMatrix();
+			Pi::renderer->SetMatrixMode(Graphics::MatrixMode::MODELVIEW);
+			Pi::renderer->PopMatrix();
 		}
 
 		// add this patches data

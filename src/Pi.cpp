@@ -111,7 +111,8 @@ bool Pi::showDebugInfo = false;
 #endif
 #if PIONEER_PROFILER
 std::string Pi::profilerPath;
-bool Pi::doProfileSlow = false;
+static std::string s_gpujobqueuePath;
+bool Pi::doProfileSlow = true;
 bool Pi::doProfileOne = false;
 #endif
 int Pi::statSceneTris = 0;
@@ -354,6 +355,9 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 #ifdef PIONEER_PROFILER
 	FileSystem::userFiles.MakeDirectory("profiler");
 	profilerPath = FileSystem::JoinPathBelow(FileSystem::userFiles.GetRoot(), "profiler");
+
+	FileSystem::userFiles.MakeDirectory("profiler/gpujobqueue");
+	s_gpujobqueuePath = FileSystem::JoinPathBelow(FileSystem::userFiles.GetRoot(), "profiler/gpujobqueue");
 #endif
 
 	Pi::config = new GameConfig(options);
@@ -1180,14 +1184,15 @@ void Pi::MainLoop()
 	double accumulator = Pi::game->GetTimeStep();
 	Pi::gameTickAlpha = 0;
 
+#ifdef PIONEER_PROFILER
+	Profiler::reset();
+#endif
+
 	while (Pi::game) {
 		PROFILE_SCOPED()
 
-#ifdef PIONEER_PROFILER
-		Profiler::reset();
-#endif
-
 		Pi::serverAgent->ProcessResponses();
+		gpuJobQueue->ProcessGPUJobs();
 
 		const Uint32 newTicks = SDL_GetTicks();
 		double newTime = 0.001 * double(newTicks);
@@ -1336,7 +1341,6 @@ void Pi::MainLoop()
 		syncJobQueue->RunJobs(SYNC_JOBS_PER_LOOP);
 		asyncJobQueue->FinishJobs();
 		syncJobQueue->FinishJobs();
-		gpuJobQueue->ProcessGPUJobs();
 
 #if WITH_DEVKEYS
 		if (Pi::showDebugInfo && SDL_GetTicks() - last_stats > 1000) {
@@ -1372,6 +1376,17 @@ void Pi::MainLoop()
 
 #endif
 
+		/*{
+#ifdef PIONEER_PROFILER
+			Profiler::reset();
+			const Uint32 jobsProcessed = gpuJobQueue->ProcessGPUJobs();
+			if (jobsProcessed>0)
+				Profiler::dumphtml(s_gpujobqueuePath.c_str());
+#else
+			gpuJobQueue->ProcessGPUJobs();
+#endif
+		}*/
+
 #ifdef MAKING_VIDEO
 		if (SDL_GetTicks() - last_screendump > 50) {
 			last_screendump = SDL_GetTicks();
@@ -1379,6 +1394,10 @@ void Pi::MainLoop()
 			Screendump(fname.c_str(), Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
 		}
 #endif /* MAKING_VIDEO */
+
+#ifdef PIONEER_PROFILER
+		Profiler::reset();
+#endif
 	}
 }
 

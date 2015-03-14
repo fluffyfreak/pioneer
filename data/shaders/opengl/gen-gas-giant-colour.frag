@@ -11,9 +11,7 @@ uniform float fracStep;
 
 uniform float time;
 
-uniform float lacunarity[10];
-uniform float frequency[10];
-uniform float amplitude[10];
+uniform vec3 frequency;
 
 in vec3 vertex;
 in vec2 uv;
@@ -23,13 +21,13 @@ out vec4 frag_color;
 #ifdef GEN_JUPITER_ESQUE
 vec4 GetColour(in vec3 p)
 {	
-	//float n = octavenoise(8, 0.5, lacunarity[0], p, frequency[0], time);
-	//float n = river_octavenoise(8, 0.5, lacunarity[0], p, frequency[0], time);
-	//float n = dunes_octavenoise(8, 0.5, lacunarity[0], p, frequency[0], time);
-	//float n = billow_octavenoise(8, 0.5, lacunarity[0], p, frequency[0], time);
-	//float n = ridged_octavenoise(8, 0.5, lacunarity[0], p, frequency[0], time);
-	//float n = combo_octavenoise(8, 0.5, lacunarity[0], p, frequency[0], time);
-	//float n = voronoiscam_octavenoise(8, 0.5, lacunarity[0], p, frequency[0], time);
+	//float n = octavenoise(8, 0.5, 2.0, p, frequency[0], time);
+	//float n = river_octavenoise(8, 0.5, 2.0, p, frequency[0], time);
+	//float n = dunes_octavenoise(8, 0.5, 2.0, p, frequency[0], time);
+	//float n = billow_octavenoise(8, 0.5, 2.0, p, frequency[0], time);
+	//float n = ridged_octavenoise(8, 0.5, 2.0, p, frequency[0], time);
+	//float n = combo_octavenoise(8, 0.5, 2.0, p, frequency[0], time);
+	//float n = voronoiscam_octavenoise(8, 0.5, 2.0, p, frequency[0], time);
 	//float n = megavolcano_function(8, frequency[0], amplitude[0], p);
 	//vec2 F = cellular( p * 16.0 );
 	//float n = F.y-F.x;
@@ -47,8 +45,8 @@ vec4 GetColour(in vec3 p)
 	//float s = fwidth(F.x);
 	//float ss = smoothstep(0.5-s, 0.5+s, F.x);
 	
-	float n1 = octavenoise(8, 0.5, lacunarity[0], p, frequency[0], time);
-	float n2 = octavenoise(8, 0.5, lacunarity[1], p * 3.14159, frequency[2], time);
+	float n1 = octavenoise(8, 0.5, 2.0, p, frequency[0], time);
+	float n2 = octavenoise(8, 0.5, 2.0, p * 3.14159, frequency[2], time);
 	vec4 color = vec4(texture(texture0, vec2(0.0, (p.y + 1.0) * 0.5) + vec2(n1*0.075,n2*0.075)).xyz, 1.0);
 	return color;
 }
@@ -57,8 +55,8 @@ vec4 GetColour(in vec3 p)
 #ifdef GEN_SATURN_ESQUE
 vec4 GetColour(in vec3 p)
 {
-	float n1 = octavenoise(8, 0.5, lacunarity[0], p, frequency[0], time);
-	float n2 = octavenoise(8, 0.5, lacunarity[1], p * 3.14159, frequency[2], time);
+	float n1 = octavenoise(8, 0.5, 2.0, p, frequency[0], time);
+	float n2 = octavenoise(8, 0.5, 2.0, p * 3.14159, frequency[2], time);
 	vec4 color = vec4(texture(texture0, vec2(0.0, (p.y + 1.0) * 0.5) + vec2(n1*0.075,n2*0.075)).xyz, 1.0);
 	return color;
 }
@@ -67,8 +65,8 @@ vec4 GetColour(in vec3 p)
 #ifdef GEN_SATURN2_ESQUE
 vec4 GetColour(in vec3 p)
 {
-	float n1 = octavenoise(8, 0.5, lacunarity[0], p, frequency[0], time);
-	float n2 = octavenoise(8, 0.5, lacunarity[1], p * 3.14159, frequency[2], time);
+	float n1 = octavenoise(8, 0.5, 2.0, p, frequency[0], time);
+	float n2 = octavenoise(8, 0.5, 2.0, p * 3.14159, frequency[2], time);
 	vec4 color = vec4(texture(texture0, vec2(0.0, (p.y + 1.0) * 0.5) + vec2(n1*0.075,n2*0.075)).xyz, 1.0);
 	return color;
 }
@@ -77,8 +75,8 @@ vec4 GetColour(in vec3 p)
 #ifdef GEN_NEPTUNE_ESQUE
 vec4 GetColour(in vec3 p)
 {
-	float n1 = octavenoise(8, 0.5, lacunarity[0], p, frequency[0], time);
-	float n2 = octavenoise(8, 0.5, lacunarity[1], p * 3.14159, frequency[2], time);
+	float n1 = octavenoise(8, 0.5, 2.0, p, frequency[0], time);
+	float n2 = octavenoise(8, 0.5, 2.0, p * 3.14159, frequency[2], time);
 	vec4 color = vec4(texture(texture0, vec2(0.0, (p.y + 1.0) * 0.5) + vec2(n1*0.075,n2*0.075)).xyz, 1.0);
 	return color;
 }
@@ -87,8 +85,8 @@ vec4 GetColour(in vec3 p)
 #ifdef GEN_NEPTUNE2_ESQUE
 vec4 GetColour(in vec3 p)
 {
-	float n1 = octavenoise(8, 0.5, lacunarity[0], p, frequency[0], time);
-	float n2 = octavenoise(8, 0.5, lacunarity[1], p * 3.14159, frequency[2], time);
+	float n1 = octavenoise(8, 0.5, 2.0, p, frequency[0], time);
+	float n2 = octavenoise(8, 0.5, 2.0, p * 3.14159, frequency[2], time);
 	vec4 color = vec4(texture(texture0, vec2(0.0, (p.y + 1.0) * 0.5) + vec2(n1*0.075,n2*0.075)).xyz, 1.0);
 	return color;
 }
@@ -97,8 +95,8 @@ vec4 GetColour(in vec3 p)
 #ifdef GEN_URANUS_ESQUE 
 vec4 GetColour(in vec3 p)
 {
-	float n1 = octavenoise(8, 0.5, lacunarity[0], p, frequency[0], time);
-	float n2 = octavenoise(8, 0.5, lacunarity[1], p * 3.14159, frequency[2], time);
+	float n1 = octavenoise(8, 0.5, 2.0, p, frequency[0], time);
+	float n2 = octavenoise(8, 0.5, 2.0, p * 3.14159, frequency[2], time);
 	vec4 color = vec4(texture(texture0, vec2(0.0, (p.y + 1.0) * 0.5) + vec2(n1*0.075,n2*0.075)).xyz, 1.0);
 	return color;
 }

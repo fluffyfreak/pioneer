@@ -248,7 +248,6 @@ bool RendererOGL::GetNearFarRange(float &near_, float &far_) const
 bool RendererOGL::BeginFrame()
 {
 	PROFILE_SCOPED()
-	glClearColor(0,0,0,0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	return true;
 }
@@ -277,6 +276,7 @@ static std::string glerr_to_string(GLenum err)
 
 void RendererOGL::CheckErrors()
 {
+	PROFILE_SCOPED()
 	GLenum err = glGetError();
 	if( err ) {
 		std::stringstream ss;
@@ -325,6 +325,7 @@ bool RendererOGL::SwapBuffers()
 
 bool RendererOGL::SetRenderState(RenderState *rs)
 {
+	PROFILE_SCOPED()
 	if (m_activeRenderState != rs) {
 		static_cast<OGL::RenderState*>(rs)->Apply();
 		m_activeRenderState = rs;
@@ -496,6 +497,7 @@ bool RendererOGL::SetScissor(bool enabled, const vector2f &pos, const vector2f &
 
 void RendererOGL::SetMaterialShaderTransforms(Material *m)
 {
+	PROFILE_SCOPED()
 	m->SetCommonUniforms(m_modelViewStack.top(), m_projectionStack.top());
 	CheckRenderErrors();
 }

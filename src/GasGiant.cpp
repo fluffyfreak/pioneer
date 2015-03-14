@@ -29,6 +29,13 @@ namespace
 	static const float s_initialCPUDelayTime = 5.0f; // (perhaps) 60 seconds seems like a reasonable default
 	static const float s_initialGPUDelayTime = 5.0f; // (perhaps) 60 seconds seems like a reasonable default
 	static std::vector<GasGiant*> s_allGasGiants;
+
+	static const std::string GGJupiter("GGJupiter");
+	static const std::string GGNeptune("GGNeptune");
+	static const std::string GGNeptune2("GGNeptune2");
+	static const std::string GGSaturn("GGSaturn");
+	static const std::string GGSaturn2("GGSaturn2");
+	static const std::string GGUranus("GGUranus");
 };
 
 
@@ -370,6 +377,7 @@ bool GasGiant::AddGPUGenResult(GasGiantJobs::SGPUGenResult *res)
 	bool result = false;
 	assert(res);
 	m_hasGpuJobRequest = false;
+	assert(!m_gpuJob.HasGPUJob());
 	const Sint32 uvDims = res->data().uvDims;
 	assert( uvDims > 0 && uvDims <= 4096 );
 
@@ -495,12 +503,6 @@ void GasGiant::GenerateTexture()
 
 		const std::string ColorFracName = GetTerrain()->GetColorFractalName();
 		Output("Color Fractal name: %s\n", ColorFracName.c_str());
-		static const std::string GGJupiter("GGJupiter");
-		static const std::string GGNeptune("GGNeptune");
-		static const std::string GGNeptune2("GGNeptune2");
-		static const std::string GGSaturn("GGSaturn");
-		static const std::string GGSaturn2("GGSaturn2");
-		static const std::string GGUranus("GGUranus");
 
 		Uint32 GasGiantType = Graphics::OGL::GEN_JUPITER_TEXTURE;
 		if( ColorFracName == GGSaturn ) {
@@ -518,9 +520,7 @@ void GasGiant::GenerateTexture()
 		assert(!m_hasGpuJobRequest);
 		assert(!m_gpuJob.HasGPUJob());
 
-		GasGiantJobs::GenFaceQuad *pQuad = new GasGiantJobs::GenFaceQuad(Pi::renderer,
-			vector2f(0.0f, 0.0f), vector2f(UV_DIMS, UV_DIMS), 
-			s_quadRenderState, GasGiantType );
+		GasGiantJobs::GenFaceQuad *pQuad = new GasGiantJobs::GenFaceQuad(Pi::renderer, vector2f(UV_DIMS, UV_DIMS), s_quadRenderState, GasGiantType );
 			
 		GasGiantJobs::SGPUGenRequest *pGPUReq = new GasGiantJobs::SGPUGenRequest(GetSystemBody()->GetPath(), UV_DIMS, GetTerrain(), GetSystemBody()->GetRadius(), pQuad, m_builtTexture.Get());
 		m_gpuJob = Pi::GpuJobs()->Queue(new GasGiantJobs::SingleGPUGenJob(pGPUReq));
@@ -727,13 +727,13 @@ void GasGiant::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 		width,
 		height,
 		Graphics::TEXTURE_NONE,		// don't create a texture
-		Graphics::TEXTURE_NONE,		// don't create a dpeth buffer
+		Graphics::TEXTURE_NONE,		// don't create a depth buffer
 		false);
 	s_renderTarget = Pi::renderer->CreateRenderTarget(rtDesc);
 }
 
 //static 
-void GasGiant::SetRenderTargetCubemap(const Uint32 face, Graphics::Texture *pTexture)
+void GasGiant::SetRenderTargetCubemap(const Uint32 face, Graphics::Texture *pTexture, const bool unBind /*= true*/)
 {
 	s_renderTarget->SetCubeFaceTexture(face, pTexture);
 }

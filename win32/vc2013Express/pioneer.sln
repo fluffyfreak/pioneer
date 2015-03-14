@@ -29,6 +29,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "collider", "collider\collider.vcxproj", "{A2082451-1B70-47C1-88E1-62A59EB13A44}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "graphics", "graphics\graphics.vcxproj", "{DED0A0AD-E7B8-42EF-83DB-EDAE7E2443EE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{FFDC1809-F67B-4933-B4E0-5298EA5DDB7E} = {FFDC1809-F67B-4933-B4E0-5298EA5DDB7E}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "terrain", "terrain\terrain.vcxproj", "{64F034A3-B40E-4D42-ADDD-E2EE42ED517F}"
 EndProject
