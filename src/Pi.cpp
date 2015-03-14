@@ -112,7 +112,7 @@ bool Pi::showDebugInfo = false;
 #if PIONEER_PROFILER
 std::string Pi::profilerPath;
 static std::string s_gpujobqueuePath;
-bool Pi::doProfileSlow = true;
+bool Pi::doProfileSlow = false;
 bool Pi::doProfileOne = false;
 #endif
 int Pi::statSceneTris = 0;
@@ -1192,7 +1192,6 @@ void Pi::MainLoop()
 		PROFILE_SCOPED()
 
 		Pi::serverAgent->ProcessResponses();
-		gpuJobQueue->ProcessGPUJobs();
 
 		const Uint32 newTicks = SDL_GetTicks();
 		double newTime = 0.001 * double(newTicks);
@@ -1376,7 +1375,7 @@ void Pi::MainLoop()
 
 #endif
 
-		/*{
+		{
 #ifdef PIONEER_PROFILER
 			Profiler::reset();
 			const Uint32 jobsProcessed = gpuJobQueue->ProcessGPUJobs();
@@ -1385,7 +1384,7 @@ void Pi::MainLoop()
 #else
 			gpuJobQueue->ProcessGPUJobs();
 #endif
-		}*/
+		}
 
 #ifdef MAKING_VIDEO
 		if (SDL_GetTicks() - last_screendump > 50) {
