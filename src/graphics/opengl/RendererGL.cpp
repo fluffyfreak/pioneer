@@ -276,7 +276,6 @@ static std::string glerr_to_string(GLenum err)
 
 void RendererOGL::CheckErrors()
 {
-	PROFILE_SCOPED()
 	GLenum err = glGetError();
 	if( err ) {
 		std::stringstream ss;
