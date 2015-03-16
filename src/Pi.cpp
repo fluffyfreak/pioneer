@@ -1377,7 +1377,7 @@ void Pi::MainLoop()
 
 		{
 #ifdef PIONEER_PROFILER
-			Profiler::reset();
+			//Profiler::reset();
 			const Uint32 jobsProcessed = gpuJobQueue->ProcessGPUJobs();
 			if (jobsProcessed>0)
 				Profiler::dumphtml(s_gpujobqueuePath.c_str());
