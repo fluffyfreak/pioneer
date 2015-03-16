@@ -97,12 +97,7 @@ void GenGasGiantColourMaterial::Apply()
 	// XXX omg hacking galore
 	p->time.Set(params.time);
 
-	assert(params.pTerrain);
-	vector3f frequency;
-	for(Uint32 i=0; i<3; i++) {
-		frequency[i] = (float)params.pTerrain->GetFracDef(i).frequency;
-	}
-	p->frequency.Set(frequency);
+	p->frequency.Set(params.frequency);
 	// XXX omg hacking galore
 
 	//Light uniform parameters

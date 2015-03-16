@@ -170,7 +170,7 @@ namespace GasGiantJobs
 	// ********************************************************************************
 	class SGPUGenRequest {
 	public:
-		SGPUGenRequest(const SystemPath &sysPath_, const Sint32 uvDIMs_, Terrain *pTerrain_, const float planetRadius_, GenFaceQuad* pQuad_, Graphics::Texture *pTex_);
+		SGPUGenRequest(const SystemPath &sysPath_, const Sint32 uvDIMs_, vector3f frequency_, const float planetRadius_, GenFaceQuad* pQuad_, Graphics::Texture *pTex_);
 
 		inline Sint32 UVDims() const { return uvDIMs; }
 		Graphics::Texture* Texture() const { return m_texture.Get(); }
@@ -184,7 +184,7 @@ namespace GasGiantJobs
 			m_specialParams.fracStep = 1.0f / float(uvDIMs);
 			m_specialParams.planetRadius = planetRadius;
 			m_specialParams.time = 0.0f;
-			m_specialParams.pTerrain = pTerrain;
+			m_specialParams.frequency = frequency;
 			pQuad->GetMaterial()->specialParameter0 = &m_specialParams;
 		}
 
@@ -219,7 +219,7 @@ namespace GasGiantJobs
 
 		const SystemPath sysPath;
 		const Sint32 uvDIMs;
-		Terrain *pTerrain;
+		const vector3f frequency;
 		const float planetRadius;
 		GenFaceQuad* pQuad;
 		Graphics::GenGasGiantColourMaterialParameters m_specialParams;

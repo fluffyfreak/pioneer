@@ -165,8 +165,8 @@ namespace GasGiantJobs
 	}
 
 	// ********************************************************************************
-	SGPUGenRequest::SGPUGenRequest(const SystemPath &sysPath_, const Sint32 uvDIMs_, Terrain *pTerrain_, const float planetRadius_, GenFaceQuad* pQuad_, Graphics::Texture *pTex_) :
-		m_texture(pTex_), sysPath(sysPath_), uvDIMs(uvDIMs_), pTerrain(pTerrain_), planetRadius(planetRadius_), pQuad(pQuad_)
+	SGPUGenRequest::SGPUGenRequest(const SystemPath &sysPath_, const Sint32 uvDIMs_, vector3f frequency_, const float planetRadius_, GenFaceQuad* pQuad_, Graphics::Texture *pTex_) :
+		m_texture(pTex_), sysPath(sysPath_), uvDIMs(uvDIMs_), frequency(frequency_), planetRadius(planetRadius_), pQuad(pQuad_)
 	{
 		PROFILE_SCOPED()
 		assert(m_texture.Valid());

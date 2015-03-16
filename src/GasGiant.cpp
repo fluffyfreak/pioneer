@@ -521,8 +521,13 @@ void GasGiant::GenerateTexture()
 		assert(!m_gpuJob.HasGPUJob());
 
 		GasGiantJobs::GenFaceQuad *pQuad = new GasGiantJobs::GenFaceQuad(Pi::renderer, vector2f(UV_DIMS, UV_DIMS), s_quadRenderState, GasGiantType );
-			
-		GasGiantJobs::SGPUGenRequest *pGPUReq = new GasGiantJobs::SGPUGenRequest(GetSystemBody()->GetPath(), UV_DIMS, GetTerrain(), GetSystemBody()->GetRadius(), pQuad, m_builtTexture.Get());
+		
+		const Terrain *pTerrain = GetTerrain();
+		vector3f frequency;
+		for (Uint32 i = 0; i<3; i++) {
+			frequency[i] = (float)pTerrain->GetFracDef(i).frequency;
+		}
+		GasGiantJobs::SGPUGenRequest *pGPUReq = new GasGiantJobs::SGPUGenRequest(GetSystemBody()->GetPath(), UV_DIMS, frequency, GetSystemBody()->GetRadius(), pQuad, m_builtTexture.Get());
 		m_gpuJob = Pi::GpuJobs()->Queue(new GasGiantJobs::SingleGPUGenJob(pGPUReq));
 		m_hasGpuJobRequest = true;
 	}
