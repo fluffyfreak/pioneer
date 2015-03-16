@@ -165,8 +165,8 @@ namespace GasGiantJobs
 	}
 
 	// ********************************************************************************
-	SGPUGenRequest::SGPUGenRequest(const SystemPath &sysPath_, const Sint32 uvDIMs_, vector3f frequency_, const float planetRadius_, GenFaceQuad* pQuad_, Graphics::Texture *pTex_) :
-		m_texture(pTex_), sysPath(sysPath_), uvDIMs(uvDIMs_), frequency(frequency_), planetRadius(planetRadius_), pQuad(pQuad_)
+	SGPUGenRequest::SGPUGenRequest(const vector3d *v_, const SystemPath &sysPath_, const Sint32 face_, const Sint32 uvDIMs_, vector3f frequency_, const float planetRadius_, GenFaceQuad* pQuad_, Graphics::Texture *pTex_) :
+		corners(v_), m_texture(pTex_), sysPath(sysPath_), face(face_), uvDIMs(uvDIMs_), frequency(frequency_), planetRadius(planetRadius_), pQuad(pQuad_)
 	{
 		PROFILE_SCOPED()
 		assert(m_texture.Valid());
@@ -203,7 +203,7 @@ namespace GasGiantJobs
 			mpResults = nullptr;
 		}
 	}
-
+#pragma optimize("",off)
 	void SingleGPUGenJob::OnRun() // Runs in the main thread, may trash the GPU state
 	{
 		PROFILE_SCOPED()
@@ -223,25 +223,24 @@ namespace GasGiantJobs
 		}
 
 		GasGiant::BeginRenderTarget();
-		for( Uint32 iFace=0; iFace<NUM_PATCHES; iFace++ )
 		{
 			// render the scene
-			GasGiant::SetRenderTargetCubemap(iFace, mData->Texture());
+			GasGiant::SetRenderTargetCubemap(mData->Face(), mData->Texture());
 			Pi::renderer->BeginFrame();
 
 #ifdef DUMP_PARAMS
-			if (0 == iFace) {
+			if (0 == mData->Face()) {
 				// dump the params
 				mData->DumpParams(iFace);
 			}
 #endif
 
 			// draw to the texture here
-			mData->SetupMaterialParams( iFace );
+			mData->SetupMaterialParams();
 			mData->Quad()->Draw(Pi::renderer);
 
 			Pi::renderer->EndFrame();
-			GasGiant::SetRenderTargetCubemap(iFace, nullptr);
+			GasGiant::SetRenderTargetCubemap(mData->Face(), nullptr);
 		}
 		GasGiant::EndRenderTarget();
 
@@ -254,7 +253,7 @@ namespace GasGiantJobs
 		}
 
 		// add this patches data
-		SGPUGenResult *sr = new SGPUGenResult();
+		SGPUGenResult *sr = new SGPUGenResult(mData->Face());
 		sr->addResult( mData->Texture(), mData->UVDims() );
 
 		// store the result

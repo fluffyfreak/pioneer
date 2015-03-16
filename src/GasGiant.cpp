@@ -36,6 +36,28 @@ namespace
 	static const std::string GGSaturn("GGSaturn");
 	static const std::string GGSaturn2("GGSaturn2");
 	static const std::string GGUranus("GGUranus");
+
+	// generate root face patches of the cube/sphere
+	static const vector3d p1 = (vector3d(1, 1, 1)).Normalized();
+	static const vector3d p2 = (vector3d(-1, 1, 1)).Normalized();
+	static const vector3d p3 = (vector3d(-1, -1, 1)).Normalized();
+	static const vector3d p4 = (vector3d(1, -1, 1)).Normalized();
+	static const vector3d p5 = (vector3d(1, 1, -1)).Normalized();
+	static const vector3d p6 = (vector3d(-1, 1, -1)).Normalized();
+	static const vector3d p7 = (vector3d(-1, -1, -1)).Normalized();
+	static const vector3d p8 = (vector3d(1, -1, -1)).Normalized();
+
+	static const vector3d s_patchFaces[NUM_PATCHES][4] =
+	{
+		{ p5, p1, p4, p8 }, // +x
+		{ p2, p6, p7, p3 }, // -x
+
+		{ p2, p1, p5, p6 }, // +y
+		{ p7, p8, p4, p3 }, // -y
+
+		{ p6, p5, p8, p7 }, // +z - NB: these are actually reversed!
+		{ p1, p2, p3, p4 }  // -z
+	};
 };
 
 
@@ -229,12 +251,13 @@ void GasGiant::UpdateAllGasGiants()
 }
 
 GasGiant::GasGiant(const SystemBody *body) : BaseSphere(body),
-	m_hasTempCampos(false), m_tempCampos(0.0), m_timeDelay(s_initialCPUDelayTime), m_hasGpuJobRequest(false)
+	m_hasTempCampos(false), m_tempCampos(0.0), m_timeDelay(s_initialCPUDelayTime) 
 {
 	s_allGasGiants.push_back(this);
 	
 	for(int i=0; i<NUM_PATCHES; i++) {
 		m_hasJobRequest[i] = false;
+		m_hasGpuJobRequest[i] = false;
 	}
 
 	const bool bEnableGPUJobs = (Pi::config->Int("EnableGPUJobs") == 1);
@@ -371,15 +394,23 @@ bool GasGiant::AddTextureFaceResult(GasGiantJobs::STextureFaceResult *res)
 
 	return result;
 }
-
+#pragma optimize("",off)
 bool GasGiant::AddGPUGenResult(GasGiantJobs::SGPUGenResult *res)
 {
 	bool result = false;
+
 	assert(res);
-	m_hasGpuJobRequest = false;
-	assert(!m_gpuJob.HasGPUJob());
+	const Sint32 face = res->face();
+	assert(face >= 0 && face < NUM_PATCHES);
+
+	m_hasGpuJobRequest[face] = false;
+	assert(!m_gpuJob[face].HasGPUJob());
+
 	const Sint32 uvDims = res->data().uvDims;
 	assert( uvDims > 0 && uvDims <= 4096 );
+
+	assert(res->data().texture.Valid());
+	m_jobTexture[face] = res->data().texture;
 
 #if DUMP_TO_TEXTURE
 	for(int iFace=0; iFace<NUM_PATCHES; iFace++) {
@@ -399,17 +430,25 @@ bool GasGiant::AddGPUGenResult(GasGiantJobs::SGPUGenResult *res)
 	// tidyup
 	delete res;
 
-	if (m_builtTexture.Valid()) {
-		m_surfaceTexture = m_builtTexture;
-		m_builtTexture.Reset();
+	bool bCreateTexture = true;
+	for (int i = 0; (i<NUM_PATCHES) && bCreateTexture; i++) {
+		bCreateTexture = bCreateTexture & (!m_hasGpuJobRequest[i]);
+	}
 
-		// these won't be automatically generated otherwise since we used it as a render target
-		m_surfaceTexture->BuildMipmaps();
+	if (bCreateTexture) {
+		// built all of the faces, time to update the cubemap
+		if (m_builtTexture.Valid()) {
+			m_surfaceTexture = m_builtTexture;
+			m_builtTexture.Reset();
 
-		// change the planet texture for the new higher resolution texture
-		if( m_surfaceMaterial.get() ) {
-			m_surfaceMaterial->texture0 = m_surfaceTexture.Get();
-			m_surfaceTextureSmall.Reset();
+			// these won't be automatically generated otherwise since we used it as a render target
+			m_surfaceTexture->BuildMipmaps();
+
+			// change the planet texture for the new higher resolution texture
+			if (m_surfaceMaterial.get()) {
+				m_surfaceMaterial->texture0 = m_surfaceTexture.Get();
+				m_surfaceTextureSmall.Reset();
+			}
 		}
 	}
 
@@ -425,7 +464,7 @@ void GasGiant::GenerateTexture()
 {
 	using namespace GasGiantJobs;
 	for(int i=0; i<NUM_PATCHES; i++) {
-		if (m_hasGpuJobRequest || m_hasJobRequest[i])
+		if (m_hasGpuJobRequest[i] || m_hasJobRequest[i])
 			return;
 	}
 
@@ -517,8 +556,8 @@ void GasGiant::GenerateTexture()
 			GasGiantType = Graphics::OGL::GEN_URANUS_TEXTURE;
 		}
 
-		assert(!m_hasGpuJobRequest);
-		assert(!m_gpuJob.HasGPUJob());
+		assert(!m_hasGpuJobRequest[i]);
+		assert(!m_gpuJob[i].HasGPUJob());
 
 		GasGiantJobs::GenFaceQuad *pQuad = new GasGiantJobs::GenFaceQuad(Pi::renderer, vector2f(UV_DIMS, UV_DIMS), s_quadRenderState, GasGiantType );
 		
@@ -527,9 +566,15 @@ void GasGiant::GenerateTexture()
 		for (Uint32 i = 0; i<3; i++) {
 			frequency[i] = (float)pTerrain->GetFracDef(i).frequency;
 		}
-		GasGiantJobs::SGPUGenRequest *pGPUReq = new GasGiantJobs::SGPUGenRequest(GetSystemBody()->GetPath(), UV_DIMS, frequency, GetSystemBody()->GetRadius(), pQuad, m_builtTexture.Get());
-		m_gpuJob = Pi::GpuJobs()->Queue(new GasGiantJobs::SingleGPUGenJob(pGPUReq));
-		m_hasGpuJobRequest = true;
+
+		for (int i = 0; i<NUM_PATCHES; i++)
+		{
+			assert(!m_hasGpuJobRequest[i]);
+			assert(!m_gpuJob[i].HasJob());
+			m_hasGpuJobRequest[i] = true;
+			GasGiantJobs::SGPUGenRequest *pGPUReq = new GasGiantJobs::SGPUGenRequest(&s_patchFaces[i][0], GetSystemBody()->GetPath(), i, UV_DIMS, frequency, GetSystemBody()->GetRadius(), pQuad, m_builtTexture.Get());
+			m_gpuJob[i] = Pi::GpuJobs()->Queue(new GasGiantJobs::SingleGPUGenJob(pGPUReq));
+		}
 	}
 }
 

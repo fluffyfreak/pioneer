@@ -24,28 +24,6 @@ namespace GasGiantJobs
 {
 	//#define DUMP_PARAMS 1
 
-	// generate root face patches of the cube/sphere
-	static const vector3d p1 = (vector3d(1, 1, 1)).Normalized();
-	static const vector3d p2 = (vector3d(-1, 1, 1)).Normalized();
-	static const vector3d p3 = (vector3d(-1, -1, 1)).Normalized();
-	static const vector3d p4 = (vector3d(1, -1, 1)).Normalized();
-	static const vector3d p5 = (vector3d(1, 1, -1)).Normalized();
-	static const vector3d p6 = (vector3d(-1, 1, -1)).Normalized();
-	static const vector3d p7 = (vector3d(-1, -1, -1)).Normalized();
-	static const vector3d p8 = (vector3d(1, -1, -1)).Normalized();
-
-	static const vector3d s_patchFaces[NUM_PATCHES][4] =
-	{
-		{ p5, p1, p4, p8 }, // +x
-		{ p2, p6, p7, p3 }, // -x
-
-		{ p2, p1, p5, p6 }, // +y
-		{ p7, p8, p4, p3 }, // -y
-
-		{ p6, p5, p8, p7 }, // +z - NB: these are actually reversed!
-		{ p1, p2, p3, p4 }  // -z
-	};
-
 	class STextureFaceRequest {
 	public:
 		STextureFaceRequest(const vector3d *v_, const SystemPath &sysPath_, const Sint32 face_, const Sint32 uvDIMs_, Terrain *pTerrain_);
@@ -170,17 +148,18 @@ namespace GasGiantJobs
 	// ********************************************************************************
 	class SGPUGenRequest {
 	public:
-		SGPUGenRequest(const SystemPath &sysPath_, const Sint32 uvDIMs_, vector3f frequency_, const float planetRadius_, GenFaceQuad* pQuad_, Graphics::Texture *pTex_);
+		SGPUGenRequest(const vector3d *v_, const SystemPath &sysPath_, const Sint32 face_, const Sint32 uvDIMs_, vector3f frequency_, const float planetRadius_, GenFaceQuad* pQuad_, Graphics::Texture *pTex_);
 
+		inline Sint32 Face() const { return face; }
 		inline Sint32 UVDims() const { return uvDIMs; }
-		Graphics::Texture* Texture() const { return m_texture.Get(); }
-		GenFaceQuad* Quad() const { return pQuad; }
-		const SystemPath& SysPath() const { return sysPath; }
+		inline Graphics::Texture* Texture() const { return m_texture.Get(); }
+		inline GenFaceQuad* Quad() const { return pQuad; }
+		inline const SystemPath& SysPath() const { return sysPath; }
 
-		void SetupMaterialParams(const int face)
+		void SetupMaterialParams()
 		{
 			PROFILE_SCOPED()
-			m_specialParams.v = &s_patchFaces[face][0];
+			m_specialParams.v = corners;
 			m_specialParams.fracStep = 1.0f / float(uvDIMs);
 			m_specialParams.planetRadius = planetRadius;
 			m_specialParams.time = 0.0f;
@@ -193,7 +172,7 @@ namespace GasGiantJobs
 		{
 			//
 			Output("--face-%d------------\n", face);
-			const vector3d *v = &s_patchFaces[face][0];
+			const vector3d *v = corners;
 			for (int i = 0; i < 4;i++)
 				Output("v(%.4f,%.4f,%.4f)\n", v[i].x, v[i].y, v[i].z);
 
@@ -217,7 +196,9 @@ namespace GasGiantJobs
 		// this is created with the request and are given to the resulting patches
 		RefCountedPtr<Graphics::Texture> m_texture;
 
+		const vector3d *corners;
 		const SystemPath sysPath;
+		const Sint32 face;
 		const Sint32 uvDIMs;
 		const vector3f frequency;
 		const float planetRadius;
@@ -236,11 +217,12 @@ namespace GasGiantJobs
 			Sint32 uvDims;
 		};
 
-		SGPUGenResult() {}
+		SGPUGenResult(const int32_t face_) : mFace(face_) {}
 
 		void addResult(Graphics::Texture *t_, Sint32 uvDims_);
 
 		inline const SGPUGenData& data() const { return mData; }
+		inline int32_t face() const { return mFace; }
 
 		void OnCancel();
 
@@ -248,6 +230,7 @@ namespace GasGiantJobs
 		// deliberately prevent copy constructor access
 		SGPUGenResult(const SGPUGenResult &r);
 
+		const int32_t mFace;
 		SGPUGenData mData;
 	};
 

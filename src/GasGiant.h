@@ -82,8 +82,9 @@ private:
 	Job::Handle m_job[NUM_PATCHES];
 	bool m_hasJobRequest[NUM_PATCHES];
 
-	JobHandleGPU m_gpuJob;
-	bool m_hasGpuJobRequest;
+	RefCountedPtr<Graphics::Texture> m_jobTexture[NUM_PATCHES];
+	JobHandleGPU m_gpuJob[NUM_PATCHES];
+	bool m_hasGpuJobRequest[NUM_PATCHES];
 
 	float m_timeDelay;
 };
