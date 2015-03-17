@@ -48,8 +48,12 @@ private:
 	bool m_needUpdateVBOs;
 
 	const GeoPatchID mPatchID;
+	// Multi-threaded CPU jobs
 	Job::Handle m_job;
 	bool mHasJobRequest;
+	// GPU jobs
+	JobHandleGPU m_jobGPU;
+	bool mHasJobRequestGPU;
 #ifdef DEBUG_BOUNDING_SPHERES
 	std::unique_ptr<Graphics::Drawables::Sphere3D> m_boundsphere;
 #endif

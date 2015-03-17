@@ -30,7 +30,7 @@ GeoPatch::GeoPatch(const RefCountedPtr<GeoPatchContext> &ctx_, GeoSphere *gs,
 	heights(nullptr), normals(nullptr), colors(nullptr),
 	parent(nullptr), geosphere(gs),
 	m_depth(depth), mPatchID(ID_),
-	mHasJobRequest(false)
+	mHasJobRequest(false), mHasJobRequestGPU(false)
 {
 	for (int i=0; i<NUM_KIDS; ++i) {
 		edgeFriend[i]	= NULL;
@@ -55,6 +55,7 @@ GeoPatch::GeoPatch(const RefCountedPtr<GeoPatchContext> &ctx_, GeoSphere *gs,
 
 GeoPatch::~GeoPatch() {
 	mHasJobRequest = false;
+	mHasJobRequestGPU = false;
 
 	for (int i=0; i<NUM_KIDS; i++) {
 		if (edgeFriend[i]) edgeFriend[i]->NotifyEdgeFriendDeleted(this);
@@ -177,7 +178,7 @@ void GeoPatch::Render(Graphics::Renderer *renderer, const vector3d &campos, cons
 void GeoPatch::LODUpdate(const vector3d &campos) 
 {
 	// there should be no LOD update when we have active split requests
-	if(mHasJobRequest)
+	if (mHasJobRequest || mHasJobRequestGPU)
 		return;
 
 	bool canSplit = true;
@@ -203,8 +204,8 @@ void GeoPatch::LODUpdate(const vector3d &campos)
 
 	if (canSplit) {
 		if (!kids[0]) {
-            assert(!mHasJobRequest);
-            assert(!m_job.HasJob());
+			assert(!mHasJobRequest && !mHasJobRequestGPU);
+			assert(!m_job.HasJob() && !m_jobGPU.HasJob());
 			mHasJobRequest = true;
 
 			SQuadSplitRequest *ssrd = new SQuadSplitRequest(v0, v1, v2, v3, centroid.Normalized(), m_depth,

@@ -22,9 +22,12 @@ namespace Graphics { class Renderer; }
 class SystemBody;
 class GeoPatch;
 class GeoPatchContext;
-class SQuadSplitRequest;
+// CPU job fwd decl'
 class SQuadSplitResult;
 class SSingleSplitResult;
+// GPU job fwd decl'
+class SQuadResultGPU;
+class SSingleResultGPU;
 
 #define NUM_PATCHES 6
 
@@ -55,13 +58,21 @@ public:
 	static void Uninit();
 	static void UpdateAllGeoSpheres();
 	static void OnChangeDetailLevel();
+	// CPU
 	static bool OnAddQuadSplitResult(const SystemPath &path, SQuadSplitResult *res);
 	static bool OnAddSingleSplitResult(const SystemPath &path, SSingleSplitResult *res);
+	// GPU
+	static bool OnAddQuadResultGPU(const SystemPath &path, SQuadResultGPU *res);
+	static bool OnAddSingleResultGPU(const SystemPath &path, SSingleResultGPU *res);
 	// in sbody radii
 	virtual double GetMaxFeatureHeight() const { return m_terrain->GetMaxHeight(); }
 
+	// CPU
 	bool AddQuadSplitResult(SQuadSplitResult *res);
 	bool AddSingleSplitResult(SSingleSplitResult *res);
+	// GPU
+	bool AddQuadResultGPU(SQuadResultGPU *res);
+	bool AddSingleResultGPU(SSingleResultGPU *res);
 	void ProcessSplitResults();
 
 	virtual void Reset();
@@ -70,6 +81,10 @@ public:
 
 private:
 	void BuildFirstPatches();
+	void ProcessQuadResultsCPU();
+	void ProcessSingleResultsCPU();
+	void ProcessQuadResultsGPU();
+	void ProcessSingleResultsGPU();
 	void CalculateMaxPatchDepth();
 	inline vector3d GetColor(const vector3d &p, double height, const vector3d &norm) const {
 		return m_terrain->GetColor(p, height, norm);
@@ -78,8 +93,12 @@ private:
 	std::unique_ptr<GeoPatch> m_patches[6];
 
 	static const uint32_t MAX_SPLIT_OPERATIONS = 128;
+	// CPU
 	std::deque<SQuadSplitResult*> mQuadSplitResults;
 	std::deque<SSingleSplitResult*> mSingleSplitResults;
+	// GPU
+	std::deque<SQuadResultGPU*> mQuadResultsGPU;
+	std::deque<SSingleResultGPU*> mSingleResultsGPU;
 
 	bool m_hasTempCampos;
 	vector3d m_tempCampos;

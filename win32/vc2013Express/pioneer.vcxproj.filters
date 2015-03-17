@@ -435,6 +435,9 @@
     <ClCompile Include="..\..\src\GasGiantJobs.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\GeoPatchJobsGPU.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Aabb.h">
@@ -879,6 +882,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\GasGiantJobs.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\GeoPatchJobsGPU.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

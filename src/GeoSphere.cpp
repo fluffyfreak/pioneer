@@ -6,6 +6,7 @@
 #include "GeoPatchContext.h"
 #include "GeoPatch.h"
 #include "GeoPatchJobs.h"
+#include "GeoPatchJobsGPU.h"
 #include "perlin.h"
 #include "Pi.h"
 #include "RefCounted.h"
@@ -90,6 +91,7 @@ void GeoSphere::OnChangeDetailLevel()
 	}
 }
 
+// CPU
 //static
 bool GeoSphere::OnAddQuadSplitResult(const SystemPath &path, SQuadSplitResult *res)
 {
@@ -120,6 +122,42 @@ bool GeoSphere::OnAddSingleSplitResult(const SystemPath &path, SSingleSplitResul
 	}
 	// GeoSphere not found to return the data to, cancel and delete it instead
 	if( res ) {
+		res->OnCancel();
+		delete res;
+	}
+	return false;
+}
+
+// GPU
+//static
+bool GeoSphere::OnAddQuadResultGPU(const SystemPath &path, SQuadResultGPU *res)
+{
+	// Find the correct GeoSphere via it's system path, and give it the split result
+	for (std::vector<GeoSphere*>::iterator i = s_allGeospheres.begin(), iEnd = s_allGeospheres.end(); i != iEnd; ++i) {
+		if (path == (*i)->GetSystemBody()->GetPath()) {
+			(*i)->AddQuadResultGPU(res);
+			return true;
+		}
+	}
+	// GeoSphere not found to return the data to, cancel and delete it instead
+	if (res) {
+		res->OnCancel();
+		delete res;
+	}
+	return false;
+}
+//static
+bool GeoSphere::OnAddSingleResultGPU(const SystemPath &path, SSingleResultGPU *res)
+{
+	// Find the correct GeoSphere via it's system path, and give it the split result
+	for (std::vector<GeoSphere*>::iterator i = s_allGeospheres.begin(), iEnd = s_allGeospheres.end(); i != iEnd; ++i) {
+		if (path == (*i)->GetSystemBody()->GetPath()) {
+			(*i)->AddSingleResultGPU(res);
+			return true;
+		}
+	}
+	// GeoSphere not found to return the data to, cancel and delete it instead
+	if (res) {
 		res->OnCancel();
 		delete res;
 	}
@@ -199,6 +237,7 @@ GeoSphere::~GeoSphere()
 	s_allGeospheres.erase(std::find(s_allGeospheres.begin(), s_allGeospheres.end(), this));
 }
 
+// CPU
 bool GeoSphere::AddQuadSplitResult(SQuadSplitResult *res)
 {
 	bool result = false;
@@ -218,6 +257,31 @@ bool GeoSphere::AddSingleSplitResult(SSingleSplitResult *res)
 	assert(mSingleSplitResults.size()<MAX_SPLIT_OPERATIONS);
 	if(mSingleSplitResults.size()<MAX_SPLIT_OPERATIONS) {
 		mSingleSplitResults.push_back(res);
+		result = true;
+	}
+	return result;
+}
+
+// GPU
+bool GeoSphere::AddQuadResultGPU(SQuadResultGPU *res)
+{
+	bool result = false;
+	assert(res);
+	assert(mQuadResultsGPU.size()<MAX_SPLIT_OPERATIONS);
+	if (mQuadResultsGPU.size()<MAX_SPLIT_OPERATIONS) {
+		mQuadResultsGPU.push_back(res);
+		result = true;
+	}
+	return result;
+}
+
+bool GeoSphere::AddSingleResultGPU(SSingleResultGPU *res)
+{
+	bool result = false;
+	assert(res);
+	assert(mSingleResultsGPU.size()<MAX_SPLIT_OPERATIONS);
+	if (mSingleResultsGPU.size()<MAX_SPLIT_OPERATIONS) {
+		mSingleResultsGPU.push_back(res);
 		result = true;
 	}
 	return result;
@@ -251,29 +315,109 @@ void GeoSphere::ProcessSplitResults()
 	}
 
 	// now handle the quad split results
+	ProcessQuadResultsCPU();
+}
+
+void GeoSphere::ProcessQuadResultsCPU()
+{
+	std::deque<SQuadSplitResult*>::iterator iter = mQuadSplitResults.begin();
+	while (iter != mQuadSplitResults.end())
 	{
-		std::deque<SQuadSplitResult*>::iterator iter = mQuadSplitResults.begin();
-		while(iter!=mQuadSplitResults.end())
-		{
-			// finally pass SplitResults
-			SQuadSplitResult *psr = (*iter);
-			assert(psr);
+		// finally pass SplitResults
+		SQuadSplitResult *psr = (*iter);
+		assert(psr);
 
-			const int32_t faceIdx = psr->face();
-			if( m_patches[faceIdx] ) {
-				m_patches[faceIdx]->ReceiveHeightmaps(psr);
-			} else {
-				psr->OnCancel();
-			}
-
-			// tidyup
-			delete psr;
-
-			// Next!
-			++iter;
+		const int32_t faceIdx = psr->face();
+		if (m_patches[faceIdx]) {
+			m_patches[faceIdx]->ReceiveHeightmaps(psr);
+		} else {
+			psr->OnCancel();
 		}
-		mQuadSplitResults.clear();
+
+		// tidyup
+		delete psr;
+
+		// Next!
+		++iter;
 	}
+	mQuadSplitResults.clear();
+}
+
+void GeoSphere::ProcessSingleResultsCPU()
+{
+	// now handle the single split results that define the base level of the quad tree
+	std::deque<SSingleSplitResult*>::iterator iter = mSingleSplitResults.begin();
+	while (iter != mSingleSplitResults.end())
+	{
+		// finally pass SplitResults
+		SSingleSplitResult *psr = (*iter);
+		assert(psr);
+
+		const int32_t faceIdx = psr->face();
+		if (m_patches[faceIdx]) {
+			m_patches[faceIdx]->ReceiveHeightmap(psr);
+		} else {
+			psr->OnCancel();
+		}
+
+		// tidyup
+		delete psr;
+
+		// Next!
+		++iter;
+	}
+	mSingleSplitResults.clear();
+}
+
+void GeoSphere::ProcessQuadResultsGPU()
+{
+	std::deque<SQuadResultGPU*>::iterator iter = mQuadResultsGPU.begin();
+	while (iter != mQuadResultsGPU.end())
+	{
+		// finally pass SplitResults
+		SQuadResultGPU *psr = (*iter);
+		assert(psr);
+
+		const int32_t faceIdx = psr->face();
+		if (m_patches[faceIdx]) {
+			m_patches[faceIdx]->ReceiveHeightmaps(psr);
+		} else {
+			psr->OnCancel();
+		}
+
+		// tidyup
+		delete psr;
+
+		// Next!
+		++iter;
+	}
+	mQuadResultsGPU.clear();
+}
+
+void GeoSphere::ProcessSingleResultsGPU()
+{
+	// now handle the single split results that define the base level of the quad tree
+	std::deque<SSingleResultGPU*>::iterator iter = mSingleResultsGPU.begin();
+	while (iter != mSingleResultsGPU.end())
+	{
+		// finally pass SplitResults
+		SSingleResultGPU *psr = (*iter);
+		assert(psr);
+
+		const int32_t faceIdx = psr->face();
+		if (m_patches[faceIdx]) {
+			m_patches[faceIdx]->ReceiveHeightmap(psr);
+		} else {
+			psr->OnCancel();
+		}
+
+		// tidyup
+		delete psr;
+
+		// Next!
+		++iter;
+	}
+	mSingleResultsGPU.clear();
 }
 
 void GeoSphere::BuildFirstPatches()
