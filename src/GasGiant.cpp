@@ -394,7 +394,7 @@ bool GasGiant::AddTextureFaceResult(GasGiantJobs::STextureFaceResult *res)
 
 	return result;
 }
-#pragma optimize("",off)
+
 bool GasGiant::AddGPUGenResult(GasGiantJobs::SGPUGenResult *res)
 {
 	bool result = false;
@@ -556,24 +556,21 @@ void GasGiant::GenerateTexture()
 			GasGiantType = Graphics::OGL::GEN_URANUS_TEXTURE;
 		}
 
-		assert(!m_hasGpuJobRequest[i]);
-		assert(!m_gpuJob[i].HasGPUJob());
-
 		GasGiantJobs::GenFaceQuad *pQuad = new GasGiantJobs::GenFaceQuad(Pi::renderer, vector2f(UV_DIMS, UV_DIMS), s_quadRenderState, GasGiantType );
 		
 		const Terrain *pTerrain = GetTerrain();
 		vector3f frequency;
-		for (Uint32 i = 0; i<3; i++) {
-			frequency[i] = (float)pTerrain->GetFracDef(i).frequency;
+		for (int f = 0; f<3; f++) {
+			frequency[f] = (float)pTerrain->GetFracDef(f).frequency;
 		}
 
-		for (int i = 0; i<NUM_PATCHES; i++)
+		for (int ip = 0; ip<NUM_PATCHES; ip++)
 		{
-			assert(!m_hasGpuJobRequest[i]);
-			assert(!m_gpuJob[i].HasJob());
-			m_hasGpuJobRequest[i] = true;
-			GasGiantJobs::SGPUGenRequest *pGPUReq = new GasGiantJobs::SGPUGenRequest(&s_patchFaces[i][0], GetSystemBody()->GetPath(), i, UV_DIMS, frequency, GetSystemBody()->GetRadius(), pQuad, m_builtTexture.Get());
-			m_gpuJob[i] = Pi::GpuJobs()->Queue(new GasGiantJobs::SingleGPUGenJob(pGPUReq));
+			assert(!m_hasGpuJobRequest[ip]);
+			assert(!m_gpuJob[ip].HasGPUJob());
+			m_hasGpuJobRequest[ip] = true;
+			GasGiantJobs::SGPUGenRequest *pGPUReq = new GasGiantJobs::SGPUGenRequest(&s_patchFaces[ip][0], GetSystemBody()->GetPath(), ip, UV_DIMS, frequency, GetSystemBody()->GetRadius(), pQuad, m_builtTexture.Get());
+			m_gpuJob[ip] = Pi::GpuJobs()->Queue(new GasGiantJobs::SingleGPUGenJob(pGPUReq));
 		}
 	}
 }

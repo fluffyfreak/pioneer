@@ -53,6 +53,7 @@ noinst_HEADERS = \
 	Intro.h \
 	IterationProxy.h \
 	JobQueue.h \
+	JobQueueGPU.h \
 	GameConfig.h \
 	KeyBindings.h \
 	Lang.h \
@@ -190,6 +191,7 @@ pioneer_SOURCES	= \
 	IniConfig.cpp \
 	Intro.cpp \
 	JobQueue.cpp \
+	JobQueueGPU.cpp \
 	GameConfig.cpp \
 	KeyBindings.cpp \
 	Lang.cpp \
