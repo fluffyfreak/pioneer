@@ -35,7 +35,7 @@ ShipCockpit::~ShipCockpit()
 
 }
 
-void ShipCockpit::Render(Graphics::Renderer *renderer, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform)
+void ShipCockpit::Render(Graphics::Renderer *renderer, Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform)
 {
 	RenderModel(renderer, camera, viewCoords, viewTransform);
 }
@@ -177,7 +177,7 @@ void ShipCockpit::Update(float timeStep)
 	}
 }
 
-void ShipCockpit::RenderCockpit(Graphics::Renderer* renderer, const Camera* camera, Frame* frame)
+void ShipCockpit::RenderCockpit(Graphics::Renderer* renderer, Camera* camera, Frame* frame)
 {
 	renderer->ClearDepthBuffer();
 	SetFrame(frame);

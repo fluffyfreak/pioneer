@@ -91,7 +91,7 @@ Model *Model::MakeInstance() const
 	return m;
 }
 
-void Model::Render(const matrix4x4f &trans, const RenderData *rd)
+void Model::UpdateInstanceMaterials()
 {
 	PROFILE_SCOPED()
 	//update color parameters (materials are shared by model instances)
@@ -108,11 +108,27 @@ void Model::Render(const matrix4x4f &trans, const RenderData *rd)
 	for (unsigned int i=0; i < MAX_DECAL_MATERIALS; i++)
 		if (m_decalMaterials[i])
 			m_decalMaterials[i]->texture0 = m_curDecals[i];
+}
+
+void Model::Render(const matrix4x4f &trans, const RenderData *rd)
+{
+	assert(rd);
+	UpdateInstanceMaterials();
+	
+	RenderData *params = &m_renderData;
+	params->boundingRadius = GetDrawClipRadius(); //needed by lod nodes
+	params->nodemask = rd->nodemask;
+
+	m_root->Render(trans, params);
+}
+
+void Model::Render(const matrix4x4f &trans)
+{
+	UpdateInstanceMaterials();
 
 	//Override renderdata if this model is called from ModelNode
-	RenderData params = (rd != 0) ? (*rd) : m_renderData;
+	RenderData params = m_renderData;
 
-	m_renderer->SetTransform(trans);
 	//using the entire model bounding radius for all nodes at the moment.
 	//BR could also be a property of Node.
 	params.boundingRadius = GetDrawClipRadius();
@@ -157,6 +173,12 @@ void Model::Render(const matrix4x4f &trans, const RenderData *rd)
 	}
 }
 
+void Model::RenderAsSubModel(const matrix4x4f &trans, const RenderData *rd)
+{
+	UpdateInstanceMaterials();
+	m_root->Render(trans, rd);
+}
+
 void Model::CreateAabbVB()
 {
 	PROFILE_SCOPED()
@@ -190,7 +212,7 @@ void Model::CreateAabbVB()
 		for(unsigned int i = 0; i < 7; i++) {
 			va.Add(verts[i]);
 			va.Add(verts[i+1]);
-}
+		}
 
 		for(unsigned int i = 8; i < 15; i++) {
 			va.Add(verts[i]);
@@ -223,7 +245,6 @@ void Model::DrawAabb()
 	}
 
 	m_renderer->DrawBuffer( m_aabbVB.Get(), m_state, m_aabbMat.Get(), Graphics::LINE_SINGLE);
-	
 }
 
 // Draw collision mesh as a wireframe overlay

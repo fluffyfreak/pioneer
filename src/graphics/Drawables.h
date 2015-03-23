@@ -140,7 +140,6 @@ private:
 	RefCountedPtr<Material> m_material;
 	Graphics::RenderState *m_renderState;
 
-	//std::unique_ptr<Surface> m_surface;
 	//add a new vertex, return the index
 	int AddVertex(VertexArray&, const vector3f &v, const vector3f &n);
 	//add three vertex indices to form a triangle

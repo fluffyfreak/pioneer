@@ -22,10 +22,10 @@ public:
 	explicit ShipCockpit(const std::string &modelName);
 	virtual ~ShipCockpit();
 
-	virtual void Render(Graphics::Renderer *r, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform) override;
+	virtual void Render(Graphics::Renderer *r, Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform) override;
 
 	void Update(float timeStep);
-	void RenderCockpit(Graphics::Renderer* renderer, const Camera* camera, Frame* frame);
+	void RenderCockpit(Graphics::Renderer* renderer, Camera* camera, Frame* frame);
 	void OnActivated();
        void resetInternalCameraController(void);
 

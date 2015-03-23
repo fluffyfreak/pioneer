@@ -43,7 +43,7 @@ void Star::InitStar()
 	m_haloState = Pi::renderer->CreateRenderState(rsd);
 }
 
-void Star::Render(Graphics::Renderer *renderer, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform)
+void Star::Render(Graphics::Renderer *renderer, Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform)
 {
 	double radius = GetClipRadius();
 

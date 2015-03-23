@@ -108,7 +108,14 @@ public:
 
 	float GetDrawClipRadius() const { return m_boundingRadius; }
 	void SetDrawClipRadius(float clipRadius) { m_boundingRadius = clipRadius; }
-	void Render(const matrix4x4f &trans, const RenderData *rd = 0); //ModelNode can override RD
+	
+	bool ContainsNodeMask(unsigned int) const { return true; }
+
+	void Render(const matrix4x4f &trans, const RenderData *rd); //just one pass
+	void Render(const matrix4x4f &trans); //render solid & transparent (for modelviewer, intro etc.)
+	void RenderAsSubModel(const matrix4x4f &trans, const RenderData *parentModelParams);
+	void UpdateInstanceMaterials();
+
 	RefCountedPtr<CollMesh> CreateCollisionMesh();
 	RefCountedPtr<CollMesh> GetCollisionMesh() const { return m_collMesh; }
 	void SetCollisionMesh(RefCountedPtr<CollMesh> collMesh) { m_collMesh.Reset(collMesh.Get()); }

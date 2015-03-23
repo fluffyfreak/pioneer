@@ -8,6 +8,7 @@
 #include "Body.h"
 #include "CollMesh.h"
 #include "Shields.h"
+#include "Renderable.h"
 
 class Geom;
 class Camera;
@@ -30,12 +31,12 @@ public:
 	void SetStatic(bool isStatic);
 	bool IsStatic() const { return m_isStatic; }
 	const Aabb &GetAabb() const { return m_collMesh->GetAabb(); }
-	SceneGraph::Model *GetModel() const { return m_model; }
+	SceneGraph::Model *GetModel() const { return m_model.get(); }
 	CollMesh *GetCollMesh() { return m_collMesh.Get(); }
 
 	void SetModel(const char *modelName);
 
-	void RenderModel(Graphics::Renderer *r, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform, const bool setLighting=true);
+	void RenderModel(Graphics::Renderer *r, Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform, const bool setLighting=true);
 
 	virtual void TimeStepUpdate(const float timeStep);
 
@@ -62,10 +63,12 @@ private:
 	RefCountedPtr<CollMesh> m_collMesh;
 	Geom *m_geom; //static geom
 	std::string m_modelName;
-	SceneGraph::Model *m_model;
+	std::unique_ptr<SceneGraph::Model> m_model;
 	std::vector<Geom*> m_dynGeoms;
 	SceneGraph::Animation *m_idleAnimation;
 	std::unique_ptr<Shields> m_shields;
+
+	std::unique_ptr<ModelGraphic> m_transparentModelGraphic;
 };
 
 #endif /* _MODELBODY_H */

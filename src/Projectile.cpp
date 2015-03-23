@@ -110,6 +110,7 @@ void Projectile::FreeModel()
 
 Projectile::Projectile(): Body()
 {
+	m_renderable.reset(new LaserGraphic(Pi::renderer));
 	if (!s_sideMat) BuildModel();
 	SetOrient(matrix3x3d::Identity());
 	m_lifespan = 0;
@@ -283,7 +284,7 @@ void Projectile::StaticUpdate(const float timeStep)
 	}
 }
 
-void Projectile::Render(Graphics::Renderer *renderer, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform)
+void Projectile::Render(Graphics::Renderer *renderer, Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform)
 {
 	vector3d _from = viewTransform * GetInterpPosition();
 	vector3d _to = viewTransform * (GetInterpPosition() + m_dirVel);
@@ -310,30 +311,43 @@ void Projectile::Render(Graphics::Renderer *renderer, const Camera *camera, cons
 	const float length = m_length + dist_scale;
 	const float width = m_width + dist_scale;
 
-	renderer->SetTransform(m * matrix4x4f::ScaleMatrix(width, width, length));
+	//renderer->SetTransform(m * matrix4x4f::ScaleMatrix(width, width, length));
+	m.Scale(width, width, length);
 
 	Color color = m_color;
 	// fade them out as they age so they don't suddenly disappear
 	// this matches the damage fall-off calculation
 	const float base_alpha = sqrt(1.0f - m_age/m_lifespan);
 	// fade out side quads when viewing nearly edge on
-	vector3f view_dir = vector3f(viewCoords).Normalized();
+	/*vector3f view_dir = vector3f(viewCoords).Normalized();
 	color.a = (base_alpha * (1.f - powf(fabs(dir.Dot(view_dir)), length))) * 255;
 
 	if (color.a > 3) {
 		s_sideMat->diffuse = color;
 		renderer->DrawTriangles(s_sideVerts.get(), s_renderState, s_sideMat.get());
-	}
+	}*/
+
+	// fade out side quads when viewing nearly edge on
+	const vector3f view_dir = vector3f(viewCoords).Normalized();
+	float intensity = base_alpha * (1.f - powf(fabs(dir.Dot(view_dir)), length));
+	m_renderable->SetSideIntensity(intensity);
 
 	// fade out glow quads when viewing nearly edge on
 	// these and the side quads fade at different rates
 	// so that they aren't both at the same alpha as that looks strange
 	color.a = (base_alpha * powf(fabs(dir.Dot(view_dir)), width)) * 255;
 
-	if (color.a > 3) {
+	/*if (color.a > 3) {
 		s_glowMat->diffuse = color;
 		renderer->DrawTriangles(s_glowVerts.get(), s_renderState, s_glowMat.get());
-	}
+	}*/
+
+	intensity = base_alpha * powf(fabs(dir.Dot(view_dir)), width);
+	m_renderable->SetGlowIntensity(intensity);
+
+	m_renderable->SetColor(color);
+	m_renderable->SetTransform(m);
+	camera->GetCollector().AddAdditive(m_renderable.get());
 }
 
 void Projectile::Add(Body *parent, float lifespan, float dam, float length, float width, bool mining, const Color &color, const vector3d &pos, const vector3d &baseVel, const vector3d &dirVel)
