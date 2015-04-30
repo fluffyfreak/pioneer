@@ -23,6 +23,7 @@ GameConfig::GameConfig(const std::map<std::string,std::string> &override_)
 	map["FOVVertical"] = "65";
 	map["DisplayNavTunnel"] = "0";
 	map["CompactScanner"] = "1";
+	map["ConfirmQuit"] = "1";
 	map["MasterVolume"] = "0.8";
 	map["MusicVolume"] = "0.8";
 	map["MasterMuted"] = "0";
@@ -41,6 +42,7 @@ GameConfig::GameConfig(const std::map<std::string,std::string> &override_)
 	map["SpeedLines"] = "0";
 	map["EnableCockpit"] = "0";
 	map["HudTrails"] = "0";
+	map["EnableServerAgent"] = "0";
 
 #ifdef _WIN32
 	map["RedirectStdio"] = "1";

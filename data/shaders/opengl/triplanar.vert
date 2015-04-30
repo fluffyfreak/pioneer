@@ -33,13 +33,13 @@ void main(void)
 	texCoord0 = a_uv0.xy;
 #if (NUM_LIGHTS > 0)
 	eyePos = vec3(uViewMatrix * a_vertex);
-	normal = normalize(uNormalMatrix * vec4(a_normal, 1.0)).xyz;
+	normal = normalize(uNormalMatrix * a_normal).xyz;
 	wNormal = a_normal;
 	wCoords01 = a_vertex.xyz * texScale01;
 	wCoords23 = a_vertex.xyz * texScale23;
 #ifdef MAP_NORMAL
-	tangent = normalize(uNormalMatrix * vec4(a_tangent, 1.0)).xyz;
-	bitangent = normalize(uNormalMatrix * vec4(cross(a_normal, a_tangent), 1.0)).xyz;
+	tangent = normalize(uNormalMatrix * a_tangent.xyz).xyz;
+	bitangent = normalize(uNormalMatrix * cross(a_normal, a_tangent.xyz)).xyz;
 #endif
 #ifdef HEAT_COLOURING
 	heatingDir = normalize(heatingMatrix * heatingNormal);

@@ -31,6 +31,7 @@
 #include "LuaMusic.h"
 #include "LuaNameGen.h"
 #include "LuaRef.h"
+#include "LuaServerAgent.h"
 #include "LuaShipDef.h"
 #include "LuaSpace.h"
 #include "LuaTimer.h"
@@ -62,6 +63,7 @@
 #include "UIView.h"
 #include "KeyBindings.h"
 #include "EnumStrings.h"
+#include "ServerAgent.h"
 #include "galaxy/CustomSystem.h"
 #include "galaxy/GalaxyGenerator.h"
 #include "galaxy/StarSystem.h"
@@ -70,6 +72,7 @@
 #include "graphics/Graphics.h"
 #include "graphics/Light.h"
 #include "graphics/Renderer.h"
+#include "graphics/Stats.h"
 #include "gui/Gui.h"
 #include "scenegraph/Model.h"
 #include "scenegraph/Lua.h"
@@ -89,6 +92,7 @@ sigc::signal<void> Pi::onPlayerChangeFlightControlState;
 LuaSerializer *Pi::luaSerializer;
 LuaTimer *Pi::luaTimer;
 LuaNameGen *Pi::luaNameGen;
+ServerAgent *Pi::serverAgent;
 int Pi::keyModState;
 std::map<SDL_Keycode,bool> Pi::keyState; // XXX SDL2 SDLK_LAST
 char Pi::mouseButton[6];
@@ -269,6 +273,7 @@ static void LuaInit()
 	LuaLang::Register();
 	LuaEngine::Register();
 	LuaFileSystem::Register();
+	LuaServerAgent::Register();
 	LuaGame::Register();
 	LuaComms::Register();
 	LuaFormat::Register();
@@ -444,6 +449,19 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 	Lua::Init();
 
 	Pi::ui.Reset(new UI::Context(Lua::manager, Pi::renderer, Graphics::GetScreenWidth(), Graphics::GetScreenHeight()));
+
+	Pi::serverAgent = 0;
+	if (config->Int("EnableServerAgent")) {
+		const std::string endpoint(config->String("ServerEndpoint"));
+		if (endpoint.size() > 0) {
+			Output("Server agent enabled, endpoint: %s\n", endpoint.c_str());
+			Pi::serverAgent = new HTTPServerAgent(endpoint);
+		}
+	}
+	if (!Pi::serverAgent) {
+		Output("Server agent disabled\n");
+		Pi::serverAgent = new NullServerAgent();
+	}
 
 	LuaInit();
 
@@ -1069,6 +1087,8 @@ void Pi::Start()
 		Pi::frameTime = 0.001f*(SDL_GetTicks() - last_time);
 		_time += Pi::frameTime;
 		last_time = SDL_GetTicks();
+
+		Pi::serverAgent->ProcessResponses();
 	}
 
 	ui->DropAllLayers();
@@ -1126,7 +1146,7 @@ void Pi::MainLoop()
 	Uint32 last_stats = SDL_GetTicks();
 	int frame_stat = 0;
 	int phys_stat = 0;
-	char fps_readout[256];
+	char fps_readout[2048];
 	memset(fps_readout, 0, sizeof(fps_readout));
 #endif
 
@@ -1144,6 +1164,8 @@ void Pi::MainLoop()
 #ifdef PIONEER_PROFILER
 		Profiler::reset();
 #endif
+
+		Pi::serverAgent->ProcessResponses();
 
 		const Uint32 newTicks = SDL_GetTicks();
 		double newTime = 0.001 * double(newTicks);
@@ -1299,13 +1321,34 @@ void Pi::MainLoop()
 			int lua_memB = int(lua_mem & ((1u << 10) - 1));
 			int lua_memKB = int(lua_mem >> 10) % 1024;
 			int lua_memMB = int(lua_mem >> 20);
+			const Graphics::Stats::TFrameData &stats = Pi::renderer->GetStats().FrameStatsPrevious();
+			const Uint32 numDrawCalls = stats.m_stats[Graphics::Stats::STAT_DRAWCALL];
+			const Uint32 numDrawTris = stats.m_stats[Graphics::Stats::STAT_DRAWTRIS];
+			const Uint32 numDrawPointSprites = stats.m_stats[Graphics::Stats::STAT_DRAWPOINTSPRITES];
+			const Uint32 numDrawBuildings		= stats.m_stats[Graphics::Stats::STAT_BUILDINGS];
+			const Uint32 numDrawCities			= stats.m_stats[Graphics::Stats::STAT_CITIES];
+			const Uint32 numDrawGroundStations	= stats.m_stats[Graphics::Stats::STAT_GROUNDSTATIONS];
+			const Uint32 numDrawSpaceStations	= stats.m_stats[Graphics::Stats::STAT_SPACESTATIONS];
+			const Uint32 numDrawAtmospheres		= stats.m_stats[Graphics::Stats::STAT_ATMOSPHERES];
+			const Uint32 numDrawPatches			= stats.m_stats[Graphics::Stats::STAT_PATCHES];
+			const Uint32 numDrawPlanets			= stats.m_stats[Graphics::Stats::STAT_PLANETS];
+			const Uint32 numDrawGasGiants		= stats.m_stats[Graphics::Stats::STAT_GASGIANTS];
+			const Uint32 numDrawStars			= stats.m_stats[Graphics::Stats::STAT_STARS];
+			const Uint32 numDrawShips			= stats.m_stats[Graphics::Stats::STAT_SHIPS];
+			const Uint32 numDrawBillBoards = stats.m_stats[Graphics::Stats::STAT_BILLBOARD];
 			snprintf(
 				fps_readout, sizeof(fps_readout),
 				"%d fps (%.1f ms/f), %d phys updates, %d triangles, %.3f M tris/sec, %d glyphs/sec, %d patches/frame\n"
-				"Lua mem usage: %d MB + %d KB + %d bytes (stack top: %d)",
+				"Lua mem usage: %d MB + %d KB + %d bytes (stack top: %d)\n\n"
+				"Draw Calls (%u), of which were:\n Tris (%u)\n Point Sprites (%u)\n Billboards (%u)\n"
+				"Buildings (%u), Cities (%u), GroundStations (%u), SpaceStations (%u), Atmospheres (%u)\n"
+				"Patches (%u), Planets (%u), GasGiants (%u), Stars (%u), Ships (%u)\n",
 				frame_stat, (1000.0/frame_stat), phys_stat, Pi::statSceneTris, Pi::statSceneTris*frame_stat*1e-6,
 				Text::TextureFont::GetGlyphCount(), Pi::statNumPatches,
-				lua_memMB, lua_memKB, lua_memB, lua_gettop(Lua::manager->GetLuaState())
+				lua_memMB, lua_memKB, lua_memB, lua_gettop(Lua::manager->GetLuaState()),
+				numDrawCalls, numDrawTris, numDrawPointSprites, numDrawBillBoards,
+				numDrawBuildings, numDrawCities, numDrawGroundStations, numDrawSpaceStations, numDrawAtmospheres,
+				numDrawPatches, numDrawPlanets, numDrawGasGiants, numDrawStars, numDrawShips
 			);
 			frame_stat = 0;
 			phys_stat = 0;

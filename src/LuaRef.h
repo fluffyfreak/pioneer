@@ -6,6 +6,7 @@
 
 #include "lua/lua.hpp"
 #include "Serializer.h"
+#include "json/json.h"
 #include <vector>
 #include <cassert>
 
@@ -21,6 +22,11 @@ public:
 	void PushCopyToStack() const;
 
 	lua_State * GetLua() const { return m_lua; }
+
+	bool IsValid() const { return m_lua && m_id != LUA_NOREF; }
+
+	void SaveToJson(Json::Value &jsonObj);
+	void LoadFromJson(const Json::Value &jsonObj);
 
 private:
 	lua_State * m_lua;

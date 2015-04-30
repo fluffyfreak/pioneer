@@ -429,6 +429,12 @@
     <ClCompile Include="..\..\src\AsteroidBody.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\ServerAgent.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\LuaServerAgent.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Aabb.h">
@@ -870,6 +876,12 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\vector4.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ServerAgent.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\LuaServerAgent.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

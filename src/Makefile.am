@@ -82,6 +82,7 @@ noinst_HEADERS = \
 	LuaRef.h \
 	LuaSerializer.h \
 	LuaShipDef.h \
+	LuaServerAgent.h \
 	LuaSpace.h \
 	LuaTable.h \
 	LuaTimer.h \
@@ -142,6 +143,7 @@ noinst_HEADERS = \
 	VideoLink.h \
 	View.h \
 	WorldView.h \
+	ServerAgent.h \
 	SmartPtr.h \
 	buildopts.h \
 	fixed.h \
@@ -223,6 +225,7 @@ pioneer_SOURCES	= \
 	LuaPropertiedObject.cpp \
 	LuaRand.cpp \
 	LuaRef.cpp \
+	LuaServerAgent.cpp \
 	LuaSystemBody.cpp \
 	LuaSystemPath.cpp \
 	LuaSerializer.cpp \
@@ -255,6 +258,7 @@ pioneer_SOURCES	= \
 	SectorView.cpp \
 	Sensors.cpp \
 	Serializer.cpp \
+	ServerAgent.cpp \
 	StringF.cpp \
 	Sfx.cpp \
 	Shields.cpp \
@@ -305,7 +309,7 @@ pioneer_LDADD = \
 pioneer_LDADD += \
 	$(FREETYPE_LIBS) $(GL_LIBS) \
 	$(SDL2_LIBS) $(SIGC_LIBS) $(LUA_LIBS) $(VORBIS_LIBS) \
-	$(PNG_LIBS) $(ASSIMP_LIBS) $(EXTRA_LIBS)
+	$(PNG_LIBS) $(CURL_LIBS) $(ASSIMP_LIBS) $(EXTRA_LIBS)
 
 if BUILD_WIN32
 pioneer_LDFLAGS = -Wl,-Map=pioneer.map
@@ -362,6 +366,7 @@ uitest_SOURCES = \
 	LuaConstants.cpp \
 	LuaRef.cpp \
 	LuaPropertiedObject.cpp \
+	LuaSerializer.cpp \
 	PngWriter.cpp \
 	EnumStrings.cpp \
 	PropertyMap.cpp \

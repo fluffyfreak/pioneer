@@ -73,6 +73,7 @@ void GeomTree::BuildTreeData()
 		std::vector<Uint32> xrefs;
 		nv::Weld<vector3f> weld;
 		weld(m_vertices, xrefs);
+		m_numVertices = m_vertices.size();
 
 		//Output("---   %d vertices welded\n", count - newCount);
 
@@ -169,10 +170,6 @@ void GeomTree::BuildTreeData()
 
 GeomTree::GeomTree(Serializer::Reader &rd)
 {
-	PROFILE_SCOPED()
-	Profiler::Timer timer;
-	timer.Start();
-
 	m_numVertices = rd.Int32();
 	m_numEdges = rd.Int32();
 	m_numTris = rd.Int32();
@@ -241,14 +238,10 @@ GeomTree::GeomTree(Serializer::Reader &rd)
 		edgeIdxs[i] = i;
 	}
 	m_edgeTree.reset(new BVHTree(m_numEdges, edgeIdxs, &m_aabbs[0]));
-
-	timer.Stop();
-	//Output(" - - GeomTree::GeomTree(Serializer::Reader &rd) took: %lf milliseconds\n", timer.millicycles());
 }
 
 static bool SlabsRayAabbTest(const BVHNode *n, const vector3f &start, const vector3f &invDir, isect_t *isect)
 {
-	PROFILE_SCOPED()
 	float
 	l1      = (n->aabb.min.x - start.x) * invDir.x,
 	l2      = (n->aabb.max.x - start.x) * invDir.x,
@@ -270,13 +263,11 @@ static bool SlabsRayAabbTest(const BVHNode *n, const vector3f &start, const vect
 
 void GeomTree::TraceRay(const vector3f &start, const vector3f &dir, isect_t *isect) const
 {
-	PROFILE_SCOPED()
 	TraceRay(m_triTree->GetRoot(), start, dir, isect);
 }
 
 void GeomTree::TraceRay(const BVHNode *currnode, const vector3f &a_origin, const vector3f &a_dir, isect_t *isect) const
 {
-	PROFILE_SCOPED()
 	BVHNode *stack[32];
 	int stackpos = -1;
 	vector3f invDir(1.0f/a_dir.x, 1.0f/a_dir.y, 1.0f/a_dir.z);
@@ -308,7 +299,7 @@ struct bvhstack {
 /*
  * Bundle of rays with common origin
  */
-void GeomTree::TraceCoherentRays(int numRays, const vector3f &a_origin, const vector3f *a_dirs, isect_t *isects) const
+/*void GeomTree::TraceCoherentRays(int numRays, const vector3f &a_origin, const vector3f *a_dirs, isect_t *isects) const
 {
 	PROFILE_SCOPED()
 	TraceCoherentRays(m_triTree->GetRoot(), numRays, a_origin, a_dirs, isects);
@@ -347,11 +338,10 @@ pop_bstack:
 		activeRay = stack[stackpos].activeRay;
 		stackpos--;
 	}
-}
+}*/
 
 void GeomTree::RayTriIntersect(int numRays, const vector3f &origin, const vector3f *dirs, int triIdx, isect_t *isects) const
 {
-	PROFILE_SCOPED()
 	const vector3f a(m_vertices[m_indices[triIdx+0]]);
 	const vector3f b(m_vertices[m_indices[triIdx+1]]);
 	const vector3f c(m_vertices[m_indices[triIdx+2]]);
@@ -382,7 +372,6 @@ void GeomTree::RayTriIntersect(int numRays, const vector3f &origin, const vector
 
 vector3f GeomTree::GetTriNormal(int triIdx) const
 {
-	PROFILE_SCOPED()
 	const vector3f a(m_vertices[m_indices[3*triIdx+0]]);
 	const vector3f b(m_vertices[m_indices[3*triIdx+1]]);
 	const vector3f c(m_vertices[m_indices[3*triIdx+2]]);

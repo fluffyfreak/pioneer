@@ -14,17 +14,27 @@
 #include "scenegraph/SceneGraph.h"
 #include "scenegraph/ModelSkin.h"
 
-void AsteroidBody::Save(Serializer::Writer &wr, Space *space)
+void AsteroidBody::SaveToJson(Json::Value &jsonObj, Space *space)
 {
-	DynamicBody::Save(wr, space);
-	wr.Float(m_hitpoints);
+	DynamicBody::SaveToJson(jsonObj, space);
+
+	Json::Value asteroidBodyObj(Json::objectValue); // Create JSON object to contain dynamic body data.
+
+	asteroidBodyObj["hit_points"] = FloatToStr(m_hitpoints);
+
+	jsonObj["asteroid_body"] = asteroidBodyObj; // Add asteroid body object to supplied object.
 }
 
-void AsteroidBody::Load(Serializer::Reader &rd, Space *space)
+void AsteroidBody::LoadFromJson(const Json::Value &jsonObj, Space *space)
 {
-	DynamicBody::Load(rd, space);
+	DynamicBody::LoadFromJson(jsonObj, space);
 	Init();
-	m_hitpoints = rd.Float();
+
+	if (!jsonObj.isMember("asteroid_body")) throw SavedGameCorruptException();
+	Json::Value asteroidBodyObj = jsonObj["asteroid_body"];
+
+	if (!asteroidBodyObj.isMember("hit_points")) throw SavedGameCorruptException();
+	m_hitpoints = StrToFloat(asteroidBodyObj["hit_points"].asString());
 }
 
 void AsteroidBody::Init()
