@@ -1,9 +1,14 @@
 April 2015
    * New Features
      * Confirm quit question added (#3374)
+     * Enable vsync (#3385)
 
    * Fixes
      * Broken cockpit rotations using headlook (#3381)
+
+   * Internal Changes
+     * luacheck changes (#3383)
+     * Cppcheck changes (#3384)
 
 March 2015
    * Fixes
