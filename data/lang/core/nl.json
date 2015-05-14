@@ -53,7 +53,7 @@
    },
    "AUTOMATIC_SYSTEM_SELECTION" : {
       "description" : "for star map, select star system when mouse close to it",
-      "message" : "Automatische systeem selectie"
+      "message" : "Automatische stelselselectie"
    },
    "AUTOPILOT_CONTROL" : {
       "description" : "Indicating that ship is flying under autopilot control",
@@ -61,7 +61,7 @@
    },
    "AUTOPILOT_DOCK_WITH_STATION" : {
       "description" : "",
-      "message" : "Autopiloot: Meer aan bij ruimtestation"
+      "message" : "Automatische piloot: Meer aan bij ruimtestation"
    },
    "AUTOPILOT_ENTER_HIGH_ORBIT_AROUND" : {
       "description" : "",
@@ -97,7 +97,7 @@
    },
    "BINARY_SYSTEM" : {
       "description" : "",
-      "message" : "Binair systeem"
+      "message" : "Binair stelsel"
    },
    "BODIES" : {
       "description" : "space bodies",
@@ -145,7 +145,7 @@
    },
    "CANT_SAVE_IN_HYPERSPACE" : {
       "description" : "",
-      "message" : "Kan niet opslaan tijdens hyperspace"
+      "message" : "Kan het spel niet opslaan tijdens een hyperruimtesprong"
    },
    "CAPITALIST" : {
       "description" : "",
@@ -245,7 +245,7 @@
    },
    "CORPORATE_SYSTEM" : {
       "description" : "",
-      "message" : "Corporate systeem"
+      "message" : "Corporate stelsel"
    },
    "COULD_NOT_OPEN_FILENAME" : {
       "description" : "",
@@ -253,7 +253,7 @@
    },
    "COUNT_ON_SURFACE" : {
       "description" : "",
-      "message" : "\" (%surfacecount on surface)\""
+      "message" : "\" (%surfacecount op oppervlak)\""
    },
    "COUNT_STARPORTS" : {
       "description" : "",
@@ -325,7 +325,7 @@
    },
    "DRAW_OUT_RANGE_LABELS" : {
       "description" : "",
-      "message" : "Label out-of-range systems"
+      "message" : "Label stelsels buiten bereik"
    },
    "DRAW_UNINHABITED_LABELS" : {
       "description" : "",
@@ -477,7 +477,7 @@
    },
    "HEADING_LOCK_BACKWARD" : {
       "description" : "Autopilot points/holds/faces you retrograde (backwards rel. orbital direction)",
-      "message" : "Hold retrograde"
+      "message" : "Retrograde vasthouden"
    },
    "HEADING_LOCK_FORWARD" : {
       "description" : "Autopilot points/holds/faces you prograde (tangent to the orbit, i.e. forward), http://wiki.kerbalspaceprogram.com/wiki/Maneuver_node",
@@ -537,27 +537,27 @@
    },
    "HYPERSPACE_ARRIVAL_CLOUD" : {
       "description" : "",
-      "message" : "Hyperspace aankomst-wolk"
+      "message" : "Hyperruimte-aankomstwolk"
    },
    "HYPERSPACE_ARRIVAL_CLOUD_REMNANT" : {
       "description" : "",
-      "message" : "Hyperspace aankomst-wolk overblijfsel"
+      "message" : "Hyperruimte-aankomstwolkoverblijfsel"
    },
    "HYPERSPACE_DEPARTURE_CLOUD" : {
       "description" : "",
-      "message" : "Hyperspace vertrek-wolk"
+      "message" : "Hyperruimte-vertrekwolk"
    },
    "HYPERSPACE_JUMP" : {
       "description" : "",
-      "message" : "Hyperspace-sprong"
+      "message" : "Hyperruimtesprong"
    },
    "HYPERSPACE_JUMP_ABORTED" : {
       "description" : "",
-      "message" : "Hyperspace-sprong afgebroken."
+      "message" : "Hyperruimtesprong afgebroken."
    },
    "HYPERSPACE_TARGET" : {
       "description" : "",
-      "message" : "Hyperspace doel"
+      "message" : "Hyperruimte-bestemming"
    },
    "HYPERSPACING_IN_N_SECONDS" : {
       "description" : "",
@@ -597,7 +597,7 @@
    },
    "INDUSTRIAL_HUB_SYSTEM" : {
       "description" : "",
-      "message" : "Industrieël knooppunt-systeem."
+      "message" : "Industriëel knooppuntstelsel"
    },
    "INDUSTRIAL_MACHINERY" : {
       "description" : "",
@@ -669,7 +669,7 @@
    },
    "LIQUID_OXYGEN_DESCRIPTION" : {
       "description" : "",
-      "message" : "Zuurstof wordt gebruikt voor levensinstandhoudingssystemen en een aantal industriële processen"
+      "message" : "Zuurstof is nodig voor levensinstandhoudingssystemen en een aantal industriële processen"
    },
    "LIQUOR" : {
       "description" : "",
@@ -713,7 +713,7 @@
    },
    "MAP_LOCK_HYPERSPACE_TARGET" : {
       "description" : "",
-      "message" : "Lock Hyperspace Target"
+      "message" : "Leg hyperruimtebestemming vast"
    },
    "MAP_TOGGLE_INFO_PANEL" : {
       "description" : "",
@@ -769,7 +769,7 @@
    },
    "MAP_WARP_TO_HYPERSPACE_TARGET" : {
       "description" : "",
-      "message" : "Warp to Hyperspace Target"
+      "message" : "Warp naar hyperspace-bestemming"
    },
    "MAP_WARP_TO_SELECTED_SYSTEM" : {
       "description" : "",
@@ -905,7 +905,7 @@
    },
    "MULTI_SCOOP" : {
       "description" : "A ship equipment: a cargo scoop and fuel scoop combined to one",
-      "message" : "Multi Scoop"
+      "message" : "Multischep"
    },
    "MULTI_SCOOP_DESCRIPTION" : {
       "description" : "",
@@ -1181,11 +1181,11 @@
    },
    "PROBABILITY_OF_ARRIVAL_X_PERCENT" : {
       "description" : "",
-      "message" : "Probability of arrival: %probability%%"
+      "message" : "Waarschijnlijkheid van aankomst: %probability%%"
    },
    "QUADRUPLE_SYSTEM" : {
       "description" : "",
-      "message" : "Viervoudig systeem"
+      "message" : "Viervoudig stelsel"
    },
    "RADIOACTIVES" : {
       "description" : "",
@@ -1197,7 +1197,7 @@
    },
    "RECENTLY_EXPLORED_SYSTEM" : {
       "description" : "",
-      "message" : "Dit systeem was verkent op %datum"
+      "message" : "Dit stelsel is verkend op %datum"
    },
    "REQUEST_DOCKING_CLEARANCE" : {
       "description" : "",
@@ -1317,7 +1317,7 @@
    },
    "SELECT_LOW_THRUST_POWER_LEVEL" : {
       "description" : "",
-      "message" : "Select low thrust power level"
+      "message" : "Selecteer lage aandrijfkrachtniveau"
    },
    "SEMI_MAJOR_AXIS" : {
       "description" : "",
@@ -1325,11 +1325,11 @@
    },
    "SET_HYPERSPACE_DESTINATION_TO" : {
       "description" : "",
-      "message" : "Kies hyperspace-bestemming naar %system"
+      "message" : "Kies hyperruimte-bestemming naar %system"
    },
    "SET_HYPERSPACE_TARGET_TO_FOLLOW_THIS_DEPARTURE" : {
       "description" : "",
-      "message" : "Hyperspace-wolk Analysator: Kies hyperspace-doelwit om dit vertrek te volgen"
+      "message" : "Hyperruimtewolk-analysesysteem. Kies hyperruimte-bestemming om dit vertrek te volgen"
    },
    "SET_LOW_THRUST_POWER_LEVEL_TO_X_PERCENT" : {
       "description" : "",
@@ -1445,7 +1445,7 @@
    },
    "STABLE_SYSTEM_WITH_N_MAJOR_BODIES_STARPORTS" : {
       "description" : "",
-      "message" : "Stabiel systeem met %bodycount grote %{body(s)} en %portcount %{starport(s)}."
+      "message" : "Stabiel stelsel met %bodycount grote %{body(s)} en %portcount %{starport(s)}."
    },
    "STARPORT" : {
       "description" : "",
@@ -1605,11 +1605,11 @@
    },
    "SYSTEM" : {
       "description" : "star system",
-      "message" : "Systeem"
+      "message" : "Stelsel"
    },
    "SYSTEM_NUMBER" : {
       "description" : "",
-      "message" : "Systeem nummer:"
+      "message" : "Stelselnummer:"
    },
    "SYSTEM_ORBIT_VIEW" : {
       "description" : "",
@@ -1713,7 +1713,7 @@
    },
    "TRIPLE_SYSTEM" : {
       "description" : "",
-      "message" : "Drietallig systeem"
+      "message" : "Drievoudig stelsel"
    },
    "UNEXPLORED_SYSTEM_NO_DATA" : {
       "description" : "",

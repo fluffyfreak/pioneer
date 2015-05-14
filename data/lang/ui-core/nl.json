@@ -565,7 +565,7 @@
    },
    "LY" : {
       "description" : "Light year",
-      "message" : "ly"
+      "message" : "lj"
    },
    "MAKE_NEW_FACE" : {
       "description" : "",
@@ -749,7 +749,7 @@
    },
    "ORBIT" : {
       "description" : "",
-      "message" : "Orbit"
+      "message" : "Omloopbaan"
    },
    "ORBITAL_ANALYSIS" : {
       "description" : "",
