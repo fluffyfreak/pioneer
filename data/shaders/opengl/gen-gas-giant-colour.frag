@@ -18,44 +18,13 @@ in vec2 uv;
 
 out vec4 frag_color;
 
-#ifdef GEN_JUPITER_ESQUE
-vec4 GetColour(in vec3 p)
-{	
-	//float n = octavenoise(8, 0.5, 2.0, p, frequency[0], time);
-	//float n = river_octavenoise(8, 0.5, 2.0, p, frequency[0], time);
-	//float n = dunes_octavenoise(8, 0.5, 2.0, p, frequency[0], time);
-	//float n = billow_octavenoise(8, 0.5, 2.0, p, frequency[0], time);
-	//float n = ridged_octavenoise(8, 0.5, 2.0, p, frequency[0], time);
-	//float n = combo_octavenoise(8, 0.5, 2.0, p, frequency[0], time);
-	//float n = voronoiscam_octavenoise(8, 0.5, 2.0, p, frequency[0], time);
-	//float n = megavolcano_function(8, frequency[0], amplitude[0], p);
-	//vec2 F = cellular( p * 16.0 );
-	//float n = F.y-F.x;
-	//return mix(vec4(0.04, 0.05, 0.15, 1.0), vec4(0.80,0.94,0.96, 1.0), n);
-	
-	// spots
-	//vec2 F = cellular( p * 4.0 );
-	//float s = fwidth(F.x);
-	//float n1 = smoothstep(0.4-s, 0.4+s, F.x);
-	//float n2 = smoothstep(0.5-s, 0.5+s, F.x);
-	//return vec4(n1, n2, n2, 1.0);
-	
-	// partial spot
-	//vec2 F = cellular( p * 4.0 );
-	//float s = fwidth(F.x);
-	//float ss = smoothstep(0.5-s, 0.5+s, F.x);
-	
-	
-	//float n1 = octavenoise(8, 0.5, 2.0, p, frequency[0], time);
-	//float n2 = octavenoise(8, 0.5, 2.0, p * 3.14159, frequency[2], time);
-	//vec4 color = vec4(texture(texture0, vec2(0.0, (p.y + 1.0) * 0.5) + vec2(n1*0.075,n2*0.075)).xyz, 1.0);
-	//return color;
-
+vec3 NoiseSample(in vec3 p)
+{
 	// fractal definition example:
 	// float #fractalNoise#(vec3 position, int octaves, float frequency, float persistence, float time);
 	// -------------------------------------------------------------------------------------------------
-	float n1 = fbm(p, 6, 0.1, 0.8, time) * 0.01;
-	float n2 = ridgedfbm(p, 5, 5.8, 0.75, time) * 0.015 - 0.01;
+	float n1 = fbm      (p, 6, 10.0 * frequency[0], 0.8, time) * 0.01;
+	float n2 = ridgedfbm(p, 5, 5.8 * frequency[1], 0.75, time) * 0.015 - 0.01;
 
 	// Get the three threshold samples
 	float s = 0.6;
@@ -67,14 +36,19 @@ vec4 GetColour(in vec3 p)
 	float threshold = max(t1 * t2 * t3, 0.0);
 
 	// Storms
-	float n3 = snoise(vec4(p, time)) * threshold * 3.0;
+	float n3 = snoise(vec4(p * frequency[2], time)) * threshold * 3.0;
 	float n = n1 + n2 + n3;
 	
 	vec2 newUV = vec2(n,n);
 	vec3 texColor = texture(texture0, vec2(0.0, (p.y + 1.0) * 0.5) + newUV).xyz;
- 
-	// Add to red color channel for debugging
-	//return vec4(threshold * 3.0, 0.0, 0.0, 0.0) + vec4(texColor, 1.0);
+
+	return texColor;
+}
+
+#ifdef GEN_JUPITER_ESQUE
+vec4 GetColour(in vec3 p)
+{
+	vec3 texColor = NoiseSample(p);
 	return vec4(texColor, 1.0);
 }
 #endif
@@ -82,50 +56,40 @@ vec4 GetColour(in vec3 p)
 #ifdef GEN_SATURN_ESQUE
 vec4 GetColour(in vec3 p)
 {
-	float n1 = octavenoise(8, 0.5, 2.0, p, frequency[0], time);
-	float n2 = octavenoise(8, 0.5, 2.0, p * 3.14159, frequency[2], time);
-	vec4 color = vec4(texture(texture0, vec2(0.0, (p.y + 1.0) * 0.5) + vec2(n1*0.075,n2*0.075)).xyz, 1.0);
-	return color;
+	vec3 texColor = NoiseSample(p);
+	return vec4(texColor, 1.0);
 }
 #endif
 
 #ifdef GEN_SATURN2_ESQUE
 vec4 GetColour(in vec3 p)
 {
-	float n1 = octavenoise(8, 0.5, 2.0, p, frequency[0], time);
-	float n2 = octavenoise(8, 0.5, 2.0, p * 3.14159, frequency[2], time);
-	vec4 color = vec4(texture(texture0, vec2(0.0, (p.y + 1.0) * 0.5) + vec2(n1*0.075,n2*0.075)).xyz, 1.0);
-	return color;
+	vec3 texColor = NoiseSample(p);
+	return vec4(texColor, 1.0);
 }
 #endif // GEN_SATURN2_ESQUE
 
 #ifdef GEN_NEPTUNE_ESQUE
 vec4 GetColour(in vec3 p)
 {
-	float n1 = octavenoise(8, 0.5, 2.0, p, frequency[0], time);
-	float n2 = octavenoise(8, 0.5, 2.0, p * 3.14159, frequency[2], time);
-	vec4 color = vec4(texture(texture0, vec2(0.0, (p.y + 1.0) * 0.5) + vec2(n1*0.075,n2*0.075)).xyz, 1.0);
-	return color;
+	vec3 texColor = NoiseSample(p);
+	return vec4(texColor, 1.0);
 }
 #endif
 
 #ifdef GEN_NEPTUNE2_ESQUE
 vec4 GetColour(in vec3 p)
 {
-	float n1 = octavenoise(8, 0.5, 2.0, p, frequency[0], time);
-	float n2 = octavenoise(8, 0.5, 2.0, p * 3.14159, frequency[2], time);
-	vec4 color = vec4(texture(texture0, vec2(0.0, (p.y + 1.0) * 0.5) + vec2(n1*0.075,n2*0.075)).xyz, 1.0);
-	return color;
+	vec3 texColor = NoiseSample(p);
+	return vec4(texColor, 1.0);
 }
 #endif
 
 #ifdef GEN_URANUS_ESQUE 
 vec4 GetColour(in vec3 p)
 {
-	float n1 = octavenoise(8, 0.5, 2.0, p, frequency[0], time);
-	float n2 = octavenoise(8, 0.5, 2.0, p * 3.14159, frequency[2], time);
-	vec4 color = vec4(texture(texture0, vec2(0.0, (p.y + 1.0) * 0.5) + vec2(n1*0.075,n2*0.075)).xyz, 1.0);
-	return color;
+	vec3 texColor = NoiseSample(p);
+	return vec4(texColor, 1.0);
 }
 #endif
 
