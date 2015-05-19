@@ -441,3 +441,41 @@ float megavolcano_function(in int octaves, in float frequency, in float amplitud
 	}
 	return 4.0 * crater;
 }
+
+float fbm(in vec3 position, in int octaves, in float frequency, in float persistence, in float time) {
+    float total = 0.0; // Total value so far
+    float maxAmplitude = 0.0; // Accumulates highest theoretical amplitude
+    float amplitude = 1.0;
+    for (int i = 0; i < octaves; i++) {
+        // Get the noise sample
+        total += snoise(vec4(position * frequency, time)) * amplitude;
+        // Make the wavelength twice as small
+        frequency *= 2.0;
+        // Add to our maximum possible amplitude
+        maxAmplitude += amplitude;
+        // Reduce amplitude according to persistence for the next octave
+        amplitude *= persistence;
+    }
+    // Scale the result by the maximum amplitude
+    return total / maxAmplitude;
+}
+
+float ridgedfbm(in vec3 position, in int octaves, in float frequency, in float persistence, in float time) {
+    float total = 0.0; // Total value so far
+    float maxAmplitude = 0.0; // Accumulates highest theoretical amplitude
+    float amplitude = 1.0;
+    for (int i = 0; i < octaves; i++) {
+        // Get the noise sample
+        total += ((1.0 - abs(snoise(vec4(position * frequency, time)))) * 2.0 - 1.0) * amplitude;
+        // Make the wavelength twice as small
+        frequency *= 2.0;
+        // Add to our maximum possible amplitude
+        maxAmplitude += amplitude;
+        // Reduce amplitude according to persistence for the next octave
+        amplitude *= persistence;
+    }
+    // Scale the result by the maximum amplitude
+    return total / maxAmplitude;
+}
+
+

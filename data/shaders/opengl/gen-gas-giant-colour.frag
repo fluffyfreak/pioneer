@@ -45,10 +45,37 @@ vec4 GetColour(in vec3 p)
 	//float s = fwidth(F.x);
 	//float ss = smoothstep(0.5-s, 0.5+s, F.x);
 	
-	float n1 = octavenoise(8, 0.5, 2.0, p, frequency[0], time);
-	float n2 = octavenoise(8, 0.5, 2.0, p * 3.14159, frequency[2], time);
-	vec4 color = vec4(texture(texture0, vec2(0.0, (p.y + 1.0) * 0.5) + vec2(n1*0.075,n2*0.075)).xyz, 1.0);
-	return color;
+	
+	//float n1 = octavenoise(8, 0.5, 2.0, p, frequency[0], time);
+	//float n2 = octavenoise(8, 0.5, 2.0, p * 3.14159, frequency[2], time);
+	//vec4 color = vec4(texture(texture0, vec2(0.0, (p.y + 1.0) * 0.5) + vec2(n1*0.075,n2*0.075)).xyz, 1.0);
+	//return color;
+
+	// fractal definition example:
+	// float #fractalNoise#(vec3 position, int octaves, float frequency, float persistence, float time);
+	// -------------------------------------------------------------------------------------------------
+	float n1 = fbm(p, 6, 0.1, 0.8, time) * 0.01;
+	float n2 = ridgedfbm(p, 5, 5.8, 0.75, time) * 0.015 - 0.01;
+
+	// Get the three threshold samples
+	float s = 0.6;
+	float t1 = snoise(vec4(p * 2.0, time)) - s;
+	float t2 = snoise(vec4((p + 800.0) * 2.0, time)) - s;
+	float t3 = snoise(vec4((p + 1600.0) * 2.0, time)) - s;
+ 
+	// Intersect them and get rid of negatives
+	float threshold = max(t1 * t2 * t3, 0.0);
+
+	// Storms
+	float n3 = snoise(vec4(p, time)) * threshold * 3.0;
+	float n = n1 + n2 + n3;
+	
+	vec2 newUV = vec2(n,n);
+	vec3 texColor = texture(texture0, vec2(0.0, (p.y + 1.0) * 0.5) + newUV).xyz;
+ 
+	// Add to red color channel for debugging
+	//return vec4(threshold * 3.0, 0.0, 0.0, 0.0) + vec4(texColor, 1.0);
+	return vec4(texColor, 1.0);
 }
 #endif
 
@@ -115,9 +142,7 @@ void main(void)
 	vec3 p = GetSpherePoint(xfrac, yfrac);
 	
 	// call the GetColour function implemented for this shader type
-	vec4 colour = GetColour(p);
-	
-	frag_color = colour;
+	frag_color = GetColour(p);
 	
 	SetFragDepth();
 }
