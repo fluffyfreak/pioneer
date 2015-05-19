@@ -187,5 +187,100 @@
     <Filter Include="dummy">
       <UniqueIdentifier>{613c7313-f10f-43ec-92f0-5f0c66d0cfc6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="opengl\shaders">
+      <UniqueIdentifier>{5cfa5230-e0ff-423c-8c05-c390d4b39c45}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\data\shaders\opengl\FresnelColour.frag">
+      <Filter>opengl\shaders</Filter>
+    </None>
+    <None Include="..\..\..\data\shaders\opengl\FresnelColour.vert">
+      <Filter>opengl\shaders</Filter>
+    </None>
+    <None Include="..\..\..\data\shaders\opengl\gassphere_base.frag">
+      <Filter>opengl\shaders</Filter>
+    </None>
+    <None Include="..\..\..\data\shaders\opengl\gassphere_base.vert">
+      <Filter>opengl\shaders</Filter>
+    </None>
+    <None Include="..\..\..\data\shaders\opengl\gen-gas-giant-colour.frag">
+      <Filter>opengl\shaders</Filter>
+    </None>
+    <None Include="..\..\..\data\shaders\opengl\gen-gas-giant-colour.vert">
+      <Filter>opengl\shaders</Filter>
+    </None>
+    <None Include="..\..\..\data\shaders\opengl\geosphere_sky.frag">
+      <Filter>opengl\shaders</Filter>
+    </None>
+    <None Include="..\..\..\data\shaders\opengl\geosphere_sky.vert">
+      <Filter>opengl\shaders</Filter>
+    </None>
+    <None Include="..\..\..\data\shaders\opengl\geosphere_terrain.frag">
+      <Filter>opengl\shaders</Filter>
+    </None>
+    <None Include="..\..\..\data\shaders\opengl\geosphere_terrain.vert">
+      <Filter>opengl\shaders</Filter>
+    </None>
+    <None Include="..\..\..\data\shaders\opengl\lib.glsl">
+      <Filter>opengl\shaders</Filter>
+    </None>
+    <None Include="..\..\..\data\shaders\opengl\logz.glsl">
+      <Filter>opengl\shaders</Filter>
+    </None>
+    <None Include="..\..\..\data\shaders\opengl\multi.frag">
+      <Filter>opengl\shaders</Filter>
+    </None>
+    <None Include="..\..\..\data\shaders\opengl\multi.vert">
+      <Filter>opengl\shaders</Filter>
+    </None>
+    <None Include="..\..\..\data\shaders\opengl\noise.glsl">
+      <Filter>opengl\shaders</Filter>
+    </None>
+    <None Include="..\..\..\data\shaders\opengl\planetrings.frag">
+      <Filter>opengl\shaders</Filter>
+    </None>
+    <None Include="..\..\..\data\shaders\opengl\planetrings.vert">
+      <Filter>opengl\shaders</Filter>
+    </None>
+    <None Include="..\..\..\data\shaders\opengl\shield.frag">
+      <Filter>opengl\shaders</Filter>
+    </None>
+    <None Include="..\..\..\data\shaders\opengl\shield.vert">
+      <Filter>opengl\shaders</Filter>
+    </None>
+    <None Include="..\..\..\data\shaders\opengl\skybox.frag">
+      <Filter>opengl\shaders</Filter>
+    </None>
+    <None Include="..\..\..\data\shaders\opengl\skybox.vert">
+      <Filter>opengl\shaders</Filter>
+    </None>
+    <None Include="..\..\..\data\shaders\opengl\starfield.frag">
+      <Filter>opengl\shaders</Filter>
+    </None>
+    <None Include="..\..\..\data\shaders\opengl\starfield.vert">
+      <Filter>opengl\shaders</Filter>
+    </None>
+    <None Include="..\..\..\data\shaders\opengl\ui.frag">
+      <Filter>opengl\shaders</Filter>
+    </None>
+    <None Include="..\..\..\data\shaders\opengl\ui.vert">
+      <Filter>opengl\shaders</Filter>
+    </None>
+    <None Include="..\..\..\data\shaders\opengl\vtxColor.frag">
+      <Filter>opengl\shaders</Filter>
+    </None>
+    <None Include="..\..\..\data\shaders\opengl\vtxColor.vert">
+      <Filter>opengl\shaders</Filter>
+    </None>
+    <None Include="..\..\..\data\shaders\opengl\attributes.glsl">
+      <Filter>opengl\shaders</Filter>
+    </None>
+    <None Include="..\..\..\data\shaders\opengl\billboard_sphereimpostor.frag">
+      <Filter>opengl\shaders</Filter>
+    </None>
+    <None Include="..\..\..\data\shaders\opengl\billboard_sphereimpostor.vert">
+      <Filter>opengl\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

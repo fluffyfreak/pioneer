@@ -215,6 +215,38 @@
     <ClInclude Include="..\..\..\src\graphics\WindowSDL.h" />
     <ClInclude Include="..\..\..\src\win32\pch.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\data\shaders\opengl\attributes.glsl" />
+    <None Include="..\..\..\data\shaders\opengl\billboard_sphereimpostor.frag" />
+    <None Include="..\..\..\data\shaders\opengl\billboard_sphereimpostor.vert" />
+    <None Include="..\..\..\data\shaders\opengl\FresnelColour.frag" />
+    <None Include="..\..\..\data\shaders\opengl\FresnelColour.vert" />
+    <None Include="..\..\..\data\shaders\opengl\gassphere_base.frag" />
+    <None Include="..\..\..\data\shaders\opengl\gassphere_base.vert" />
+    <None Include="..\..\..\data\shaders\opengl\gen-gas-giant-colour.frag" />
+    <None Include="..\..\..\data\shaders\opengl\gen-gas-giant-colour.vert" />
+    <None Include="..\..\..\data\shaders\opengl\geosphere_sky.frag" />
+    <None Include="..\..\..\data\shaders\opengl\geosphere_sky.vert" />
+    <None Include="..\..\..\data\shaders\opengl\geosphere_terrain.frag" />
+    <None Include="..\..\..\data\shaders\opengl\geosphere_terrain.vert" />
+    <None Include="..\..\..\data\shaders\opengl\lib.glsl" />
+    <None Include="..\..\..\data\shaders\opengl\logz.glsl" />
+    <None Include="..\..\..\data\shaders\opengl\multi.frag" />
+    <None Include="..\..\..\data\shaders\opengl\multi.vert" />
+    <None Include="..\..\..\data\shaders\opengl\noise.glsl" />
+    <None Include="..\..\..\data\shaders\opengl\planetrings.frag" />
+    <None Include="..\..\..\data\shaders\opengl\planetrings.vert" />
+    <None Include="..\..\..\data\shaders\opengl\shield.frag" />
+    <None Include="..\..\..\data\shaders\opengl\shield.vert" />
+    <None Include="..\..\..\data\shaders\opengl\skybox.frag" />
+    <None Include="..\..\..\data\shaders\opengl\skybox.vert" />
+    <None Include="..\..\..\data\shaders\opengl\starfield.frag" />
+    <None Include="..\..\..\data\shaders\opengl\starfield.vert" />
+    <None Include="..\..\..\data\shaders\opengl\ui.frag" />
+    <None Include="..\..\..\data\shaders\opengl\ui.vert" />
+    <None Include="..\..\..\data\shaders\opengl\vtxColor.frag" />
+    <None Include="..\..\..\data\shaders\opengl\vtxColor.vert" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
