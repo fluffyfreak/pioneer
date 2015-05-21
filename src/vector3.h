@@ -75,6 +75,8 @@ public:
 			return vector3(x/l, y/l, z/l);
 		}
 	}
+	#define Magnitude() Length()
+	#define MagnitudeSqr() LengthSqr()
 
 	void Print() const { printf("v(%f,%f,%f)\n", x, y, z); }
 
@@ -121,6 +123,22 @@ public:
 			sqrtf (u*u+v*v+w*w)*(-v*x+u*y)*sin_a;
 		t.z *= inv_poo;
 		*this = t;
+	}
+
+	static vector3 Zero() {
+		return vector3(0,0,0);
+	}
+
+	static vector3 UnitX() {
+		return vector3(1,0,0);
+	}
+
+	static vector3 UnitY() {
+		return vector3(0,1,0);
+	}
+
+	static vector3 UnitZ() {
+		return vector3(0,0,1);
 	}
 };
 
