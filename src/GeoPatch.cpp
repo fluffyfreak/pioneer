@@ -73,50 +73,99 @@ void GeoPatch::_UpdateVBOs(Graphics::Renderer *renderer)
 		assert(renderer);
 		m_needUpdateVBOs = false;
 
-		//create buffer and upload data
-		Graphics::VertexBufferDesc vbd;
-		vbd.attrib[0].semantic = Graphics::ATTRIB_POSITION;
-		vbd.attrib[0].format   = Graphics::ATTRIB_FORMAT_FLOAT3;
-		vbd.attrib[1].semantic = Graphics::ATTRIB_NORMAL;
-		vbd.attrib[1].format   = Graphics::ATTRIB_FORMAT_FLOAT3;
-		vbd.attrib[2].semantic = Graphics::ATTRIB_DIFFUSE;
-		vbd.attrib[2].format   = Graphics::ATTRIB_FORMAT_UBYTE4;
-		vbd.numVertices = ctx->NUMVERTICES();
-		vbd.usage = Graphics::BUFFER_USAGE_STATIC;
-		m_vertexBuffer.reset(renderer->CreateVertexBuffer(vbd));
+		{
+			//create buffer and upload data
+			Graphics::VertexBufferDesc vbd;
+			vbd.attrib[0].semantic = Graphics::ATTRIB_POSITION;
+			vbd.attrib[0].format   = Graphics::ATTRIB_FORMAT_FLOAT3;
+			vbd.attrib[1].semantic = Graphics::ATTRIB_NORMAL;
+			vbd.attrib[1].format   = Graphics::ATTRIB_FORMAT_FLOAT3;
+			vbd.attrib[2].semantic = Graphics::ATTRIB_DIFFUSE;
+			vbd.attrib[2].format   = Graphics::ATTRIB_FORMAT_UBYTE4;
+			vbd.numVertices = ctx->NUMVERTICES();
+			vbd.usage = Graphics::BUFFER_USAGE_STATIC;
+			m_vertexBuffer.reset(renderer->CreateVertexBuffer(vbd));
 
-		GeoPatchContext::VBOVertex* vtxPtr = m_vertexBuffer->Map<GeoPatchContext::VBOVertex>(Graphics::BUFFER_MAP_WRITE);
-		assert(m_vertexBuffer->GetDesc().stride == sizeof(GeoPatchContext::VBOVertex));
+			GeoPatchContext::VBOVertex* vtxPtr = m_vertexBuffer->Map<GeoPatchContext::VBOVertex>(Graphics::BUFFER_MAP_WRITE);
+			assert(m_vertexBuffer->GetDesc().stride == sizeof(GeoPatchContext::VBOVertex));
 
-		const Sint32 edgeLen = ctx->GetEdgeLen();
-		const double frac = ctx->GetFrac();
-		const double *pHts = heights.get();
-		const vector3f *pNorm = normals.get();
-		const Color3ub *pColr = colors.get();
-		for (Sint32 y=0; y<edgeLen; y++) {
-			for (Sint32 x=0; x<edgeLen; x++) {
-				const double height = *pHts;
-				const double xFrac = double(x)*frac;
-				const double yFrac = double(y)*frac;
-				const vector3d p((GetSpherePoint(xFrac, yFrac) * (height + 1.0)) - clipCentroid);
-				clipRadius = std::max(clipRadius, p.Length());
-				vtxPtr->pos = vector3f(p);
-				++pHts;	// next height
+			const Sint32 edgeLen = ctx->GetEdgeLen();
+			const double frac = ctx->GetFrac();
+			const double *pHts = heights.get();
+			const vector3f *pNorm = normals.get();
+			const Color3ub *pColr = colors.get();
+			for (Sint32 y=0; y<edgeLen; y++) {
+				for (Sint32 x=0; x<edgeLen; x++) {
+					const double height = *pHts;
+					const double xFrac = double(x)*frac;
+					const double yFrac = double(y)*frac;
+					const vector3d p((GetSpherePoint(xFrac, yFrac) * (height + 1.0)) - clipCentroid);
+					clipRadius = std::max(clipRadius, p.Length());
+					vtxPtr->pos = vector3f(p);
+					++pHts;	// next height
 
-				const vector3f norma(pNorm->Normalized());
-				vtxPtr->norm = norma;
-				++pNorm; // next normal
+					const vector3f norma(pNorm->Normalized());
+					vtxPtr->norm = norma;
+					++pNorm; // next normal
 
-				vtxPtr->col[0] = pColr->r;
-				vtxPtr->col[1] = pColr->g;
-				vtxPtr->col[2] = pColr->b;
-				vtxPtr->col[3] = 255;
-				++pColr; // next colour
+					vtxPtr->col[0] = pColr->r;
+					vtxPtr->col[1] = pColr->g;
+					vtxPtr->col[2] = pColr->b;
+					vtxPtr->col[3] = 255;
+					++pColr; // next colour
 
-				++vtxPtr; // next vertex
+					++vtxPtr; // next vertex
+				}
 			}
+			m_vertexBuffer->Unmap();
 		}
-		m_vertexBuffer->Unmap();
+
+		heights.reset();
+		normals.reset();
+		colors.reset();
+
+		if(geosphere->GetTerrain()->GetSurfaceEffects() & Terrain::EFFECT_WATER)
+		{
+			//create buffer and upload data
+			Graphics::VertexBufferDesc vbd;
+			vbd.attrib[0].semantic = Graphics::ATTRIB_POSITION;
+			vbd.attrib[0].format   = Graphics::ATTRIB_FORMAT_FLOAT3;
+			vbd.attrib[1].semantic = Graphics::ATTRIB_NORMAL;
+			vbd.attrib[1].format   = Graphics::ATTRIB_FORMAT_FLOAT3;
+			vbd.attrib[2].semantic = Graphics::ATTRIB_DIFFUSE;
+			vbd.attrib[2].format   = Graphics::ATTRIB_FORMAT_UBYTE4;
+			vbd.numVertices = ctx->NUMVERTICES();
+			vbd.usage = Graphics::BUFFER_USAGE_STATIC;
+			m_waterVB.reset(renderer->CreateVertexBuffer(vbd));
+
+			GeoPatchContext::VBOVertex* vtxPtr = m_waterVB->Map<GeoPatchContext::VBOVertex>(Graphics::BUFFER_MAP_WRITE);
+			assert(m_waterVB->GetDesc().stride == sizeof(GeoPatchContext::VBOVertex));
+
+			const Sint32 edgeLen = ctx->GetEdgeLen();
+			const double frac = ctx->GetFrac();
+			for (Sint32 y=0; y<edgeLen; y++) {
+				for (Sint32 x=0; x<edgeLen; x++) {
+					const double xFrac = double(x)*frac;
+					const double yFrac = double(y)*frac;
+					const vector3d point(GetSpherePoint(xFrac, yFrac));
+					const vector3d p(point - clipCentroid);
+					clipRadius = std::max(clipRadius, p.Length());
+					vtxPtr->pos = vector3f(p);
+
+					const vector3f norma(point.Normalized());
+					vtxPtr->norm = norma;
+
+					vtxPtr->col[0] = 000;//pColr->r;
+					vtxPtr->col[1] = 000;//pColr->g;
+					vtxPtr->col[2] = 255;//pColr->b;
+					vtxPtr->col[3] = 255;
+
+					++vtxPtr; // next vertex
+				}
+			}
+			m_waterVB->Unmap();
+			
+		}
 
 #ifdef DEBUG_BOUNDING_SPHERES
 		RefCountedPtr<Graphics::Material> mat(Pi::renderer->CreateMaterial(Graphics::MaterialDescriptor()));
@@ -153,7 +202,7 @@ void GeoPatch::Render(Graphics::Renderer *renderer, const vector3d &campos, cons
 
 	if (kids[0]) {
 		for (int i=0; i<NUM_KIDS; i++) kids[i]->Render(renderer, campos, modelView, frustum);
-	} else if (heights) {
+	} else if (m_vertexBuffer.get()) {
 		Graphics::Material *mat = geosphere->GetSurfaceMaterial();
 		Graphics::RenderState *rs = geosphere->GetSurfRenderState();
 
@@ -164,6 +213,9 @@ void GeoPatch::Render(Graphics::Renderer *renderer, const vector3d &campos, cons
 		++Pi::statNumPatches;
 
 		renderer->DrawBufferIndexed(m_vertexBuffer.get(), ctx->GetIndexBuffer(DetermineIndexbuffer()), rs, mat);
+		if(m_waterVB.get()) {
+			renderer->DrawBufferIndexed(m_waterVB.get(), ctx->GetIndexBuffer(DetermineIndexbuffer()), rs, geosphere->GetWaterMaterial());
+		}
 #ifdef DEBUG_BOUNDING_SPHERES
 		if(m_boundsphere.get()) {
 			renderer->SetWireFrameMode(true);

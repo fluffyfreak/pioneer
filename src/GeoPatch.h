@@ -37,6 +37,7 @@ private:
 	std::unique_ptr<vector3f[]> normals;
 	std::unique_ptr<Color3ub[]> colors;
 	std::unique_ptr<Graphics::VertexBuffer> m_vertexBuffer;
+	std::unique_ptr<Graphics::VertexBuffer> m_waterVB;
 	std::unique_ptr<GeoPatch> kids[NUM_KIDS];
 	GeoPatch *parent;
 	GeoPatch *edgeFriend[NUM_EDGES]; // [0]=v01, [1]=v12, [2]=v20

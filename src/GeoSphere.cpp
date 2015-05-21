@@ -397,6 +397,7 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView
 		m_materialParameters.shadows = shadows;
 
 		m_surfaceMaterial->specialParameter0 = &m_materialParameters;
+		m_waterMaterial->specialParameter0 = &m_materialParameters;
 
 		if (m_materialParameters.atmosphere.atmosDensity > 0.0) {
 			m_atmosphereMaterial->specialParameter0 = &m_materialParameters;
@@ -423,8 +424,8 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView
 		emission = StarSystem::starRealColors[GetSystemBody()->GetType()];
 		emission.a = 255;
 	}
-
-	else {
+	else 
+	{
 		// give planet some ambient lighting if the viewer is close to it
 		double camdist = campos.Length();
 		camdist = 0.1 / (camdist*camdist);
@@ -496,6 +497,16 @@ void GeoSphere::SetUpMaterials()
 		surfDesc.quality |= Graphics::HAS_ECLIPSES;
 	}
 	m_surfaceMaterial.reset(Pi::renderer->CreateMaterial(surfDesc));
+
+	{
+		Graphics::MaterialDescriptor waterDesc;
+		waterDesc.effect = Graphics::EFFECT_WATER;
+		waterDesc.lighting = true;
+		if (bEnableEclipse) {
+			waterDesc.quality |= Graphics::HAS_ECLIPSES;
+		}
+		m_waterMaterial.reset(Pi::renderer->CreateMaterial(waterDesc));
+	}
 
 	{
 		Graphics::MaterialDescriptor skyDesc;

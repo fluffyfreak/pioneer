@@ -53,6 +53,7 @@ public:
 
 	Graphics::RenderState* GetSurfRenderState() const { return m_surfRenderState; }
 	Graphics::Material* GetSurfaceMaterial() const { return m_surfaceMaterial.get(); }
+	Graphics::Material* GetWaterMaterial() const { return m_waterMaterial.get(); }
 
 protected:
 	const SystemBody *m_sbody;
@@ -65,6 +66,7 @@ protected:
 	Graphics::RenderState *m_surfRenderState;
 	Graphics::RenderState *m_atmosRenderState;
 	std::unique_ptr<Graphics::Material> m_surfaceMaterial;
+	std::unique_ptr<Graphics::Material> m_waterMaterial;
 	std::unique_ptr<Graphics::Material> m_atmosphereMaterial;
 
 	//special parameters for shaders
