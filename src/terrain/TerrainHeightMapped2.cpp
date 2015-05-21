@@ -71,6 +71,7 @@ double TerrainHeightFractal<TerrainHeightMapped2>::GetHeight(const vector3d &p) 
 		//v = (v<0 ? 0 : v);
 
 		v=v*m_heightScaling+m_minh; // v = v*height scaling+min height
+
 		v/=m_planetRadius;
 
 		v += 0.1;
@@ -79,8 +80,7 @@ double TerrainHeightFractal<TerrainHeightMapped2>::GetHeight(const vector3d &p) 
 		h += v;
 		h -= 0.09;
 
-		return (h > 0.0 ? h : 0.0);
-
+		return h;
 	}
 
 }

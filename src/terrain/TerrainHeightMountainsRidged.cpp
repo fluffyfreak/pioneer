@@ -69,5 +69,5 @@ double TerrainHeightFractal<TerrainHeightMountainsRidged>::GetHeight(const vecto
 	}
 
 	n = m_maxHeight*n;
-	return (n > 0.0 ? n : 0.0);
+	return n;//(n > 0.0 ? n : 0.0);
 }
