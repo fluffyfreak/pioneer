@@ -155,7 +155,7 @@ void main(void)
 	const float Density = 0.02;
 	
 	
-	vec3 noisePosition = varyingTexCoord0 + (vec3(0.0, 0.1, 1.0) * time);
+	vec3 noisePosition = varyingTexCoord0 + vec3((1.0 + sin(time)) * 0.5, 1.0, (1.0 + cos(time)) * 0.5);
 	float noise = fbm(noisePosition, 8, 8.0, 0.5) * nScale;
 	float rnoise = ridgedNoise(noisePosition, 4, 1.0, 0.5) * nScale;
 	rnoise -= (1.0 - Density);
