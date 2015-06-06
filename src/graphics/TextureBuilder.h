@@ -33,6 +33,9 @@ public:
 	static TextureBuilder Decal(const std::string &filename) {
 		return TextureBuilder(filename, LINEAR_CLAMP, true, true, false, true);
 	}
+	static TextureBuilder NoMip(const std::string &filename) {
+		return TextureBuilder(filename, LINEAR_REPEAT, false, false, false, false);
+	}
 	static TextureBuilder Cube(const std::string &filename) {
 		return TextureBuilder(filename, LINEAR_CLAMP, true, true, false, true, TEXTURE_CUBE_MAP);
 	}
