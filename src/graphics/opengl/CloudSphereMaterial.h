@@ -34,6 +34,8 @@ namespace Graphics {
 			Uniform lrad;
 			Uniform sdivlrad;
 
+			Uniform time;
+
 		protected:
 			virtual void InitUniforms();
 		};

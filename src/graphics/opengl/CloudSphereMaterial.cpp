@@ -7,6 +7,8 @@
 #include "StringF.h"
 #include "graphics/Graphics.h"
 #include "RendererGL.h"
+#include "Pi.h"
+#include "Game.h"
 #include <sstream>
 
 namespace Graphics {
@@ -40,6 +42,8 @@ void CloudSphereProgram::InitUniforms()
 	srad.Init("srad", m_program);
 	lrad.Init("lrad", m_program);
 	sdivlrad.Init("sdivlrad", m_program);
+
+	time.Init("time", m_program);
 }
 
 // CloudSphereMaterial -----------------------------------
@@ -98,6 +102,8 @@ void CloudSphereMaterial::SetGSUniforms()
 
 	p->diffuse.Set(this->diffuse);
 	p->texture0.Set(this->texture0, 0);
+
+	p->time.Set(float(Pi::game->GetTime() * 0.0005));
 
 	// we handle up to three shadows at a time
 	int occultedLight[3] = {-1,-1,-1};
