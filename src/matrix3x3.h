@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _MATRIX3X3_H
@@ -135,7 +135,7 @@ class matrix3x3 {
 					  cell2d(0, 1) * (cell2d(1, 0) * cell2d(2, 2) - cell2d(1, 2) * cell2d(2, 0)) +
 					  cell2d(0, 2) * (cell2d(1, 0) * cell2d(2, 1) - cell2d(1, 1) * cell2d(2, 0));
 
-		const T invdet = 1 / det;
+		const T invdet = T(1.0) / det;
 
 		matrix3x3 minv; // inverse of matrix m
 		#define idx2d(x,y)    ((y*3) + x)
@@ -153,7 +153,7 @@ class matrix3x3 {
 	void Renormalize() {
 		vector3<T> x = VectorX().Normalized();
 		vector3<T> y = VectorZ().Cross(x).Normalized();
-		*this = matrix3x3::FromVectors(x, y);
+		*this = FromVectors(x, y);
 	}
 	void Print () const {
 		for (int i=0; i<3; i++) {

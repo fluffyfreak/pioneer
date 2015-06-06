@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #define ALLOW_LUA_SHIP_DEF 1
@@ -98,7 +98,7 @@ ShipType::ShipType(const Id &_id, const std::string &path)
 	capacity = data.get("capacity", 0).asInt();
 	fuelTankMass = data.get("fuel_tank_mass", 5).asInt();
 
-	for( Json::Value::iterator slot = data["slots"].begin() ; slot != data["slots"].end() ; slot++ ) {
+	for( Json::Value::iterator slot = data["slots"].begin() ; slot != data["slots"].end() ; ++slot ) {
 		const std::string slotname = slot.key().asString();
 		slots[slotname] = data["slots"].get(slotname, 0).asInt();
 	}
@@ -247,7 +247,7 @@ int _define_ship(lua_State *L, ShipType::Tag tag, std::vector<ShipType::Id> *lis
 		Output("couldn't open file for writing '%s'\n", path.c_str());
 		abort();
 	}
-	const size_t nwritten = fwrite(saveMe.data(), saveMe.length(), 1, f);
+	fwrite(saveMe.data(), saveMe.length(), 1, f);
 	fclose(f);
 
 	lua_pop(L, 1);

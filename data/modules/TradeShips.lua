@@ -1,4 +1,4 @@
--- Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local Engine = import("Engine")
@@ -311,7 +311,7 @@ local getSystemAndJump = function (ship)
 end
 
 local getAcceptableShips = function ()
-    -- only accept ships with enough capacity that are capable of landing in atmospheres
+	-- only accept ships with enough capacity that are capable of landing in atmospheres
 	local filter_function
 	if #vacuum_starports == 0 then
 		filter_function = function(k,def)
@@ -757,6 +757,8 @@ end
 Event.Register("onShipAlertChanged", onShipAlertChanged)
 
 local onShipHit = function (ship, attacker)
+	if attacker == nil then return end-- XX
+	
 	-- XXX this whole thing might be better if based on amount of damage sustained
 	if trade_ships[ship] == nil then return end
 	local trader = trade_ships[ship]
@@ -831,6 +833,7 @@ end
 Event.Register("onShipCollided", onShipCollided)
 
 local onShipDestroyed = function (ship, attacker)
+	if attacker == nil then return end-- XX
 	if trade_ships[ship] ~= nil then
 		local trader = trade_ships[ship]
 
@@ -894,9 +897,9 @@ local onGameStart = function ()
 				local v = Game.system:GetCommodityBasePriceAlterations(equip)
 				if key ~= 'rubbish' and key ~= 'radioactives' and Game.system:IsCommodityLegal(equip) then
 					if v > 2 then
-						table.insert(imports, k)
+						table.insert(imports, key)
 					elseif v < -2 then
-						table.insert(exports, k)
+						table.insert(exports, key)
 					end
 				end
 			end

@@ -253,11 +253,7 @@
    },
    "FLAVOUR_9_WHYSOMUCHTEXT" : {
       "description" : "",
-      "message" : "Our livelihood depends on it."
-   },
-   "HANG_UP" : {
-      "description" : "",
-      "message" : "Спасибо за информацию, конец связи."
+      "message" : "От этого зависит наше благосостояние."
    },
    "HOW_SOON_MUST_IT_BE_DELIVERED" : {
       "description" : "",
@@ -277,7 +273,7 @@
    },
    "LY" : {
       "description" : "",
-      "message" : "св.лет›"
+      "message" : "св.лет"
    },
    "NOT_ANY_MORE_THAN_USUAL" : {
       "description" : "",
