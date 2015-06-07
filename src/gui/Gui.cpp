@@ -23,7 +23,6 @@ namespace RawEvents {
 static Sint32 lastMouseX, lastMouseY;
 void HandleSDLEvent(SDL_Event *event)
 {
-	PROFILE_SCOPED()
 	switch (event->type) {
 		case SDL_MOUSEBUTTONDOWN:
 			lastMouseX = event->button.x;
@@ -86,7 +85,6 @@ static std::list<TimerSignal*> g_timeSignals;
 
 sigc::connection AddTimer(Uint32 ms, sigc::slot<void> slot)
 {
-	PROFILE_SCOPED()
 	TimerSignal *_s = new TimerSignal;
 	_s->goTime = SDL_GetTicks() + ms;
 	sigc::connection con = _s->sig.connect(slot);
@@ -96,7 +94,6 @@ sigc::connection AddTimer(Uint32 ms, sigc::slot<void> slot)
 
 void Draw()
 {
-	PROFILE_SCOPED()
 	Uint32 t = SDL_GetTicks();
 	// also abused like an update() function...
 	for (std::list<TimerSignal*>::iterator i = g_timeSignals.begin(); i != g_timeSignals.end();) {
@@ -115,13 +112,11 @@ void Draw()
 
 void Init(Graphics::Renderer *renderer, int screen_width, int screen_height, int ui_width, int ui_height)
 {
-	PROFILE_SCOPED()
 	Screen::Init(renderer, screen_width, screen_height, ui_width, ui_height);
 }
 
 void Uninit()
 {
-	PROFILE_SCOPED()
 	std::list<TimerSignal*>::iterator i;
 	for (i=g_timeSignals.begin(); i!=g_timeSignals.end(); ++i) delete *i;
 
@@ -138,7 +133,6 @@ namespace Theme {
 
 	void DrawRect(const vector2f &pos, const vector2f &size, const Color &c, Graphics::RenderState *state)
 	{
-		PROFILE_SCOPED()
 		Graphics::VertexArray bgArr(Graphics::ATTRIB_POSITION, 4);
 		bgArr.Add(vector3f(pos.x,size.y,0));
 		bgArr.Add(vector3f(size.x,size.y,0));
@@ -150,7 +144,6 @@ namespace Theme {
 
 	void DrawRoundEdgedRect(const float size[2], float rad, const Color &color, Graphics::RenderState *state)
 	{
-		PROFILE_SCOPED()
 		static Graphics::VertexArray vts(Graphics::ATTRIB_POSITION);
 		vts.Clear();
 
@@ -189,7 +182,6 @@ namespace Theme {
 
 	void DrawHollowRect(const float size[2], const Color &color, Graphics::RenderState *state)
 	{
-		PROFILE_SCOPED()
 		const vector3f vertices[] = { 
 	/* 0 */	vector3f(0,0,0),
 	/* 1 */	vector3f(0,size[1],0),
@@ -237,7 +229,6 @@ namespace Theme {
 
 	Graphics::IndexBuffer* CreateIndexBuffer(const GLushort indices[], const Uint32 IndexStart, const Uint32 IndexEnd, const Uint32 NumIndices)
 	{
-		PROFILE_SCOPED()
 		Graphics::IndexBuffer *ib = Screen::GetRenderer()->CreateIndexBuffer(NumIndices, Graphics::BUFFER_USAGE_STATIC);
 		Uint16* idxPtr = ib->Map(Graphics::BUFFER_MAP_WRITE);
 		for (Uint32 j = 0; j < NumIndices; j++) {
@@ -250,7 +241,6 @@ namespace Theme {
 
 	void DrawIndent(const float size[2], Graphics::RenderState *state)
 	{
-		PROFILE_SCOPED()
 		const vector3f vertices[] = { 
 	/* 0 */	vector3f(0,0,0),
 	/* 1 */	vector3f(0,size[1],0),
@@ -314,7 +304,6 @@ namespace Theme {
 
 	void DrawOutdent(const float size[2], Graphics::RenderState *state)
 	{
-		PROFILE_SCOPED()
 		const vector3f vertices[] = { 
 	/* 0 */	vector3f(0,0,0),
 	/* 1 */	vector3f(0,size[1],0),

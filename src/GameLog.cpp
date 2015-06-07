@@ -17,7 +17,6 @@ GameLog::GameLog(RefCountedPtr<Text::TextureFont> font, vector2f scrSize)
 , m_screenSize(scrSize)
 , m_prevMessages(0)
 {
-	PROFILE_SCOPED()
 	m_lineHeight = m_font->GetHeight();
 
 	// position just above cpanel
@@ -27,7 +26,6 @@ GameLog::GameLog(RefCountedPtr<Text::TextureFont> font, vector2f scrSize)
 
 void GameLog::Add(const std::string &msg)
 {
-	PROFILE_SCOPED()
 	m_messages.push_back(Message(msg, 0));
 
 	while (m_messages.size() > MAX_MESSAGES) m_messages.pop_front();
@@ -35,7 +33,6 @@ void GameLog::Add(const std::string &msg)
 
 void GameLog::Add(const std::string &from, const std::string &msg)
 {
-	PROFILE_SCOPED()
 	if(from.empty())
 		Add(msg);
 	else
@@ -44,7 +41,6 @@ void GameLog::Add(const std::string &from, const std::string &msg)
 
 void GameLog::Update(bool paused)
 {
-	PROFILE_SCOPED()
 	static Uint32 prevTime = 0;
 	Uint32 now = SDL_GetTicks();
 	Uint32 elapsed = now - prevTime;
@@ -65,7 +61,6 @@ void GameLog::Update(bool paused)
 
 void GameLog::DrawHudMessages(Graphics::Renderer *r)
 {
-	PROFILE_SCOPED()
 	Graphics::Renderer::StateTicket ticket(r);
 	Graphics::RenderStateDesc rsd;
 	rsd.depthTest  = false;

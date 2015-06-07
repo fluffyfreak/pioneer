@@ -119,7 +119,6 @@ VertexBuffer::VertexBuffer(const VertexBufferDesc &desc) :
 
 VertexBuffer::~VertexBuffer()
 {
-	PROFILE_SCOPED()
 	glDeleteBuffers(1, &m_buffer);
 	glDeleteVertexArrays(1, &m_vao);
 	delete[] m_data;
@@ -127,7 +126,6 @@ VertexBuffer::~VertexBuffer()
 
 Uint8 *VertexBuffer::MapInternal(BufferMapMode mode)
 {
-	PROFILE_SCOPED()
 	assert(mode != BUFFER_MAP_NONE); //makes no sense
 	assert(m_mapMode == BUFFER_MAP_NONE); //must not be currently mapped
 	m_mapMode = mode;
@@ -145,7 +143,6 @@ Uint8 *VertexBuffer::MapInternal(BufferMapMode mode)
 
 void VertexBuffer::Unmap()
 {
-	PROFILE_SCOPED()
 	assert(m_mapMode != BUFFER_MAP_NONE); //not currently mapped
 
 	if (GetDesc().usage == BUFFER_USAGE_STATIC) {
@@ -194,7 +191,6 @@ struct PosNormUVVert {
 
 void CopyPosUV0(Graphics::VertexBuffer *vb, const Graphics::VertexArray &va)
 {
-	PROFILE_SCOPED()
 	PosUVVert* vtxPtr = vb->Map<PosUVVert>(Graphics::BUFFER_MAP_WRITE);
 	assert(vb->GetDesc().stride == sizeof(PosUVVert));
 	for(Uint32 i=0 ; i<va.GetNumVerts() ; i++)
@@ -207,7 +203,6 @@ void CopyPosUV0(Graphics::VertexBuffer *vb, const Graphics::VertexArray &va)
 
 void CopyPosCol(Graphics::VertexBuffer *vb, const Graphics::VertexArray &va)
 {
-	PROFILE_SCOPED()
 	PosColVert* vtxPtr = vb->Map<PosColVert>(Graphics::BUFFER_MAP_WRITE);
 	assert(vb->GetDesc().stride == sizeof(PosColVert));
 	for(Uint32 i=0 ; i<va.GetNumVerts() ; i++)
@@ -220,7 +215,6 @@ void CopyPosCol(Graphics::VertexBuffer *vb, const Graphics::VertexArray &va)
 
 void CopyPos(Graphics::VertexBuffer *vb, const Graphics::VertexArray &va)
 {
-	PROFILE_SCOPED()
 	PosVert* vtxPtr = vb->Map<PosVert>(Graphics::BUFFER_MAP_WRITE);
 	assert(vb->GetDesc().stride == sizeof(PosVert));
 	for(Uint32 i=0 ; i<va.GetNumVerts() ; i++)
@@ -232,7 +226,6 @@ void CopyPos(Graphics::VertexBuffer *vb, const Graphics::VertexArray &va)
 
 void CopyPosColUV0(Graphics::VertexBuffer *vb, const Graphics::VertexArray &va)
 {
-	PROFILE_SCOPED()
 	PosColUVVert* vtxPtr = vb->Map<PosColUVVert>(Graphics::BUFFER_MAP_WRITE);
 	assert(vb->GetDesc().stride == sizeof(PosColUVVert));
 	for(Uint32 i=0 ; i<va.GetNumVerts() ; i++)
@@ -246,7 +239,6 @@ void CopyPosColUV0(Graphics::VertexBuffer *vb, const Graphics::VertexArray &va)
 
 void CopyPosNormUV0(Graphics::VertexBuffer *vb, const Graphics::VertexArray &va)
 {
-	PROFILE_SCOPED()
 	PosNormUVVert* vtxPtr = vb->Map<PosNormUVVert>(Graphics::BUFFER_MAP_WRITE);
 	assert(vb->GetDesc().stride == sizeof(PosNormUVVert));
 	for(Uint32 i=0 ; i<va.GetNumVerts() ; i++)
@@ -261,7 +253,6 @@ void CopyPosNormUV0(Graphics::VertexBuffer *vb, const Graphics::VertexArray &va)
 // copies the contents of the VertexArray into the buffer
 bool VertexBuffer::Populate(const VertexArray &va)
 {
-	PROFILE_SCOPED()
 	assert(va.GetNumVerts()>0);
 	bool result = false;
 	const Graphics::AttributeSet as = va.GetAttributeSet();
@@ -315,7 +306,6 @@ void VertexBuffer::Release() {
 IndexBuffer::IndexBuffer(Uint32 size, BufferUsage hint)
 	: Graphics::IndexBuffer(size, hint)
 {
-	PROFILE_SCOPED()
 	assert(size > 0);
 
 	const GLenum usage = (hint == BUFFER_USAGE_STATIC) ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW;
@@ -335,14 +325,12 @@ IndexBuffer::IndexBuffer(Uint32 size, BufferUsage hint)
 
 IndexBuffer::~IndexBuffer()
 {
-	PROFILE_SCOPED()
 	glDeleteBuffers(1, &m_buffer);
 	delete[] m_data;
 }
 
 Uint16 *IndexBuffer::Map(BufferMapMode mode)
 {
-	PROFILE_SCOPED()
 	assert(mode != BUFFER_MAP_NONE); //makes no sense
 	assert(m_mapMode == BUFFER_MAP_NONE); //must not be currently mapped
 	m_mapMode = mode;
@@ -359,7 +347,6 @@ Uint16 *IndexBuffer::Map(BufferMapMode mode)
 
 void IndexBuffer::Unmap()
 {
-	PROFILE_SCOPED()
 	assert(m_mapMode != BUFFER_MAP_NONE); //not currently mapped
 
 	if (GetUsage() == BUFFER_USAGE_STATIC) {

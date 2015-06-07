@@ -361,8 +361,7 @@ void GeoSphere::Update()
 		break;
 	}
 }
-#pragma optimize("",off)
-static bool s_bDrawClouds = true;
+
 void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView, vector3d campos, const float radius, const float scale, const std::vector<Camera::Shadow> &shadows)
 {
 	// store this for later usage in the update method.
@@ -419,7 +418,7 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView
 	static std::unique_ptr<Graphics::Drawables::Sphere3D> m_ball;
 	const float rad = 1.005f;//m_materialParameters.atmosphere.atmosRadius;
 	const matrix4x4d cloudsTrans(trans * matrix4x4d::ScaleMatrix(rad, rad, rad));
-	if(s_bDrawClouds && bHasAtmosphere)
+	if(bHasAtmosphere)
 	{
 		// bunny, ball ball!
 		if( !m_ball.get() ) {
@@ -430,7 +429,7 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView
 			m_cloudMaterial->diffuse = Color4f(0.7f, 0.7f, 0.7f, 0.5f);
 #if 1
 			//m_cloudMaterial->texture0 = Graphics::TextureBuilder::Cube("textures/tex_clouds.dds").GetOrCreateTexture(Pi::renderer, "clouds");
-			m_cloudMaterial->texture0 = Graphics::TextureBuilder::NoMip("textures/tex16.png").GetOrCreateTexture(Pi::renderer, "noise");
+			m_cloudMaterial->texture0 = Graphics::TextureBuilder::Raw("textures/tex16.png").GetOrCreateTexture(Pi::renderer, "noise");
 #else
 			m_cloudMaterial->texture0 = Graphics::TextureBuilder::Billboard("textures/tex694_hi.png").GetOrCreateTexture(Pi::renderer, "billboard");
 #endif
@@ -478,7 +477,7 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView
 
 	renderer->SetAmbientColor(oldAmbient);
 	
-	if( s_bDrawClouds && bHasAtmosphere )
+	if( bHasAtmosphere )
 	{
 		// draw it
 		renderer->SetTransform(cloudsTrans);

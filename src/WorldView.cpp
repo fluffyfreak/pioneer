@@ -76,7 +76,6 @@ static const float LOW_THRUST_LEVELS[] = { 0.75, 0.5, 0.25, 0.1, 0.05, 0.01 };
 
 void WorldView::InitObject()
 {
-	PROFILE_SCOPED()
 	float size[2];
 	GetSizeRequested(size);
 
@@ -345,7 +344,6 @@ void WorldView::SaveToJson(Json::Value &jsonObj)
 
 void WorldView::SetCamType(enum CamType c)
 {
-	PROFILE_SCOPED()
 	Pi::BoinkNoise();
 
 	// don't allow external cameras when docked inside space stations.
@@ -388,7 +386,6 @@ void WorldView::ChangeInternalCameraMode(InternalCameraController::Mode m)
 
 void WorldView::UpdateCameraName()
 {
-	PROFILE_SCOPED()
 	if (m_showCameraName)
 		Remove(m_showCameraName);
 
@@ -469,7 +466,6 @@ void WorldView::OnClickHyperspace()
 
 void WorldView::Draw3D()
 {
-	PROFILE_SCOPED()
 	assert(m_game);
 	assert(Pi::player);
 	assert(!Pi::player->IsDead());
@@ -517,7 +513,6 @@ void WorldView::OnToggleLabels()
 
 void WorldView::ShowAll()
 {
-	PROFILE_SCOPED()
 	View::ShowAll(); // by default, just delegate back to View
 	RefreshButtonStateAndVisibility();
 }
@@ -534,7 +529,6 @@ static Color get_color_for_warning_meter_bar(float v) {
 }
 
 void WorldView::RefreshHyperspaceButton() {
-	PROFILE_SCOPED()
 	SystemPath target = m_game->GetSectorView()->GetHyperspaceTarget();
 	if (LuaObject<Ship>::CallMethod<bool>(Pi::player, "CanHyperjumpTo", &target))
 		m_hyperspaceButton->Show();
@@ -545,7 +539,6 @@ void WorldView::RefreshHyperspaceButton() {
 static std::pair<double, double> calculateHeadingPitch(enum PlaneType);
 
 void WorldView::RefreshHeadingPitch(void) {
-	PROFILE_SCOPED()
 	if(m_curPlane == NONE) {
 		m_hudDockTop->SetInnerWidget(m_headingInfo.Get());
 		m_hudDockRight->SetInnerWidget(m_pitchInfo.Get());
@@ -563,7 +556,6 @@ void WorldView::RefreshHeadingPitch(void) {
 
 void WorldView::RefreshButtonStateAndVisibility()
 {
-	PROFILE_SCOPED()
 	assert(m_game);
 	assert(Pi::player);
 	assert(!Pi::player->IsDead());
@@ -1006,7 +998,6 @@ bool WorldView::OnClickHeadingLabel(void) {
 
 void WorldView::Update()
 {
-	PROFILE_SCOPED()
 	assert(m_game);
 	assert(Pi::player);
 	assert(!Pi::player->IsDead());
@@ -1115,7 +1106,6 @@ void WorldView::Update()
 
 void WorldView::BuildUI(UI::Single *container)
 {
-	PROFILE_SCOPED()
 	container->SetInnerWidget(m_hudRoot.Get());
 }
 
@@ -1153,7 +1143,6 @@ void WorldView::HideTargetActions()
 
 Gui::Button *WorldView::AddCommsOption(const std::string &msg, int ypos, int xoffset, int optnum)
 {
-	PROFILE_SCOPED()
 	Gui::Label *l = new Gui::Label(msg);
 	m_commsOptions->Add(l, 50 + xoffset, float(ypos));
 
@@ -1176,7 +1165,6 @@ void WorldView::OnClickCommsNavOption(Body *target)
 
 void WorldView::AddCommsNavOption(const std::string &msg, Body *target)
 {
-	PROFILE_SCOPED()
 	Gui::HBox *hbox = new Gui::HBox();
 	hbox->SetSpacing(5);
 
@@ -1192,7 +1180,6 @@ void WorldView::AddCommsNavOption(const std::string &msg, Body *target)
 
 void WorldView::BuildCommsNavOptions()
 {
-	PROFILE_SCOPED()
 	std::map< Uint32,std::vector<SystemBody*> > groups;
 
 	m_commsNavOptions->PackEnd(new Gui::Label(std::string("#ff0")+std::string(Lang::NAVIGATION_TARGETS_IN_THIS_SYSTEM)+std::string("\n")));
@@ -1277,7 +1264,6 @@ static void PlayerPayFine()
 // XXX belongs in some sort of hyperspace controller
 void WorldView::OnHyperspaceTargetChanged()
 {
-	PROFILE_SCOPED()
 	if (Pi::player->IsHyperspaceActive()) {
 		Pi::player->AbortHyperjump();
 		m_game->log->Add(Lang::HYPERSPACE_JUMP_ABORTED);
@@ -1286,7 +1272,6 @@ void WorldView::OnHyperspaceTargetChanged()
 
 void WorldView::OnPlayerChangeTarget()
 {
-	PROFILE_SCOPED()
 	Body *b = Pi::player->GetNavTarget();
 	if (b) {
 		Sound::PlaySfx("OK");
@@ -1328,7 +1313,6 @@ static void OnCommsSelectAttitude(FlightControlState s) {
 
 void WorldView::UpdateCommsOptions()
 {
-	PROFILE_SCOPED()
 	m_commsOptions->DeleteAllChildren();
 	m_commsNavOptions->DeleteAllChildren();
 
@@ -1452,7 +1436,6 @@ void WorldView::UpdateCommsOptions()
 
 void WorldView::SelectBody(Body *target, bool reselectIsDeselect)
 {
-	PROFILE_SCOPED()
 	if (!target || target == Pi::player) return;		// don't select self
 	if (target->IsType(Object::PROJECTILE)) return;
 
@@ -1473,7 +1456,6 @@ void WorldView::SelectBody(Body *target, bool reselectIsDeselect)
 
 Body* WorldView::PickBody(const double screenX, const double screenY) const
 {
-	PROFILE_SCOPED()
 	for (std::map<Body*,vector3d>::const_iterator
 		i = m_projectedPos.begin(); i != m_projectedPos.end(); ++i) {
 		Body *b = i->first;
@@ -1515,7 +1497,6 @@ static inline bool project_to_screen(const vector3d &in, vector3d &out, const Gr
 
 void WorldView::UpdateProjectedObjects()
 {
-	PROFILE_SCOPED()
 	const int guiSize[2] = { Gui::Screen::GetWidth(), Gui::Screen::GetHeight() };
 	const Graphics::Frustum frustum = m_cameraContext->GetFrustum();
 
@@ -1690,7 +1671,6 @@ void WorldView::UpdateProjectedObjects()
 
 void WorldView::UpdateIndicator(Indicator &indicator, const vector3d &cameraSpacePos)
 {
-	PROFILE_SCOPED()
 	const int guiSize[2] = { Gui::Screen::GetWidth(), Gui::Screen::GetHeight() };
 	const Graphics::Frustum frustum = m_cameraContext->GetFrustum();
 
@@ -1827,7 +1807,6 @@ void WorldView::HideIndicator(Indicator &indicator)
 
 void WorldView::SeparateLabels(Gui::Label *a, Gui::Label *b)
 {
-	PROFILE_SCOPED()
 	float posa[2], posb[2], sizea[2], sizeb[2];
 	GetChildPosition(a, posa);
 	a->GetSize(sizea);
@@ -1870,17 +1849,13 @@ double getSquareHeight(double distance, double angle) {
 
 void WorldView::Draw()
 {
-	PROFILE_SCOPED()
 	assert(m_game);
 	assert(Pi::player);
 	assert(!Pi::player->IsDead());
 
 	m_renderer->ClearDepthBuffer();
 
-	{
-		PROFILE_SCOPED_RAW("View::Draw()")
-		View::Draw();
-	}
+	View::Draw();
 
 	// don't draw crosshairs etc in hyperspace
 	if (Pi::player->GetFlightState() == Ship::HYPERSPACE) return;
@@ -1912,7 +1887,6 @@ void WorldView::Draw()
 
 	// normal crosshairs
 	if (GetCamType() == CAM_INTERNAL) {
-		PROFILE_SCOPED_RAW("Internal Crosshairs")
 		const vector2f center        = vector2f(Gui::Screen::GetWidth(), Gui::Screen::GetHeight()) * 0.5f;
 		const vector2f crosshairSize = vector2f(HUD_CROSSHAIR_SIZE, HUD_CROSSHAIR_SIZE) * 2.0f;
 		const vector2f crosshairPos  = center - crosshairSize * 0.5f;
@@ -1932,7 +1906,6 @@ void WorldView::Draw()
 
 void WorldView::DrawCombatTargetIndicator(const Indicator &target, const Indicator &lead, const Color &c)
 {
-	PROFILE_SCOPED()
 	if (target.side == INDICATOR_HIDDEN) return;
 
 	if (target.side == INDICATOR_ONSCREEN) {
@@ -1987,7 +1960,6 @@ void WorldView::DrawCombatTargetIndicator(const Indicator &target, const Indicat
 
 void WorldView::DrawTargetSquare(const Indicator &marker, const Color &c)
 {
-	PROFILE_SCOPED()
 	if (marker.side == INDICATOR_HIDDEN) return;
 	if (marker.side != INDICATOR_ONSCREEN)
 		DrawEdgeMarker(marker, c);
@@ -2000,7 +1972,6 @@ void WorldView::DrawTargetSquare(const Indicator &marker, const Color &c)
 
 void WorldView::DrawVelocityIndicator(const Indicator &marker, VelIconType d, const Color &c)
 {
-	PROFILE_SCOPED()
 	if (marker.side == INDICATOR_HIDDEN) return;
 	if (marker.side == INDICATOR_ONSCREEN) {
 		const float posx = marker.pos.x;
@@ -2027,7 +1998,6 @@ void WorldView::DrawVelocityIndicator(const Indicator &marker, VelIconType d, co
 
 void WorldView::DrawImageIndicator(const Indicator &marker, Gui::TexturedQuad *quad, const Color &c)
 {
-	PROFILE_SCOPED()
 	if (marker.side == INDICATOR_HIDDEN) return;
 
 	if (marker.side == INDICATOR_ONSCREEN) {
@@ -2040,7 +2010,6 @@ void WorldView::DrawImageIndicator(const Indicator &marker, Gui::TexturedQuad *q
 
 void WorldView::DrawEdgeMarker(const Indicator &marker, const Color &c)
 {
-	PROFILE_SCOPED()
 	const vector2f screenCentre(Gui::Screen::GetWidth()/2.0f, Gui::Screen::GetHeight()/2.0f);
 	vector2f dir = screenCentre - marker.pos;
 	float len = dir.Length();
@@ -2053,7 +2022,6 @@ void WorldView::DrawEdgeMarker(const Indicator &marker, const Color &c)
 
 void WorldView::MouseWheel(bool up)
 {
-	PROFILE_SCOPED()
 	if (this == Pi::GetView())
 	{
 		if (m_activeCameraController->IsExternal()) {
@@ -2074,7 +2042,6 @@ NavTunnelWidget::NavTunnelWidget(WorldView *worldview, Graphics::RenderState *rs
 }
 
 void NavTunnelWidget::Draw() {
-	PROFILE_SCOPED()
 	if (!Pi::IsNavTunnelDisplayed()) return;
 
 	Body *navtarget = Pi::player->GetNavTarget();
@@ -2112,7 +2079,6 @@ void NavTunnelWidget::Draw() {
 
 void NavTunnelWidget::DrawTargetGuideSquare(const vector2f &pos, const float size, const Color &c)
 {
-	PROFILE_SCOPED()
 	const float x1 = pos.x - size;
 	const float x2 = pos.x + size;
 	const float y1 = pos.y - size;
@@ -2146,7 +2112,6 @@ void NavTunnelWidget::GetSizeRequested(float size[2]) {
 
 void NavTunnelWidget::CreateVertexBuffer(const Uint32 size)
 {
-	PROFILE_SCOPED()
 	Graphics::Renderer *r = m_worldView->m_renderer;
 
 	Graphics::MaterialDescriptor desc;
@@ -2181,7 +2146,6 @@ static double wrapAngleToPositive(const double theta) {
   pitch 90 - up
 */
 static std::pair<double, double> calculateHeadingPitch(PlaneType pt) {
-	PROFILE_SCOPED()
 	auto frame  = Pi::player->GetFrame();
 
 	if(pt == ROTATIONAL)

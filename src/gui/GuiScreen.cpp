@@ -32,7 +32,6 @@ Graphics::Material *Screen::flatColorMaterial = nullptr;
 
 void Screen::Init(Graphics::Renderer *renderer, int real_width, int real_height, int ui_width, int ui_height)
 {
-	PROFILE_SCOPED()
     s_renderer = renderer;
 
 	Screen::width = ui_width;
@@ -64,7 +63,6 @@ void Screen::Init(Graphics::Renderer *renderer, int real_width, int real_height,
 
 void Screen::Uninit()
 {
-	PROFILE_SCOPED()
 	Screen::baseContainer->RemoveAllChildren();		// children deleted elsewhere?
 	delete Screen::baseContainer;
 	delete flatColorMaterial;
@@ -74,14 +72,12 @@ static sigc::connection _focusedWidgetOnDelete;
 
 void Screen::OnDeleteFocusedWidget()
 {
-	PROFILE_SCOPED()
 	_focusedWidgetOnDelete.disconnect();
 	focusedWidget = 0;
 }
 
 void Screen::SetFocused(Widget *w, bool enableKeyRepeat)
 {
-	PROFILE_SCOPED()
 	ClearFocus();
 	_focusedWidgetOnDelete = w->onDelete.connect(sigc::ptr_fun(&Screen::OnDeleteFocusedWidget));
 	focusedWidget = w;
@@ -89,7 +85,6 @@ void Screen::SetFocused(Widget *w, bool enableKeyRepeat)
 
 void Screen::ClearFocus()
 {
-	PROFILE_SCOPED()
 	if (!focusedWidget) return;
 	_focusedWidgetOnDelete.disconnect();
 	focusedWidget = 0;
@@ -97,7 +92,6 @@ void Screen::ClearFocus()
 
 bool Screen::Project(const vector3d &in, vector3d &out)
 {
-	PROFILE_SCOPED()
 	// implements gluProject (see the OpenGL documentation or the Mesa implementation of gluProject)
 	const float * const M = modelMatrix.Data();
 	const float * const P = projMatrix.Data();
@@ -137,8 +131,6 @@ bool Screen::Project(const vector3d &in, vector3d &out)
 
 void Screen::EnterOrtho()
 {
-	PROFILE_SCOPED()
-
 	Graphics::Renderer *r = GetRenderer();
 
 	modelMatrix = r->GetCurrentModelView();
@@ -151,8 +143,6 @@ void Screen::EnterOrtho()
 
 void Screen::LeaveOrtho()
 {
-	PROFILE_SCOPED()
-
 	Graphics::Renderer *r = GetRenderer();
 
 	r->SetProjection(projMatrix);
@@ -161,7 +151,6 @@ void Screen::LeaveOrtho()
 
 void Screen::Draw()
 {
-	PROFILE_SCOPED()
 	assert(Screen::initted);
 	EnterOrtho();
 	baseContainer->Draw();
@@ -170,19 +159,16 @@ void Screen::Draw()
 
 bool Screen::IsBaseWidget(const Widget *w)
 {
-	PROFILE_SCOPED()
 	return w == static_cast<const Widget*>(baseContainer);
 }
 
 void Screen::AddBaseWidget(Widget *w, int x, int y)
 {
-	PROFILE_SCOPED()
 	baseContainer->Add(w, float(x), float(y));
 }
 
 void Screen::RemoveBaseWidget(Widget *w)
 {
-	PROFILE_SCOPED()
 	baseContainer->Remove(w);
 }
 
@@ -194,7 +180,6 @@ void Screen::SDLEventCoordToScreenCoord(int sdlev_x, int sdlev_y, float *x, floa
 
 void Screen::OnMouseMotion(SDL_MouseMotionEvent *e)
 {
-	PROFILE_SCOPED()
 	MouseMotionEvent ev;
 	float x, y;
 	Screen::SDLEventCoordToScreenCoord(e->x, e->y, &x, &y);
@@ -208,7 +193,6 @@ void Screen::OnMouseMotion(SDL_MouseMotionEvent *e)
 
 void Screen::OnClick(SDL_MouseButtonEvent *e)
 {
-	PROFILE_SCOPED()
 	MouseButtonEvent ev;
 	float x, y;
 	Screen::SDLEventCoordToScreenCoord(e->x, e->y, &x, &y);
@@ -227,7 +211,6 @@ void Screen::OnClick(SDL_MouseButtonEvent *e)
 
 void Screen::OnKeyDown(const SDL_Keysym *sym)
 {
-	PROFILE_SCOPED()
 	if (focusedWidget) {
 		bool accepted = focusedWidget->OnKeyDown(sym);
 		// don't check shortcuts if the focused widget accepted the key-press
@@ -247,7 +230,6 @@ void Screen::OnKeyUp(const SDL_Keysym *sym)
 
 void Screen::OnTextInput(const SDL_TextInputEvent *e)
 {
-	PROFILE_SCOPED()
 	if (!focusedWidget) return;
 	Uint32 unicode;
 	Text::utf8_decode_char(&unicode, e->text);
@@ -256,7 +238,6 @@ void Screen::OnTextInput(const SDL_TextInputEvent *e)
 
 float Screen::GetFontHeight(Text::TextureFont *font)
 {
-	PROFILE_SCOPED()
     if (!font) font = GetFont().Get();
 
 	return font->GetHeight() * fontScale[1];
@@ -264,7 +245,6 @@ float Screen::GetFontHeight(Text::TextureFont *font)
 
 float Screen::GetFontDescender(Text::TextureFont *font)
 {
-	PROFILE_SCOPED()
     if (!font) font = GetFont().Get();
 
 	return font->GetDescender() * fontScale[1];
@@ -272,7 +252,6 @@ float Screen::GetFontDescender(Text::TextureFont *font)
 
 void Screen::MeasureString(const std::string &s, float &w, float &h, Text::TextureFont *font)
 {
-	PROFILE_SCOPED()
 	if (!font) font = GetFont().Get();
 	assert(font);
 
@@ -283,7 +262,6 @@ void Screen::MeasureString(const std::string &s, float &w, float &h, Text::Textu
 
 void Screen::MeasureCharacterPos(const std::string &s, int charIndex, float &x, float &y, Text::TextureFont *font)
 {
-	PROFILE_SCOPED()
 	assert((charIndex >= 0) && (charIndex <= int(s.size())));
 
 	if (!font) font = GetFont().Get();
@@ -296,7 +274,6 @@ void Screen::MeasureCharacterPos(const std::string &s, int charIndex, float &x, 
 
 int Screen::PickCharacterInString(const std::string &s, float x, float y, Text::TextureFont *font)
 {
-	PROFILE_SCOPED()
 	if (!font) font = GetFont().Get();
 	assert(font);
 
@@ -308,7 +285,6 @@ int Screen::PickCharacterInString(const std::string &s, float x, float y, Text::
 
 void Screen::RenderStringBuffer(RefCountedPtr<Graphics::VertexBuffer> vb, const std::string &s, float xoff, float yoff, const Color &color, Text::TextureFont *font)
 {
-	PROFILE_SCOPED()
     if (!font) font = GetFont().Get();
 
 	Graphics::Renderer *r = Gui::Screen::GetRenderer();
@@ -339,7 +315,6 @@ void Screen::RenderStringBuffer(RefCountedPtr<Graphics::VertexBuffer> vb, const 
 
 void Screen::RenderMarkupBuffer(RefCountedPtr<Graphics::VertexBuffer> vb, const std::string &s, const Color &color, Text::TextureFont *font)
 {
-	PROFILE_SCOPED()
     if (!font) font = GetFont().Get();
 
 	Graphics::Renderer *r = Gui::Screen::GetRenderer();
@@ -370,13 +345,11 @@ void Screen::RenderMarkupBuffer(RefCountedPtr<Graphics::VertexBuffer> vb, const 
 
 void Screen::AddShortcutWidget(Widget *w)
 {
-	PROFILE_SCOPED()
 	kbshortcut_widgets.push_back(w);
 }
 
 void Screen::RemoveShortcutWidget(Widget *w)
 {
-	PROFILE_SCOPED()
 	kbshortcut_widgets.remove(w);
 }
 

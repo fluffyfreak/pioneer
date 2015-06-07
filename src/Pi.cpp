@@ -1227,13 +1227,10 @@ void Pi::MainLoop()
 
 		/* Calculate position for this rendered frame (interpolated between two physics ticks */
 		// XXX should this be here? what is this anyway?
-		{
-			PROFILE_SCOPED_RAW("UpdateInterpTransforms")
-			for (Body* b : game->GetSpace()->GetBodies()) {
-				b->UpdateInterpTransform(Pi::GetGameTickAlpha());
-			}
-			game->GetSpace()->GetRootFrame()->UpdateInterpTransform(Pi::GetGameTickAlpha());
+		for (Body* b : game->GetSpace()->GetBodies()) {
+			b->UpdateInterpTransform(Pi::GetGameTickAlpha());
 		}
+		game->GetSpace()->GetRootFrame()->UpdateInterpTransform(Pi::GetGameTickAlpha());
 
 		currentView->Update();
 		currentView->Draw3D();
@@ -1252,7 +1249,6 @@ void Pi::MainLoop()
 
 		Pi::renderer->ClearDepthBuffer();
 		if( DrawGUI ) {
-			PROFILE_SCOPED_RAW("DrawGUI")
 			Gui::Draw();
 			if (game)
 				game->log->DrawHudMessages(renderer);
@@ -1281,7 +1277,6 @@ void Pi::MainLoop()
 		// probably sure draw it if they switch to eg infoview while the HUD is
 		// disabled so we need much smarter control for all this rubbish
 		if ((!Pi::game || Pi::GetView() != Pi::game->GetDeathView()) && DrawGUI) {
-			PROFILE_SCOPED_RAW("Update & Draw UI")
 			Pi::ui->Update();
 			Pi::ui->Draw();
 		}

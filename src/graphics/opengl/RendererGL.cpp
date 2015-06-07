@@ -247,7 +247,6 @@ bool RendererOGL::GetNearFarRange(float &near_, float &far_) const
 
 bool RendererOGL::BeginFrame()
 {
-	PROFILE_SCOPED()
 	glClearColor(0,0,0,0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	return true;
@@ -296,7 +295,6 @@ void RendererOGL::CheckErrors()
 
 bool RendererOGL::SwapBuffers()
 {
-	PROFILE_SCOPED()
 #ifndef NDEBUG
 	// Check if an error occurred during the frame. This is not very useful for
 	// determining *where* the error happened. For that purpose, try GDebugger or
@@ -326,7 +324,6 @@ bool RendererOGL::SwapBuffers()
 
 bool RendererOGL::SetRenderState(RenderState *rs)
 {
-	PROFILE_SCOPED()
 	if (m_activeRenderState != rs) {
 		static_cast<OGL::RenderState*>(rs)->Apply();
 		m_activeRenderState = rs;
@@ -337,7 +334,6 @@ bool RendererOGL::SetRenderState(RenderState *rs)
 
 bool RendererOGL::SetRenderTarget(RenderTarget *rt)
 {
-	PROFILE_SCOPED()
 	if (rt)
 		static_cast<OGL::RenderTarget*>(rt)->Bind();
 	else if (m_activeRenderTarget)
@@ -357,7 +353,6 @@ bool RendererOGL::SetDepthRange(double near, double far)
 
 bool RendererOGL::ClearScreen()
 {
-	PROFILE_SCOPED()
 	m_activeRenderState = nullptr;
 	glDepthMask(GL_TRUE);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -368,7 +363,6 @@ bool RendererOGL::ClearScreen()
 
 bool RendererOGL::ClearDepthBuffer()
 {
-	PROFILE_SCOPED()
 	m_activeRenderState = nullptr;
 	glDepthMask(GL_TRUE);
 	glClear(GL_DEPTH_BUFFER_BIT);
@@ -385,7 +379,6 @@ bool RendererOGL::SetClearColor(const Color &c)
 
 bool RendererOGL::SetViewport(int x, int y, int width, int height)
 {
-	PROFILE_SCOPED()
 	assert(!m_viewportStack.empty());
 	Viewport& currentViewport = m_viewportStack.top();
 	currentViewport.x = x;
@@ -398,7 +391,6 @@ bool RendererOGL::SetViewport(int x, int y, int width, int height)
 
 bool RendererOGL::SetTransform(const matrix4x4d &m)
 {
-	PROFILE_SCOPED()
 	matrix4x4f mf;
 	matrix4x4dtof(m, mf);
 	return SetTransform(mf);
@@ -406,7 +398,6 @@ bool RendererOGL::SetTransform(const matrix4x4d &m)
 
 bool RendererOGL::SetTransform(const matrix4x4f &m)
 {
-	PROFILE_SCOPED()
 	//same as above
 	SetMatrixMode(MatrixMode::MODELVIEW);
 	LoadMatrix(m);
@@ -415,8 +406,6 @@ bool RendererOGL::SetTransform(const matrix4x4f &m)
 
 bool RendererOGL::SetPerspectiveProjection(float fov, float aspect, float near_, float far_)
 {
-	PROFILE_SCOPED()
-
 	// update values for log-z hack
 	m_invLogZfarPlus1 = 1.0f / (log1p(far_)/log(2.0f));
 
@@ -434,7 +423,6 @@ bool RendererOGL::SetPerspectiveProjection(float fov, float aspect, float near_,
 
 bool RendererOGL::SetOrthographicProjection(float xmin, float xmax, float ymin, float ymax, float zmin, float zmax)
 {
-	PROFILE_SCOPED()
 	const matrix4x4f orthoMat = matrix4x4f::OrthoFrustum(xmin, xmax, ymin, ymax, zmin, zmax);
 	SetProjection(orthoMat);
 	return true;
@@ -442,7 +430,6 @@ bool RendererOGL::SetOrthographicProjection(float xmin, float xmax, float ymin, 
 
 bool RendererOGL::SetProjection(const matrix4x4f &m)
 {
-	PROFILE_SCOPED()
 	//same as above
 	SetMatrixMode(MatrixMode::PROJECTION);
 	LoadMatrix(m);
@@ -501,14 +488,12 @@ bool RendererOGL::SetScissor(bool enabled, const vector2f &pos, const vector2f &
 
 void RendererOGL::SetMaterialShaderTransforms(Material *m)
 {
-	PROFILE_SCOPED()
 	m->SetCommonUniforms(m_modelViewStack.top(), m_projectionStack.top());
 	CheckRenderErrors();
 }
 
 bool RendererOGL::DrawTriangles(const VertexArray *v, RenderState *rs, Material *m, PrimitiveType t)
 {
-	PROFILE_SCOPED()
 	if (!v || v->position.size() < 3) return false;
 
 	VertexBufferDesc vbd;
@@ -551,7 +536,6 @@ bool RendererOGL::DrawTriangles(const VertexArray *v, RenderState *rs, Material 
 
 bool RendererOGL::DrawPointSprites(int count, const vector3f *positions, RenderState *rs, Material *material, float size)
 {
-	PROFILE_SCOPED()
 	if (count < 1 || !material || !material->texture0) return false;
 
 	VertexArray va(ATTRIB_POSITION | ATTRIB_UV0, count * 6);
@@ -591,7 +575,6 @@ bool RendererOGL::DrawPointSprites(int count, const vector3f *positions, RenderS
 
 bool RendererOGL::DrawBuffer(VertexBuffer* vb, RenderState* state, Material* mat, PrimitiveType pt)
 {
-	PROFILE_SCOPED()
 	SetRenderState(state);
 	mat->Apply();
 
@@ -609,7 +592,6 @@ bool RendererOGL::DrawBuffer(VertexBuffer* vb, RenderState* state, Material* mat
 
 bool RendererOGL::DrawBufferIndexed(VertexBuffer *vb, IndexBuffer *ib, RenderState *state, Material *mat, PrimitiveType pt)
 {
-	PROFILE_SCOPED()
 	SetRenderState(state);
 	mat->Apply();
 
@@ -629,7 +611,6 @@ bool RendererOGL::DrawBufferIndexed(VertexBuffer *vb, IndexBuffer *ib, RenderSta
 
 bool RendererOGL::DrawBufferInstanced(VertexBuffer* vb, RenderState* state, Material* mat, InstanceBuffer* instb, PrimitiveType pt)
 {
-	PROFILE_SCOPED()
 	SetRenderState(state);
 	mat->Apply();
 
@@ -649,7 +630,6 @@ bool RendererOGL::DrawBufferInstanced(VertexBuffer* vb, RenderState* state, Mate
 
 bool RendererOGL::DrawBufferIndexedInstanced(VertexBuffer *vb, IndexBuffer *ib, RenderState *state, Material *mat, InstanceBuffer* instb, PrimitiveType pt)
 {
-	PROFILE_SCOPED()
 	SetRenderState(state);
 	mat->Apply();
 
@@ -671,7 +651,6 @@ bool RendererOGL::DrawBufferIndexedInstanced(VertexBuffer *vb, IndexBuffer *ib, 
 
 Material *RendererOGL::CreateMaterial(const MaterialDescriptor &d)
 {
-	PROFILE_SCOPED()
 	CheckRenderErrors();
 	MaterialDescriptor desc = d;
 
@@ -753,7 +732,6 @@ bool RendererOGL::ReloadShaders()
 
 OGL::Program* RendererOGL::GetOrCreateProgram(OGL::Material *mat)
 {
-	PROFILE_SCOPED()
 	CheckRenderErrors();
 	const MaterialDescriptor &desc = mat->GetDescriptor();
 	OGL::Program *p = 0;
@@ -778,14 +756,12 @@ OGL::Program* RendererOGL::GetOrCreateProgram(OGL::Material *mat)
 
 Texture *RendererOGL::CreateTexture(const TextureDescriptor &descriptor)
 {
-	PROFILE_SCOPED()
 	CheckRenderErrors();
 	return new TextureGL(descriptor, m_useCompressedTextures);
 }
 
 RenderState *RendererOGL::CreateRenderState(const RenderStateDesc &desc)
 {
-	PROFILE_SCOPED()
 	CheckRenderErrors();
 	const uint32_t hash = lookup3_hashlittle(&desc, sizeof(RenderStateDesc), 0);
 	auto it = m_renderStates.find(hash);
@@ -802,7 +778,6 @@ RenderState *RendererOGL::CreateRenderState(const RenderStateDesc &desc)
 
 RenderTarget *RendererOGL::CreateRenderTarget(const RenderTargetDesc &desc)
 {
-	PROFILE_SCOPED()
 	CheckRenderErrors();
 	OGL::RenderTarget* rt = new OGL::RenderTarget(desc);
 	rt->Bind();
@@ -840,13 +815,11 @@ RenderTarget *RendererOGL::CreateRenderTarget(const RenderTargetDesc &desc)
 
 VertexBuffer *RendererOGL::CreateVertexBuffer(const VertexBufferDesc &desc)
 {
-	PROFILE_SCOPED()
 	return new OGL::VertexBuffer(desc);
 }
 
 IndexBuffer *RendererOGL::CreateIndexBuffer(Uint32 size, BufferUsage usage)
 {
-	PROFILE_SCOPED()
 	return new OGL::IndexBuffer(size, usage);
 }
 
@@ -860,7 +833,6 @@ InstanceBuffer *RendererOGL::CreateInstanceBuffer(Uint32 size, BufferUsage usage
 // only restoring the things that have changed
 void RendererOGL::PushState()
 {
-	PROFILE_SCOPED()
 	SetMatrixMode(MatrixMode::PROJECTION);
 	PushMatrix();
 	SetMatrixMode(MatrixMode::MODELVIEW);
@@ -870,7 +842,6 @@ void RendererOGL::PushState()
 
 void RendererOGL::PopState()
 {
-	PROFILE_SCOPED()
 	m_viewportStack.pop();
 	assert(!m_viewportStack.empty());
 	const Viewport& cvp = m_viewportStack.top();
