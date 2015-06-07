@@ -505,6 +505,7 @@ void GeoSphere::SetUpMaterials()
 		if (bEnableEclipse) {
 			waterDesc.quality |= Graphics::HAS_ECLIPSES;
 		}
+		waterDesc.alphaTest = false;
 		m_waterMaterial.reset(Pi::renderer->CreateMaterial(waterDesc));
 	}
 

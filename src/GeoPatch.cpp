@@ -8,6 +8,7 @@
 #include "GeoSphere.h"
 #include "perlin.h"
 #include "Pi.h"
+#include "Game.h"
 #include "RefCounted.h"
 #include "graphics/Material.h"
 #include "graphics/Renderer.h"
@@ -124,53 +125,120 @@ void GeoPatch::_UpdateVBOs(Graphics::Renderer *renderer)
 		normals.reset();
 		colors.reset();
 
-		if(geosphere->GetTerrain()->GetSurfaceEffects() & Terrain::EFFECT_WATER)
-		{
-			//create buffer and upload data
-			Graphics::VertexBufferDesc vbd;
-			vbd.attrib[0].semantic = Graphics::ATTRIB_POSITION;
-			vbd.attrib[0].format   = Graphics::ATTRIB_FORMAT_FLOAT3;
-			vbd.attrib[1].semantic = Graphics::ATTRIB_NORMAL;
-			vbd.attrib[1].format   = Graphics::ATTRIB_FORMAT_FLOAT3;
-			vbd.attrib[2].semantic = Graphics::ATTRIB_DIFFUSE;
-			vbd.attrib[2].format   = Graphics::ATTRIB_FORMAT_UBYTE4;
-			vbd.numVertices = ctx->NUMVERTICES();
-			vbd.usage = Graphics::BUFFER_USAGE_STATIC;
-			m_waterVB.reset(renderer->CreateVertexBuffer(vbd));
-
-			GeoPatchContext::VBOVertex* vtxPtr = m_waterVB->Map<GeoPatchContext::VBOVertex>(Graphics::BUFFER_MAP_WRITE);
-			assert(m_waterVB->GetDesc().stride == sizeof(GeoPatchContext::VBOVertex));
-
-			const Sint32 edgeLen = ctx->GetEdgeLen();
-			const double frac = ctx->GetFrac();
-			for (Sint32 y=0; y<edgeLen; y++) {
-				for (Sint32 x=0; x<edgeLen; x++) {
-					const double xFrac = double(x)*frac;
-					const double yFrac = double(y)*frac;
-					const vector3d point(GetSpherePoint(xFrac, yFrac));
-					const vector3d p(point - clipCentroid);
-					clipRadius = std::max(clipRadius, p.Length());
-					vtxPtr->pos = vector3f(p);
-
-					const vector3f norma(point.Normalized());
-					vtxPtr->norm = norma;
-
-					vtxPtr->col[0] = 000;//pColr->r;
-					vtxPtr->col[1] = 000;//pColr->g;
-					vtxPtr->col[2] = 255;//pColr->b;
-					vtxPtr->col[3] = 255;
-
-					++vtxPtr; // next vertex
-				}
-			}
-			m_waterVB->Unmap();
-			
-		}
-
 #ifdef DEBUG_BOUNDING_SPHERES
 		RefCountedPtr<Graphics::Material> mat(Pi::renderer->CreateMaterial(Graphics::MaterialDescriptor()));
 		m_boundsphere.reset( new Graphics::Drawables::Sphere3D(Pi::renderer, mat, Pi::renderer->CreateRenderState(Graphics::RenderStateDesc()), 0, clipRadius) );
 #endif
+	}
+
+	// update the water on CPU each frame
+	if (geosphere->GetTerrain()->GetSurfaceEffects() & Terrain::EFFECT_WATER)
+	{
+		//create buffer and upload data
+		Graphics::VertexBufferDesc vbd;
+		vbd.attrib[0].semantic = Graphics::ATTRIB_POSITION;
+		vbd.attrib[0].format = Graphics::ATTRIB_FORMAT_FLOAT3;
+		vbd.attrib[1].semantic = Graphics::ATTRIB_NORMAL;
+		vbd.attrib[1].format = Graphics::ATTRIB_FORMAT_FLOAT3;
+		vbd.attrib[2].semantic = Graphics::ATTRIB_DIFFUSE;
+		vbd.attrib[2].format = Graphics::ATTRIB_FORMAT_UBYTE4;
+		vbd.numVertices = ctx->NUMVERTICES();
+		vbd.usage = Graphics::BUFFER_USAGE_DYNAMIC;
+		if (!m_waterVB.get())
+		{
+			m_waterVB.reset(renderer->CreateVertexBuffer(vbd));
+		}
+
+		GeoPatchContext::VBOVertex* vtxPtr = m_waterVB->Map<GeoPatchContext::VBOVertex>(Graphics::BUFFER_MAP_WRITE);
+		assert(m_waterVB->GetDesc().stride == sizeof(GeoPatchContext::VBOVertex));
+
+		const double time = Pi::game->GetTime() * 0.005;
+
+		const double frac = ctx->GetFrac();
+		const Sint32 edgeLen = ctx->GetEdgeLen();
+		const int borderedEdgeLen = edgeLen + 2;
+		const int numBorderedVerts = borderedEdgeLen*borderedEdgeLen;
+		std::unique_ptr<double> borderHeights(new double[numBorderedVerts]);
+		std::unique_ptr<vector3d> borderVertexs(new vector3d[numBorderedVerts]);
+
+		// XXX - TODO - this needs to set a base height to account for tidal forces, then add the waves heights too it
+
+		// generate heights plus a 1 unit border
+		double *bhts = borderHeights.get();
+		vector3d *vrts = borderVertexs.get();
+		for (int y = -1; y<borderedEdgeLen - 1; y++) {
+			const double yfrac = double(y) * frac;
+			for (int x = -1; x<borderedEdgeLen - 1; x++) {
+				const double xfrac = double(x) * frac;
+				const vector3d point = GetSpherePoint(xfrac, yfrac);
+
+				const double latitude = -asin(point.y);
+				const double longitude = atan2(point.x, point.z);
+				double waveheight = 0.0f;
+				waveheight += sin((time + longitude) * (0.1)) * 0.000001;
+
+				*(bhts++) = waveheight;
+				*(vrts++) = point * (waveheight + 1.0);
+			}
+		}
+		assert(bhts == &borderHeights[numBorderedVerts]);
+
+		// Generate normals & colors for non-edge vertices since they never change
+		vrts = borderVertexs.get();
+		for (int y = 1; y<borderedEdgeLen - 1; y++) {
+			for (int x = 1; x<borderedEdgeLen - 1; x++) {
+				// height
+				const double waveheight = borderHeights.get()[x + y*borderedEdgeLen];
+				const vector3d& point = borderVertexs.get()[x + y*borderedEdgeLen];
+				const vector3d p(point - clipCentroid);
+				clipRadius = std::max(clipRadius, p.Length());
+				vtxPtr->pos = vector3f(p);
+
+				// normal
+				const vector3d &x1 = vrts[x - 1 + y*borderedEdgeLen];
+				const vector3d &x2 = vrts[x + 1 + y*borderedEdgeLen];
+				const vector3d &y1 = vrts[x + (y - 1)*borderedEdgeLen];
+				const vector3d &y2 = vrts[x + (y + 1)*borderedEdgeLen];
+				const vector3d n = ((x2 - x1).Cross(y2 - y1)).Normalized();
+				vtxPtr->norm = vector3f(n);
+
+				// color
+				vtxPtr->col[0] = 000;//pColr->r;
+				vtxPtr->col[1] = 000;//pColr->g;
+				vtxPtr->col[2] = 255;//pColr->b;
+				vtxPtr->col[3] = 128;
+
+				++vtxPtr; // next vertex
+			}
+		}
+
+		/*for (Sint32 y = 0; y<edgeLen; y++) {
+			for (Sint32 x = 0; x<edgeLen; x++) {
+				const double xFrac = double(x)*frac;
+				const double yFrac = double(y)*frac;
+				const vector3d point(GetSpherePoint(xFrac, yFrac));
+
+				const double latitude = -asin(point.y);
+				const double longitude = atan2(point.x, point.z);
+				double waveheight = 0.0f;
+				waveheight += sin((time + longitude) / 1000.0) * 0.000001;
+
+				const vector3d p((point * (waveheight + 1.0))-clipCentroid);
+				clipRadius = std::max(clipRadius, p.Length());
+				vtxPtr->pos = vector3f(p);
+
+				const vector3f norma(point.Normalized());
+				vtxPtr->norm = norma;
+
+				vtxPtr->col[0] = 000;//pColr->r;
+				vtxPtr->col[1] = 000;//pColr->g;
+				vtxPtr->col[2] = 255;//pColr->b;
+				vtxPtr->col[3] = 255;
+
+				++vtxPtr; // next vertex
+			}
+		}*/
+		m_waterVB->Unmap();
 	}
 }
 
@@ -214,7 +282,8 @@ void GeoPatch::Render(Graphics::Renderer *renderer, const vector3d &campos, cons
 
 		renderer->DrawBufferIndexed(m_vertexBuffer.get(), ctx->GetIndexBuffer(DetermineIndexbuffer()), rs, mat);
 		if(m_waterVB.get()) {
-			renderer->DrawBufferIndexed(m_waterVB.get(), ctx->GetIndexBuffer(DetermineIndexbuffer()), rs, geosphere->GetWaterMaterial());
+			renderer->DrawBufferIndexed(m_waterVB.get(), ctx->GetIndexBuffer(DetermineIndexbuffer()), 
+				geosphere->GetAtmosRenderState(), geosphere->GetWaterMaterial());
 		}
 #ifdef DEBUG_BOUNDING_SPHERES
 		if(m_boundsphere.get()) {

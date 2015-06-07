@@ -52,6 +52,7 @@ public:
 	Terrain* GetTerrain() const { return m_terrain.Get(); }
 
 	Graphics::RenderState* GetSurfRenderState() const { return m_surfRenderState; }
+	Graphics::RenderState* GetAtmosRenderState() const { return m_atmosRenderState; }
 	Graphics::Material* GetSurfaceMaterial() const { return m_surfaceMaterial.get(); }
 	Graphics::Material* GetWaterMaterial() const { return m_waterMaterial.get(); }
 

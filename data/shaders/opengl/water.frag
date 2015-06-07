@@ -135,6 +135,8 @@ void main(void)
 		  diff*specularReflection*sunset +
 		  (0.02-clamp(fogFactor,0.0,0.01))*diff*ldprod*sunset +	      //increase fog scatter				
 		  (pow((1.0-pow(fogFactor,0.75)),256.0)*0.4*diff*atmosColor)*sunset;  //distant fog.
+	
+	frag_color.a = 0.75;
 
 #else // NUM_LIGHTS > 0 -- unlit rendering - stars
 	//emission is used to boost colour of stars, which is a bit odd
