@@ -359,7 +359,7 @@ static size_t bufread_or_die(void *ptr, size_t size, size_t nmemb, ByteRange &bu
 	}
 	return read_count;
 }
-
+#include "PngWriter.h"
 // XXX this sucks, but there isn't a reliable cross-platform way to get them
 #ifndef INT16_MIN
 # define INT16_MIN   (-32767-1)
@@ -370,8 +370,129 @@ static size_t bufread_or_die(void *ptr, size_t size, size_t nmemb, ByteRange &bu
 #ifndef UINT16_MAX
 # define UINT16_MAX  (65535)
 #endif
+#pragma optimize("",off)
+Terrain::Terrain(const SystemBody *body) : m_seed(body->GetSeed()), m_rand(body->GetSeed()), m_minBody(body) 
+{
+	/*{
+		RefCountedPtr<FileSystem::FileData> fdata = FileSystem::gameDataFiles.ReadFile("heightmaps/earth.hmap");
+		if (!fdata) {
+			Output("Error: could not open file '%s'\n", body->GetHeightMapFilename().c_str());
+			abort();
+		}
 
-Terrain::Terrain(const SystemBody *body) : m_seed(body->GetSeed()), m_rand(body->GetSeed()), m_heightScaling(0), m_minh(0), m_minBody(body) {
+		ByteRange databuf = fdata->AsByteRange();
+
+		Sint16 minHMap = INT16_MAX, maxHMap = INT16_MIN;
+		Uint16 minHMapScld = UINT16_MAX, maxHMapScld = 0;
+
+		// XXX unify heightmap types
+		{
+			Uint16 v;
+			bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeX = v;
+			bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeY = v;
+			const Uint32 heightmapPixelArea = (m_heightMapSizeX * m_heightMapSizeY);
+
+			std::unique_ptr<Sint16[]> heightMap(new Sint16[heightmapPixelArea]);
+			bufread_or_die(heightMap.get(), sizeof(Sint16), heightmapPixelArea, databuf);
+			std::unique_ptr<double[]> hmap;
+			hmap.reset(new double[heightmapPixelArea]);
+			double *pHeightMap = hmap.get();
+			for (Uint32 i = 0; i < heightmapPixelArea; i++) {
+				const Sint16 val = heightMap.get()[i];
+				minHMap = std::min(minHMap, val);
+				maxHMap = std::max(maxHMap, val);
+				// store then increment pointer
+				(*pHeightMap) = val;
+				++pHeightMap;
+			}
+			assert(pHeightMap == &hmap[heightmapPixelArea]);
+			//Output("minHMap = (%hd), maxHMap = (%hd)\n", minHMap, maxHMap);
+
+			const std::string dir = "heightmaps";
+			FileSystem::userFiles.MakeDirectory(dir);
+			const std::string fname = FileSystem::JoinPathBelow(dir, "earth.png");
+
+			std::unique_ptr<Uint8[]> outmap(new Uint8[heightmapPixelArea]);
+			pHeightMap = hmap.get();
+			Uint8 *pOutMap = outmap.get();
+			for (Uint32 i = 0; i < heightmapPixelArea; i++) {
+				// store then increment pointer
+				//(*pOutMap) = (((*pHeightMap) + (double)minHMap) / (double)maxHMap) * 255.0;
+				const double h = (*pHeightMap) + abs(minHMap);
+				(*pOutMap) = (h / (double)(maxHMap - minHMap)) * 255.0;
+				++pHeightMap;
+				++pOutMap;
+			}
+			int stride = (m_heightMapSizeX);
+			write_png(FileSystem::userFiles, fname, outmap.get(), m_heightMapSizeX, m_heightMapSizeY, stride, 1);
+
+			Output("Heightmap %s saved\n", fname.c_str());
+		}
+	}
+
+	{
+		RefCountedPtr<FileSystem::FileData> fdata = FileSystem::gameDataFiles.ReadFile("heightmaps/moon.hmap");
+		if (!fdata) {
+			Output("Error: could not open file '%s'\n", body->GetHeightMapFilename().c_str());
+			abort();
+		}
+
+		ByteRange databuf = fdata->AsByteRange();
+
+		Sint16 minHMap = INT16_MAX, maxHMap = INT16_MIN;
+		Uint16 minHMapScld = UINT16_MAX, maxHMapScld = 0;
+
+		{
+			Uint16 v;
+			// XXX x and y reversed from above *sigh*
+			bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeY = v;
+			bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeX = v;
+			const Uint32 heightmapPixelArea = (m_heightMapSizeX * m_heightMapSizeY);
+
+			// read height scaling and min height which are doubles
+			double te;
+			bufread_or_die(&te, 8, 1, databuf);
+			double m_heightScaling = te;
+			bufread_or_die(&te, 8, 1, databuf);
+			double m_minh = te;
+
+			std::unique_ptr<Uint16[]> heightMapScaled(new Uint16[heightmapPixelArea]);
+			bufread_or_die(heightMapScaled.get(), sizeof(Uint16), heightmapPixelArea, databuf);
+			std::unique_ptr<double[]> hmap;
+			hmap.reset(new double[heightmapPixelArea]);
+			double *pHeightMap = hmap.get();
+			for (Uint32 i = 0; i<heightmapPixelArea; i++) {
+				const Uint16 val = heightMapScaled[i];
+				minHMapScld = std::min(minHMapScld, val);
+				maxHMapScld = std::max(maxHMapScld, val);
+				// store then increment pointer
+				(*pHeightMap) = val;
+				++pHeightMap;
+			}
+			assert(pHeightMap == &hmap[heightmapPixelArea]);
+			//Output("minHMapScld = (%hu), maxHMapScld = (%hu)\n", minHMapScld, maxHMapScld);
+
+			const std::string dir = "heightmaps";
+			FileSystem::userFiles.MakeDirectory(dir);
+			const std::string fname = FileSystem::JoinPathBelow(dir, "moon.png");
+
+			std::unique_ptr<Uint8[]> outmap(new Uint8[heightmapPixelArea]);
+			pHeightMap = hmap.get();
+			Uint8 *pOutMap = outmap.get();
+			for (Uint32 i = 0; i < heightmapPixelArea; i++) {
+				// store then increment pointer
+				const double h = (*pHeightMap) + abs(minHMapScld);
+				(*pOutMap) = (h / (double)(maxHMapScld - minHMapScld)) * 255.0;
+				//(*pOutMap) = (((*pHeightMap) * m_heightScaling + m_minh) / (double)maxHMap) * 255.0;
+				++pHeightMap;
+				++pOutMap;
+			}
+			int stride = (m_heightMapSizeX);
+			write_png(FileSystem::userFiles, fname, outmap.get(), m_heightMapSizeX, m_heightMapSizeY, stride, 1);
+
+			Output("Heightmap %s saved\n", fname.c_str());
+		}
+	}*/
 
 	// load the heightmap
 	if (!body->GetHeightMapFilename().empty()) {
@@ -388,62 +509,54 @@ Terrain::Terrain(const SystemBody *body) : m_seed(body->GetSeed()), m_rand(body-
 
 		// XXX unify heightmap types
 		switch (body->GetHeightMapFractal()) {
-			case 0: {
-				Uint16 v;
-				bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeX = v;
-				bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeY = v;
-				const Uint32 heightmapPixelArea = (m_heightMapSizeX * m_heightMapSizeY);
+		case 0:
+		{
+			m_heightMapSizeX = 5400;
+			m_heightMapSizeY = 2700;
+			const Uint32 heightmapPixelArea = (m_heightMapSizeX * m_heightMapSizeY);
 
-				std::unique_ptr<Sint16[]> heightMap(new Sint16[heightmapPixelArea]);
-				bufread_or_die(heightMap.get(), sizeof(Sint16), heightmapPixelArea, databuf);
-				m_heightMap.reset(new double[heightmapPixelArea]);
-				double *pHeightMap = m_heightMap.get();
-				for(Uint32 i=0; i<heightmapPixelArea; i++) {
-					const Sint16 val = heightMap.get()[i];
-					minHMap = std::min(minHMap, val);
-					maxHMap = std::max(maxHMap, val);
-					// store then increment pointer
-					(*pHeightMap) = val;
-					++pHeightMap;
-				}
-				assert(pHeightMap == &m_heightMap[heightmapPixelArea]);
-				//Output("minHMap = (%hd), maxHMap = (%hd)\n", minHMap, maxHMap);
-				break;
+			std::unique_ptr<Sint16[]> heightMap(new Sint16[heightmapPixelArea]);
+			bufread_or_die(heightMap.get(), sizeof(Sint16), heightmapPixelArea, databuf);
+			m_heightMap.reset(new double[heightmapPixelArea]);
+			double *pHeightMap = m_heightMap.get();
+			for (Uint32 i = 0; i < heightmapPixelArea; i++) {
+				const Sint16 val = ((Sint32)heightMap.get()[i] - 10701);
+				minHMap = std::min(minHMap, val);
+				maxHMap = std::max(maxHMap, val);
+				// store then increment pointer
+				(*pHeightMap) = val;
+				++pHeightMap;
 			}
+			assert(pHeightMap == &m_heightMap[heightmapPixelArea]);
+			//Output("minHMap = (%hd), maxHMap = (%hd)\n", minHMap, maxHMap);
+			break;
+		}
 
-			case 1: {
-				Uint16 v;
-				// XXX x and y reversed from above *sigh*
-				bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeY = v;
-				bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeX = v;
-				const Uint32 heightmapPixelArea = (m_heightMapSizeX * m_heightMapSizeY);
+		case 1:
+		{
+			m_heightMapSizeX = 5400;
+			m_heightMapSizeY = 2700;
+			const Uint32 heightmapPixelArea = (m_heightMapSizeX * m_heightMapSizeY);
 
-				// read height scaling and min height which are doubles
-				double te;
-				bufread_or_die(&te, 8, 1, databuf);
-				m_heightScaling = te;
-				bufread_or_die(&te, 8, 1, databuf);
-				m_minh = te;
-
-				std::unique_ptr<Uint16[]> heightMapScaled(new Uint16[heightmapPixelArea]);
-				bufread_or_die(heightMapScaled.get(), sizeof(Uint16), heightmapPixelArea, databuf);
-				m_heightMap.reset(new double[heightmapPixelArea]);
-				double *pHeightMap = m_heightMap.get();
-				for(Uint32 i=0; i<heightmapPixelArea; i++) {
-					const Uint16 val = heightMapScaled[i];
-					minHMapScld = std::min(minHMapScld, val);
-					maxHMapScld = std::max(maxHMapScld, val);
-					// store then increment pointer
-					(*pHeightMap) = val;
-					++pHeightMap;
-				}
-				assert(pHeightMap == &m_heightMap[heightmapPixelArea]);
-				//Output("minHMapScld = (%hu), maxHMapScld = (%hu)\n", minHMapScld, maxHMapScld);
-				break;
+			std::unique_ptr<Uint16[]> heightMapScaled(new Uint16[heightmapPixelArea]);
+			bufread_or_die(heightMapScaled.get(), sizeof(Uint16), heightmapPixelArea, databuf);
+			m_heightMap.reset(new double[heightmapPixelArea]);
+			double *pHeightMap = m_heightMap.get();
+			for (Uint32 i = 0; i<heightmapPixelArea; i++) {
+				const Uint16 val = heightMapScaled[i];
+				minHMapScld = std::min(minHMapScld, val);
+				maxHMapScld = std::max(maxHMapScld, val);
+				// store then increment pointer
+				(*pHeightMap) = val;
+				++pHeightMap;
 			}
+			assert(pHeightMap == &m_heightMap[heightmapPixelArea]);
+			//Output("minHMapScld = (%hu), maxHMapScld = (%hu)\n", minHMapScld, maxHMapScld);
+			break;
+		}
 
-			default:
-				assert(0);
+		default:
+			assert(0);
 		}
 
 	}
@@ -473,9 +586,9 @@ Terrain::Terrain(const SystemBody *body) : m_seed(body->GetSeed()), m_rand(body-
 	const double rad = m_minBody.m_radius;
 
 	// calculate max height
-	if (!body->GetHeightMapFilename().empty() && body->GetHeightMapFractal() > 1){ // if scaled heightmap
-		m_maxHeightInMeters = 1.1*pow(2.0, 16.0)*m_heightScaling; // no min height required as it's added to radius in lua
-	}else {
+	if (!body->GetHeightMapFilename().empty() && body->GetHeightMapFractal() > 1) { // if scaled heightmap
+		m_maxHeightInMeters = 1.1*pow(2.0, 16.0); // no min height required as it's added to radius in lua
+	} else {
 		m_maxHeightInMeters = std::max(100.0, (9000.0*rad*rad*(m_volcanic+0.5)) / (body->GetMass() * 6.64e-12));
 		if (!is_finite(m_maxHeightInMeters)) m_maxHeightInMeters = rad * 0.5;
 		//             ^^^^ max mountain height for earth-like planet (same mass, radius)

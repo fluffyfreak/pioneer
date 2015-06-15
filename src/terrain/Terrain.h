@@ -76,9 +76,7 @@ protected:
 	Uint32 m_surfaceEffects;
 
 	// heightmap stuff
-	// XXX unify heightmap types
 	std::unique_ptr<double[]> m_heightMap;
-	double m_heightScaling, m_minh;
 
 	int m_heightMapSizeX;
 	int m_heightMapSizeY;

@@ -12,14 +12,16 @@ template <>
 TerrainHeightFractal<TerrainHeightMapped2>::TerrainHeightFractal(const SystemBody *body) : Terrain(body)
 {
 }
-
+#pragma optimize("",off)
 template <>
 double TerrainHeightFractal<TerrainHeightMapped2>::GetHeight(const vector3d &p) const
 {
 
 	double latitude = -asin(p.y);
-	if (p.y < -1.0) latitude = -0.5*M_PI;
-	if (p.y > 1.0) latitude = 0.5*M_PI;
+	if (p.y < -1.0) 
+		latitude = -0.5*M_PI;
+	if (p.y > 1.0) 
+		latitude = 0.5*M_PI;
 //	if (!isfinite(latitude)) {
 //		// p.y is just n of asin domain [-1,1]
 //		latitude = (p.y < 0 ? -0.5*M_PI : M_PI*0.5);
@@ -69,8 +71,10 @@ double TerrainHeightFractal<TerrainHeightMapped2>::GetHeight(const vector3d &p) 
 		double v = 0.1 + a0 + a1*dy + a2*dy*dy + a3*dy*dy*dy;
 
 		//v = (v<0 ? 0 : v);
+		if (v<0)
+			return (v / m_planetRadius);
 
-		v=v*m_heightScaling+m_minh; // v = v*height scaling+min height
+
 		v/=m_planetRadius;
 
 		v += 0.1;
@@ -79,7 +83,7 @@ double TerrainHeightFractal<TerrainHeightMapped2>::GetHeight(const vector3d &p) 
 		h += v;
 		h -= 0.09;
 
-		return (h > 0.0 ? h : 0.0);
+		return h;// (h > 0.0 ? h : 0.0);
 
 	}
 

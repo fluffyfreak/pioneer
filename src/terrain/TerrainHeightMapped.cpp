@@ -26,28 +26,20 @@ TerrainHeightFractal<TerrainHeightMapped>::TerrainHeightFractal(const SystemBody
 	SetFracDef(5-m_fracnum, m_maxHeightInMeters*0.000005, 2e4, 200*m_fracmult);//[5]
 	SetFracDef(6-m_fracnum, m_maxHeightInMeters*0.0000005, 5e3, 100*m_fracmult);//[3]
 }
-
+#pragma optimize("",off)
 template <>
 double TerrainHeightFractal<TerrainHeightMapped>::GetHeight(const vector3d &p) const
 {
     // This is all used for Earth and Earth alone
 
-	double latitude = -asin(p.y);
-	if (p.y < -1.0) latitude = -0.5*M_PI;
-	if (p.y > 1.0) latitude = 0.5*M_PI;
-//	if (!isfinite(latitude)) {
-//		// p.y is just n of asin domain [-1,1]
-//		latitude = (p.y < 0 ? -0.5*M_PI : M_PI*0.5);
-//	}
-	double longitude = atan2(p.x, p.z);
-	double px = (((m_heightMapSizeX-1) * (longitude + M_PI)) / (2*M_PI));
-	double py = ((m_heightMapSizeY-1)*(latitude + 0.5*M_PI)) / M_PI;
-	int ix = int(floor(px));
-	int iy = int(floor(py));
-	ix = Clamp(ix, 0, m_heightMapSizeX-1);
-	iy = Clamp(iy, 0, m_heightMapSizeY-1);
-	double dx = px-ix;
-	double dy = py-iy;
+	const double latitude = -asin(p.y);
+	const double longitude = atan2(p.x, p.z);
+	const double px = (((m_heightMapSizeX-1) * (longitude + M_PI)) / (2*M_PI));
+	const double py = ((m_heightMapSizeY-1)*(latitude + 0.5*M_PI)) / M_PI;
+	const int ix = Clamp(int(floor(px)), 0, m_heightMapSizeX - 1);
+	const int iy = Clamp(int(floor(py)), 0, m_heightMapSizeY - 1);
+	const double dx = px-ix;
+	const double dy = py-iy;
 
 	// p0,3 p1,3 p2,3 p3,3
 	// p0,2 p1,2 p2,2 p3,2
@@ -83,7 +75,10 @@ double TerrainHeightFractal<TerrainHeightMapped>::GetHeight(const vector3d &p) c
 		double a3 = -(1/6.0)*d0 - 0.5*d2 + (1/6.0)*d3;
 		double v = a0 + a1*dy + a2*dy*dy + a3*dy*dy*dy;
 
-		v = (v<0 ? 0 : v);
+		if (v<0)
+			return (v / m_planetRadius);
+
+		//v = (v<0 ? 0 : v);
 		double h = v;
 
 		//Here's where we add some noise over the heightmap so it doesnt look so boring, we scale by height so values are greater high up
@@ -138,6 +133,7 @@ double TerrainHeightFractal<TerrainHeightMapped>::GetHeight(const vector3d &p) c
 			v += h;
 		}
 
-		return v<0 ? 0 : (v/m_planetRadius);
+		//return v<0 ? 0 : (v/m_planetRadius);
+		return (v / m_planetRadius);
 	}
 }

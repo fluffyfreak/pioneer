@@ -161,7 +161,7 @@ public:
 	void SetOrbitPlane(const matrix3x3d &orient) { m_orbit.SetPlane(orient); }
 
 	int GetAverageTemp() const { return m_averageTemp; }
-	std::string GetHeightMapFilename() const { return m_heightMapFilename; }
+	const std::string& GetHeightMapFilename() const { return m_heightMapFilename; }
 	unsigned int GetHeightMapFractal() const { return m_heightMapFractal; }
 
 	Uint32 GetSeed() const { return m_seed; }
