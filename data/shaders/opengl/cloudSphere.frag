@@ -154,8 +154,11 @@ void main(void)
 	const float nScale = 1.4; // Uniform?
 	const float Density = 0.02;
 	
+	//const float latitude = -asin(varyingTexCoord0.y);
+	float longitude = atan(varyingTexCoord0.x, varyingTexCoord0.z) + time;
 	
-	vec3 noisePosition = varyingTexCoord0 + vec3((1.0 + sin(time)) * 0.5, 1.0, (1.0 + cos(time)) * 0.5);
+	
+	vec3 noisePosition = varyingTexCoord0 * longitude;
 	float noise = fbm(noisePosition, 8, 8.0, 0.5) * nScale;
 	float rnoise = ridgedNoise(noisePosition, 4, 1.0, 0.5) * nScale;
 	rnoise -= (1.0 - Density);

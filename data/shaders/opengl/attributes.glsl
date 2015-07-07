@@ -32,7 +32,7 @@ layout (location = 1) in vec3 a_normal;
 layout (location = 2) in vec4 a_color;
 layout (location = 3) in vec4 a_uv0;
 layout (location = 4) in mat4 a_transform;
-// shadows 5, 6, and 7
+// location 4 shadows (hides) 5, 6, and 7
 // next available is layout (location = 8) 
 
 #endif // VERTEX_SHADER
