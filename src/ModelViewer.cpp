@@ -16,6 +16,7 @@
 #include "Pi.h"
 #include "StringF.h"
 #include "ModManager.h"
+#include "MathUtil.h"
 #include <sstream>
 
 //default options
@@ -38,6 +39,14 @@ ModelViewer::Options::Options()
 
 //some utility functions
 namespace {
+	// shadow mapping texture dimensions (width and height values)
+	static const int s_shadowMapDimensions = 1024;//4096;
+	enum eRenderPasses {
+		RENDER_SHADOW_MAP=0,
+		RENDER_REGULAR,
+		RENDER_PASS_MAX
+	};
+
 	//azimuth/elevation in degrees to a dir vector
 	vector3f az_el_to_dir(float yaw, float pitch) {
 		//0,0 points to "right" (1,0,0)
@@ -121,6 +130,22 @@ ModelViewer::ModelViewer(Graphics::Renderer *r, LuaManager *lm)
 	rsd.depthWrite = false;
 	rsd.cullMode = Graphics::CULL_NONE;
 	m_bgState = m_renderer->CreateRenderState(rsd);
+
+	// for shadow map rendering texture
+	Graphics::RenderTargetDesc rtDesc(
+		s_shadowMapDimensions,
+		s_shadowMapDimensions,
+		Graphics::TEXTURE_NONE,		// don't create a texture
+		Graphics::TEXTURE_DEPTH,
+		true);
+	m_pShadowRT.reset( m_renderer->CreateRenderTarget(rtDesc) );
+
+	Graphics::TextureDescriptor texDesc(
+		Graphics::TEXTURE_DEPTH,
+		vector2f(s_shadowMapDimensions, s_shadowMapDimensions),
+		Graphics::LINEAR_CLAMP, false, false, 0);
+	m_depthTexture.Reset(m_renderer->CreateTexture(texDesc));
+	m_pShadowRT->SetDepthTexture(m_depthTexture.Get());
 }
 
 ModelViewer::~ModelViewer()
@@ -495,6 +520,8 @@ void ModelViewer::DrawModel(const matrix4x4f &mv)
 
 void ModelViewer::MainLoop()
 {
+	std::unique_ptr<Graphics::Drawables::TexturedQuad> depthBufferQuad;
+	Graphics::RenderState *depthBufferQuadRS = nullptr;
 	double lastTime = SDL_GetTicks() * 0.001;
 	while (!m_done)
 	{
@@ -510,52 +537,120 @@ void ModelViewer::MainLoop()
 		UpdateCamera();
 		UpdateShield();
 
-		// render the gradient backdrop
-		DrawBackground();
-
-		//update animations, draw model etc.
-		if (m_model) {
-			m_navLights->Update(m_frameTime);
-			m_shields->SetEnabled(m_options.showShields || m_shieldIsHit);
-
-			//Calculate the impact's radius dependant on time
-			const float dif1 = 0.34 - (-1.48f);
-			const float dif2 = m_shieldHitPan - (-1.48f);
-			//Range from start (0.0) to end (1.0)
-			const float dif = dif2 / (dif1 * 1.0f);
-
-			m_shields->Update(m_options.showShields ? 1.0f : (1.0f - dif), 1.0f);
-			
-			// setup rendering
-			m_renderer->SetPerspectiveProjection(85, Graphics::GetScreenWidth()/float(Graphics::GetScreenHeight()), 0.1f, 100000.f);
-			m_renderer->SetTransform(matrix4x4f::Identity());
-
-			// calc camera info
+		for( int pass = RENDER_SHADOW_MAP; pass<RENDER_PASS_MAX; pass++)
+		{
 			matrix4x4f mv;
-			if (m_options.mouselookEnabled) {
-				mv = m_viewRot.Transpose() * matrix4x4f::Translation(-m_viewPos);
-			} else {
-				m_rotX = Clamp(m_rotX, -90.0f, 90.0f);
-				matrix4x4f rot = matrix4x4f::Identity();
-				rot.RotateX(DEG2RAD(-m_rotX));
-				rot.RotateY(DEG2RAD(-m_rotY));
-				mv = matrix4x4f::Translation(0.0f, 0.0f, -zoom_distance(m_baseDistance, m_zoom)) * rot;
+			switch(pass) {
+			case RENDER_SHADOW_MAP: 
+			{
+				// 1. first render to depth map
+				m_renderer->SetViewport(0, 0, s_shadowMapDimensions, s_shadowMapDimensions);
+				m_renderer->SetRenderTarget(m_pShadowRT.get());
+				if(!depthBufferQuad) {
+					Graphics::RenderStateDesc rsd;
+					rsd.depthTest  = false;
+					rsd.depthWrite = false;
+					rsd.blendMode = Graphics::BLEND_SOLID;
+					depthBufferQuadRS = m_renderer->CreateRenderState(rsd);
+					depthBufferQuad.reset( new Graphics::Drawables::TexturedQuad(m_renderer, m_pShadowRT->GetDepthTexture(), vector2f(0.0f, 600.0f), vector2f(256.0f, 256.0f), depthBufferQuadRS) );
+				}
+				m_renderer->ClearDepthBuffer();
+					
+				// setup rendering
+				static const GLfloat near_plane = 1.0f, far_plane = 100000.0f;
+				static GLfloat frustumSize = 100.0f;
+				const matrix4x4f lightProjection(matrix4x4f::OrthoFrustum(-frustumSize, frustumSize, -frustumSize, frustumSize, near_plane, far_plane));
+				m_renderer->SetProjection(lightProjection);
+
+				const Graphics::Light &light = m_renderer->GetLight(0);
+				const matrix4x4f lightView(MathUtil::LookAt(light.GetPosition(), vector3f(0.0f), vector3f(0.0f, 1.0f, 0.0f)));
+				const matrix4x4f lightSpaceMatrix = lightProjection * lightView;
+				m_renderer->SetTransform(lightSpaceMatrix);
+				//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+				break;
+			}
+			case RENDER_REGULAR: 
+			{
+				// 2. then render scene as normal with shadow mapping (using depth map)
+				m_renderer->SetViewport(0, 0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
+				m_renderer->SetRenderTarget(nullptr);
+				m_renderer->ClearScreen();
+
+				// render the gradient backdrop
+				DrawBackground();
+					
+				// setup rendering
+				m_renderer->SetPerspectiveProjection(85, Graphics::GetScreenWidth()/float(Graphics::GetScreenHeight()), 0.1f, 100000.f);
+				m_renderer->SetTransform(matrix4x4f::Identity());
+
+				// calc camera info
+				if (m_options.mouselookEnabled) {
+					mv = m_viewRot.Transpose() * matrix4x4f::Translation(-m_viewPos);
+				} else {
+					m_rotX = Clamp(m_rotX, -90.0f, 90.0f);
+					matrix4x4f rot = matrix4x4f::Identity();
+					rot.RotateX(DEG2RAD(-m_rotX));
+					rot.RotateY(DEG2RAD(-m_rotY));
+					mv = matrix4x4f::Translation(0.0f, 0.0f, -zoom_distance(m_baseDistance, m_zoom)) * rot;
+				}
+				//glBindTexture(GL_TEXTURE_2D, depthMap);
+				break;
+			} 
 			}
 
-			// draw the model itself
-			DrawModel(mv);
+			//update animations, draw model etc.
+			if (m_model) {
+				m_navLights->Update(m_frameTime);
+				m_shields->SetEnabled(m_options.showShields || m_shieldIsHit);
 
-			// helper rendering
-			if (m_options.showLandingPad) {
-				if (!m_scaleModel) CreateTestResources();
-				m_scaleModel->Render(mv * matrix4x4f::Translation(0.f, m_landingMinOffset, 0.f));
+				//Calculate the impact's radius dependant on time
+				const float dif1 = 0.34 - (-1.48f);
+				const float dif2 = m_shieldHitPan - (-1.48f);
+				//Range from start (0.0) to end (1.0)
+				const float dif = dif2 / (dif1 * 1.0f);
+
+				m_shields->Update(m_options.showShields ? 1.0f : (1.0f - dif), 1.0f);
+
+				// helper rendering
+				if (m_options.showLandingPad) {
+					if (!m_scaleModel) CreateTestResources();
+					m_scaleModel->Render(mv * matrix4x4f::Translation(0.f, m_landingMinOffset, 0.f));
+				}
+
+				if (m_options.showGrid) {
+					DrawGrid(mv, m_model->GetDrawClipRadius());
+				}
+
+				// draw the model itself
+				DrawModel(mv);
 			}
 
-			if (m_options.showGrid) {
-				DrawGrid(mv, m_model->GetDrawClipRadius());
-			}
-		}
+			if( pass != RENDER_SHADOW_MAP )
+			{
+				m_renderer->SetViewport(0, 0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());	
+				m_renderer->SetTransform(matrix4x4f::Identity());
 
+				{
+					m_renderer->SetMatrixMode(Graphics::MatrixMode::PROJECTION);
+					m_renderer->PushMatrix();
+					m_renderer->SetOrthographicProjection(0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight(), 0, -1, 1);
+					m_renderer->SetMatrixMode(Graphics::MatrixMode::MODELVIEW);
+					m_renderer->PushMatrix();
+					m_renderer->LoadIdentity();
+				}
+	
+				depthBufferQuad->Draw(m_renderer);
+
+				{
+					m_renderer->SetMatrixMode(Graphics::MatrixMode::PROJECTION);
+					m_renderer->PopMatrix();
+					m_renderer->SetMatrixMode(Graphics::MatrixMode::MODELVIEW);
+					m_renderer->PopMatrix();
+				}
+			}
+		} // end of passes loop
+
+		// Ui and other bits
 		m_ui->Update();
 		if (m_options.showUI && !m_screenshotQueued) {
 			m_ui->Draw();

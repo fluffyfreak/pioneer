@@ -88,6 +88,8 @@ private:
 	float m_shieldHitPan;
 	double m_frameTime;
 	Graphics::Renderer *m_renderer;
+	std::unique_ptr<Graphics::RenderTarget> m_pShadowRT;
+	RefCountedPtr<Graphics::Texture> m_depthTexture;
 	Graphics::Texture *m_decalTexture;
 	vector3f m_viewPos;
 	matrix3x3f m_viewRot;
