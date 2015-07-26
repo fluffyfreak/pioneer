@@ -60,6 +60,12 @@ inline GLint GLTextureType(TextureType type) {
 }
 
 inline GLint GLImageType(TextureFormat format) {
+	switch (format) {
+		case TEXTURE_DEPTH: 
+			return GL_FLOAT;
+		default: 
+			return GL_UNSIGNED_BYTE;
+	}
 	return GL_UNSIGNED_BYTE;
 }
 
