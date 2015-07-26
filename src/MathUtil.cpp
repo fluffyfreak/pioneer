@@ -215,4 +215,41 @@ namespace MathUtil {
 		minv[idx2d(2, 2)] = (cell2d(0, 0) * cell2d(1, 1) - cell2d(1, 0) * cell2d(0, 1)) * invdet;
 		return minv;
 	}
+
+	matrix4x4f LookAt(const vector3f &eye,	const vector3f &centre, const vector3f &up)
+	{
+		vector3f f = (centre - eye).Normalized();
+		vector3f u = up.Normalized();
+		vector3f s = Cross(f, u).Normalized();
+		u = Cross(s, f);
+
+		const float matf[16] = {
+			 s.x,
+			 s.y,
+			 s.z,
+			-Dot(s, eye),
+			 u.x,
+			 u.y,
+			 u.z,
+			-Dot(u, eye),
+			-f.x,
+			-f.y,
+			-f.z,
+			 Dot(f, eye),
+			0.0f,
+			0.0f,
+			0.0f,
+			1.0f
+		};
+		return matrix4x4f(matf);
+	}
+
+	matrix4x4f PerspectiveMatrix(const float fov, const float aspect, const float near_, const float far_)
+	{
+		const float ymax = near_ * tan(fov * M_PI / 360.0);
+		const float ymin = -ymax;
+		const float xmin = ymin * aspect;
+		const float xmax = ymax * aspect;
+		return matrix4x4f::FrustumMatrix(xmin, xmax, ymin, ymax, near_, far_);
+	}
 }

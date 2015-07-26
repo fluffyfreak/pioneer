@@ -25,11 +25,14 @@ namespace MathUtil {
 	}
 
 	inline float Dot(const vector3f &a, const vector3f &b) { return a.x*b.x + a.y*b.y + a.z*b.z; }
+	inline vector3f Cross(const vector3f &a, const vector3f &b) { return vector3f (a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x); }
 
 	// matrix4x4f utility functions
 	matrix4x4f Inverse(const matrix4x4f &);
 	matrix4x4f InverseSlow(const matrix4x4f &);
 	matrix4x4f Transpose(const matrix4x4f &);
+	matrix4x4f PerspectiveMatrix(const float fov, const float aspect, const float near_, const float far_);
+	matrix4x4f LookAt(const vector3f &eye, const vector3f &centre, const vector3f &up);
 	
 	// matrix3x3f utility functions
 	matrix3x3f Inverse(const matrix3x3f &);
