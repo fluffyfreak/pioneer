@@ -27,6 +27,7 @@
 #include "SphereImpostorMaterial.h"
 #include "UIMaterial.h"
 #include "VtxColorMaterial.h"
+#include "DepthTextureMaterial.h"
 
 #include <stddef.h> //for offsetof
 #include <ostream>
@@ -713,6 +714,9 @@ Material *RendererOGL::CreateMaterial(const MaterialDescriptor &d)
 		break;
 	case EFFECT_GASSPHERE_TERRAIN:
 		mat = new OGL::GasGiantSurfaceMaterial();
+		break;
+	case EFFECT_DEPTH_TEXTURE:
+		mat = new OGL::DepthTextureMaterial();
 		break;
 	default:
 		if (desc.lighting)

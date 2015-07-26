@@ -633,6 +633,9 @@ TexturedQuad::TexturedQuad(Graphics::Renderer *r, Graphics::Texture *texture, co
 
 	VertexArray vertices(ATTRIB_POSITION | ATTRIB_UV0);
 	Graphics::MaterialDescriptor desc;
+	if(texture->GetDescriptor().format == TEXTURE_DEPTH) {
+		desc.effect = EFFECT_DEPTH_TEXTURE;
+	}
 	desc.textures = 1;
 	m_material.reset(r->CreateMaterial(desc));
 	m_material->texture0 = m_texture.Get();
