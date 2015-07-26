@@ -102,7 +102,7 @@ void RenderTarget::CreateDepthRenderbuffer()
 	assert(m_active);
 	m_depthRenderBuffer.Reset(new RenderBuffer());
 	m_depthRenderBuffer->Bind();
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, GetDesc().width, GetDesc().height);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32, GetDesc().width, GetDesc().height);
 	m_depthRenderBuffer->Attach(GL_DEPTH_ATTACHMENT);
 	m_depthRenderBuffer->Unbind();
 }
