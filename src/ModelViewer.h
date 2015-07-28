@@ -21,6 +21,12 @@ public:
 	static void Run(const std::string &modelName);
 
 private:
+	enum eRenderPasses {
+		RENDER_SHADOW_MAP=0,
+		RENDER_REGULAR,
+		RENDER_PASS_MAX
+	};
+
 	bool OnPickModel(UI::List*);
 	bool OnQuit();
 	bool OnReloadModel(UI::Widget*);
@@ -40,7 +46,7 @@ private:
 	void DrawBackground();
 	void DrawGrid(const matrix4x4f &trans, float radius);
 	void DrawLog();
-	void DrawModel(const matrix4x4f &mv);
+	void DrawModel(const matrix4x4f &mv, const eRenderPasses eRP);
 	void MainLoop();
 	void OnAnimChanged(unsigned int, const std::string&);
 	void OnAnimSliderChanged(float);
@@ -97,7 +103,7 @@ private:
 	float m_baseDistance;
 	Random m_rng;
 	SceneGraph::Animation *m_currentAnimation;
-	SceneGraph::Model *m_model;
+	std::unique_ptr<SceneGraph::Model> m_model;
 	Options m_options;
 	float m_landingMinOffset;
 	std::unique_ptr<NavLights> m_navLights;

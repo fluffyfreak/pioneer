@@ -41,11 +41,6 @@ ModelViewer::Options::Options()
 namespace {
 	// shadow mapping texture dimensions (width and height values)
 	static const int s_shadowMapDimensions = 1024;//4096;
-	enum eRenderPasses {
-		RENDER_SHADOW_MAP=0,
-		RENDER_REGULAR,
-		RENDER_PASS_MAX
-	};
 
 	//azimuth/elevation in degrees to a dir vector
 	vector3f az_el_to_dir(float yaw, float pitch) {
@@ -105,7 +100,6 @@ ModelViewer::ModelViewer(Graphics::Renderer *r, LuaManager *lm)
 , m_baseDistance(100.0f)
 , m_rng(time(0))
 , m_currentAnimation(0)
-, m_model(0)
 , m_modelName("")
 {
 	m_ui.Reset(new UI::Context(lm, r, Graphics::GetScreenWidth(), Graphics::GetScreenHeight()));
@@ -402,7 +396,7 @@ void ModelViewer::ClearLog()
 
 void ModelViewer::ClearModel()
 {
-	delete m_model; m_model = 0;
+	m_model.reset();
 	m_gunModel.reset();
 	m_scaleModel.reset();
 
@@ -501,7 +495,7 @@ void ModelViewer::DrawGrid(const matrix4x4f &trans, float radius)
 	Graphics::Drawables::GetAxes3DDrawable(m_renderer)->Draw(m_renderer);
 }
 
-void ModelViewer::DrawModel(const matrix4x4f &mv)
+void ModelViewer::DrawModel(const matrix4x4f &mv, const eRenderPasses eRP)
 {
 	assert(m_model);
 
@@ -515,7 +509,17 @@ void ModelViewer::DrawModel(const matrix4x4f &mv)
 		(m_options.wireframe           ? SceneGraph::Model::DEBUG_WIREFRAME : 0x0)
 	);
 
-	m_model->Render(mv);
+	if( RENDER_SHADOW_MAP == eRP )
+	{
+		SceneGraph::RenderData rd;
+		memset(&rd, 0, sizeof(SceneGraph::RenderData));
+		rd.nodemask = SceneGraph::NODE_SOLID;
+		m_model->Render(mv,&rd);
+	}
+	else
+	{
+		m_model->Render(mv);
+	}
 }
 
 void ModelViewer::MainLoop()
@@ -558,7 +562,7 @@ void ModelViewer::MainLoop()
 					
 				// setup rendering
 				static const GLfloat near_plane = 1.0f, far_plane = 100000.0f;
-				static GLfloat frustumSize = 100.0f;
+				static GLfloat frustumSize = 7.5f;
 				const matrix4x4f lightProjection(matrix4x4f::OrthoFrustum(-frustumSize, frustumSize, -frustumSize, frustumSize, near_plane, far_plane));
 				m_renderer->SetProjection(lightProjection);
 
@@ -566,6 +570,7 @@ void ModelViewer::MainLoop()
 				const matrix4x4f lightView(MathUtil::LookAt(light.GetPosition(), vector3f(0.0f), vector3f(0.0f, 1.0f, 0.0f)));
 				const matrix4x4f lightSpaceMatrix = lightProjection * lightView;
 				m_renderer->SetTransform(lightSpaceMatrix);
+				mv = lightSpaceMatrix;
 				//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 				break;
 			}
@@ -622,9 +627,10 @@ void ModelViewer::MainLoop()
 				}
 
 				// draw the model itself
-				DrawModel(mv);
+				DrawModel(mv, eRenderPasses(pass));
 			}
 
+#if 1 // draw depth map quad
 			if( pass != RENDER_SHADOW_MAP )
 			{
 				m_renderer->SetViewport(0, 0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());	
@@ -648,6 +654,7 @@ void ModelViewer::MainLoop()
 					m_renderer->PopMatrix();
 				}
 			}
+#endif // draw depth map quad
 		} // end of passes loop
 
 		// Ui and other bits
@@ -704,7 +711,7 @@ void ModelViewer::OnDecalChanged(unsigned int index, const std::string &texname)
 
 void ModelViewer::OnLightPresetChanged(unsigned int index, const std::string&)
 {
-	m_options.lightPreset = std::min<unsigned int>(index, 3);
+	m_options.lightPreset = std::min<unsigned int>(index, 4);
 }
 
 void ModelViewer::OnModelColorsChanged(float)
@@ -959,11 +966,11 @@ void ModelViewer::SetModel(const std::string &filename)
 			//binary loader expects extension-less name. Might want to change this.
 			m_modelName = filename.substr(0, filename.size()-4);
 			SceneGraph::BinaryConverter bc(m_renderer);
-			m_model = bc.Load(m_modelName);
+			m_model.reset( bc.Load(m_modelName) );
 		} else {
 			m_modelName = filename;
 			SceneGraph::Loader loader(m_renderer, true);
-			m_model = loader.LoadModel(filename);
+			m_model.reset( loader.LoadModel(filename) );
 
 			//dump warnings
 			for (std::vector<std::string>::const_iterator it = loader.GetLogMessages().begin();
@@ -973,13 +980,13 @@ void ModelViewer::SetModel(const std::string &filename)
 			}
 		}
 
-		Shields::ReparentShieldNodes(m_model);
+		Shields::ReparentShieldNodes(m_model.get());
 
 		//set decal textures, max 4 supported.
 		//Identical texture at the moment
 		OnDecalChanged(0, "pioneer");
 
-		SceneGraph::DumpVisitor d(m_model);
+		SceneGraph::DumpVisitor d(m_model.get());
 		m_model->GetRoot()->Accept(d);
 		AddLog(d.GetModelStatistics());
 
@@ -993,13 +1000,13 @@ void ModelViewer::SetModel(const std::string &filename)
 			m_landingMinOffset = 0.0f;
 
 		//note: stations won't demonstrate full docking light logic in MV
-		m_navLights.reset(new NavLights(m_model));
+		m_navLights.reset(new NavLights(m_model.get()));
 		m_navLights->SetEnabled(true);
 
-		m_shields.reset(new Shields(m_model));
+		m_shields.reset(new Shields(m_model.get()));
 	} catch (SceneGraph::LoadingError &err) {
 		// report the error and show model picker.
-		m_model = 0;
+		m_model.reset();
 		AddLog(stringf("Could not load model %0: %1", filename, err.what()));
 	}
 
@@ -1175,6 +1182,7 @@ void ModelViewer::SetupUI()
 			->AddOption("1  Front white")
 			->AddOption("2  Two-point")
 			->AddOption("3  Backlight")
+			->AddOption("4  Two-point-rotating")
 			//->AddOption("4  Nuts")
 	);
 	lightSelector->SetSelectedOption("1  Front white");
@@ -1355,6 +1363,16 @@ void ModelViewer::UpdateLights()
 		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0,-90), Color(13, 13, 26), Color(255)));
 		break;
 	case 3:
+	{
+		//Two-point - one rotating
+		static float yaw = 0;
+		yaw+=1.0f;
+		yaw=fmod(yaw,360.0f);
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(yaw,45), Color(230, 204, 204), Color(255)));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(-30,-90), Color(178, 128, 0), Color(255)));
+		break;
+	}
+	case 4:
 		//4 lights
 		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, 90), Color::YELLOW, Color(255)));
 		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, -90), Color::GREEN, Color(255)));
