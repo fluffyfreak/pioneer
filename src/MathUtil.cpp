@@ -216,7 +216,7 @@ namespace MathUtil {
 		return minv;
 	}
 
-	matrix4x4f LookAt(const vector3f &eye,	const vector3f &centre, const vector3f &up)
+	matrix4x4f LookAt(const vector3f &eye, const vector3f &centre, const vector3f &up)
 	{
 		vector3f f = (centre - eye).Normalized();
 		vector3f u = up.Normalized();
@@ -224,24 +224,12 @@ namespace MathUtil {
 		u = Cross(s, f);
 
 		const float matf[16] = {
-			 s.x,
-			 s.y,
-			 s.z,
-			-Dot(s, eye),
-			 u.x,
-			 u.y,
-			 u.z,
-			-Dot(u, eye),
-			-f.x,
-			-f.y,
-			-f.z,
-			 Dot(f, eye),
-			0.0f,
-			0.0f,
-			0.0f,
-			1.0f
+			 s.x,			 s.y,			 s.z,			-Dot(s, eye),
+			 u.x,			 u.y,			 u.z,			-Dot(u, eye),
+			-f.x,			-f.y,			-f.z,			 Dot(f, eye),
+			0.0f,			0.0f,			0.0f,			1.0f
 		};
-		return matrix4x4f(matf);
+		return matrix4x4f(matf).Transpose();
 	}
 
 	matrix4x4f PerspectiveMatrix(const float fov, const float aspect, const float near_, const float far_)
