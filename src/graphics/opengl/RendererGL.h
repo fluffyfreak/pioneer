@@ -84,6 +84,11 @@ public:
 
 	virtual bool SetScissor(bool enabled, const vector2f &pos = vector2f(0.0f), const vector2f &size = vector2f(0.0f));
 
+	virtual Material* GetShadowMaterial() const override;
+	virtual void SetShadowMatrix(const matrix4x4f &shadowMatrix) override;
+	virtual void SetShadowTexture(Texture *shadowTexture) override;
+	virtual Texture* GetShadowTexture() const override;
+
 	virtual bool DrawTriangles(const VertexArray *vertices, RenderState *state, Material *material, PrimitiveType type=TRIANGLES) override;
 	virtual bool DrawPointSprites(int count, const vector3f *positions, RenderState *rs, Material *material, float size) override;
 	virtual bool DrawBuffer(VertexBuffer*, RenderState*, Material*, PrimitiveType) override;
@@ -149,6 +154,9 @@ protected:
 	float m_invLogZfarPlus1;
 	OGL::RenderTarget *m_activeRenderTarget;
 	RenderState *m_activeRenderState;
+	RefCountedPtr<Material> m_shadowMaterial;
+	RefCountedPtr<Texture> m_shadowTexture;
+	matrix4x4f m_shadowMatrix;
 
 	MatrixMode m_matrixMode;
 	std::stack<matrix4x4f> m_modelViewStack;

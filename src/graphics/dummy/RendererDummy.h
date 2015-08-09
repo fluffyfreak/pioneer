@@ -56,6 +56,11 @@ public:
 
 	virtual bool SetScissor(bool enabled, const vector2f &pos = vector2f(0.0f), const vector2f &size = vector2f(0.0f)) { return true; }
 
+	virtual Material* GetShadowMaterial() const override { return nullptr; }
+	virtual void SetShadowMatrix(const matrix4x4f &shadowMatrix) override {}
+	virtual void SetShadowTexture(Texture *shadowTexture) override {}
+	virtual Texture* GetShadowTexture() const override { return nullptr; }
+
 	virtual bool DrawTriangles(const VertexArray *vertices, RenderState *state, Material *material, PrimitiveType type=TRIANGLES) override { return true; }
 	virtual bool DrawPointSprites(int count, const vector3f *positions, RenderState *rs, Material *material, float size) override { return true; }
 	virtual bool DrawBuffer(VertexBuffer*, RenderState*, Material*, PrimitiveType) override { return true; }

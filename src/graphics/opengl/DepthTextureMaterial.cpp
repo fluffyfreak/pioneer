@@ -12,6 +12,7 @@
 namespace Graphics {
 namespace OGL {
 
+// rendering OF a depth map material
 DepthTextureProgram::DepthTextureProgram(const MaterialDescriptor &desc)
 {
 	m_name = "DepthTexture";
@@ -42,6 +43,29 @@ void DepthTextureMaterial::Unapply()
 	if (texture0) {
 		static_cast<TextureGL*>(texture0)->Unbind();
 	}
+}
+
+
+// render-to-depth map material
+DepthRenderProgram::DepthRenderProgram(const MaterialDescriptor &desc)
+{
+	m_name = "DepthRender";
+	RendererOGL::CheckErrors();
+
+	LoadShaders(m_name, m_defines);
+	InitUniforms();
+}
+
+Program *DepthRenderMaterial::CreateProgram(const MaterialDescriptor &desc)
+{
+	return new DepthRenderProgram(desc);
+}
+
+void DepthRenderMaterial::Apply()
+{
+	OGL::Material::Apply();
+
+	RendererOGL::CheckErrors();
 }
 
 }

@@ -63,6 +63,7 @@ void BaseLoader::ConvertMaterialDefinition(const MaterialDefinition &mdef)
 	
 	//texture4 is reserved for pattern
 	//texture5 is reserved for color gradient
+	//texture6 is reserved for shadow map
 
 	m_model->m_materials.push_back(std::make_pair(mdef.name, mat));
 }

@@ -8,7 +8,9 @@ uniform sampler2D texture2; //glow
 uniform sampler2D texture3; //ambient
 uniform sampler2D texture4; //pattern
 uniform sampler2D texture5; //color
+uniform sampler2D texture6; //shadow
 in vec2 texCoord0;
+in vec4 shadowMapTexCoord;
 #endif
 
 #ifdef VERTEXCOLOR
@@ -78,6 +80,22 @@ void main(void)
 	vec4 specular = vec4(0.0);
 	for (int i=0; i<NUM_LIGHTS; ++i) {
 		ads(i, eyePos, normal, light, specular);
+	}
+
+	if(shadowMapTexCoord.w > 0.0)
+	{
+		vec3 shadowMapTexCoordProj = shadowMapTexCoord.xyz / shadowMapTexCoord.w;
+		
+		if(shadowMapTexCoordProj.x >= 0.0 && shadowMapTexCoordProj.x < 1.0 &&
+		   shadowMapTexCoordProj.y >= 0.0 && shadowMapTexCoordProj.y < 1.0 &&
+		   shadowMapTexCoordProj.z >= 0.0 && shadowMapTexCoordProj.z < 1.0)
+		{
+			if(texture2D(texture6, shadowMapTexCoordProj.xy).r <= shadowMapTexCoordProj.z)
+			{
+				// in shadow so reset to ambient
+				light = scene.ambient;
+			}
+		}
 	}
 
 #ifdef MAP_AMBIENT

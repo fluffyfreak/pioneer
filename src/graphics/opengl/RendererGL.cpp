@@ -101,6 +101,10 @@ RendererOGL::RendererOGL(WindowSDL *window, const Graphics::Settings &vs)
 
 	if (vs.enableDebugMessages)
 		GLDebug::Enable();
+
+	MaterialDescriptor desc;
+	desc.effect = EFFECT_DEPTH_RENDER;
+	m_shadowMaterial.Reset(CreateMaterial(desc));
 }
 
 RendererOGL::~RendererOGL()
@@ -495,10 +499,30 @@ bool RendererOGL::SetScissor(bool enabled, const vector2f &pos, const vector2f &
 	return true;
 }
 
+Material* RendererOGL::GetShadowMaterial() const
+{
+	return m_shadowMaterial.Get();
+}
+
+void RendererOGL::SetShadowMatrix(const matrix4x4f &shadowMatrix)
+{
+	m_shadowMatrix = shadowMatrix;
+}
+
 void RendererOGL::SetMaterialShaderTransforms(Material *m)
 {
-	m->SetCommonUniforms(m_modelViewStack.top(), m_projectionStack.top());
+	m->SetCommonUniforms(m_modelViewStack.top(), m_projectionStack.top(), m_shadowMatrix);
 	CheckRenderErrors();
+}
+
+void RendererOGL::SetShadowTexture(Texture *shadowTexture)
+{
+	m_shadowTexture.Reset(shadowTexture);
+}
+
+Texture* RendererOGL::GetShadowTexture() const
+{
+	return m_shadowTexture.Get();
 }
 
 bool RendererOGL::DrawTriangles(const VertexArray *v, RenderState *rs, Material *m, PrimitiveType t)
@@ -717,6 +741,9 @@ Material *RendererOGL::CreateMaterial(const MaterialDescriptor &d)
 		break;
 	case EFFECT_DEPTH_TEXTURE:
 		mat = new OGL::DepthTextureMaterial();
+		break;
+	case EFFECT_DEPTH_RENDER:
+		mat = new OGL::DepthRenderMaterial();
 		break;
 	default:
 		if (desc.lighting)

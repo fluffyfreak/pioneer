@@ -14,6 +14,7 @@
 namespace Graphics {
 
 	namespace OGL {
+		// Depth texture display material for debug rendering of depth texture
 		class DepthTextureProgram : public Program {
 		public:
 			DepthTextureProgram(const MaterialDescriptor &);
@@ -25,6 +26,19 @@ namespace Graphics {
 			virtual void Apply();
 			virtual void Unapply();
 		};
+
+		// 
+		class DepthRenderProgram : public Program {
+		public:
+			DepthRenderProgram(const MaterialDescriptor &);
+		};
+
+		class DepthRenderMaterial : public Material {
+		public:
+			virtual Program *CreateProgram(const MaterialDescriptor &);
+			virtual void Apply();
+		};
+		
 	}
 }
 

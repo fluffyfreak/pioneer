@@ -12,6 +12,7 @@ Material::Material() :
 	texture3(nullptr),
 	texture4(nullptr),
 	texture5(nullptr),
+	texture6(nullptr),
 	heatGradient(nullptr),
 	diffuse(Color::WHITE),
 	specular(Color::BLACK),

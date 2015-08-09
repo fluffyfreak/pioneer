@@ -45,11 +45,14 @@ struct RenderData
 	float boundingRadius;	//updated by model and passed to submodels
 	unsigned int nodemask;
 
+	bool shadowPass; // true or false
+
 	RenderData()
 	: linthrust()
 	, angthrust()
 	, boundingRadius(0.f)
 	, nodemask(NODE_SOLID) //draw solids
+	, shadowPass(false)
 	{
 	}
 };

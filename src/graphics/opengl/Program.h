@@ -33,6 +33,7 @@ namespace Graphics {
 			Uniform uViewMatrixInverse;
 			Uniform uViewProjectionMatrix;
 			Uniform uNormalMatrix;
+			Uniform uShadowMatrix;
 
 			Uniform invLogZfarPlus1;
 			Uniform diffuse;
@@ -45,6 +46,7 @@ namespace Graphics {
 			Uniform texture3;
 			Uniform texture4;
 			Uniform texture5;
+			Uniform texture6;
 			Uniform heatGradient;
 			Uniform heatingMatrix;
 			Uniform heatingNormal;

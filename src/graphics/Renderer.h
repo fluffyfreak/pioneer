@@ -98,6 +98,11 @@ public:
 
 	virtual bool SetScissor(bool enabled, const vector2f &pos = vector2f(0.0f), const vector2f &size = vector2f(0.0f)) = 0;
 
+	virtual Material* GetShadowMaterial() const = 0;
+	virtual void SetShadowMatrix(const matrix4x4f &shadowMatrix) = 0;
+	virtual void SetShadowTexture(Texture *shadowTexture) = 0;
+	virtual Texture* GetShadowTexture() const = 0;
+
 	//drawing functions
 	//2d drawing is generally understood to be for gui use (unlit, ortho projection)
 	//unindexed triangle draw

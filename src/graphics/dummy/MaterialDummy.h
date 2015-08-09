@@ -23,7 +23,7 @@ namespace Graphics {
 			virtual void Apply() {}
 			virtual void Unapply() {}
 			virtual void SetProgram(Program *p) { }
-			virtual void SetCommonUniforms(const matrix4x4f& mv, const matrix4x4f& proj) {}
+			virtual void SetCommonUniforms(const matrix4x4f& mv, const matrix4x4f& proj, const matrix4x4f& shadow) {}
 		};
 	}
 }

@@ -513,7 +513,7 @@ void ModelViewer::DrawModel(const matrix4x4f &mv, const eRenderPasses eRP)
 	{
 		SceneGraph::RenderData rd;
 		memset(&rd, 0, sizeof(SceneGraph::RenderData));
-		rd.nodemask = SceneGraph::NODE_SOLID;
+		rd.shadowPass = true;
 		m_model->Render(mv,&rd);
 	}
 	else
@@ -541,6 +541,14 @@ void ModelViewer::MainLoop()
 		UpdateCamera();
 		UpdateShield();
 
+		static GLfloat near_plane = 0.1f, far_plane = 10000.0f;
+		static GLfloat frustumSize = 7.5f;
+		const matrix4x4f lightProjection(matrix4x4f::OrthoFrustum(-frustumSize, frustumSize, -frustumSize, frustumSize, near_plane, far_plane));
+
+		const Graphics::Light &light = m_renderer->GetLight(0);
+		const matrix4x4f lightView(MathUtil::LookAt(light.GetPosition(), vector3f(0.0f), vector3f(0.0f, 1.0f, 0.0f)));
+		const matrix4x4f lightSpaceMatrix = lightProjection * lightView;
+
 		for( int pass = RENDER_SHADOW_MAP; pass<RENDER_PASS_MAX; pass++)
 		{
 			matrix4x4f mv;
@@ -561,17 +569,9 @@ void ModelViewer::MainLoop()
 				m_renderer->ClearDepthBuffer();
 					
 				// setup rendering
-				static const GLfloat near_plane = 1.0f, far_plane = 100000.0f;
-				static GLfloat frustumSize = 7.5f;
-				const matrix4x4f lightProjection(matrix4x4f::OrthoFrustum(-frustumSize, frustumSize, -frustumSize, frustumSize, near_plane, far_plane));
 				m_renderer->SetProjection(lightProjection);
-
-				const Graphics::Light &light = m_renderer->GetLight(0);
-				const matrix4x4f lightView(MathUtil::LookAt(light.GetPosition(), vector3f(0.0f), vector3f(0.0f, 1.0f, 0.0f)));
-				const matrix4x4f lightSpaceMatrix = lightProjection * lightView;
 				m_renderer->SetTransform(lightSpaceMatrix);
 				mv = lightSpaceMatrix;
-				//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 				break;
 			}
 			case RENDER_REGULAR: 
@@ -598,7 +598,12 @@ void ModelViewer::MainLoop()
 					rot.RotateY(DEG2RAD(-m_rotY));
 					mv = matrix4x4f::Translation(0.0f, 0.0f, -zoom_distance(m_baseDistance, m_zoom)) * rot;
 				}
-				//glBindTexture(GL_TEXTURE_2D, depthMap);
+
+				static const float biasValues[16] = {0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.5f, 0.0f, 0.5f, 0.5f, 0.5f, 1.0f};
+				static const matrix4x4f BiasMatrix(biasValues);
+				matrix4x4f ShadowMatrix = BiasMatrix * lightProjection * lightSpaceMatrix * mv.Inverse();
+				m_renderer->SetShadowMatrix(ShadowMatrix);
+				m_renderer->SetShadowTexture(m_pShadowRT->GetDepthTexture());
 				break;
 			} 
 			}
@@ -711,7 +716,7 @@ void ModelViewer::OnDecalChanged(unsigned int index, const std::string &texname)
 
 void ModelViewer::OnLightPresetChanged(unsigned int index, const std::string&)
 {
-	m_options.lightPreset = std::min<unsigned int>(index, 4);
+	m_options.lightPreset = std::min<unsigned int>(index, 6);
 }
 
 void ModelViewer::OnModelColorsChanged(float)
@@ -1183,7 +1188,8 @@ void ModelViewer::SetupUI()
 			->AddOption("2  Two-point")
 			->AddOption("3  Backlight")
 			->AddOption("4  Two-point-rotating")
-			//->AddOption("4  Nuts")
+			->AddOption("5  4, many colours")
+			->AddOption("6  1 side white")
 	);
 	lightSelector->SetSelectedOption("1  Front white");
 	m_options.lightPreset = 0;
@@ -1378,6 +1384,10 @@ void ModelViewer::UpdateLights()
 		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, -90), Color::GREEN, Color(255)));
 		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, 45), Color::BLUE, Color(255)));
 		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, -45), Color::WHITE, Color(255)));
+		break;
+	case 5:
+		//Side white
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0,0), Color(255), Color(255)));
 		break;
 	};
 

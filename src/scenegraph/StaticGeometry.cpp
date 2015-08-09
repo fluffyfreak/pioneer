@@ -47,8 +47,16 @@ void StaticGeometry::Render(const matrix4x4f &trans, const RenderData *rd)
 	SDL_assert(m_renderState);
 	Graphics::Renderer *r = GetRenderer();
 	r->SetTransform(trans);
-	for (auto& it : m_meshes)
-		r->DrawBufferIndexed(it.vertexBuffer.Get(), it.indexBuffer.Get(), m_renderState, it.material.Get());
+	if(rd->shadowPass) {
+		Graphics::Material *shadowMat( r->GetShadowMaterial() );
+		for (auto& it : m_meshes) {
+			r->DrawBufferIndexed(it.vertexBuffer.Get(), it.indexBuffer.Get(), m_renderState, shadowMat);
+		}
+	} else {
+		for (auto& it : m_meshes) {
+			r->DrawBufferIndexed(it.vertexBuffer.Get(), it.indexBuffer.Get(), m_renderState, it.material.Get());
+		}
+	}
 
 	//DrawBoundingBox(m_boundingBox);
 }

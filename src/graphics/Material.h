@@ -38,7 +38,8 @@ enum EffectType {
 	EFFECT_SHIELD,
 	EFFECT_SKYBOX,
 	EFFECT_SPHEREIMPOSTOR,
-	EFFECT_DEPTH_TEXTURE
+	EFFECT_DEPTH_TEXTURE,
+	EFFECT_DEPTH_RENDER
 };
 
 
@@ -84,6 +85,7 @@ public:
 	Texture *texture3;
 	Texture *texture4;
 	Texture *texture5;
+	Texture *texture6;
 	Texture *heatGradient;
 
 	Color diffuse;
@@ -94,7 +96,7 @@ public:
 	virtual void Apply() { }
 	virtual void Unapply() { }
 
-	virtual void SetCommonUniforms(const matrix4x4f& mv, const matrix4x4f& proj) = 0;
+	virtual void SetCommonUniforms(const matrix4x4f& mv, const matrix4x4f& proj, const matrix4x4f& shadow) = 0;
 
 	void *specialParameter0; //this can be whatever. Bit of a hack.
 

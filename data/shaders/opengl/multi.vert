@@ -5,6 +5,7 @@
 
 #ifdef TEXTURE0
 out vec2 texCoord0;
+out vec4 shadowMapTexCoord;
 #endif
 #ifdef VERTEXCOLOR
 out vec4 vertexColor;
@@ -35,6 +36,7 @@ void main(void)
 #else
 	eyePos = vec3(uViewMatrix * a_vertex);
 	normal = normalize(uNormalMatrix * a_normal);
+	shadowMapTexCoord = uShadowMatrix * a_vertex;
 #endif
 	
 	//mat3 mn = mat3(transpose(inverse(uViewMatrix)));
