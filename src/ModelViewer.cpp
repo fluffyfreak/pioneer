@@ -541,17 +541,29 @@ void ModelViewer::MainLoop()
 		UpdateCamera();
 		UpdateShield();
 
-		static GLfloat near_plane = 0.1f, far_plane = 10000.0f;
-		static GLfloat frustumSize = 7.5f;
-		const matrix4x4f lightProjection(matrix4x4f::OrthoFrustum(-frustumSize, frustumSize, -frustumSize, frustumSize, near_plane, far_plane));
-
+		static GLfloat near_plane = 0.1f, far_plane = 100000.f;
+		static GLfloat frustumSize = 50.0f;
 		const Graphics::Light &light = m_renderer->GetLight(0);
-		const matrix4x4f lightView(MathUtil::LookAt(light.GetPosition(), vector3f(0.0f), vector3f(0.0f, 1.0f, 0.0f)));
-		const matrix4x4f lightSpaceMatrix = lightProjection * lightView;
-
+		
+		// Compute the MVP matrix from the light's point of view
+		matrix4x4f depthProjectionMatrix = matrix4x4f::OrthoFrustum(-frustumSize, frustumSize, -frustumSize, frustumSize, near_plane, far_plane);
+		matrix4x4f depthViewMatrix = MathUtil::LookAt(light.GetPosition(), vector3f(0.0f, 0.0f, -zoom_distance(m_baseDistance, m_zoom)), vector3f(0.0f, 1.0f, 0.0f));
+		matrix4x4f depthModelMatrix = matrix4x4f::Identity();
+		// calc camera info
+		if (m_options.mouselookEnabled) {
+			depthModelMatrix = (m_viewRot.Transpose() * matrix4x4f::Translation(-m_viewPos));
+		} else {
+			m_rotX = Clamp(m_rotX, -90.0f, 90.0f);
+			matrix4x4f rot = matrix4x4f::Identity();
+			rot.RotateX(DEG2RAD(-m_rotX));
+			rot.RotateY(DEG2RAD(-m_rotY));
+			depthModelMatrix = (matrix4x4f::Translation(0.0f, 0.0f, -zoom_distance(m_baseDistance, m_zoom)) * rot);
+		}
+		matrix4x4f depthMVP = depthProjectionMatrix * depthViewMatrix * depthModelMatrix;
+ 
 		for( int pass = RENDER_SHADOW_MAP; pass<RENDER_PASS_MAX; pass++)
 		{
-			matrix4x4f mv;
+			const matrix4x4f &mv = depthModelMatrix;
 			switch(pass) {
 			case RENDER_SHADOW_MAP: 
 			{
@@ -569,9 +581,7 @@ void ModelViewer::MainLoop()
 				m_renderer->ClearDepthBuffer();
 					
 				// setup rendering
-				m_renderer->SetProjection(lightProjection);
-				m_renderer->SetTransform(lightSpaceMatrix);
-				mv = lightSpaceMatrix;
+				m_renderer->SetProjection(depthProjectionMatrix);
 				break;
 			}
 			case RENDER_REGULAR: 
@@ -585,23 +595,11 @@ void ModelViewer::MainLoop()
 				DrawBackground();
 					
 				// setup rendering
-				m_renderer->SetPerspectiveProjection(85, Graphics::GetScreenWidth()/float(Graphics::GetScreenHeight()), 0.1f, 100000.f);
-				m_renderer->SetTransform(matrix4x4f::Identity());
-
-				// calc camera info
-				if (m_options.mouselookEnabled) {
-					mv = m_viewRot.Transpose() * matrix4x4f::Translation(-m_viewPos);
-				} else {
-					m_rotX = Clamp(m_rotX, -90.0f, 90.0f);
-					matrix4x4f rot = matrix4x4f::Identity();
-					rot.RotateX(DEG2RAD(-m_rotX));
-					rot.RotateY(DEG2RAD(-m_rotY));
-					mv = matrix4x4f::Translation(0.0f, 0.0f, -zoom_distance(m_baseDistance, m_zoom)) * rot;
-				}
+				m_renderer->SetPerspectiveProjection(85, Graphics::GetScreenWidth()/float(Graphics::GetScreenHeight()), near_plane, far_plane);
 
 				static const float biasValues[16] = {0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.5f, 0.0f, 0.5f, 0.5f, 0.5f, 1.0f};
 				static const matrix4x4f BiasMatrix(biasValues);
-				matrix4x4f ShadowMatrix = BiasMatrix * lightProjection * lightSpaceMatrix * mv.Inverse();
+				matrix4x4f ShadowMatrix = BiasMatrix * depthMVP;
 				m_renderer->SetShadowMatrix(ShadowMatrix);
 				m_renderer->SetShadowTexture(m_pShadowRT->GetDepthTexture());
 				break;
