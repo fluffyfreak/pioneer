@@ -26,6 +26,7 @@ namespace Graphics { class Renderer; }
 class SystemBody;
 class GeoPatch;
 class GeoSphere;
+namespace SceneGraph { class Model; }
 
 class GeoPatchContext : public RefCounted {
 private:
@@ -33,6 +34,7 @@ private:
 	static int numTris;
 
 	static double frac;
+	static SceneGraph::Model* rock;
 
 	static inline int VBO_COUNT_LO_EDGE() { return 3*(edgeLen/2); }
 	static inline int VBO_COUNT_HI_EDGE() { return 3*(edgeLen-1); }
@@ -85,6 +87,8 @@ public:
 	static inline int GetEdgeLen() { return edgeLen; }
 	static inline int GetNumTris() { return numTris; }
 	static inline double GetFrac() { return frac; }
+
+	static SceneGraph::Model* GetModelLibrary();
 };
 
 #endif /* _GEOPATCHCONTEXT_H */

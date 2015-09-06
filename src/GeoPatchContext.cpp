@@ -19,6 +19,7 @@
 int GeoPatchContext::edgeLen = 0;
 int GeoPatchContext::numTris = 0;
 double GeoPatchContext::frac = 0.0;
+SceneGraph::Model* GeoPatchContext::rock = nullptr;
 std::unique_ptr<unsigned short[]> GeoPatchContext::midIndices;
 std::unique_ptr<unsigned short[]> GeoPatchContext::loEdgeIndices[4];
 std::unique_ptr<unsigned short[]> GeoPatchContext::hiEdgeIndices[4];
@@ -254,5 +255,12 @@ void GeoPatchContext::Init()
 	numTris = 2*(edgeLen-1)*(edgeLen-1);
 
 	GenerateIndices();
+
+	rock = Pi::FindModel("Rock1");
+}
+
+SceneGraph::Model* GeoPatchContext::GetModelLibrary()
+{
+	return rock;
 }
 

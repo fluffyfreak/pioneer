@@ -14,11 +14,124 @@
 #include "graphics/Frustum.h"
 #include "graphics/Graphics.h"
 #include "graphics/VertexArray.h"
+#include "scenegraph/Model.h"
 #include "MathUtil.h"
 #include "Sphere.h"
 #include "vcacheopt/vcacheopt.h"
 #include <deque>
 #include <algorithm>
+
+////////////////////////////////////////////////////////////////////////////////////
+// cHaltonSequence2
+//
+
+namespace
+{
+   static const float kOneOverThree = float(1.0 / 3.0);
+   static const float kOneOverFive  = float(1.0 / 5.0);
+}
+
+/// This calculates the Halton sequence incrementally
+/// for a base 2/3 doublet.
+class cHaltonSequence2
+{
+private:
+//    cFXVector3 mPoint;  ///< Current sample point.
+    float mX;
+    float mY;
+    
+    Uint32 mBase2;
+    Uint32 mBase3;
+    
+public:
+    cHaltonSequence2() : 
+        mBase2(0),
+        mBase3(0),
+        mX(0.0f),
+        mY(0.0f)
+    {}
+    
+    ///< Advance to next point in the sequence. Returns the index of this point. 
+    int inc(vector2f &out)
+	{
+		/////////////////////////////////////
+		// base 2
+		Uint32 oldBase2 = mBase2;
+		++mBase2;
+		Uint32 diff = mBase2 ^ oldBase2;
+
+		// bottom bit always changes, higher bits
+		// change less frequently.
+		float s = 0.5f;
+
+		// diff will be of the form 0*1+, i.e. one bits up until the last carry.
+		// expected iterations = 1 + 0.5 + 0.25 + ... = 2
+		do
+		{
+			if (oldBase2 & 1) {
+				mX -= s;
+			} else {
+				mX += s;
+			}
+        
+			s *= 0.5f;
+        
+			diff = diff >> 1;
+			oldBase2 = oldBase2 >> 1;
+		}
+		while (diff);
+
+    
+		/////////////////////////////////////
+		// base 3: use 2 bits for each base 3 digit.
+    
+		Uint32 mask = 0x3;  // also the max base 3 digit
+		Uint32 add  = 0x1;  // amount to add to force carry once digit==3
+		s = kOneOverThree;
+
+		++mBase3;
+
+		// expected iterations: 1.5
+		while (1)
+		{
+			if ((mBase3 & mask) == mask)
+			{
+				mBase3 += add;          // force carry into next 2-bit digit
+				mY -= 2 * s;
+            
+				mask = mask << 2;
+				add  = add  << 2;
+            
+				s *= kOneOverThree;
+			}
+			else 
+			{
+				mY += s;     // we know digit n has gone from a to a + 1
+				break;
+			}
+		};
+
+		out.x = mX;
+		out.y = mY;
+
+		return mBase2; // return the index of this sequence point
+	}
+	
+	///< Move back to first point in the sequence (i.e. the origin.)
+	void reset()
+	{
+		mBase2 = 0;
+		mBase3 = 0;
+		mX = 0.0f;
+		mY = 0.0f;
+	}
+};
+
+//for station waypoint interpolation
+vector2f lerp(const vector2f& v1, const vector2f& v2, const float t)
+{
+	return t*v2 + (1.0-t)*v1;
+}
 
 // tri edge lengths
 static const double GEOPATCH_SUBDIVIDE_AT_CAMDIST = 5.0;
@@ -28,7 +141,7 @@ GeoPatch::GeoPatch(const RefCountedPtr<GeoPatchContext> &ctx_, GeoSphere *gs,
 	const int depth, const GeoPatchID &ID_)
 	: ctx(ctx_), v0(v0_), v1(v1_), v2(v2_), v3(v3_),
 	heights(nullptr), normals(nullptr), colors(nullptr),
-	parent(nullptr), geosphere(gs),
+	m_numInstances(0), parent(nullptr), geosphere(gs),
 	m_depth(depth), mPatchID(ID_),
 	mHasJobRequest(false)
 {
@@ -66,7 +179,7 @@ GeoPatch::~GeoPatch() {
 	normals.reset();
 	colors.reset();
 }
-
+#pragma optimize("",off)
 void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 {
 	if (m_needUpdateVBOs) {
@@ -118,6 +231,49 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 		}
 		m_vertexBuffer->Unmap();
 
+		if( (GEOPATCH_MAX_DEPTH - m_depth) < 2 )
+		{
+			// allocate space for instances
+			const Uint32 MaxInstances = 5;
+			assert(MaxInstances > 0);
+			instances.reset( new vector3f[MaxInstances] );
+			m_numInstances = 0;
+
+			// populate
+			cHaltonSequence2 seq;
+			vector2f outVec;
+			pHts = heights.get();
+			for( Uint32 iHal=0; iHal<5; ++iHal) 
+			{
+				seq.inc(outVec);
+				const Sint32 x = Sint32(outVec.x * (edgeLen-1));
+				const Sint32 y = Sint32(outVec.y * (edgeLen-1));
+
+				// for each quad
+				const double h0 = pHts[(x   + (y   * edgeLen))];
+				const double h1 = pHts[(x+1 + (y   * edgeLen))];
+				const double h2 = pHts[(x   + (y+1 * edgeLen))];
+				const double h3 = pHts[(x+1 + (y+1 * edgeLen))];
+
+				// p0--p1
+				// |    |
+				// p2--p3
+				const vector3d p0 = (GetSpherePoint(x*frac,   y*frac)   * (h0 + 1.0)) - clipCentroid;
+				const vector3d p1 = (GetSpherePoint(x+1*frac, y*frac)   * (h1 + 1.0)) - clipCentroid;
+				const vector3d p2 = (GetSpherePoint(x*frac,   y+1*frac) * (h2 + 1.0)) - clipCentroid;
+				const vector3d p3 = (GetSpherePoint(x+1*frac, y+1*frac) * (h3 + 1.0)) - clipCentroid;
+
+				// bi-linear interpolation
+				// x-axis first
+				const vector3d i0 = MathUtil::mix<vector3d, double>(p0, p1, double(outVec.x));
+				const vector3d i1 = MathUtil::mix<vector3d, double>(p2, p3, double(outVec.x));
+				// y-axis and final position
+				const vector3d pos = MathUtil::mix<vector3d, double>(i0, i1, double(outVec.y));
+				instances.get()[m_numInstances++] = vector3f(pos);
+			}
+			assert(MaxInstances == m_numInstances);
+		}
+
 #ifdef DEBUG_BOUNDING_SPHERES
 		RefCountedPtr<Graphics::Material> mat(Pi::renderer->CreateMaterial(Graphics::MaterialDescriptor()));
 		m_boundsphere.reset( new Graphics::Drawables::Sphere3D(Pi::renderer, mat, Pi::renderer->CreateRenderState(Graphics::RenderStateDesc()), 0, clipRadius) );
@@ -164,6 +320,21 @@ void GeoPatch::Render(Graphics::Renderer *renderer, const vector3d &campos, cons
 		++Pi::statNumPatches;
 
 		renderer->DrawBufferIndexed(m_vertexBuffer.get(), ctx->GetIndexBuffer(DetermineIndexbuffer()), rs, mat);
+
+		if(m_numInstances>0)
+		{
+			matrix4x4f mv;
+			matrix4x4dtof(modelView * matrix4x4d::Translation(relpos), mv);
+			std::vector<matrix4x4f> transforms(m_numInstances);
+			for(Uint32 in=0; in<m_numInstances; in++) {
+				matrix4x4f mt(matrix4x4f::Identity());
+				mt.SetTranslate(mv * instances[in]);
+				transforms[in] = mt;
+			}
+			SceneGraph::Model *pModel = ctx->GetModelLibrary();
+			pModel->Render(transforms);
+		}
+
 #ifdef DEBUG_BOUNDING_SPHERES
 		if(m_boundsphere.get()) {
 			renderer->SetWireFrameMode(true);
