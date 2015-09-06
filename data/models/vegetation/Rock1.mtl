@@ -1,0 +1,9 @@
+# File produced by Your-Mum
+
+newmtl Rock1Mtl
+kd 0.75 0.75 0.75
+ks 1 1 1
+d 1
+Ns 16
+illum 2
+map_kd rock1.png

@@ -1,0 +1,7 @@
+material Rock1Mtl
+diffuse 1.0 1.0 1.0
+specular 0.3 0.3 0.3
+shininess 23
+tex_diff rock1.png
+
+mesh Rock1LQ.obj
