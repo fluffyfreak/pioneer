@@ -239,8 +239,27 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 			instances.reset( new vector3f[MaxInstances] );
 			m_numInstances = 0;
 
+			const double *pHts = heights.get();
+			const vector3f *pNorm = normals.get();
+			const Color3ub *pColr = colors.get();
+			for (Sint32 y=0; y<edgeLen; y++) {
+				for (Sint32 x=0; x<edgeLen; x++) {
+					const double height = *pHts;
+					const double xFrac = double(x)*frac;
+					const double yFrac = double(y)*frac;
+					const vector3d p((GetSpherePoint(xFrac, yFrac) * (height + 1.0)) - clipCentroid);
+					clipRadius = std::max(clipRadius, p.Length());
+					instances.get()[m_numInstances++] = vector3f(p);
+					++pHts;	// next height
+					if(MaxInstances == m_numInstances)
+						break;
+				}
+				if(MaxInstances == m_numInstances)
+					break;
+			}
+
 			// populate
-			cHaltonSequence2 seq;
+			/*cHaltonSequence2 seq;
 			vector2f outVec;
 			pHts = heights.get();
 			for( Uint32 iHal=0; iHal<5; ++iHal) 
@@ -270,7 +289,7 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 				// y-axis and final position
 				const vector3d pos = MathUtil::mix<vector3d, double>(i0, i1, double(outVec.y));
 				instances.get()[m_numInstances++] = vector3f(pos);
-			}
+			}*/
 			assert(MaxInstances == m_numInstances);
 		}
 
