@@ -963,6 +963,10 @@
       "description" : "New Hope is an in game location",
       "message" : "Starta vid New Hope"
    },
+   "STAR_FIELD_DENSITY" : {
+      "description" : "",
+      "message" : "Täthet i bakgrundssjärnor"
+   },
    "STATION_MANAGER" : {
       "description" : "",
       "message" : "Stationschef"

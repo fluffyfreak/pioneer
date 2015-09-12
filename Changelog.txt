@@ -1,3 +1,28 @@
+September 2015
+   * New Features
+     * Control how many stars in the sky (#3431)
+     * Two state hyperspace button (#3438)
+     * Terrain detail textures (#3448)
+
+   * Fixes
+     * Fix undefined symbols for static const members (#3446)
+     * Resolve Detail Texturing abort (#3452)
+
+   * Internal Changes
+     * Remove planetary scaling during rendering (#3434)
+     * Remove the animation Interpolate optimisation (#3435)
+
+August 2015
+   * New Features
+     * Orbital planner got some new features (#3426)
+
+   * Fixes
+     * Fix NAN for planned orbit (#3437)
+     * Fix math typo (#3440)
+
+   * Internal Changes
+     * Changed/removed some non-portable C++11 usage (#3444)
+
 July 2015
    * New Features
      * Add first initial support for Arab fonts (#3416)

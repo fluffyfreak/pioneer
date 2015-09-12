@@ -13,6 +13,8 @@
 #include "graphics/Renderer.h"
 #include "graphics/Frustum.h"
 #include "graphics/Graphics.h"
+#include "graphics/Texture.h"
+#include "graphics/TextureBuilder.h"
 #include "graphics/VertexArray.h"
 #include "vcacheopt/vcacheopt.h"
 #include <deque>
@@ -387,7 +389,7 @@ void GeoSphere::ProcessQuadSplitRequests()
 	mQuadSplitRequests.clear();
 }
 
-void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView, vector3d campos, const float radius, const float scale, const std::vector<Camera::Shadow> &shadows)
+void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView, vector3d campos, const float radius, const std::vector<Camera::Shadow> &shadows)
 {
 	// store this for later usage in the update method.
 	m_tempCampos = campos;
@@ -418,9 +420,10 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView
 		m_materialParameters.atmosphere = GetSystemBody()->CalcAtmosphereParams();
 		m_materialParameters.atmosphere.center = trans * vector3d(0.0, 0.0, 0.0);
 		m_materialParameters.atmosphere.planetRadius = radius;
-		m_materialParameters.atmosphere.scale = scale;
 
 		m_materialParameters.shadows = shadows;
+
+		m_materialParameters.maxPatchDepth = GetMaxDepth();
 
 		m_surfaceMaterial->specialParameter0 = &m_materialParameters;
 
@@ -521,7 +524,16 @@ void GeoSphere::SetUpMaterials()
 	if (bEnableEclipse) {
 		surfDesc.quality |= Graphics::HAS_ECLIPSES;
 	}
+	const bool bEnableDetailMaps = (Pi::config->Int("DisableDetailMaps") == 0);
+	if (bEnableDetailMaps) {
+		surfDesc.quality |= Graphics::HAS_DETAIL_MAPS;
+	}
 	m_surfaceMaterial.reset(Pi::renderer->CreateMaterial(surfDesc));
+
+	m_texHi.Reset( Graphics::TextureBuilder::Model("textures/high.dds").GetOrCreateTexture(Pi::renderer, "model") );
+	m_texLo.Reset( Graphics::TextureBuilder::Model("textures/low.dds").GetOrCreateTexture(Pi::renderer, "model") );
+	m_surfaceMaterial->texture0 = m_texHi.Get();
+	m_surfaceMaterial->texture1 = m_texLo.Get();
 
 	{
 		Graphics::MaterialDescriptor skyDesc;
@@ -531,5 +543,7 @@ void GeoSphere::SetUpMaterials()
 			skyDesc.quality |= Graphics::HAS_ECLIPSES;
 		}
 		m_atmosphereMaterial.reset(Pi::renderer->CreateMaterial(skyDesc));
+		m_atmosphereMaterial->texture0 = nullptr;
+		m_atmosphereMaterial->texture1 = nullptr;
 	}
 }

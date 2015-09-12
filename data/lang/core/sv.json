@@ -547,13 +547,17 @@
       "description" : "",
       "message" : "Avgångsmoln till hyperrymd"
    },
-   "HYPERSPACE_JUMP" : {
-      "description" : "",
-      "message" : "Hyperrymdhopp"
+   "HYPERSPACE_JUMP_ABORT" : {
+      "description" : "Mouse over text for hyperdrive button on ship control panel",
+      "message" : "Stängner Hypermotor"
    },
    "HYPERSPACE_JUMP_ABORTED" : {
       "description" : "",
       "message" : "Hyerrymdshopp avbrutet."
+   },
+   "HYPERSPACE_JUMP_ENGAGE" : {
+      "description" : "Mouse over text for hyperdrive button on ship control panel",
+      "message" : "Starta Hypermotor"
    },
    "HYPERSPACE_TARGET" : {
       "description" : "",
@@ -1154,6 +1158,10 @@
    "PLANNER_RESET_RADIAL" : {
       "description" : "For system orbit view",
       "message" : "Radiell delta-v. Klicka för att återställa till noll."
+   },
+   "PLANNER_RESET_START" : {
+      "description" : "For system orbit view",
+      "message" : "Börja manöver. Klicka för att återställa."
    },
    "PLASTICS" : {
       "description" : "",

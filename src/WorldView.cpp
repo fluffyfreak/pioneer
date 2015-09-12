@@ -37,6 +37,7 @@
 #include "LuaObject.h"
 #include <algorithm>
 #include <sstream>
+#include <iomanip>
 #include <SDL_stdinc.h>
 
 const double WorldView::PICK_OBJECT_RECT_SIZE = 20.0;
@@ -149,9 +150,10 @@ void WorldView::InitObject()
 	set_low_thrust_power_button->SetRenderDimensions(30.0f, 22.0f);
 	m_rightButtonBar->Add(set_low_thrust_power_button, 98, 2);
 
-	m_hyperspaceButton = new Gui::ImageButton("icons/hyperspace_f8.png");
+	m_hyperspaceButton = new Gui::MultiStateImageButton();
 	m_hyperspaceButton->SetShortcut(SDLK_F7, KMOD_NONE);
-	m_hyperspaceButton->SetToolTip(Lang::HYPERSPACE_JUMP);
+	m_hyperspaceButton->AddState(0, "icons/hyperspace_engage_f8.png", Lang::HYPERSPACE_JUMP_ENGAGE);
+	m_hyperspaceButton->AddState(1, "icons/hyperspace_abort_f8.png", Lang::HYPERSPACE_JUMP_ABORT);
 	m_hyperspaceButton->onClick.connect(sigc::mem_fun(this, &WorldView::OnClickHyperspace));
 	m_hyperspaceButton->SetRenderDimensions(30.0f, 22.0f);
 	m_rightButtonBar->Add(m_hyperspaceButton, 66, 2);
@@ -256,12 +258,14 @@ void WorldView::InitObject()
 	m_navVelIndicator.label = (new Gui::Label(""))->Color(0, 255, 0);
 	m_combatTargetIndicator.label = new Gui::Label(""); // colour set dynamically
 	m_targetLeadIndicator.label = new Gui::Label("");
+	m_burnIndicator.label = (new Gui::Label(""))->Color(0, 153, 255);
 
 	// these labels are repositioned during Draw3D()
 	Add(m_navTargetIndicator.label, 0, 0);
 	Add(m_navVelIndicator.label, 0, 0);
 	Add(m_combatTargetIndicator.label, 0, 0);
 	Add(m_targetLeadIndicator.label, 0, 0);
+	Add(m_burnIndicator.label, 0, 0);
 
 	// XXX m_renderer not set yet
 	Graphics::TextureBuilder b1 = Graphics::TextureBuilder::UI("icons/indicator_mousedir.png");
@@ -454,8 +458,12 @@ void WorldView::OnClickBlastoff()
 	}
 }
 
-void WorldView::OnClickHyperspace()
+void WorldView::OnClickHyperspace(Gui::MultiStateImageButton *b)
 {
+	// Not the best way, but show the button when docked, but flip it back when pressed
+	if(Pi::player->GetFlightState() == Ship::DOCKED || Pi::player->GetFlightState() == Ship::LANDED)
+		ResetHyperspaceButton();
+
 	if (Pi::player->IsHyperspaceActive()) {
 		// Hyperspace countdown in effect.. abort!
 		Pi::player->AbortHyperjump();
@@ -465,6 +473,12 @@ void WorldView::OnClickHyperspace()
 		SystemPath path = m_game->GetSectorView()->GetHyperspaceTarget();
 		LuaObject<Player>::CallMethod(Pi::player, "HyperjumpTo", &path);
 	}
+}
+
+void WorldView::ResetHyperspaceButton()
+{
+	if(m_hyperspaceButton->GetState() == 1)
+		m_hyperspaceButton->StatePrev();
 }
 
 void WorldView::Draw3D()
@@ -1567,20 +1581,39 @@ void WorldView::UpdateProjectedObjects()
 
 	// velocity relative to current frame (white)
 	const vector3d camSpaceVel = Pi::player->GetVelocity() * cam_rot;
-	const vector3d camSpaceBurnVel = Pi::planner->GetOffsetVel() * cam_rot;
 	if (camSpaceVel.LengthSqr() >= 1e-4) {
 		UpdateIndicator(m_velIndicator, camSpaceVel);
 		UpdateIndicator(m_retroVelIndicator, -camSpaceVel);
-
-		if(camSpaceBurnVel.ExactlyEqual(vector3d(0,0,0))) {
-			HideIndicator(m_burnIndicator);
-		} else {
-			UpdateIndicator(m_burnIndicator, camSpaceBurnVel);
-		}
-
 	} else {
 		HideIndicator(m_velIndicator);
 		HideIndicator(m_retroVelIndicator);
+	}
+
+	const Frame* frame = Pi::player->GetFrame();
+	if(frame->IsRotFrame())
+		frame = frame->GetNonRotFrame();
+	const SystemBody* systemBody = frame->GetSystemBody();
+
+	if(Pi::planner->GetOffsetVel().ExactlyEqual(vector3d(0,0,0))) {
+		HideIndicator(m_burnIndicator);
+	} else if(systemBody) {
+		Orbit playerOrbit = Pi::player->ComputeOrbit();
+		if(!is_zero_exact(playerOrbit.GetSemiMajorAxis())) {
+			double mass = systemBody->GetMass();
+			// XXX The best solution would be to store the mass(es) on Orbit
+			const vector3d camSpacePlanSpeed = (Pi::planner->GetVel() - playerOrbit.OrbitalVelocityAtTime(mass, playerOrbit.OrbitalTimeAtPos(Pi::planner->GetPosition(), mass))) * cam_rot;
+			double relativeSpeed = camSpacePlanSpeed.Length();
+
+			std::stringstream ddV;
+			ddV << std::setprecision(2) << std::fixed;
+			if(relativeSpeed > 1000)
+				ddV << relativeSpeed / 1000. << " km/s";
+			else
+				ddV << relativeSpeed << " m/s";
+			m_burnIndicator.label->SetText(ddV.str());
+			m_burnIndicator.side = INDICATOR_TOP;
+			UpdateIndicator(m_burnIndicator, camSpacePlanSpeed);
+		}
 	}
 
 	// orientation according to mouse

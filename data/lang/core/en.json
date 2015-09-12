@@ -547,9 +547,13 @@
       "description" : "",
       "message" : "Hyperspace departure cloud"
    },
-   "HYPERSPACE_JUMP" : {
-      "description" : "",
-      "message" : "Hyperspace Jump"
+   "HYPERSPACE_JUMP_ABORT" : {
+      "description" : "Mouse over text for hyperdrive button on ship control panel",
+      "message" : "Disengage Hyperdrive"
+   },
+   "HYPERSPACE_JUMP_ENGAGE" : {
+      "description" : "Mouse over text for hyperdrive button on ship control panel",
+      "message" : "Engage Hyperdrive"
    },
    "HYPERSPACE_JUMP_ABORTED" : {
       "description" : "",
@@ -1806,6 +1810,10 @@
    "PLANNER_RESET_FACTOR" : {
       "description" : "For system orbit view",
       "message" : "Rate of increase of delta-v values. Click to reset to default."
+   },
+   "PLANNER_RESET_START" : {
+      "description" : "For system orbit view",
+      "message" : "Maneuver start. Click to reset to default."
    },
    "PLANNER_RESET_PROGRADE" : {
       "description" : "For system orbit view",

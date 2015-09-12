@@ -437,11 +437,11 @@
    },
    "HYPERDRIVE" : {
       "description" : "",
-      "message" : "Ipermotore"
+      "message" : "Iperguida"
    },
    "HYPERDRIVE_FITTED" : {
       "description" : "",
-      "message" : "Ipermotore montato:"
+      "message" : "Iperguida montata:"
    },
    "HYPERSPACE_RANGE" : {
       "description" : "",
@@ -962,6 +962,10 @@
    "START_AT_NEW_HOPE" : {
       "description" : "New Hope is an in game location",
       "message" : "Parti da New Hope"
+   },
+   "STAR_FIELD_DENSITY" : {
+      "description" : "",
+      "message" : "Densità del campo stellare"
    },
    "STATION_MANAGER" : {
       "description" : "",

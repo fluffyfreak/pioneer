@@ -547,13 +547,17 @@
       "description" : "",
       "message" : "Hyperraumabflugswolke"
    },
-   "HYPERSPACE_JUMP" : {
-      "description" : "",
-      "message" : "Hyperraumsprung"
+   "HYPERSPACE_JUMP_ABORT" : {
+      "description" : "Mouse over text for hyperdrive button on ship control panel",
+      "message" : "Hyperraumantrieb ausschalten"
    },
    "HYPERSPACE_JUMP_ABORTED" : {
       "description" : "",
       "message" : "Hyperraumsprung abgebrochen."
+   },
+   "HYPERSPACE_JUMP_ENGAGE" : {
+      "description" : "Mouse over text for hyperdrive button on ship control panel",
+      "message" : "Hyperraumantrieb anschalten"
    },
    "HYPERSPACE_TARGET" : {
       "description" : "",
@@ -1154,6 +1158,10 @@
    "PLANNER_RESET_RADIAL" : {
       "description" : "For system orbit view",
       "message" : "Radiales delta-v. Klicken um auf Null zurückzusetzen."
+   },
+   "PLANNER_RESET_START" : {
+      "description" : "For system orbit view",
+      "message" : "Manöverstart. Klicken, um auf Standard zurückzusetzen."
    },
    "PLASTICS" : {
       "description" : "",

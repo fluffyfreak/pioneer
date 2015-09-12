@@ -547,13 +547,17 @@
       "description" : "",
       "message" : "Nube hiperespacial de partida"
    },
-   "HYPERSPACE_JUMP" : {
-      "description" : "",
-      "message" : "Salto hiperespacial"
+   "HYPERSPACE_JUMP_ABORT" : {
+      "description" : "Mouse over text for hyperdrive button on ship control panel",
+      "message" : "Desconectar Hiperimpulsor"
    },
    "HYPERSPACE_JUMP_ABORTED" : {
       "description" : "",
       "message" : "Salto hiperespacial abortado."
+   },
+   "HYPERSPACE_JUMP_ENGAGE" : {
+      "description" : "Mouse over text for hyperdrive button on ship control panel",
+      "message" : "Conectar Hiperimpulsor"
    },
    "HYPERSPACE_TARGET" : {
       "description" : "",
@@ -1154,6 +1158,10 @@
    "PLANNER_RESET_RADIAL" : {
       "description" : "For system orbit view",
       "message" : "Delta-V radial. Click para restablecer a cero."
+   },
+   "PLANNER_RESET_START" : {
+      "description" : "For system orbit view",
+      "message" : "Iniciar maniobra. Click para reiniciar por defecto."
    },
    "PLASTICS" : {
       "description" : "",
