@@ -3,6 +3,7 @@
 #include "FileSystem.h"
 #include "SDLWrappers.h"
 #include "StringF.h"
+#include "graphics/Drawables.h"
 #include "graphics/Frustum.h"
 
 #define GL_CLAMP_TO_EDGE 0x812F
@@ -121,12 +122,12 @@ void VolumetricClouds::GrowCloud(VolumetricCloud* Cloud, int level, float radius
 	Cloud->ColorBuffer = new Color4f[Num * 4];
 }
 
-void VolumetricClouds::GenerateTexture()
+void VolumetricClouds::GenerateTexture(Graphics::Renderer *renderer)
 {
-	int N = 64;
+	static const int N(64);
+	const float Incr = 2.0f/N;
 	unsigned char *B = new unsigned char[4*N*N];
 	float X,Y,Dist;
-	float Incr = 2.0f/N;
 	int i = 0, j = 0;
 	float value;
 
@@ -150,20 +151,19 @@ void VolumetricClouds::GenerateTexture()
 		Y+=Incr;
 	}
 
-	glGenTextures(1, &PuffTexture);
-	glBindTexture(GL_TEXTURE_2D, PuffTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, N, N, 0, GL_RGBA, GL_UNSIGNED_BYTE, B);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);	
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);	
+	Graphics::TextureDescriptor texDesc(
+		Graphics::TEXTURE_RGBA_8888,
+		vector2f(N, N),
+		Graphics::LINEAR_CLAMP, false, false, 0);
+	PuffTexture.Reset(renderer->CreateTexture(texDesc));
+	PuffTexture->Update(B, vector2f(N, N), Graphics::TEXTURE_RGBA_8888, 0);
 
 	delete [] B;		
 }
 
-int VolumetricClouds::Create(const int Num, const float PlaneSize, const float PlaneHeight)
+int VolumetricClouds::Create(Graphics::Renderer *renderer, const int Num, const float PlaneSize, const float PlaneHeight)
 {
-	GenerateTexture();
+	GenerateTexture(renderer);
 
 	for (int i = 0; i < Num; i++)
 	{
@@ -198,8 +198,8 @@ void VolumetricClouds::Update(Graphics::Renderer *r, const Graphics::Frustum &fr
 		ToCam =  (Camera - Clouds[i].Center).Normalized();
 		if (SunDir.Dot(Clouds[i].LastLight) < 0.99f)
 		{
-			LightCloud(&Clouds[i], Sun);
-			MakeCloudImpostor(&Clouds[i], Sun, Camera);
+			LightCloud(r, &Clouds[i], Sun);
+			MakeCloudImpostor(r, &Clouds[i], Sun, Camera);
 			Clouds[i].LastLight = SunDir;
 			Clouds[i].LastCamera = ToCam;
 		}
@@ -216,7 +216,7 @@ void VolumetricClouds::Update(Graphics::Renderer *r, const Graphics::Frustum &fr
 			//isn't good enough (the camera has come too close)
 			if ((dot < 0.99f || Clouds[i].ImpostorSize < mip_size) && in_frustum)
 			{
-				MakeCloudImpostor(&Clouds[i], Sun, Camera);
+				MakeCloudImpostor(r, &Clouds[i], Sun, Camera);
 				Clouds[i].LastCamera = ToCam;
 			}
 		}
@@ -287,17 +287,17 @@ void VolumetricClouds::Render(Graphics::Renderer *r, const Graphics::Frustum &fr
 
 		if (Clouds[i].DistanceFromCamera > dist_impostor)
 			//fully impostor
-			RenderCloudImpostor(&Clouds[i], 1.0f);
+			RenderCloudImpostor(r, &Clouds[i], 1.0f);
 		else
 			if (Clouds[i].DistanceFromCamera < dist_3D)
 				//fully 3D
-				RenderCloud3D(&Clouds[i], Camera, Sun, 1.0f);
+				RenderCloud3D(r, &Clouds[i], Camera, Sun, 1.0f);
 			else
 			{
 				//in between, interpolate nicely and tweak the alpha to make it look prettier
 				alpha = (Clouds[i].DistanceFromCamera - dist_3D) / (dist_impostor - dist_3D);		
-				RenderCloudImpostor(&Clouds[i], ALPHA_ADJUST + alpha);
-				RenderCloud3D(&Clouds[i], Camera, Sun, 1.0f - alpha);
+				RenderCloudImpostor(r, &Clouds[i], ALPHA_ADJUST + alpha);
+				RenderCloud3D(r, &Clouds[i], Camera, Sun, 1.0f - alpha);
 			}
 	}
 }
@@ -352,7 +352,7 @@ int glhProjectf(float objx, float objy, float objz, double *modelview, double *p
       return 1;
   }
 
-void VolumetricClouds::MakeCloudImpostor(VolumetricCloud* Cloud, vector3f Sun, vector3f Camera)
+void VolumetricClouds::MakeCloudImpostor(Graphics::Renderer *renderer, VolumetricCloud* Cloud, vector3f Sun, vector3f Camera)
 {
 	unsigned i;
 	
@@ -399,7 +399,8 @@ void VolumetricClouds::MakeCloudImpostor(VolumetricCloud* Cloud, vector3f Sun, v
 	vector3f vx(mat[0], mat[4], mat[8] );
 	vector3f vy(mat[1], mat[5], mat[9] );	
 	
-	Cloud->vx = vx;		Cloud->vy = vy; //store for rendering
+	Cloud->vx = vx;
+	Cloud->vy = vy; //store for rendering
 
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, PuffTexture);
@@ -520,7 +521,7 @@ void VolumetricClouds::MakeCloudImpostor(VolumetricCloud* Cloud, vector3f Sun, v
 	Cloud->ImpostorSize = ViewportSize;
 }
 
-void VolumetricClouds::LightCloud(VolumetricCloud* Cloud, vector3f Sun)
+void VolumetricClouds::LightCloud(Graphics::Renderer *renderer, VolumetricCloud* Cloud, vector3f Sun)
 {
 //	assume Sun is a point!!
 	Sun = Sun.Normalized() * Cloud->Radius * 1.5f + Cloud->Center;
@@ -672,7 +673,7 @@ void VolumetricClouds::LightCloud(VolumetricCloud* Cloud, vector3f Sun)
 	glPopMatrix();				
 }
 
-void VolumetricClouds::RenderCloud3D(VolumetricCloud* Cloud, vector3f Camera, vector3f Sun, float alpha)
+void VolumetricClouds::RenderCloud3D(Graphics::Renderer *renderer, VolumetricCloud* Cloud, vector3f Camera, vector3f Sun, float alpha)
 {
 	unsigned i;
 	
@@ -682,17 +683,12 @@ void VolumetricClouds::RenderCloud3D(VolumetricCloud* Cloud, vector3f Camera, ve
 
 	SortParticles(Cloud, SORT_TOWARD);
 
-	float mat[16];
-	glGetFloatv(GL_MODELVIEW_MATRIX, mat);
+	const matrix4x4f mat = renderer->GetCurrentModelView();
+	//float mat[16];
+	//glGetFloatv(GL_MODELVIEW_MATRIX, mat);
 		
 	vector3f vx(mat[0], mat[4], mat[8] );
-	vector3f vy(mat[1], mat[5], mat[9] );	
-	
-	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, PuffTexture);
-	
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+	vector3f vy(mat[1], mat[5], mat[9] );
 	
 	vector3f Light = (Camera - Sun).Normalized();
 	vector3f Omega;
@@ -713,6 +709,14 @@ void VolumetricClouds::RenderCloud3D(VolumetricCloud* Cloud, vector3f Camera, ve
 
 	vector3f Corner1, Corner2, Corner3, Corner4;
 	Corner1 = -vx - vy; Corner2 = vx - vy; Corner3 = vx + vy; Corner4 = vy - vx;
+
+	Graphics::VertexArray vertices(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_UV0 | Graphics::ATTRIB_DIFFUSE);
+
+	Graphics::MaterialDescriptor desc;
+	desc.vertexColors = true;
+	desc.textures = 1;
+	RefCountedPtr<Graphics::Material> m_material(renderer->CreateMaterial(desc));
+	m_material->texture0 = PuffTexture.Get();
 	
 	for (PuffIter = Cloud->Puffs.begin(); PuffIter != Cloud->Puffs.end(); ++PuffIter)
 	{		
@@ -732,7 +736,12 @@ void VolumetricClouds::RenderCloud3D(VolumetricCloud* Cloud, vector3f Camera, ve
 		ParticleColor.g = (0.3f + Puff->Color.g * phase) * alpha;
 		ParticleColor.b = (0.3f + Puff->Color.b * phase) * alpha;
 		ParticleColor.a = Puff->Color.a * Puff->Life * alpha;
-				
+		
+		vertices.Add(Puff->Position + Corner1 * Puff->Size, ParticleColor, v1);
+		vertices.Add(Puff->Position + Corner2 * Puff->Size, ParticleColor, v2);
+		vertices.Add(Puff->Position + Corner3 * Puff->Size, ParticleColor, v3);
+		vertices.Add(Puff->Position + Corner4 * Puff->Size, ParticleColor, v4);
+
 		*(vp++) = Puff->Position + Corner1 * Puff->Size;
 		*(tp++) = v1;
 		*(cp++) = ParticleColor;
@@ -749,7 +758,27 @@ void VolumetricClouds::RenderCloud3D(VolumetricCloud* Cloud, vector3f Camera, ve
 		*(tp++) = v4;
 		*(cp++) = ParticleColor;
 	}
+
+	//Create vtx & index buffers and copy data
+	Graphics::VertexBufferDesc vbd;
+	vbd.attrib[0].semantic = Graphics::ATTRIB_POSITION;
+	vbd.attrib[0].format   = Graphics::ATTRIB_FORMAT_FLOAT3;
+	vbd.attrib[1].semantic = Graphics::ATTRIB_DIFFUSE;
+	vbd.attrib[1].format   = Graphics::ATTRIB_FORMAT_UBYTE4;
+	vbd.attrib[2].semantic = Graphics::ATTRIB_UV0;
+	vbd.attrib[2].format   = Graphics::ATTRIB_FORMAT_FLOAT2;
+	vbd.numVertices = vertices.GetNumVerts();
+	vbd.usage = Graphics::BUFFER_USAGE_STATIC;
+	RefCountedPtr<Graphics::VertexBuffer> m_vertexBuffer(renderer->CreateVertexBuffer(vbd));
+	m_vertexBuffer->Populate(vertices);
+
+	Graphics::RenderStateDesc rsDesc;
+	rsDesc.blendMode = Graphics::BLEND_ALPHA;
 	
+	renderer->DrawBuffer(m_vertexBuffer.Get(), renderer->CreateRenderState(rsDesc), m_material.Get(), Graphics::TRIANGLE_STRIP);
+	NumSprites += Cloud->Puffs.size();
+	
+	/*
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
@@ -766,10 +795,10 @@ void VolumetricClouds::RenderCloud3D(VolumetricCloud* Cloud, vector3f Camera, ve
 	glDisableClientState(GL_COLOR_ARRAY);
 			
 	glDisable(GL_BLEND);
-	glDisable(GL_TEXTURE_2D);		
+	glDisable(GL_TEXTURE_2D);		*/
 }
 
-void VolumetricClouds::RenderCloudImpostor(VolumetricCloud* Cloud, float alpha)
+void VolumetricClouds::RenderCloudImpostor(Graphics::Renderer *renderer, VolumetricCloud* Cloud, float alpha)
 {
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, Cloud->ImpostorTex);

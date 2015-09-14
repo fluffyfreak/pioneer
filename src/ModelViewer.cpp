@@ -531,7 +531,7 @@ void ModelViewer::DrawModel()
 void ModelViewer::MainLoop()
 {
 	m_VolumeClouds.reset( new VolumetricClouds );
-	m_VolumeClouds->Create( 30, 200, 0 );
+	m_VolumeClouds->Create( m_renderer, 30, 200, 0 );
 
 	double lastTime = SDL_GetTicks() * 0.001;
 	while (!m_done)

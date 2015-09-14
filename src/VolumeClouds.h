@@ -3,7 +3,7 @@
 
 #include "libs.h"
 
-namespace Graphics { class Renderer; class Frustum; }
+namespace Graphics { class Renderer; class Frustum; class Texture; }
 
 #define SORT_TOWARD 0
 #define SORT_AWAY 1
@@ -42,7 +42,7 @@ class VolumetricClouds
 public:
 	VolumetricClouds();
 	
-	int 	Create(const int NumClouds, const float PlaneSize, const float PlaneHeight);	
+	int 	Create(Graphics::Renderer *r, const int NumClouds, const float PlaneSize, const float PlaneHeight);	
 	void	Update(Graphics::Renderer *r, const Graphics::Frustum &frustum, const vector3f& Sun, const vector3f& Camera);
 	void	Render(Graphics::Renderer *r, const Graphics::Frustum &frustum, const vector3f& Sun, const vector3f& Camera);
 	void	Destroy();
@@ -55,16 +55,16 @@ public:
 private:
 
 	void	UpdateCloud(VolumetricCloud* Cloud, vector3f Sun, vector3f Camera);
-	void	RenderCloudImpostor(VolumetricCloud* Cloud, float alpha); 
-	void	RenderCloud3D(VolumetricCloud* Cloud, vector3f Camera, vector3f Sun, float alpha);
+	void	RenderCloudImpostor(Graphics::Renderer *r, VolumetricCloud* Cloud, float alpha); 
+	void	RenderCloud3D(Graphics::Renderer *r, VolumetricCloud* Cloud, vector3f Camera, vector3f Sun, float alpha);
 
-	void	MakeCloudImpostor(VolumetricCloud* Cloud, vector3f Sun, vector3f Camera);
+	void	MakeCloudImpostor(Graphics::Renderer *r, VolumetricCloud* Cloud, vector3f Sun, vector3f Camera);
 	
-	void	LightCloud(VolumetricCloud* Cloud, vector3f Sun);
+	void	LightCloud(Graphics::Renderer *r, VolumetricCloud* Cloud, vector3f Sun);
 	void	GrowCloud(VolumetricCloud* Cloud, int level, float radius, vector3f Position);
 
 	int		GetImpostorSize(float distance2);	
-	void	GenerateTexture();
+	void	GenerateTexture(Graphics::Renderer *r);
 	void	SortParticles(VolumetricCloud* Cloud, int mode);
 
 	class	SortAwayComparison
@@ -94,8 +94,7 @@ private:
 		};
 	} SortCloudToward;
 
-	unsigned PuffTexture;
-	unsigned PuffImage;
+	RefCountedPtr<Graphics::Texture> PuffTexture;
 
 	std::vector<VolumetricCloud> Clouds;
 	
