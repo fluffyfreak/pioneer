@@ -179,6 +179,39 @@ void Camera::Update()
 
 	// depth sort
 	m_sortedBodies.sort();
+
+	//fade space background based on atmosphere thickness and light angle
+	float bgIntensity = 1.f;
+	if (camFrame->GetParent() && camFrame->GetParent()->IsRotFrame()) {
+		//check if camera is near a planet
+		Body *camParentBody = camFrame->GetParent()->GetBody();
+		if (camParentBody && camParentBody->IsType(Object::PLANET)) {
+			Planet *planet = static_cast<Planet*>(camParentBody);
+			const vector3f relpos(planet->GetInterpPositionRelTo(camFrame));
+			double altitude(relpos.Length());
+			double pressure, density;
+			planet->GetAtmosphericState(altitude, &pressure, &density);
+			if (pressure >= 0.001)
+			{
+				//go through all lights to calculate something resembling light intensity
+				float intensity = 0.f;
+				const Player* pBody = Pi::game->GetPlayer();
+				for (Uint32 i = 0; i<m_lightSources.size(); i++)
+				{
+					// Set up data for eclipses. All bodies are assumed to be spheres.
+					const LightSource &it = m_lightSources[i];
+					const vector3f lightDir(it.GetLight().GetPosition().Normalized());
+					intensity += ShadowedIntensity(i, pBody) * std::max(0.f, lightDir.Dot(-relpos.Normalized())) * (it.GetLight().GetDiffuse().GetLuminance() / 255.0f);
+				}
+				intensity = Clamp(intensity, 0.0f, 1.0f);
+
+				//calculate background intensity with some hand-tweaked fuzz applied
+				bgIntensity = Clamp(1.f - std::min(1.f, powf(density, 0.25f)) * (0.3f + powf(intensity, 0.25f)), 0.f, 1.f);
+			}
+		}
+	}
+
+	Pi::game->GetSpace()->GetBackground()->SetIntensity(bgIntensity);
 }
 
 void Camera::Draw(const Body *excludeBody, ShipCockpit* cockpit)
@@ -203,39 +236,6 @@ void Camera::Draw(const Body *excludeBody, ShipCockpit* cockpit)
 		const Color col(255);
 		m_lightSources.push_back(LightSource(0, Graphics::Light(Graphics::Light::LIGHT_DIRECTIONAL, vector3f(0.f), col, col)));
 	}
-
-	//fade space background based on atmosphere thickness and light angle
-	float bgIntensity = 1.f;
-	if (camFrame->GetParent() && camFrame->GetParent()->IsRotFrame()) {
-		//check if camera is near a planet
-		Body *camParentBody = camFrame->GetParent()->GetBody();
-		if (camParentBody && camParentBody->IsType(Object::PLANET)) {
-			Planet *planet = static_cast<Planet*>(camParentBody);
-			const vector3f relpos(planet->GetInterpPositionRelTo(camFrame));
-			double altitude(relpos.Length());
-			double pressure, density;
-			planet->GetAtmosphericState(altitude, &pressure, &density);
-			if (pressure >= 0.001)
-			{
-				//go through all lights to calculate something resembling light intensity
-				float intensity = 0.f;
-				const Player* pBody = Pi::game->GetPlayer();
-				for( Uint32 i=0; i<m_lightSources.size() ; i++ ) 
-				{
-					// Set up data for eclipses. All bodies are assumed to be spheres.
-					const LightSource &it = m_lightSources[i];
-					const vector3f lightDir(it.GetLight().GetPosition().Normalized());
-					intensity += ShadowedIntensity(i, pBody) * std::max(0.f, lightDir.Dot(-relpos.Normalized())) * (it.GetLight().GetDiffuse().GetLuminance() / 255.0f);
-				}
-				intensity = Clamp(intensity, 0.0f, 1.0f);
-
-				//calculate background intensity with some hand-tweaked fuzz applied
-				bgIntensity = Clamp(1.f - std::min(1.f, powf(density, 0.25f)) * (0.3f + powf(intensity, 0.25f)), 0.f, 1.f);
-			}
-		}
-	}
-
-	Pi::game->GetSpace()->GetBackground()->SetIntensity(bgIntensity);
 	Pi::game->GetSpace()->GetBackground()->Draw(trans2bg);
 
 	{
