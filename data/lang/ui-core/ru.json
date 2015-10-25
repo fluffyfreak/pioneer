@@ -575,6 +575,14 @@
       "description" : "",
       "message" : "Мужчина"
    },
+   "MARKET_BUYLINE" : {
+      "description" : "",
+      "message" : "Купить {amount} ед. за {price}"
+   },
+   "MARKET_SELLINE" : {
+      "description" : "",
+      "message" : "Продать {amount} ед. за {price}"
+   },
    "MASS" : {
       "description" : "",
       "message" : "Вес"

@@ -575,6 +575,14 @@
       "description" : "",
       "message" : "Férfi"
    },
+   "MARKET_BUYLINE" : {
+      "description" : "",
+      "message" : "Venni: {amount}, Ár: {price}"
+   },
+   "MARKET_SELLINE" : {
+      "description" : "",
+      "message" : "Eladni: {amount}, Ár: {price}"
+   },
    "MASS" : {
       "description" : "",
       "message" : "Tömeg"
@@ -965,7 +973,7 @@
    },
    "STAR_FIELD_DENSITY" : {
       "description" : "",
-      "message" : "Density of Star field"
+      "message" : "Csillagos ég sűrűsége"
    },
    "STATION_MANAGER" : {
       "description" : "",

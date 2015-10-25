@@ -575,6 +575,14 @@
       "description" : "",
       "message" : "Hombre"
    },
+   "MARKET_BUYLINE" : {
+      "description" : "",
+      "message" : "Comprar {amount} unidades a {price}"
+   },
+   "MARKET_SELLINE" : {
+      "description" : "",
+      "message" : "Vender {amount} unidades a {price}"
+   },
    "MASS" : {
       "description" : "",
       "message" : "Masa"
@@ -921,7 +929,7 @@
    },
    "SHIP_INFORMATION" : {
       "description" : "",
-      "message" : "Información de la nave"
+      "message" : "Información de la Nave"
    },
    "SHIP_IS_ALREADY_FULLY_REPAIRED" : {
       "description" : "",
