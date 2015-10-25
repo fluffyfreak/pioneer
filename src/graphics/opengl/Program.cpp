@@ -129,7 +129,7 @@ struct Shader {
 			AppendSource("#define FRAGMENT_SHADER\n");
 		}
 		AppendSource(code.StripUTF8BOM());
-#if 0
+#if 1
 		static bool s_bDumpShaderSource = true;
 		if (s_bDumpShaderSource) {
 			const char SHADER_OUT_DIR_NAME[] = "shaders";

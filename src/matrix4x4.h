@@ -4,6 +4,7 @@
 #ifndef _MATRIX4X4_H
 #define _MATRIX4X4_H
 
+#include <cassert>
 #include <math.h>
 #include <stdio.h>
 #include "vector3.h"
