@@ -194,6 +194,8 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 		vbd.attrib[1].format   = Graphics::ATTRIB_FORMAT_FLOAT3;
 		vbd.attrib[2].semantic = Graphics::ATTRIB_DIFFUSE;
 		vbd.attrib[2].format   = Graphics::ATTRIB_FORMAT_UBYTE4;
+		vbd.attrib[3].semantic = Graphics::ATTRIB_UV0;
+		vbd.attrib[3].format   = Graphics::ATTRIB_FORMAT_FLOAT2;
 		vbd.numVertices = ctx->NUMVERTICES();
 		vbd.usage = Graphics::BUFFER_USAGE_STATIC;
 		m_vertexBuffer.reset(renderer->CreateVertexBuffer(vbd));
@@ -225,6 +227,10 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 				vtxPtr->col[2] = pColr->b;
 				vtxPtr->col[3] = 255;
 				++pColr; // next colour
+
+				// uv coords
+				vtxPtr->uv.x = 1.0f - float(x) / float(edgeLen);
+				vtxPtr->uv.y = float(y) / float(edgeLen);
 
 				++vtxPtr; // next vertex
 			}
@@ -338,6 +344,9 @@ void GeoPatch::Render(Graphics::Renderer *renderer, const vector3d &campos, cons
 		Pi::statSceneTris += (ctx->GetNumTris());
 		++Pi::statNumPatches;
 
+		// per-patch detail texture scaling value
+		geosphere->GetMaterialParameters().patchDepth = m_depth;
+
 		renderer->DrawBufferIndexed(m_vertexBuffer.get(), ctx->GetIndexBuffer(DetermineIndexbuffer()), rs, mat);
 
 		if(m_numInstances>0)
@@ -397,7 +406,7 @@ void GeoPatch::LODUpdate(const vector3d &campos)
 		if (!kids[0]) {
             assert(!mHasJobRequest);
 			mHasJobRequest = true;
-			
+
 			SQuadSplitRequest *ssrd = new SQuadSplitRequest(v0, v1, v2, v3, centroid.Normalized(), m_depth,
 						geosphere->GetSystemBody()->GetPath(), mPatchID, ctx->GetEdgeLen(),
 						ctx->GetFrac(), geosphere->GetTerrain());

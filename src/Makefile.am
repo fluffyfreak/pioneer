@@ -163,6 +163,7 @@ pioneer_SOURCES	= \
 	CameraController.cpp \
 	CargoBody.cpp \
 	Color.cpp \
+	CollMesh.cpp \
 	CityOnPlanet.cpp \
 	CRC32.cpp \
 	DateTime.cpp \
@@ -309,6 +310,7 @@ pioneer_LDADD += \
 
 if BUILD_WIN32
 pioneer_LDFLAGS = -Wl,-Map=pioneer.map
+modelcompiler_LDFLAGS = -Wl,-Map=modelcompiler.map
 endif
 
 if !HAVE_LUA
@@ -417,6 +419,7 @@ endif
 modelcompiler_SOURCES = \
 	modelcompiler.cpp \
 	Color.cpp \
+	CollMesh.cpp \
 	DateTime.cpp \
 	FileSourceZip.cpp \
 	FileSystem.cpp \

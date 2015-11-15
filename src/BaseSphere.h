@@ -34,7 +34,8 @@ public:
 	static void Uninit();
 	static void UpdateAllBaseSphereDerivatives();
 	static void OnChangeDetailLevel();
-	static void DrawAtmosphereSurface(Graphics::Renderer *renderer,
+
+	void DrawAtmosphereSurface(Graphics::Renderer *renderer,
 		const matrix4x4d &modelView, const vector3d &campos, float rad,
 		Graphics::RenderState *rs, Graphics::Material *mat);
 
@@ -44,6 +45,8 @@ public:
 	struct MaterialParameters {
 		SystemBody::AtmosphereParameters atmosphere;
 		std::vector<Camera::Shadow> shadows;
+		Sint32 patchDepth;
+		Sint32 maxPatchDepth;
 	};
 
 	virtual void Reset()=0;
@@ -53,6 +56,7 @@ public:
 
 	Graphics::RenderState* GetSurfRenderState() const { return m_surfRenderState; }
 	Graphics::Material* GetSurfaceMaterial() const { return m_surfaceMaterial.get(); }
+	MaterialParameters& GetMaterialParameters() { return m_materialParameters; }
 
 protected:
 	const SystemBody *m_sbody;
@@ -66,6 +70,12 @@ protected:
 	Graphics::RenderState *m_atmosRenderState;
 	std::unique_ptr<Graphics::Material> m_surfaceMaterial;
 	std::unique_ptr<Graphics::Material> m_atmosphereMaterial;
+
+	// atmosphere geometry
+	static const int LAT_SEGS = 20;
+	static const int LONG_SEGS = 20;
+	RefCountedPtr<Graphics::VertexBuffer> m_TriFanAbove;
+	RefCountedPtr<Graphics::VertexBuffer> m_LatitudinalStrips[LAT_SEGS];
 
 	//special parameters for shaders
 	MaterialParameters m_materialParameters;

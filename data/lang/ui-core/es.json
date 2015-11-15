@@ -200,7 +200,7 @@
       "message" : "Listado de Tripulación"
    },
    "CRIMINAL_RECORD" : {
-      "description" : "",
+      "description" : "Past crimes / crime history of character",
       "message" : "Registro Criminal"
    },
    "DANGEROUS" : {
@@ -259,6 +259,10 @@
       "description" : "mission deadline date",
       "message" : "Vencimiento"
    },
+   "DUMPING" : {
+      "description" : "The illegal act of dumping waste",
+      "message" : "Vaciando"
+   },
    "D_DAYS_LEFT" : {
       "description" : "",
       "message" : "Días restantes: %d"
@@ -278,6 +282,10 @@
    "EMPLOYMENT" : {
       "description" : "",
       "message" : "Ocupación"
+   },
+   "ENABLE_AUTOSAVE" : {
+      "description" : "Allow the game to autosave when docking",
+      "message" : "Enable Autosave"
    },
    "ENABLE_COCKPIT" : {
       "description" : "Game settings option: to use a cockpit 3D model",
@@ -575,6 +583,14 @@
       "description" : "",
       "message" : "Hombre"
    },
+   "MARKET_BUYLINE" : {
+      "description" : "",
+      "message" : "Comprar {amount} unidades a {price}"
+   },
+   "MARKET_SELLINE" : {
+      "description" : "",
+      "message" : "Vender {amount} unidades a {price}"
+   },
    "MASS" : {
       "description" : "",
       "message" : "Masa"
@@ -759,6 +775,10 @@
       "description" : "",
       "message" : "La velocidad de órbita circular es dada por una velocidad tangencial. La nave se debería mover en una dirección a 90° del eje de la nave/{name}.\n\nLa velocidad de descenso es un mínimo absoluto, y es también tangencial. Una velocidad o ángulo más bajos resultarán en un curso que intersecta con la superficie de {name}.\n\nLa velocidad de escape funcionará, en teoría, en cualquier dirección, mientras que la nave no colisione con {name} en la ruta.\n\t\t"
    },
+   "OUTSTANDING_FINES" : {
+      "description" : "Unpaid fines for crimes committed",
+      "message" : "Multas espectaculares"
+   },
    "OWED" : {
       "description" : "Player owing money to crew members",
       "message" : "Deuda"
@@ -921,7 +941,7 @@
    },
    "SHIP_INFORMATION" : {
       "description" : "",
-      "message" : "Información de la nave"
+      "message" : "Información de la Nave"
    },
    "SHIP_IS_ALREADY_FULLY_REPAIRED" : {
       "description" : "",
@@ -965,7 +985,7 @@
    },
    "STAR_FIELD_DENSITY" : {
       "description" : "",
-      "message" : "Density of Star field"
+      "message" : "Densidad del fondo estelar"
    },
    "STATION_MANAGER" : {
       "description" : "",
@@ -974,6 +994,14 @@
    "STATUS" : {
       "description" : "",
       "message" : "Estatus"
+   },
+   "TECH_CERTIFIED" : {
+      "description" : "Lobby screen shows the tech level (an integer number) of the station",
+      "message" : "Esta estación mantiene un certificado de tecnología de nivel {tech_level}."
+   },
+   "TECH_CERTIFIED_MILITARY" : {
+      "description" : "Lobby screen shows the tech level of the station",
+      "message" : "Esta instalación mantiene una autorización tecnológica militar."
    },
    "THANKS_AND_REMEMBER_TO_BUY_FUEL" : {
       "description" : "",
@@ -1074,6 +1102,10 @@
    "WE_HAVE_NO_BUSINESS_WITH_YOU" : {
       "description" : "Said by the police to law abiding player",
       "message" : "No tenemos asuntos pendientes con usted."
+   },
+   "X_CANNOT_BE_TOLERATED_HERE" : {
+      "description" : "Message to be sent over comms by police when crime is committed by player",
+      "message" : "¡Aquí el {crime} no está tolerado!"
    },
    "YES" : {
       "description" : "Positive answer to a question",

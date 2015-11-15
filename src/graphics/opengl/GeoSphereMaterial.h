@@ -6,7 +6,7 @@
 /*
  * Programs & Materials used by terrain
  */
-#include "libs.h"
+#include "OpenGLLibs.h"
 #include "MaterialGL.h"
 #include "Program.h"
 #include "galaxy/StarSystem.h"
@@ -23,6 +23,9 @@ namespace Graphics {
 			Uniform geosphereAtmosTopRad; // in planet radii
 			Uniform geosphereCenter;
 			Uniform geosphereRadius; // (planet radius)
+			
+			Uniform detailScaleHi;
+			Uniform detailScaleLo;
 
 			Uniform shadows;
 			Uniform occultedLight;
@@ -40,6 +43,7 @@ namespace Graphics {
 		class GeoSphereSurfaceMaterial : public Material {
 			virtual Program *CreateProgram(const MaterialDescriptor &);
 			virtual void Apply();
+			virtual void Unapply();
 
 		protected:
 			void SetGSUniforms();
@@ -50,6 +54,17 @@ namespace Graphics {
 			virtual Program *CreateProgram(const MaterialDescriptor &);
 			virtual void Apply();
 		};
+
+
+		class GeoSphereStarMaterial : public Material {
+			virtual Program *CreateProgram(const MaterialDescriptor &);
+			virtual void Apply();
+			virtual void Unapply();
+
+		protected:
+			void SetGSUniforms();
+		};
+		
 	}
 }
 #endif
