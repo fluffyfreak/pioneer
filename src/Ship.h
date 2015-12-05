@@ -152,6 +152,10 @@ public:
 	float GetHyperspaceCountdown() const { return m_hyperspace.countdown; }
 	bool IsHyperspaceActive() const { return (m_hyperspace.countdown > 0.0); }
 
+	bool UsingSliceDrive() const { return m_usingSliceDrive; }
+	void EngageSliceDrive();
+	void DisengageSliceDrive();
+
 	// 0 to 1.0 is alive, > 1.0 = death
 	double GetHullTemperature() const;
 	// Calculate temperature we would have with wheels down
@@ -362,6 +366,9 @@ private:
 	std::unordered_map<Body*, Uint8> m_relationsMap;
 
 	std::string m_shipName;
+
+	bool m_usingSliceDrive;
+	vector3d m_preSliceVel;
 };
 
 

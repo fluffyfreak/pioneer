@@ -85,6 +85,9 @@ void Ship::SaveToJson(Json::Value &jsonObj, Space *space)
 	m_navLights->SaveToJson(shipObj);
 
 	shipObj["name"] = m_shipName;
+	
+	shipObj["usingSliceDrive"] = m_usingSliceDrive;
+	VectorToJson(shipObj, m_preSliceVel, "preSliceVel");
 
 	jsonObj["ship"] = shipObj; // Add ship object to supplied object.
 }
@@ -120,6 +123,8 @@ void Ship::LoadFromJson(const Json::Value &jsonObj, Space *space)
 	if (!shipObj.isMember("reserve_fuel")) throw SavedGameCorruptException();
 	if (!shipObj.isMember("controller_type")) throw SavedGameCorruptException();
 	if (!shipObj.isMember("name")) throw SavedGameCorruptException();
+	if (!shipObj.isMember("usingSliceDrive")) throw SavedGameCorruptException();
+	if (!shipObj.isMember("preSliceVel")) throw SavedGameCorruptException();
 
 	m_skin.LoadFromJson(shipObj);
 	m_skin.Apply(GetModel());
@@ -195,6 +200,9 @@ void Ship::LoadFromJson(const Json::Value &jsonObj, Space *space)
 
 	m_shipName = shipObj["name"].asString();
 	Properties().Set("shipName", m_shipName);
+
+	m_usingSliceDrive = shipObj["usingSliceDrive"].asBool();
+	JsonToVector(&m_preSliceVel, shipObj, "preSliceVel");
 }
 
 void Ship::InitEquipSet() {
@@ -271,6 +279,9 @@ void Ship::Init()
 	m_hyperspace.now = false;			// TODO: move this on next savegame change, maybe
 	m_hyperspaceCloud = 0;
 
+	m_usingSliceDrive = false;
+	m_preSliceVel = vector3d(0.0, 0.0, 0.0);
+
 	m_landingGearAnimation = GetModel()->FindAnimation("gear_down");
 
 	InitGun("tag_gunmount_0", 0);
@@ -299,7 +310,9 @@ Ship::Ship(ShipType::Id shipId): DynamicBody(),
 	m_controller(0),
 	m_thrusterFuel(1.0),
 	m_reserveFuel(0.0),
-	m_landingGearAnimation(nullptr)
+	m_landingGearAnimation(nullptr),
+	m_usingSliceDrive(false),
+	m_preSliceVel(0.0, 0.0, 0.0)
 {
 	m_flightState = FLYING;
 	m_alertState = ALERT_NONE;
@@ -638,6 +651,9 @@ Ship::HyperjumpStatus Ship::InitiateHyperjumpTo(const SystemPath &dest, int warm
 	m_hyperspace.duration = duration;
 	m_hyperspace.checks = checks;
 
+	// Can't do both.
+	DisengageSliceDrive();
+
 	return Ship::HYPERJUMP_OK;
 }
 
@@ -646,6 +662,25 @@ void Ship::AbortHyperjump() {
 	m_hyperspace.now = false;
 	m_hyperspace.duration = 0;
 	m_hyperspace.checks = LuaRef();
+}
+
+void Ship::EngageSliceDrive()
+{
+	if (!m_usingSliceDrive) {
+		m_usingSliceDrive = true;
+		m_preSliceVel = GetVelocity();
+		vector3d vel = m_preSliceVel.Normalized();
+		vel *= 299792458.0;
+		SetVelocity(vel);
+	}
+}
+
+void Ship::DisengageSliceDrive()
+{
+	if (m_usingSliceDrive) {
+		m_usingSliceDrive = false;
+		SetVelocity(m_preSliceVel);
+	}
 }
 
 float Ship::GetECMRechargeTime()
