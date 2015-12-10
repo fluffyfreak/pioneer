@@ -1209,38 +1209,11 @@ void Ship::StaticUpdate(const float timeStep)
 		Properties().Set("hullPercent", 100.0f * (m_stats.hull_mass_left / float(m_type->hullMass)));
 	}
 
-	// After calling StartHyperspaceTo this Ship must not spawn objects
-	// holding references to it (eg missiles), as StartHyperspaceTo
+	// After calling InitiateHyperjumpTo this Ship must not spawn objects
+	// holding references to it (eg missiles), as InitiateHyperjumpTo
 	// removes the ship from Space::bodies and so the missile will not
 	// have references to this cleared by NotifyRemoved()
-	if (m_hyperspace.now) {
-		m_hyperspace.now = false;
-		EnterHyperspace();
-	}
-
-	if (m_hyperspace.countdown > 0.0f) {
-		// Check the Lua function
-		bool abort = false;
-		lua_State * l = m_hyperspace.checks.GetLua();
-		if (l) {
-			m_hyperspace.checks.PushCopyToStack();
-			if (lua_isfunction(l, -1)) {
-				lua_call(l, 0, 1);
-				abort = !lua_toboolean(l, -1);
-				lua_pop(l, 1);
-			}
-		}
-		if (abort) {
-			AbortHyperjump();
-		} else {
-			m_hyperspace.countdown = m_hyperspace.countdown - timeStep;
-			if (!abort && m_hyperspace.countdown <= 0.0f) {
-				m_hyperspace.countdown = 0;
-				m_hyperspace.now = true;
-				SetFlightState(JUMPING);
-			}
-		}
-	}
+	UpdateHyperspace(timeStep);
 
 	//Add smoke trails for missiles on thruster state
 	if (m_type->tag == ShipType::TAG_MISSILE && m_thrusters.z < 0.0 && 0.1*Pi::rng.Double() < timeStep) {
@@ -1375,6 +1348,39 @@ void Ship::EnterHyperspace() {
 
 	// virtual call, do class-specific things
 	OnEnterHyperspace();
+}
+
+void Ship::UpdateHyperspace(const float timeStep)
+{
+	if (m_hyperspace.now) {
+		m_hyperspace.now = false;
+		EnterHyperspace();
+	}
+
+	if (m_hyperspace.countdown > 0.0f) {
+		// Check the Lua function
+		bool abort = false;
+		lua_State * l = m_hyperspace.checks.GetLua();
+		if (l) {
+			m_hyperspace.checks.PushCopyToStack();
+			if (lua_isfunction(l, -1)) {
+				lua_call(l, 0, 1);
+				abort = !lua_toboolean(l, -1);
+				lua_pop(l, 1);
+			}
+		}
+		if (abort) {
+			AbortHyperjump();
+		}
+		else {
+			m_hyperspace.countdown = m_hyperspace.countdown - timeStep;
+			if (!abort && m_hyperspace.countdown <= 0.0f) {
+				m_hyperspace.countdown = 0;
+				m_hyperspace.now = true;
+				SetFlightState(JUMPING);
+			}
+		}
+	}
 }
 
 void Ship::OnEnterHyperspace() {
