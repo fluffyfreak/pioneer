@@ -34,6 +34,9 @@ static const float TONS_HULL_PER_SHIELD = 10.f;
 HeatGradientParameters_t Ship::s_heatGradientParams;
 const float Ship::DEFAULT_SHIELD_COOLDOWN_TIME = 1.0f;
 
+const float Ship::SliceDrive::DISABLED_COUNTDOWN = -1.0f;
+const float Ship::SliceDrive::ENGAGE_COUNTDOWN = 5.0f;
+
 void Ship::SaveToJson(Json::Value &jsonObj, Space *space)
 {
 	DynamicBody::SaveToJson(jsonObj, space);
@@ -86,8 +89,10 @@ void Ship::SaveToJson(Json::Value &jsonObj, Space *space)
 
 	shipObj["name"] = m_shipName;
 	
-	shipObj["usingSliceDrive"] = m_usingSliceDrive;
-	VectorToJson(shipObj, m_preSliceVel, "preSliceVel");
+	shipObj["slice.inUse"] = m_slicing.inUse;
+	shipObj["slice.now"] = m_slicing.now;
+	shipObj["slice.countdown"] = m_slicing.countdown;
+	VectorToJson(shipObj, m_slicing.prevVel, "slice.prevVel");
 
 	jsonObj["ship"] = shipObj; // Add ship object to supplied object.
 }
@@ -201,8 +206,10 @@ void Ship::LoadFromJson(const Json::Value &jsonObj, Space *space)
 	m_shipName = shipObj["name"].asString();
 	Properties().Set("shipName", m_shipName);
 
-	m_usingSliceDrive = shipObj["usingSliceDrive"].asBool();
-	JsonToVector(&m_preSliceVel, shipObj, "preSliceVel");
+	m_slicing.inUse = shipObj["slice.inUse"].asBool();
+	m_slicing.now = shipObj["slice.now"].asBool();
+	m_slicing.countdown = shipObj["slice.countdown"].asFloat();
+	JsonToVector(&m_slicing.prevVel, shipObj, "slice.prevVel");
 }
 
 void Ship::InitEquipSet() {
@@ -279,8 +286,7 @@ void Ship::Init()
 	m_hyperspace.now = false;			// TODO: move this on next savegame change, maybe
 	m_hyperspaceCloud = 0;
 
-	m_usingSliceDrive = false;
-	m_preSliceVel = vector3d(0.0, 0.0, 0.0);
+	m_slicing = SliceDrive();
 
 	m_landingGearAnimation = GetModel()->FindAnimation("gear_down");
 
@@ -310,9 +316,7 @@ Ship::Ship(ShipType::Id shipId): DynamicBody(),
 	m_controller(0),
 	m_thrusterFuel(1.0),
 	m_reserveFuel(0.0),
-	m_landingGearAnimation(nullptr),
-	m_usingSliceDrive(false),
-	m_preSliceVel(0.0, 0.0, 0.0)
+	m_landingGearAnimation(nullptr)
 {
 	m_flightState = FLYING;
 	m_alertState = ALERT_NONE;
@@ -664,12 +668,72 @@ void Ship::AbortHyperjump() {
 	m_hyperspace.checks = LuaRef();
 }
 
+// ------------------------------------------------------------
+// slice drive methods
+bool Ship::RequestSliceDrive()
+{
+	if (IsHyperspaceActive())
+		return false;
+
+	m_slicing.countdown = SliceDrive::ENGAGE_COUNTDOWN;
+	m_slicing.now = false;
+	m_slicing.checks = LuaRef();
+	return true;
+}
+
+float Ship::SliceReadyPercentage()
+{
+	return m_slicing.countdown / SliceDrive::ENGAGE_COUNTDOWN;
+}
+
+void Ship::AbortSliceDrive()
+{
+	m_slicing.Reset();
+}
+
+void Ship::UpdateSliceDrive(const float timeStep)
+{
+	// After calling StartHyperspaceTo this Ship must not spawn objects
+	// holding references to it (eg missiles), as StartHyperspaceTo
+	// removes the ship from Space::bodies and so the missile will not
+	// have references to this cleared by NotifyRemoved()
+	if (m_slicing.now) {
+		m_slicing.now = false;
+		EngageSliceDrive();
+	}
+
+	if (m_slicing.countdown > 0.0f) {
+		// Check the Lua function
+		bool abort = false;
+		lua_State * l = m_slicing.checks.GetLua();
+		if (l) {
+			m_slicing.checks.PushCopyToStack();
+			if (lua_isfunction(l, -1)) {
+				lua_call(l, 0, 1);
+				abort = !lua_toboolean(l, -1);
+				lua_pop(l, 1);
+			}
+		}
+		if (abort) {
+			AbortSliceDrive();
+		}
+		else {
+			m_slicing.countdown -= timeStep;
+			if (!abort && m_slicing.countdown <= 0.0f) {
+				m_slicing.countdown = SliceDrive::DISABLED_COUNTDOWN;
+				m_slicing.now = true;
+			}
+		}
+	}
+}
+
 void Ship::EngageSliceDrive()
 {
-	if (!m_usingSliceDrive) {
-		m_usingSliceDrive = true;
-		m_preSliceVel = GetVelocity();
-		vector3d vel = m_preSliceVel.Normalized();
+	if (!m_slicing.inUse) {
+		m_slicing.Reset();
+		m_slicing.inUse = true;
+		m_slicing.prevVel = GetVelocity();
+		vector3d vel = m_slicing.prevVel.Normalized();
 		vel *= 299792458.0;
 		SetVelocity(vel);
 	}
@@ -677,9 +741,9 @@ void Ship::EngageSliceDrive()
 
 void Ship::DisengageSliceDrive()
 {
-	if (m_usingSliceDrive) {
-		m_usingSliceDrive = false;
-		SetVelocity(m_preSliceVel);
+	if (m_slicing.inUse) {
+		SetVelocity(m_slicing.prevVel);
+		m_slicing.Reset();
 	}
 }
 
@@ -1276,6 +1340,8 @@ void Ship::StaticUpdate(const float timeStep)
 			}
 		}
 	}
+
+	UpdateSliceDrive(timeStep);
 
 	//Add smoke trails for missiles on thruster state
 	if (m_type->tag == ShipType::TAG_MISSILE && m_thrusters.z < 0.0 && 0.1*Pi::rng.Double() < timeStep) {

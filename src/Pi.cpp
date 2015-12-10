@@ -841,7 +841,7 @@ void Pi::HandleEvents()
 								if (Pi::player->UsingSliceDrive()) {
 									Pi::player->DisengageSliceDrive();
 								} else {
-									Pi::player->EngageSliceDrive();
+									Pi::player->RequestSliceDrive();
 								}
 							}
 							break;

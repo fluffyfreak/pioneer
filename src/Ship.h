@@ -152,8 +152,10 @@ public:
 	float GetHyperspaceCountdown() const { return m_hyperspace.countdown; }
 	bool IsHyperspaceActive() const { return (m_hyperspace.countdown > 0.0); }
 
-	bool UsingSliceDrive() const { return m_usingSliceDrive; }
-	void EngageSliceDrive();
+	bool UsingSliceDrive() const { return m_slicing.inUse; }
+	bool RequestSliceDrive();
+	float SliceReadyPercentage();
+	void AbortSliceDrive();
 	void DisengageSliceDrive();
 
 	// 0 to 1.0 is alive, > 1.0 = death
@@ -312,6 +314,9 @@ private:
 	void InitMaterials();
 	void InitEquipSet();
 
+	void UpdateSliceDrive(const float timeStep);
+	void EngageSliceDrive();
+
 	bool m_invulnerable;
 
 	static const float DEFAULT_SHIELD_COOLDOWN_TIME;
@@ -367,8 +372,23 @@ private:
 
 	std::string m_shipName;
 
-	bool m_usingSliceDrive;
-	vector3d m_preSliceVel;
+	struct SliceDrive {
+		static const float DISABLED_COUNTDOWN;
+		static const float ENGAGE_COUNTDOWN;
+		SliceDrive(): inUse(false), now(false), countdown(DISABLED_COUNTDOWN), prevVel(0.0,0.0,0.0) {}
+		void Reset() { 
+			inUse = false;
+			now = false;
+			countdown = DISABLED_COUNTDOWN;
+			checks = LuaRef();
+		}
+		bool inUse;
+		bool now;
+		// > 0 means active
+		float countdown;
+		vector3d prevVel;
+		LuaRef checks; // A Lua function to check all the conditions before the jump
+	} m_slicing;
 };
 
 
