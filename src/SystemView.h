@@ -77,7 +77,7 @@ private:
 	void PutSelectionBox(const vector3d &worldPos, const Color &col);
 	void GetTransformTo(const SystemBody *b, vector3d &pos);
 	void OnClickObject(const SystemBody *b);
-	void OnClickLagrange();
+	void OnClickLagrange(const Orbit *orb, bool isL5);
 	void OnClickAccel(float step);
 	void OnClickRealt();
 	void OnIncreaseFactorButtonClick(void), OnResetFactorButtonClick(void), OnDecreaseFactorButtonClick(void);

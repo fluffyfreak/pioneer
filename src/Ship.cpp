@@ -607,6 +607,7 @@ void Ship::UpdateLuaStats() {
 	p.Set("hyperspaceRange", m_stats.hyperspace_range);
 	p.Set("maxHyperspaceRange", m_stats.hyperspace_range_max);
 }
+
 void Ship::UpdateFuelStats()
 {
 	m_stats.fuel_tank_mass_left = m_type->fuelTankMass * GetFuel();
@@ -625,13 +626,15 @@ Ship::HyperjumpStatus Ship::CheckHyperjumpCapability() const {
 	return HYPERJUMP_OK;
 }
 
-Ship::HyperjumpStatus Ship::InitiateHyperjumpTo(const SystemPath &dest, int warmup_time, double duration, LuaRef checks) {
+Ship::HyperjumpStatus Ship::InitiateHyperjumpTo(const SystemPath &dest, int warmup_time, double duration, LuaRef checks) 
+{
 	if (!dest.HasValidSystem() || GetFlightState() != FLYING || warmup_time < 1)
 		return HYPERJUMP_SAFETY_LOCKOUT;
 	StarSystem *s = Pi::game->GetSpace()->GetStarSystem().Get();
 	if (s && s->GetPath().IsSameSystem(dest))
 		return HYPERJUMP_CURRENT_SYSTEM;
 
+	m_hyperspace.isInSystem = false;
 	m_hyperspace.dest = dest;
 	m_hyperspace.countdown = warmup_time;
 	m_hyperspace.now = false;
@@ -641,7 +644,25 @@ Ship::HyperjumpStatus Ship::InitiateHyperjumpTo(const SystemPath &dest, int warm
 	return Ship::HYPERJUMP_OK;
 }
 
-void Ship::AbortHyperjump() {
+Ship::HyperjumpStatus Ship::InitiateHyperjumpTo(const Orbit &dest, const bool isL5, int warmup_time, double duration, LuaRef checks)
+{
+	if (GetFlightState() != FLYING || warmup_time < 1)
+		return HYPERJUMP_SAFETY_LOCKOUT;
+
+	m_hyperspace.isInSystem = true;
+	m_hyperspace.inSys = std::make_pair(dest, isL5);
+	m_hyperspace.countdown = warmup_time;
+	m_hyperspace.now = false;
+	m_hyperspace.duration = duration;
+	m_hyperspace.checks = checks;
+
+	return Ship::HYPERJUMP_OK;
+
+}
+
+void Ship::AbortHyperjump() 
+{
+	m_hyperspace.isInSystem = false;
 	m_hyperspace.countdown = 0;
 	m_hyperspace.now = false;
 	m_hyperspace.duration = 0;

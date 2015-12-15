@@ -148,6 +148,7 @@ public:
 
 	Ship::HyperjumpStatus CheckHyperjumpCapability() const;
 	virtual Ship::HyperjumpStatus InitiateHyperjumpTo(const SystemPath &dest, int warmup_time, double duration, LuaRef checks);
+	virtual Ship::HyperjumpStatus InitiateHyperjumpTo(const Orbit &dest, const bool isL5, int warmup_time, double duration, LuaRef checks);
 	virtual void AbortHyperjump();
 	float GetHyperspaceCountdown() const { return m_hyperspace.countdown; }
 	bool IsHyperspaceActive() const { return (m_hyperspace.countdown > 0.0); }
@@ -334,7 +335,10 @@ private:
 	Space::BodyNearList m_nearbyBodies;
 
 	struct HyperspacingOut {
+		HyperspacingOut() : isInSystem(false), countdown(0.0), now(false), duration(0.0), checks(LuaRef()) {}
+		bool isInSystem;
 		SystemPath dest;
+		std::pair<Orbit, bool> inSys;
 		// > 0 means active
 		float countdown;
 		bool now;
