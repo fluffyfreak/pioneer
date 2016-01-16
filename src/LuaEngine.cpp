@@ -362,6 +362,38 @@ static int l_engine_set_cockpit_enabled(lua_State *l)
 	return 0;
 }
 
+static int l_engine_get_aniso_enabled(lua_State *l)
+{
+	lua_pushboolean(l, Pi::config->Int("UseAnisotropicFiltering") != 0);
+	return 1;
+}
+
+static int l_engine_set_aniso_enabled(lua_State *l)
+{
+	if (lua_isnone(l, 1))
+		return luaL_error(l, "SetAnisoEnabled takes one boolean argument");
+	const bool enabled = lua_toboolean(l, 1);
+	Pi::config->SetInt("UseAnisotropicFiltering", (enabled ? 1 : 0));
+	Pi::config->Save();
+	return 0;
+}
+
+static int l_engine_get_autosave_enabled(lua_State *l)
+{
+	lua_pushboolean(l, Pi::config->Int("EnableAutosave") != 0);
+	return 1;
+}
+
+static int l_engine_set_autosave_enabled(lua_State *l)
+{
+	if (lua_isnone(l, 1))
+		return luaL_error(l, "SetAutopilotEnabled takes one boolean argument");
+	const bool enabled = lua_toboolean(l, 1);
+	Pi::config->SetInt("EnableAutosave", (enabled ? 1 : 0));
+	Pi::config->Save();
+	return 0;
+}
+
 static int l_engine_get_display_hud_trails(lua_State *l)
 {
 	lua_pushboolean(l, Pi::config->Int("HudTrails") != 0);
@@ -805,6 +837,12 @@ void LuaEngine::Register()
 
 		{ "GetCockpitEnabled", l_engine_get_cockpit_enabled },
 		{ "SetCockpitEnabled", l_engine_set_cockpit_enabled },
+
+		{ "GetAnisoFiltering", l_engine_get_aniso_enabled },
+		{ "SetAnisoFiltering", l_engine_set_aniso_enabled },
+
+		{ "GetAutosaveEnabled", l_engine_get_autosave_enabled },
+		{ "SetAutosaveEnabled", l_engine_set_autosave_enabled },
 
 		{ "GetDisplayHudTrails", l_engine_get_display_hud_trails },
 		{ "SetDisplayHudTrails", l_engine_set_display_hud_trails },

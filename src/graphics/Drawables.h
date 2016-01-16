@@ -85,7 +85,6 @@ private:
 	void CreateVertexBuffer(Graphics::Renderer *r, const Uint32 size);
 
 	bool m_refreshVertexBuffer;
-	float m_width;
 	RefCountedPtr<Material> m_material;
 	RefCountedPtr<VertexBuffer> m_vertexBuffer;
 	std::unique_ptr<VertexArray> m_va;
@@ -144,8 +143,8 @@ private:
 	//add a new vertex, return the index
 	int AddVertex(VertexArray&, const vector3f &v, const vector3f &n);
 	//add three vertex indices to form a triangle
-	void AddTriangle(std::vector<Uint16>&, int i1, int i2, int i3);
-	void Subdivide(VertexArray&, std::vector<Uint16>&,
+	void AddTriangle(std::vector<Uint32>&, int i1, int i2, int i3);
+	void Subdivide(VertexArray&, std::vector<Uint32>&,
 		const matrix4x4f &trans, const vector3f &v1, const vector3f &v2, const vector3f &v3,
 		int i1, int i2, int i3, int depth);
 };
@@ -154,8 +153,18 @@ private:
 // a textured quad with reversed winding
 class TexturedQuad {
 public:
+	// Simple constructor to build a textured quad from an image.
+	// Note: this is intended for UI icons and similar things, and it builds the
+	// texture with that in mind (e.g., no texture compression because compression
+	// tends to create visible artefacts when used on UI-style textures that have
+	// edges/lines, etc)
+	// XXX: This is totally the wrong place for this helper function.
+	TexturedQuad(Graphics::Renderer *r, const std::string &filename);
+
+	// Build a textured quad to display an arbitrary texture.
 	TexturedQuad(Graphics::Renderer *r, Graphics::Texture *texture, const vector2f &pos, const vector2f &size, RenderState *state);
 	virtual void Draw(Graphics::Renderer *r);
+	virtual void Draw(Graphics::Renderer *r, const Color4ub &tint);
 	const Graphics::Texture* GetTexture() const { return m_texture.Get(); }
 private:
 	RefCountedPtr<Graphics::Texture> m_texture;

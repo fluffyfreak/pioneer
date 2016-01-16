@@ -287,6 +287,10 @@
       "description" : "",
       "message" : "Mindsk indstillet hastighed"
    },
+   "DECREASE_TIME_ACCELERATION" : {
+      "description" : "",
+      "message" : "Decrease Time Acceleration"
+   },
    "DEMOGRAPHICS" : {
       "description" : "",
       "message" : "Demografi"
@@ -429,7 +433,7 @@
    },
    "GAME_LOAD_CANNOT_OPEN" : {
       "description" : "",
-      "message" : "Denne gemning kunne ikke åbnes på grund af rettigheder eller lignende..."
+      "message" : "Save file '%filename' could not be found (or the game does not have access to open it)."
    },
    "GAME_LOAD_CORRUPT" : {
       "description" : "",
@@ -595,6 +599,10 @@
       "description" : "",
       "message" : "Øg indstillet hastighed"
    },
+   "INCREASE_TIME_ACCELERATION" : {
+      "description" : "",
+      "message" : "Increase Time Acceleration"
+   },
    "INDUSTRIAL_COLONY" : {
       "description" : "",
       "message" : "Industriel koloni."
@@ -639,6 +647,10 @@
       "description" : "",
       "message" : "%speed{f.2} km/s rel.t. %frame"
    },
+   "L4L5_DISPLAY_MODE_TOGGLE" : {
+      "description" : "Either show L4/L5 points or don't",
+      "message" : "Switch between Lagrange L4/L5 point display modes."
+   },
    "LANDED" : {
       "description" : "",
       "message" : "Landet"
@@ -658,6 +670,10 @@
    "LASER_FIRE_DETECTED" : {
       "description" : "",
       "message" : "Laserskud detekteret."
+   },
+   "LATITUDE" : {
+      "description" : "Short for latitude",
+      "message" : "Lat:"
    },
    "LEGAL_CURRENT_SYSTEM" : {
       "description" : "Short (tooltip) description of commodity (singular) status in the system the player is currently in",
@@ -683,13 +699,13 @@
       "description" : "",
       "message" : "Levende Dyr"
    },
-   "LOCAL_ARM" : {
-      "description" : "Arm of the Milky Way galaxy",
-      "message" : "Local arm"
-   },
    "LOCKED" : {
       "description" : "to lock a hyperspace target",
       "message" : "låst"
+   },
+   "LONGITUDE" : {
+      "description" : "Short for longitude",
+      "message" : "Long:"
    },
    "MAJOR_EXPORTS" : {
       "description" : "",
@@ -907,18 +923,6 @@
       "description" : "",
       "message" : "Sep"
    },
-   "MULTI_SCOOP" : {
-      "description" : "A ship equipment: a cargo scoop and fuel scoop combined to one",
-      "message" : "Multi Scoop"
-   },
-   "MULTI_SCOOP_DESCRIPTION" : {
-      "description" : "",
-      "message" : "Although less effective than a fuel scoop it permits scooping of both cargo and fuel"
-   },
-   "MURDER" : {
-      "description" : "",
-      "message" : "Mord"
-   },
    "M_S_RELATIVE_TO" : {
       "description" : "",
       "message" : "%speed{f.0} m/s rel.t. %frame"
@@ -947,10 +951,6 @@
       "description" : "",
       "message" : "Nervegas"
    },
-   "NORMA_ARM" : {
-      "description" : "Arm of the Milky Way galaxy",
-      "message" : "Norma arm"
-   },
    "NOT_FOUND" : {
       "description" : "searching star system in sector view",
       "message" : "Ikke fundet"
@@ -958,6 +958,10 @@
    "NOT_FOUND_BEST_MATCH_X" : {
       "description" : "",
       "message" : "Ikke fundet, bedste match: %system"
+   },
+   "NOW" : {
+      "description" : "In System Orbit View",
+      "message" : "Now"
    },
    "NO_ALERT" : {
       "description" : "",
@@ -1075,10 +1079,6 @@
       "description" : "",
       "message" : "Udendørs landbrugsverden."
    },
-   "OUTER_ARM" : {
-      "description" : "Arm of the Milky Way galaxy",
-      "message" : "Ydre arm"
-   },
    "OVER_N_BILLION" : {
       "description" : "",
       "message" : "Over %population millarder"
@@ -1103,17 +1103,9 @@
       "description" : "",
       "message" : "Afstand til periapse"
    },
-   "PERSEUS_ARM" : {
-      "description" : "Arm of the Milky Way galaxy",
-      "message" : "Perseus arm"
-   },
    "PIONEER" : {
       "description" : "",
       "message" : "PIONEER"
-   },
-   "PIRACY" : {
-      "description" : "",
-      "message" : "Pirateri"
    },
    "PITCH" : {
       "description" : "",
@@ -1170,10 +1162,6 @@
    "PLUTOCRATIC_DICTATORSHIP" : {
       "description" : "",
       "message" : "Plutokratisk diktatur"
-   },
-   "POLICE_SHIP_REGISTRATION" : {
-      "description" : "",
-      "message" : "POLITI"
    },
    "POPULATION" : {
       "description" : "",
@@ -1275,10 +1263,6 @@
       "description" : "",
       "message" : "Affald"
    },
-   "SAGITTARIUS_ARM" : {
-      "description" : "Arm of the Milky Way galaxy",
-      "message" : "Sagittarius arm"
-   },
    "SCANNER_CONTROL" : {
       "description" : "",
       "message" : "Skannerkontrol"
@@ -1290,10 +1274,6 @@
    "SCREENSHOT_FILENAME_TEMPLATE" : {
       "description" : "",
       "message" : "screenshot%index{d08}.png"
-   },
-   "SCUTUM_CENTAURUS_ARM" : {
-      "description" : "Arm of the Milky Way galaxy",
-      "message" : "Scutum-Centaurus arm"
    },
    "SEARCH" : {
       "description" : "",
@@ -1655,10 +1635,6 @@
       "description" : "",
       "message" : "tynd"
    },
-   "THREE_KPC_ARM" : {
-      "description" : "Arm of the Milky Way galaxy",
-      "message" : "3kpc arm"
-   },
    "THRIVING_OUTDOOR_WORLD" : {
       "description" : "",
       "message" : "Trivende udendørsverden."
@@ -1695,6 +1671,10 @@
       "description" : "",
       "message" : "Lille"
    },
+   "TOGGLE_EQUIPMENT_VIEW" : {
+      "description" : "Tooltip for the Equipment View button",
+      "message" : "Equipment View"
+   },
    "TOGGLE_HUD_MODE" : {
       "description" : "",
       "message" : "Skift HUD-tilstand"
@@ -1706,6 +1686,10 @@
    "TOGGLE_ROTATION_DAMPING" : {
       "description" : "",
       "message" : "Aktivér rotationsdæmpning"
+   },
+   "TOGGLE_SCANNER_VIEW" : {
+      "description" : "Tooltip for the Scanner View button",
+      "message" : "Scanner View"
    },
    "TOGGLE_SCAN_MODE" : {
       "description" : "",
@@ -1742,10 +1726,6 @@
    "UNKNOWN" : {
       "description" : "",
       "message" : "<ukendt>"
-   },
-   "UNLAWFUL_WEAPONS_DISCHARGE" : {
-      "description" : "",
-      "message" : "Lovstridig våbenaffyring"
    },
    "UNSET_NAVTARGET" : {
       "description" : "",
@@ -1810,10 +1790,6 @@
    "X" : {
       "description" : "keybinding: x axis",
       "message" : "X"
-   },
-   "X_CANNOT_BE_TOLERATED_HERE" : {
-      "description" : "",
-      "message" : "%crime bliver ikke tolereret her."
    },
    "Y" : {
       "description" : "keybinding: y axis",

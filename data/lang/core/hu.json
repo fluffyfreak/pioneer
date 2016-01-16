@@ -287,6 +287,10 @@
       "description" : "",
       "message" : "Beállított sebesség csökkentése"
    },
+   "DECREASE_TIME_ACCELERATION" : {
+      "description" : "",
+      "message" : "Decrease Time Acceleration"
+   },
    "DEMOGRAPHICS" : {
       "description" : "",
       "message" : "Demográfia"
@@ -429,7 +433,7 @@
    },
    "GAME_LOAD_CANNOT_OPEN" : {
       "description" : "",
-      "message" : "Ez a fájl nem nyitható meg, talán jogosultági okokból, vagy ilyesmi..."
+      "message" : "Save file '%filename' could not be found (or the game does not have access to open it)."
    },
    "GAME_LOAD_CORRUPT" : {
       "description" : "",
@@ -595,6 +599,10 @@
       "description" : "",
       "message" : "Beállított sebesség növelése"
    },
+   "INCREASE_TIME_ACCELERATION" : {
+      "description" : "",
+      "message" : "Increase Time Acceleration"
+   },
    "INDUSTRIAL_COLONY" : {
       "description" : "",
       "message" : "Ipari kolónia"
@@ -639,6 +647,10 @@
       "description" : "",
       "message" : "Relatív sebesség (%frame): %speed{f.2} km/s"
    },
+   "L4L5_DISPLAY_MODE_TOGGLE" : {
+      "description" : "Either show L4/L5 points or don't",
+      "message" : "Switch between Lagrange L4/L5 point display modes."
+   },
    "LANDED" : {
       "description" : "",
       "message" : "Leszállt"
@@ -658,6 +670,10 @@
    "LASER_FIRE_DETECTED" : {
       "description" : "",
       "message" : "Lézerlövés érzékelve."
+   },
+   "LATITUDE" : {
+      "description" : "Short for latitude",
+      "message" : "Lat:"
    },
    "LEGAL_CURRENT_SYSTEM" : {
       "description" : "Short (tooltip) description of commodity (singular) status in the system the player is currently in",
@@ -683,13 +699,13 @@
       "description" : "",
       "message" : "Élőállat"
    },
-   "LOCAL_ARM" : {
-      "description" : "Arm of the Milky Way galaxy",
-      "message" : "Helyi kar"
-   },
    "LOCKED" : {
       "description" : "to lock a hyperspace target",
       "message" : "zárolt"
+   },
+   "LONGITUDE" : {
+      "description" : "Short for longitude",
+      "message" : "Long:"
    },
    "MAJOR_EXPORTS" : {
       "description" : "",
@@ -907,18 +923,6 @@
       "description" : "",
       "message" : "Szep"
    },
-   "MULTI_SCOOP" : {
-      "description" : "A ship equipment: a cargo scoop and fuel scoop combined to one",
-      "message" : "Kombinált szívó"
-   },
-   "MULTI_SCOOP_DESCRIPTION" : {
-      "description" : "",
-      "message" : "Bár kevésbé hatékony üzemanyagszívó üzemmódban, mint a hagyományos üzemanyagszívó de lehetővé teszi rakomány befogását is."
-   },
-   "MURDER" : {
-      "description" : "",
-      "message" : "Gyilkosság"
-   },
    "M_S_RELATIVE_TO" : {
       "description" : "",
       "message" : "Relatív sebesség (%frame): %speed{f.0} m/s"
@@ -947,10 +951,6 @@
       "description" : "",
       "message" : "Ideggáz"
    },
-   "NORMA_ARM" : {
-      "description" : "Arm of the Milky Way galaxy",
-      "message" : "Norma kar"
-   },
    "NOT_FOUND" : {
       "description" : "searching star system in sector view",
       "message" : "Nincs ilyen"
@@ -958,6 +958,10 @@
    "NOT_FOUND_BEST_MATCH_X" : {
       "description" : "",
       "message" : "Nincs, közeli egyezés: %system"
+   },
+   "NOW" : {
+      "description" : "In System Orbit View",
+      "message" : "Now"
    },
    "NO_ALERT" : {
       "description" : "",
@@ -1075,10 +1079,6 @@
       "description" : "",
       "message" : "Szabadföldi agrikulturális világ"
    },
-   "OUTER_ARM" : {
-      "description" : "Arm of the Milky Way galaxy",
-      "message" : "Külső kar"
-   },
    "OVER_N_BILLION" : {
       "description" : "",
       "message" : "Több, mint %population milliárd"
@@ -1103,17 +1103,9 @@
       "description" : "",
       "message" : "Periapszis"
    },
-   "PERSEUS_ARM" : {
-      "description" : "Arm of the Milky Way galaxy",
-      "message" : "Perseus kar"
-   },
    "PIONEER" : {
       "description" : "",
       "message" : "PIONEER"
-   },
-   "PIRACY" : {
-      "description" : "",
-      "message" : "Kalózkodás"
    },
    "PITCH" : {
       "description" : "",
@@ -1170,10 +1162,6 @@
    "PLUTOCRATIC_DICTATORSHIP" : {
       "description" : "",
       "message" : "Plutokrata diktatúra"
-   },
-   "POLICE_SHIP_REGISTRATION" : {
-      "description" : "",
-      "message" : "RENDŐRSÉG"
    },
    "POPULATION" : {
       "description" : "",
@@ -1275,10 +1263,6 @@
       "description" : "",
       "message" : "Hulladék"
    },
-   "SAGITTARIUS_ARM" : {
-      "description" : "Arm of the Milky Way galaxy",
-      "message" : "Sagittarius kar"
-   },
    "SCANNER_CONTROL" : {
       "description" : "",
       "message" : "Szkenner irányítás"
@@ -1290,10 +1274,6 @@
    "SCREENSHOT_FILENAME_TEMPLATE" : {
       "description" : "",
       "message" : "screenshot%index{d08}.png"
-   },
-   "SCUTUM_CENTAURUS_ARM" : {
-      "description" : "Arm of the Milky Way galaxy",
-      "message" : "Scutum-Centaurus kar"
    },
    "SEARCH" : {
       "description" : "",
@@ -1655,10 +1635,6 @@
       "description" : "",
       "message" : "vékony"
    },
-   "THREE_KPC_ARM" : {
-      "description" : "Arm of the Milky Way galaxy",
-      "message" : "3kpsz kar"
-   },
    "THRIVING_OUTDOOR_WORLD" : {
       "description" : "",
       "message" : "Virágzó világ"
@@ -1695,6 +1671,10 @@
       "description" : "",
       "message" : "Apró"
    },
+   "TOGGLE_EQUIPMENT_VIEW" : {
+      "description" : "Tooltip for the Equipment View button",
+      "message" : "Equipment View"
+   },
    "TOGGLE_HUD_MODE" : {
       "description" : "",
       "message" : "HUD mód váltás"
@@ -1706,6 +1686,10 @@
    "TOGGLE_ROTATION_DAMPING" : {
       "description" : "",
       "message" : "Forgásfékezés ki-be"
+   },
+   "TOGGLE_SCANNER_VIEW" : {
+      "description" : "Tooltip for the Scanner View button",
+      "message" : "Scanner View"
    },
    "TOGGLE_SCAN_MODE" : {
       "description" : "",
@@ -1742,10 +1726,6 @@
    "UNKNOWN" : {
       "description" : "",
       "message" : "<ismeretlen>"
-   },
-   "UNLAWFUL_WEAPONS_DISCHARGE" : {
-      "description" : "",
-      "message" : "Törvénytelen fegyverhasználat"
    },
    "UNSET_NAVTARGET" : {
       "description" : "",
@@ -1810,10 +1790,6 @@
    "X" : {
       "description" : "keybinding: x axis",
       "message" : "X"
-   },
-   "X_CANNOT_BE_TOLERATED_HERE" : {
-      "description" : "",
-      "message" : "A(z) %crime bűntény itt nem elfogadott."
    },
    "Y" : {
       "description" : "keybinding: y axis",

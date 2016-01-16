@@ -11,7 +11,6 @@
 #include "Factions.h"
 #include "FileSystem.h"
 #include "Frame.h"
-#include "GalacticView.h"
 #include "Game.h"
 #include "BaseSphere.h"
 #include "Intro.h"
@@ -81,6 +80,13 @@
 #include <algorithm>
 #include <sstream>
 
+#if defined(_MSC_VER) || defined(__MINGW32__)
+	// RegisterClassA and RegisterClassW are defined as macros in WinUser.h
+	#ifdef RegisterClass
+	#undef RegisterClass
+	#endif
+#endif
+
 float Pi::gameTickAlpha;
 sigc::signal<void, SDL_Keysym*> Pi::onKeyPress;
 sigc::signal<void, SDL_Keysym*> Pi::onKeyRelease;
@@ -118,7 +124,7 @@ bool Pi::doProfileOne = false;
 int Pi::statSceneTris = 0;
 int Pi::statNumPatches = 0;
 GameConfig *Pi::config;
-struct DetailLevel Pi::detail = { 0, 0 };
+DetailLevel Pi::detail;
 bool Pi::joystickEnabled;
 bool Pi::mouseYInvert;
 bool Pi::compactScanner;
@@ -407,6 +413,7 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 	videoSettings.requestedSamples = config->Int("AntiAliasingMode");
 	videoSettings.vsync = (config->Int("VSync") != 0);
 	videoSettings.useTextureCompression = (config->Int("UseTextureCompression") != 0);
+	videoSettings.useAnisotropicFiltering = (config->Int("UseAnisotropicFiltering") != 0);
 	videoSettings.enableDebugMessages = (config->Int("EnableGLDebug") != 0);
 	videoSettings.iconFile = OS::GetIconFilename();
 	videoSettings.title = "Pioneer";
@@ -451,7 +458,17 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 	Output("Lua::Init()\n");
 	Lua::Init();
 
-	Pi::ui.Reset(new UI::Context(Lua::manager, Pi::renderer, Graphics::GetScreenWidth(), Graphics::GetScreenHeight()));
+	float ui_scale = config->Float("UIScaleFactor", 1.0f);
+	if (Graphics::GetScreenHeight() < 768) {
+		ui_scale = float(Graphics::GetScreenHeight()) / 768.0f;
+	}
+
+	Pi::ui.Reset(new UI::Context(
+		Lua::manager,
+		Pi::renderer,
+		Graphics::GetScreenWidth(),
+		Graphics::GetScreenHeight(),
+		ui_scale));
 
 	Pi::serverAgent = 0;
 	if (config->Int("EnableServerAgent")) {

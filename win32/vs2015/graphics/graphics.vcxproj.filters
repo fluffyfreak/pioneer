@@ -69,9 +69,6 @@
       <Filter>dummy</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\graphics\Stats.cpp" />
-    <ClCompile Include="..\..\..\src\graphics\opengl\DepthTextureMaterial.cpp">
-      <Filter>opengl</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\graphics\Drawables.h" />
@@ -169,6 +166,10 @@
     <ClInclude Include="..\..\..\src\graphics\opengl\DepthTextureMaterial.h">
       <Filter>opengl</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\src\graphics\opengl\OpenGLLibs.h">
+      <Filter>opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\graphics\Types.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="win32">
