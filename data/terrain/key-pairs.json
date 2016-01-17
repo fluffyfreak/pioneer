@@ -1,0 +1,1101 @@
+{
+   "Mappings" : [
+      {
+         "type" : "BROWN_DWARF",
+         "keys" : [
+			{
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "BrownDwarf"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "WHITE_DWARF",
+         "keys" : [
+			{
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "WhiteDwarf"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "STAR_M",
+         "keys" : [
+            {
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarM"
+                  },
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarM"
+                  },
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarK"
+                  },
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarG"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "STAR_M_GIANT",
+         "keys" : [
+            {
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarM"
+                  },
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarM"
+                  },
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarK"
+                  },
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarG"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "STAR_M_SUPER_GIANT",
+         "keys" : [
+            {
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarM"
+                  },
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarM"
+                  },
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarK"
+                  },
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarG"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "STAR_M_HYPER_GIANT",
+         "keys" : [
+			{
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarM"
+                  },
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarM"
+                  },
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarK"
+                  },
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarG"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "STAR_K",
+         "keys" : [
+            {
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarM"
+                  },
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarK"
+                  },
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarK"
+                  },
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarG"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "STAR_K_GIANT",
+         "keys" : [
+            {
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarM"
+                  },
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarK"
+                  },
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarK"
+                  },
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarG"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "STAR_K_SUPER",
+         "keys" : [
+			{
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarM"
+                  },
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarK"
+                  },
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarK"
+                  },
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarG"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "STAR_K_HYPER_GIANT",
+         "keys" : [
+			{
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarM"
+                  },
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarK"
+                  },
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarK"
+                  },
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarG"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "STAR_G",
+         "keys" : [
+            {
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "WhiteDwarf"
+                  },
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarG"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "STAR_G_GIANT",
+         "keys" : [
+            {
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "WhiteDwarf"
+                  },
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarG"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "STAR_G_SUPER_GIANT",
+         "keys" : [
+            {
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "WhiteDwarf"
+                  },
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarG"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "STAR_G_HYPER_GIANT",
+         "keys" : [
+            {
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "WhiteDwarf"
+                  },
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "StarG"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "STAR_F",
+         "keys" : [
+            {
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "Solid"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "STAR_F_GIANT",
+         "keys" : [
+            {
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "Solid"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "STAR_F_SUPER_GIANT",
+         "keys" : [
+            {
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "Solid"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "STAR_F_HYPER_GIANT",
+         "keys" : [
+            {
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "Solid"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "STAR_A",
+         "keys" : [
+            {
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "Solid"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "STAR_A_GIANT",
+         "keys" : [
+            {
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "Solid"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "STAR_A_SUPER_GIANT",
+         "keys" : [
+            {
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "Solid"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "STAR_A_HYPER_GIANT",
+         "keys" : [
+            {
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "Solid"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "STAR_B",
+         "keys" : [
+            {
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "Solid"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "STAR_B_GIANT",
+         "keys" : [
+            {
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "Solid"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "STAR_B_SUPER_GIANT",
+         "keys" : [
+            {
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "Solid"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "STAR_B_WF",
+         "keys" : [
+            {
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "Solid"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "STAR_O",
+         "keys" : [
+            {
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "Solid"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "STAR_O_GIANT",
+         "keys" : [
+            {
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "Solid"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "STAR_O_SUPER_GIANT",
+         "keys" : [
+            {
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "Solid"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "STAR_O_HYPER_GIANT",
+         "keys" : [
+            {
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "Solid"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "STAR_O_WF",
+         "keys" : [
+            {
+               "definitions" : [
+                  {
+                     "height" : "ellipsoid",
+                     "surface" : "Solid"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "PLANET_GAS_GIANT",
+         "keys" : [
+            {
+               "definitions" : [
+                  {
+                     "height" : "flat",
+                     "surface" : "Jupiter"
+                  },
+                  {
+                     "height" : "flat",
+                     "surface" : "Saturn"
+                  },
+                  {
+                     "height" : "flat",
+                     "surface" : "Saturn2"
+                  },
+                  {
+                     "height" : "flat",
+                     "surface" : "Neptune"
+                  },
+                  {
+                     "height" : "flat",
+                     "surface" : "Neptune2"
+                  },
+                  {
+                     "height" : "flat",
+                     "surface" : "Uranus"
+                  },
+                  {
+                     "height" : "flat",
+                     "surface" : "Saturn"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "PLANET_ASTEROID",
+         "keys" : [
+            {
+               "definitions" : [
+                  {
+                     "height" : "Asteroid",
+                     "surface" : "Asteroid"
+                  },
+                  {
+                     "height" : "Asteroid2",
+                     "surface" : "Asteroid"
+                  },
+                  {
+                     "height" : "Asteroid3",
+                     "surface" : "Asteroid"
+                  },
+                  {
+                     "height" : "Asteroid4",
+                     "surface" : "Asteroid"
+                  },
+                  {
+                     "height" : "Asteroid",
+                     "surface" : "Rock"
+                  },
+                  {
+                     "height" : "Asteroid2",
+                     "surface" : "BandedRock"
+                  },
+                  {
+                     "height" : "Asteroid3",
+                     "surface" : "Rock"
+                  },
+                  {
+                     "height" : "Asteroid4",
+                     "surface" : "BandedRock"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "type" : "PLANET_TERRESTRIAL",
+         "keys" : [
+            {
+               "avg temp" : 240,
+               "life" : 0.69999999999999996,
+               "gases" : 0.20000000000000001,
+               "definitions" : [
+                  {
+                     "height" : "HillsRidged",
+                     "surface" : "Terran"
+                  },
+                  {
+                     "height" : "HillsRivers",
+                     "surface" : "Terran"
+                  },
+                  {
+                     "height" : "HillsDunes",
+                     "surface" : "Terran"
+                  },
+                  {
+                     "height" : "MountainsRidged",
+                     "surface" : "Terran"
+                  },
+                  {
+                     "height" : "MountainsNormal",
+                     "surface" : "Terran"
+                  },
+                  {
+                     "height" : "MountainsRivers",
+                     "surface" : "Terran"
+                  },
+                  {
+                     "height" : "MountainsVolcano",
+                     "surface" : "Terran"
+                  },
+                  {
+                     "height" : "MountainsRiversVolcano",
+                     "surface" : "Terran"
+                  }
+               ]
+            },
+            {
+               "life" : 0.69999999999999996,
+               "gases" : 0.20000000000000001,
+               "definitions" : [
+                  {
+                     "height" : "HillsRidged",
+                     "surface" : "Terran"
+                  },
+				  {
+					   "height" : "HillsRivers",
+					   "surface" : "Desert"
+					},
+					{
+					   "height" : "HillsDunes",
+					   "surface" : "Desert"
+					},
+					{
+					   "height" : "MountainsRidged",
+					   "surface" : "Desert"
+					},
+					{
+					   "height" : "MountainsNormal",
+					   "surface" : "Desert"
+					},
+					{
+					   "height" : "MountainsRivers",
+					   "surface" : "Desert"
+					},
+					{
+					   "height" : "MountainsVolcano",
+					   "surface" : "Desert"
+					},
+					{
+					   "height" : "MountainsRiversVolcano",
+					   "surface" : "Desert"
+					},
+					{
+					   "height" : "BarrenRock",
+					   "surface" : "Desert"
+					},
+					{
+					   "height" : "BarrenRock2",
+					   "surface" : "Desert"
+					}
+				]
+            },
+            {
+               "avg temp" : 240,
+               "life" : 0.40000000000000002,
+               "gases" : 0.20000000000000001,
+               "definitions" : [
+                  {
+                     "height" : "HillsRivers",
+                     "surface" : "TFGood"
+                  },
+                  {
+                     "height" : "HillsDunes",
+                     "surface" : "TFGood"
+                  },
+                  {
+                     "height" : "MountainsRidged",
+                     "surface" : "TFGood"
+                  },
+                  {
+                     "height" : "MountainsNormal",
+                     "surface" : "TFGood"
+                  },
+                  {
+                     "height" : "MountainsRivers",
+                     "surface" : "TFGood"
+                  },
+                  {
+                     "height" : "MountainsVolcano",
+                     "surface" : "TFGood"
+                  },
+                  {
+                     "height" : "MountainsRiversVolcano",
+                     "surface" : "TFGood"
+                  },
+                  {
+                     "height" : "BarrenRock",
+                     "surface" : "TFGood"
+                  },
+                  {
+                     "height" : "BarrenRock2",
+                     "surface" : "TFGood"
+                  }
+               ]
+            },
+            {
+               "life" : 0.40000000000000002,
+               "gases" : 0.20000000000000001,
+               "definitions" : [
+                  {
+                     "height" : "HillsRidged",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "HillsRivers",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "HillsDunes",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "MountainsRidged",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "MountainsNormal",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "MountainsRivers",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "MountainsVolcano",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "MountainsRiversVolcano",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "BarrenRock",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "BarrenRock2",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "BarrenRock3",
+                     "surface" : "Ice"
+                  }
+               ]
+            },
+            {
+               "avg temp" : 240,
+               "life" : 0.10000000000000001,
+               "gases" : 0.10000000000000001,
+               "definitions" : [
+                  {
+                     "height" : "HillsRidged",
+                     "surface" : "TFPoor"
+                  },
+                  {
+                     "height" : "HillsRivers",
+                     "surface" : "TFPoor"
+                  },
+                  {
+                     "height" : "HillsDunes",
+                     "surface" : "TFPoor"
+                  },
+                  {
+                     "height" : "MountainsRidged",
+                     "surface" : "TFPoor"
+                  },
+                  {
+                     "height" : "MountainsNormal",
+                     "surface" : "TFPoor"
+                  },
+                  {
+                     "height" : "MountainsRivers",
+                     "surface" : "TFPoor"
+                  },
+                  {
+                     "height" : "MountainsVolcano",
+                     "surface" : "TFPoor"
+                  },
+                  {
+                     "height" : "MountainsRiversVolcano",
+                     "surface" : "TFPoor"
+                  },
+                  {
+                     "height" : "BarrenRock",
+                     "surface" : "TFPoor"
+                  },
+                  {
+                     "height" : "BarrenRock2",
+                     "surface" : "TFPoor"
+                  },
+                  {
+                     "height" : "BarrenRock3",
+                     "surface" : "TFPoor"
+                  }
+               ]
+            },
+            {
+               "life" : 0.10000000000000001,
+               "gases" : 0.10000000000000001,
+               "definitions" : [
+                  {
+                     "height" : "HillsRidged",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "HillsRivers",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "HillsDunes",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "MountainsRidged",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "MountainsNormal",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "MountainsRivers",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "MountainsVolcano",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "MountainsRiversVolcano",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "BarrenRock",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "BarrenRock2",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "BarrenRock3",
+                     "surface" : "Ice"
+                  }
+               ]
+            },
+            {
+               "liquid" : 0.10000000000000001,
+               "gases" : 0.20000000000000001,
+               "definitions" : [
+                  {
+                     "height" : "HillsDunes",
+                     "surface" : "Desert"
+                  },
+                  {
+                     "height" : "WaterSolid",
+                     "surface" : "Desert"
+                  },
+                  {
+                     "height" : "RuggedDesert",
+                     "surface" : "Desert"
+                  },
+                  {
+                     "height" : "RuggedLava",
+                     "surface" : "Desert"
+                  },
+                  {
+                     "height" : "MountainsVolcano",
+                     "surface" : "Desert"
+                  },
+                  {
+                     "height" : "MountainsRiversVolcano",
+                     "surface" : "Desert"
+                  },
+                  {
+                     "height" : "BarrenRock",
+                     "surface" : "Desert"
+                  },
+                  {
+                     "height" : "BarrenRock2",
+                     "surface" : "Desert"
+                  }
+               ]
+            },
+            {
+               "ices" : 0.80000000000000004,
+               "avg temp below" : 250,
+               "definitions" : [
+                  {
+                     "height" : "HillsDunes",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "HillsCraters",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "MountainsCraters",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "WaterSolid",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "WaterSolidCanyons",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "RuggedDesert",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "BarrenRock",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "BarrenRock2",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "BarrenRock3",
+                     "surface" : "Ice"
+                  }
+               ]
+            },
+            {
+               "volcanicity" : 0.69999999999999996,
+               "life" : 0.5,
+               "definitions" : [
+                  {
+                     "height" : "RuggedLava",
+                     "surface" : "TFGood"
+                  }
+               ]
+            },
+            {
+               "volcanicity" : 0.69999999999999996,
+               "life" : 0.20000000000000001,
+               "definitions" : [
+                  {
+                     "height" : "RuggedLava",
+                     "surface" : "TFPoor"
+                  }
+               ]
+            },
+            {
+               "volcanicity" : 0.69999999999999996,
+               "definitions" : [
+                  {
+                     "height" : "RuggedLava",
+                     "surface" : "Volcanic"
+                  }
+               ]
+            },
+            {
+               "life" : 0.10000000000000001,
+               "definitions" : [
+                  {
+                     "height" : "HillsDunes",
+                     "surface" : "TFPoor"
+                  },
+                  {
+                     "height" : "HillsRidged",
+                     "surface" : "TFPoor"
+                  },
+                  {
+                     "height" : "HillsRivers",
+                     "surface" : "TFPoor"
+                  },
+                  {
+                     "height" : "MountainsNormal",
+                     "surface" : "TFPoor"
+                  },
+                  {
+                     "height" : "MountainsRidged",
+                     "surface" : "TFPoor"
+                  },
+                  {
+                     "height" : "MountainsVolcano",
+                     "surface" : "TFPoor"
+                  },
+                  {
+                     "height" : "MountainsRiversVolcano",
+                     "surface" : "TFPoor"
+                  },
+                  {
+                     "height" : "MountainsRivers",
+                     "surface" : "TFPoor"
+                  },
+                  {
+                     "height" : "WaterSolid",
+                     "surface" : "TFPoor"
+                  },
+                  {
+                     "height" : "RuggedLava",
+                     "surface" : "TFPoor"
+                  },
+                  {
+                     "height" : "RuggedDesert",
+                     "surface" : "TFPoor"
+                  },
+                  {
+                     "height" : "BarrenRock",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "BarrenRock2",
+                     "surface" : "Ice"
+                  },
+                  {
+                     "height" : "BarrenRock3",
+                     "surface" : "Ice"
+                  }
+               ]
+            },
+			
+            {
+               "height" : "HillsDunes",
+               "surface" : "TFPoor",
+               "gases" : 0.10000000000000001,
+               "definitions" : [
+                  {
+                     "height" : "HillsNormal",
+                     "surface" : "Rock"
+                  },
+                  {
+                     "height" : "MountainsNormal",
+                     "surface" : "Rock"
+                  },
+                  {
+                     "height" : "RuggedDesert",
+                     "surface" : "Rock"
+                  },
+                  {
+                     "height" : "BarrenRock",
+                     "surface" : "Rock"
+                  },
+                  {
+                     "height" : "BarrenRock2",
+                     "surface" : "Rock"
+                  },
+                  {
+                     "height" : "BarrenRock3",
+                     "surface" : "Rock"
+                  }
+               ]
+            },
+            {
+               "height" : "BarrenRock3",
+               "surface" : "Rock",
+               "definitions" : [
+                  {
+                     "height" : "HillsCraters2",
+                     "surface" : "Rock"
+                  },
+                  {
+                     "height" : "MountainsCraters2",
+                     "surface" : "Rock"
+                  },
+                  {
+                     "height" : "BarrenRock3",
+                     "surface" : "Rock"
+                  }
+               ]
+            }
+         ]
+      }
+   ]
+}

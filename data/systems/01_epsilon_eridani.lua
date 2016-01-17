@@ -71,6 +71,7 @@ local newhope = CustomSystemBody:new('New Hope', 'PLANET_TERRESTRIAL')
 	:ocean_cover(f(45,100))
 	:ice_cover(f(6,10))
 	:life(f(9,10))
+	:height_map('json.hmap',0)
 
 	local newhope_starports = {
 	CustomSystemBody:new('Itzalean', 'STARPORT_SURFACE')

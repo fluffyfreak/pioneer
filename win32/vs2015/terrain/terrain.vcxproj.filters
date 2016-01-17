@@ -4,7 +4,6 @@
     <ClCompile Include="..\..\..\src\terrain\Terrain.cpp" />
     <ClCompile Include="..\..\..\src\terrain\TerrainColorAsteroid.cpp" />
     <ClCompile Include="..\..\..\src\terrain\TerrainColorBandedRock.cpp" />
-    <ClCompile Include="..\..\..\src\terrain\TerrainColorDeadWithWater.cpp" />
     <ClCompile Include="..\..\..\src\terrain\TerrainColorDesert.cpp" />
     <ClCompile Include="..\..\..\src\terrain\TerrainColorEarthLike.cpp" />
     <ClCompile Include="..\..\..\src\terrain\TerrainColorGGJupiter.cpp" />
@@ -56,6 +55,7 @@
     <ClCompile Include="..\..\..\src\terrain\TerrainHeightBarrenRock3.cpp" />
     <ClCompile Include="..\..\..\src\terrain\TerrainHeightEllipsoid.cpp" />
     <ClCompile Include="..\..\..\src\terrain\TerrainColorEarthLikeHeightmapped.cpp" />
+    <ClCompile Include="..\..\..\src\terrain\TerrainHeightJSON.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\terrain\Terrain.h" />

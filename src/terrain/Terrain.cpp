@@ -15,12 +15,19 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 	// heightmap setup. if you add another height fractal, remember to change
 	// the check in CustomSystem::l_height_map
 	if (!body->GetHeightMapFilename().empty()) {
-		const GeneratorInstancer choices[] = {
-			InstanceGenerator<TerrainHeightMapped,TerrainColorEarthLikeHeightmapped>,
-			InstanceGenerator<TerrainHeightMapped2,TerrainColorRock2>
-		};
-		assert(body->GetHeightMapFractal() < COUNTOF(choices));
-		return choices[body->GetHeightMapFractal()](body);
+		if (body->GetHeightMapFilename() == "heightmaps/json.hmap")
+		{
+			return InstanceGenerator<TerrainHeightJSON, TerrainColorEarthLikeHeightmapped>(body);
+		}
+		else
+		{
+			const GeneratorInstancer choices[] = {
+				InstanceGenerator<TerrainHeightMapped,TerrainColorEarthLikeHeightmapped>,
+				InstanceGenerator<TerrainHeightMapped2,TerrainColorRock2>
+			};
+			assert(body->GetHeightMapFractal() < COUNTOF(choices));
+			return choices[body->GetHeightMapFractal()](body);
+		}
 	}
 
 	Random rand(body->GetSeed());
@@ -151,6 +158,7 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 					break;
 				}
 
+				// desert-ice planets
 				const GeneratorInstancer choices[] = {
 					InstanceGenerator<TerrainHeightHillsRidged,TerrainColorDesert>,
 					InstanceGenerator<TerrainHeightHillsRivers,TerrainColorDesert>,
@@ -191,6 +199,7 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 					break;
 				}
 
+				// ice planets
 				const GeneratorInstancer choices[] = {
 					InstanceGenerator<TerrainHeightHillsRidged,TerrainColorIce>,
 					InstanceGenerator<TerrainHeightHillsRivers,TerrainColorIce>,
@@ -233,6 +242,7 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 					break;
 				}
 
+				// ice planets
 				const GeneratorInstancer choices[] = {
 					InstanceGenerator<TerrainHeightHillsRidged,TerrainColorIce>,
 					InstanceGenerator<TerrainHeightHillsRivers,TerrainColorIce>,
