@@ -260,7 +260,7 @@ namespace cellywelly
 	//}
 }
 
-inline double noise(int octaves, double frequency, double persistence, const vector3d &position) {
+inline double noise(const int octaves, double frequency, double persistence, const vector3d &position) {
 	double total = 0.0;
 	double maxAmplitude = 0.0;
 	double amplitude = 1.0;
@@ -273,7 +273,7 @@ inline double noise(int octaves, double frequency, double persistence, const vec
 	return total / maxAmplitude;
 }
 
-inline double noise_cubed(int octaves, double frequency, double persistence, const vector3d &position) {
+inline double noise_cubed(const int octaves, double frequency, double persistence, const vector3d &position) {
 	double total = 0.0;
 	double maxAmplitude = 0.0;
 	double amplitude = 1.0;
@@ -286,7 +286,7 @@ inline double noise_cubed(int octaves, double frequency, double persistence, con
 	return pow(total / maxAmplitude, 3.0);
 }
 
-inline double noise_ridged(int octaves, double frequency, double persistence, const vector3d &position) {
+inline double noise_ridged(const int octaves, double frequency, double persistence, const vector3d &position) {
 	double total = 0.0;
 	double maxAmplitude = 0.0;
 	double amplitude = 1.0;
@@ -299,20 +299,20 @@ inline double noise_ridged(int octaves, double frequency, double persistence, co
 	return total / maxAmplitude;
 }
 
-double noise_cellular_squared(int octaves, const double persistence, double frequency, const vector3d &position) {
-	//double total = 0.0;
-	//double maxAmplitude = 0.0;
-	//double amplitude = 1.0;
-	//double tmp;
-	//for (int i = 0; i < octaves; i++) {
-	//	vector2f ff = cellywelly::cellular2x2x2(position * frequency);
-	//	tmp = ff.y - ff.x;
-	//	total += tmp * tmp * amplitude;
-	//	frequency *= 2.0;
-	//	maxAmplitude += amplitude;
-	//	amplitude *= persistence;
-	//}
-	return 0.0;// total / maxAmplitude;
+double noise_cellular_squared(const int octaves, double frequency, const double persistence, const vector3d &position) {
+	double total = 0.0;
+	double maxAmplitude = 0.0;
+	double amplitude = 1.0;
+	double tmp;
+	for (int i = 0; i < octaves; i++) {
+		vector2d ff = cellywelly::cellular(position * frequency);
+		tmp = ff.y - ff.x;
+		total += tmp * tmp * amplitude;
+		frequency *= 2.0;
+		maxAmplitude += amplitude;
+		amplitude *= persistence;
+	}
+	return total / maxAmplitude;
 }
 
 class TerrainNodeData
@@ -398,7 +398,7 @@ public:
 	void AddChild(const TerrainNodeData& child) {
 		m_children.push_back(child);
 	}
-#pragma optimize("",off)
+
 	double Call(const vector3d& p) 
 	{
 		// A good way to fix this is to use another low frequency noise function that is scaled between 0 and 1.
@@ -410,35 +410,37 @@ public:
 		double localH = 0.0;
 		switch (m_noiseType)
 		{
-		case NT_NOISE:					localH = noise(m_octaves, m_persistence, m_frequency, p);						break;
-		case NT_NOISE_CELLULAR_SQUARED:	localH = noise_cellular_squared(m_octaves, m_persistence, m_frequency, p);		break;
-		case NT_NOISE_RIDGED:			localH = noise_ridged(m_octaves, m_persistence, m_frequency, p);				break;
-		case NT_NOISE_CUBED:			localH = noise_cubed(m_octaves, m_persistence, m_frequency, p);					break;
+		case NT_NOISE:					localH = noise(m_octaves, m_frequency, m_persistence, p);						break;
+		case NT_NOISE_CELLULAR_SQUARED:	localH = noise_cellular_squared(m_octaves, m_frequency, m_persistence, p);		break;
+		case NT_NOISE_RIDGED:			localH = noise_ridged(m_octaves, m_frequency, m_persistence, p);				break;
+		case NT_NOISE_CUBED:			localH = noise_cubed(m_octaves, m_frequency, m_persistence, p);					break;
 		case NT_CONSTANT:				localH = m_scaleLow;															break;
 		//case NT_CUBED:					localH = pow(h, 3.0);															break;
 		}
+		localH = Clamp(Scale(localH), m_clamp.first, m_clamp.second);
 
-		double childH = 0.0;
-		for (auto child : m_children)
+		if (!m_children.empty())
 		{
-			childH += child.Call(p);
+			double childH = 0.0;
+			for (auto child : m_children)
+			{
+				childH += child.Call(p);
+			}
+
+			// wtf?
+			switch (m_op)
+			{
+			case TO_ADD: localH += childH; break;
+			case TO_SUB: localH -= childH; break;
+			case TO_MUL: localH *= childH; break;
+			case TO_DIV: localH /= childH; break;
+			}
 		}
 
-		// wtf?
-		switch (m_op)
-		{
-		case TO_ADD: localH += childH; break;
-		case TO_SUB: localH -= childH; break;
-		case TO_MUL: localH *= childH; break;
-		case TO_DIV: localH /= childH; break;
-		}
-
-		localH = Scale(Clamp(localH, m_clamp.first, m_clamp.second));
 		return localH;
 	}
 
 private:
-#pragma optimize("",off)
 	double Scale(const double h)
 	{
 		// convert to 0..1 from -1..1
@@ -610,7 +612,6 @@ void ParseTerrainNode(Json::Value::iterator& j, TerrainNodeData& node)
 template <>
 const char *TerrainHeightFractal<TerrainHeightJSON>::GetHeightFractalName() const { return "JSON"; }
 
-
 template <>
 TerrainHeightFractal<TerrainHeightJSON>::TerrainHeightFractal(const SystemBody *body) : Terrain(body)
 {
@@ -668,8 +669,7 @@ TerrainHeightFractal<TerrainHeightJSON>::TerrainHeightFractal(const SystemBody *
 	}
 }
 
-static double posScale = 100.0;
-#pragma optimize("",off)
+static double posScale = 1000.0;
 template <>
 double TerrainHeightFractal<TerrainHeightJSON>::GetHeight(const vector3d &p) const
 {
@@ -694,5 +694,5 @@ double TerrainHeightFractal<TerrainHeightJSON>::GetHeight(const vector3d &p) con
 		}
 	}
 
-	return n / 3000000.0;
+	return n / 3000000.0;//3000000.0;
 }
