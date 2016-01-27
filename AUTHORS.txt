@@ -24,6 +24,8 @@ The Pioneer Developers are:
 * Chip Richards
 * Chris Collins
 * Chris Dennett
+* Christian Koch
+* Claudius Mueller
 * Connor Findlay
 * Craig Thomson
 * Dan Bennett
@@ -78,6 +80,7 @@ The Pioneer Developers are:
 * Robert Norris
 * Robert Pallier
 * Roland Mas
+* Sal Borrelli
 * Sean Bailey
 * Simon Chopin
 * SolCommand

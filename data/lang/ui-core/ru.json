@@ -167,6 +167,14 @@
       "description" : "graphics option in game settings menu ",
       "message" : "Сжатие текстур"
    },
+   "CONFIRM_PURCHASE" : {
+      "description" : "",
+      "message" : "Подтвердить покупку"
+   },
+   "CONFIRM_SALE" : {
+      "description" : "",
+      "message" : "Подтвердить продажу"
+   },
    "CONSTABLE" : {
       "description" : "",
       "message" : "Начальник охраны"
@@ -283,9 +291,13 @@
       "description" : "",
       "message" : "Занятость"
    },
+   "ENABLE_ANISOTROPIC_FILTERING" : {
+      "description" : "Use Anisotropic Filtering",
+      "message" : "Анизотропная фильтрация"
+   },
    "ENABLE_AUTOSAVE" : {
       "description" : "Allow the game to autosave when docking",
-      "message" : "Enable Autosave"
+      "message" : "Включить автосохранения"
    },
    "ENABLE_COCKPIT" : {
       "description" : "Game settings option: to use a cockpit 3D model",
@@ -471,6 +483,10 @@
       "description" : "For player reputation",
       "message" : "Неопытный"
    },
+   "INSUFFICIENT_FUNDS" : {
+      "description" : "",
+      "message" : "Недостаточно средств."
+   },
    "INVERT_MOUSE_Y" : {
       "description" : "",
       "message" : "Инвертировать мышь по оси Y"
@@ -558,6 +574,10 @@
    "LOBBY" : {
       "description" : "",
       "message" : "Информационный центр"
+   },
+   "LOCAL_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Рукав Ориона"
    },
    "LOCATED_N_KM_FROM_THE_CENTRE_OF_NAME" : {
       "description" : "",
@@ -699,6 +719,10 @@
       "description" : "",
       "message" : "Навигация:"
    },
+   "NAVIGATOR" : {
+      "description" : "",
+      "message" : "Навигатор"
+   },
    "NEGOTIATE" : {
       "description" : "",
       "message" : "Условия"
@@ -718,6 +742,14 @@
    "NONE" : {
       "description" : "",
       "message" : "<отсутствует>"
+   },
+   "NONE_FOR_SALE_IN_THIS_STATION" : {
+      "description" : "",
+      "message" : "None for sale in this station."
+   },
+   "NORMA_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Рукав Лебедя"
    },
    "NOTES" : {
       "description" : "",
@@ -775,9 +807,13 @@
       "description" : "",
       "message" : "Круговая орбитальная скорость дана для тангенциальной скорости. Корабль должен двигаться под 90В° к оси корабля/{name}.\n\nСкорость снижения - минимальная и тангенциальная. Наиболее низка скорость или минимальный угол, которые приведут к пересечению с поверхностью {name}.\n\nСкорость отдаления - теоретическая для любого направления, на котором корабль не пересечется с поверхностью {name}.\n\t\t"
    },
+   "OUTER_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Внешний рукав"
+   },
    "OUTSTANDING_FINES" : {
       "description" : "Unpaid fines for crimes committed",
-      "message" : "Outstanding fines"
+      "message" : "Неоплаченные штрафы"
    },
    "OWED" : {
       "description" : "Player owing money to crew members",
@@ -787,9 +823,17 @@
       "description" : "",
       "message" : "Оплатить штраф в размере {amount}"
    },
+   "PERSEUS_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Рукав Персея"
+   },
    "PERSONAL_INFORMATION" : {
       "description" : "",
       "message" : "Персональная информация"
+   },
+   "PILOT" : {
+      "description" : "",
+      "message" : "Пилот"
    },
    "PILOTING" : {
       "description" : "",
@@ -834,6 +878,10 @@
    "PROFESSIONAL" : {
       "description" : "For player reputation",
       "message" : "Профессионал"
+   },
+   "PUMP_DOWN" : {
+      "description" : "Drain the fuel tank",
+      "message" : "Pump down"
    },
    "QUALIFICATION_SCORES" : {
       "description" : "",
@@ -883,6 +931,10 @@
       "description" : "",
       "message" : "Запрос на взлёт"
    },
+   "RESET" : {
+      "description" : "",
+      "message" : "Сброс"
+   },
    "RETURN_TO_GAME" : {
       "description" : "",
       "message" : "Вернуться к игре"
@@ -903,6 +955,10 @@
       "description" : "",
       "message" : "Награда"
    },
+   "SAGITTARIUS_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Рукав Стрельца"
+   },
    "SAVE" : {
       "description" : "",
       "message" : "Сохранить игру"
@@ -910,6 +966,10 @@
    "SCOOP_MOUNTS" : {
       "description" : "How many slots or mounts exist on the ship for fitting SCOOPS (e.g. cargo scoop, fuel scoop, multi-scoop) ",
       "message" : "Крепления для заборника"
+   },
+   "SCUTUM_CENTAURUS_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Рукав Центавра"
    },
    "SELECT" : {
       "description" : "",
@@ -935,9 +995,17 @@
       "description" : "",
       "message" : "Сенсоры:"
    },
+   "SENSORS_AND_DEFENCE" : {
+      "description" : "",
+      "message" : "Сенсоры и защита"
+   },
    "SHIP" : {
       "description" : "",
       "message" : "Корабль"
+   },
+   "SHIPS_ENGINEER" : {
+      "description" : "",
+      "message" : "Корабельный инженер"
    },
    "SHIP_INFORMATION" : {
       "description" : "",
@@ -985,7 +1053,7 @@
    },
    "STAR_FIELD_DENSITY" : {
       "description" : "",
-      "message" : "Density of Star field"
+      "message" : "Плотность звёздного поля"
    },
    "STATION_MANAGER" : {
       "description" : "",
@@ -997,7 +1065,7 @@
    },
    "TECH_CERTIFIED" : {
       "description" : "Lobby screen shows the tech level (an integer number) of the station",
-      "message" : "This station holds a level {tech_level} technology certificate."
+      "message" : "Эта станция имеет сертификацию {tech_level} технологического уровня."
    },
    "TECH_CERTIFIED_MILITARY" : {
       "description" : "Lobby screen shows the tech level of the station",
@@ -1014,6 +1082,10 @@
    "THE_SHIP_IS_UNDER_STATION_CONTROL_COMMANDER" : {
       "description" : "",
       "message" : "Корабль под контролем станции, Командир."
+   },
+   "THREE_KPC_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Рукав в 3 кпк от центра"
    },
    "TOGGLE_MALE_FEMALE" : {
       "description" : "player gender",
@@ -1123,6 +1195,10 @@
       "description" : "",
       "message" : "У вас недостаточно средств для совершения этой операции."
    },
+   "YOU_HAVE_X_UNITS_IN_YOUR_CARGOHOLD" : {
+      "description" : "",
+      "message" : "В грузовом отсеке имеется {units} единиц "
+   },
    "YOU_MUST_FIRST_SELECT_A_COMBAT_TARGET_COMMANDER" : {
       "description" : "",
       "message" : "Командир, сначала вы должны указать боевую цель."
@@ -1142,5 +1218,9 @@
    "YOU_NOT_ENOUGH_MONEY" : {
       "description" : "",
       "message" : "У вас недостаточно средств"
+   },
+   "ZOOM" : {
+      "description" : "Label for a zoom (magnification) control bar.",
+      "message" : "Масштаб"
    }
 }

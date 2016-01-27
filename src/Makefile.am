@@ -39,10 +39,7 @@ noinst_HEADERS = \
 	Factions.h \
 	FileSystem.h \
 	FontCache.h \
-	Form.h \
-	FormController.h \
 	Frame.h \
-	GalacticView.h \
 	Game.h \
 	GameLog.h \
 	GasGiant.h \
@@ -175,9 +172,7 @@ pioneer_SOURCES	= \
 	FileSourceZip.cpp \
 	FileSystem.cpp \
 	FontCache.cpp \
-	FormController.cpp \
 	Frame.cpp \
-	GalacticView.cpp \
 	Game.cpp \
 	GameLog.cpp \
 	GasGiant.cpp \
@@ -351,6 +346,7 @@ tests_LDADD = \
 uitest_SOURCES = \
 	uitest.cpp \
 	Color.cpp \
+	DateTime.cpp \
 	FileSystem.cpp \
 	SDLWrappers.cpp \
 	FontCache.cpp \
@@ -375,6 +371,7 @@ uitest_LDADD = \
 	gui/libgui.a \
 	text/libtext.a \
 	graphics/libgraphics.a \
+	graphics/opengl/libgraphicsopengl.a \
 	posix/libposix.a \
 	../contrib/jenkins/libjenkins.a \
 	../contrib/PicoDDS/libpicodds.a \
