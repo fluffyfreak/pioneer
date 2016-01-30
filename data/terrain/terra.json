@@ -57,6 +57,73 @@
                 "op": "mul",
                 "persistence": 0.7,
                 "type": "noise_cubed"
+            },
+            {
+				"name": "Plateaus",
+                "children": [
+                    {
+						"name": "Tall Plateaus",
+                        "clamp": [
+                            0,
+                            1500
+                        ],
+                        "frequency": 0.08,
+                        "high": 8000,
+                        "low": -13000,
+                        "octaves": 5,
+                        "persistence": 0.55,
+                        "type": "noise"
+                    },
+                    {
+						"name": "Short Plateaus",
+                        "clamp": [
+                            0,
+                            750
+                        ],
+                        "frequency": 0.1,
+                        "high": 5000,
+                        "low": -7000,
+                        "octaves": 5,
+                        "persistence": 0.6,
+                        "type": "noise"
+                    }
+                ],
+                "clamp": [
+                    0,
+                    1
+                ],
+                "frequency": 0.003,
+                "high": 25,
+                "low": -25,
+                "octaves": 6,
+                "op": "mul",
+                "persistence": 0.6,
+                "type": "noise_cubed"
+            },
+            {
+				"name": "Oceans",
+                "children": [
+                    {
+                        "frequency": 0.002,
+                        "high": 20000,
+                        "low": 10000,
+                        "octaves": 6,
+                        "op": "sub",
+                        "persistence": 0.9,
+                        "type": "noise"
+                    }
+                ],
+                "clamp": [
+                    0,
+                    1
+                ],
+                "frequency": 0.00015,
+                "high": 7,
+                "low": -5,
+                "octaves": 6,
+                "op": "mul",
+                "persistence": 0.75,
+                "type": "noise"
             }
         ]
     },

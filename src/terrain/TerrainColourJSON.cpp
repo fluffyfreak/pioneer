@@ -9,20 +9,24 @@
 static std::vector<TerrainSource> terrainSrcs;
 
 template <>
-const char *TerrainHeightFractal<TerrainHeightJSON>::GetHeightFractalName() const { return "JSON"; }
+const char *TerrainColorFractal<TerrainColourJSON>::GetColorFractalName() const { return "JSON"; }
 
 template <>
-TerrainHeightFractal<TerrainHeightJSON>::TerrainHeightFractal(const SystemBody *body) : Terrain(body)
+TerrainColorFractal<TerrainColourJSON>::TerrainColorFractal(const SystemBody *body) : Terrain(body)
 {
 	const std::string path("terrain/Terra.json");
 	LoadTerrainJSON(path, terrainSrcs);
 }
-
-static double posScale = 1000.0;
+#pragma optimize("",off)
 template <>
-double TerrainHeightFractal<TerrainHeightJSON>::GetHeight(const vector3d &p) const
+vector3d TerrainColorFractal<TerrainColourJSON>::GetColor(const vector3d &p, double height, const vector3d &norm) const
 {
-	double n = 0.0;
+	if (height > 0.0) {
+		return vector3d(1.0);
+	}
+	return vector3d(0.0, 0.0, 1.0);
+
+	/*double n = 0.0;
 
 	const vector3d posRadius(p * posScale);
 
@@ -44,4 +48,5 @@ double TerrainHeightFractal<TerrainHeightJSON>::GetHeight(const vector3d &p) con
 	}
 
 	return n / 3000000.0;//3000000.0;
+	*/
 }

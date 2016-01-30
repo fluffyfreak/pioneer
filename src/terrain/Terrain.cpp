@@ -17,7 +17,7 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 	if (!body->GetHeightMapFilename().empty()) {
 		if (body->GetHeightMapFilename() == "heightmaps/json.hmap")
 		{
-			return InstanceGenerator<TerrainHeightJSON, TerrainColorSolid>(body);
+			return InstanceGenerator<TerrainHeightJSON, TerrainColourJSON>(body);
 		}
 		else
 		{

@@ -255,6 +255,7 @@ class TerrainColorStarWhiteDwarf;
 class TerrainColorTFGood;
 class TerrainColorTFPoor;
 class TerrainColorVolcanic;
+class TerrainColourJSON;
 
 #ifdef _MSC_VER
 #pragma warning(default : 4250)
