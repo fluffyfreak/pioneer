@@ -332,6 +332,7 @@ public:
 		NT_NOISE_RIDGED,
 		NT_NOISE_CUBED,
 		NT_CONSTANT,
+		NT_SQUARED,
 		NT_CUBED
 	};
 
@@ -340,10 +341,12 @@ public:
 		m_op(TO_ADD), 
 		m_scaleHigh(0.0), 
 		m_scaleLow(0.0),
+		m_bScale(false),
 		m_octaves(0),
 		m_frequency(0.0),
 		m_persistence(0.0),
 		m_clamp(std::make_pair(DBL_MIN, DBL_MAX)),
+		m_bClamp(false),
 		m_noiseType(NT_NOISE)
 	{
 	}
@@ -362,6 +365,7 @@ public:
 
 	void ScaleHigh(const double high) {
 		m_scaleHigh = high;
+		m_bScale = true;
 	}
 
 	void Octaves(const int oct) {
@@ -385,6 +389,8 @@ public:
 			m_noiseType = NT_NOISE_CUBED;
 		} else if (str == "constant") {
 			m_noiseType = NT_CONSTANT;
+		} else if (str == "squared") {
+			m_noiseType = NT_SQUARED;
 		} else if (str == "cubed") {
 			m_noiseType = NT_CUBED;
 		}
@@ -393,6 +399,7 @@ public:
 	void ClampNoise(const double lower, const double upper) {
 		m_clamp.first = lower;
 		m_clamp.second = upper;
+		m_bClamp = true;
 	}
 
 	void AddChild(const TerrainNodeData& child) {
@@ -407,6 +414,13 @@ public:
 		// Notice that weve added a few things here.
 		// We moved the mountain function to be a child of our new function. 
 		// "op: mul" will multiply the output of the function with its direct children, and the "clamp" will clamp the output between 0 and 1.
+
+		double childH = 0.0;
+		for (auto child : m_children)
+		{
+			childH += child.Call(p);
+		}
+
 		double localH = 0.0;
 		switch (m_noiseType)
 		{
@@ -415,26 +429,20 @@ public:
 		case NT_NOISE_RIDGED:			localH = noise_ridged(m_octaves, m_frequency, m_persistence, p);				break;
 		case NT_NOISE_CUBED:			localH = noise_cubed(m_octaves, m_frequency, m_persistence, p);					break;
 		case NT_CONSTANT:				localH = m_scaleLow;															break;
-		//case NT_CUBED:					localH = pow(h, 3.0);															break;
+		case NT_SQUARED:				localH = pow(childH, 2.0);														break;
+		case NT_CUBED:					localH = pow(childH, 3.0);														break;
 		}
-		localH = Clamp(Scale(localH), m_clamp.first, m_clamp.second);
+		
+		// clamp || scale || both
+		localH = m_bClamp ? Clamp(Scale(localH), m_clamp.first, m_clamp.second) : Scale(localH);
 
-		if (!m_children.empty())
+		// wtf?
+		switch (m_op)
 		{
-			double childH = 0.0;
-			for (auto child : m_children)
-			{
-				childH += child.Call(p);
-			}
-
-			// wtf?
-			switch (m_op)
-			{
-			case TO_ADD: localH += childH; break;
-			case TO_SUB: localH -= childH; break;
-			case TO_MUL: localH *= childH; break;
-			case TO_DIV: localH /= childH; break;
-			}
+		case TO_ADD: localH += childH; break;
+		case TO_SUB: localH -= childH; break;
+		case TO_MUL: localH *= childH; break;
+		case TO_DIV: localH /= childH; break;
 		}
 
 		return localH;
@@ -444,7 +452,7 @@ private:
 	double Scale(const double h)
 	{
 		// convert to 0..1 from -1..1
-		return MathUtil::mix(m_scaleLow, m_scaleHigh, ((1.0 + h)*0.5));
+		return (m_bScale) ? MathUtil::mix(m_scaleLow, m_scaleHigh, ((1.0 + h)*0.5)) : h;
 	}
 
 	//"name": "Mountains",
@@ -457,6 +465,7 @@ private:
 	//"low": -13,
 	double m_scaleHigh;
 	double m_scaleLow;
+	bool m_bScale;
 
 	//"octaves": 7,
 	int m_octaves;
@@ -472,6 +481,7 @@ private:
 
 	//"clamp": [ 0, 1 ]
 	std::pair<double, double> m_clamp;
+	bool m_bClamp;
 
 	//"children": [ ... ]
 	std::vector<TerrainNodeData> m_children;
@@ -575,38 +585,6 @@ void ParseTerrainNode(Json::Value::iterator& j, TerrainNodeData& node)
 		}
 		Output("\t\ttag:\"%s\"\n", tag.c_str());
 	}
-	//{
-	//"name": "Mountains",
-	//"frequency": 0.002,
-	//"high": 13,
-	//"low": -13,
-	//"octaves": 7,
-	//"op": "mul",
-	//"persistence": 0.7,
-	//"type": "noise_cubed"
-	//"clamp": [
-	//    0,
-	//    1
-	//],
-	//"children": [
-	//    {
-	//        "frequency": 0.05,
-	//        "high": 25000,
-	//        "low": -25000,
-	//        "octaves": 3,
-	//        "persistence": 0.6,
-	//        "type": "noise_cellular_squared"
-	//    },
-	//    {
-	//        "frequency": 0.03,
-	//        "high": 7500,
-	//        "low": 0,
-	//        "octaves": 11,
-	//        "persistence": 0.5,
-	//        "type": "noise_ridged"
-	//    }
-	//],
-	//},
 }
 
 template <>
