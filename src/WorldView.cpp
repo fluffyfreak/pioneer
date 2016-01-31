@@ -827,7 +827,7 @@ void WorldView::RefreshButtonStateAndVisibility()
 			// This should rather be 1.5 * max_radius, but due to quirkses in terrain generation we must be generous.
 			if (center_dist <= 3.0 * terrain->GetMaxFeatureRadius()) {
 				vector3d surface_pos = pos.Normalized();
-				double radius = terrain->GetTerrainHeight(surface_pos);
+				double radius = terrain->GetSystemBody()->GetRadius();// > GetTerrainHeight(surface_pos);
 				double altitude = center_dist - radius;
 				if (altitude < 10000000.0 && altitude < 0.5 * radius) {
 					vector3d velocity = (frame == Pi::player->GetFrame() ? vel : Pi::player->GetVelocityRelTo(frame));
