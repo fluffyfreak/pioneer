@@ -3,8 +3,6 @@
 
 #include "Terrain.h"
 #include "TerrainNode.h"
-//#include "TerrainNoise.h"
-//#include "TerrainFeature.h"
 
 static std::vector<TerrainSource> terrainSrcs;
 
@@ -18,13 +16,13 @@ TerrainHeightFractal<TerrainHeightJSON>::TerrainHeightFractal(const SystemBody *
 	LoadTerrainJSON(path, terrainSrcs);
 }
 
-static double posScale = 1000.0;
+static double heightScale = 1.0 / 15000000.0;
 template <>
 double TerrainHeightFractal<TerrainHeightJSON>::GetHeight(const vector3d &p) const
 {
 	double n = 0.0;
 
-	const vector3d posRadius(p * posScale);
+	const vector3d posRadius(p * (m_planetRadius * 0.001));
 
 	for (auto ts : terrainSrcs)
 	{
@@ -43,5 +41,5 @@ double TerrainHeightFractal<TerrainHeightJSON>::GetHeight(const vector3d &p) con
 		}
 	}
 
-	return n / 3000000.0;//3000000.0;
+	return n * heightScale;
 }
