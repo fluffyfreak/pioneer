@@ -17,12 +17,21 @@ TerrainColorFractal<TerrainColourJSON>::TerrainColorFractal(const SystemBody *bo
 	const std::string path("terrain/Terra.json");
 	LoadTerrainJSON(path, terrainSrcs);
 }
-#pragma optimize("",off)
+
 template <>
 vector3d TerrainColorFractal<TerrainColourJSON>::GetColor(const vector3d &p, double height, const vector3d &norm) const
 {
-	if (height > 0.0) {
-		return vector3d(1.0);
+	double n = 0.0;
+	//for (auto ts : terrainSrcs)
+	//{
+	//	if (ts.Type() == TerrainSource::ST_HEIGHT)
+	//	{
+	//		// initialise the height
+	//		n = ts.BaseHeight();
+	//	}
+	//}
+	if (height > n) {
+		return vector3d(1.0, 1.0, 1.0);
 	}
 	return vector3d(0.0, 0.0, 1.0);
 
@@ -32,6 +41,8 @@ vector3d TerrainColorFractal<TerrainColourJSON>::GetColor(const vector3d &p, dou
 
 	for (auto ts : terrainSrcs)
 	{
+	ST_HUMIDITY,
+	ST_TEMPERATURE
 		if (ts.Type() == TerrainSource::ST_HEIGHT)
 		{
 			// initialise the height
