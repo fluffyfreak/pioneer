@@ -261,7 +261,7 @@ namespace cellywelly
 	//}
 }
 
-inline double noise(const int octaves, double frequency, double persistence, const vector3d &position) {
+inline double noise(const int octaves, double frequency, const double persistence, const vector3d &position) {
 	double total = 0.0;
 	double maxAmplitude = 0.0;
 	double amplitude = 1.0;
@@ -274,7 +274,7 @@ inline double noise(const int octaves, double frequency, double persistence, con
 	return total / maxAmplitude;
 }
 
-inline double noise_cubed(const int octaves, double frequency, double persistence, const vector3d &position) {
+inline double noise_cubed(const int octaves, double frequency, const double persistence, const vector3d &position) {
 	double total = 0.0;
 	double maxAmplitude = 0.0;
 	double amplitude = 1.0;
@@ -287,7 +287,7 @@ inline double noise_cubed(const int octaves, double frequency, double persistenc
 	return pow(total / maxAmplitude, 3.0);
 }
 
-inline double noise_ridged(const int octaves, double frequency, double persistence, const vector3d &position) {
+inline double noise_ridged(const int octaves, double frequency, const double persistence, const vector3d &position) {
 	double total = 0.0;
 	double maxAmplitude = 0.0;
 	double amplitude = 1.0;
@@ -317,7 +317,7 @@ double noise_cellular_squared(const int octaves, double frequency, const double 
 }
 
 
-double TerrainNodeData::Call(const vector3d& p)
+void TerrainNodeData::Call(const vector3d& p, double& accumH)
 {
 	// A good way to fix this is to use another low frequency noise function that is scaled between 0 and 1.
 	// If we multiply the output of that noise function with our mountain function, then mountains will exists where it is 1, but not where it is 0.
@@ -325,12 +325,6 @@ double TerrainNodeData::Call(const vector3d& p)
 	// Notice that weve added a few things here.
 	// We moved the mountain function to be a child of our new function. 
 	// "op: mul" will multiply the output of the function with its direct children, and the "clamp" will clamp the output between 0 and 1.
-
-	double childH = 0.0;
-	for (auto child : m_children)
-	{
-		childH += child.Call(p);
-	}
 
 	double localH = 0.0;
 	switch (m_noiseType)
@@ -340,24 +334,28 @@ double TerrainNodeData::Call(const vector3d& p)
 	case NT_NOISE_RIDGED:			localH = noise_ridged(m_octaves, m_frequency, m_persistence, p);				break;
 	case NT_NOISE_CUBED:			localH = noise_cubed(m_octaves, m_frequency, m_persistence, p);					break;
 	case NT_CONSTANT:				localH = m_scaleLow;															break;
-	case NT_SQUARED:				localH = pow(childH, 2.0);														break;
-	case NT_CUBED:					localH = pow(childH, 3.0);														break;
+	case NT_SQUARED:				localH = pow(accumH, 2.0);														break;
+	case NT_CUBED:					localH = pow(accumH, 3.0);														break;
 	}
-		
+
 	// clamp || scale || both
 	localH = m_bClamp ? Clamp(Scale(localH), m_clamp.first, m_clamp.second) : Scale(localH);
 
 	// wtf?
 	switch (m_op)
 	{
-	case TO_ADD: localH += childH; break;
-	case TO_SUB: localH -= childH; break;
-	case TO_MUL: localH *= childH; break;
-	case TO_DIV: localH /= childH; break;
+	case TO_ADD: accumH += localH; break;
+	case TO_SUB: accumH -= localH; break;
+	case TO_MUL: accumH *= localH; break;
+	case TO_DIV: accumH /= localH; break;
 	}
 
-	return localH;
+	for (auto child : m_children)
+	{
+		child.Call(p, accumH);
+	}
 }
+
 
 void ParseTerrainNode(Json::Value::iterator& j, TerrainNodeData& node)
 {

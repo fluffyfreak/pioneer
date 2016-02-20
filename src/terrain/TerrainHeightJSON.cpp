@@ -35,7 +35,7 @@ double TerrainHeightFractal<TerrainHeightJSON>::GetHeight(const vector3d &p) con
 			for (auto nodex : ts.Nodes())
 			{
 				// for each node
-				n += nodex.Call(posRadius);
+				nodex.Call(posRadius, n);
 			}
 			break;
 		}

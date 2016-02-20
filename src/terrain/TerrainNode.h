@@ -104,7 +104,7 @@ public:
 		m_children.push_back(child);
 	}
 
-	double Call(const vector3d& p);
+	void Call(const vector3d& p, double& accumH);
 
 private:
 	inline double Scale(const double h)
