@@ -99,6 +99,84 @@
                 "op": "mul",
                 "persistence": 0.6,
                 "type": "noise_cubed"
+            },
+            {
+				"name": "Oceans",
+                "children": [
+                    {
+                        "frequency": 0.002,
+                        "high": 20000,
+                        "low": 10000,
+                        "octaves": 6,
+                        "op": "sub",
+                        "persistence": 0.9,
+                        "type": "noise"
+                    }
+                ],
+                "clamp": [
+                    0,
+                    1
+                ],
+                "frequency": 0.00015,
+                "high": 7,
+                "low": -5,
+                "octaves": 6,
+                "op": "mul",
+                "persistence": 0.75,
+                "type": "noise"
+            },
+            {
+				"name": "Rivers",
+                "children": [
+                    {
+                        "children": [
+                            {
+                                "children": [
+                                    {
+                                        "children": [
+                                            {
+                                                "children": [
+                                                    {
+                                                        "clamp": [
+                                                            0,
+                                                            1000
+                                                        ],
+                                                        "frequency": 0.1,
+                                                        "high": 800,
+                                                        "low": -200,
+                                                        "octaves": 8,
+                                                        "op": "sub",
+                                                        "persistence": 0.6,
+                                                        "type": "noise"
+                                                    }
+                                                ],
+                                                "low": 1,
+                                                "op": "mul",
+                                                "type": "constant"
+                                            }
+                                        ],
+                                        "op": "sub",
+                                        "type": "cubed"
+                                    }
+                                ],
+                                "low": 1,
+                                "type": "constant"
+                            }
+                        ],
+                        "op": "sub",
+                        "type": "cubed"
+                    }
+                ],
+                "clamp": [
+                    0,
+                    1
+                ],
+                "frequency": 0.015,
+                "high": 1,
+                "low": -185,
+                "octaves": 1,
+                "persistence": 0.1,
+                "type": "noise_ridged"
             }
         ]
     },
