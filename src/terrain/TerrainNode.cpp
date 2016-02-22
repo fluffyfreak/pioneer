@@ -339,7 +339,7 @@ void TerrainNodeData::Call(const vector3d& p, double& accumH)
 	}
 
 	// clamp || scale || both
-	localH = m_bClamp ? Clamp(Scale(localH), m_clamp.first, m_clamp.second) : Scale(localH);
+	localH = Clamp(Scale(localH), m_clamp.first, m_clamp.second);
 
 	// wtf?
 	switch (m_op)
@@ -349,6 +349,8 @@ void TerrainNodeData::Call(const vector3d& p, double& accumH)
 	case TO_MUL: accumH *= localH; break;
 	case TO_DIV: accumH /= localH; break;
 	}
+
+	//accumH = Clamp(Scale(accumH), m_clamp.first, m_clamp.second);
 
 	for (auto child : m_children)
 	{

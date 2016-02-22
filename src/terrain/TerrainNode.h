@@ -44,7 +44,6 @@ public:
 		m_frequency(0.0),
 		m_persistence(0.0),
 		m_clamp(std::make_pair(DBL_MIN, DBL_MAX)),
-		m_bClamp(false),
 		m_noiseType(NT_NOISE)
 	{
 	}
@@ -97,7 +96,6 @@ public:
 	void ClampNoise(const double lower, const double upper) {
 		m_clamp.first = lower;
 		m_clamp.second = upper;
-		m_bClamp = true;
 	}
 
 	void AddChild(const TerrainNodeData& child) {
@@ -139,7 +137,6 @@ private:
 
 	//"clamp": [ 0, 1 ]
 	std::pair<double, double> m_clamp;
-	bool m_bClamp;
 
 	//"children": [ ... ]
 	std::vector<TerrainNodeData> m_children;
