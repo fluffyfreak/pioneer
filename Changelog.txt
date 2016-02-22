@@ -1,3 +1,18 @@
+February 2016
+   * Minor changes and tweaks
+     * New behaviour of ESC button (#3618)
+
+   * Fixes
+     * Fix Character.lua / Ship.lua import relationship (#3617)
+     * Fix Search and Rescue bug not recognizing a competed mission (#3621)
+
+   * Internal Changes
+     * GL_INVALID_OPERATION warning (win32) (#3620)
+     * Reduce size of terrain patch skirts (#3622)
+     * Rendering cleanup, possible perf improvements (#3623)
+     * Cleaning up Pi.h (#3624)
+     * Fix terrain cracks (#3625)
+
 January 2016
    * New Features
      * Barnard's star update (#3584)
