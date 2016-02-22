@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Frame.h"
@@ -120,6 +120,7 @@ void Frame::Init(Frame *parent, const char *label, unsigned int flags)
 	m_collisionSpace = new CollisionSpace();
 	if (m_parent) m_parent->AddChild(this);
 	if (label) m_label = label;
+	m_sbody = nullptr;
 }
 
 Frame::~Frame()

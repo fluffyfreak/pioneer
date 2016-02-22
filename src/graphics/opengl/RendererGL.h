@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #pragma once
@@ -13,6 +13,7 @@
  *  - use glvertexattribpointer instead of glvertexpointer etc
  *  - get rid of built-in glMaterial, glMatrix use
  */
+#include "OpenGLLibs.h"
 #include "graphics/Renderer.h"
 #include <stack>
 #include <unordered_map>
@@ -25,6 +26,7 @@ struct Settings;
 namespace OGL {
 	class GasGiantSurfaceMaterial;
 	class GeoSphereSkyMaterial;
+	class GeoSphereStarMaterial;
 	class GeoSphereSurfaceMaterial;
 	class Material;
 	class MultiMaterial;
@@ -129,6 +131,7 @@ protected:
 	float m_minZNear;
 	float m_maxZFar;
 	bool m_useCompressedTextures;
+	bool m_useAnisotropicFiltering;
 	
 	void SetMaterialShaderTransforms(Material *);
 
@@ -140,6 +143,7 @@ protected:
 	friend class OGL::GasGiantSurfaceMaterial;
 	friend class OGL::GeoSphereSurfaceMaterial;
 	friend class OGL::GeoSphereSkyMaterial;
+	friend class OGL::GeoSphereStarMaterial;
 	friend class OGL::MultiMaterial;
 	friend class OGL::LitMultiMaterial;
 	friend class OGL::RingMaterial;
@@ -164,6 +168,10 @@ protected:
 
 private:
 	static bool initted;
+
+	typedef std::map<std::pair<AttributeSet, size_t>, RefCountedPtr<VertexBuffer>> AttribBufferMap;
+	typedef AttribBufferMap::iterator AttribBufferIter;
+	static AttribBufferMap s_AttribBufferMap;
 };
 
 }

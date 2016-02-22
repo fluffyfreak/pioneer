@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaGame.h"
@@ -103,7 +103,9 @@ static int l_game_load_game(lua_State *l)
 		luaL_error(l, Lang::GAME_LOAD_WRONG_VERSION);
 	}
 	catch (CouldNotOpenFileException) {
-		luaL_error(l, Lang::GAME_LOAD_CANNOT_OPEN);
+		const std::string msg = stringf(Lang::GAME_LOAD_CANNOT_OPEN,
+			formatarg("filename", filename));
+		luaL_error(l, msg.c_str());
 	}
 
 	return 0;

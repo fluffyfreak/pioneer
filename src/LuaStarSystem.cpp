@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaObject.h"
@@ -148,6 +148,9 @@ static int l_starsystem_get_commodity_base_price_alterations(lua_State *l)
 	LUA_DEBUG_START(l);
 
 	StarSystem *s = LuaObject<StarSystem>::CheckFromLua(1);
+	if (!lua_istable(l, 2)) {
+		return luaL_error(l, "GetCommodityBasePriceAlterations takes a cargo object as and argument.");
+	}
 	LuaTable equip(l, 2);
 
 	if (!equip.CallMethod<bool>("IsValidSlot", "cargo")) {

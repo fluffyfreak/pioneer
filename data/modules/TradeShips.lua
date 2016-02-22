@@ -1,4 +1,4 @@
--- Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local Engine = import("Engine")
@@ -60,7 +60,7 @@ local e = import ("Equipment")
 		approached without atmospheric shields,	updated by spawnInitialShips
 
 	imports, exports - in the current system, indexed array of
-		Constants.EquipType strings, updated by spawnInitialShips
+		equipment objects (from the 'Equipment' module), updated by spawnInitialShips
 --]]
 local trade_ships, system_updated, from_paths, starports, vacuum_starports, imports, exports
 
@@ -897,9 +897,9 @@ local onGameStart = function ()
 				local v = Game.system:GetCommodityBasePriceAlterations(equip)
 				if key ~= 'rubbish' and key ~= 'radioactives' and Game.system:IsCommodityLegal(equip) then
 					if v > 2 then
-						table.insert(imports, key)
+						table.insert(imports, equip)
 					elseif v < -2 then
-						table.insert(exports, key)
+						table.insert(exports, equip)
 					end
 				end
 			end

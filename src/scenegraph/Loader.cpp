@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Loader.h"
@@ -52,7 +52,7 @@ namespace {
 				case aiOrigin_END: offset += m_data->GetSize(); break;
 				default: assert(0); break;
 			}
-			if (offset < 0 || offset > m_data->GetSize())
+			if (offset > m_data->GetSize())
 				return aiReturn_FAILURE;
 			m_cursor = m_data->GetData() + offset;
 			return aiReturn_SUCCESS;
@@ -156,7 +156,10 @@ Model *Loader::LoadModel(const std::string &shortname, const std::string &basepa
 				//binary loader expects extension-less name. Might want to change this.
 				SceneGraph::BinaryConverter bc(m_renderer);
 				m_model = bc.Load(shortname);
-				return m_model;
+				if (m_model)
+					return m_model;
+				else
+					break; // we'll have to load the non-sgm file
 			}
 		}
 	}
@@ -321,7 +324,7 @@ RefCountedPtr<Node> Loader::LoadMesh(const std::string &filename, const AnimList
 
 	//Removing components is suggested to optimize loading. We do not care about vtx colors now.
 	importer.SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, aiComponent_COLORS);
-	importer.SetPropertyInteger(AI_CONFIG_PP_SLM_VERTEX_LIMIT, 65536);
+	importer.SetPropertyInteger(AI_CONFIG_PP_SLM_VERTEX_LIMIT, AI_SLM_DEFAULT_MAX_VERTICES);
 
 	//There are several optimizations assimp can do, intentionally skipping them now
 	const aiScene *scene = importer.ReadFile(
@@ -331,7 +334,7 @@ RefCountedPtr<Node> Loader::LoadMesh(const std::string &filename, const AnimList
 		aiProcess_SortByPType		| //ignore point, line primitive types (collada dummy nodes seem to be fine)
 		aiProcess_GenUVCoords		|
 		aiProcess_FlipUVs			|
-		aiProcess_SplitLargeMeshes	|
+		aiProcess_CalcTangentSpace	|
 		aiProcess_GenSmoothNormals);  //only if normals not specified
 
 	if(!scene)
@@ -419,6 +422,13 @@ struct ModelVtx {
 	vector3f nrm;
 	vector2f uv0;
 };
+
+struct ModelTangentVtx {
+	vector3f pos;
+	vector3f nrm;
+	vector2f uv0;
+	vector3f tangent;
+};
 #pragma pack(pop)
 
 void Loader::ConvertAiMeshes(std::vector<RefCountedPtr<StaticGeometry> > &geoms, const aiScene *scene)
@@ -432,13 +442,16 @@ void Loader::ConvertAiMeshes(std::vector<RefCountedPtr<StaticGeometry> > &geoms,
 	for (unsigned int i=0; i<scene->mNumMeshes; i++) {
 		const aiMesh *mesh = scene->mMeshes[i];
 		assert(mesh->HasNormals());
-		assert(mesh->mNumVertices <= 65536);
 
 		RefCountedPtr<StaticGeometry> geom(new StaticGeometry(m_renderer));
 		geom->SetName(stringf("sgMesh%0{u}", i));
 
 		const bool hasUVs = mesh->HasTextureCoords(0);
-		if (!hasUVs) AddLog(stringf("%0: missing UV coordinates", m_curMeshDef));
+		const bool hasTangents = mesh->HasTangentsAndBitangents();
+		if (!hasUVs) 
+			AddLog(stringf("%0: missing UV coordinates", m_curMeshDef));
+		if (!hasTangents) 
+			AddLog(stringf("%0: missing Tangents and Bitangents coordinates", m_curMeshDef));
 		//sadly, aimesh name is usually empty so no help for logging
 
 		//Material names are not consistent throughout formats.
@@ -471,21 +484,26 @@ void Loader::ConvertAiMeshes(std::vector<RefCountedPtr<StaticGeometry> > &geoms,
 		Graphics::VertexBufferDesc vbd;
 		vbd.attrib[0].semantic = Graphics::ATTRIB_POSITION;
 		vbd.attrib[0].format   = Graphics::ATTRIB_FORMAT_FLOAT3;
-		vbd.attrib[0].offset   = offsetof(ModelVtx, pos);
+		vbd.attrib[0].offset   = hasTangents ? offsetof(ModelTangentVtx, pos) : offsetof(ModelVtx, pos);
 		vbd.attrib[1].semantic = Graphics::ATTRIB_NORMAL;
 		vbd.attrib[1].format   = Graphics::ATTRIB_FORMAT_FLOAT3;
-		vbd.attrib[1].offset   = offsetof(ModelVtx, nrm);
+		vbd.attrib[1].offset   = hasTangents ? offsetof(ModelTangentVtx, nrm) : offsetof(ModelVtx, nrm);
 		vbd.attrib[2].semantic = Graphics::ATTRIB_UV0;
 		vbd.attrib[2].format   = Graphics::ATTRIB_FORMAT_FLOAT2;
-		vbd.attrib[2].offset   = offsetof(ModelVtx, uv0);
-		vbd.stride = sizeof(ModelVtx);
+		vbd.attrib[2].offset   = hasTangents ? offsetof(ModelTangentVtx, uv0) : offsetof(ModelVtx, uv0);
+		if (hasTangents) {
+			vbd.attrib[3].semantic = Graphics::ATTRIB_TANGENT;
+			vbd.attrib[3].format = Graphics::ATTRIB_FORMAT_FLOAT3;
+			vbd.attrib[3].offset = offsetof(ModelTangentVtx, tangent);
+		}
+		vbd.stride = hasTangents ? sizeof(ModelTangentVtx) : sizeof(ModelVtx);
 		vbd.numVertices = mesh->mNumVertices;
 		vbd.usage = Graphics::BUFFER_USAGE_STATIC;
 
 		RefCountedPtr<Graphics::VertexBuffer> vb(m_renderer->CreateVertexBuffer(vbd));
 
 		// huge meshes are split by the importer so this should not exceed 65K indices
-		std::vector<Uint16> indices;
+		std::vector<Uint32> indices;
 		if (mesh->mNumFaces > 0)
 		{
 			indices.reserve(mesh->mNumFaces * 3);
@@ -507,27 +525,49 @@ void Loader::ConvertAiMeshes(std::vector<RefCountedPtr<StaticGeometry> > &geoms,
 
 		//create buffer & copy
 		RefCountedPtr<Graphics::IndexBuffer> ib(m_renderer->CreateIndexBuffer(indices.size(), Graphics::BUFFER_USAGE_STATIC));
-		Uint16* idxPtr = ib->Map(Graphics::BUFFER_MAP_WRITE);
+		Uint32* idxPtr = ib->Map(Graphics::BUFFER_MAP_WRITE);
 		for (Uint32 j = 0; j < indices.size(); j++)
 			idxPtr[j] = indices[j];
 		ib->Unmap();
 
 		//copy vertices, always assume normals
 		//replace nonexistent UVs with zeros
-		ModelVtx *vtxPtr = vb->Map<ModelVtx>(Graphics::BUFFER_MAP_WRITE);
-		for (unsigned int v = 0; v < mesh->mNumVertices; v++) {
-			const aiVector3D &vtx = mesh->mVertices[v];
-			const aiVector3D &norm = mesh->mNormals[v];
-			const aiVector3D &uv0 = hasUVs ? mesh->mTextureCoords[0][v] : aiVector3D(0.f);
-			vtxPtr[v].pos = vector3f(vtx.x, vtx.y, vtx.z);
-			vtxPtr[v].nrm = vector3f(norm.x, norm.y, norm.z);
-			vtxPtr[v].uv0 = vector2f(uv0.x, uv0.y);
+		if (!hasTangents)
+		{
+			ModelVtx *vtxPtr = vb->Map<ModelVtx>(Graphics::BUFFER_MAP_WRITE);
+			for (unsigned int v = 0; v < mesh->mNumVertices; v++) {
+				const aiVector3D &vtx = mesh->mVertices[v];
+				const aiVector3D &norm = mesh->mNormals[v];
+				const aiVector3D &uv0 = hasUVs ? mesh->mTextureCoords[0][v] : aiVector3D(0.f);
+				vtxPtr[v].pos = vector3f(vtx.x, vtx.y, vtx.z);
+				vtxPtr[v].nrm = vector3f(norm.x, norm.y, norm.z);
+				vtxPtr[v].uv0 = vector2f(uv0.x, uv0.y);
 
-			//update bounding box
-			//untransformed points, collision visitor will transform
-			geom->m_boundingBox.Update(vtx.x, vtx.y, vtx.z);
+				//update bounding box
+				//untransformed points, collision visitor will transform
+				geom->m_boundingBox.Update(vtx.x, vtx.y, vtx.z);
+			}
+			vb->Unmap();
 		}
-		vb->Unmap();
+		else
+		{
+			ModelTangentVtx *vtxPtr = vb->Map<ModelTangentVtx>(Graphics::BUFFER_MAP_WRITE);
+			for (unsigned int v = 0; v < mesh->mNumVertices; v++) {
+				const aiVector3D &vtx = mesh->mVertices[v];
+				const aiVector3D &norm = mesh->mNormals[v];
+				const aiVector3D &uv0 = hasUVs ? mesh->mTextureCoords[0][v] : aiVector3D(0.f);
+				const aiVector3D &tangents = mesh->mTangents[v];
+				vtxPtr[v].pos = vector3f(vtx.x, vtx.y, vtx.z);
+				vtxPtr[v].nrm = vector3f(norm.x, norm.y, norm.z);
+				vtxPtr[v].uv0 = vector2f(uv0.x, uv0.y);
+				vtxPtr[v].tangent = vector3f(tangents.x, tangents.y, tangents.z);
+				
+				//update bounding box
+				//untransformed points, collision visitor will transform
+				geom->m_boundingBox.Update(vtx.x, vtx.y, vtx.z);
+			}
+			vb->Unmap();
+		}
 
 		geom->AddMesh(vb, ib, mat);
 
@@ -766,10 +806,10 @@ RefCountedPtr<CollisionGeometry> Loader::CreateCollisionGeometry(RefCountedPtr<S
 	mesh.vertexBuffer->Unmap();
 
 	//copy indices from buffer
-	std::vector<unsigned short> idx;
+	std::vector<Uint32> idx;
 	idx.reserve(numIdx);
 
-	Uint16 *idxPtr = mesh.indexBuffer->Map(Graphics::BUFFER_MAP_READ);
+	Uint32 *idxPtr = mesh.indexBuffer->Map(Graphics::BUFFER_MAP_READ);
 	for (Uint32 i = 0; i < numIdx; i++)
 		idx.push_back(idxPtr[i]);
 	mesh.indexBuffer->Unmap();
@@ -886,11 +926,11 @@ void Loader::LoadCollision(const std::string &filename)
 	if(scene->mNumMeshes == 0)
 		throw LoadingError("No geometry found");
 
-	std::vector<unsigned short> indices;
+	std::vector<Uint32> indices;
 	std::vector<vector3f> vertices;
-	unsigned int indexOffset = 0;
+	Uint32 indexOffset = 0;
 
-	for(unsigned int i=0; i<scene->mNumMeshes; i++) {
+	for(Uint32 i=0; i<scene->mNumMeshes; i++) {
 		aiMesh* mesh = scene->mMeshes[i];
 
 		//copy indices

@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "TextureFont.h"
@@ -19,7 +19,10 @@
 
 #include <algorithm>
 
-static const int ATLAS_SIZE = 1024;
+namespace {
+	static const int ATLAS_SIZE = 1024;
+	static double CACHE_EVICTION_TIME = 0.25;
+};
 
 namespace Text {
 
@@ -69,7 +72,8 @@ void TextureFont::MeasureString(const std::string &str, float &w, float &h)
 		} else {
 			Uint32 chr;
 			int n = utf8_decode_char(&chr, &str[i]);
-			assert(n);
+			if (n == 0)
+				break;
 			i += n;
 
 			const Glyph &glyph = GetGlyph(chr);
@@ -195,6 +199,12 @@ void TextureFont::PopulateString(Graphics::VertexArray &va, const std::string &s
 	float px = x;
 	float py = y;
 
+	// we know how many we're adding so reserve space ahead of time
+	va.position.reserve(str.size() * 6);
+	va.diffuse.reserve(str.size() * 6);
+	va.uv0.reserve(str.size() * 6);
+
+	// add all of the glyphs individually
 	int i = 0;
 	while (str[i]) {
 		if (str[i] == '\n') {
@@ -228,6 +238,11 @@ Color TextureFont::PopulateMarkup(Graphics::VertexArray &va, const std::string &
 	PROFILE_SCOPED()
 
 	if(str.empty()) return Color::BLACK;
+
+	// we know how many we're adding so reserve space ahead of time
+	va.position.reserve(str.size() * 6);
+	va.diffuse.reserve(str.size() * 6);
+	va.uv0.reserve(str.size() * 6);
 
 	float px = x;
 	float py = y;
@@ -282,26 +297,88 @@ Color TextureFont::PopulateMarkup(Graphics::VertexArray &va, const std::string &
 	return c;
 }
 
-Graphics::VertexBuffer* TextureFont::CreateVertexBuffer(const Graphics::VertexArray &va) const 
+Graphics::VertexBuffer* TextureFont::CreateVertexBuffer(const Graphics::VertexArray &va, const bool bIsStatic) const
 {
-	if( va.GetNumVerts() > 0 )
+	if (va.GetNumVerts() > 0)
 	{
 		//create buffer and upload data
 		Graphics::VertexBufferDesc vbd;
 		vbd.attrib[0].semantic = Graphics::ATTRIB_POSITION;
-		vbd.attrib[0].format   = Graphics::ATTRIB_FORMAT_FLOAT3;
+		vbd.attrib[0].format = Graphics::ATTRIB_FORMAT_FLOAT3;
 		vbd.attrib[1].semantic = Graphics::ATTRIB_DIFFUSE;
-		vbd.attrib[1].format   = Graphics::ATTRIB_FORMAT_UBYTE4;
+		vbd.attrib[1].format = Graphics::ATTRIB_FORMAT_UBYTE4;
 		vbd.attrib[2].semantic = Graphics::ATTRIB_UV0;
-		vbd.attrib[2].format   = Graphics::ATTRIB_FORMAT_FLOAT2;
+		vbd.attrib[2].format = Graphics::ATTRIB_FORMAT_FLOAT2;
 		vbd.numVertices = va.GetNumVerts();
-		vbd.usage = Graphics::BUFFER_USAGE_DYNAMIC;	// we could be updating this per-frame
+		vbd.usage = bIsStatic ? Graphics::BUFFER_USAGE_STATIC : Graphics::BUFFER_USAGE_DYNAMIC;	// we could be updating this per-frame
 		Graphics::VertexBuffer *vbuffer = m_renderer->CreateVertexBuffer(vbd);
-		vbuffer->Populate( va );
+		vbuffer->Populate(va);
 
 		return vbuffer;
 	}
 	return nullptr;
+}
+
+Graphics::VertexBuffer* TextureFont::CreateVertexBuffer(const Graphics::VertexArray &va, const std::string &str, const bool bIsStatic)
+{
+	if( va.GetNumVerts() > 0 )
+	{
+		Graphics::VertexBuffer *pVB = GetCachedVertexBuffer(str);
+		if (pVB)
+			return pVB;
+
+		//create buffer and upload data
+		Graphics::VertexBuffer *vbuffer = CreateVertexBuffer(va, bIsStatic);
+		AddCachedVertexBuffer(vbuffer, str);
+
+		return vbuffer;
+	}
+	return nullptr;
+}
+
+Graphics::VertexBuffer* TextureFont::GetCachedVertexBuffer(const std::string &str)
+{
+	VBHashMapIter found = m_vbTextCache.find(str);
+	if (found == m_vbTextCache.end()) {
+		return nullptr;
+	}
+
+	// update the last access time
+	const double lastAccessTime = 0.001 * double(SDL_GetTicks());
+	found->second.first = lastAccessTime;
+
+	if ((lastAccessTime - m_lfLastCacheCleanTime) > CACHE_EVICTION_TIME) {
+		CleanVertexBufferCache();
+		m_lfLastCacheCleanTime = lastAccessTime;
+	}
+
+	// return the vertex buffer
+	return found->second.second.Get();
+}
+
+void TextureFont::AddCachedVertexBuffer(Graphics::VertexBuffer *pVB, const std::string &str)
+{
+	Graphics::VertexBuffer *pLocalVB = GetCachedVertexBuffer(str);
+	if (pLocalVB)
+		return;
+
+	// set the time that the buffer was added to the cache
+	const double lastAccessTime = 0.001 * double(SDL_GetTicks());
+	m_vbTextCache[str] = std::make_pair(lastAccessTime, RefCountedPtr<Graphics::VertexBuffer>(pVB));
+}
+
+Uint32 TextureFont::CleanVertexBufferCache()
+{
+	// update the last access time
+	Uint32 numDeleted = 0;
+	const double currentTime = 0.001 * double(SDL_GetTicks());
+	for (auto it : m_vbTextCache) {
+		if ((currentTime - it.second.first) > CACHE_EVICTION_TIME) {
+			it.second.second.Reset();
+			++numDeleted;
+		}
+	}
+	return numDeleted;
 }
 
 const TextureFont::Glyph &TextureFont::GetGlyph(Uint32 chr)
@@ -502,6 +579,7 @@ TextureFont::TextureFont(const FontConfig &config, Graphics::Renderer *renderer,
 	, m_atlasU(0)
 	, m_atlasV(0)
 	, m_atlasVIncrement(0)
+	, m_lfLastCacheCleanTime(0.0)
 {
 	renderer->CheckRenderErrors();
 
@@ -540,7 +618,7 @@ TextureFont::TextureFont(const FontConfig &config, Graphics::Renderer *renderer,
 	desc.vertexColors = true; //to allow per-character colors
 	desc.textures = 1;
 	m_mat.reset(m_renderer->CreateMaterial(desc));
-	Graphics::TextureDescriptor textureDescriptor(m_texFormat, vector2f(ATLAS_SIZE), Graphics::NEAREST_CLAMP, false, false);
+	Graphics::TextureDescriptor textureDescriptor(m_texFormat, vector2f(ATLAS_SIZE), Graphics::NEAREST_CLAMP, false, false, false, 0, Graphics::TEXTURE_2D);
 	m_texture.Reset(m_renderer->CreateTexture(textureDescriptor));
 	m_mat->texture0 = m_texture.Get();
 

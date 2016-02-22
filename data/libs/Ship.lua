@@ -1,4 +1,4 @@
--- Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local Ship = import_core("Ship")
@@ -10,6 +10,7 @@ local ShipDef = import("ShipDef")
 local Equipment = import("Equipment")
 local Timer = import("Timer")
 local Lang = import("Lang")
+local Character = import("Character")
 
 local l = Lang.GetResource("ui-core")
 
@@ -533,6 +534,48 @@ function Ship:FireMissileAt(which_missile, target)
 	return missile_object
 end
 
+-- Method: StartSensor
+--
+-- Starts the equipped sensor
+--
+-- Parameters:
+--   idx - the index of the sensor in the equipment slots
+--
+-- Availability:
+--
+--   2015 June
+--
+-- Status:
+--
+--   experimental
+--
+
+function Ship:StartSensor(idx)
+	local sensor = self:GetEquip("sensor", idx)
+	sensor:BeginAcquisition(function(progress, state) end)
+end
+
+-- Method: StopSensor
+--
+-- Stops the equipped sensor
+--
+-- Parameters:
+--   idx - the index of the sensor in the equipment slots
+--
+-- Availability:
+--
+--   2015 June
+--
+-- Status:
+--
+--   experimental
+--
+
+function Ship:StopSensor(idx)
+	local sensor = self:GetEquip("sensor", idx)
+	sensor:ClearAcquisition()
+end
+
 --
 -- Method: Refuel
 --
@@ -563,12 +606,11 @@ Ship.Refuel = function (self,amount)
 		return 0
 	end
 	local fuelTankMass = ShipDef[self.shipId].fuelTankMass
-	local needed = math.clamp(math.ceil(fuelTankMass - self.fuelMassLeft), 0, amount)
+	local needed = math.clamp(math.floor(fuelTankMass - self.fuelMassLeft), 0, amount)
 	local removed = self:RemoveEquip(Equipment.cargo.hydrogen, needed)
 	self:SetFuelPercent(math.clamp(self.fuel + removed * 100 / fuelTankMass, 0, 100))
 	return removed
 end
-
 
 --
 -- Method: Jettison

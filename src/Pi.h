@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _PI_H
@@ -41,7 +41,9 @@ namespace UI { class Context; }
 class ObjectViewerView;
 #endif
 
-struct DetailLevel {
+class DetailLevel {
+public:
+	DetailLevel() : planets(0), textures(0), fracmult(0), cities(0) {}
 	int planets;
 	int textures;
 	int fracmult;
@@ -55,7 +57,6 @@ class Pi {
 public:
 	static void Init(const std::map<std::string,std::string> &options, bool no_gui = false);
 	static void InitGame();
-	static void StarportStart(Uint32 starport);
 	static void StartGame();
 	static void RequestEndGame(); // request that the game is ended as soon as safely possible
 	static void EndGame();
@@ -94,14 +95,13 @@ public:
 	static bool AreHudTrailsDisplayed() { return hudTrailsDisplayed; }
 	static void SetHudTrailsDisplayed(bool state) { hudTrailsDisplayed = state; }
 	static int MouseButtonState(int button) { return mouseButton[button]; }
-	/// Get the default speed modifier to apply to movement (scrolling, zooming...), depending on the "shift" keys.
-	/// This is a default value only, centralized here to promote uniform user expericience.
+	// Get the default speed modifier to apply to movement (scrolling, zooming...), depending on the "shift" keys.
+	// This is a default value only, centralized here to promote uniform user expericience.
 	static float GetMoveSpeedShiftModifier();
 	static void GetMouseMotion(int motion[2]) {
 		memcpy(motion, mouseMotion, sizeof(int)*2);
 	}
 	static void SetMouseGrab(bool on);
-	static void FlushCaches();
 	static void BoinkNoise();
 	static std::string GetSaveDir();
 	static SceneGraph::Model *FindModel(const std::string&, bool allowPlaceholder = true);
@@ -137,6 +137,14 @@ public:
 	static void SetView(View *v);
 	static View *GetView() { return currentView; }
 
+	static void SetAmountBackgroundStars(const float pc) { amountOfBackgroundStarsDisplayed = Clamp(pc, 0.01f, 1.0f); bRefreshBackgroundStars = true; }
+	static float GetAmountBackgroundStars() { return amountOfBackgroundStarsDisplayed; }
+	static bool MustRefreshBackgroundClearFlag() { 
+		const bool bRet = bRefreshBackgroundStars;
+		bRefreshBackgroundStars = false;
+		return bRet; 
+	}
+
 #if WITH_DEVKEYS
 	static bool showDebugInfo;
 #endif
@@ -157,7 +165,7 @@ public:
 
 	static Game *game;
 
-	static struct DetailLevel detail;
+	static DetailLevel detail;
 	static GameConfig *config;
 
 	static JobQueue *GetAsyncJobQueue() { return asyncJobQueue.get();}
@@ -167,6 +175,8 @@ public:
 
 private:
 	static void HandleEvents();
+	// Handler for ESC key press
+	static void HandleEscKey();
 	static void InitJoysticks();
 
 	static const Uint32 SYNC_JOBS_PER_LOOP = 1;
@@ -207,6 +217,8 @@ private:
 	static bool navTunnelDisplayed;
 	static bool speedLinesDisplayed;
 	static bool hudTrailsDisplayed;
+	static bool bRefreshBackgroundStars;
+	static float amountOfBackgroundStarsDisplayed;
 
 	static Gui::Fixed *menu;
 

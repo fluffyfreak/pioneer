@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _OGL_SKYBOX_MATERIAL_H_
@@ -7,7 +7,7 @@
 /*
  * Renders a cube map as a skybox.
  */
-#include "libs.h"
+#include "OpenGLLibs.h"
 #include "Program.h"
 
 namespace Graphics {

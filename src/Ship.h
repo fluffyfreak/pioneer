@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _SHIP_H
@@ -38,7 +38,7 @@ struct shipstats_t {
 	int used_capacity;
 	int used_cargo;
 	int free_capacity;
-	int total_mass; // cargo, equipment + hull
+	int static_mass; // cargo, equipment + hull
 	float hull_mass_left; // effectively hitpoints
 	float hyperspace_range;
 	float hyperspace_range_max;
@@ -113,6 +113,7 @@ public:
 	enum FlightState { // <enum scope='Ship' name=ShipFlightState public>
 		FLYING,     // open flight (includes autopilot)
 		DOCKING,    // in docking animation
+		UNDOCKING,  // in docking animation
 		DOCKED,     // docked with station
 		LANDED,     // rough landed (not docked)
 		JUMPING,    // between space and hyperspace ;)
@@ -345,7 +346,7 @@ private:
 	AIError m_aiMessage;
 	bool m_decelerating;
 
-	double m_thrusterFuel; 	// remaining fuel 0.0-1.0
+	double m_thrusterFuel;	// remaining fuel 0.0-1.0
 	double m_reserveFuel;	// 0-1, fuel not to touch for the current AI program
 
 	double m_landingMinOffset;	// offset from the centre of the ship used during docking

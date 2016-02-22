@@ -1,4 +1,4 @@
--- Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local f = Faction:new('Solar Federation')
@@ -9,6 +9,7 @@ local f = Faction:new('Solar Federation')
 	:expansionRate(1.0)
 	:military_name('SolFed Military')
 	:police_name('SolFed Police Force')
+	:police_ship('kanara')
 	:colour(0.4,0.4,1.0)
 
 f:govtype_weight('EARTHDEMOC',    60)

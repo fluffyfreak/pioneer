@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "StarSystemGenerator.h"
@@ -311,7 +311,7 @@ void StarSystemLegacyGeneratorBase::PickAtmosphere(SystemBody* sbody)
 			sbody->m_atmosDensity = 14.0;
 			break;
 		case SystemBody::TYPE_PLANET_ASTEROID:
-			sbody->m_atmosColor = Color(0);
+			sbody->m_atmosColor = Color::BLANK;
 			sbody->m_atmosDensity = 0.0;
 			break;
 		default:
@@ -367,7 +367,7 @@ void StarSystemLegacyGeneratorBase::PickAtmosphere(SystemBody* sbody)
 				}
 				sbody->m_atmosColor = Color(r*255, g*255, b*255, 255);
 			} else {
-				sbody->m_atmosColor = Color(0);
+				sbody->m_atmosColor = Color::BLANK;
 			}
 			sbody->m_atmosDensity = sbody->GetVolatileGas();
 			//Output("| Atmosphere :\n|      red   : [%f] \n|      green : [%f] \n|      blue  : [%f] \n", r, g, b);
@@ -532,9 +532,17 @@ void StarSystemCustomGenerator::CustomGetKidsOf(RefCountedPtr<StarSystem::Genera
 		if (kid->GetType() == SystemBody::TYPE_STARPORT_SURFACE) {
 			kid->m_orbit.SetPlane(matrix3x3d::RotateY(csbody->longitude) * matrix3x3d::RotateX(-0.5*M_PI + csbody->latitude));
 		} else {
-			if (kid->m_orbit.GetSemiMajorAxis() < 1.2 * parent->GetRadius()) {
-				Error("%s's orbit is too close to its parent", csbody->name.c_str());
-			}
+                        if (kid->GetSuperType() == SystemBody::SUPERTYPE_STARPORT) {
+                            fixed lowestOrbit = fixed().FromDouble(parent->CalcAtmosphereParams().atmosRadius + 500000.0/EARTH_RADIUS);
+                            if (kid->m_orbit.GetSemiMajorAxis() < lowestOrbit.ToDouble()) {
+                                    Error("%s's orbit is too close to its parent (%.2f/%.2f)", csbody->name.c_str(),kid->m_orbit.GetSemiMajorAxis(),lowestOrbit.ToFloat());
+                            }
+                        }
+                        else {
+                            if (kid->m_orbit.GetSemiMajorAxis() < 1.2 * parent->GetRadius()) {
+                                    Error("%s's orbit is too close to its parent", csbody->name.c_str());
+                            }
+                        }
 			double offset = csbody->want_rand_offset ? rand.Double(2*M_PI) : (csbody->orbitalOffset.ToDouble());
 			kid->m_orbit.SetPlane(matrix3x3d::RotateY(offset) * matrix3x3d::RotateX(-0.5*M_PI + csbody->latitude));
 		}
@@ -1542,9 +1550,8 @@ void PopulateStarSystemGenerator::PopulateAddStations(SystemBody* sbody, StarSys
 	namerand->seed(_init, 6);
 
 	if (sbody->GetPopulationAsFixed() < fixed(1,1000)) return;
-
 	fixed orbMaxS = fixed(1,4)*CalcHillRadius(sbody);
-	fixed orbMinS = 4 * sbody->GetRadiusAsFixed() * AU_EARTH_RADIUS;
+	fixed orbMinS = fixed().FromDouble((sbody->CalcAtmosphereParams().atmosRadius + + 500000.0/EARTH_RADIUS)) * AU_EARTH_RADIUS;
 	if (sbody->GetNumChildren() > 0) 
 		orbMaxS = std::min(orbMaxS, fixed(1,2) * sbody->GetChildren()[0]->GetOrbMinAsFixed());
 
@@ -1564,18 +1571,21 @@ void PopulateStarSystemGenerator::PopulateAddStations(SystemBody* sbody, StarSys
 		if( NumToMake > 0 )
 		{
 			const double centralMass = sbody->GetMassAsFixed().ToDouble() * EARTH_MASS;
-
+                        
 			// What is our innermost orbit?
-			fixed innerOrbit = orbMinS + ((orbMaxS - orbMinS) / 4);
+			fixed innerOrbit = orbMinS;// + ((orbMaxS - orbMinS) / 25);
 
-			// Try to limit the inner orbit to at least one day.
+			// Try to limit the inner orbit to at least three hours.
 			{
+                                const double minHours = 3.0;
 				const double seconds = Orbit::OrbitalPeriod(innerOrbit.ToDouble() * AU, centralMass);
-				const double days = seconds / (60.0*60.0*24.0);
-				if (days < 1.0)
+				const double hours = seconds / (60.0*60.0);
+				if (hours < minHours)
 				{
-					// We can't go higher than our maximum so set it to that.
-					innerOrbit = orbMaxS;
+                                        //knowing that T=2*pi*R/sqrt(G*M/R) find R for set T=4 hours: 
+                                        fixed orbitFromPeriod = fixed().FromDouble((std::pow(G*centralMass, 1.0/3.0)*std::pow(minHours*60.0*60.0, 2.0/3.0))/(std::pow(2.0*M_PI, 2.0/3.0)*AU));
+                                        // We can't go higher than our maximum so set it to that.
+					innerOrbit = std::min(orbMaxS, orbitFromPeriod);
 				}
 			}
 

@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaConstants.h"
@@ -198,25 +198,6 @@ void LuaConstants::Register(lua_State *l)
 	 * Availability:
 	 *
 	 *   2014 April
-	 *
-	 * Status:
-	 *
-	 *   experimental
-	 */
-
-	/*
-	 * Constants: PolitCrime
-	 *
-	 * Crimes
-	 *
-	 * TRADING_ILLEGAL_GOODS - .
-	 * WEAPON_DISCHARGE - .
-	 * PIRACY - .
-	 * MURDER - .
-	 *
-	 * Availability:
-	 *
-	 *   alpha 10
 	 *
 	 * Status:
 	 *
@@ -451,6 +432,7 @@ void LuaConstants::Register(lua_State *l)
 	 *
 	 * FLYING     - open flight (includes autopilot)
 	 * DOCKING    - in docking animation
+	 * UNDOCKING  - in docking animation
 	 * DOCKED     - docked with station
 	 * LANDED     - rough landed (not docked)
 	 * JUMPING    - just initiating hyperjump (as of February 2014)

@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _RENDERER_H
@@ -6,8 +6,8 @@
 
 #include "WindowSDL.h"
 #include "libs.h"
-#include "graphics/Types.h"
-#include "graphics/Light.h"
+#include "Types.h"
+#include "Light.h"
 #include "Stats.h"
 #include <map>
 #include <memory>

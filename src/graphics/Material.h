@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _MATERIAL_H
@@ -33,6 +33,7 @@ enum EffectType {
 	EFFECT_GEOSPHERE_TERRAIN_WITH_LAVA,
 	EFFECT_GEOSPHERE_TERRAIN_WITH_WATER,
 	EFFECT_GEOSPHERE_SKY,
+	EFFECT_GEOSPHERE_STAR,
 	EFFECT_GASSPHERE_TERRAIN,
 	EFFECT_FRESNEL_SPHERE,
 	EFFECT_SHIELD,
@@ -46,7 +47,8 @@ enum EffectType {
 enum MaterialQuality {
 	HAS_ATMOSPHERE		= 1 << 0,
 	HAS_ECLIPSES		= 1 << 1,
-	HAS_HEAT_GRADIENT   = 1 << 2
+	HAS_HEAT_GRADIENT   = 1 << 2,
+	HAS_DETAIL_MAPS		= 1 << 3
 };
 
 // Renderer creates a material that best matches these requirements.
@@ -59,6 +61,7 @@ public:
 	bool glowMap;
 	bool ambientMap;
 	bool lighting;
+	bool normalMap;
 	bool specularMap;
 	bool usePatterns; //pattern/color system
 	bool vertexColors;
@@ -84,6 +87,7 @@ public:
 	Texture *texture3;
 	Texture *texture4;
 	Texture *texture5;
+	Texture *texture6;
 	Texture *heatGradient;
 
 	Color diffuse;

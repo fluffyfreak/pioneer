@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "GameConfig.h"
@@ -15,6 +15,7 @@ GameConfig::GameConfig(const std::map<std::string,std::string> &override_)
 	map["StartFullscreen"] = "0";
 	map["ScrWidth"] = "800";
 	map["ScrHeight"] = "600";
+	map["UIScaleFactor"] = "1";
 	map["DetailCities"] = "1";
 	map["DetailPlanets"] = "1";
 	map["SfxVolume"] = "0.8";
@@ -43,6 +44,8 @@ GameConfig::GameConfig(const std::map<std::string,std::string> &override_)
 	map["EnableCockpit"] = "0";
 	map["HudTrails"] = "0";
 	map["EnableServerAgent"] = "0";
+	map["AmountOfBackgroundStars"] = "1.0";
+	map["UseAnisotropicFiltering"] = "0";
 
 #ifdef _WIN32
 	map["RedirectStdio"] = "1";

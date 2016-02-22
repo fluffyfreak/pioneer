@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -42,7 +42,6 @@ void BasePatchJob::GenerateMesh(double *heights, vector3f *normals, Color3ub *co
 			const double xfrac = double(x) * fracStep;
 			const vector3d p = GetSpherePoint(v0, v1, v2, v3, xfrac, yfrac);
 			const double height = pTerrain->GetHeight(p);
-			assert(height >= 0.0f && height <= 1.0f);
 			*(bhts++) = height;
 			*(vrts++) = p * (height + 1.0);
 		}

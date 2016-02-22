@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "ModelViewer.h"
@@ -154,6 +154,7 @@ void ModelViewer::Run(const std::string &modelName)
 	videoSettings.requestedSamples = config->Int("AntiAliasingMode");
 	videoSettings.vsync = (config->Int("VSync") != 0);
 	videoSettings.useTextureCompression = (config->Int("UseTextureCompression") != 0);
+	videoSettings.useAnisotropicFiltering = (config->Int("UseAnisotropicFiltering") != 0);
 	videoSettings.iconFile = OS::GetIconFilename();
 	videoSettings.title = "Model viewer";
 	Graphics::Renderer *renderer = Graphics::Init(videoSettings);
@@ -408,19 +409,34 @@ void ModelViewer::DrawBackground()
 	m_renderer->SetOrthographicProjection(0.f, 1.f, 0.f, 1.f, -1.f, 1.f);
 	m_renderer->SetTransform(matrix4x4f::Identity());
 
-	static Graphics::VertexArray va(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_DIFFUSE);
-	va.Clear();
-	const Color top = Color::BLACK;
-	const Color bottom = Color(77);
-	va.Add(vector3f(0.f, 0.f, 0.f), bottom);
-	va.Add(vector3f(1.f, 0.f, 0.f), bottom);
-	va.Add(vector3f(1.f, 1.f, 0.f), top);
+	if(!m_bgBuffer.Valid())
+	{
+		const Color top = Color::BLACK;
+		const Color bottom = Color(77, 77, 77);
+		Graphics::VertexArray bgArr(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_DIFFUSE, 6);
+		// triangle 1
+		bgArr.Add(vector3f(0.f, 0.f, 0.f), bottom);
+		bgArr.Add(vector3f(1.f, 0.f, 0.f), bottom);
+		bgArr.Add(vector3f(1.f, 1.f, 0.f), top);
+		// triangle 2
+		bgArr.Add(vector3f(0.f, 0.f, 0.f), bottom);
+		bgArr.Add(vector3f(1.f, 1.f, 0.f), top);
+		bgArr.Add(vector3f(0.f, 1.f, 0.f), top);
 
-	va.Add(vector3f(0.f, 0.f, 0.f), bottom);
-	va.Add(vector3f(1.f, 1.f, 0.f), top);
-	va.Add(vector3f(0.f, 1.f, 0.f), top);
-
-	m_renderer->DrawTriangles(&va, m_bgState, Graphics::vtxColorMaterial);
+		Graphics::VertexBufferDesc vbd;
+		vbd.attrib[0].semantic	= Graphics::ATTRIB_POSITION;
+		vbd.attrib[0].format	= Graphics::ATTRIB_FORMAT_FLOAT3;
+		vbd.attrib[1].semantic	= Graphics::ATTRIB_DIFFUSE;
+		vbd.attrib[1].format	= Graphics::ATTRIB_FORMAT_UBYTE4;
+		vbd.numVertices = 6;
+		vbd.usage = Graphics::BUFFER_USAGE_STATIC;
+	
+		// VertexBuffer
+		m_bgBuffer.Reset( m_renderer->CreateVertexBuffer(vbd) );
+		m_bgBuffer->Populate(bgArr);
+	}
+	
+	m_renderer->DrawBuffer(m_bgBuffer.Get(), m_bgState, Graphics::vtxColorMaterial, Graphics::TRIANGLES);
 }
 
 //Draw grid and axes
@@ -453,7 +469,7 @@ void ModelViewer::DrawGrid(const matrix4x4f &trans, float radius)
 	}
 
 	m_renderer->SetTransform(trans);
-	m_gridLines.SetData(points.size(), &points[0], Color(128));
+	m_gridLines.SetData(points.size(), &points[0], Color(128, 128, 128));
 	m_gridLines.Draw(m_renderer, m_bgState);
 
 	// industry-standard red/green/blue XYZ axis indiactor
@@ -461,24 +477,9 @@ void ModelViewer::DrawGrid(const matrix4x4f &trans, float radius)
 	Graphics::Drawables::GetAxes3DDrawable(m_renderer)->Draw(m_renderer);
 }
 
-void ModelViewer::DrawModel()
+void ModelViewer::DrawModel(const matrix4x4f &mv)
 {
 	assert(m_model);
-
-	m_renderer->SetPerspectiveProjection(85, Graphics::GetScreenWidth()/float(Graphics::GetScreenHeight()), 0.1f, 100000.f);
-	m_renderer->SetTransform(matrix4x4f::Identity());
-	UpdateLights();
-
-	matrix4x4f mv;
-	if (m_options.mouselookEnabled) {
-		mv = m_viewRot.Transpose() * matrix4x4f::Translation(-m_viewPos);
-	} else {
-		m_rotX = Clamp(m_rotX, -90.0f, 90.0f);
-		matrix4x4f rot = matrix4x4f::Identity();
-		rot.RotateX(DEG2RAD(-m_rotX));
-		rot.RotateY(DEG2RAD(-m_rotY));
-		mv = matrix4x4f::Translation(0.0f, 0.0f, -zoom_distance(m_baseDistance, m_zoom)) * rot;
-	}
 
 	m_model->UpdateAnimations();
 
@@ -491,14 +492,6 @@ void ModelViewer::DrawModel()
 	);
 
 	m_model->Render(mv);
-
-	if (m_options.showLandingPad) {
-		if (!m_scaleModel) CreateTestResources();
-		m_scaleModel->Render(mv * matrix4x4f::Translation(0.f, m_landingMinOffset, 0.f));
-	}
-
-	if (m_options.showGrid)
-		DrawGrid(mv, m_model->GetDrawClipRadius());
 }
 
 void ModelViewer::MainLoop()
@@ -510,12 +503,15 @@ void ModelViewer::MainLoop()
 		m_frameTime = (ticks - lastTime);
 		lastTime = ticks;
 
-		m_renderer->ClearScreen();
-
+		// logic update
 		PollEvents();
+
+		m_renderer->ClearScreen();
+		UpdateLights();
 		UpdateCamera();
 		UpdateShield();
 
+		// render the gradient backdrop
 		DrawBackground();
 
 		//update animations, draw model etc.
@@ -524,13 +520,41 @@ void ModelViewer::MainLoop()
 			m_shields->SetEnabled(m_options.showShields || m_shieldIsHit);
 
 			//Calculate the impact's radius dependant on time
-			float dif1 = 0.34 - (-1.48f);
-			float dif2 = m_shieldHitPan - (-1.48f);
+			const float dif1 = 0.34 - (-1.48f);
+			const float dif2 = m_shieldHitPan - (-1.48f);
 			//Range from start (0.0) to end (1.0)
-			float dif = dif2 / (dif1 * 1.0f);
+			const float dif = dif2 / (dif1 * 1.0f);
 
 			m_shields->Update(m_options.showShields ? 1.0f : (1.0f - dif), 1.0f);
-			DrawModel();
+			
+			// setup rendering
+			m_renderer->SetPerspectiveProjection(85, Graphics::GetScreenWidth()/float(Graphics::GetScreenHeight()), 0.1f, 100000.f);
+			m_renderer->SetTransform(matrix4x4f::Identity());
+
+			// calc camera info
+			matrix4x4f mv;
+			if (m_options.mouselookEnabled) {
+				mv = m_viewRot.Transpose() * matrix4x4f::Translation(-m_viewPos);
+			} else {
+				m_rotX = Clamp(m_rotX, -90.0f, 90.0f);
+				matrix4x4f rot = matrix4x4f::Identity();
+				rot.RotateX(DEG2RAD(-m_rotX));
+				rot.RotateY(DEG2RAD(-m_rotY));
+				mv = matrix4x4f::Translation(0.0f, 0.0f, -zoom_distance(m_baseDistance, m_zoom)) * rot;
+			}
+
+			// draw the model itself
+			DrawModel(mv);
+
+			// helper rendering
+			if (m_options.showLandingPad) {
+				if (!m_scaleModel) CreateTestResources();
+				m_scaleModel->Render(mv * matrix4x4f::Translation(0.f, m_landingMinOffset, 0.f));
+			}
+
+			if (m_options.showGrid) {
+				DrawGrid(mv, m_model->GetDrawClipRadius());
+			}
 		}
 
 		m_ui->Update();
@@ -542,6 +566,7 @@ void ModelViewer::MainLoop()
 			Screenshot();
 		}
 
+		// end scene
 		m_renderer->SwapBuffers();
 	}
 }
@@ -1222,25 +1247,25 @@ void ModelViewer::UpdateLights()
 	switch(m_options.lightPreset) {
 	case 0:
 		//Front white
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(90,0), Color(255), Color(255)));
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0,-90), Color(13, 13, 26), Color(255)));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(90,0), Color::WHITE, Color::WHITE));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0,-90), Color(13, 13, 26), Color::WHITE));
 		break;
 	case 1:
 		//Two-point
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(120,0), Color(230, 204, 204), Color(255)));
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(-30,-90), Color(178, 128, 0), Color(255)));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(120,0), Color(230, 204, 204), Color::WHITE));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(-30,-90), Color(178, 128, 0), Color::WHITE));
 		break;
 	case 2:
 		//Backlight
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(-75,20), Color(255), Color(255)));
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0,-90), Color(13, 13, 26), Color(255)));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(-75,20), Color::WHITE, Color::WHITE));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0,-90), Color(13, 13, 26), Color::WHITE));
 		break;
 	case 3:
 		//4 lights
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, 90), Color::YELLOW, Color(255)));
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, -90), Color::GREEN, Color(255)));
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, 45), Color::BLUE, Color(255)));
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, -45), Color::WHITE, Color(255)));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, 90), Color::YELLOW, Color::WHITE));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, -90), Color::GREEN, Color::WHITE));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, 45), Color::BLUE, Color::WHITE));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, -45), Color::WHITE, Color::WHITE));
 		break;
 	};
 

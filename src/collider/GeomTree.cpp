@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "../libs.h"
@@ -6,18 +6,18 @@
 #include "BVHTree.h"
 #include "Weld.h"
 
-static const unsigned int IGNORE_FLAG = 0x8000;
+static const Uint32 IGNORE_FLAG = 0x8000;
 
 GeomTree::~GeomTree()
 {
 }
 
-GeomTree::GeomTree(const int numVerts, const int numTris, const std::vector<vector3f> &vertices, const Uint16 *indices, const unsigned int *triflags)
+GeomTree::GeomTree(const int numVerts, const int numTris, const std::vector<vector3f> &vertices, const Uint32 *indices, const Uint32 *triflags)
 : m_numVertices(numVerts)
 , m_numTris(numTris)
 , m_vertices(vertices)
 {
-	assert(vertices.size() == m_numVertices);
+	assert(static_cast<int>(vertices.size()) == m_numVertices);
 	Profiler::Timer timer;
 	timer.Start();
 
@@ -39,7 +39,7 @@ GeomTree::GeomTree(const int numVerts, const int numTris, const std::vector<vect
 	std::vector<int> activeTris;
 	activeTris.reserve(numTris);
 	// So, we ignore tris with flag >= 0x8000
-	for (int i=0; i<numTris; i++) 
+	for (int i=0; i<numTris; i++)
 	{
 		if (triflags[i] >= IGNORE_FLAG) continue;
 		activeTris.push_back(i*3);
@@ -73,10 +73,10 @@ GeomTree::GeomTree(const int numVerts, const int numTris, const std::vector<vect
 
 	// Get radius, m_aabb, and merge duplicate edges
 	m_radius = 0;
-	for (int i=0; i<numTris; i++) 
+	for (int i=0; i<numTris; i++)
 	{
-		const unsigned int triflag = m_triFlags[i];
-		if (triflag < IGNORE_FLAG) 
+		const Uint32 triflag = m_triFlags[i];
+		if (triflag < IGNORE_FLAG)
 		{
 			const int vi1 = m_indices[3*i+0];
 			const int vi2 = m_indices[3*i+1];
@@ -103,7 +103,7 @@ GeomTree::GeomTree(const int numVerts, const int numTris, const std::vector<vect
 
 	{
 		Aabb *aabbs = new Aabb[activeTris.size()];
-		for (unsigned int i = 0; i < activeTris.size(); i++)
+		for (Uint32 i = 0; i < activeTris.size(); i++)
 		{
 			const vector3d v1 = vector3d(m_vertices[m_indices[activeTris[i] + 0]]);
 			const vector3d v2 = vector3d(m_vertices[m_indices[activeTris[i] + 1]]);
@@ -127,7 +127,7 @@ GeomTree::GeomTree(const int numVerts, const int numTris, const std::vector<vect
 
 	int pos = 0;
 	typedef EdgeType::iterator MapPairIter;
-	for (MapPairIter i = edges.begin(), iEnd = edges.end();	i != iEnd; ++i, pos++) 
+	for (MapPairIter i = edges.begin(), iEnd = edges.end();	i != iEnd; ++i, pos++)
 	{
 		// precalc some jizz
 		const std::pair<int, int> &vtx = (*i).first;
@@ -190,7 +190,7 @@ GeomTree::GeomTree(Serializer::Reader &rd)
 	const int numIndicies(m_numTris * 3);
 	m_indices.resize(numIndicies);
 	for (Sint32 iIndi = 0; iIndi < numIndicies; ++iIndi) {
-		m_indices[iIndi] = rd.Int16();
+		m_indices[iIndi] = rd.Int32();
 	}
 
 	m_triFlags.resize(m_numTris);
@@ -209,7 +209,7 @@ GeomTree::GeomTree(Serializer::Reader &rd)
 	}
 	// regenerate the aabb data
 	Aabb *aabbs = new Aabb[activeTris.size()];
-	for (unsigned int i = 0; i<activeTris.size(); i++)
+	for (Uint32 i = 0; i<activeTris.size(); i++)
 	{
 		const vector3d v1 = vector3d(m_vertices[m_indices[activeTris[i] + 0]]);
 		const vector3d v2 = vector3d(m_vertices[m_indices[activeTris[i] + 1]]);
@@ -221,7 +221,7 @@ GeomTree::GeomTree(Serializer::Reader &rd)
 	m_triTree.reset(new BVHTree(activeTris.size(), &activeTris[0], aabbs));
 	delete[] aabbs;
 
-	// 
+	//
 	int *edgeIdxs = new int[m_numEdges];
 	memset(edgeIdxs, 0, sizeof(int)*m_numEdges);
 	for (int i = 0; i<m_numEdges; i++) {
@@ -350,7 +350,7 @@ void GeomTree::RayTriIntersect(int numRays, const vector3f &origin, const vector
 		const float v2d = v2_cross.Dot(dirs[i]);
 
 		if (((v0d > 0) && (v1d > 0) && (v2d > 0)) ||
-		    ((v0d < 0) && (v1d < 0) && (v2d < 0))) {
+			 ((v0d < 0) && (v1d < 0) && (v2d < 0))) {
 			const float dist = nominator / dirs[i].Dot(n);
 			if ((dist > 0) && (dist < isects[i].dist)) {
 				isects[i].dist = dist;
@@ -396,7 +396,7 @@ void GeomTree::Save(Serializer::Writer &wr) const
 	}
 
 	for (Sint32 iIndi = 0; iIndi < (m_numTris * 3); ++iIndi) {
-		wr.Int16(m_indices[iIndi]);
+		wr.Int32(m_indices[iIndi]);
 	}
 
 	for (Sint32 iTri = 0; iTri < m_numTris; ++iTri) {

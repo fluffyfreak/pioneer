@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _TEXT_TEXTUREFONT_H
@@ -11,6 +11,8 @@
 #include "graphics/Material.h"
 #include "graphics/VertexBuffer.h"
 #include "graphics/RenderState.h"
+
+#include <unordered_map>
 
 namespace FileSystem { class FileData; }
 
@@ -37,7 +39,9 @@ public:
 
 	void PopulateString(Graphics::VertexArray &va, const std::string &str, const float x, const float y, const Color &color = Color::WHITE);
 	Color PopulateMarkup(Graphics::VertexArray &va, const std::string &str, const float x, const float y, const Color &color = Color::WHITE);
-	Graphics::VertexBuffer* CreateVertexBuffer(const Graphics::VertexArray &va) const;
+	Graphics::VertexBuffer* CreateVertexBuffer(const Graphics::VertexArray &va, const bool bIsStatic) const;
+	Graphics::VertexBuffer* CreateVertexBuffer(const Graphics::VertexArray &va, const std::string &str, const bool bIsStatic);
+	Graphics::VertexBuffer* GetCachedVertexBuffer(const std::string &str);
 
 	// general baseline-to-baseline height
 	float GetHeight() const { return m_height; }
@@ -66,6 +70,9 @@ private:
 	TextureFont(const TextureFont &);
 	TextureFont &operator=(const TextureFont &);
 
+	void AddCachedVertexBuffer(Graphics::VertexBuffer *pVB, const std::string &str);
+	Uint32 CleanVertexBufferCache();
+
 	FontConfig m_config;
 	Graphics::Renderer *m_renderer;
 	float m_scale;
@@ -84,7 +91,6 @@ private:
 	float m_height;
 	float m_descender;
 	std::unique_ptr<Graphics::Material> m_mat;
-	std::unique_ptr<Graphics::VertexBuffer> m_vertexBuffer;
 	Graphics::RenderState *m_renderState;
 
 	static int s_glyphCount;
@@ -102,6 +108,12 @@ private:
 	std::vector<unsigned char> m_buf;
 	int m_bufWidth, m_bufHeight;
 	int m_bpp;
+
+	typedef std::unordered_map<std::string, std::pair<double,RefCountedPtr<Graphics::VertexBuffer>>> VBHashMap;
+	typedef VBHashMap::iterator VBHashMapIter;
+	typedef VBHashMap::const_iterator VBHashMapConstIter;
+	VBHashMap m_vbTextCache;
+	double m_lfLastCacheCleanTime;
 };
 
 }

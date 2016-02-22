@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Ship.h"
@@ -31,6 +31,7 @@ void CargoBody::SaveToJson(Json::Value &jsonObj, Space *space)
 void CargoBody::LoadFromJson(const Json::Value &jsonObj, Space *space)
 {
 	DynamicBody::LoadFromJson(jsonObj, space);
+	GetModel()->SetLabel(GetLabel());
 
 	if (!jsonObj.isMember("cargo_body")) throw SavedGameCorruptException();
 	Json::Value cargoBodyObj = jsonObj["cargo_body"];

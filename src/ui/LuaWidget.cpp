@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Widget.h"
@@ -69,6 +69,18 @@ public:
 	static int l_attr_disabled(lua_State *l) {
 		UI::Widget *w = LuaObject<UI::Widget>::CheckFromLua(1);
 		lua_pushboolean(l, w->IsDisabled());
+		return 1;
+	}
+
+	static int l_attr_width(lua_State *l) {
+		UI::Widget *w = LuaObject<UI::Widget>::CheckFromLua(1);
+		lua_pushnumber(l, w->GetSize().x);
+		return 1;
+	}
+
+	static int l_attr_height(lua_State *l) {
+		UI::Widget *w = LuaObject<UI::Widget>::CheckFromLua(1);
+		lua_pushnumber(l, w->GetSize().y);
 		return 1;
 	}
 
@@ -166,6 +178,8 @@ template <> void LuaObject<UI::Widget>::RegisterClass()
 
 	static const luaL_Reg l_attrs[] = {
 		{ "disabled",            LuaWidget::l_attr_disabled              },
+		{ "width",               LuaWidget::l_attr_width                 },
+		{ "height",              LuaWidget::l_attr_height                },
 
 		{ "onKeyDown",           LuaWidget::l_attr_on_key_down           },
 		{ "onKeyUp",             LuaWidget::l_attr_on_key_up             },

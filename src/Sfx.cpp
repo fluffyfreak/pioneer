@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Sfx.h"
@@ -125,8 +125,8 @@ void Sfx::TimeStepUpdate(const float timeStep)
 void Sfx::Render(Renderer *renderer, const matrix4x4d &ftransform)
 {
 	PROFILE_SCOPED()
-	vector3d fpos = ftransform * GetPosition();
-	vector3f pos(&fpos.x);
+	const vector3d fpos = ftransform * GetPosition();
+	const vector3f pos(fpos);
 
 	switch (m_type) 
 	{

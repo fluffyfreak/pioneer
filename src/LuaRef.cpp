@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaRef.h"
@@ -108,6 +108,8 @@ void LuaRef::SaveToJson(Json::Value &jsonObj)
 
 void LuaRef::LoadFromJson(const Json::Value &jsonObj)
 {
+	if (!m_lua) { m_lua = Lua::manager->GetLuaState(); }
+
 	if (!jsonObj.isMember("lua_ref")) throw SavedGameCorruptException();
 
 	std::string pickled = jsonObj["lua_ref"].asString();

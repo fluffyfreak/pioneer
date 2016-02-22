@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _OGL_MATERIAL_H
@@ -12,7 +12,7 @@
  *
  * Programs are owned by the renderer, since they are shared between materials.
  */
-#include "libs.h"
+#include "OpenGLLibs.h"
 #include "graphics/Material.h"
 
 namespace Graphics {

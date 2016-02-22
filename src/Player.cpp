@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Player.h"
@@ -188,6 +188,7 @@ void Player::OnEnterSystem()
 	m_controller->SetFlightControlState(CONTROL_MANUAL);
 	//XXX don't call sectorview from here, use signals instead
 	Pi::game->GetSectorView()->ResetHyperspaceTarget();
+	Pi::game->GetWorldView()->ResetHyperspaceButton();
 }
 
 //temporary targeting stuff

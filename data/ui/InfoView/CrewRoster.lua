@@ -1,4 +1,4 @@
--- Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local Engine = import("Engine")
@@ -99,6 +99,7 @@ local crewRoster = function ()
 						JUMPING = l.WE_ARE_IN_HYPERSPACE_COMMANDER,
 						HYPERSPACE = l.WE_ARE_IN_HYPERSPACE_COMMANDER,
 						DOCKING = l.THE_SHIP_IS_UNDER_STATION_CONTROL_COMMANDER,
+						UNDOCKING = l.THE_SHIP_IS_UNDER_STATION_CONTROL_COMMANDER,
 					})[Game.player.flightState])
 				elseif not Game.player:GetCombatTarget() then
 					feedback:SetText(l.YOU_MUST_FIRST_SELECT_A_COMBAT_TARGET_COMMANDER)
