@@ -48,6 +48,7 @@ private:
 	void BuildFirstPatches();
 	void GenerateTexture();
 	bool AddTextureFaceResult(STextureFaceResult *res);
+	void SetUpMaterials();
 
 	static RefCountedPtr<GasPatchContext> s_patchContext;
 
@@ -57,7 +58,6 @@ private:
 	bool m_hasTempCampos;
 	vector3d m_tempCampos;
 
-	virtual void SetUpMaterials();
 	RefCountedPtr<Graphics::Texture> m_surfaceTextureSmall;
 	RefCountedPtr<Graphics::Texture> m_surfaceTexture;
 	

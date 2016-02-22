@@ -148,6 +148,7 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 
 			GeoPatchContext::VBOVertex* vtxPtr = &VBOVtxPtr[outerLeft + (y*edgeLen)];
 			GeoPatchContext::VBOVertex* vtxInr = &VBOVtxPtr[innerLeft + (y*edgeLen)];
+			vtxPtr->pos = vector3f(p);
 			vtxPtr->norm = vtxInr->norm;
 			vtxPtr->col = vtxInr->col;
 			vtxPtr->uv = vtxInr->uv;
@@ -163,6 +164,8 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 			GeoPatchContext::VBOVertex* vtxInr = &VBOVtxPtr[innerRight + (y*edgeLen)];
 			vtxPtr->pos = vector3f(p);
 			vtxPtr->norm = vtxInr->norm;
+			vtxPtr->col = vtxInr->col;
+			vtxPtr->uv = vtxInr->uv;
 		}
 		// ----------------------------------------------------
 		// horizontal edges
@@ -180,7 +183,7 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 			vtxPtr->norm = vtxInr->norm;
 			vtxPtr->col = vtxInr->col;
 			vtxPtr->uv = vtxInr->uv;
-	}
+		}
 		// bottom-edge
 		for (Sint32 x = 1; x < edgeLen - 1; x++)
 		{
@@ -195,7 +198,7 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 			vtxPtr->norm = vtxInr->norm;
 			vtxPtr->col = vtxInr->col;
 			vtxPtr->uv = vtxInr->uv;
-}
+		}
 		// corners
 		{
 			// top left
@@ -224,6 +227,7 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 
 		// ----------------------------------------------------
 		// end of mapping
+		m_vertexBuffer->Unmap();
 
 #ifdef DEBUG_BOUNDING_SPHERES
 		RefCountedPtr<Graphics::Material> mat(Pi::renderer->CreateMaterial(Graphics::MaterialDescriptor()));

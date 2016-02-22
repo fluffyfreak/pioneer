@@ -78,6 +78,8 @@ private:
 	}
 	void ProcessQuadSplitRequests();
 
+	void SetUpMaterials();
+
 	std::unique_ptr<GeoPatch> m_patches[6];
 	struct TDistanceRequest {
 		TDistanceRequest(double dist, SQuadSplitRequest *pRequest, GeoPatch *pRequester) :
@@ -97,8 +99,6 @@ private:
 	Graphics::Frustum m_tempFrustum;
 
 	static RefCountedPtr<GeoPatchContext> s_patchContext;
-
-	virtual void SetUpMaterials();
 
 	RefCountedPtr<Graphics::Texture> m_texHi;
 	RefCountedPtr<Graphics::Texture> m_texLo;
