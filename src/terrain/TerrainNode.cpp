@@ -329,17 +329,15 @@ void TerrainNodeData::Call(const vector3d& p, double& accumH)
 	double localH = 0.0;
 	switch (m_noiseType)
 	{
-	case NT_NOISE:					localH = noise(m_octaves, m_frequency, m_persistence, p);						break;
-	case NT_NOISE_CELLULAR_SQUARED:	localH = noise_cellular_squared(m_octaves, m_frequency, m_persistence, p);		break;
-	case NT_NOISE_RIDGED:			localH = noise_ridged(m_octaves, m_frequency, m_persistence, p);				break;
-	case NT_NOISE_CUBED:			localH = noise_cubed(m_octaves, m_frequency, m_persistence, p);					break;
-	case NT_CONSTANT:				localH = m_scaleLow;															break;
-	case NT_SQUARED:				localH = pow(accumH, 2.0);														break;
-	case NT_CUBED:					localH = pow(accumH, 3.0);														break;
+		// noise is always scaled and clamped
+	case NT_NOISE:					localH = Clamp(Scale(noise(m_octaves, m_frequency, m_persistence, p)));						break;
+	case NT_NOISE_CELLULAR_SQUARED:	localH = Clamp(Scale(noise_cellular_squared(m_octaves, m_frequency, m_persistence, p)));	break;
+	case NT_NOISE_RIDGED:			localH = Clamp(Scale(noise_ridged(m_octaves, m_frequency, m_persistence, p)));				break;
+	case NT_NOISE_CUBED:			localH = Clamp(Scale(noise_cubed(m_octaves, m_frequency, m_persistence, p)));				break;
+	case NT_CONSTANT:				localH = m_scaleLow;																		break;
+	case NT_SQUARED:				localH = pow(accumH, 2.0);																	break;
+	case NT_CUBED:					localH = pow(accumH, 3.0);																	break;
 	}
-
-	// clamp || scale || both
-	localH = Clamp(Scale(localH), m_clamp.first, m_clamp.second);
 
 	// wtf?
 #if 1
@@ -350,7 +348,7 @@ void TerrainNodeData::Call(const vector3d& p, double& accumH)
 	case TO_MUL: accumH *= localH; break;
 	case TO_DIV: accumH /= localH; break;
 	}
-#elif 0
+#elif 1
 	switch (m_op)
 	{
 	case TO_ADD: accumH = localH + accumH; break;
@@ -368,11 +366,15 @@ void TerrainNodeData::Call(const vector3d& p, double& accumH)
 	}
 #endif
 
-	//accumH = Clamp(Scale(accumH), m_clamp.first, m_clamp.second);
-
 	for (auto child : m_children)
 	{
+#if 0
+		double accumulator = accumH;
+		child.Call(p, accumulator);
+		accumH += accumulator;
+#else
 		child.Call(p, accumH);
+#endif
 	}
 }
 

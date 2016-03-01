@@ -39,7 +39,6 @@ public:
 		m_op(TO_ADD), 
 		m_scaleHigh(0.0), 
 		m_scaleLow(0.0),
-		m_bScale(false),
 		m_octaves(0),
 		m_frequency(0.0),
 		m_persistence(0.0),
@@ -62,7 +61,6 @@ public:
 
 	void ScaleHigh(const double high) {
 		m_scaleHigh = high;
-		m_bScale = true;
 	}
 
 	void Octaves(const int oct) {
@@ -108,7 +106,12 @@ private:
 	inline double Scale(const double h)
 	{
 		// convert to 0..1 from -1..1
-		return (m_bScale) ? MathUtil::mix(m_scaleLow, m_scaleHigh, ((1.0 + h)*0.5)) : h;
+		return MathUtil::mix(m_scaleLow, m_scaleHigh, ((1.0 + h)*0.5));
+	}
+
+	inline double Clamp(const double h)
+	{
+		return ::Clamp(h, m_clamp.first, m_clamp.second);
 	}
 
 	//"name": "Mountains",
@@ -121,7 +124,6 @@ private:
 	//"low": -13,
 	double m_scaleHigh;
 	double m_scaleLow;
-	bool m_bScale;
 
 	//"octaves": 7,
 	int m_octaves;
