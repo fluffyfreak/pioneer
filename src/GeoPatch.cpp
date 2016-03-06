@@ -8,6 +8,7 @@
 #include "GeoSphere.h"
 #include "perlin.h"
 #include "Pi.h"
+#include "Game.h"
 #include "RefCounted.h"
 #include "graphics/Material.h"
 #include "graphics/Renderer.h"
@@ -60,7 +61,8 @@ GeoPatch::~GeoPatch() {
 	colors.reset();
 }
 
-void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
+static Sint32 s_depth_sub = 2;
+void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer) 
 {
 	PROFILE_SCOPED()
 	if (m_needUpdateVBOs) {
@@ -197,7 +199,6 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 			vtxPtr->col = vtxInr->col;
 			vtxPtr->uv = vtxInr->uv;
 		}
-		// ----------------------------------------------------
 		// corners
 		{
 			// top left
@@ -232,16 +233,163 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 		RefCountedPtr<Graphics::Material> mat(Pi::renderer->CreateMaterial(Graphics::MaterialDescriptor()));
 		m_boundsphere.reset( new Graphics::Drawables::Sphere3D(Pi::renderer, mat, Pi::renderer->CreateRenderState(Graphics::RenderStateDesc()), 0, clipRadius) );
 #endif
+
+		{
+			const bool s_bHasDynamicWater = (m_depth >= std::min(GEOPATCH_MAX_DEPTH, geosphere->GetMaxDepth() - s_depth_sub));
+			UpdateWaterBuffer(renderer, s_bHasDynamicWater);
+		}
 	}
+
+	if (m_depth >= std::min(GEOPATCH_MAX_DEPTH, geosphere->GetMaxDepth() - s_depth_sub))
+	{
+		static const bool s_bHasDynamicWater = true;
+		UpdateWaterBuffer(renderer, s_bHasDynamicWater);
+	}
+	
 }
 
+void GeoPatch::UpdateWaterBuffer(Graphics::Renderer *renderer, const bool bIsDynamicWater /*= false*/)
+{
+	// update the water on CPU each frame
+	if (geosphere->GetTerrain()->GetSurfaceEffects() & Terrain::EFFECT_WATER)
+	{
+		//create buffer and upload data
+		Graphics::VertexBufferDesc vbd;
+		vbd.attrib[0].semantic = Graphics::ATTRIB_POSITION;
+		vbd.attrib[0].format = Graphics::ATTRIB_FORMAT_FLOAT3;
+		vbd.attrib[1].semantic = Graphics::ATTRIB_NORMAL;
+		vbd.attrib[1].format = Graphics::ATTRIB_FORMAT_FLOAT3;
+		vbd.attrib[2].semantic = Graphics::ATTRIB_DIFFUSE;
+		vbd.attrib[2].format = Graphics::ATTRIB_FORMAT_UBYTE4;
+		vbd.attrib[3].semantic = Graphics::ATTRIB_UV0;
+		vbd.attrib[3].format = Graphics::ATTRIB_FORMAT_FLOAT2;
+		vbd.numVertices = ctx->NUMVERTICES();
+		vbd.usage = Graphics::BUFFER_USAGE_DYNAMIC;
+		if (!m_waterVB.get())
+		{
+			m_waterVB.reset(renderer->CreateVertexBuffer(vbd));
+		}
+
+		GeoPatchContext::VBOVertex* vtxPtr = m_waterVB->Map<GeoPatchContext::VBOVertex>(Graphics::BUFFER_MAP_WRITE);
+		assert(m_waterVB->GetDesc().stride == sizeof(GeoPatchContext::VBOVertex));
+
+		const double time = Pi::game->GetTime();
+
+		const double frac = ctx->GetFrac();
+		const Sint32 edgeLen = ctx->GetEdgeLen();
+		const int borderedEdgeLen = edgeLen + 2;
+		const int numBorderedVerts = borderedEdgeLen*borderedEdgeLen;
+		std::unique_ptr<double> borderHeights(new double[numBorderedVerts]);
+		std::unique_ptr<vector3d> borderVertexs(new vector3d[numBorderedVerts]);
+
+		// XXX - TODO - this needs to set a base height to account for tidal forces, then add the waves heights too it
+
+		// generate heights plus a 1 unit border
+		double *bhts = borderHeights.get();
+		vector3d *vrts = borderVertexs.get();
+		if (bIsDynamicWater)
+		{
+			for (int y = -1; y < borderedEdgeLen - 1; y++) {
+				const double yfrac = double(y) * frac;
+				for (int x = -1; x < borderedEdgeLen - 1; x++) {
+					const double xfrac = double(x) * frac;
+					const vector3d point = GetSpherePoint(xfrac, yfrac);
+					double waveScale = 0.0000001;
+#if 0
+					const double latitude = (-asin(point.y) * scaleLongitude);
+					const double longitude = (atan2(point.x, point.z) * scaleLongitude);
+					double waveheight = 0.0f;
+					waveheight += sin(time + longitude + latitude) * waveScale;
+#else
+					double scaleLongitude = 1000000.0;
+					const double latitude = -asin(point.y);
+					const double longitude = atan2(point.x, point.z);
+					double waveheight = 0.0f;
+					Uint32 il = 0;
+					for (; il < 4; il++) {
+						waveheight += sin(time + (longitude * scaleLongitude)) * waveScale;
+						waveheight += cos(time + ((il % 2 == 0) ? latitude : -latitude) * scaleLongitude) * waveScale;
+						waveScale *= 0.4993;
+						scaleLongitude *= 2.13;
+					}
+#endif
+					*(bhts++) = waveheight;
+					*(vrts++) = point * (waveheight + 1.0);
+				}
+			}
+		}
+		else
+		{
+			for (int y = -1; y < borderedEdgeLen - 1; y++) {
+				const double yfrac = double(y) * frac;
+				for (int x = -1; x < borderedEdgeLen - 1; x++) {
+					const double xfrac = double(x) * frac;
+					const vector3d point = GetSpherePoint(xfrac, yfrac);
+
+					*(bhts++) = 0.0f;
+					*(vrts++) = point;
+				}
+			}
+		}
+		assert(bhts == &borderHeights.get()[numBorderedVerts]);
+
+		// Generate normals & colors for non-edge vertices since they never change
+		vrts = borderVertexs.get();
+		for (int y = 1; y<borderedEdgeLen - 1; y++) {
+			const double yfrac = double(y) * frac;
+			for (int x = 1; x<borderedEdgeLen - 1; x++) {
+				const double xfrac = double(x) * frac;
+				// height
+				const double waveheight = borderHeights.get()[x + y*borderedEdgeLen];
+				const vector3d& point = borderVertexs.get()[x + y*borderedEdgeLen];
+				const vector3d p(point - clipCentroid);
+				clipRadius = std::max(clipRadius, p.Length());
+				vtxPtr->pos = vector3f(p);
+
+				// normal
+				const vector3d &x1 = vrts[x - 1 + y*borderedEdgeLen];
+				const vector3d &x2 = vrts[x + 1 + y*borderedEdgeLen];
+				const vector3d &y1 = vrts[x + (y - 1)*borderedEdgeLen];
+				const vector3d &y2 = vrts[x + (y + 1)*borderedEdgeLen];
+				const vector3d n = ((x2 - x1).Cross(y2 - y1)).Normalized();
+				vtxPtr->norm = vector3f(n);
+
+				// color
+				//if (bIsDynamicWater)
+				{
+					vtxPtr->col[0] = 000;//pColr->r;
+					vtxPtr->col[1] = 000;//pColr->g;
+					vtxPtr->col[2] = 255;//pColr->b;
+					vtxPtr->col[3] = 128;
+				}
+				//else
+				//{
+				//	vtxPtr->col[0] = 255;//pColr->r;
+				//	vtxPtr->col[1] = 000;//pColr->g;
+				//	vtxPtr->col[2] = 000;//pColr->b;
+				//	vtxPtr->col[3] = 128;
+				//}
+
+				// uv coords
+				vtxPtr->uv.x = 1.0f - xfrac;
+				vtxPtr->uv.y = yfrac;
+
+				++vtxPtr; // next vertex
+			}
+		}
+
+		m_waterVB->Unmap();
+	}
+}
 // the default sphere we do the horizon culling against
 static const SSphere s_sph;
+static bool s_wireframeSea = false;
 void GeoPatch::Render(Graphics::Renderer *renderer, const vector3d &campos, const matrix4x4d &modelView, const Graphics::Frustum &frustum)
 {
 	PROFILE_SCOPED()
 	// must update the VBOs to calculate the clipRadius...
 	UpdateVBOs(renderer);
+
 	// ...before doing the furstum culling that relies on it.
 	if (!frustum.TestPoint(clipCentroid, clipRadius))
 		return; // nothing below this patch is visible
@@ -278,6 +426,14 @@ void GeoPatch::Render(Graphics::Renderer *renderer, const vector3d &campos, cons
 		geosphere->GetMaterialParameters().patchDepth = m_depth;
 
 		renderer->DrawBufferIndexed(m_vertexBuffer.get(), ctx->GetIndexBuffer(), rs, mat.Get());
+
+		if(m_waterVB.get()) {
+			renderer->SetWireFrameMode(s_wireframeSea);
+			renderer->DrawBufferIndexed(m_waterVB.get(), ctx->GetIndexBuffer(), 
+				rs, geosphere->GetWaterMaterial().Get());
+			renderer->SetWireFrameMode(false);
+		}
+		
 #ifdef DEBUG_BOUNDING_SPHERES
 		if(m_boundsphere.get()) {
 			renderer->SetWireFrameMode(true);

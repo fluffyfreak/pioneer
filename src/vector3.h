@@ -60,10 +60,10 @@ public:
 	friend vector3 operator-(const T scalar, const vector3 &a) { return a - scalar; }
 
 	friend vector3 operator*(const vector3 &a, const vector3 &b) { return vector3(T(a.x*b.x), T(a.y*b.y), T(a.z*b.z)); }
-	friend vector3 operator*(const vector3 &a, const T scalar) { return vector3(T(a.x*scalar), T(a.y*scalar), T(a.z*scalar)); }
-	//friend vector3 operator*(const vector3 &a, const double scalar) { return vector3(T(a.x*scalar), T(a.y*scalar), T(a.z*scalar)); }
-	friend vector3 operator*(const T scalar, const vector3 &a) { return a*scalar; }
-	//friend vector3 operator*(const double scalar, const vector3 &a) { return a*scalar; }
+	friend vector3 operator*(const vector3 &a, const float  scalar) { return vector3(T(a.x*scalar), T(a.y*scalar), T(a.z*scalar)); }
+	friend vector3 operator*(const vector3 &a, const double scalar) { return vector3(T(a.x*scalar), T(a.y*scalar), T(a.z*scalar)); }
+	friend vector3 operator*(const float  scalar, const vector3 &a) { return a*scalar; }
+	friend vector3 operator*(const double scalar, const vector3 &a) { return a*scalar; }
 	friend vector3 operator/(const vector3 &a, const float  scalar) { const T inv = 1.0/scalar; return vector3(a.x*inv, a.y*inv, a.z*inv); }
 	friend vector3 operator/(const vector3 &a, const double scalar) { const T inv = 1.0/scalar; return vector3(a.x*inv, a.y*inv, a.z*inv); }
 
@@ -81,6 +81,8 @@ public:
 			return vector3(x/l, y/l, z/l);
 		}
 	}
+	#define Magnitude() Length()
+	#define MagnitudeSqr() LengthSqr()
 
 	void Print() const { printf("v(%f,%f,%f)\n", x, y, z); }
 
@@ -138,6 +140,22 @@ public:
 	vector2<T> yz() { return vector2<T>(y,z); }
 	vector2<T> yx() { return vector2<T>(y,x); }
 	vector2<T> zx() { return vector2<T>(z,x); }
+
+	static vector3 Zero() {
+		return vector3(0,0,0);
+	}
+
+	static vector3 UnitX() {
+		return vector3(1,0,0);
+	}
+
+	static vector3 UnitY() {
+		return vector3(0,1,0);
+	}
+
+	static vector3 UnitZ() {
+		return vector3(0,0,1);
+	}
 };
 
 // These are here in this manner to enforce that only float and double versions are possible.

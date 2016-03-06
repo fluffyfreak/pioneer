@@ -25,8 +25,8 @@ public:
 	BaseSphere(const SystemBody *body);
 	virtual ~BaseSphere();
 
-	virtual void Update()=0;
-	virtual void Render(Graphics::Renderer *renderer, const matrix4x4d &modelView, vector3d campos, const float radius, const std::vector<Camera::Shadow> &shadows)=0;
+	virtual void Update() = 0;
+	virtual void Render(Graphics::Renderer *renderer, const matrix4x4d &modelView, vector3d campos, const float radius, const std::vector<Camera::Shadow> &shadows) = 0;
 
 	virtual double GetHeight(const vector3d &p) const { return 0.0; }
 
@@ -49,13 +49,14 @@ public:
 		Sint32 maxPatchDepth;
 	};
 
-	virtual void Reset()=0;
+	virtual void Reset() = 0;
 
 	const SystemBody *GetSystemBody() const { return m_sbody; }
 	Terrain* GetTerrain() const { return m_terrain.Get(); }
 
 	Graphics::RenderState* GetSurfRenderState() const { return m_surfRenderState; }
 	RefCountedPtr<Graphics::Material> GetSurfaceMaterial() const { return m_surfaceMaterial; }
+	RefCountedPtr<Graphics::Material> GetWaterMaterial() const { return m_waterMaterial; }
 	MaterialParameters& GetMaterialParameters() { return m_materialParameters; }
 
 protected:
@@ -64,12 +65,11 @@ protected:
 	// all variables for GetHeight(), GetColor()
 	RefCountedPtr<Terrain> m_terrain;
 
-	virtual void SetUpMaterials()=0;
-
 	Graphics::RenderState *m_surfRenderState;
 	Graphics::RenderState *m_atmosRenderState;
 	RefCountedPtr<Graphics::Material> m_surfaceMaterial;
 	RefCountedPtr<Graphics::Material> m_atmosphereMaterial;
+	RefCountedPtr<Graphics::Material> m_waterMaterial;
 
 	// atmosphere geometry
 	std::unique_ptr<Graphics::Drawables::Sphere3D> m_atmos;

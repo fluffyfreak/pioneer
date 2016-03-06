@@ -422,6 +422,7 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView
 		m_materialParameters.maxPatchDepth = GetMaxDepth();
 
 		m_surfaceMaterial->specialParameter0 = &m_materialParameters;
+		m_waterMaterial->specialParameter0 = &m_materialParameters;
 
 		if (m_materialParameters.atmosphere.atmosDensity > 0.0) {
 			m_atmosphereMaterial->specialParameter0 = &m_materialParameters;
@@ -441,15 +442,16 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView
 	// save old global ambient
 	const Color oldAmbient = renderer->GetAmbientColor();
 
-	if ((GetSystemBody()->GetSuperType() == SystemBody::SUPERTYPE_STAR) || (GetSystemBody()->GetType() == SystemBody::TYPE_BROWN_DWARF)) {
+	if ((GetSystemBody()->GetSuperType() == SystemBody::SUPERTYPE_STAR) || (GetSystemBody()->GetType() == SystemBody::TYPE_BROWN_DWARF)) 
+	{
 		// stars should emit light and terrain should be visible from distance
 		ambient.r = ambient.g = ambient.b = 51;
 		ambient.a = 255;
 		emission = StarSystem::starRealColors[GetSystemBody()->GetType()];
 		emission.a = 255;
 	}
-
-	else {
+	else 
+	{
 		// give planet some ambient lighting if the viewer is close to it
 		double camdist = campos.Length();
 		camdist = 0.1 / (camdist*camdist);
@@ -532,6 +534,17 @@ void GeoSphere::SetUpMaterials()
 	m_texLo.Reset( Graphics::TextureBuilder::Model("textures/low.dds").GetOrCreateTexture(Pi::renderer, "model") );
 	m_surfaceMaterial->texture0 = m_texHi.Get();
 	m_surfaceMaterial->texture1 = m_texLo.Get();
+
+	{
+		Graphics::MaterialDescriptor waterDesc;
+		waterDesc.effect = Graphics::EFFECT_WATER;
+		waterDesc.lighting = true;
+		if (bEnableEclipse) {
+			waterDesc.quality |= Graphics::HAS_ECLIPSES;
+		}
+		waterDesc.alphaTest = false;
+		m_waterMaterial.Reset(Pi::renderer->CreateMaterial(waterDesc));
+	}
 
 	{
 		Graphics::MaterialDescriptor skyDesc;

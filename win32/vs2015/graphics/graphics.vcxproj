@@ -153,6 +153,7 @@
     <ClCompile Include="..\..\..\src\graphics\Graphics.cpp" />
     <ClCompile Include="..\..\..\src\graphics\Light.cpp" />
     <ClCompile Include="..\..\..\src\graphics\Material.cpp" />
+    <ClCompile Include="..\..\..\src\graphics\opengl\WaterMaterial.cpp" />
     <ClCompile Include="..\..\..\src\graphics\Renderer.cpp" />
     <ClCompile Include="..\..\..\src\graphics\Stats.cpp" />
     <ClCompile Include="..\..\..\src\graphics\TextureBuilder.cpp" />
@@ -194,6 +195,7 @@
     <ClInclude Include="..\..\..\src\graphics\Graphics.h" />
     <ClInclude Include="..\..\..\src\graphics\Light.h" />
     <ClInclude Include="..\..\..\src\graphics\Material.h" />
+    <ClInclude Include="..\..\..\src\graphics\opengl\WaterMaterial.h" />
     <ClInclude Include="..\..\..\src\graphics\Renderer.h" />
     <ClInclude Include="..\..\..\src\graphics\RenderState.h" />
     <ClInclude Include="..\..\..\src\graphics\RenderTarget.h" />

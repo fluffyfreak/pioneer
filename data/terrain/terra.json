@@ -1,6 +1,6 @@
 {
     "baseHeight": {
-        "base": 10,
+        "base": -10000,
         "funcs": [
             {
 				"name": "Tiny detail",

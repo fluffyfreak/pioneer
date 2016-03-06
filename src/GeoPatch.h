@@ -37,6 +37,7 @@ private:
 	std::unique_ptr<vector3f[]> normals;
 	std::unique_ptr<Color3ub[]> colors;
 	std::unique_ptr<Graphics::VertexBuffer> m_vertexBuffer;
+	std::unique_ptr<Graphics::VertexBuffer> m_waterVB;
 	std::unique_ptr<GeoPatch> kids[NUM_KIDS];
 	GeoPatch *parent;
 	GeoSphere *geosphere;
@@ -65,6 +66,7 @@ public:
 	}
 
 	void UpdateVBOs(Graphics::Renderer *renderer);
+	void UpdateWaterBuffer(Graphics::Renderer *renderer, const bool bIsDynamicWater = false);
 
 	int GetChildIdx(const GeoPatch *child) const {
 		for (int i=0; i<NUM_KIDS; i++) {

@@ -14,6 +14,7 @@ const char *TerrainColorFractal<TerrainColourJSON>::GetColorFractalName() const 
 template <>
 TerrainColorFractal<TerrainColourJSON>::TerrainColorFractal(const SystemBody *body) : Terrain(body)
 {
+	m_surfaceEffects |= Terrain::EFFECT_WATER;
 	const std::string path("terrain/Terra.json");
 	LoadTerrainJSON(path, terrainSrcs);
 }
