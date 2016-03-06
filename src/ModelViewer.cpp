@@ -99,6 +99,7 @@ ModelViewer::ModelViewer(Graphics::Renderer *r, LuaManager *lm)
 , m_model(0)
 , m_modelName("")
 {
+	OS::RedirectStdio();
 	m_ui.Reset(new UI::Context(lm, r, Graphics::GetScreenWidth(), Graphics::GetScreenHeight()));
 	m_ui->SetMousePointer("icons/cursors/mouse_cursor_2.png", UI::Point(15, 8));
 
@@ -245,19 +246,21 @@ bool ModelViewer::OnToggleGuns(UI::CheckBox *w)
 	}
 
 	m_options.attachGuns = !m_options.attachGuns;
-	SceneGraph::Group *tagL = m_model->FindTagByName("tag_gun_left");
-	SceneGraph::Group *tagR = m_model->FindTagByName("tag_gun_right");
-	if (!tagL || !tagR) {
-		AddLog("Missing tags gun_left and gun_right in model");
+	SceneGraph::Model::TVecMT tags;
+	m_model->FindTagsByStartOfName("tag_gun_", tags);
+	if (tags.empty()) {
+		AddLog("Missing tags \"tag_gun_XXX\" in model");
 		return false;
 	}
 	if (m_options.attachGuns) {
-		tagL->AddChild(new SceneGraph::ModelNode(m_gunModel.get()));
-		tagR->AddChild(new SceneGraph::ModelNode(m_gunModel.get()));
+		for (auto tag : tags) {
+			tag->AddChild(new SceneGraph::ModelNode(m_gunModel.get()));
+		}
 	} else { //detach
 		//we know there's nothing else
-		tagL->RemoveChildAt(0);
-		tagR->RemoveChildAt(0);
+		for (auto tag : tags) {
+			tag->RemoveChildAt(0);
+		}
 	}
 	return true;
 }
@@ -876,6 +879,7 @@ void ModelViewer::SetModel(const std::string &filename)
 				it != loader.GetLogMessages().end(); ++it)
 			{
 				AddLog(*it);
+				Output((*it).c_str());
 			}
 		}
 
@@ -884,6 +888,7 @@ void ModelViewer::SetModel(const std::string &filename)
 		//set decal textures, max 4 supported.
 		//Identical texture at the moment
 		OnDecalChanged(0, "pioneer");
+		Output("\n\n");
 
 		SceneGraph::DumpVisitor d(m_model);
 		m_model->GetRoot()->Accept(d);

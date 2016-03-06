@@ -1,3 +1,12 @@
+March 2016
+   * New Features
+     * Ship stat planner addon for Blender. Exports ship.json (#3639)
+
+   * Minor changes and tweaks
+     * gun locator tag fix (#3633)
+     * Ability to set Combat and Nav targets to null validly (#3634)
+     * Redirect stdout for modelviewer mode (#3640)
+
 February 2016
    * Minor changes and tweaks
      * New behaviour of ESC button (#3618)
@@ -5,6 +14,7 @@ February 2016
    * Fixes
      * Fix Character.lua / Ship.lua import relationship (#3617)
      * Fix Search and Rescue bug not recognizing a competed mission (#3621)
+     * Only get the SystemBody pointer on system bodies and NOT on ships (#3632)
 
    * Internal Changes
      * GL_INVALID_OPERATION warning (win32) (#3620)
@@ -12,6 +22,8 @@ February 2016
      * Rendering cleanup, possible perf improvements (#3623)
      * Cleaning up Pi.h (#3624)
      * Fix terrain cracks (#3625)
+     * Remove IGNORE_FLAG etc (#3628)
+     * Moar profiling (#3629)
 
 January 2016
    * New Features
