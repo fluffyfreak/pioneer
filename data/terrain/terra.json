@@ -3,12 +3,39 @@
         "base": 10,
         "funcs": [
             {
+				"name": "Tiny detail",
+                "frequency": 0.15,
+				"scale": [0,50],
+                "octaves": 9,
+                "persistence": 0.8
+            },
+            {
+				"name": "Small detail",
+                "frequency": 0.05,
+				"scale": [0,100],
+                "octaves": 6,
+                "persistence": 0.8
+            },
+            {
+				"name": "Large detail",
+                "frequency": 0.003,
+				"scale": [-2000,3000],
+                "octaves": 8,
+                "persistence": 0.8
+            },
+            {
 				"name": "Mountains",
                 "children": [
                     {
+                        "frequency": 0.05,
+						"scale": [-25000,25000],
+                        "octaves": 3,
+                        "persistence": 0.6,
+                        "type": "noise_cellular_squared"
+                    },
+                    {
                         "frequency": 0.03,
-                        "high": 7500,
-                        "low": 0,
+						"scale": [0,7500],
                         "octaves": 11,
                         "persistence": 0.5,
                         "type": "noise_ridged"
@@ -19,11 +46,72 @@
                     1
                 ],
                 "frequency": 0.002,
-                "high": 13,
-                "low": -13,
+				"scale": [-13,13],
                 "octaves": 7,
                 "op": "mul",
                 "persistence": 0.7,
+                "type": "noise_cubed"
+            },
+            {
+				"name": "Plateaus",
+                "children": [
+                    {
+						"name": "Tall Plateaus",
+                        "clamp": [
+                            0,
+                            1500
+                        ],
+                        "frequency": 0.08,
+						"scale": [-13000,8000],
+                        "octaves": 5,
+                        "persistence": 0.55,
+                        "type": "noise"
+                    },
+                    {
+						"name": "Short Plateaus",
+                        "clamp": [
+                            0,
+                            750
+                        ],
+                        "frequency": 0.1,
+						"scale": [-7000,5000],
+                        "octaves": 5,
+                        "persistence": 0.6,
+                        "type": "noise"
+                    }
+                ],
+                "clamp": [
+                    0,
+                    1
+                ],
+                "frequency": 0.003,
+				"scale": [-25,25],
+                "octaves": 6,
+                "op": "mul",
+                "persistence": 0.6,
+                "type": "noise_cubed"
+            },
+            {
+				"name": "Oceans",
+                "children": [
+                    {
+                        "frequency": 0.002,
+						"scale": [10000,20000],
+                        "octaves": 6,
+                        "op": "sub",
+                        "persistence": 0.9,
+                        "type": "noise"
+                    }
+                ],
+                "clamp": [
+                    0,
+                    1
+                ],
+                "frequency": 0.00015,
+				"scale": [-5,7],
+                "octaves": 6,
+                "op": "mul",
+                "persistence": 0.75,
                 "type": "noise"
             }
         ]
@@ -33,8 +121,7 @@
         "funcs": [
             {
                 "frequency": 0.0008,
-                "high": 128,
-                "low": -128,
+				"scale": [-128,128],
                 "octaves": 6,
                 "persistence": 0.9
             }
@@ -45,8 +132,7 @@
         "funcs": [
             {
                 "frequency": 0.0006,
-                "high": 64,
-                "low": -64,
+				"scale": [-64,64],
                 "octaves": 6,
                 "persistence": 0.9
             }

@@ -28,17 +28,13 @@ public:
 		NT_NOISE = 0,
 		NT_NOISE_CELLULAR_SQUARED,
 		NT_NOISE_RIDGED,
-		NT_NOISE_CUBED,
-		NT_CONSTANT,
-		NT_SQUARED,
-		NT_CUBED
+		NT_NOISE_CUBED
 	};
 
 	// public methods
 	TerrainNodeData() : 
 		m_op(TO_ADD), 
-		m_scaleHigh(0.0), 
-		m_scaleLow(0.0),
+		m_scale(std::make_pair(0, 0)),
 		m_octaves(0),
 		m_frequency(0.0),
 		m_persistence(0.0),
@@ -55,12 +51,9 @@ public:
 		m_frequency = freq;
 	}
 
-	void ScaleLow(const double low) {
-		m_scaleLow = low;
-	}
-
-	void ScaleHigh(const double high) {
-		m_scaleHigh = high;
+	void Scale(const double lower, const double upper) {
+		m_scale.first = lower;
+		m_scale.second = upper;
 	}
 
 	void Octaves(const int oct) {
@@ -76,19 +69,15 @@ public:
 	}
 
 	void NoiseType(const std::string& str) {
-		if (str == "noise_cellular_squared") {
+		if (str == "noise") {
+			m_noiseType = NT_NOISE;
+		} else if (str == "noise_cellular_squared") {
 			m_noiseType = NT_NOISE_CELLULAR_SQUARED;
 		} else if (str == "noise_ridged") {
 			m_noiseType = NT_NOISE_RIDGED;
 		} else if (str == "noise_cubed") {
 			m_noiseType = NT_NOISE_CUBED;
-		} else if (str == "constant") {
-			m_noiseType = NT_CONSTANT;
-		} else if (str == "squared") {
-			m_noiseType = NT_SQUARED;
-		} else if (str == "cubed") {
-			m_noiseType = NT_CUBED;
-		}
+		} 
 	}
 
 	void ClampNoise(const double lower, const double upper) {
@@ -100,13 +89,13 @@ public:
 		m_children.push_back(child);
 	}
 
-	void Call(const vector3d& p, double& accumH);
+	double Call(const vector3d& p);
 
 private:
 	inline double Scale(const double h)
 	{
 		// convert to 0..1 from -1..1
-		return MathUtil::mix(m_scaleLow, m_scaleHigh, ((1.0 + h)*0.5));
+		return MathUtil::mix(m_scale.first, m_scale.second, ((1.0 + h)*0.5));
 	}
 
 	inline double Clamp(const double h)
@@ -120,10 +109,8 @@ private:
 	//"op": "mul",
 	EnumTerrainOp m_op;
 
-	//"high": 13,
-	//"low": -13,
-	double m_scaleHigh;
-	double m_scaleLow;
+	//"scale": [-13,13],
+	std::pair<double, double> m_scale;
 
 	//"octaves": 7,
 	int m_octaves;

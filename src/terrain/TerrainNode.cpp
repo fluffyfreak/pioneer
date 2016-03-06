@@ -317,7 +317,7 @@ double noise_cellular_squared(const int octaves, double frequency, const double 
 }
 
 
-void TerrainNodeData::Call(const vector3d& p, double& accumH)
+double TerrainNodeData::Call(const vector3d& p)
 {
 	// A good way to fix this is to use another low frequency noise function that is scaled between 0 and 1.
 	// If we multiply the output of that noise function with our mountain function, then mountains will exists where it is 1, but not where it is 0.
@@ -334,48 +334,23 @@ void TerrainNodeData::Call(const vector3d& p, double& accumH)
 	case NT_NOISE_CELLULAR_SQUARED:	localH = Clamp(Scale(noise_cellular_squared(m_octaves, m_frequency, m_persistence, p)));	break;
 	case NT_NOISE_RIDGED:			localH = Clamp(Scale(noise_ridged(m_octaves, m_frequency, m_persistence, p)));				break;
 	case NT_NOISE_CUBED:			localH = Clamp(Scale(noise_cubed(m_octaves, m_frequency, m_persistence, p)));				break;
-	case NT_CONSTANT:				localH = m_scaleLow;																		break;
-	case NT_SQUARED:				localH = pow(accumH, 2.0);																	break;
-	case NT_CUBED:					localH = pow(accumH, 3.0);																	break;
 	}
 
-	// wtf?
-#if 1
-	switch (m_op)
-	{
-	case TO_ADD: accumH += localH; break;
-	case TO_SUB: accumH -= localH; break;
-	case TO_MUL: accumH *= localH; break;
-	case TO_DIV: accumH /= localH; break;
-	}
-#elif 1
-	switch (m_op)
-	{
-	case TO_ADD: accumH = localH + accumH; break;
-	case TO_SUB: accumH = localH - accumH; break;
-	case TO_MUL: accumH = localH * accumH; break;
-	case TO_DIV: accumH = localH / accumH; break;
-	}
-#else
-	switch (m_op)
-	{
-	case TO_ADD: accumH = accumH + localH; break;
-	case TO_SUB: accumH = accumH - localH; break;
-	case TO_MUL: accumH = accumH * localH; break;
-	case TO_DIV: accumH = accumH / localH; break;
-	}
-#endif
-
+	// mix the child node together
+	double childH = 0.0;
 	for (auto child : m_children)
 	{
-#if 0
-		double accumulator = accumH;
-		child.Call(p, accumulator);
-		accumH += accumulator;
-#else
-		child.Call(p, accumH);
-#endif
+		childH += child.Call(p);
 	}
+	switch (m_op)
+	{
+	case TO_ADD: localH += childH; break;
+	case TO_SUB: localH -= childH; break;
+	case TO_MUL: localH *= childH; break;
+	case TO_DIV: localH /= childH; break;
+	}
+
+	return localH;
 }
 
 
@@ -400,6 +375,7 @@ void ParseTerrainNode(Json::Value::iterator& j, TerrainNodeData& node)
 		else if (tag == "clamp")
 		{
 			const bool bIsArray = (*funcTag).isArray();
+			assert(bIsArray);
 			const double low = (*funcTag).get(Json::ArrayIndex(0), 0).asDouble();
 			const double high = (*funcTag).get(Json::ArrayIndex(1), 0).asDouble();
 			node.ClampNoise(low, high);
@@ -408,13 +384,13 @@ void ParseTerrainNode(Json::Value::iterator& j, TerrainNodeData& node)
 		{
 			node.Frequency((*funcTag).asDouble());
 		}
-		else if (tag == "high")
+		else if (tag == "scale")
 		{
-			node.ScaleHigh((*funcTag).asDouble());
-		}
-		else if (tag == "low")
-		{
-			node.ScaleLow((*funcTag).asDouble());
+			const bool bIsArray = (*funcTag).isArray();
+			assert(bIsArray);
+			const double low = (*funcTag).get(Json::ArrayIndex(0), 0).asDouble();
+			const double high = (*funcTag).get(Json::ArrayIndex(1), 0).asDouble();
+			node.Scale(low, high);
 		}
 		else if (tag == "name")
 		{
