@@ -17,13 +17,14 @@ TerrainHeightFractal<TerrainHeightJSON>::TerrainHeightFractal(const SystemBody *
 }
 
 static double heightScale = 1.0 / 15000000.0;
-static double radiusScale = 1000.0;// 0.001;
+static double radiusScale = 0.001;
 template <>
 double TerrainHeightFractal<TerrainHeightJSON>::GetHeight(const vector3d &p) const
 {
 	double n = 0.0;
 
-	const vector3d posRadius(p * radiusScale);// *(m_planetRadius * radiusScale));
+	//const vector3d posRadius(p * radiusScale);// *(m_planetRadius * radiusScale));
+	const vector3d posRadius(p*(m_planetRadius * radiusScale));
 
 	for (auto ts : terrainSrcs)
 	{
