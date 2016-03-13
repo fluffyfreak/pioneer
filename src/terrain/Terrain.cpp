@@ -103,13 +103,13 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 
 			case SystemBody::TYPE_PLANET_GAS_GIANT: {
 				static const std::pair<std::string, std::string> choices[] = {
-					std::make_pair<std::string, std::string>("Flat.json","GGJupiter.json"),
-					std::make_pair<std::string, std::string>("Flat.json","GGSaturn.json"),
-					std::make_pair<std::string, std::string>("Flat.json","GGSaturn2.json"),
-					std::make_pair<std::string, std::string>("Flat.json","GGNeptune.json"),
-					std::make_pair<std::string, std::string>("Flat.json","GGNeptune2.json"),
-					std::make_pair<std::string, std::string>("Flat.json","GGUranus.json"),
-					std::make_pair<std::string, std::string>("Flat.json","GGSaturn.json")
+					std::make_pair<std::string, std::string>("flat.json","GGJupiter.json"),
+					std::make_pair<std::string, std::string>("flat.json","GGSaturn.json"),
+					std::make_pair<std::string, std::string>("flat.json","GGSaturn2.json"),
+					std::make_pair<std::string, std::string>("flat.json","GGNeptune.json"),
+					std::make_pair<std::string, std::string>("flat.json","GGNeptune2.json"),
+					std::make_pair<std::string, std::string>("flat.json","GGUranus.json"),
+					std::make_pair<std::string, std::string>("flat.json","GGSaturn.json")
 				};
 				const Uint32 choice = rand.Int32(COUNTOF(choices)); jsonHeightFilename = choices[choice].first; jsonColourFilename = choices[choice].second;
 				break;
@@ -117,14 +117,14 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 
 			case SystemBody::TYPE_PLANET_ASTEROID: {
 				static const std::pair<std::string, std::string> choices[] = {
-					std::make_pair<std::string, std::string>("Asteroid.json","Asteroid.json"),
-					std::make_pair<std::string, std::string>("Asteroid2.json","Asteroid.json"),
-					std::make_pair<std::string, std::string>("Asteroid3.json","Asteroid.json"),
-					std::make_pair<std::string, std::string>("Asteroid4.json","Asteroid.json"),
-					std::make_pair<std::string, std::string>("Asteroid.json","Rock.json"),
-					std::make_pair<std::string, std::string>("Asteroid2.json","BandedRock.json"),
-					std::make_pair<std::string, std::string>("Asteroid3.json","Rock.json"),
-					std::make_pair<std::string, std::string>("Asteroid4.json","BandedRock.json")
+					std::make_pair<std::string, std::string>("asteroid.json","Asteroid.json"),
+					std::make_pair<std::string, std::string>("asteroid2.json","Asteroid.json"),
+					std::make_pair<std::string, std::string>("asteroid3.json","Asteroid.json"),
+					std::make_pair<std::string, std::string>("asteroid4.json","Asteroid.json"),
+					std::make_pair<std::string, std::string>("asteroid.json","Rock.json"),
+					std::make_pair<std::string, std::string>("asteroid2.json","BandedRock.json"),
+					std::make_pair<std::string, std::string>("asteroid3.json","Rock.json"),
+					std::make_pair<std::string, std::string>("asteroid4.json","BandedRock.json")
 				};
 				const Uint32 choice = rand.Int32(COUNTOF(choices)); jsonHeightFilename = choices[choice].first; jsonColourFilename = choices[choice].second;
 				break;
@@ -133,7 +133,7 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 			case SystemBody::TYPE_PLANET_TERRESTRIAL: {
 
 				//Over-ride:
-				//gi = InstanceGenerator<"Asteroid3.json","Rock>;
+				//jsonHeightFilename = "asteroid3.json"; jsonColourFilename = "Rock.json";
 				//break;
 				// Earth-like world
 
@@ -142,14 +142,14 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 
 					if (body->GetAverageTemp() > 240) {
 						static const std::pair<std::string, std::string> choices[] = {
-							std::make_pair<std::string, std::string>("HillsRidged.json","EarthLike.json"),
-							std::make_pair<std::string, std::string>("HillsRivers.json","EarthLike.json"),
-							std::make_pair<std::string, std::string>("HillsDunes.json","EarthLike.json"),
-							std::make_pair<std::string, std::string>("MountainsRidged.json","EarthLike.json"),
-							std::make_pair<std::string, std::string>("MountainsNormal.json","EarthLike.json"),
-							std::make_pair<std::string, std::string>("MountainsRivers.json","EarthLike.json"),
-							std::make_pair<std::string, std::string>("MountainsVolcano.json","EarthLike.json"),
-							std::make_pair<std::string, std::string>("MountainsRiversVolcano.json","EarthLike.json")
+							std::make_pair<std::string, std::string>("hillsridged.json","EarthLike.json"),
+							std::make_pair<std::string, std::string>("hillsrivers.json","EarthLike.json"),
+							std::make_pair<std::string, std::string>("hillsdunes.json","EarthLike.json"),
+							std::make_pair<std::string, std::string>("mountainsridged.json","EarthLike.json"),
+							std::make_pair<std::string, std::string>("mountainsnormal.json","EarthLike.json"),
+							std::make_pair<std::string, std::string>("mountainsrivers.json","EarthLike.json"),
+							std::make_pair<std::string, std::string>("mountainsvolcano.json","EarthLike.json"),
+							std::make_pair<std::string, std::string>("mountainsriversvolcano.json","EarthLike.json")
 						};
 						const Uint32 choice = rand.Int32(COUNTOF(choices)); jsonHeightFilename = choices[choice].first; jsonColourFilename = choices[choice].second;
 						break;
@@ -157,16 +157,16 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 
 					// desert-ice planets
 					static const std::pair<std::string, std::string> choices[] = {
-						std::make_pair<std::string, std::string>("HillsRidged.json","Desert.json"),
-						std::make_pair<std::string, std::string>("HillsRivers.json","Desert.json"),
-						std::make_pair<std::string, std::string>("HillsDunes.json","Desert.json"),
-						std::make_pair<std::string, std::string>("MountainsRidged.json","Desert.json"),
-						std::make_pair<std::string, std::string>("MountainsNormal.json","Desert.json"),
-						std::make_pair<std::string, std::string>("MountainsRivers.json","Desert.json"),
-						std::make_pair<std::string, std::string>("MountainsVolcano.json","Desert.json"),
-						std::make_pair<std::string, std::string>("MountainsRiversVolcano.json","Desert.json"),
-						std::make_pair<std::string, std::string>("BarrenRock.json","Desert.json"),
-						std::make_pair<std::string, std::string>("BarrenRock2.json","Desert.json")
+						std::make_pair<std::string, std::string>("hillsridged.json","Desert.json"),
+						std::make_pair<std::string, std::string>("hillsrivers.json","Desert.json"),
+						std::make_pair<std::string, std::string>("hillsdunes.json","Desert.json"),
+						std::make_pair<std::string, std::string>("mountainsridged.json","Desert.json"),
+						std::make_pair<std::string, std::string>("mountainsnormal.json","Desert.json"),
+						std::make_pair<std::string, std::string>("mountainsrivers.json","Desert.json"),
+						std::make_pair<std::string, std::string>("mountainsvolcano.json","Desert.json"),
+						std::make_pair<std::string, std::string>("mountainsriversvolcano.json","Desert.json"),
+						std::make_pair<std::string, std::string>("barrenrock.json","Desert.json"),
+						std::make_pair<std::string, std::string>("barrenrock2.json","Desert.json")
 					};
 					const Uint32 choice = rand.Int32(COUNTOF(choices)); jsonHeightFilename = choices[choice].first; jsonColourFilename = choices[choice].second;
 					break;
@@ -177,18 +177,18 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 
 					if (body->GetAverageTemp() > 240) {
 						static const std::pair<std::string, std::string> choices[] = {
-							std::make_pair<std::string, std::string>("HillsRidged.json","TFGood.json"),
-							std::make_pair<std::string, std::string>("HillsRivers.json","TFGood.json"),
-							std::make_pair<std::string, std::string>("HillsDunes.json","TFGood.json"),
-							std::make_pair<std::string, std::string>("HillsNormal.json","TFGood.json"),
-							std::make_pair<std::string, std::string>("MountainsNormal.json","TFGood.json"),
-							std::make_pair<std::string, std::string>("MountainsRidged.json","TFGood.json"),
-							std::make_pair<std::string, std::string>("MountainsVolcano.json","TFGood.json"),
-							std::make_pair<std::string, std::string>("MountainsRiversVolcano.json","TFGood.json"),
-							std::make_pair<std::string, std::string>("MountainsRivers.json","TFGood.json"),
-							std::make_pair<std::string, std::string>("RuggedDesert.json","TFGood.json"),
-							std::make_pair<std::string, std::string>("BarrenRock.json","TFGood.json"),
-							std::make_pair<std::string, std::string>("BarrenRock2.json","TFGood.json")
+							std::make_pair<std::string, std::string>("hillsridged.json","TFGood.json"),
+							std::make_pair<std::string, std::string>("hillsrivers.json","TFGood.json"),
+							std::make_pair<std::string, std::string>("hillsdunes.json","TFGood.json"),
+							std::make_pair<std::string, std::string>("hillsnormal.json","TFGood.json"),
+							std::make_pair<std::string, std::string>("mountainsnormal.json","TFGood.json"),
+							std::make_pair<std::string, std::string>("mountainsridged.json","TFGood.json"),
+							std::make_pair<std::string, std::string>("mountainsvolcano.json","TFGood.json"),
+							std::make_pair<std::string, std::string>("mountainsriversvolcano.json","TFGood.json"),
+							std::make_pair<std::string, std::string>("mountainsrivers.json","TFGood.json"),
+							std::make_pair<std::string, std::string>("ruggeddesert.json","TFGood.json"),
+							std::make_pair<std::string, std::string>("barrenrock.json","TFGood.json"),
+							std::make_pair<std::string, std::string>("barrenrock2.json","TFGood.json")
 						};
 						const Uint32 choice = rand.Int32(COUNTOF(choices)); jsonHeightFilename = choices[choice].first; jsonColourFilename = choices[choice].second;
 						break;
@@ -196,19 +196,19 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 
 					// ice planets
 					static const std::pair<std::string, std::string> choices[] = {
-						std::make_pair<std::string, std::string>("HillsRidged.json","Ice.json"),
-						std::make_pair<std::string, std::string>("HillsRivers.json","Ice.json"),
-						std::make_pair<std::string, std::string>("HillsDunes.json","Ice.json"),
-						std::make_pair<std::string, std::string>("HillsNormal.json","Ice.json"),
-						std::make_pair<std::string, std::string>("MountainsNormal.json","Ice.json"),
-						std::make_pair<std::string, std::string>("MountainsRidged.json","Ice.json"),
-						std::make_pair<std::string, std::string>("MountainsVolcano.json","Ice.json"),
-						std::make_pair<std::string, std::string>("MountainsRiversVolcano.json","Ice.json"),
-						std::make_pair<std::string, std::string>("MountainsRivers.json","Ice.json"),
-						std::make_pair<std::string, std::string>("RuggedDesert.json","Ice.json"),
-						std::make_pair<std::string, std::string>("BarrenRock.json","Ice.json"),
-						std::make_pair<std::string, std::string>("BarrenRock2.json","Ice.json"),
-						std::make_pair<std::string, std::string>("BarrenRock3.json","Ice.json")
+						std::make_pair<std::string, std::string>("hillsridged.json","Ice.json"),
+						std::make_pair<std::string, std::string>("hillsrivers.json","Ice.json"),
+						std::make_pair<std::string, std::string>("hillsdunes.json","Ice.json"),
+						std::make_pair<std::string, std::string>("hillsnormal.json","Ice.json"),
+						std::make_pair<std::string, std::string>("mountainsnormal.json","Ice.json"),
+						std::make_pair<std::string, std::string>("mountainsridged.json","Ice.json"),
+						std::make_pair<std::string, std::string>("mountainsvolcano.json","Ice.json"),
+						std::make_pair<std::string, std::string>("mountainsriversvolcano.json","Ice.json"),
+						std::make_pair<std::string, std::string>("mountainsrivers.json","Ice.json"),
+						std::make_pair<std::string, std::string>("ruggeddesert.json","Ice.json"),
+						std::make_pair<std::string, std::string>("barrenrock.json","Ice.json"),
+						std::make_pair<std::string, std::string>("barrenrock2.json","Ice.json"),
+						std::make_pair<std::string, std::string>("barrenrock3.json","Ice.json")
 					};
 					const Uint32 choice = rand.Int32(COUNTOF(choices)); jsonHeightFilename = choices[choice].first; jsonColourFilename = choices[choice].second;
 					break;
@@ -219,19 +219,19 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 
 					if (body->GetAverageTemp() > 240) {
 						static const std::pair<std::string, std::string> choices[] = {
-							std::make_pair<std::string, std::string>("HillsRidged.json","TFPoor.json"),
-							std::make_pair<std::string, std::string>("HillsRivers.json","TFPoor.json"),
-							std::make_pair<std::string, std::string>("HillsDunes.json","TFPoor.json"),
-							std::make_pair<std::string, std::string>("HillsNormal.json","TFPoor.json"),
-							std::make_pair<std::string, std::string>("MountainsNormal.json","TFPoor.json"),
-							std::make_pair<std::string, std::string>("MountainsRidged.json","TFPoor.json"),
-							std::make_pair<std::string, std::string>("MountainsVolcano.json","TFPoor.json"),
-							std::make_pair<std::string, std::string>("MountainsRiversVolcano.json","TFPoor.json"),
-							std::make_pair<std::string, std::string>("MountainsRivers.json","TFPoor.json"),
-							std::make_pair<std::string, std::string>("RuggedDesert.json","TFPoor.json"),
-							std::make_pair<std::string, std::string>("BarrenRock.json","TFPoor.json"),
-							std::make_pair<std::string, std::string>("BarrenRock2.json","TFPoor.json"),
-							std::make_pair<std::string, std::string>("BarrenRock3.json","TFPoor.json")
+							std::make_pair<std::string, std::string>("hillsridged.json","TFPoor.json"),
+							std::make_pair<std::string, std::string>("hillsrivers.json","TFPoor.json"),
+							std::make_pair<std::string, std::string>("hillsdunes.json","TFPoor.json"),
+							std::make_pair<std::string, std::string>("hillsnormal.json","TFPoor.json"),
+							std::make_pair<std::string, std::string>("mountainsnormal.json","TFPoor.json"),
+							std::make_pair<std::string, std::string>("mountainsridged.json","TFPoor.json"),
+							std::make_pair<std::string, std::string>("mountainsvolcano.json","TFPoor.json"),
+							std::make_pair<std::string, std::string>("mountainsriversvolcano.json","TFPoor.json"),
+							std::make_pair<std::string, std::string>("mountainsrivers.json","TFPoor.json"),
+							std::make_pair<std::string, std::string>("ruggeddesert.json","TFPoor.json"),
+							std::make_pair<std::string, std::string>("barrenrock.json","TFPoor.json"),
+							std::make_pair<std::string, std::string>("barrenrock2.json","TFPoor.json"),
+							std::make_pair<std::string, std::string>("barrenrock3.json","TFPoor.json")
 						};
 						const Uint32 choice = rand.Int32(COUNTOF(choices)); jsonHeightFilename = choices[choice].first; jsonColourFilename = choices[choice].second;
 						break;
@@ -239,19 +239,19 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 
 					// ice planets
 					static const std::pair<std::string, std::string> choices[] = {
-						std::make_pair<std::string, std::string>("HillsRidged.json","Ice.json"),
-						std::make_pair<std::string, std::string>("HillsRivers.json","Ice.json"),
-						std::make_pair<std::string, std::string>("HillsDunes.json","Ice.json"),
-						std::make_pair<std::string, std::string>("HillsNormal.json","Ice.json"),
-						std::make_pair<std::string, std::string>("MountainsNormal.json","Ice.json"),
-						std::make_pair<std::string, std::string>("MountainsRidged.json","Ice.json"),
-						std::make_pair<std::string, std::string>("MountainsVolcano.json","Ice.json"),
-						std::make_pair<std::string, std::string>("MountainsRiversVolcano.json","Ice.json"),
-						std::make_pair<std::string, std::string>("MountainsRivers.json","Ice.json"),
-						std::make_pair<std::string, std::string>("RuggedDesert.json","Ice.json"),
-						std::make_pair<std::string, std::string>("BarrenRock.json","Ice.json"),
-						std::make_pair<std::string, std::string>("BarrenRock2.json","Ice.json"),
-						std::make_pair<std::string, std::string>("BarrenRock3.json","Ice.json")
+						std::make_pair<std::string, std::string>("hillsridged.json","Ice.json"),
+						std::make_pair<std::string, std::string>("hillsrivers.json","Ice.json"),
+						std::make_pair<std::string, std::string>("hillsdunes.json","Ice.json"),
+						std::make_pair<std::string, std::string>("hillsnormal.json","Ice.json"),
+						std::make_pair<std::string, std::string>("mountainsnormal.json","Ice.json"),
+						std::make_pair<std::string, std::string>("mountainsridged.json","Ice.json"),
+						std::make_pair<std::string, std::string>("mountainsvolcano.json","Ice.json"),
+						std::make_pair<std::string, std::string>("mountainsriversvolcano.json","Ice.json"),
+						std::make_pair<std::string, std::string>("mountainsrivers.json","Ice.json"),
+						std::make_pair<std::string, std::string>("ruggeddesert.json","Ice.json"),
+						std::make_pair<std::string, std::string>("barrenrock.json","Ice.json"),
+						std::make_pair<std::string, std::string>("barrenrock2.json","Ice.json"),
+						std::make_pair<std::string, std::string>("barrenrock3.json","Ice.json")
 					};
 					const Uint32 choice = rand.Int32(COUNTOF(choices)); jsonHeightFilename = choices[choice].first; jsonColourFilename = choices[choice].second;
 					break;
@@ -260,14 +260,14 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 				// Desert-like world, Mars -like.
 				if ((body->GetVolatileLiquidAsFixed() < fixed(1,10)) && (body->GetVolatileGasAsFixed() > fixed(1,5))) {
 					static const std::pair<std::string, std::string> choices[] = {
-						std::make_pair<std::string, std::string>("HillsDunes.json","Desert.json"),
-						std::make_pair<std::string, std::string>("WaterSolid.json","Desert.json"),
-						std::make_pair<std::string, std::string>("RuggedDesert.json","Desert.json"),
-						std::make_pair<std::string, std::string>("RuggedLava.json","Desert.json"),
-						std::make_pair<std::string, std::string>("MountainsVolcano.json","Desert.json"),
-						std::make_pair<std::string, std::string>("MountainsRiversVolcano.json","Desert.json"),
-						std::make_pair<std::string, std::string>("BarrenRock.json","Desert.json"),
-						std::make_pair<std::string, std::string>("BarrenRock2.json","Desert.json")
+						std::make_pair<std::string, std::string>("hillsdunes.json","Desert.json"),
+						std::make_pair<std::string, std::string>("watersolid.json","Desert.json"),
+						std::make_pair<std::string, std::string>("ruggeddesert.json","Desert.json"),
+						std::make_pair<std::string, std::string>("ruggedlava.json","Desert.json"),
+						std::make_pair<std::string, std::string>("mountainsvolcano.json","Desert.json"),
+						std::make_pair<std::string, std::string>("mountainsriversvolcano.json","Desert.json"),
+						std::make_pair<std::string, std::string>("barrenrock.json","Desert.json"),
+						std::make_pair<std::string, std::string>("barrenrock2.json","Desert.json")
 					};
 					const Uint32 choice = rand.Int32(COUNTOF(choices)); jsonHeightFilename = choices[choice].first; jsonColourFilename = choices[choice].second;
 					break;
@@ -276,15 +276,15 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 				// Frozen world
 				if ((body->GetVolatileIcesAsFixed() > fixed(8,10)) &&  (body->GetAverageTemp() < 250)) {
 					static const std::pair<std::string, std::string> choices[] = {
-						std::make_pair<std::string, std::string>("HillsDunes.json","Ice.json"),
-						std::make_pair<std::string, std::string>("HillsCraters.json","Ice.json"),
-						std::make_pair<std::string, std::string>("MountainsCraters.json","Ice.json"),
-						std::make_pair<std::string, std::string>("WaterSolid.json","Ice.json"),
-						std::make_pair<std::string, std::string>("WaterSolidCanyons.json","Ice.json"),
-						std::make_pair<std::string, std::string>("RuggedDesert.json","Ice.json"),
-						std::make_pair<std::string, std::string>("BarrenRock.json","Ice.json"),
-						std::make_pair<std::string, std::string>("BarrenRock2.json","Ice.json"),
-						std::make_pair<std::string, std::string>("BarrenRock3.json","Ice.json")
+						std::make_pair<std::string, std::string>("hillsdunes.json","Ice.json"),
+						std::make_pair<std::string, std::string>("hillscraters.json","Ice.json"),
+						std::make_pair<std::string, std::string>("mountainscraters.json","Ice.json"),
+						std::make_pair<std::string, std::string>("watersolid.json","Ice.json"),
+						std::make_pair<std::string, std::string>("watersolidcanyons.json","Ice.json"),
+						std::make_pair<std::string, std::string>("ruggeddesert.json","Ice.json"),
+						std::make_pair<std::string, std::string>("barrenrock.json","Ice.json"),
+						std::make_pair<std::string, std::string>("barrenrock2.json","Ice.json"),
+						std::make_pair<std::string, std::string>("barrenrock3.json","Ice.json")
 					};
 					const Uint32 choice = rand.Int32(COUNTOF(choices)); jsonHeightFilename = choices[choice].first; jsonColourFilename = choices[choice].second;
 					break;
@@ -294,13 +294,13 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 				if (body->GetVolcanicityAsFixed() > fixed(7,10)) {
 
 					if (body->GetLifeAsFixed() > fixed(5,10)) {	// life on a volcanic world ;)
-						jsonHeightFilename = "RuggedLava.json";
+						jsonHeightFilename = "ruggedlava.json";
 						jsonColourFilename = "TFGood.json";
 					} else if (body->GetLifeAsFixed() > fixed(2,10)) {
-						jsonHeightFilename = "RuggedLava.json";
+						jsonHeightFilename = "ruggedlava.json";
 						jsonColourFilename = "TFPoor.json";
 					} else {
-						jsonHeightFilename = "RuggedLava.json";
+						jsonHeightFilename = "ruggedlava.json";
 						jsonColourFilename = "Volcanic.json";
 					}
 					break;
@@ -310,20 +310,20 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 				//Alien life world:
 				if (body->GetLifeAsFixed() > fixed(1,10))  {
 					static const std::pair<std::string, std::string> choices[] = {
-						std::make_pair<std::string, std::string>("HillsDunes.json","TFPoor.json"),
-						std::make_pair<std::string, std::string>("HillsRidged.json","TFPoor.json"),
-						std::make_pair<std::string, std::string>("HillsRivers.json","TFPoor.json"),
-						std::make_pair<std::string, std::string>("MountainsNormal.json","TFPoor.json"),
-						std::make_pair<std::string, std::string>("MountainsRidged.json","TFPoor.json"),
-						std::make_pair<std::string, std::string>("MountainsVolcano.json","TFPoor.json"),
-						std::make_pair<std::string, std::string>("MountainsRiversVolcano.json","TFPoor.json"),
-						std::make_pair<std::string, std::string>("MountainsRivers.json","TFPoor.json"),
-						std::make_pair<std::string, std::string>("WaterSolid.json","TFPoor.json"),
-						std::make_pair<std::string, std::string>("RuggedLava.json","TFPoor.json"),
-						std::make_pair<std::string, std::string>("RuggedDesert.json","TFPoor.json"),
-						std::make_pair<std::string, std::string>("BarrenRock.json","Ice.json"),
-						std::make_pair<std::string, std::string>("BarrenRock2.json","Ice.json"),
-						std::make_pair<std::string, std::string>("BarrenRock3.json","Ice.json")
+						std::make_pair<std::string, std::string>("hillsdunes.json","TFPoor.json"),
+						std::make_pair<std::string, std::string>("hillsridged.json","TFPoor.json"),
+						std::make_pair<std::string, std::string>("hillsrivers.json","TFPoor.json"),
+						std::make_pair<std::string, std::string>("mountainsnormal.json","TFPoor.json"),
+						std::make_pair<std::string, std::string>("mountainsridged.json","TFPoor.json"),
+						std::make_pair<std::string, std::string>("mountainsvolcano.json","TFPoor.json"),
+						std::make_pair<std::string, std::string>("mountainsriversvolcano.json","TFPoor.json"),
+						std::make_pair<std::string, std::string>("mountainsrivers.json","TFPoor.json"),
+						std::make_pair<std::string, std::string>("watersolid.json","TFPoor.json"),
+						std::make_pair<std::string, std::string>("ruggedlava.json","TFPoor.json"),
+						std::make_pair<std::string, std::string>("ruggeddesert.json","TFPoor.json"),
+						std::make_pair<std::string, std::string>("barrenrock.json","Ice.json"),
+						std::make_pair<std::string, std::string>("barrenrock2.json","Ice.json"),
+						std::make_pair<std::string, std::string>("barrenrock3.json","Ice.json")
 					};
 					const Uint32 choice = rand.Int32(COUNTOF(choices)); jsonHeightFilename = choices[choice].first; jsonColourFilename = choices[choice].second;
 					break;
@@ -331,28 +331,28 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 
 				if (body->GetVolatileGasAsFixed() > fixed(1,10)) {
 					static const std::pair<std::string, std::string> choices[] = {
-						std::make_pair<std::string, std::string>("HillsNormal.json","Rock.json"),
-						std::make_pair<std::string, std::string>("MountainsNormal.json","Rock.json"),
-						std::make_pair<std::string, std::string>("RuggedDesert.json","Rock.json"),
-						std::make_pair<std::string, std::string>("BarrenRock.json","Rock.json"),
-						std::make_pair<std::string, std::string>("BarrenRock2.json","Rock.json"),
-						std::make_pair<std::string, std::string>("BarrenRock3.json","Rock.json")
+						std::make_pair<std::string, std::string>("hillsnormal.json","Rock.json"),
+						std::make_pair<std::string, std::string>("mountainsnormal.json","Rock.json"),
+						std::make_pair<std::string, std::string>("ruggeddesert.json","Rock.json"),
+						std::make_pair<std::string, std::string>("barrenrock.json","Rock.json"),
+						std::make_pair<std::string, std::string>("barrenrock2.json","Rock.json"),
+						std::make_pair<std::string, std::string>("barrenrock3.json","Rock.json")
 					};
 					const Uint32 choice = rand.Int32(COUNTOF(choices)); jsonHeightFilename = choices[choice].first; jsonColourFilename = choices[choice].second;
 					break;
 				}
 
 				static const std::pair<std::string, std::string> choices[] = {
-					std::make_pair<std::string, std::string>("HillsCraters2.json","Rock.json"),
-					std::make_pair<std::string, std::string>("MountainsCraters2.json","Rock.json"),
-					std::make_pair<std::string, std::string>("BarrenRock3.json","Rock.json")
+					std::make_pair<std::string, std::string>("hillscraters2.json","Rock.json"),
+					std::make_pair<std::string, std::string>("mountainscraters2.json","Rock.json"),
+					std::make_pair<std::string, std::string>("barrenrock3.json","Rock.json")
 				};
 				const Uint32 choice = rand.Int32(COUNTOF(choices)); jsonHeightFilename = choices[choice].first; jsonColourFilename = choices[choice].second;
 				break;
 			}
 
 			default:
-				jsonHeightFilename = "Flat.json";
+				jsonHeightFilename = "flat.json";
 				jsonColourFilename = "Solid.json";
 				break;
 		}
@@ -361,94 +361,8 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 	return gi(body, jsonHeightFilename, jsonColourFilename);
 }
 
-// XXX this sucks, but there isn't a reliable cross-platform way to get them
-#ifndef INT16_MIN
-# define INT16_MIN   (-32767-1)
-#endif
-#ifndef INT16_MAX
-# define INT16_MAX   (32767)
-#endif
-#ifndef UINT16_MAX
-# define UINT16_MAX  (65535)
-#endif
-
-Terrain::Terrain(const SystemBody *body) : m_seed(body->GetSeed()), m_rand(body->GetSeed()), m_heightScaling(0), m_minh(0), m_minBody(body) 
+Terrain::Terrain(const SystemBody *body) : m_seed(body->GetSeed()), m_rand(body->GetSeed()), m_minBody(body) 
 {
-	// load the heightmap
-	/*if (!body->GetHeightMapFilename().empty()) {
-		RefCountedPtr<FileSystem::FileData> fdata = FileSystem::gameDataFiles.ReadFile(body->GetHeightMapFilename());
-		if (!fdata) {
-			Output("Error: could not open file '%s'\n", body->GetHeightMapFilename().c_str());
-			abort();
-		}
-
-		ByteRange databuf = fdata->AsByteRange();
-
-		Sint16 minHMap = INT16_MAX, maxHMap = INT16_MIN;
-		Uint16 minHMapScld = UINT16_MAX, maxHMapScld = 0;
-
-		// XXX unify heightmap types
-		switch (body->GetHeightMapFractal()) {
-			case 0: {
-				Uint16 v;
-				bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeX = v;
-				bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeY = v;
-				const Uint32 heightmapPixelArea = (m_heightMapSizeX * m_heightMapSizeY);
-
-				std::unique_ptr<Sint16[]> heightMap(new Sint16[heightmapPixelArea]);
-				bufread_or_die(heightMap.get(), sizeof(Sint16), heightmapPixelArea, databuf);
-				m_heightMap.reset(new double[heightmapPixelArea]);
-				double *pHeightMap = m_heightMap.get();
-				for(Uint32 i=0; i<heightmapPixelArea; i++) {
-					const Sint16 val = heightMap.get()[i];
-					minHMap = std::min(minHMap, val);
-					maxHMap = std::max(maxHMap, val);
-					// store then increment pointer
-					(*pHeightMap) = val;
-					++pHeightMap;
-				}
-				assert(pHeightMap == &m_heightMap[heightmapPixelArea]);
-				//Output("minHMap = (%hd), maxHMap = (%hd)\n", minHMap, maxHMap);
-				break;
-			}
-
-			case 1: {
-				Uint16 v;
-				// XXX x and y reversed from above *sigh*
-				bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeY = v;
-				bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeX = v;
-				const Uint32 heightmapPixelArea = (m_heightMapSizeX * m_heightMapSizeY);
-
-				// read height scaling and min height which are doubles
-				double te;
-				bufread_or_die(&te, 8, 1, databuf);
-				m_heightScaling = te;
-				bufread_or_die(&te, 8, 1, databuf);
-				m_minh = te;
-
-				std::unique_ptr<Uint16[]> heightMapScaled(new Uint16[heightmapPixelArea]);
-				bufread_or_die(heightMapScaled.get(), sizeof(Uint16), heightmapPixelArea, databuf);
-				m_heightMap.reset(new double[heightmapPixelArea]);
-				double *pHeightMap = m_heightMap.get();
-				for(Uint32 i=0; i<heightmapPixelArea; i++) {
-					const Uint16 val = heightMapScaled[i];
-					minHMapScld = std::min(minHMapScld, val);
-					maxHMapScld = std::max(maxHMapScld, val);
-					// store then increment pointer
-					(*pHeightMap) = val;
-					++pHeightMap;
-				}
-				assert(pHeightMap == &m_heightMap[heightmapPixelArea]);
-				//Output("minHMapScld = (%hu), maxHMapScld = (%hu)\n", minHMapScld, maxHMapScld);
-				break;
-			}
-
-			default:
-				assert(0);
-		}
-
-	}*/
-
 	switch (Pi::detail.textures) {
 		case 0: textures = false;
 			m_fracnum = 2;break;

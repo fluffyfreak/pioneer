@@ -340,7 +340,7 @@ double TerrainNodeData::Call(const vector3d& p)
 	case NT_NOISE_CELLULAR_SQUARED:	localH = Clamp(Scale(noise_cellular_squared(m_octaves, m_frequency, m_persistence, p)));	break;
 	case NT_NOISE_RIDGED:			localH = Clamp(Scale(noise_ridged(m_octaves, m_frequency, m_persistence, p)));				break;
 	case NT_NOISE_CUBED:			localH = Clamp(Scale(noise_cubed(m_octaves, m_frequency, m_persistence, p)));				break;
-	case NT_HEIGHTMAP:				localH = Clamp(Scale(GetHeightMapValue(p)));												break;
+	case NT_HEIGHTMAP:				localH = Clamp(GetHeightMapValue(p));														break;
 	}
 
 	// mix the values together
