@@ -160,6 +160,9 @@ private:
 //This is the most complex and insanely crazy terrain you will ever see :
 class TerrainHeightFlat;
 
+// CPU side JSON height based generation:
+class TerrainHeightJSON;
+
 //New terrains with less noise :
 class TerrainHeightAsteroid;
 class TerrainHeightAsteroid2;
@@ -226,7 +229,6 @@ class TerrainHeightWaterSolid;
 
 class TerrainColorAsteroid;
 class TerrainColorBandedRock;
-class TerrainColorDeadWithWater;
 class TerrainColorDesert;
 /*ColorEarthlike uses features not yet included in all terrain colours
  such as better poles : http://www.spacesimcentral.com/forum/download/file.php?id=1884&mode=view
@@ -253,6 +255,7 @@ class TerrainColorStarWhiteDwarf;
 class TerrainColorTFGood;
 class TerrainColorTFPoor;
 class TerrainColorVolcanic;
+class TerrainColourJSON;
 
 #ifdef _MSC_VER
 #pragma warning(default : 4250)
