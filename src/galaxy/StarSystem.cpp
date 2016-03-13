@@ -801,9 +801,6 @@ void SystemBody::Dump(FILE* file, const char* indent) const
 		if (!m_JSONFilename.empty()) {
 			fprintf(file, "%s\tJSONFilename \"%s\"\n", indent, m_JSONFilename.c_str());
 		}
-		if (!m_heightMapFilename.empty()) {
-			fprintf(file, "%s\theightmap \"%s\"\n", indent, m_heightMapFilename.c_str());
-		}
 	}
 	for (const SystemBody* kid : m_children) {
 		assert(kid->m_parent == this);

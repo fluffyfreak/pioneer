@@ -3,8 +3,6 @@
 
 #include "Terrain.h"
 #include "TerrainNode.h"
-//#include "TerrainNoise.h"
-//#include "TerrainFeature.h"
 
 static std::vector<TerrainSource> terrainSrcs;
 
@@ -12,10 +10,9 @@ template <>
 const char *TerrainColorFractal<TerrainColourJSON>::GetColorFractalName() const { return "JSON"; }
 
 template <>
-TerrainColorFractal<TerrainColourJSON>::TerrainColorFractal(const SystemBody *body) : Terrain(body)
+TerrainColorFractal<TerrainColourJSON>::TerrainColorFractal(const SystemBody *body, const std::string &JSONColourFile) : Terrain(body)
 {
-	const std::string path("terrain/Terra.json");
-	LoadTerrainJSON(path, terrainSrcs);
+	LoadTerrainJSON(FileSystem::JoinPathBelow("terrain", JSONColourFile), m_terrainSrcs);
 }
 
 template <>

@@ -1,10 +1,9 @@
 // Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
-#include "TerrainNode.h"
 #include "Terrain.h"
+#include "TerrainNode.h"
 #include "TerrainNoise.h"
-#include "TerrainFeature.h"
 
 #include <math.h>
 #include "MathUtil.h"
@@ -15,7 +14,6 @@
 #include "vector2.h"
 
 using namespace TerrainNoise;
-using namespace TerrainFeature;
 
 namespace cellywelly
 {
@@ -366,12 +364,12 @@ static size_t bufread_or_die(void *ptr, size_t size, size_t nmemb, ByteRange &bu
 	}
 	return read_count;
 }
-
+#pragma optimize("",off)
 bool TerrainNodeData::LoadHeightmap(const std::string &filename)
 {
 	if (!filename.empty()) 
 	{
-		RefCountedPtr<FileSystem::FileData> fdata = FileSystem::gameDataFiles.ReadFile(filename);
+		RefCountedPtr<FileSystem::FileData> fdata = FileSystem::gameDataFiles.ReadFile(FileSystem::JoinPathBelow("heightmaps", filename));
 		if (!fdata) {
 			Output("Error: could not open file '%s'\n", filename.c_str());
 			abort();
@@ -438,7 +436,7 @@ bool TerrainNodeData::LoadHeightmap(const std::string &filename)
 	}
 	return false;
 }
-
+#pragma optimize("",off)
 double TerrainNodeData::GetHeightMapValue(const vector3d& p)
 {
 	if(!m_heightMap)
@@ -565,6 +563,10 @@ void ParseTerrainNode(Json::Value::iterator& j, TerrainNodeData& node)
 		{
 			node.NoiseType((*funcTag).asString());
 		}
+		else if (tag == "file")
+		{
+			node.LoadHeightmap((*funcTag).asString());
+		}
 		Output("\t\ttag:\"%s\"\n", tag.c_str());
 	}
 }
@@ -585,7 +587,7 @@ void LoadTerrainJSON(const std::string& path, std::vector<TerrainSource>& source
 		return;
 	}
 
-	Output("\nterrain/Terra.json\n");
+	Output("\n%s\n", path.c_str());
 	for (Json::Value::iterator slot = data.begin(); slot != data.end(); ++slot)
 	{
 		TerrainSource source;

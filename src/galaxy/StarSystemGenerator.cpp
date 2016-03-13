@@ -521,10 +521,6 @@ void StarSystemCustomGenerator::CustomGetKidsOf(RefCountedPtr<StarSystem::Genera
 			kid->m_JSONFilename = csbody->JSONFilename;
 		}
 
-		if (!(csbody->heightMapFilename.empty())) {
-			kid->m_heightMapFilename = csbody->heightMapFilename;
-		}
-
 		if(parent->GetType() == SystemBody::TYPE_GRAVPOINT) // generalize Kepler's law to multiple stars
 			kid->m_orbit.SetShapeAroundBarycentre(csbody->semiMajorAxis.ToDouble() * AU, parent->GetMass(), kid->GetMass(), csbody->eccentricity.ToDouble());
 		else

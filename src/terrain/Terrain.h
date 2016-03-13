@@ -7,6 +7,8 @@
 #include "libs.h"
 #include "galaxy/StarSystem.h"
 
+#include "TerrainNode.h"
+
 #ifdef _MSC_VER
 #pragma warning(disable : 4250)			// workaround for MSVC 2008 multiple inheritance bug
 #endif
@@ -54,9 +56,9 @@ public:
 
 private:
 	template <typename HeightFractal, typename ColorFractal>
-	static Terrain *InstanceGenerator(const SystemBody *body, const std::string &JSONfilename, const std::string &heightmapFilename) { return new TerrainGenerator<HeightFractal,ColorFractal>(body, JSONfilename, heightmapFilename); }
+	static Terrain *InstanceGenerator(const SystemBody *body, const std::string &JSONHeightFile, const std::string &JSONColourFile) { return new TerrainGenerator<HeightFractal,ColorFractal>(body, JSONHeightFile, JSONColourFile); }
 
-	typedef Terrain* (*GeneratorInstancer)(const SystemBody *, const std::string &JSONfilename, const std::string &heightmapFilename);
+	typedef Terrain* (*GeneratorInstancer)(const SystemBody *, const std::string &JSONHeightFile, const std::string &JSONColourFile);
 
 
 protected:
@@ -122,6 +124,8 @@ protected:
 		std::string m_name;
 	};
 	MinBodyData m_minBody;
+	
+	std::vector<TerrainSource> m_terrainSrcs;
 };
 
 
@@ -131,7 +135,7 @@ public:
 	virtual double GetHeight(const vector3d &p) const;
 	virtual const char *GetHeightFractalName() const;
 protected:
-	TerrainHeightFractal(const SystemBody *body, const std::string &JSONfilename, const std::string &heightmapFilename);
+	TerrainHeightFractal(const SystemBody *body, const std::string &JSONHeightFile);
 private:
 	TerrainHeightFractal() {}
 };
@@ -142,7 +146,7 @@ public:
 	virtual vector3d GetColor(const vector3d &p, double height, const vector3d &norm) const;
 	virtual const char *GetColorFractalName() const;
 protected:
-	TerrainColorFractal(const SystemBody *body);
+	TerrainColorFractal(const SystemBody *body, const std::string &JSONColourFile);
 private:
 	TerrainColorFractal() {}
 };
@@ -151,110 +155,14 @@ private:
 template <typename HeightFractal, typename ColorFractal>
 class TerrainGenerator : public TerrainHeightFractal<HeightFractal>, public TerrainColorFractal<ColorFractal> {
 public:
-	TerrainGenerator(const SystemBody *body, const std::string &JSONfilename, const std::string &heightmapFilename) : Terrain(body), TerrainHeightFractal<HeightFractal>(body, JSONfilename, heightmapFilename), TerrainColorFractal<ColorFractal>(body) {}
+	TerrainGenerator(const SystemBody *body, const std::string &JSONHeightFile, const std::string &JSONColourFile) : Terrain(body), TerrainHeightFractal<HeightFractal>(body, JSONHeightFile), TerrainColorFractal<ColorFractal>(body, JSONColourFile) {}
 
 private:
 	TerrainGenerator() {}
 };
 
-//This is the most complex and insanely crazy terrain you will ever see :
-class TerrainHeightFlat;
-
 // CPU side JSON height based generation:
 class TerrainHeightJSON;
-
-//New terrains with less noise :
-class TerrainHeightAsteroid;
-class TerrainHeightAsteroid2;
-class TerrainHeightAsteroid3;
-class TerrainHeightAsteroid4;
-class TerrainHeightBarrenRock;
-class TerrainHeightBarrenRock2;
-class TerrainHeightBarrenRock3;
-/* Pictures of the above terrains:
- http://i.imgur.com/cJO4E.jpg
- http://i.imgur.com/BtB0g.png
- http://i.imgur.com/qeEuS.png
- */
-
-class TerrainHeightEllipsoid;
-
-// Newish terrains, 6 months or so :
-class TerrainHeightHillsCraters2;
-class TerrainHeightHillsCraters;
-class TerrainHeightHillsDunes;
-//   This terrain or the following one should have terragen style ridged mountains :
-//   (As seen in an ancient clip of Mars http://www.youtube.com/watch?v=WeO28VBTWxs )
-class TerrainHeightHillsNormal;
-class TerrainHeightHillsRidged;
-class TerrainHeightHillsRivers;
-
-class TerrainHeightMapped;
-class TerrainHeightMapped2;
-class TerrainHeightMountainsCraters2;
-class TerrainHeightMountainsCraters;
-
-//Probably the best looking terrain due to variety, but among the most costly too :
-//(It was also used for mars at some point : http://www.youtube.com/watch?feature=player_embedded&v=4-DcyQm0zE4 )
-/// and http://www.youtube.com/watch?v=gPtxUUunSWg&t=5m15s
-class TerrainHeightMountainsNormal;
-// Based on TerrainHeightMountainsNormal :
-class TerrainHeightMountainsRivers;
- /*Pictures from the above two terrains generating Earth-like worlds:
- http://www.spacesimcentral.com/forum/download/file.php?id=1533&mode=view
- http://www.spacesimcentral.com/forum/download/file.php?id=1544&mode=view
- http://www.spacesimcentral.com/forum/download/file.php?id=1550&mode=view
- http://www.spacesimcentral.com/forum/download/file.php?id=1540&mode=view
- */
-
-
-
-// Older terrains:
-class TerrainHeightMountainsRidged;
-class TerrainHeightMountainsRiversVolcano;
-//   Used to be used for mars since it has a megavolcano:
-class TerrainHeightMountainsVolcano;
-
-//Oldest terrains, from before fracdefs :
-class TerrainHeightRuggedDesert;
-//   lava terrain should look like this http://www.spacesimcentral.com/forum/download/file.php?id=1778&mode=view
-class TerrainHeightRuggedLava;
-
-/*Terrains used for Iceworlds,
-only terrain to use the much neglected impact crater function
-(basically I forgot about it;) ) **It makes cool looking sunken craters** */
-class TerrainHeightWaterSolidCanyons;
-class TerrainHeightWaterSolid;
-
-
-class TerrainColorAsteroid;
-class TerrainColorBandedRock;
-class TerrainColorDesert;
-/*ColorEarthlike uses features not yet included in all terrain colours
- such as better poles : http://www.spacesimcentral.com/forum/download/file.php?id=1884&mode=view
- http://www.spacesimcentral.com/forum/download/file.php?id=1885&mode=view
-and better distribution of snow :  http://www.spacesimcentral.com/forum/download/file.php?id=1879&mode=view  */
-class TerrainColorEarthLike;
-class TerrainColorEarthLikeHeightmapped;
-class TerrainColorGGJupiter;
-class TerrainColorGGNeptune2;
-class TerrainColorGGNeptune;
-class TerrainColorGGSaturn2;
-class TerrainColorGGSaturn;
-class TerrainColorGGUranus;
-class TerrainColorIce;
-class TerrainColorMethane;
-class TerrainColorRock2;
-class TerrainColorRock;
-class TerrainColorSolid;
-class TerrainColorStarBrownDwarf;
-class TerrainColorStarG;
-class TerrainColorStarK;
-class TerrainColorStarM;
-class TerrainColorStarWhiteDwarf;
-class TerrainColorTFGood;
-class TerrainColorTFPoor;
-class TerrainColorVolcanic;
 class TerrainColourJSON;
 
 #ifdef _MSC_VER

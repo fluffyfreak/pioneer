@@ -1,17 +1,18 @@
 // Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
+#pragma once
+
+#ifndef _TERRAIN_NODE_H_
+#define _TERRAIN_NODE_H_
+
 #include "Terrain.h"
-#include "TerrainNoise.h"
-#include "TerrainFeature.h"
 
 #include <math.h>
 #include "MathUtil.h"
 
 #include "FileSystem.h"
 #include "json/json.h"
-
-#include "vector2.h"
 
 class TerrainNodeData
 {
@@ -93,6 +94,8 @@ public:
 		m_clamp.second = upper;
 	}
 
+	bool LoadHeightmap(const std::string &filename);
+
 	void AddChild(const TerrainNodeData& child) {
 		m_children.push_back(child);
 	}
@@ -111,7 +114,6 @@ private:
 		return ::Clamp(h, m_clamp.first, m_clamp.second);
 	}
 
-	bool LoadHeightmap(const std::string &filename);
 	double GetHeightMapValue(const vector3d& p);
 
 	//"name": "Mountains",
@@ -183,3 +185,5 @@ private:
 };
 
 void LoadTerrainJSON(const std::string& path, std::vector<TerrainSource>& sources);
+
+#endif // _TERRAIN_NODE_H_

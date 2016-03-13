@@ -11,8 +11,8 @@
 Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 {
 	static const std::string s_dummy;
-	std::string jsonFilename = s_dummy;
-	std::string heightFilename = s_dummy;
+	std::string jsonHeightFilename = s_dummy;
+	std::string jsonColourFilename = s_dummy;
 
 	Random rand(body->GetSeed());
 	GeneratorInstancer gi = InstanceGenerator<TerrainHeightJSON,TerrainColourJSON>;
@@ -21,34 +21,36 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 	// XXX this is terrible but will do for now until we get a unified
 	// heightmap setup. if you add another height fractal, remember to change
 	// the check in CustomSystem::l_height_map
-	if (!body->GetHeightMapFilename().empty() || !body->GetJSONFilename().empty()) 
+	if (!body->GetJSONFilename().empty()) 
 	{
-		jsonFilename = body->GetJSONFilename();
-		heightFilename = body->GetHeightMapFilename();
+		jsonHeightFilename = body->GetJSONFilename();
+		jsonColourFilename = body->GetJSONFilename();
 	}
 	else 
 	{
-		switch (body->GetType()) {
-
+		switch (body->GetType()) 
+		{
 			case SystemBody::TYPE_BROWN_DWARF:
-				gi = InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarBrownDwarf>;
+				jsonHeightFilename = "ellipsoid.json";
+				jsonColourFilename = "StarBrownDwarf.json";
 				break;
 
 			case SystemBody::TYPE_WHITE_DWARF:
-				gi = InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarWhiteDwarf>;
+				jsonHeightFilename = "ellipsoid.json";
+				jsonColourFilename = "StarWhiteDwarf.json";
 				break;
 
 			case SystemBody::TYPE_STAR_M:
 			case SystemBody::TYPE_STAR_M_GIANT:
 			case SystemBody::TYPE_STAR_M_SUPER_GIANT:
 			case SystemBody::TYPE_STAR_M_HYPER_GIANT: {
-				const GeneratorInstancer choices[] = {
-					InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarM>,
-					InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarM>,
-					InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarK>,
-					InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarG>
+				static const std::pair<std::string, std::string> choices[] = {
+					std::make_pair<std::string, std::string>("ellipsoid.json","StarK.json"),
+					std::make_pair<std::string, std::string>("ellipsoid.json","StarK.json"),
+					std::make_pair<std::string, std::string>("ellipsoid.json","StarK.json"),
+					std::make_pair<std::string, std::string>("ellipsoid.json","StarG.json")
 				};
-				gi = choices[rand.Int32(COUNTOF(choices))];
+				const Uint32 choice = rand.Int32(COUNTOF(choices)); jsonHeightFilename = choices[choice].first; jsonColourFilename = choices[choice].second;
 				break;
 			}
 
@@ -56,13 +58,13 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 			case SystemBody::TYPE_STAR_K_GIANT:
 			case SystemBody::TYPE_STAR_K_SUPER_GIANT:
 			case SystemBody::TYPE_STAR_K_HYPER_GIANT: {
-				const GeneratorInstancer choices[] = {
-					InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarM>,
-					InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarK>,
-					InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarK>,
-					InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarG>
+				static const std::pair<std::string, std::string> choices[] = {
+					std::make_pair<std::string, std::string>("ellipsoid.json","StarK.json"),
+					std::make_pair<std::string, std::string>("ellipsoid.json","StarK.json"),
+					std::make_pair<std::string, std::string>("ellipsoid.json","StarK.json"),
+					std::make_pair<std::string, std::string>("ellipsoid.json","StarG.json")
 				};
-				gi = choices[rand.Int32(COUNTOF(choices))];
+				const Uint32 choice = rand.Int32(COUNTOF(choices)); jsonHeightFilename = choices[choice].first; jsonColourFilename = choices[choice].second;
 				break;
 			}
 
@@ -70,11 +72,11 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 			case SystemBody::TYPE_STAR_G_GIANT:
 			case SystemBody::TYPE_STAR_G_SUPER_GIANT:
 			case SystemBody::TYPE_STAR_G_HYPER_GIANT: {
-				const GeneratorInstancer choices[] = {
-					InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarWhiteDwarf>,
-					InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarG>
+				static const std::pair<std::string, std::string> choices[] = {
+					std::make_pair<std::string, std::string>("ellipsoid.json","StarWhiteDwarf.json"),
+					std::make_pair<std::string, std::string>("ellipsoid.json","StarG.json")
 				};
-				gi = choices[rand.Int32(COUNTOF(choices))];
+				const Uint32 choice = rand.Int32(COUNTOF(choices)); jsonHeightFilename = choices[choice].first; jsonColourFilename = choices[choice].second;
 				break;
 			}
 
@@ -95,42 +97,43 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 			case SystemBody::TYPE_STAR_O_HYPER_GIANT:
 			case SystemBody::TYPE_STAR_O_SUPER_GIANT:
 			case SystemBody::TYPE_STAR_O_WF:
-				gi = InstanceGenerator<TerrainHeightEllipsoid,TerrainColorSolid>;
+				jsonHeightFilename = "ellipsoid.json";
+				jsonColourFilename = "Solid.json";
 			break;
 
 			case SystemBody::TYPE_PLANET_GAS_GIANT: {
-				const GeneratorInstancer choices[] = {
-					InstanceGenerator<TerrainHeightFlat,TerrainColorGGJupiter>,
-					InstanceGenerator<TerrainHeightFlat,TerrainColorGGSaturn>,
-					InstanceGenerator<TerrainHeightFlat,TerrainColorGGSaturn2>,
-					InstanceGenerator<TerrainHeightFlat,TerrainColorGGNeptune>,
-					InstanceGenerator<TerrainHeightFlat,TerrainColorGGNeptune2>,
-					InstanceGenerator<TerrainHeightFlat,TerrainColorGGUranus>,
-					InstanceGenerator<TerrainHeightFlat,TerrainColorGGSaturn>
+				static const std::pair<std::string, std::string> choices[] = {
+					std::make_pair<std::string, std::string>("Flat.json","GGJupiter.json"),
+					std::make_pair<std::string, std::string>("Flat.json","GGSaturn.json"),
+					std::make_pair<std::string, std::string>("Flat.json","GGSaturn2.json"),
+					std::make_pair<std::string, std::string>("Flat.json","GGNeptune.json"),
+					std::make_pair<std::string, std::string>("Flat.json","GGNeptune2.json"),
+					std::make_pair<std::string, std::string>("Flat.json","GGUranus.json"),
+					std::make_pair<std::string, std::string>("Flat.json","GGSaturn.json")
 				};
-				gi = choices[rand.Int32(COUNTOF(choices))];
+				const Uint32 choice = rand.Int32(COUNTOF(choices)); jsonHeightFilename = choices[choice].first; jsonColourFilename = choices[choice].second;
 				break;
 			}
 
 			case SystemBody::TYPE_PLANET_ASTEROID: {
-				const GeneratorInstancer choices[] = {
-					InstanceGenerator<TerrainHeightAsteroid,TerrainColorAsteroid>,
-					InstanceGenerator<TerrainHeightAsteroid2,TerrainColorAsteroid>,
-					InstanceGenerator<TerrainHeightAsteroid3,TerrainColorAsteroid>,
-					InstanceGenerator<TerrainHeightAsteroid4,TerrainColorAsteroid>,
-					InstanceGenerator<TerrainHeightAsteroid,TerrainColorRock>,
-					InstanceGenerator<TerrainHeightAsteroid2,TerrainColorBandedRock>,
-					InstanceGenerator<TerrainHeightAsteroid3,TerrainColorRock>,
-					InstanceGenerator<TerrainHeightAsteroid4,TerrainColorBandedRock>
+				static const std::pair<std::string, std::string> choices[] = {
+					std::make_pair<std::string, std::string>("Asteroid.json","Asteroid.json"),
+					std::make_pair<std::string, std::string>("Asteroid2.json","Asteroid.json"),
+					std::make_pair<std::string, std::string>("Asteroid3.json","Asteroid.json"),
+					std::make_pair<std::string, std::string>("Asteroid4.json","Asteroid.json"),
+					std::make_pair<std::string, std::string>("Asteroid.json","Rock.json"),
+					std::make_pair<std::string, std::string>("Asteroid2.json","BandedRock.json"),
+					std::make_pair<std::string, std::string>("Asteroid3.json","Rock.json"),
+					std::make_pair<std::string, std::string>("Asteroid4.json","BandedRock.json")
 				};
-				gi = choices[rand.Int32(COUNTOF(choices))];
+				const Uint32 choice = rand.Int32(COUNTOF(choices)); jsonHeightFilename = choices[choice].first; jsonColourFilename = choices[choice].second;
 				break;
 			}
 
 			case SystemBody::TYPE_PLANET_TERRESTRIAL: {
 
 				//Over-ride:
-				//gi = InstanceGenerator<TerrainHeightAsteroid3,TerrainColorRock>;
+				//gi = InstanceGenerator<"Asteroid3.json","Rock>;
 				//break;
 				// Earth-like world
 
@@ -138,35 +141,34 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 					// There would be no life on the surface without atmosphere
 
 					if (body->GetAverageTemp() > 240) {
-						const GeneratorInstancer choices[] = {
-							InstanceGenerator<TerrainHeightHillsRidged,TerrainColorEarthLike>,
-							InstanceGenerator<TerrainHeightHillsRivers,TerrainColorEarthLike>,
-							InstanceGenerator<TerrainHeightHillsDunes,TerrainColorEarthLike>,
-							InstanceGenerator<TerrainHeightMountainsRidged,TerrainColorEarthLike>,
-							InstanceGenerator<TerrainHeightMountainsNormal,TerrainColorEarthLike>,
-							InstanceGenerator<TerrainHeightMountainsRivers,TerrainColorEarthLike>,
-							InstanceGenerator<TerrainHeightMountainsVolcano,TerrainColorEarthLike>,
-							InstanceGenerator<TerrainHeightMountainsRiversVolcano,TerrainColorEarthLike>
+						static const std::pair<std::string, std::string> choices[] = {
+							std::make_pair<std::string, std::string>("HillsRidged.json","EarthLike.json"),
+							std::make_pair<std::string, std::string>("HillsRivers.json","EarthLike.json"),
+							std::make_pair<std::string, std::string>("HillsDunes.json","EarthLike.json"),
+							std::make_pair<std::string, std::string>("MountainsRidged.json","EarthLike.json"),
+							std::make_pair<std::string, std::string>("MountainsNormal.json","EarthLike.json"),
+							std::make_pair<std::string, std::string>("MountainsRivers.json","EarthLike.json"),
+							std::make_pair<std::string, std::string>("MountainsVolcano.json","EarthLike.json"),
+							std::make_pair<std::string, std::string>("MountainsRiversVolcano.json","EarthLike.json")
 						};
-						gi = choices[rand.Int32(COUNTOF(choices))];
+						const Uint32 choice = rand.Int32(COUNTOF(choices)); jsonHeightFilename = choices[choice].first; jsonColourFilename = choices[choice].second;
 						break;
 					}
 
 					// desert-ice planets
-					const GeneratorInstancer choices[] = {
-						InstanceGenerator<TerrainHeightHillsRidged,TerrainColorDesert>,
-						InstanceGenerator<TerrainHeightHillsRivers,TerrainColorDesert>,
-						InstanceGenerator<TerrainHeightHillsDunes,TerrainColorDesert>,
-						InstanceGenerator<TerrainHeightMountainsRidged,TerrainColorDesert>,
-						InstanceGenerator<TerrainHeightMountainsNormal,TerrainColorDesert>,
-						InstanceGenerator<TerrainHeightMountainsRivers,TerrainColorDesert>,
-						InstanceGenerator<TerrainHeightMountainsVolcano,TerrainColorDesert>,
-						InstanceGenerator<TerrainHeightMountainsRiversVolcano,TerrainColorDesert>,
-						InstanceGenerator<TerrainHeightBarrenRock,TerrainColorDesert>,
-						InstanceGenerator<TerrainHeightBarrenRock2,TerrainColorDesert>//,
-						//InstanceGenerator<TerrainHeightBarrenRock3,TerrainColorTFGood>
+					static const std::pair<std::string, std::string> choices[] = {
+						std::make_pair<std::string, std::string>("HillsRidged.json","Desert.json"),
+						std::make_pair<std::string, std::string>("HillsRivers.json","Desert.json"),
+						std::make_pair<std::string, std::string>("HillsDunes.json","Desert.json"),
+						std::make_pair<std::string, std::string>("MountainsRidged.json","Desert.json"),
+						std::make_pair<std::string, std::string>("MountainsNormal.json","Desert.json"),
+						std::make_pair<std::string, std::string>("MountainsRivers.json","Desert.json"),
+						std::make_pair<std::string, std::string>("MountainsVolcano.json","Desert.json"),
+						std::make_pair<std::string, std::string>("MountainsRiversVolcano.json","Desert.json"),
+						std::make_pair<std::string, std::string>("BarrenRock.json","Desert.json"),
+						std::make_pair<std::string, std::string>("BarrenRock2.json","Desert.json")
 					};
-					gi = choices[rand.Int32(COUNTOF(choices))];
+					const Uint32 choice = rand.Int32(COUNTOF(choices)); jsonHeightFilename = choices[choice].first; jsonColourFilename = choices[choice].second;
 					break;
 				}
 
@@ -174,42 +176,41 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 				if ((body->GetVolatileGasAsFixed() > fixed(2,10)) && (body->GetLifeAsFixed() > fixed(4,10)) ) {
 
 					if (body->GetAverageTemp() > 240) {
-						const GeneratorInstancer choices[] = {
-							InstanceGenerator<TerrainHeightHillsRidged,TerrainColorTFGood>,
-							InstanceGenerator<TerrainHeightHillsRivers,TerrainColorTFGood>,
-							InstanceGenerator<TerrainHeightHillsDunes,TerrainColorTFGood>,
-							InstanceGenerator<TerrainHeightHillsNormal,TerrainColorTFGood>,
-							InstanceGenerator<TerrainHeightMountainsNormal,TerrainColorTFGood>,
-							InstanceGenerator<TerrainHeightMountainsRidged,TerrainColorTFGood>,
-							InstanceGenerator<TerrainHeightMountainsVolcano,TerrainColorTFGood>,
-							InstanceGenerator<TerrainHeightMountainsRiversVolcano,TerrainColorTFGood>,
-							InstanceGenerator<TerrainHeightMountainsRivers,TerrainColorTFGood>,
-							InstanceGenerator<TerrainHeightRuggedDesert,TerrainColorTFGood>,
-							InstanceGenerator<TerrainHeightBarrenRock,TerrainColorTFGood>,
-							InstanceGenerator<TerrainHeightBarrenRock2,TerrainColorTFGood>
-							//InstanceGenerator<TerrainHeightBarrenRock3,TerrainColorTFGood>
+						static const std::pair<std::string, std::string> choices[] = {
+							std::make_pair<std::string, std::string>("HillsRidged.json","TFGood.json"),
+							std::make_pair<std::string, std::string>("HillsRivers.json","TFGood.json"),
+							std::make_pair<std::string, std::string>("HillsDunes.json","TFGood.json"),
+							std::make_pair<std::string, std::string>("HillsNormal.json","TFGood.json"),
+							std::make_pair<std::string, std::string>("MountainsNormal.json","TFGood.json"),
+							std::make_pair<std::string, std::string>("MountainsRidged.json","TFGood.json"),
+							std::make_pair<std::string, std::string>("MountainsVolcano.json","TFGood.json"),
+							std::make_pair<std::string, std::string>("MountainsRiversVolcano.json","TFGood.json"),
+							std::make_pair<std::string, std::string>("MountainsRivers.json","TFGood.json"),
+							std::make_pair<std::string, std::string>("RuggedDesert.json","TFGood.json"),
+							std::make_pair<std::string, std::string>("BarrenRock.json","TFGood.json"),
+							std::make_pair<std::string, std::string>("BarrenRock2.json","TFGood.json")
 						};
-						gi = choices[rand.Int32(COUNTOF(choices))];
+						const Uint32 choice = rand.Int32(COUNTOF(choices)); jsonHeightFilename = choices[choice].first; jsonColourFilename = choices[choice].second;
 						break;
 					}
 
 					// ice planets
-					const GeneratorInstancer choices[] = {
-						InstanceGenerator<TerrainHeightHillsRidged,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightHillsRivers,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightHillsDunes,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightHillsNormal,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightMountainsNormal,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightMountainsRidged,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightMountainsVolcano,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightMountainsRiversVolcano,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightMountainsRivers,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightRuggedDesert,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightBarrenRock,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightBarrenRock2,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightBarrenRock3,TerrainColorIce>
+					static const std::pair<std::string, std::string> choices[] = {
+						std::make_pair<std::string, std::string>("HillsRidged.json","Ice.json"),
+						std::make_pair<std::string, std::string>("HillsRivers.json","Ice.json"),
+						std::make_pair<std::string, std::string>("HillsDunes.json","Ice.json"),
+						std::make_pair<std::string, std::string>("HillsNormal.json","Ice.json"),
+						std::make_pair<std::string, std::string>("MountainsNormal.json","Ice.json"),
+						std::make_pair<std::string, std::string>("MountainsRidged.json","Ice.json"),
+						std::make_pair<std::string, std::string>("MountainsVolcano.json","Ice.json"),
+						std::make_pair<std::string, std::string>("MountainsRiversVolcano.json","Ice.json"),
+						std::make_pair<std::string, std::string>("MountainsRivers.json","Ice.json"),
+						std::make_pair<std::string, std::string>("RuggedDesert.json","Ice.json"),
+						std::make_pair<std::string, std::string>("BarrenRock.json","Ice.json"),
+						std::make_pair<std::string, std::string>("BarrenRock2.json","Ice.json"),
+						std::make_pair<std::string, std::string>("BarrenRock3.json","Ice.json")
 					};
-					gi = choices[rand.Int32(COUNTOF(choices))];
+					const Uint32 choice = rand.Int32(COUNTOF(choices)); jsonHeightFilename = choices[choice].first; jsonColourFilename = choices[choice].second;
 					break;
 				}
 
@@ -217,142 +218,147 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 				else if ((body->GetVolatileGasAsFixed() > fixed(1,10)) && (body->GetLifeAsFixed() > fixed(1,10)) ) {
 
 					if (body->GetAverageTemp() > 240) {
-						const GeneratorInstancer choices[] = {
-							InstanceGenerator<TerrainHeightHillsRidged,TerrainColorTFPoor>,
-							InstanceGenerator<TerrainHeightHillsRivers,TerrainColorTFPoor>,
-							InstanceGenerator<TerrainHeightHillsDunes,TerrainColorTFPoor>,
-							InstanceGenerator<TerrainHeightHillsNormal,TerrainColorTFPoor>,
-							InstanceGenerator<TerrainHeightMountainsNormal,TerrainColorTFPoor>,
-							InstanceGenerator<TerrainHeightMountainsRidged,TerrainColorTFPoor>,
-							InstanceGenerator<TerrainHeightMountainsVolcano,TerrainColorTFPoor>,
-							InstanceGenerator<TerrainHeightMountainsRiversVolcano,TerrainColorTFPoor>,
-							InstanceGenerator<TerrainHeightMountainsRivers,TerrainColorTFPoor>,
-							InstanceGenerator<TerrainHeightRuggedDesert,TerrainColorTFPoor>,
-							InstanceGenerator<TerrainHeightBarrenRock,TerrainColorTFPoor>,
-							InstanceGenerator<TerrainHeightBarrenRock2,TerrainColorTFPoor>,
-							InstanceGenerator<TerrainHeightBarrenRock3,TerrainColorTFPoor>
+						static const std::pair<std::string, std::string> choices[] = {
+							std::make_pair<std::string, std::string>("HillsRidged.json","TFPoor.json"),
+							std::make_pair<std::string, std::string>("HillsRivers.json","TFPoor.json"),
+							std::make_pair<std::string, std::string>("HillsDunes.json","TFPoor.json"),
+							std::make_pair<std::string, std::string>("HillsNormal.json","TFPoor.json"),
+							std::make_pair<std::string, std::string>("MountainsNormal.json","TFPoor.json"),
+							std::make_pair<std::string, std::string>("MountainsRidged.json","TFPoor.json"),
+							std::make_pair<std::string, std::string>("MountainsVolcano.json","TFPoor.json"),
+							std::make_pair<std::string, std::string>("MountainsRiversVolcano.json","TFPoor.json"),
+							std::make_pair<std::string, std::string>("MountainsRivers.json","TFPoor.json"),
+							std::make_pair<std::string, std::string>("RuggedDesert.json","TFPoor.json"),
+							std::make_pair<std::string, std::string>("BarrenRock.json","TFPoor.json"),
+							std::make_pair<std::string, std::string>("BarrenRock2.json","TFPoor.json"),
+							std::make_pair<std::string, std::string>("BarrenRock3.json","TFPoor.json")
 						};
-						gi = choices[rand.Int32(COUNTOF(choices))];
+						const Uint32 choice = rand.Int32(COUNTOF(choices)); jsonHeightFilename = choices[choice].first; jsonColourFilename = choices[choice].second;
 						break;
 					}
 
 					// ice planets
-					const GeneratorInstancer choices[] = {
-						InstanceGenerator<TerrainHeightHillsRidged,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightHillsRivers,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightHillsDunes,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightHillsNormal,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightMountainsNormal,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightMountainsRidged,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightMountainsVolcano,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightMountainsRiversVolcano,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightMountainsRivers,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightRuggedDesert,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightBarrenRock,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightBarrenRock2,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightBarrenRock3,TerrainColorIce>
+					static const std::pair<std::string, std::string> choices[] = {
+						std::make_pair<std::string, std::string>("HillsRidged.json","Ice.json"),
+						std::make_pair<std::string, std::string>("HillsRivers.json","Ice.json"),
+						std::make_pair<std::string, std::string>("HillsDunes.json","Ice.json"),
+						std::make_pair<std::string, std::string>("HillsNormal.json","Ice.json"),
+						std::make_pair<std::string, std::string>("MountainsNormal.json","Ice.json"),
+						std::make_pair<std::string, std::string>("MountainsRidged.json","Ice.json"),
+						std::make_pair<std::string, std::string>("MountainsVolcano.json","Ice.json"),
+						std::make_pair<std::string, std::string>("MountainsRiversVolcano.json","Ice.json"),
+						std::make_pair<std::string, std::string>("MountainsRivers.json","Ice.json"),
+						std::make_pair<std::string, std::string>("RuggedDesert.json","Ice.json"),
+						std::make_pair<std::string, std::string>("BarrenRock.json","Ice.json"),
+						std::make_pair<std::string, std::string>("BarrenRock2.json","Ice.json"),
+						std::make_pair<std::string, std::string>("BarrenRock3.json","Ice.json")
 					};
-					gi = choices[rand.Int32(COUNTOF(choices))];
+					const Uint32 choice = rand.Int32(COUNTOF(choices)); jsonHeightFilename = choices[choice].first; jsonColourFilename = choices[choice].second;
 					break;
 				}
 
 				// Desert-like world, Mars -like.
 				if ((body->GetVolatileLiquidAsFixed() < fixed(1,10)) && (body->GetVolatileGasAsFixed() > fixed(1,5))) {
-					const GeneratorInstancer choices[] = {
-						InstanceGenerator<TerrainHeightHillsDunes,TerrainColorDesert>,
-						InstanceGenerator<TerrainHeightWaterSolid,TerrainColorDesert>,
-						InstanceGenerator<TerrainHeightRuggedDesert,TerrainColorDesert>,
-						InstanceGenerator<TerrainHeightRuggedLava,TerrainColorDesert>,
-						InstanceGenerator<TerrainHeightMountainsVolcano,TerrainColorDesert>,
-						InstanceGenerator<TerrainHeightMountainsRiversVolcano,TerrainColorDesert>,
-						InstanceGenerator<TerrainHeightBarrenRock,TerrainColorDesert>,
-						InstanceGenerator<TerrainHeightBarrenRock2,TerrainColorDesert>
+					static const std::pair<std::string, std::string> choices[] = {
+						std::make_pair<std::string, std::string>("HillsDunes.json","Desert.json"),
+						std::make_pair<std::string, std::string>("WaterSolid.json","Desert.json"),
+						std::make_pair<std::string, std::string>("RuggedDesert.json","Desert.json"),
+						std::make_pair<std::string, std::string>("RuggedLava.json","Desert.json"),
+						std::make_pair<std::string, std::string>("MountainsVolcano.json","Desert.json"),
+						std::make_pair<std::string, std::string>("MountainsRiversVolcano.json","Desert.json"),
+						std::make_pair<std::string, std::string>("BarrenRock.json","Desert.json"),
+						std::make_pair<std::string, std::string>("BarrenRock2.json","Desert.json")
 					};
-					gi = choices[rand.Int32(COUNTOF(choices))];
+					const Uint32 choice = rand.Int32(COUNTOF(choices)); jsonHeightFilename = choices[choice].first; jsonColourFilename = choices[choice].second;
 					break;
 				}
 
 				// Frozen world
 				if ((body->GetVolatileIcesAsFixed() > fixed(8,10)) &&  (body->GetAverageTemp() < 250)) {
-					const GeneratorInstancer choices[] = {
-						InstanceGenerator<TerrainHeightHillsDunes,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightHillsCraters,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightMountainsCraters,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightWaterSolid,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightWaterSolidCanyons,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightRuggedDesert,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightBarrenRock,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightBarrenRock2,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightBarrenRock3,TerrainColorIce>
+					static const std::pair<std::string, std::string> choices[] = {
+						std::make_pair<std::string, std::string>("HillsDunes.json","Ice.json"),
+						std::make_pair<std::string, std::string>("HillsCraters.json","Ice.json"),
+						std::make_pair<std::string, std::string>("MountainsCraters.json","Ice.json"),
+						std::make_pair<std::string, std::string>("WaterSolid.json","Ice.json"),
+						std::make_pair<std::string, std::string>("WaterSolidCanyons.json","Ice.json"),
+						std::make_pair<std::string, std::string>("RuggedDesert.json","Ice.json"),
+						std::make_pair<std::string, std::string>("BarrenRock.json","Ice.json"),
+						std::make_pair<std::string, std::string>("BarrenRock2.json","Ice.json"),
+						std::make_pair<std::string, std::string>("BarrenRock3.json","Ice.json")
 					};
-					gi = choices[rand.Int32(COUNTOF(choices))];
+					const Uint32 choice = rand.Int32(COUNTOF(choices)); jsonHeightFilename = choices[choice].first; jsonColourFilename = choices[choice].second;
 					break;
 				}
 
 				// Volcanic world
 				if (body->GetVolcanicityAsFixed() > fixed(7,10)) {
 
-					if (body->GetLifeAsFixed() > fixed(5,10))	// life on a volcanic world ;)
-						gi = InstanceGenerator<TerrainHeightRuggedLava,TerrainColorTFGood>;
-					else if (body->GetLifeAsFixed() > fixed(2,10))
-						gi = InstanceGenerator<TerrainHeightRuggedLava,TerrainColorTFPoor>;
-					else
-						gi = InstanceGenerator<TerrainHeightRuggedLava,TerrainColorVolcanic>;
+					if (body->GetLifeAsFixed() > fixed(5,10)) {	// life on a volcanic world ;)
+						jsonHeightFilename = "RuggedLava.json";
+						jsonColourFilename = "TFGood.json";
+					} else if (body->GetLifeAsFixed() > fixed(2,10)) {
+						jsonHeightFilename = "RuggedLava.json";
+						jsonColourFilename = "TFPoor.json";
+					} else {
+						jsonHeightFilename = "RuggedLava.json";
+						jsonColourFilename = "Volcanic.json";
+					}
 					break;
 				}
 
 				//Below might not be needed.
 				//Alien life world:
 				if (body->GetLifeAsFixed() > fixed(1,10))  {
-					const GeneratorInstancer choices[] = {
-						InstanceGenerator<TerrainHeightHillsDunes,TerrainColorTFPoor>,
-						InstanceGenerator<TerrainHeightHillsRidged,TerrainColorTFPoor>,
-						InstanceGenerator<TerrainHeightHillsRivers,TerrainColorTFPoor>,
-						InstanceGenerator<TerrainHeightMountainsNormal,TerrainColorTFPoor>,
-						InstanceGenerator<TerrainHeightMountainsRidged,TerrainColorTFPoor>,
-						InstanceGenerator<TerrainHeightMountainsVolcano,TerrainColorTFPoor>,
-						InstanceGenerator<TerrainHeightMountainsRiversVolcano,TerrainColorTFPoor>,
-						InstanceGenerator<TerrainHeightMountainsRivers,TerrainColorTFPoor>,
-						InstanceGenerator<TerrainHeightWaterSolid,TerrainColorTFPoor>,
-						InstanceGenerator<TerrainHeightRuggedLava,TerrainColorTFPoor>,
-						InstanceGenerator<TerrainHeightRuggedDesert,TerrainColorTFPoor>,
-						InstanceGenerator<TerrainHeightBarrenRock,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightBarrenRock2,TerrainColorIce>,
-						InstanceGenerator<TerrainHeightBarrenRock3,TerrainColorIce>
+					static const std::pair<std::string, std::string> choices[] = {
+						std::make_pair<std::string, std::string>("HillsDunes.json","TFPoor.json"),
+						std::make_pair<std::string, std::string>("HillsRidged.json","TFPoor.json"),
+						std::make_pair<std::string, std::string>("HillsRivers.json","TFPoor.json"),
+						std::make_pair<std::string, std::string>("MountainsNormal.json","TFPoor.json"),
+						std::make_pair<std::string, std::string>("MountainsRidged.json","TFPoor.json"),
+						std::make_pair<std::string, std::string>("MountainsVolcano.json","TFPoor.json"),
+						std::make_pair<std::string, std::string>("MountainsRiversVolcano.json","TFPoor.json"),
+						std::make_pair<std::string, std::string>("MountainsRivers.json","TFPoor.json"),
+						std::make_pair<std::string, std::string>("WaterSolid.json","TFPoor.json"),
+						std::make_pair<std::string, std::string>("RuggedLava.json","TFPoor.json"),
+						std::make_pair<std::string, std::string>("RuggedDesert.json","TFPoor.json"),
+						std::make_pair<std::string, std::string>("BarrenRock.json","Ice.json"),
+						std::make_pair<std::string, std::string>("BarrenRock2.json","Ice.json"),
+						std::make_pair<std::string, std::string>("BarrenRock3.json","Ice.json")
 					};
-					gi = choices[rand.Int32(COUNTOF(choices))];
+					const Uint32 choice = rand.Int32(COUNTOF(choices)); jsonHeightFilename = choices[choice].first; jsonColourFilename = choices[choice].second;
 					break;
 				};
 
 				if (body->GetVolatileGasAsFixed() > fixed(1,10)) {
-					const GeneratorInstancer choices[] = {
-						InstanceGenerator<TerrainHeightHillsNormal,TerrainColorRock>,
-						InstanceGenerator<TerrainHeightMountainsNormal,TerrainColorRock>,
-						InstanceGenerator<TerrainHeightRuggedDesert,TerrainColorRock>,
-						InstanceGenerator<TerrainHeightBarrenRock,TerrainColorRock>,
-						InstanceGenerator<TerrainHeightBarrenRock2,TerrainColorRock>,
-						InstanceGenerator<TerrainHeightBarrenRock3,TerrainColorRock>
+					static const std::pair<std::string, std::string> choices[] = {
+						std::make_pair<std::string, std::string>("HillsNormal.json","Rock.json"),
+						std::make_pair<std::string, std::string>("MountainsNormal.json","Rock.json"),
+						std::make_pair<std::string, std::string>("RuggedDesert.json","Rock.json"),
+						std::make_pair<std::string, std::string>("BarrenRock.json","Rock.json"),
+						std::make_pair<std::string, std::string>("BarrenRock2.json","Rock.json"),
+						std::make_pair<std::string, std::string>("BarrenRock3.json","Rock.json")
 					};
-					gi = choices[rand.Int32(COUNTOF(choices))];
+					const Uint32 choice = rand.Int32(COUNTOF(choices)); jsonHeightFilename = choices[choice].first; jsonColourFilename = choices[choice].second;
 					break;
 				}
 
-				const GeneratorInstancer choices[] = {
-					InstanceGenerator<TerrainHeightHillsCraters2,TerrainColorRock>,
-					InstanceGenerator<TerrainHeightMountainsCraters2,TerrainColorRock>,
-					InstanceGenerator<TerrainHeightBarrenRock3,TerrainColorRock>
+				static const std::pair<std::string, std::string> choices[] = {
+					std::make_pair<std::string, std::string>("HillsCraters2.json","Rock.json"),
+					std::make_pair<std::string, std::string>("MountainsCraters2.json","Rock.json"),
+					std::make_pair<std::string, std::string>("BarrenRock3.json","Rock.json")
 				};
-				gi = choices[rand.Int32(COUNTOF(choices))];
+				const Uint32 choice = rand.Int32(COUNTOF(choices)); jsonHeightFilename = choices[choice].first; jsonColourFilename = choices[choice].second;
 				break;
 			}
 
 			default:
-				gi = InstanceGenerator<TerrainHeightFlat,TerrainColorSolid>;
+				jsonHeightFilename = "Flat.json";
+				jsonColourFilename = "Solid.json";
 				break;
 		}
 	}
 
-	return gi(body, jsonFilename, heightFilename);
+	return gi(body, jsonHeightFilename, jsonColourFilename);
 }
 
 // XXX this sucks, but there isn't a reliable cross-platform way to get them
@@ -366,8 +372,8 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 # define UINT16_MAX  (65535)
 #endif
 
-Terrain::Terrain(const SystemBody *body) : m_seed(body->GetSeed()), m_rand(body->GetSeed()), m_heightScaling(0), m_minh(0), m_minBody(body) {
-
+Terrain::Terrain(const SystemBody *body) : m_seed(body->GetSeed()), m_rand(body->GetSeed()), m_heightScaling(0), m_minh(0), m_minBody(body) 
+{
 	// load the heightmap
 	/*if (!body->GetHeightMapFilename().empty()) {
 		RefCountedPtr<FileSystem::FileData> fdata = FileSystem::gameDataFiles.ReadFile(body->GetHeightMapFilename());

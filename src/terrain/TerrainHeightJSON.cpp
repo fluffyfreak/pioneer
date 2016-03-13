@@ -4,16 +4,13 @@
 #include "Terrain.h"
 #include "TerrainNode.h"
 
-static std::vector<TerrainSource> terrainSrcs;
-
 template <>
 const char *TerrainHeightFractal<TerrainHeightJSON>::GetHeightFractalName() const { return "JSON"; }
 
 template <>
-TerrainHeightFractal<TerrainHeightJSON>::TerrainHeightFractal(const SystemBody *body, const std::string &JSONfilename, const std::string &heightmapFilename) : Terrain(body)
+TerrainHeightFractal<TerrainHeightJSON>::TerrainHeightFractal(const SystemBody *body, const std::string &JSONHeightFile) : Terrain(body)
 {
-	const std::string path("terrain/Terra.json");
-	LoadTerrainJSON(path, terrainSrcs);
+	LoadTerrainJSON(FileSystem::JoinPathBelow("terrain", JSONHeightFile), m_terrainSrcs);
 }
 
 static double heightScale = 1.0 / 15000000.0;
@@ -26,7 +23,7 @@ double TerrainHeightFractal<TerrainHeightJSON>::GetHeight(const vector3d &p) con
 	//const vector3d posRadius(p * radiusScale);// *(m_planetRadius * radiusScale));
 	const vector3d posRadius(p*(m_planetRadius * radiusScale));
 
-	for (auto ts : terrainSrcs)
+	for (auto ts : m_terrainSrcs)
 	{
 		if (ts.Type() == TerrainSource::ST_HEIGHT)
 		{

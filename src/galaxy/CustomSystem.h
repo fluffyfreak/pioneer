@@ -35,7 +35,6 @@ public:
 	fixed                  rotationalPhaseAtStart; // 0 to 2 pi
 	fixed                  axialTilt; // in radians
 	std::string            JSONFilename;
-	std::string            heightMapFilename;
 	std::vector<CustomSystemBody*> children;
 
 	/* composition */
