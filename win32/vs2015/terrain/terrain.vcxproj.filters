@@ -55,10 +55,14 @@
     <ClCompile Include="..\..\..\src\terrain\TerrainHeightBarrenRock3.cpp" />
     <ClCompile Include="..\..\..\src\terrain\TerrainHeightEllipsoid.cpp" />
     <ClCompile Include="..\..\..\src\terrain\TerrainColorEarthLikeHeightmapped.cpp" />
+    <ClCompile Include="..\..\..\src\terrain\TerrainColourJSON.cpp" />
+    <ClCompile Include="..\..\..\src\terrain\TerrainHeightJSON.cpp" />
+    <ClCompile Include="..\..\..\src\terrain\TerrainNode.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\terrain\Terrain.h" />
     <ClInclude Include="..\..\..\src\terrain\TerrainFeature.h" />
     <ClInclude Include="..\..\..\src\terrain\TerrainNoise.h" />
+    <ClInclude Include="..\..\..\src\terrain\TerrainNode.h" />
   </ItemGroup>
 </Project>
