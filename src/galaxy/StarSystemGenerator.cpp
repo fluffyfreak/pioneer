@@ -523,7 +523,6 @@ void StarSystemCustomGenerator::CustomGetKidsOf(RefCountedPtr<StarSystem::Genera
 
 		if (!(csbody->heightMapFilename.empty())) {
 			kid->m_heightMapFilename = csbody->heightMapFilename;
-			kid->m_heightMapFractal = csbody->heightMapFractal;
 		}
 
 		if(parent->GetType() == SystemBody::TYPE_GRAVPOINT) // generalize Kepler's law to multiple stars

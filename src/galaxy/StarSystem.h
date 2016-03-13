@@ -163,9 +163,7 @@ public:
 	int GetAverageTemp() const { return m_averageTemp; }
 
 	const std::string& GetJSONFilename() const { return m_JSONFilename; }
-
 	const std::string& GetHeightMapFilename() const { return m_heightMapFilename; }
-	unsigned int GetHeightMapFractal() const { return m_heightMapFractal; }
 
 	Uint32 GetSeed() const { return m_seed; }
 
@@ -277,9 +275,7 @@ private:
 	fixed m_agricultural;
 
 	std::string m_JSONFilename;
-
 	std::string m_heightMapFilename;
-	unsigned int m_heightMapFractal;
 
 	Color m_atmosColor;
 	double m_atmosDensity;

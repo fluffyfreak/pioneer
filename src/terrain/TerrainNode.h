@@ -24,11 +24,12 @@ public:
 		TO_DIV
 	};
 
-	enum EnumNoiseTypes {
+	enum EnumNodeTypes {
 		NT_NOISE = 0,
 		NT_NOISE_CELLULAR_SQUARED,
 		NT_NOISE_RIDGED,
-		NT_NOISE_CUBED
+		NT_NOISE_CUBED,
+		NT_HEIGHTMAP
 	};
 
 	// public methods
@@ -39,7 +40,12 @@ public:
 		m_frequency(0.0),
 		m_persistence(0.0),
 		m_clamp(std::make_pair(DBL_MIN, DBL_MAX)),
-		m_noiseType(NT_NOISE)
+		m_nodeType(NT_NOISE),
+		m_heightMap(nullptr),
+		m_heightScaling(0), 
+		m_minh(0),
+		m_heightMapSizeX(0),
+		m_heightMapSizeY(0)
 	{
 	}
 
@@ -70,13 +76,15 @@ public:
 
 	void NoiseType(const std::string& str) {
 		if (str == "noise") {
-			m_noiseType = NT_NOISE;
+			m_nodeType = NT_NOISE;
 		} else if (str == "noise_cellular_squared") {
-			m_noiseType = NT_NOISE_CELLULAR_SQUARED;
+			m_nodeType = NT_NOISE_CELLULAR_SQUARED;
 		} else if (str == "noise_ridged") {
-			m_noiseType = NT_NOISE_RIDGED;
+			m_nodeType = NT_NOISE_RIDGED;
 		} else if (str == "noise_cubed") {
-			m_noiseType = NT_NOISE_CUBED;
+			m_nodeType = NT_NOISE_CUBED;
+		} else if (str == "heightmap") {
+			m_nodeType = NT_HEIGHTMAP;
 		} 
 	}
 
@@ -103,6 +111,9 @@ private:
 		return ::Clamp(h, m_clamp.first, m_clamp.second);
 	}
 
+	bool LoadHeightmap(const std::string &filename);
+	double GetHeightMapValue(const vector3d& p);
+
 	//"name": "Mountains",
 	std::string m_name;
 
@@ -122,13 +133,20 @@ private:
 	double m_persistence;
 
 	//"type": "noise_cubed"
-	EnumNoiseTypes m_noiseType;
+	EnumNodeTypes m_nodeType;
 
 	//"clamp": [ 0, 1 ]
 	std::pair<double, double> m_clamp;
 
 	//"children": [ ... ]
 	std::vector<TerrainNodeData> m_children;
+
+	// heightmap stuff
+	double *m_heightMap;
+	double m_heightScaling, m_minh;
+
+	int m_heightMapSizeX;
+	int m_heightMapSizeY;
 };
 
 class TerrainSource

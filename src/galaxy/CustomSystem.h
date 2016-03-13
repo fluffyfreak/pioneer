@@ -36,7 +36,6 @@ public:
 	fixed                  axialTilt; // in radians
 	std::string            JSONFilename;
 	std::string            heightMapFilename;
-	int                    heightMapFractal;
 	std::vector<CustomSystemBody*> children;
 
 	/* composition */

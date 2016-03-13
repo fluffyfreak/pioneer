@@ -563,7 +563,7 @@ SystemPath StarSystem::GetPathOf(const SystemBody *sbody) const
 
 SystemBody::SystemBody(const SystemPath& path, StarSystem *system) : m_parent(nullptr), m_path(path), m_seed(0), m_aspectRatio(1,1), m_orbMin(0),
 	m_orbMax(0), m_rotationalPhaseAtStart(0), m_semiMajorAxis(0), m_eccentricity(0), m_orbitalOffset(0), m_axialTilt(0),
-	m_inclination(0), m_averageTemp(0), m_type(TYPE_GRAVPOINT), m_isCustomBody(false), m_heightMapFractal(0), m_atmosDensity(0.0), m_system(system)
+	m_inclination(0), m_averageTemp(0), m_type(TYPE_GRAVPOINT), m_isCustomBody(false), m_atmosDensity(0.0), m_system(system)
 {
 }
 
@@ -802,7 +802,7 @@ void SystemBody::Dump(FILE* file, const char* indent) const
 			fprintf(file, "%s\tJSONFilename \"%s\"\n", indent, m_JSONFilename.c_str());
 		}
 		if (!m_heightMapFilename.empty()) {
-			fprintf(file, "%s\theightmap \"%s\", fractal %u\n", indent, m_heightMapFilename.c_str(), m_heightMapFractal);
+			fprintf(file, "%s\theightmap \"%s\"\n", indent, m_heightMapFilename.c_str());
 		}
 	}
 	for (const SystemBody* kid : m_children) {

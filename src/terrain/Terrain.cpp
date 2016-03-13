@@ -10,358 +10,349 @@
 // static instancer. selects the best height and color classes for the body
 Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 {
+	static const std::string s_dummy;
+	std::string jsonFilename = s_dummy;
+	std::string heightFilename = s_dummy;
+
+	Random rand(body->GetSeed());
+	GeneratorInstancer gi = InstanceGenerator<TerrainHeightJSON,TerrainColourJSON>;
+
 	// special case for heightmaps
 	// XXX this is terrible but will do for now until we get a unified
 	// heightmap setup. if you add another height fractal, remember to change
 	// the check in CustomSystem::l_height_map
-	if (!body->GetHeightMapFilename().empty()) {
-		const GeneratorInstancer choices[] = {
-			InstanceGenerator<TerrainHeightMapped,TerrainColorEarthLikeHeightmapped>,
-			InstanceGenerator<TerrainHeightMapped2,TerrainColorRock2>
-		};
-		assert(body->GetHeightMapFractal() < COUNTOF(choices));
-		return choices[body->GetHeightMapFractal()](body, body->GetJSONFilename(), body->GetHeightMapFilename());
+	if (!body->GetHeightMapFilename().empty() || !body->GetJSONFilename().empty()) 
+	{
+		jsonFilename = body->GetJSONFilename();
+		heightFilename = body->GetHeightMapFilename();
 	}
+	else 
+	{
+		switch (body->GetType()) {
 
-	Random rand(body->GetSeed());
+			case SystemBody::TYPE_BROWN_DWARF:
+				gi = InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarBrownDwarf>;
+				break;
 
-	GeneratorInstancer gi = nullptr;
+			case SystemBody::TYPE_WHITE_DWARF:
+				gi = InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarWhiteDwarf>;
+				break;
 
-	switch (body->GetType()) {
-
-		case SystemBody::TYPE_BROWN_DWARF:
-			gi = InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarBrownDwarf>;
-			break;
-
-		case SystemBody::TYPE_WHITE_DWARF:
-			gi = InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarWhiteDwarf>;
-			break;
-
-		case SystemBody::TYPE_STAR_M:
-		case SystemBody::TYPE_STAR_M_GIANT:
-		case SystemBody::TYPE_STAR_M_SUPER_GIANT:
-		case SystemBody::TYPE_STAR_M_HYPER_GIANT: {
-			const GeneratorInstancer choices[] = {
-				InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarM>,
-				InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarM>,
-				InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarK>,
-				InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarG>
-			};
-			gi = choices[rand.Int32(COUNTOF(choices))];
-			break;
-		}
-
-		case SystemBody::TYPE_STAR_K:
-		case SystemBody::TYPE_STAR_K_GIANT:
-		case SystemBody::TYPE_STAR_K_SUPER_GIANT:
-		case SystemBody::TYPE_STAR_K_HYPER_GIANT: {
-			const GeneratorInstancer choices[] = {
-				InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarM>,
-				InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarK>,
-				InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarK>,
-				InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarG>
-			};
-			gi = choices[rand.Int32(COUNTOF(choices))];
-			break;
-		}
-
-		case SystemBody::TYPE_STAR_G:
-		case SystemBody::TYPE_STAR_G_GIANT:
-		case SystemBody::TYPE_STAR_G_SUPER_GIANT:
-		case SystemBody::TYPE_STAR_G_HYPER_GIANT: {
-			const GeneratorInstancer choices[] = {
-				InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarWhiteDwarf>,
-				InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarG>
-			};
-			gi = choices[rand.Int32(COUNTOF(choices))];
-			break;
-		}
-
-		case SystemBody::TYPE_STAR_F:
-		case SystemBody::TYPE_STAR_F_GIANT:
-		case SystemBody::TYPE_STAR_F_HYPER_GIANT:
-		case SystemBody::TYPE_STAR_F_SUPER_GIANT:
-		case SystemBody::TYPE_STAR_A:
-		case SystemBody::TYPE_STAR_A_GIANT:
-		case SystemBody::TYPE_STAR_A_HYPER_GIANT:
-		case SystemBody::TYPE_STAR_A_SUPER_GIANT:
-		case SystemBody::TYPE_STAR_B:
-		case SystemBody::TYPE_STAR_B_GIANT:
-		case SystemBody::TYPE_STAR_B_SUPER_GIANT:
-		case SystemBody::TYPE_STAR_B_WF:
-		case SystemBody::TYPE_STAR_O:
-		case SystemBody::TYPE_STAR_O_GIANT:
-		case SystemBody::TYPE_STAR_O_HYPER_GIANT:
-		case SystemBody::TYPE_STAR_O_SUPER_GIANT:
-		case SystemBody::TYPE_STAR_O_WF:
-			gi = InstanceGenerator<TerrainHeightEllipsoid,TerrainColorSolid>;
-		break;
-
-		case SystemBody::TYPE_PLANET_GAS_GIANT: {
-			const GeneratorInstancer choices[] = {
-				InstanceGenerator<TerrainHeightFlat,TerrainColorGGJupiter>,
-				InstanceGenerator<TerrainHeightFlat,TerrainColorGGSaturn>,
-				InstanceGenerator<TerrainHeightFlat,TerrainColorGGSaturn2>,
-				InstanceGenerator<TerrainHeightFlat,TerrainColorGGNeptune>,
-				InstanceGenerator<TerrainHeightFlat,TerrainColorGGNeptune2>,
-				InstanceGenerator<TerrainHeightFlat,TerrainColorGGUranus>,
-				InstanceGenerator<TerrainHeightFlat,TerrainColorGGSaturn>
-			};
-			gi = choices[rand.Int32(COUNTOF(choices))];
-			break;
-		}
-
-		case SystemBody::TYPE_PLANET_ASTEROID: {
-			const GeneratorInstancer choices[] = {
-				InstanceGenerator<TerrainHeightAsteroid,TerrainColorAsteroid>,
-				InstanceGenerator<TerrainHeightAsteroid2,TerrainColorAsteroid>,
-				InstanceGenerator<TerrainHeightAsteroid3,TerrainColorAsteroid>,
-				InstanceGenerator<TerrainHeightAsteroid4,TerrainColorAsteroid>,
-				InstanceGenerator<TerrainHeightAsteroid,TerrainColorRock>,
-				InstanceGenerator<TerrainHeightAsteroid2,TerrainColorBandedRock>,
-				InstanceGenerator<TerrainHeightAsteroid3,TerrainColorRock>,
-				InstanceGenerator<TerrainHeightAsteroid4,TerrainColorBandedRock>
-			};
-			gi = choices[rand.Int32(COUNTOF(choices))];
-			break;
-		}
-
-		case SystemBody::TYPE_PLANET_TERRESTRIAL: {
-
-			//Over-ride:
-			//gi = InstanceGenerator<TerrainHeightAsteroid3,TerrainColorRock>;
-			//break;
-			// Earth-like world
-
-			if ((body->GetLifeAsFixed() > fixed(7,10)) && (body->GetVolatileGasAsFixed() > fixed(2,10))) {
-				// There would be no life on the surface without atmosphere
-
-				if (body->GetAverageTemp() > 240) {
-					const GeneratorInstancer choices[] = {
-						InstanceGenerator<TerrainHeightHillsRidged,TerrainColorEarthLike>,
-						InstanceGenerator<TerrainHeightHillsRivers,TerrainColorEarthLike>,
-						InstanceGenerator<TerrainHeightHillsDunes,TerrainColorEarthLike>,
-						InstanceGenerator<TerrainHeightMountainsRidged,TerrainColorEarthLike>,
-						InstanceGenerator<TerrainHeightMountainsNormal,TerrainColorEarthLike>,
-						InstanceGenerator<TerrainHeightMountainsRivers,TerrainColorEarthLike>,
-						InstanceGenerator<TerrainHeightMountainsVolcano,TerrainColorEarthLike>,
-						InstanceGenerator<TerrainHeightMountainsRiversVolcano,TerrainColorEarthLike>
-					};
-					gi = choices[rand.Int32(COUNTOF(choices))];
-					break;
-				}
-
-				// desert-ice planets
+			case SystemBody::TYPE_STAR_M:
+			case SystemBody::TYPE_STAR_M_GIANT:
+			case SystemBody::TYPE_STAR_M_SUPER_GIANT:
+			case SystemBody::TYPE_STAR_M_HYPER_GIANT: {
 				const GeneratorInstancer choices[] = {
-					InstanceGenerator<TerrainHeightHillsRidged,TerrainColorDesert>,
-					InstanceGenerator<TerrainHeightHillsRivers,TerrainColorDesert>,
-					InstanceGenerator<TerrainHeightHillsDunes,TerrainColorDesert>,
-					InstanceGenerator<TerrainHeightMountainsRidged,TerrainColorDesert>,
-					InstanceGenerator<TerrainHeightMountainsNormal,TerrainColorDesert>,
-					InstanceGenerator<TerrainHeightMountainsRivers,TerrainColorDesert>,
-					InstanceGenerator<TerrainHeightMountainsVolcano,TerrainColorDesert>,
-					InstanceGenerator<TerrainHeightMountainsRiversVolcano,TerrainColorDesert>,
-					InstanceGenerator<TerrainHeightBarrenRock,TerrainColorDesert>,
-					InstanceGenerator<TerrainHeightBarrenRock2,TerrainColorDesert>//,
-					//InstanceGenerator<TerrainHeightBarrenRock3,TerrainColorTFGood>
+					InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarM>,
+					InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarM>,
+					InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarK>,
+					InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarG>
 				};
 				gi = choices[rand.Int32(COUNTOF(choices))];
 				break;
 			}
 
-			// Harsh, habitable world
-			if ((body->GetVolatileGasAsFixed() > fixed(2,10)) && (body->GetLifeAsFixed() > fixed(4,10)) ) {
+			case SystemBody::TYPE_STAR_K:
+			case SystemBody::TYPE_STAR_K_GIANT:
+			case SystemBody::TYPE_STAR_K_SUPER_GIANT:
+			case SystemBody::TYPE_STAR_K_HYPER_GIANT: {
+				const GeneratorInstancer choices[] = {
+					InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarM>,
+					InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarK>,
+					InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarK>,
+					InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarG>
+				};
+				gi = choices[rand.Int32(COUNTOF(choices))];
+				break;
+			}
 
-				if (body->GetAverageTemp() > 240) {
+			case SystemBody::TYPE_STAR_G:
+			case SystemBody::TYPE_STAR_G_GIANT:
+			case SystemBody::TYPE_STAR_G_SUPER_GIANT:
+			case SystemBody::TYPE_STAR_G_HYPER_GIANT: {
+				const GeneratorInstancer choices[] = {
+					InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarWhiteDwarf>,
+					InstanceGenerator<TerrainHeightEllipsoid,TerrainColorStarG>
+				};
+				gi = choices[rand.Int32(COUNTOF(choices))];
+				break;
+			}
+
+			case SystemBody::TYPE_STAR_F:
+			case SystemBody::TYPE_STAR_F_GIANT:
+			case SystemBody::TYPE_STAR_F_HYPER_GIANT:
+			case SystemBody::TYPE_STAR_F_SUPER_GIANT:
+			case SystemBody::TYPE_STAR_A:
+			case SystemBody::TYPE_STAR_A_GIANT:
+			case SystemBody::TYPE_STAR_A_HYPER_GIANT:
+			case SystemBody::TYPE_STAR_A_SUPER_GIANT:
+			case SystemBody::TYPE_STAR_B:
+			case SystemBody::TYPE_STAR_B_GIANT:
+			case SystemBody::TYPE_STAR_B_SUPER_GIANT:
+			case SystemBody::TYPE_STAR_B_WF:
+			case SystemBody::TYPE_STAR_O:
+			case SystemBody::TYPE_STAR_O_GIANT:
+			case SystemBody::TYPE_STAR_O_HYPER_GIANT:
+			case SystemBody::TYPE_STAR_O_SUPER_GIANT:
+			case SystemBody::TYPE_STAR_O_WF:
+				gi = InstanceGenerator<TerrainHeightEllipsoid,TerrainColorSolid>;
+			break;
+
+			case SystemBody::TYPE_PLANET_GAS_GIANT: {
+				const GeneratorInstancer choices[] = {
+					InstanceGenerator<TerrainHeightFlat,TerrainColorGGJupiter>,
+					InstanceGenerator<TerrainHeightFlat,TerrainColorGGSaturn>,
+					InstanceGenerator<TerrainHeightFlat,TerrainColorGGSaturn2>,
+					InstanceGenerator<TerrainHeightFlat,TerrainColorGGNeptune>,
+					InstanceGenerator<TerrainHeightFlat,TerrainColorGGNeptune2>,
+					InstanceGenerator<TerrainHeightFlat,TerrainColorGGUranus>,
+					InstanceGenerator<TerrainHeightFlat,TerrainColorGGSaturn>
+				};
+				gi = choices[rand.Int32(COUNTOF(choices))];
+				break;
+			}
+
+			case SystemBody::TYPE_PLANET_ASTEROID: {
+				const GeneratorInstancer choices[] = {
+					InstanceGenerator<TerrainHeightAsteroid,TerrainColorAsteroid>,
+					InstanceGenerator<TerrainHeightAsteroid2,TerrainColorAsteroid>,
+					InstanceGenerator<TerrainHeightAsteroid3,TerrainColorAsteroid>,
+					InstanceGenerator<TerrainHeightAsteroid4,TerrainColorAsteroid>,
+					InstanceGenerator<TerrainHeightAsteroid,TerrainColorRock>,
+					InstanceGenerator<TerrainHeightAsteroid2,TerrainColorBandedRock>,
+					InstanceGenerator<TerrainHeightAsteroid3,TerrainColorRock>,
+					InstanceGenerator<TerrainHeightAsteroid4,TerrainColorBandedRock>
+				};
+				gi = choices[rand.Int32(COUNTOF(choices))];
+				break;
+			}
+
+			case SystemBody::TYPE_PLANET_TERRESTRIAL: {
+
+				//Over-ride:
+				//gi = InstanceGenerator<TerrainHeightAsteroid3,TerrainColorRock>;
+				//break;
+				// Earth-like world
+
+				if ((body->GetLifeAsFixed() > fixed(7,10)) && (body->GetVolatileGasAsFixed() > fixed(2,10))) {
+					// There would be no life on the surface without atmosphere
+
+					if (body->GetAverageTemp() > 240) {
+						const GeneratorInstancer choices[] = {
+							InstanceGenerator<TerrainHeightHillsRidged,TerrainColorEarthLike>,
+							InstanceGenerator<TerrainHeightHillsRivers,TerrainColorEarthLike>,
+							InstanceGenerator<TerrainHeightHillsDunes,TerrainColorEarthLike>,
+							InstanceGenerator<TerrainHeightMountainsRidged,TerrainColorEarthLike>,
+							InstanceGenerator<TerrainHeightMountainsNormal,TerrainColorEarthLike>,
+							InstanceGenerator<TerrainHeightMountainsRivers,TerrainColorEarthLike>,
+							InstanceGenerator<TerrainHeightMountainsVolcano,TerrainColorEarthLike>,
+							InstanceGenerator<TerrainHeightMountainsRiversVolcano,TerrainColorEarthLike>
+						};
+						gi = choices[rand.Int32(COUNTOF(choices))];
+						break;
+					}
+
+					// desert-ice planets
 					const GeneratorInstancer choices[] = {
-						InstanceGenerator<TerrainHeightHillsRidged,TerrainColorTFGood>,
-						InstanceGenerator<TerrainHeightHillsRivers,TerrainColorTFGood>,
-						InstanceGenerator<TerrainHeightHillsDunes,TerrainColorTFGood>,
-						InstanceGenerator<TerrainHeightHillsNormal,TerrainColorTFGood>,
-						InstanceGenerator<TerrainHeightMountainsNormal,TerrainColorTFGood>,
-						InstanceGenerator<TerrainHeightMountainsRidged,TerrainColorTFGood>,
-						InstanceGenerator<TerrainHeightMountainsVolcano,TerrainColorTFGood>,
-						InstanceGenerator<TerrainHeightMountainsRiversVolcano,TerrainColorTFGood>,
-						InstanceGenerator<TerrainHeightMountainsRivers,TerrainColorTFGood>,
-						InstanceGenerator<TerrainHeightRuggedDesert,TerrainColorTFGood>,
-						InstanceGenerator<TerrainHeightBarrenRock,TerrainColorTFGood>,
-						InstanceGenerator<TerrainHeightBarrenRock2,TerrainColorTFGood>
+						InstanceGenerator<TerrainHeightHillsRidged,TerrainColorDesert>,
+						InstanceGenerator<TerrainHeightHillsRivers,TerrainColorDesert>,
+						InstanceGenerator<TerrainHeightHillsDunes,TerrainColorDesert>,
+						InstanceGenerator<TerrainHeightMountainsRidged,TerrainColorDesert>,
+						InstanceGenerator<TerrainHeightMountainsNormal,TerrainColorDesert>,
+						InstanceGenerator<TerrainHeightMountainsRivers,TerrainColorDesert>,
+						InstanceGenerator<TerrainHeightMountainsVolcano,TerrainColorDesert>,
+						InstanceGenerator<TerrainHeightMountainsRiversVolcano,TerrainColorDesert>,
+						InstanceGenerator<TerrainHeightBarrenRock,TerrainColorDesert>,
+						InstanceGenerator<TerrainHeightBarrenRock2,TerrainColorDesert>//,
 						//InstanceGenerator<TerrainHeightBarrenRock3,TerrainColorTFGood>
 					};
 					gi = choices[rand.Int32(COUNTOF(choices))];
 					break;
 				}
 
-				// ice planets
-				const GeneratorInstancer choices[] = {
-					InstanceGenerator<TerrainHeightHillsRidged,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightHillsRivers,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightHillsDunes,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightHillsNormal,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightMountainsNormal,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightMountainsRidged,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightMountainsVolcano,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightMountainsRiversVolcano,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightMountainsRivers,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightRuggedDesert,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightBarrenRock,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightBarrenRock2,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightBarrenRock3,TerrainColorIce>
-				};
-				gi = choices[rand.Int32(COUNTOF(choices))];
-				break;
-			}
+				// Harsh, habitable world
+				if ((body->GetVolatileGasAsFixed() > fixed(2,10)) && (body->GetLifeAsFixed() > fixed(4,10)) ) {
 
-			// Marginally habitable world/ verging on mars like :)
-			else if ((body->GetVolatileGasAsFixed() > fixed(1,10)) && (body->GetLifeAsFixed() > fixed(1,10)) ) {
+					if (body->GetAverageTemp() > 240) {
+						const GeneratorInstancer choices[] = {
+							InstanceGenerator<TerrainHeightHillsRidged,TerrainColorTFGood>,
+							InstanceGenerator<TerrainHeightHillsRivers,TerrainColorTFGood>,
+							InstanceGenerator<TerrainHeightHillsDunes,TerrainColorTFGood>,
+							InstanceGenerator<TerrainHeightHillsNormal,TerrainColorTFGood>,
+							InstanceGenerator<TerrainHeightMountainsNormal,TerrainColorTFGood>,
+							InstanceGenerator<TerrainHeightMountainsRidged,TerrainColorTFGood>,
+							InstanceGenerator<TerrainHeightMountainsVolcano,TerrainColorTFGood>,
+							InstanceGenerator<TerrainHeightMountainsRiversVolcano,TerrainColorTFGood>,
+							InstanceGenerator<TerrainHeightMountainsRivers,TerrainColorTFGood>,
+							InstanceGenerator<TerrainHeightRuggedDesert,TerrainColorTFGood>,
+							InstanceGenerator<TerrainHeightBarrenRock,TerrainColorTFGood>,
+							InstanceGenerator<TerrainHeightBarrenRock2,TerrainColorTFGood>
+							//InstanceGenerator<TerrainHeightBarrenRock3,TerrainColorTFGood>
+						};
+						gi = choices[rand.Int32(COUNTOF(choices))];
+						break;
+					}
 
-				if (body->GetAverageTemp() > 240) {
+					// ice planets
 					const GeneratorInstancer choices[] = {
-						InstanceGenerator<TerrainHeightHillsRidged,TerrainColorTFPoor>,
-						InstanceGenerator<TerrainHeightHillsRivers,TerrainColorTFPoor>,
-						InstanceGenerator<TerrainHeightHillsDunes,TerrainColorTFPoor>,
-						InstanceGenerator<TerrainHeightHillsNormal,TerrainColorTFPoor>,
-						InstanceGenerator<TerrainHeightMountainsNormal,TerrainColorTFPoor>,
-						InstanceGenerator<TerrainHeightMountainsRidged,TerrainColorTFPoor>,
-						InstanceGenerator<TerrainHeightMountainsVolcano,TerrainColorTFPoor>,
-						InstanceGenerator<TerrainHeightMountainsRiversVolcano,TerrainColorTFPoor>,
-						InstanceGenerator<TerrainHeightMountainsRivers,TerrainColorTFPoor>,
-						InstanceGenerator<TerrainHeightRuggedDesert,TerrainColorTFPoor>,
-						InstanceGenerator<TerrainHeightBarrenRock,TerrainColorTFPoor>,
-						InstanceGenerator<TerrainHeightBarrenRock2,TerrainColorTFPoor>,
-						InstanceGenerator<TerrainHeightBarrenRock3,TerrainColorTFPoor>
+						InstanceGenerator<TerrainHeightHillsRidged,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightHillsRivers,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightHillsDunes,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightHillsNormal,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightMountainsNormal,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightMountainsRidged,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightMountainsVolcano,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightMountainsRiversVolcano,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightMountainsRivers,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightRuggedDesert,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightBarrenRock,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightBarrenRock2,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightBarrenRock3,TerrainColorIce>
 					};
 					gi = choices[rand.Int32(COUNTOF(choices))];
 					break;
 				}
 
-				// ice planets
-				const GeneratorInstancer choices[] = {
-					InstanceGenerator<TerrainHeightHillsRidged,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightHillsRivers,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightHillsDunes,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightHillsNormal,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightMountainsNormal,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightMountainsRidged,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightMountainsVolcano,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightMountainsRiversVolcano,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightMountainsRivers,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightRuggedDesert,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightBarrenRock,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightBarrenRock2,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightBarrenRock3,TerrainColorIce>
+				// Marginally habitable world/ verging on mars like :)
+				else if ((body->GetVolatileGasAsFixed() > fixed(1,10)) && (body->GetLifeAsFixed() > fixed(1,10)) ) {
+
+					if (body->GetAverageTemp() > 240) {
+						const GeneratorInstancer choices[] = {
+							InstanceGenerator<TerrainHeightHillsRidged,TerrainColorTFPoor>,
+							InstanceGenerator<TerrainHeightHillsRivers,TerrainColorTFPoor>,
+							InstanceGenerator<TerrainHeightHillsDunes,TerrainColorTFPoor>,
+							InstanceGenerator<TerrainHeightHillsNormal,TerrainColorTFPoor>,
+							InstanceGenerator<TerrainHeightMountainsNormal,TerrainColorTFPoor>,
+							InstanceGenerator<TerrainHeightMountainsRidged,TerrainColorTFPoor>,
+							InstanceGenerator<TerrainHeightMountainsVolcano,TerrainColorTFPoor>,
+							InstanceGenerator<TerrainHeightMountainsRiversVolcano,TerrainColorTFPoor>,
+							InstanceGenerator<TerrainHeightMountainsRivers,TerrainColorTFPoor>,
+							InstanceGenerator<TerrainHeightRuggedDesert,TerrainColorTFPoor>,
+							InstanceGenerator<TerrainHeightBarrenRock,TerrainColorTFPoor>,
+							InstanceGenerator<TerrainHeightBarrenRock2,TerrainColorTFPoor>,
+							InstanceGenerator<TerrainHeightBarrenRock3,TerrainColorTFPoor>
+						};
+						gi = choices[rand.Int32(COUNTOF(choices))];
+						break;
+					}
+
+					// ice planets
+					const GeneratorInstancer choices[] = {
+						InstanceGenerator<TerrainHeightHillsRidged,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightHillsRivers,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightHillsDunes,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightHillsNormal,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightMountainsNormal,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightMountainsRidged,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightMountainsVolcano,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightMountainsRiversVolcano,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightMountainsRivers,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightRuggedDesert,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightBarrenRock,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightBarrenRock2,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightBarrenRock3,TerrainColorIce>
+					};
+					gi = choices[rand.Int32(COUNTOF(choices))];
+					break;
+				}
+
+				// Desert-like world, Mars -like.
+				if ((body->GetVolatileLiquidAsFixed() < fixed(1,10)) && (body->GetVolatileGasAsFixed() > fixed(1,5))) {
+					const GeneratorInstancer choices[] = {
+						InstanceGenerator<TerrainHeightHillsDunes,TerrainColorDesert>,
+						InstanceGenerator<TerrainHeightWaterSolid,TerrainColorDesert>,
+						InstanceGenerator<TerrainHeightRuggedDesert,TerrainColorDesert>,
+						InstanceGenerator<TerrainHeightRuggedLava,TerrainColorDesert>,
+						InstanceGenerator<TerrainHeightMountainsVolcano,TerrainColorDesert>,
+						InstanceGenerator<TerrainHeightMountainsRiversVolcano,TerrainColorDesert>,
+						InstanceGenerator<TerrainHeightBarrenRock,TerrainColorDesert>,
+						InstanceGenerator<TerrainHeightBarrenRock2,TerrainColorDesert>
+					};
+					gi = choices[rand.Int32(COUNTOF(choices))];
+					break;
+				}
+
+				// Frozen world
+				if ((body->GetVolatileIcesAsFixed() > fixed(8,10)) &&  (body->GetAverageTemp() < 250)) {
+					const GeneratorInstancer choices[] = {
+						InstanceGenerator<TerrainHeightHillsDunes,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightHillsCraters,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightMountainsCraters,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightWaterSolid,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightWaterSolidCanyons,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightRuggedDesert,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightBarrenRock,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightBarrenRock2,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightBarrenRock3,TerrainColorIce>
+					};
+					gi = choices[rand.Int32(COUNTOF(choices))];
+					break;
+				}
+
+				// Volcanic world
+				if (body->GetVolcanicityAsFixed() > fixed(7,10)) {
+
+					if (body->GetLifeAsFixed() > fixed(5,10))	// life on a volcanic world ;)
+						gi = InstanceGenerator<TerrainHeightRuggedLava,TerrainColorTFGood>;
+					else if (body->GetLifeAsFixed() > fixed(2,10))
+						gi = InstanceGenerator<TerrainHeightRuggedLava,TerrainColorTFPoor>;
+					else
+						gi = InstanceGenerator<TerrainHeightRuggedLava,TerrainColorVolcanic>;
+					break;
+				}
+
+				//Below might not be needed.
+				//Alien life world:
+				if (body->GetLifeAsFixed() > fixed(1,10))  {
+					const GeneratorInstancer choices[] = {
+						InstanceGenerator<TerrainHeightHillsDunes,TerrainColorTFPoor>,
+						InstanceGenerator<TerrainHeightHillsRidged,TerrainColorTFPoor>,
+						InstanceGenerator<TerrainHeightHillsRivers,TerrainColorTFPoor>,
+						InstanceGenerator<TerrainHeightMountainsNormal,TerrainColorTFPoor>,
+						InstanceGenerator<TerrainHeightMountainsRidged,TerrainColorTFPoor>,
+						InstanceGenerator<TerrainHeightMountainsVolcano,TerrainColorTFPoor>,
+						InstanceGenerator<TerrainHeightMountainsRiversVolcano,TerrainColorTFPoor>,
+						InstanceGenerator<TerrainHeightMountainsRivers,TerrainColorTFPoor>,
+						InstanceGenerator<TerrainHeightWaterSolid,TerrainColorTFPoor>,
+						InstanceGenerator<TerrainHeightRuggedLava,TerrainColorTFPoor>,
+						InstanceGenerator<TerrainHeightRuggedDesert,TerrainColorTFPoor>,
+						InstanceGenerator<TerrainHeightBarrenRock,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightBarrenRock2,TerrainColorIce>,
+						InstanceGenerator<TerrainHeightBarrenRock3,TerrainColorIce>
+					};
+					gi = choices[rand.Int32(COUNTOF(choices))];
+					break;
 				};
-				gi = choices[rand.Int32(COUNTOF(choices))];
-				break;
-			}
 
-			// Desert-like world, Mars -like.
-			if ((body->GetVolatileLiquidAsFixed() < fixed(1,10)) && (body->GetVolatileGasAsFixed() > fixed(1,5))) {
+				if (body->GetVolatileGasAsFixed() > fixed(1,10)) {
+					const GeneratorInstancer choices[] = {
+						InstanceGenerator<TerrainHeightHillsNormal,TerrainColorRock>,
+						InstanceGenerator<TerrainHeightMountainsNormal,TerrainColorRock>,
+						InstanceGenerator<TerrainHeightRuggedDesert,TerrainColorRock>,
+						InstanceGenerator<TerrainHeightBarrenRock,TerrainColorRock>,
+						InstanceGenerator<TerrainHeightBarrenRock2,TerrainColorRock>,
+						InstanceGenerator<TerrainHeightBarrenRock3,TerrainColorRock>
+					};
+					gi = choices[rand.Int32(COUNTOF(choices))];
+					break;
+				}
+
 				const GeneratorInstancer choices[] = {
-					InstanceGenerator<TerrainHeightHillsDunes,TerrainColorDesert>,
-					InstanceGenerator<TerrainHeightWaterSolid,TerrainColorDesert>,
-					InstanceGenerator<TerrainHeightRuggedDesert,TerrainColorDesert>,
-					InstanceGenerator<TerrainHeightRuggedLava,TerrainColorDesert>,
-					InstanceGenerator<TerrainHeightMountainsVolcano,TerrainColorDesert>,
-					InstanceGenerator<TerrainHeightMountainsRiversVolcano,TerrainColorDesert>,
-					InstanceGenerator<TerrainHeightBarrenRock,TerrainColorDesert>,
-					InstanceGenerator<TerrainHeightBarrenRock2,TerrainColorDesert>
-				};
-				gi = choices[rand.Int32(COUNTOF(choices))];
-				break;
-			}
-
-			// Frozen world
-			if ((body->GetVolatileIcesAsFixed() > fixed(8,10)) &&  (body->GetAverageTemp() < 250)) {
-				const GeneratorInstancer choices[] = {
-					InstanceGenerator<TerrainHeightHillsDunes,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightHillsCraters,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightMountainsCraters,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightWaterSolid,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightWaterSolidCanyons,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightRuggedDesert,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightBarrenRock,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightBarrenRock2,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightBarrenRock3,TerrainColorIce>
-				};
-				gi = choices[rand.Int32(COUNTOF(choices))];
-				break;
-			}
-
-			// Volcanic world
-			if (body->GetVolcanicityAsFixed() > fixed(7,10)) {
-
-				if (body->GetLifeAsFixed() > fixed(5,10))	// life on a volcanic world ;)
-					gi = InstanceGenerator<TerrainHeightRuggedLava,TerrainColorTFGood>;
-				else if (body->GetLifeAsFixed() > fixed(2,10))
-					gi = InstanceGenerator<TerrainHeightRuggedLava,TerrainColorTFPoor>;
-				else
-					gi = InstanceGenerator<TerrainHeightRuggedLava,TerrainColorVolcanic>;
-				break;
-			}
-
-			//Below might not be needed.
-			//Alien life world:
-			if (body->GetLifeAsFixed() > fixed(1,10))  {
-				const GeneratorInstancer choices[] = {
-					InstanceGenerator<TerrainHeightHillsDunes,TerrainColorTFPoor>,
-					InstanceGenerator<TerrainHeightHillsRidged,TerrainColorTFPoor>,
-					InstanceGenerator<TerrainHeightHillsRivers,TerrainColorTFPoor>,
-					InstanceGenerator<TerrainHeightMountainsNormal,TerrainColorTFPoor>,
-					InstanceGenerator<TerrainHeightMountainsRidged,TerrainColorTFPoor>,
-					InstanceGenerator<TerrainHeightMountainsVolcano,TerrainColorTFPoor>,
-					InstanceGenerator<TerrainHeightMountainsRiversVolcano,TerrainColorTFPoor>,
-					InstanceGenerator<TerrainHeightMountainsRivers,TerrainColorTFPoor>,
-					InstanceGenerator<TerrainHeightWaterSolid,TerrainColorTFPoor>,
-					InstanceGenerator<TerrainHeightRuggedLava,TerrainColorTFPoor>,
-					InstanceGenerator<TerrainHeightRuggedDesert,TerrainColorTFPoor>,
-					InstanceGenerator<TerrainHeightBarrenRock,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightBarrenRock2,TerrainColorIce>,
-					InstanceGenerator<TerrainHeightBarrenRock3,TerrainColorIce>
-				};
-				gi = choices[rand.Int32(COUNTOF(choices))];
-				break;
-			};
-
-			if (body->GetVolatileGasAsFixed() > fixed(1,10)) {
-				const GeneratorInstancer choices[] = {
-					InstanceGenerator<TerrainHeightHillsNormal,TerrainColorRock>,
-					InstanceGenerator<TerrainHeightMountainsNormal,TerrainColorRock>,
-					InstanceGenerator<TerrainHeightRuggedDesert,TerrainColorRock>,
-					InstanceGenerator<TerrainHeightBarrenRock,TerrainColorRock>,
-					InstanceGenerator<TerrainHeightBarrenRock2,TerrainColorRock>,
+					InstanceGenerator<TerrainHeightHillsCraters2,TerrainColorRock>,
+					InstanceGenerator<TerrainHeightMountainsCraters2,TerrainColorRock>,
 					InstanceGenerator<TerrainHeightBarrenRock3,TerrainColorRock>
 				};
 				gi = choices[rand.Int32(COUNTOF(choices))];
 				break;
 			}
 
-			const GeneratorInstancer choices[] = {
-				InstanceGenerator<TerrainHeightHillsCraters2,TerrainColorRock>,
-				InstanceGenerator<TerrainHeightMountainsCraters2,TerrainColorRock>,
-				InstanceGenerator<TerrainHeightBarrenRock3,TerrainColorRock>
-			};
-			gi = choices[rand.Int32(COUNTOF(choices))];
-			break;
+			default:
+				gi = InstanceGenerator<TerrainHeightFlat,TerrainColorSolid>;
+				break;
 		}
-
-		default:
-			gi = InstanceGenerator<TerrainHeightFlat,TerrainColorSolid>;
-			break;
 	}
 
-	static const std::string s_dummy;
-	return gi(body, s_dummy, s_dummy);
-}
-
-static size_t bufread_or_die(void *ptr, size_t size, size_t nmemb, ByteRange &buf)
-{
-	size_t read_count = buf.read(static_cast<char*>(ptr), size, nmemb);
-	if (read_count < nmemb) {
-		Output("Error: failed to read file (truncated)\n");
-		abort();
-	}
-	return read_count;
+	return gi(body, jsonFilename, heightFilename);
 }
 
 // XXX this sucks, but there isn't a reliable cross-platform way to get them
@@ -378,7 +369,7 @@ static size_t bufread_or_die(void *ptr, size_t size, size_t nmemb, ByteRange &bu
 Terrain::Terrain(const SystemBody *body) : m_seed(body->GetSeed()), m_rand(body->GetSeed()), m_heightScaling(0), m_minh(0), m_minBody(body) {
 
 	// load the heightmap
-	if (!body->GetHeightMapFilename().empty()) {
+	/*if (!body->GetHeightMapFilename().empty()) {
 		RefCountedPtr<FileSystem::FileData> fdata = FileSystem::gameDataFiles.ReadFile(body->GetHeightMapFilename());
 		if (!fdata) {
 			Output("Error: could not open file '%s'\n", body->GetHeightMapFilename().c_str());
@@ -450,7 +441,7 @@ Terrain::Terrain(const SystemBody *body) : m_seed(body->GetSeed()), m_rand(body-
 				assert(0);
 		}
 
-	}
+	}*/
 
 	switch (Pi::detail.textures) {
 		case 0: textures = false;
@@ -477,14 +468,11 @@ Terrain::Terrain(const SystemBody *body) : m_seed(body->GetSeed()), m_rand(body-
 	const double rad = m_minBody.m_radius;
 
 	// calculate max height
-	if (!body->GetHeightMapFilename().empty() && body->GetHeightMapFractal() > 1){ // if scaled heightmap
-		m_maxHeightInMeters = 1.1*pow(2.0, 16.0)*m_heightScaling; // no min height required as it's added to radius in lua
-	}else {
-		m_maxHeightInMeters = std::max(100.0, (9000.0*rad*rad*(m_volcanic+0.5)) / (body->GetMass() * 6.64e-12));
-		if (!is_finite(m_maxHeightInMeters)) m_maxHeightInMeters = rad * 0.5;
-		//             ^^^^ max mountain height for earth-like planet (same mass, radius)
-		// and then in sphere normalized jizz
-	}
+	m_maxHeightInMeters = std::max(100.0, (9000.0*rad*rad*(m_volcanic+0.5)) / (body->GetMass() * 6.64e-12));
+	if (!is_finite(m_maxHeightInMeters)) 
+		m_maxHeightInMeters = rad * 0.5;
+	//             ^^^^ max mountain height for earth-like planet (same mass, radius)
+	// and then in sphere normalized jizz
 	m_maxHeight = std::min(1.0, m_maxHeightInMeters / rad);
 	//Output("%s: max terrain height: %fm [%f]\n", m_minBody.name.c_str(), m_maxHeightInMeters, m_maxHeight);
 	m_invMaxHeight = 1.0 / m_maxHeight;

@@ -326,22 +326,26 @@ double TerrainNodeData::Call(const vector3d& p)
 	// We moved the mountain function to be a child of our new function. 
 	// "op: mul" will multiply the output of the function with its direct children, and the "clamp" will clamp the output between 0 and 1.
 
+	// process the child nodes as we depend on what values they return
+	double childH = 0.0;
+	for (auto child = m_children.begin(), end = m_children.end(); child!=end; ++child)
+	{
+		childH += child->Call(p);
+	}
+
+	// now our local value
 	double localH = 0.0;
-	switch (m_noiseType)
+	switch (m_nodeType)
 	{
 		// noise is always scaled and clamped
 	case NT_NOISE:					localH = Clamp(Scale(noise(m_octaves, m_frequency, m_persistence, p)));						break;
 	case NT_NOISE_CELLULAR_SQUARED:	localH = Clamp(Scale(noise_cellular_squared(m_octaves, m_frequency, m_persistence, p)));	break;
 	case NT_NOISE_RIDGED:			localH = Clamp(Scale(noise_ridged(m_octaves, m_frequency, m_persistence, p)));				break;
 	case NT_NOISE_CUBED:			localH = Clamp(Scale(noise_cubed(m_octaves, m_frequency, m_persistence, p)));				break;
+	case NT_HEIGHTMAP:				localH = Clamp(Scale(GetHeightMapValue(p)));												break;
 	}
 
-	// mix the child node together
-	double childH = 0.0;
-	for (auto child : m_children)
-	{
-		childH += child.Call(p);
-	}
+	// mix the values together
 	switch (m_op)
 	{
 	case TO_ADD: localH += childH; break;
@@ -351,6 +355,151 @@ double TerrainNodeData::Call(const vector3d& p)
 	}
 
 	return localH;
+}
+
+static size_t bufread_or_die(void *ptr, size_t size, size_t nmemb, ByteRange &buf)
+{
+	size_t read_count = buf.read(static_cast<char*>(ptr), size, nmemb);
+	if (read_count < nmemb) {
+		Output("Error: failed to read file (truncated)\n");
+		abort();
+	}
+	return read_count;
+}
+
+bool TerrainNodeData::LoadHeightmap(const std::string &filename)
+{
+	if (!filename.empty()) 
+	{
+		RefCountedPtr<FileSystem::FileData> fdata = FileSystem::gameDataFiles.ReadFile(filename);
+		if (!fdata) {
+			Output("Error: could not open file '%s'\n", filename.c_str());
+			abort();
+		}
+
+		ByteRange databuf = fdata->AsByteRange();
+
+		Sint16 minHMap = INT16_MAX, maxHMap = INT16_MIN;
+		Uint16 minHMapScld = UINT16_MAX, maxHMapScld = 0;
+
+		// XXX unify heightmap types
+		Uint16 v;
+		bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeX = v;
+		bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeY = v;
+		const Uint32 heightmapPixelArea = (m_heightMapSizeX * m_heightMapSizeY);
+
+		std::unique_ptr<Sint16[]> heightMap(new Sint16[heightmapPixelArea]);
+		bufread_or_die(heightMap.get(), sizeof(Sint16), heightmapPixelArea, databuf);
+		assert(m_heightMap==nullptr);
+		m_heightMap = new double[heightmapPixelArea];
+		double *pHeightMap = m_heightMap;
+		for(Uint32 i=0; i<heightmapPixelArea; i++) {
+			const Sint16 val = heightMap.get()[i];
+			minHMap = std::min(minHMap, val);
+			maxHMap = std::max(maxHMap, val);
+			// store then increment pointer
+			(*pHeightMap) = val;
+			++pHeightMap;
+		}
+		assert(pHeightMap == &m_heightMap[heightmapPixelArea]);
+		//Output("minHMap = (%hd), maxHMap = (%hd)\n", minHMap, maxHMap);
+
+		/*case 1: {
+			Uint16 v;
+			// XXX x and y reversed from above *sigh*
+			bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeY = v;
+			bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeX = v;
+			const Uint32 heightmapPixelArea = (m_heightMapSizeX * m_heightMapSizeY);
+
+			// read height scaling and min height which are doubles
+			double te;
+			bufread_or_die(&te, 8, 1, databuf);
+			m_heightScaling = te;
+			bufread_or_die(&te, 8, 1, databuf);
+			m_minh = te;
+
+			std::unique_ptr<Uint16[]> heightMapScaled(new Uint16[heightmapPixelArea]);
+			bufread_or_die(heightMapScaled.get(), sizeof(Uint16), heightmapPixelArea, databuf);
+			m_heightMap.reset(new double[heightmapPixelArea]);
+			double *pHeightMap = m_heightMap.get();
+			for(Uint32 i=0; i<heightmapPixelArea; i++) {
+				const Uint16 val = heightMapScaled[i];
+				minHMapScld = std::min(minHMapScld, val);
+				maxHMapScld = std::max(maxHMapScld, val);
+				// store then increment pointer
+				(*pHeightMap) = val;
+				++pHeightMap;
+			}
+			assert(pHeightMap == &m_heightMap[heightmapPixelArea]);
+			//Output("minHMapScld = (%hu), maxHMapScld = (%hu)\n", minHMapScld, maxHMapScld);
+			break;
+		}*/
+		return true;
+	}
+	return false;
+}
+
+double TerrainNodeData::GetHeightMapValue(const vector3d& p)
+{
+	if(!m_heightMap)
+		return 0.0;
+
+	double latitude = -asin(p.y);
+	if (p.y < -1.0) latitude = -0.5*M_PI;
+	if (p.y > 1.0) latitude = 0.5*M_PI;
+//	if (!isfinite(latitude)) {
+//		// p.y is just n of asin domain [-1,1]
+//		latitude = (p.y < 0 ? -0.5*M_PI : M_PI*0.5);
+//	}
+	double longitude = atan2(p.x, p.z);
+	double px = (((m_heightMapSizeX-1) * (longitude + M_PI)) / (2*M_PI));
+	double py = ((m_heightMapSizeY-1)*(latitude + 0.5*M_PI)) / M_PI;
+	int ix = int(floor(px));
+	int iy = int(floor(py));
+	ix = ::Clamp(ix, 0, m_heightMapSizeX-1);
+	iy = ::Clamp(iy, 0, m_heightMapSizeY-1);
+	double dx = px-ix;
+	double dy = py-iy;
+
+	// p0,3 p1,3 p2,3 p3,3
+	// p0,2 p1,2 p2,2 p3,2
+	// p0,1 p1,1 p2,1 p3,1
+	// p0,0 p1,0 p2,0 p3,0
+	double map[4][4];
+	const double *pHMap = m_heightMap;
+	for (int x=-1; x<3; x++) {
+		for (int y=-1; y<3; y++) {
+			map[x+1][y+1] = pHMap[::Clamp(iy+y, 0, m_heightMapSizeY-1)*m_heightMapSizeX + ::Clamp(ix+x, 0, m_heightMapSizeX-1)];
+		}
+	}
+
+	double c[4];
+	for (int j=0; j<4; j++) {
+		double d0 = map[0][j] - map[1][j];
+		double d2 = map[2][j] - map[1][j];
+		double d3 = map[3][j] - map[1][j];
+		double a0 = map[1][j];
+		double a1 = -(1/3.0)*d0 + d2 - (1/6.0)*d3;
+		double a2 = 0.5*d0 + 0.5*d2;
+		double a3 = -(1/6.0)*d0 - 0.5*d2 + (1/6.0)*d3;
+		c[j] = a0 + a1*dx + a2*dx*dx + a3*dx*dx*dx;
+	}
+
+	double h;
+	{
+		double d0 = c[0] - c[1];
+		double d2 = c[2] - c[1];
+		double d3 = c[3] - c[1];
+		double a0 = c[1];
+		double a1 = -(1/3.0)*d0 + d2 - (1/6.0)*d3;
+		double a2 = 0.5*d0 + 0.5*d2;
+		double a3 = -(1/6.0)*d0 - 0.5*d2 + (1/6.0)*d3;
+		double v = a0 + a1*dy + a2*dy*dy + a3*dy*dy*dy;
+
+		//v = (v<0 ? 0 : v); // limit to 0.0???
+		h = v;
+	}
+	return h;
 }
 
 
