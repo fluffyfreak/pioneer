@@ -10,7 +10,7 @@ template <>
 const char *TerrainHeightFractal<TerrainHeightJSON>::GetHeightFractalName() const { return "JSON"; }
 
 template <>
-TerrainHeightFractal<TerrainHeightJSON>::TerrainHeightFractal(const SystemBody *body) : Terrain(body)
+TerrainHeightFractal<TerrainHeightJSON>::TerrainHeightFractal(const SystemBody *body, const std::string &JSONfilename, const std::string &heightmapFilename) : Terrain(body)
 {
 	const std::string path("terrain/Terra.json");
 	LoadTerrainJSON(path, terrainSrcs);

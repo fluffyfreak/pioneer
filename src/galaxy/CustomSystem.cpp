@@ -155,6 +155,16 @@ static int l_csb_height_map(lua_State *L)
 	return 1;
 }
 
+static int l_csb_json_filename(lua_State *L)
+{
+	CustomSystemBody *csb = l_csb_check(L, 1);
+	const char *fname = luaL_checkstring(L, 2);
+
+	csb->JSONFilename = FileSystem::JoinPathBelow("terrain", fname);
+	lua_settop(L, 1);
+	return 1;
+}
+
 static int l_csb_rings(lua_State *L)
 {
 	CustomSystemBody *csb = l_csb_check(L, 1);
@@ -225,6 +235,7 @@ static luaL_Reg LuaCustomSystemBody_meta[] = {
 	{ "rotational_phase_at_start", &l_csb_rotational_phase_at_start }, // 0 to 2 pi
 	{ "axial_tilt", &l_csb_axial_tilt },
 	{ "height_map", &l_csb_height_map },
+	{ "json_file", &l_csb_json_filename },
 	{ "metallicity", &l_csb_metallicity },
 	{ "volcanicity", &l_csb_volcanicity },
 	{ "atmos_density", &l_csb_atmos_density },

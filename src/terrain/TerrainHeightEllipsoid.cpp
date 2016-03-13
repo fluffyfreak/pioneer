@@ -7,7 +7,7 @@ template <>
 const char *TerrainHeightFractal<TerrainHeightEllipsoid>::GetHeightFractalName() const { return "Ellipsoid"; }
 
 template <>
-TerrainHeightFractal<TerrainHeightEllipsoid>::TerrainHeightFractal(const SystemBody *body) : Terrain(body)
+TerrainHeightFractal<TerrainHeightEllipsoid>::TerrainHeightFractal(const SystemBody *body, const std::string &JSONfilename, const std::string &heightmapFilename) : Terrain(body)
 {
 	const double rad = m_minBody.m_radius;
 	m_maxHeight = m_minBody.m_aspectRatio - 1.0;

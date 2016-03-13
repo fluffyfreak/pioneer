@@ -42,7 +42,7 @@ double TerrainHeightFractal<TerrainHeightRuggedDesert>::GetHeight(const vector3d
 }
 
 template <>
-TerrainHeightFractal<TerrainHeightRuggedDesert>::TerrainHeightFractal(const SystemBody *body) : Terrain(body)
+TerrainHeightFractal<TerrainHeightRuggedDesert>::TerrainHeightFractal(const SystemBody *body, const std::string &JSONfilename, const std::string &heightmapFilename) : Terrain(body)
 {
 	SetFracDef(0, 0.1*m_maxHeightInMeters, 2e6, 180e3*m_fracmult);
 	double height = m_maxHeightInMeters*0.9;

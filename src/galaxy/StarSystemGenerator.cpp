@@ -517,7 +517,11 @@ void StarSystemCustomGenerator::CustomGetKidsOf(RefCountedPtr<StarSystem::Genera
 			kid->m_orbitalOffset = fixed(csbody->longitude*10000,10000);
 		kid->m_semiMajorAxis = csbody->semiMajorAxis;
 
-		if (csbody->heightMapFilename.length() > 0) {
+		if (!(csbody->JSONFilename.empty())) {
+			kid->m_JSONFilename = csbody->JSONFilename;
+		}
+
+		if (!(csbody->heightMapFilename.empty())) {
 			kid->m_heightMapFilename = csbody->heightMapFilename;
 			kid->m_heightMapFractal = csbody->heightMapFractal;
 		}

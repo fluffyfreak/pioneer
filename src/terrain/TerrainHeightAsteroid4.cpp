@@ -14,7 +14,7 @@ template <>
 const char *TerrainHeightFractal<TerrainHeightAsteroid4>::GetHeightFractalName() const { return "Asteroid4"; }
 
 template <>
-TerrainHeightFractal<TerrainHeightAsteroid4>::TerrainHeightFractal(const SystemBody *body) : Terrain(body)
+TerrainHeightFractal<TerrainHeightAsteroid4>::TerrainHeightFractal(const SystemBody *body, const std::string &JSONfilename, const std::string &heightmapFilename) : Terrain(body)
 {
 	SetFracDef(0, m_maxHeightInMeters*0.05, 1e6, 10000.0*m_fracmult);
 	const double height = m_maxHeightInMeters*0.3;

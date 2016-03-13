@@ -54,9 +54,9 @@ public:
 
 private:
 	template <typename HeightFractal, typename ColorFractal>
-	static Terrain *InstanceGenerator(const SystemBody *body) { return new TerrainGenerator<HeightFractal,ColorFractal>(body); }
+	static Terrain *InstanceGenerator(const SystemBody *body, const std::string &JSONfilename, const std::string &heightmapFilename) { return new TerrainGenerator<HeightFractal,ColorFractal>(body, JSONfilename, heightmapFilename); }
 
-	typedef Terrain* (*GeneratorInstancer)(const SystemBody *);
+	typedef Terrain* (*GeneratorInstancer)(const SystemBody *, const std::string &JSONfilename, const std::string &heightmapFilename);
 
 
 protected:
@@ -131,7 +131,7 @@ public:
 	virtual double GetHeight(const vector3d &p) const;
 	virtual const char *GetHeightFractalName() const;
 protected:
-	TerrainHeightFractal(const SystemBody *body);
+	TerrainHeightFractal(const SystemBody *body, const std::string &JSONfilename, const std::string &heightmapFilename);
 private:
 	TerrainHeightFractal() {}
 };
@@ -151,7 +151,7 @@ private:
 template <typename HeightFractal, typename ColorFractal>
 class TerrainGenerator : public TerrainHeightFractal<HeightFractal>, public TerrainColorFractal<ColorFractal> {
 public:
-	TerrainGenerator(const SystemBody *body) : Terrain(body), TerrainHeightFractal<HeightFractal>(body), TerrainColorFractal<ColorFractal>(body) {}
+	TerrainGenerator(const SystemBody *body, const std::string &JSONfilename, const std::string &heightmapFilename) : Terrain(body), TerrainHeightFractal<HeightFractal>(body, JSONfilename, heightmapFilename), TerrainColorFractal<ColorFractal>(body) {}
 
 private:
 	TerrainGenerator() {}

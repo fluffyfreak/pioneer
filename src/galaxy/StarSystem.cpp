@@ -798,6 +798,9 @@ void SystemBody::Dump(FILE* file, const char* indent) const
 			m_rings.maxRadius.ToDouble() * 100.0, m_rings.baseColor.r, m_rings.baseColor.g, m_rings.baseColor.b, m_rings.baseColor.a);
 		fprintf(file, "%s\thuman activity %.2f, population %.0f, agricultural %.2f\n", indent, m_humanActivity.ToDouble() * 100.0,
 			m_population.ToDouble() * 1e9, m_agricultural.ToDouble() * 100.0);
+		if (!m_JSONFilename.empty()) {
+			fprintf(file, "%s\tJSONFilename \"%s\"\n", indent, m_JSONFilename.c_str());
+		}
 		if (!m_heightMapFilename.empty()) {
 			fprintf(file, "%s\theightmap \"%s\", fractal %u\n", indent, m_heightMapFilename.c_str(), m_heightMapFractal);
 		}

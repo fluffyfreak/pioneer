@@ -20,12 +20,12 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 			InstanceGenerator<TerrainHeightMapped2,TerrainColorRock2>
 		};
 		assert(body->GetHeightMapFractal() < COUNTOF(choices));
-		return choices[body->GetHeightMapFractal()](body);
+		return choices[body->GetHeightMapFractal()](body, body->GetJSONFilename(), body->GetHeightMapFilename());
 	}
 
 	Random rand(body->GetSeed());
 
-	GeneratorInstancer gi = 0;
+	GeneratorInstancer gi = nullptr;
 
 	switch (body->GetType()) {
 
@@ -350,7 +350,8 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 			break;
 	}
 
-	return gi(body);
+	static const std::string s_dummy;
+	return gi(body, s_dummy, s_dummy);
 }
 
 static size_t bufread_or_die(void *ptr, size_t size, size_t nmemb, ByteRange &buf)
