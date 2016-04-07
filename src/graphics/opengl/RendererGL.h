@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #pragma once
@@ -38,6 +38,7 @@ namespace OGL {
 	class FresnelColourMaterial;
 	class ShieldMaterial;
 	class UIMaterial;
+	class BillboardMaterial;
 }
 
 class RendererOGL : public Renderer
@@ -92,7 +93,7 @@ public:
 	virtual Texture* GetShadowTexture() const override;
 
 	virtual bool DrawTriangles(const VertexArray *vertices, RenderState *state, Material *material, PrimitiveType type=TRIANGLES) override;
-	virtual bool DrawPointSprites(int count, const vector3f *positions, RenderState *rs, Material *material, float size) override;
+	virtual bool DrawPointSprites(const Uint32 count, const vector3f *positions, RenderState *rs, Material *material, float size) override;
 	virtual bool DrawBuffer(VertexBuffer*, RenderState*, Material*, PrimitiveType) override;
 	virtual bool DrawBufferIndexed(VertexBuffer*, IndexBuffer*, RenderState*, Material*, PrimitiveType) override;
 	virtual bool DrawBufferInstanced(VertexBuffer*, RenderState*, Material*, InstanceBuffer*, PrimitiveType type=TRIANGLES) override;
@@ -153,6 +154,7 @@ protected:
 	friend class OGL::RingMaterial;
 	friend class OGL::FresnelColourMaterial;
 	friend class OGL::ShieldMaterial;
+	friend class OGL::BillboardMaterial;
 	std::vector<std::pair<MaterialDescriptor, OGL::Program*> > m_programs;
 	std::unordered_map<Uint32, OGL::RenderState*> m_renderStates;
 	float m_invLogZfarPlus1;
@@ -174,6 +176,10 @@ protected:
 
 private:
 	static bool initted;
+
+	typedef std::map<std::pair<AttributeSet, size_t>, RefCountedPtr<VertexBuffer>> AttribBufferMap;
+	typedef AttribBufferMap::iterator AttribBufferIter;
+	static AttribBufferMap s_AttribBufferMap;
 };
 
 }

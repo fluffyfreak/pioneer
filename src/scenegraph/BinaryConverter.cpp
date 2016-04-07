@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 #include "BinaryConverter.h"
 #include "NodeVisitor.h"
@@ -74,12 +74,14 @@ void BinaryConverter::RegisterLoader(const std::string &typeName, std::function<
 
 void BinaryConverter::Save(const std::string& filename, Model* m)
 {
+	PROFILE_SCOPED()
 	static const std::string s_EmptyString;
 	Save(filename, s_EmptyString, m, false);
 }
 
 void BinaryConverter::Save(const std::string& filename, const std::string& savepath, Model* m, const bool bInPlace)
 {
+	PROFILE_SCOPED()
 	printf("Saving file (%s)\n", filename.c_str());
 	FILE *f = nullptr;
 	FileSystem::FileSourceFS newFS(FileSystem::GetDataDir());
@@ -145,12 +147,14 @@ void BinaryConverter::Save(const std::string& filename, const std::string& savep
 
 Model *BinaryConverter::Load(const std::string &filename)
 {
+	PROFILE_SCOPED()
 	Model *m = Load(filename, "models");
 	return m;
 }
 
 Model *BinaryConverter::Load(const std::string &shortname, const std::string &basepath)
 {
+	PROFILE_SCOPED()
 	FileSystem::FileSource &fileSource = FileSystem::gameDataFiles;
 	for (FileSystem::FileEnumerator files(fileSource, basepath, FileSystem::FileEnumerator::Recurse); !files.Finished(); files.Next()) {
 		const FileSystem::FileInfo &info = files.Current();
@@ -194,6 +198,7 @@ Model *BinaryConverter::Load(const std::string &shortname, const std::string &ba
 
 Model *BinaryConverter::CreateModel(const std::string& filename, Serializer::Reader &rd)
 {
+	PROFILE_SCOPED()
 	//verify signature
 	const Uint32 sig = rd.Int32();
 	if (sig != SGM_STRING_ID.value) { //'SGM#'
@@ -202,9 +207,10 @@ Model *BinaryConverter::CreateModel(const std::string& filename, Serializer::Rea
 	}
 
 	const Uint32 version = rd.Int32();
-	if (version != SGM_VERSION)
+	if (version != SGM_VERSION) {
 		Warning("Error whilst loading %s\nSGM versioning (%u) did not match the supported SGM_VERSION (%u)\nSGM file will be ignored\n", filename.c_str(), version, SGM_VERSION);
 		return nullptr;
+	}
 
 	const std::string modelName = rd.String();
 
@@ -233,6 +239,7 @@ Model *BinaryConverter::CreateModel(const std::string& filename, Serializer::Rea
 
 void BinaryConverter::SaveMaterials(Serializer::Writer& wr, Model* model)
 {
+	PROFILE_SCOPED()
 	//Look for the .model definition and parse it
 	//for material definitions
 	const ModelDefinition &modelDef = FindModelDefinition(model->GetName());
@@ -260,6 +267,7 @@ void BinaryConverter::SaveMaterials(Serializer::Writer& wr, Model* model)
 
 void BinaryConverter::LoadMaterials(Serializer::Reader &rd)
 {
+	PROFILE_SCOPED()
 	for (Uint32 numMats = rd.Int32(); numMats > 0; numMats--) {
 		MaterialDefinition m("");
 		m.name = rd.String();
@@ -286,6 +294,7 @@ void BinaryConverter::LoadMaterials(Serializer::Reader &rd)
 
 void BinaryConverter::SaveAnimations(Serializer::Writer &wr, Model *m)
 {
+	PROFILE_SCOPED()
 	const auto& anims = m->GetAnimations();
 	wr.Int32(anims.size());
 	for (const auto& anim : anims) {
@@ -316,6 +325,7 @@ void BinaryConverter::SaveAnimations(Serializer::Writer &wr, Model *m)
 
 void BinaryConverter::LoadAnimations(Serializer::Reader &rd)
 {
+	PROFILE_SCOPED()
 	//load channels and PRS keys
 	const Uint32 numAnims = rd.Int32();
 	for (Uint32 i = 0; i < numAnims; i++) {
@@ -350,6 +360,7 @@ void BinaryConverter::LoadAnimations(Serializer::Reader &rd)
 
 ModelDefinition BinaryConverter::FindModelDefinition(const std::string &shortname)
 {
+	PROFILE_SCOPED()
 	const std::string basepath = "models";
 
 	FileSystem::FileSource &fileSource = FileSystem::gameDataFiles;
@@ -388,6 +399,7 @@ ModelDefinition BinaryConverter::FindModelDefinition(const std::string &shortnam
 
 Node* BinaryConverter::LoadNode(Serializer::Reader &rd)
 {
+	PROFILE_SCOPED()
 	const std::string ntype = rd.String();
 	const std::string nname = rd.String();
 	//Output("Loading: %s %s\n", ntype.c_str(), nname.c_str());
@@ -423,6 +435,7 @@ Node* BinaryConverter::LoadNode(Serializer::Reader &rd)
 
 void BinaryConverter::LoadChildren(Serializer::Reader &rd, Group *parent)
 {
+	PROFILE_SCOPED()
 	const Uint32 numChildren = rd.Int32();
 	for (Uint32 i = 0; i < numChildren; i++)
 		parent->AddChild(LoadNode(rd));
@@ -430,6 +443,7 @@ void BinaryConverter::LoadChildren(Serializer::Reader &rd, Group *parent)
 
 Label3D *BinaryConverter::LoadLabel3D(NodeDatabase &db)
 {
+	PROFILE_SCOPED()
 	Label3D* lbl = new Label3D(db.loader->GetRenderer(), db.loader->GetLabel3DFont());
 	lbl->SetText("NCC-1982");
 	return lbl;

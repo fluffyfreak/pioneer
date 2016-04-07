@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "graphics/Renderer.h"
@@ -84,6 +84,7 @@ inline bool IsCompressed(TextureFormat format) {
 TextureGL::TextureGL(const TextureDescriptor &descriptor, const bool useCompressed, const bool useAnisoFiltering) :
 	Texture(descriptor), m_useAnisoFiltering(useAnisoFiltering && descriptor.useAnisotropicFiltering)
 {
+	PROFILE_SCOPED()
 	m_target = GLTextureType(descriptor.type);
 
 	glGenTextures(1, &m_texture);
@@ -255,6 +256,7 @@ TextureGL::~TextureGL()
 
 void TextureGL::Update(const void *data, const vector2f &pos, const vector2f &dataSize, TextureFormat format, const unsigned int numMips)
 {
+	PROFILE_SCOPED()
 	assert(m_target == GL_TEXTURE_2D);
 	glBindTexture(m_target, m_texture);
 
@@ -295,6 +297,7 @@ void TextureGL::Update(const void *data, const vector2f &pos, const vector2f &da
 
 void TextureGL::Update(const TextureCubeData &data, const vector2f &dataSize, TextureFormat format, const unsigned int numMips)
 {
+	PROFILE_SCOPED()
 	assert(m_target == GL_TEXTURE_CUBE_MAP);
 
 	glBindTexture(m_target, m_texture);

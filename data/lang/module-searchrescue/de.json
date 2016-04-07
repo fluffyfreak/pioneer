@@ -1,15 +1,23 @@
 {
+   "AU" : {
+      "description" : "",
+      "message" : "AE"
+   },
    "BOARDED_PASSENGER" : {
       "description" : "",
       "message" : "{name} hat das Schiff bestiegen."
+   },
+   "COMMODITIES" : {
+      "description" : "",
+      "message" : "Waren"
    },
    "COULD_YOU_REPEAT_THE_ORIGINAL_REQUEST" : {
       "description" : "",
       "message" : "Was war nochmal die anfängliche Frage?"
    },
-   "DANGER" : {
+   "CREW" : {
       "description" : "",
-      "message" : "Gefahr:"
+      "message" : "Crew"
    },
    "DEADLINE" : {
       "description" : "",
@@ -18,6 +26,10 @@
    "DELIVERED_PASSENGER" : {
       "description" : "",
       "message" : "{name} hat das Schiff verlassen."
+   },
+   "DELIVERY" : {
+      "description" : "",
+      "message" : "LIEFERUNG"
    },
    "DISTANCE" : {
       "description" : "",
@@ -161,7 +173,7 @@
    },
    "FLAVOUR_1_INTROTEXT" : {
       "description" : "",
-      "message" : "{starport} Raumverkehrskontrolle braucht deine SOFORTIGE Hilfe an der Absturzstelle eines Raumschiffes des Types {ship} auf {planet}. Der Status der Lebenserhaltungssysteme ist unbekannt. Das Schiff ist bei {starport} Versicherungen versichert, diese zahlt die Summe von {cash} für die sichere Bergung des Schiffes."
+      "message" : "{starport} Raumverkehrskontrolle braucht deine SOFORTIGE Hilfe an der Absturzstelle eines Raumschiffes des Typs {ship} auf {planet}. Der Status der Lebenserhaltungssysteme ist unbekannt. Das Schiff ist bei {starport} Versicherungen versichert, diese zahlt die Summe von {cash} für die sichere Bergung des Schiffes."
    },
    "FLAVOUR_1_LOCATIONTEXT" : {
       "description" : "",
@@ -265,7 +277,7 @@
    },
    "FLAVOUR_4_SUCCESSMSG" : {
       "description" : "",
-      "message" : "Sehr gut. Wir werden dich für weitere Aufträge empfehlen."
+      "message" : "Sehr gut. Wir werden Sie für weitere Aufträge weiterempfehlen."
    },
    "FLAVOUR_4_TRANSFERMSG" : {
       "description" : "",
@@ -399,21 +411,25 @@
       "description" : "",
       "message" : "Interaktionsdistanz erreicht."
    },
-   "IN_SYSTEM" : {
-      "description" : "",
-      "message" : "Im System:"
-   },
    "IT_MUST_BE_COMPLETED_BY" : {
       "description" : "",
       "message" : "Es muss fertiggestellt werden bis"
    },
-   "I_HIGHLY_DOUBT_IT" : {
+   "KM" : {
       "description" : "",
-      "message" : "Ich bezweifele das."
+      "message" : "km"
    },
-   "LOCATION" : {
+   "LAST_KNOWN_LOCATION" : {
       "description" : "",
-      "message" : "Ort:"
+      "message" : "Letzte bekannte Position:"
+   },
+   "LAT" : {
+      "description" : "",
+      "message" : "Breite:"
+   },
+   "LON" : {
+      "description" : "",
+      "message" : "Länge:"
    },
    "LY" : {
       "description" : "",
@@ -439,9 +455,29 @@
       "description" : "",
       "message" : "Okay, ich werde den Flug übernehmen."
    },
+   "ORBIT" : {
+      "description" : "",
+      "message" : "Bahn"
+   },
    "PARTIAL" : {
       "description" : "",
       "message" : "Danke für Ihre Mühen. Ich hoffe, dass Sie zurückkehren werden, um die Aufgabe abzuschließen!"
+   },
+   "PASSENGERS" : {
+      "description" : "",
+      "message" : "Passagiere"
+   },
+   "PAYMENT_LOCATION" : {
+      "description" : "",
+      "message" : "Bezahlungsort:"
+   },
+   "PICKUP" : {
+      "description" : "",
+      "message" : "ABHOLUNG"
+   },
+   "PLACE_OF_ASSISTANCE" : {
+      "description" : "",
+      "message" : "Am Ort der Unterstützung"
    },
    "PLEASE_LAND" : {
       "description" : "",
@@ -525,7 +561,7 @@
    },
    "PROBLEM_GENERAL_9" : {
       "description" : "",
-      "message" : "einem Neustart des Haupscomputers"
+      "message" : "einem Neustart des Hauptcomputers"
    },
    "PROBLEM_RESEARCH_1" : {
       "description" : "",
@@ -595,13 +631,25 @@
       "description" : "",
       "message" : "Zurückkehren nach:"
    },
+   "REWARD" : {
+      "description" : "",
+      "message" : "Belohnung:"
+   },
    "SEARCH_RESCUE" : {
       "description" : "",
-      "message" : "Such-und Rettungsdienst"
+      "message" : "Such- und Rettungsdienst"
    },
    "SHIP_UNRESPONSIVE" : {
       "description" : "",
       "message" : "Zielschiff reagiert nicht."
+   },
+   "SYSTEM" : {
+      "description" : "",
+      "message" : "System:"
+   },
+   "TARGET_SHIP_ID" : {
+      "description" : "",
+      "message" : "Zielschiffs-ID:"
    },
    "THANK_YOU_ACCEPTANCE_TXT" : {
       "description" : "",

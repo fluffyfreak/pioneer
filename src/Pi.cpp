@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Pi.h"
@@ -362,6 +362,7 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 	FileSystem::userFiles.MakeDirectory("profiler");
 	profilerPath = FileSystem::JoinPathBelow(FileSystem::userFiles.GetRoot(), "profiler");
 #endif
+	PROFILE_SCOPED()
 
 	Pi::config = new GameConfig(options);
 
@@ -692,6 +693,9 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 	planner = new TransferPlanner();
 
 	timer.Stop();
+#ifdef PIONEER_PROFILER
+	Profiler::dumphtml(profilerPath.c_str());
+#endif
 	Output("\n\nLoading took: %lf milliseconds\n", timer.millicycles());
 }
 
@@ -795,18 +799,7 @@ void Pi::HandleEvents()
 				if (event.key.keysym.sym == SDLK_ESCAPE) {
 					if (Pi::game) {
 						// only accessible once game started
-						if (currentView != 0) {
-							if (currentView != Pi::game->GetSettingsView()) {
-								Pi::game->SetTimeAccel(Game::TIMEACCEL_PAUSED);
-								SetView(Pi::game->GetSettingsView());
-							}
-							else {
-								Pi::game->RequestTimeAccel(Game::TIMEACCEL_1X);
-								SetView(Pi::player->IsDead()
-										? static_cast<View*>(Pi::game->GetDeathView())
-										: static_cast<View*>(Pi::game->GetWorldView()));
-							}
-						}
+						HandleEscKey();
 					}
 					break;
 				}
@@ -990,6 +983,51 @@ void Pi::HandleEvents()
 					break;
 				joysticks[event.jhat.which].hats[event.jhat.hat] = event.jhat.value;
 				break;
+		}
+	}
+}
+
+void Pi::HandleEscKey() {
+	if (currentView != 0) {
+		if (currentView == Pi::game->GetWorldView()) {
+			static_cast<WorldView*>(currentView)->HideTargetActions();
+			if (!Pi::game->IsPaused()) {
+				Pi::game->SetTimeAccel(Game::TIMEACCEL_PAUSED);
+			}
+			else {
+				SetView(Pi::game->GetSettingsView());
+			}
+		}
+		else if (currentView == Pi::game->GetSectorView()) {
+			Pi::game->GetCpan()->SelectGroupButton(0, 0);
+			SetView(Pi::game->GetWorldView());
+		}
+		else if ((currentView == Pi::game->GetSystemView()) || (currentView == Pi::game->GetSystemInfoView())) {
+			Pi::game->GetCpan()->SelectGroupButton(1, 0);
+			SetView(Pi::game->GetSectorView());
+		}
+		else if (currentView == Pi::game->GetSettingsView()){
+			Pi::game->RequestTimeAccel(Game::TIMEACCEL_1X);
+			SetView(Pi::player->IsDead()
+					? static_cast<View*>(Pi::game->GetDeathView())
+					: static_cast<View*>(Pi::game->GetWorldView()));
+		}
+		else {
+			UIView* view = dynamic_cast<UIView*>(currentView);
+			if (view) {
+				// checks the template name
+				const char* tname = view->GetTemplateName();
+				if(tname) {
+					if (!strcmp(tname, "GalacticView")) {
+						Pi::game->GetCpan()->SelectGroupButton(1, 0);
+						SetView(Pi::game->GetSectorView());
+					}
+					else if (!strcmp(tname, "InfoView") || !strcmp(tname, "StationView")) {
+						Pi::game->GetCpan()->SelectGroupButton(0, 0);
+						SetView(Pi::game->GetWorldView());
+					}
+				}
+			}
 		}
 	}
 }

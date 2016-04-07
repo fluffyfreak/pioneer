@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef GRAPHICS_VERTEXBUFFER_H
@@ -80,7 +80,7 @@ public:
 	//By default the maximum set in description, but
 	//you may set a smaller count for partial rendering
 	Uint32 GetVertexCount() const;
-	void SetVertexCount(Uint32);
+	bool SetVertexCount(Uint32);
 
 	// copies the contents of the VertexArray into the buffer
 	virtual bool Populate(const VertexArray &) = 0;

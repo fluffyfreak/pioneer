@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "RendererGL.h"
@@ -27,6 +27,7 @@
 #include "SphereImpostorMaterial.h"
 #include "UIMaterial.h"
 #include "VtxColorMaterial.h"
+#include "BillboardMaterial.h"
 #include "DepthTextureMaterial.h"
 
 #include <stddef.h> //for offsetof
@@ -40,15 +41,19 @@ static Renderer *CreateRenderer(WindowSDL *win, const Settings &vs) {
     return new RendererOGL(win, vs);
 }
 
+// static method instantiations
 void RendererOGL::RegisterRenderer() {
     Graphics::RegisterRenderer(Graphics::RENDERER_OPENGL, CreateRenderer);
 }
 
-
+// static member instantiations
 bool RendererOGL::initted = false;
+RendererOGL::AttribBufferMap RendererOGL::s_AttribBufferMap;
 
+// typedefs
 typedef std::vector<std::pair<MaterialDescriptor, OGL::Program*> >::const_iterator ProgramIterator;
 
+// ----------------------------------------------------------------------------
 RendererOGL::RendererOGL(WindowSDL *window, const Graphics::Settings &vs)
 : Renderer(window, window->GetWidth(), window->GetHeight())
 , m_numLights(0)
@@ -96,6 +101,7 @@ RendererOGL::RendererOGL(WindowSDL *window, const Graphics::Settings &vs)
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+	glEnable(GL_PROGRAM_POINT_SIZE);
 
 	SetMatrixMode(MatrixMode::MODELVIEW);
 
@@ -296,6 +302,8 @@ static std::string glerr_to_string(GLenum err)
 
 void RendererOGL::CheckErrors()
 {
+	PROFILE_SCOPED()
+#ifndef PIONEER_PROFILER
 	GLenum err = glGetError();
 	if( err ) {
 		std::stringstream ss;
@@ -308,9 +316,17 @@ void RendererOGL::CheckErrors()
 					<< "Recommend enabling \"Compress Textures\" in game options." << std::endl
 					<< "Also try reducing City and Planet detail settings." << std::endl;
 			}
+#ifdef _WIN32
+			else if (err == GL_INVALID_OPERATION) {
+				ss << "Invalid operations can occur if you are using overlay software." << std::endl
+					<< "Such as FRAPS, RivaTuner, MSI Afterburner etc." << std::endl
+					<< "Please try disabling this kind of software and testing again, thankyou." << std::endl;
+			}
+#endif
 		}
 		Warning("%s", ss.str().c_str());
 	}
+#endif
 }
 
 bool RendererOGL::SwapBuffers()
@@ -545,42 +561,59 @@ bool RendererOGL::DrawTriangles(const VertexArray *v, RenderState *rs, Material 
 	PROFILE_SCOPED()
 	if (!v || v->position.size() < 3) return false;
 
-	VertexBufferDesc vbd;
-	Uint32 attribIdx = 0;
-	assert(v->HasAttrib(ATTRIB_POSITION));
-	vbd.attrib[attribIdx].semantic	= ATTRIB_POSITION;
-	vbd.attrib[attribIdx].format	= ATTRIB_FORMAT_FLOAT3;
-	++attribIdx;
+	const AttributeSet attribs = v->GetAttributeSet();
+	RefCountedPtr<VertexBuffer> drawVB;
 
-	if( v->HasAttrib(ATTRIB_NORMAL) ) {
-		vbd.attrib[attribIdx].semantic	= ATTRIB_NORMAL;
-		vbd.attrib[attribIdx].format	= ATTRIB_FORMAT_FLOAT3;
-		++attribIdx;
-	}
-	if( v->HasAttrib(ATTRIB_DIFFUSE) ) {
-		vbd.attrib[attribIdx].semantic	= ATTRIB_DIFFUSE;
-		vbd.attrib[attribIdx].format	= ATTRIB_FORMAT_UBYTE4;
-		++attribIdx;
-	}
-	if( v->HasAttrib(ATTRIB_UV0) ) {
-		vbd.attrib[attribIdx].semantic	= ATTRIB_UV0;
-		vbd.attrib[attribIdx].format	= ATTRIB_FORMAT_FLOAT2;
-		++attribIdx;
-	}
-	if (v->HasAttrib(ATTRIB_TANGENT)) {
-		vbd.attrib[attribIdx].semantic = ATTRIB_TANGENT;
+	// see if we have a buffer to re-use
+	AttribBufferIter iter = s_AttribBufferMap.find(std::make_pair(attribs, v->position.size()));
+	if (iter == s_AttribBufferMap.end()) {
+		// not found a buffer so create a new one
+		VertexBufferDesc vbd;
+		Uint32 attribIdx = 0;
+		assert(v->HasAttrib(ATTRIB_POSITION));
+		vbd.attrib[attribIdx].semantic = ATTRIB_POSITION;
 		vbd.attrib[attribIdx].format = ATTRIB_FORMAT_FLOAT3;
 		++attribIdx;
-	}
-	vbd.numVertices = v->position.size();
-	vbd.usage = BUFFER_USAGE_STATIC;
-	
-	// VertexBuffer
-	std::unique_ptr<VertexBuffer> vb;
-	vb.reset(CreateVertexBuffer(vbd));
-	vb->Populate(*v);
 
-	const bool res = DrawBuffer(vb.get(), rs, m, t);
+		if (v->HasAttrib(ATTRIB_NORMAL)) {
+			vbd.attrib[attribIdx].semantic = ATTRIB_NORMAL;
+			vbd.attrib[attribIdx].format = ATTRIB_FORMAT_FLOAT3;
+			++attribIdx;
+		}
+		if (v->HasAttrib(ATTRIB_DIFFUSE)) {
+			vbd.attrib[attribIdx].semantic = ATTRIB_DIFFUSE;
+			vbd.attrib[attribIdx].format = ATTRIB_FORMAT_UBYTE4;
+			++attribIdx;
+		}
+		if (v->HasAttrib(ATTRIB_UV0)) {
+			vbd.attrib[attribIdx].semantic = ATTRIB_UV0;
+			vbd.attrib[attribIdx].format = ATTRIB_FORMAT_FLOAT2;
+			++attribIdx;
+		}
+		if (v->HasAttrib(ATTRIB_TANGENT)) {
+			vbd.attrib[attribIdx].semantic = ATTRIB_TANGENT;
+			vbd.attrib[attribIdx].format = ATTRIB_FORMAT_FLOAT3;
+			++attribIdx;
+		}
+		vbd.numVertices = v->position.size();
+		vbd.usage = BUFFER_USAGE_DYNAMIC;	// dynamic since we'll be reusing these buffers if possible
+
+		// VertexBuffer
+		RefCountedPtr<VertexBuffer> vb;
+		vb.Reset(CreateVertexBuffer(vbd));
+		vb->Populate(*v);
+
+		// add to map
+		s_AttribBufferMap[std::make_pair(attribs, v->position.size())] = vb;
+		drawVB = vb;
+	}
+	else {
+		// got a buffer so use it and fill it with newest data
+		drawVB = iter->second;
+		drawVB->Populate(*v);
+	}
+
+	const bool res = DrawBuffer(drawVB.Get(), rs, m, t);
 	CheckRenderErrors();
 	
 	m_stats.AddToStatCount(Stats::STAT_DRAWTRIS, 1);
@@ -588,42 +621,61 @@ bool RendererOGL::DrawTriangles(const VertexArray *v, RenderState *rs, Material 
 	return res;
 }
 
-bool RendererOGL::DrawPointSprites(int count, const vector3f *positions, RenderState *rs, Material *material, float size)
+bool RendererOGL::DrawPointSprites(const Uint32 count, const vector3f *positions, RenderState *rs, Material *material, float size)
 {
 	PROFILE_SCOPED()
-	if (count < 1 || !material || !material->texture0) return false;
+	if (count == 0 || !material || !material->texture0) 
+		return false;
 
-	VertexArray va(ATTRIB_POSITION | ATTRIB_UV0, count * 6);
+	size = Clamp(size, 0.1f, FLT_MAX);
 
-	matrix4x4f rot(GetCurrentModelView());
-	rot.ClearToRotOnly();
-	rot = rot.Inverse();
+	#pragma pack(push, 4)
+	struct PosNormVert {
+		vector3f pos;
+		vector3f norm;
+	};
+	#pragma pack(pop)
+	
+	RefCountedPtr<VertexBuffer> drawVB;
+	AttribBufferIter iter = s_AttribBufferMap.find(std::make_pair(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_NORMAL, count));
+	if (iter == s_AttribBufferMap.end()) 
+	{
+		// NB - we're (ab)using the normal type to hold (uv coordinate offset value + point size)
+		Graphics::VertexBufferDesc vbd;
+		vbd.attrib[0].semantic = Graphics::ATTRIB_POSITION;
+		vbd.attrib[0].format   = Graphics::ATTRIB_FORMAT_FLOAT3;
+		vbd.attrib[1].semantic = Graphics::ATTRIB_NORMAL;
+		vbd.attrib[1].format   = Graphics::ATTRIB_FORMAT_FLOAT3;
+		vbd.numVertices = count;
+		vbd.usage = Graphics::BUFFER_USAGE_DYNAMIC;	// we could be updating this per-frame
 
-	const float sz = 0.5f*size;
-	const vector3f rotv1 = rot * vector3f(sz, sz, 0.0f);
-	const vector3f rotv2 = rot * vector3f(sz, -sz, 0.0f);
-	const vector3f rotv3 = rot * vector3f(-sz, -sz, 0.0f);
-	const vector3f rotv4 = rot * vector3f(-sz, sz, 0.0f);
+		// VertexBuffer
+		RefCountedPtr<VertexBuffer> vb;
+		vb.Reset(CreateVertexBuffer(vbd));
 
-	//do two-triangle quads. Could also do indexed surfaces.
-	//OGL renderer should use actual point sprites
-	//(see history of Render.cpp for point code remnants)
-	for (int i=0; i<count; i++) {
-		const vector3f &pos = positions[i];
-
-		va.Add(pos+rotv4, vector2f(0.f, 0.f)); //top left
-		va.Add(pos+rotv3, vector2f(0.f, 1.f)); //bottom left
-		va.Add(pos+rotv1, vector2f(1.f, 0.f)); //top right
-
-		va.Add(pos+rotv1, vector2f(1.f, 0.f)); //top right
-		va.Add(pos+rotv3, vector2f(0.f, 1.f)); //bottom left
-		va.Add(pos+rotv2, vector2f(1.f, 1.f)); //bottom right
+		// add to map
+		s_AttribBufferMap[std::make_pair(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_NORMAL, count)] = vb;
+		drawVB = vb;
+	}
+	else
+	{
+		drawVB = iter->second;
 	}
 
-	DrawTriangles(&va, rs, material);
+	// got a buffer so use it and fill it with newest data
+	PosNormVert* vtxPtr = drawVB->Map<PosNormVert>(Graphics::BUFFER_MAP_WRITE);
+	assert(drawVB->GetDesc().stride == sizeof(PosNormVert));
+	for(Uint32 i=0 ; i<count ; i++)
+	{
+		vtxPtr[i].pos	= positions[i];
+		vtxPtr[i].norm	= vector3f(0.0f, 0.0f, size);
+	}
+	drawVB->Unmap();
+
+	SetTransform(matrix4x4f::Identity());
+	DrawBuffer(drawVB.Get(), rs, material, Graphics::POINTS);
+	GetStats().AddToStatCount(Graphics::Stats::STAT_DRAWPOINTSPRITES, 1);
 	CheckRenderErrors();
-	
-	m_stats.AddToStatCount(Stats::STAT_DRAWPOINTSPRITES, count);
 
 	return true;
 }
@@ -762,6 +814,10 @@ Material *RendererOGL::CreateMaterial(const MaterialDescriptor &d)
 	case EFFECT_GASSPHERE_TERRAIN:
 		mat = new OGL::GasGiantSurfaceMaterial();
 		break;
+	case EFFECT_BILLBOARD_ATLAS:
+	case EFFECT_BILLBOARD:
+		mat = new OGL::BillboardMaterial();
+		break;
 	case EFFECT_DEPTH_TEXTURE:
 		mat = new OGL::DepthTextureMaterial();
 		break;
@@ -798,6 +854,7 @@ bool RendererOGL::ReloadShaders()
 
 OGL::Program* RendererOGL::GetOrCreateProgram(OGL::Material *mat)
 {
+	PROFILE_SCOPED()
 	CheckRenderErrors();
 	const MaterialDescriptor &desc = mat->GetDescriptor();
 	OGL::Program *p = 0;
@@ -822,12 +879,14 @@ OGL::Program* RendererOGL::GetOrCreateProgram(OGL::Material *mat)
 
 Texture *RendererOGL::CreateTexture(const TextureDescriptor &descriptor)
 {
+	PROFILE_SCOPED()
 	CheckRenderErrors();
 	return new TextureGL(descriptor, m_useCompressedTextures, m_useAnisotropicFiltering);
 }
 
 RenderState *RendererOGL::CreateRenderState(const RenderStateDesc &desc)
 {
+	PROFILE_SCOPED()
 	CheckRenderErrors();
 	const uint32_t hash = lookup3_hashlittle(&desc, sizeof(RenderStateDesc), 0);
 	auto it = m_renderStates.find(hash);
@@ -844,6 +903,7 @@ RenderState *RendererOGL::CreateRenderState(const RenderStateDesc &desc)
 
 RenderTarget *RendererOGL::CreateRenderTarget(const RenderTargetDesc &desc)
 {
+	PROFILE_SCOPED()
 	CheckRenderErrors();
 	OGL::RenderTarget* rt = new OGL::RenderTarget(desc);
 	rt->Bind();
@@ -855,7 +915,8 @@ RenderTarget *RendererOGL::CreateRenderTarget(const RenderTargetDesc &desc)
 			LINEAR_CLAMP,
 			false,
 			false, 
-			false);
+			false,
+			0, Graphics::TEXTURE_2D);
 		TextureGL *colorTex = new TextureGL(cdesc, false, false);
 		rt->SetColorTexture(colorTex);
 	}
@@ -868,7 +929,8 @@ RenderTarget *RendererOGL::CreateRenderTarget(const RenderTargetDesc &desc)
 				LINEAR_CLAMP,
 				false,
 				false,
-				false);
+				false,
+				0, Graphics::TEXTURE_2D);
 			TextureGL *depthTex = new TextureGL(ddesc, false, false);
 			rt->SetDepthTexture(depthTex);
 		} else {

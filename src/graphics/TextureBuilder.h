@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _TEXTUREBUILDER_H
@@ -23,6 +23,9 @@ public:
 	// convenience constructors for common texture types
 	static TextureBuilder Model(const std::string &filename) {
 		return TextureBuilder(filename, LINEAR_REPEAT, true, false, false, true, true);
+	}
+	static TextureBuilder Normal(const std::string &filename) {
+		return TextureBuilder(filename, LINEAR_REPEAT, true, false, false, false, true);
 	}
 	static TextureBuilder Billboard(const std::string &filename) {
 		return TextureBuilder(filename, LINEAR_CLAMP, true, false, false, true, false);

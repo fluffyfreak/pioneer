@@ -1,16 +1,93 @@
+April 2016
+   * New Features
+     * First commit of the Bluenose frieghter (#3668)
+     * Change to GetPosition and GetVelocity LuaShip functions (#3679)
+     * Back port some of Marcels hometowns mod (#3676)
+
+   * Fixes
+     * Fix ModelViewer crash (#3672)
+     * Fix editing the gas giants in ObjectViewer editor mode (#3677)
+
+   * Internal Changes
+     * NavLight Billboard Gathering (#3667)
+     * Change DrawPointSprites to really use Point Sprites (#3670)
+     * Lua debug tools, part one (#3675)
+
+March 2016
+   * New Features
+     * Ship stat planner addon for Blender. Exports ship.json (#3639)
+     * Bowfin fighter for Kaluri/CIW (#3641)
+     * Invisible disabled button for commodity market (#3605)
+     * Include modelcompiler in OSX build (#3660)
+
+   * Minor changes and tweaks
+     * gun locator tag fix (#3633)
+     * Ability to set Combat and Nav targets to null validly (#3634)
+     * Redirect stdout for modelviewer mode (#3640)
+     * Kanara resize (75%) (#3642)
+     * RandomColor Port for better random colours (#3644)
+     * Bowfin: Deleting some duplicate .dae mesh files (#3653)
+
+   * Fixes
+     * Fix rare crash. #3645
+     * Fix OSX shader compilation (#3652)
+     * Fix wrong price for Kanara (#3666)
+     * Fix crash on del/bkspc in sector map search for non-UTF8 char (#3662)
+
+   * Internal Changes
+     * Remove redundant LuaAPI function: SetEnabled() (#3491)
+     * vector2 template class (#3646)
+     * vector2 template class (#3646)
+     * Fix some GCC build warnings (#3661)
+     * Don't compress normal maps (#3663)
+
+February 2016
+   * Minor changes and tweaks
+     * New behaviour of ESC button (#3618)
+
+   * Fixes
+     * Fix Character.lua / Ship.lua import relationship (#3617)
+     * Fix Search and Rescue bug not recognizing a competed mission (#3621)
+     * Only get the SystemBody pointer on system bodies and NOT on ships (#3632)
+
+   * Internal Changes
+     * GL_INVALID_OPERATION warning (win32) (#3620)
+     * Reduce size of terrain patch skirts (#3622)
+     * Rendering cleanup, possible perf improvements (#3623)
+     * Cleaning up Pi.h (#3624)
+     * Fix terrain cracks (#3625)
+     * Remove IGNORE_FLAG etc (#3628)
+     * Moar profiling (#3629)
+
 January 2016
    * New Features
      * Barnard's star update (#3584)
      * Anisotropic Texture Filtering (#3586)
-     
+
+   * Minor changes and tweaks
+     * Search and rescue missions tweaked and fixed #3589
+
    * Fixes
      * TextureDescriptor usage updated (#3591)
      * Fix ObjectViewer crash/hang (#3588)
+     * Fix for broken SGM file loading (#3597)
+     * Show the correct pattern on the ship info screen (#3598)
+     * Fix serialization bug in S&R missions (#3607)
+     * Missing text fix (#3608)
+     * Fix for console window crash (#3611)
+     * Fix for #3602 and #3517 (#3603)
+     * Fix bad text size (#3612)
+     * Fix the vcacheopt type narrowing conversions that I caused (#3613)
+     * Fix number of police ships being opposite of lawlessness (#3614)
 
    * Internal Changes
      * Optional use of std::chrono for Profiler (#3593)
      * SGM graceful failure (#3592)
      * Convert geometry to use 32-bit indices (#3585)
+     * Remove TextureDescriptor default constructor arguments (#3594)
+     * Text rendering performance improvements (#3599)
+     * Fix #ifdef to allow compilation on various BSDs (#3600)
+     * MERRY HAPPY 2016 (#3615)
 
 December 2015
    * New Features
