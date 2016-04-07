@@ -15,7 +15,6 @@
 #include "SectorView.h"
 #include "WorldView.h"
 #include "DeathView.h"
-#include "GalacticView.h"
 #include "SystemView.h"
 #include "SystemInfoView.h"
 #include "UIView.h"
@@ -27,7 +26,7 @@
 #include "ui/Context.h"
 #include "galaxy/GalaxyGenerator.h"
 
-static const int  s_saveVersion   = 81;
+static const int  s_saveVersion   = 82;
 static const char s_saveStart[]   = "PIONEER";
 static const char s_saveEnd[]     = "END";
 
@@ -76,7 +75,6 @@ Game::Game(const SystemPath &path, double time) :
 		m_player->SetPosition(vector3d(0, 1.5*sbody->GetRadius(), 0));
 		m_player->SetVelocity(vector3d(0,0,0));
 	}
-	Polit::Init(m_galaxy);
 
 	CreateViews();
 
@@ -167,9 +165,6 @@ m_forceTimeAccel(false)
 	for (Uint32 i = 0; i < hyperspaceCloudArray.size(); i++)
 		m_hyperspaceClouds.push_back(static_cast<HyperspaceCloud*>(Body::FromJson(hyperspaceCloudArray[i], 0)));
 
-	// system political stuff
-	Polit::FromJson(jsonObj, m_galaxy);
-
 	// views
 	LoadViewsFromJson(jsonObj);
 
@@ -223,9 +218,6 @@ void Game::ToJson(Json::Value &jsonObj)
 		hyperspaceCloudArray.append(hyperspaceCloudArrayEl); // Append hyperspace cloud object to array.
 	}
 	jsonObj["hyperspace_clouds"] = hyperspaceCloudArray; // Add hyperspace cloud array to supplied object.
-
-	// system political data (crime etc)
-	Polit::ToJson(jsonObj);
 
 	// views. must be saved in init order
 	m_gameViews->m_cpan->SaveToJson(jsonObj);
@@ -291,7 +283,9 @@ bool Game::UpdateTimeAccel()
 	}
 
 	// force down to timeaccel 1 during the docking sequence or when just initiating hyperspace
-	else if (m_player->GetFlightState() == Ship::DOCKING || m_player->GetFlightState() == Ship::JUMPING) {
+	else if (m_player->GetFlightState() == Ship::DOCKING ||
+			 m_player->GetFlightState() == Ship::JUMPING ||
+			 m_player->GetFlightState() == Ship::UNDOCKING) {
 		newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_10X);
 		RequestTimeAccel(newTimeAccel);
 	}
@@ -299,32 +293,37 @@ bool Game::UpdateTimeAccel()
 	// normal flight
 	else if (m_player->GetFlightState() == Ship::FLYING) {
 
-		// special timeaccel lock rules while in alert
-		if (m_player->GetAlertState() == Ship::ALERT_SHIP_NEARBY)
-			newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_10X);
-		else if (m_player->GetAlertState() == Ship::ALERT_SHIP_FIRING)
+		// limit timeaccel to 1x when fired on (no forced acceleration allowed)
+		if (m_player->GetAlertState() == Ship::ALERT_SHIP_FIRING)
 			newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_1X);
 
-		else if (!m_forceTimeAccel) {
-			// check we aren't too near to objects for timeaccel //
-			for (const Body* b : m_space->GetBodies()) {
-				if (b == m_player.get()) continue;
-				if (b->IsType(Object::HYPERSPACECLOUD)) continue;
+		if (!m_forceTimeAccel) {
 
-				vector3d toBody = m_player->GetPosition() - b->GetPositionRelTo(m_player->GetFrame());
-				double dist = toBody.Length();
-				double rad = b->GetPhysRadius();
+				// if not forced - limit timeaccel to 10x when other ships are close
+			if (m_player->GetAlertState() == Ship::ALERT_SHIP_NEARBY)
+				newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_10X);
 
-				if (dist < 1000.0) {
-					newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_1X);
-				} else if (dist < std::min(rad+0.0001*AU, rad*1.1)) {
-					newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_10X);
-				} else if (dist < std::min(rad+0.001*AU, rad*5.0)) {
-					newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_100X);
-				} else if (dist < std::min(rad+0.01*AU,rad*10.0)) {
-					newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_1000X);
-				} else if (dist < std::min(rad+0.1*AU, rad*1000.0)) {
-					newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_10000X);
+				// if not forced - check if we aren't too near to objects for timeaccel
+			else {
+				for (const Body* b : m_space->GetBodies()) {
+					if (b == m_player.get()) continue;
+					if (b->IsType(Object::HYPERSPACECLOUD)) continue;
+
+					vector3d toBody = m_player->GetPosition() - b->GetPositionRelTo(m_player->GetFrame());
+					double dist = toBody.Length();
+					double rad = b->GetPhysRadius();
+
+					if (dist < 1000.0) {
+						newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_1X);
+					} else if (dist < std::min(rad+0.0001*AU, rad*1.1)) {
+						newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_10X);
+					} else if (dist < std::min(rad+0.001*AU, rad*5.0)) {
+						newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_100X);
+					} else if (dist < std::min(rad+0.01*AU,rad*10.0)) {
+						newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_1000X);
+					} else if (dist < std::min(rad+0.1*AU, rad*1000.0)) {
+						newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_10000X);
+					}
 				}
 			}
 
@@ -420,6 +419,10 @@ void Game::SwitchToHyperspace()
 	m_space.reset(new Space(this, m_galaxy, m_space.get()));
 
 	m_space->GetBackground()->SetDrawFlags( Background::Container::DRAW_STARS );
+
+	// Reset planner
+	Pi::planner->ResetStartTime();
+	Pi::planner->ResetDv();
 
 	// put the player in it
 	m_player->SetFrame(m_space->GetRootFrame());
@@ -622,6 +625,50 @@ void Game::RequestTimeAccel(TimeAccel t, bool force)
 	m_forceTimeAccel = force;
 }
 
+void Game::RequestTimeAccelInc(bool force)
+{
+    switch(m_requestedTimeAccel) {
+        case Game::TIMEACCEL_1X:
+            m_requestedTimeAccel = Game::TIMEACCEL_10X;
+            break;
+        case Game::TIMEACCEL_10X:
+            m_requestedTimeAccel = Game::TIMEACCEL_100X;
+            break;
+        case Game::TIMEACCEL_100X:
+            m_requestedTimeAccel = Game::TIMEACCEL_1000X;
+            break;
+        case Game::TIMEACCEL_1000X:
+            m_requestedTimeAccel = Game::TIMEACCEL_10000X;
+            break;
+        default:
+            // ignore if paused, hyperspace or 10000X
+            break;
+    }
+    m_forceTimeAccel = force;
+}
+
+void Game::RequestTimeAccelDec(bool force)
+{
+    switch(m_requestedTimeAccel) {
+        case Game::TIMEACCEL_10X:
+            m_requestedTimeAccel = Game::TIMEACCEL_1X;
+            break;
+        case Game::TIMEACCEL_100X:
+            m_requestedTimeAccel = Game::TIMEACCEL_10X;
+            break;
+        case Game::TIMEACCEL_1000X:
+            m_requestedTimeAccel = Game::TIMEACCEL_100X;
+            break;
+        case Game::TIMEACCEL_10000X:
+            m_requestedTimeAccel = Game::TIMEACCEL_1000X;
+            break;
+        default:
+            // ignore if paused, hyperspace or 1X
+            break;
+    }
+    m_forceTimeAccel = force;
+}
+
 Game::Views::Views()
 	: m_sectorView(nullptr)
 	, m_galacticView(nullptr)
@@ -638,7 +685,6 @@ Game::Views::Views()
 void Game::Views::SetRenderer(Graphics::Renderer *r)
 {
 	// view manager will handle setting this probably
-	m_galacticView->SetRenderer(r);
 	m_infoView->SetRenderer(r);
 	m_sectorView->SetRenderer(r);
 	m_systemInfoView->SetRenderer(r);
@@ -656,7 +702,7 @@ void Game::Views::Init(Game* game)
 	m_cpan = new ShipCpanel(Pi::renderer, game);
 	m_sectorView = new SectorView(game);
 	m_worldView = new WorldView(game);
-	m_galacticView = new GalacticView(game);
+	m_galacticView = new UIView("GalacticView");
 	m_systemView = new SystemView(game);
 	m_systemInfoView = new SystemInfoView(game);
 	m_spaceStationView = new UIView("StationView");
@@ -677,7 +723,7 @@ void Game::Views::LoadFromJson(const Json::Value &jsonObj, Game* game)
 	m_sectorView = new SectorView(jsonObj, game);
 	m_worldView = new WorldView(jsonObj, game);
 
-	m_galacticView = new GalacticView(game);
+	m_galacticView = new UIView("GalacticView");
 	m_systemView = new SystemView(game);
 	m_systemInfoView = new SystemInfoView(game);
 	m_spaceStationView = new UIView("StationView");

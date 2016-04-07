@@ -39,9 +39,9 @@
       "description" : "",
       "message" : "Minimale tijd doorgebracht aan boord"
    },
-   "NAVIGATOR" : {
+   "NO_CREW_AVAILABLE" : {
       "description" : "",
-      "message" : "Navigator"
+      "message" : "Sorry, no candidates are currently seeking employment at {station}"
    },
    "NO_EXPERIENCE" : {
       "description" : "",
@@ -51,21 +51,9 @@
       "description" : "",
       "message" : "OK, I ga er vanuit dat dat klopt."
    },
-   "PILOT" : {
-      "description" : "",
-      "message" : "Piloot"
-   },
    "POTENTIAL_CREW_MEMBERS" : {
       "description" : "",
       "message" : "Potentiele bemanningsleden zijn geregistreerd als werkzoekend op {station}:"
-   },
-   "SENSORS_AND_DEFENCE" : {
-      "description" : "",
-      "message" : "Sensoren en verdediging"
-   },
-   "SHIPS_ENGINEER" : {
-      "description" : "",
-      "message" : "Sheepswerktuigbouwkundige"
    },
    "SIMULATOR_TRAINING_ONLY" : {
       "description" : "",

@@ -1,6 +1,10 @@
 // Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
+#include "attributes.glsl"
+#include "logz.glsl"
+#include "lib.glsl"
+
 #ifdef TEXTURE0
 uniform sampler2D texture0; //diffuse
 uniform sampler2D texture1; //specular
@@ -8,7 +12,8 @@ uniform sampler2D texture2; //glow
 uniform sampler2D texture3; //ambient
 uniform sampler2D texture4; //pattern
 uniform sampler2D texture5; //color
-uniform sampler2D texture6; //shadow
+uniform sampler2D texture6; //normal
+uniform sampler2D texture7; //shadow
 in vec2 texCoord0;
 in vec4 shadowMapTexCoord;
 #endif
@@ -19,11 +24,15 @@ in vec4 vertexColor;
 #if (NUM_LIGHTS > 0)
 in vec3 eyePos;
 in vec3 normal;
-	#ifdef HEAT_COLOURING
-		uniform sampler2D heatGradient;
-		uniform float heatingAmount; // 0.0 to 1.0 used for `u` component of heatGradient texture
-		in vec3 heatingDir;
-	#endif // HEAT_COLOURING
+#ifdef MAP_NORMAL
+	in vec3 tangent;
+	in vec3 bitangent;
+#endif
+#ifdef HEAT_COLOURING
+	uniform sampler2D heatGradient;
+	uniform float heatingAmount; // 0.0 to 1.0 used for `u` component of heatGradient texture
+	in vec3 heatingDir;
+#endif // HEAT_COLOURING
 #endif // (NUM_LIGHTS > 0)
 
 uniform Scene scene;
@@ -75,11 +84,18 @@ void main(void)
 
 //directional lighting
 #if (NUM_LIGHTS > 0)
+#ifdef MAP_NORMAL
+	vec3 bump = (texture2D(texture6, texCoord0).xyz * 2.0) - vec3(1.0);
+	mat3 tangentFrame = mat3(tangent, bitangent, normal);
+	vec3 vNormal = tangentFrame * bump;
+#else
+	vec3 vNormal = normal;
+#endif
 	//ambient only make sense with lighting
 	vec4 light = scene.ambient;
 	vec4 specular = vec4(0.0);
 	for (int i=0; i<NUM_LIGHTS; ++i) {
-		ads(i, eyePos, normal, light, specular);
+		ads(i, eyePos, vNormal, light, specular);
 	}
 
 	if(shadowMapTexCoord.w > 0.0)
@@ -90,7 +106,7 @@ void main(void)
 		   shadowMapTexCoordProj.y >= 0.0 && shadowMapTexCoordProj.y < 1.0 &&
 		   shadowMapTexCoordProj.z >= 0.0 && shadowMapTexCoordProj.z < 1.0)
 		{
-			if(texture2D(texture6, shadowMapTexCoordProj.xy).r <= shadowMapTexCoordProj.z)
+			if(texture(texture6, shadowMapTexCoordProj.xy).r <= shadowMapTexCoordProj.z)
 			{
 				// in shadow so reset to ambient
 				light = scene.ambient;
@@ -116,7 +132,7 @@ void main(void)
 	#ifdef HEAT_COLOURING
 		if (heatingAmount > 0.0)
 		{
-			float dphNn = clamp(dot(heatingDir, normal), 0.0, 1.0);
+			float dphNn = clamp(dot(heatingDir, vNormal), 0.0, 1.0);
 			float heatDot = heatingAmount * (dphNn * dphNn * dphNn);
 			vec4 heatColour = texture(heatGradient, vec2(heatDot, 0.5)); //heat gradient blend
 			frag_color = color * light + specular;

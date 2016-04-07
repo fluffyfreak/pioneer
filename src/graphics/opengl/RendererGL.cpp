@@ -68,7 +68,10 @@ RendererOGL::RendererOGL(WindowSDL *window, const Graphics::Settings &vs)
 		initted = true;
 
 		if (!ogl_LoadFunctions())
-			Error("glLoadGen failed to load functions.\n");
+			Error(
+				"Pioneer can not run on your graphics card as it does not appear to support OpenGL 3.3\n"
+				"Please check to see if your GPU driver vendor has an updated driver - or that drivers are installed correctly."
+			);
 
 		if (ogl_ext_EXT_texture_compression_s3tc == ogl_LOAD_FAILED)
 			Error(
@@ -81,6 +84,9 @@ RendererOGL::RendererOGL(WindowSDL *window, const Graphics::Settings &vs)
 
 	const bool useDXTnTextures = vs.useTextureCompression;
 	m_useCompressedTextures = useDXTnTextures;
+
+	const bool useAnisotropicFiltering = vs.useAnisotropicFiltering;
+	m_useAnisotropicFiltering = useAnisotropicFiltering;
 
 	//XXX bunch of fixed function states here!
 	glCullFace(GL_BACK);
@@ -105,6 +111,15 @@ RendererOGL::RendererOGL(WindowSDL *window, const Graphics::Settings &vs)
 	MaterialDescriptor desc;
 	desc.effect = EFFECT_DEPTH_RENDER;
 	m_shadowMaterial.Reset(CreateMaterial(desc));
+
+	// check enum PrimitiveType matches OpenGL values
+	assert(POINTS == GL_POINTS);
+	assert(LINE_SINGLE == GL_LINES);
+	assert(LINE_LOOP == GL_LINE_LOOP);
+	assert(LINE_STRIP == GL_LINE_STRIP);
+	assert(TRIANGLES == GL_TRIANGLES);
+	assert(TRIANGLE_STRIP == GL_TRIANGLE_STRIP);
+	assert(TRIANGLE_FAN == GL_TRIANGLE_FAN);
 }
 
 RendererOGL::~RendererOGL()
@@ -552,6 +567,11 @@ bool RendererOGL::DrawTriangles(const VertexArray *v, RenderState *rs, Material 
 		vbd.attrib[attribIdx].format	= ATTRIB_FORMAT_FLOAT2;
 		++attribIdx;
 	}
+	if (v->HasAttrib(ATTRIB_TANGENT)) {
+		vbd.attrib[attribIdx].semantic = ATTRIB_TANGENT;
+		vbd.attrib[attribIdx].format = ATTRIB_FORMAT_FLOAT3;
+		++attribIdx;
+	}
 	vbd.numVertices = v->position.size();
 	vbd.usage = BUFFER_USAGE_STATIC;
 	
@@ -636,7 +656,7 @@ bool RendererOGL::DrawBufferIndexed(VertexBuffer *vb, IndexBuffer *ib, RenderSta
 
 	vb->Bind();
 	ib->Bind();
-	glDrawElements(pt, ib->GetIndexCount(), GL_UNSIGNED_SHORT, 0);
+	glDrawElements(pt, ib->GetIndexCount(), GL_UNSIGNED_INT, 0);
 	ib->Release();
 	vb->Release();
 	CheckRenderErrors();
@@ -677,7 +697,7 @@ bool RendererOGL::DrawBufferIndexedInstanced(VertexBuffer *vb, IndexBuffer *ib, 
 	vb->Bind();
 	ib->Bind();
 	instb->Bind();
-	glDrawElementsInstanced(pt, ib->GetIndexCount(), GL_UNSIGNED_SHORT, 0, instb->GetInstanceCount());
+	glDrawElementsInstanced(pt, ib->GetIndexCount(), GL_UNSIGNED_INT, 0, instb->GetInstanceCount());
 	instb->Release();
 	ib->Release();
 	vb->Release();
@@ -723,6 +743,9 @@ Material *RendererOGL::CreateMaterial(const MaterialDescriptor &d)
 		break;
 	case EFFECT_GEOSPHERE_SKY:
 		mat = new OGL::GeoSphereSkyMaterial();
+		break;
+	case EFFECT_GEOSPHERE_STAR:
+		mat = new OGL::GeoSphereStarMaterial();
 		break;
 	case EFFECT_FRESNEL_SPHERE:
 		mat = new OGL::FresnelColourMaterial();
@@ -800,7 +823,7 @@ OGL::Program* RendererOGL::GetOrCreateProgram(OGL::Material *mat)
 Texture *RendererOGL::CreateTexture(const TextureDescriptor &descriptor)
 {
 	CheckRenderErrors();
-	return new TextureGL(descriptor, m_useCompressedTextures);
+	return new TextureGL(descriptor, m_useCompressedTextures, m_useAnisotropicFiltering);
 }
 
 RenderState *RendererOGL::CreateRenderState(const RenderStateDesc &desc)
@@ -831,8 +854,9 @@ RenderTarget *RendererOGL::CreateRenderTarget(const RenderTargetDesc &desc)
 			vector2f(desc.width, desc.height),
 			LINEAR_CLAMP,
 			false,
+			false, 
 			false);
-		TextureGL *colorTex = new TextureGL(cdesc, false);
+		TextureGL *colorTex = new TextureGL(cdesc, false, false);
 		rt->SetColorTexture(colorTex);
 	}
 	if (desc.depthFormat != TEXTURE_NONE) {
@@ -843,8 +867,9 @@ RenderTarget *RendererOGL::CreateRenderTarget(const RenderTargetDesc &desc)
 				vector2f(desc.width, desc.height),
 				LINEAR_CLAMP,
 				false,
+				false,
 				false);
-			TextureGL *depthTex = new TextureGL(ddesc, false);
+			TextureGL *depthTex = new TextureGL(ddesc, false, false);
 			rt->SetDepthTexture(depthTex);
 		} else {
 			rt->CreateDepthRenderbuffer();

@@ -34,7 +34,7 @@ public:
 	virtual ~GeoSphere();
 
 	virtual void Update();
-	virtual void Render(Graphics::Renderer *renderer, const matrix4x4d &modelView, vector3d campos, const float radius, const float scale, const std::vector<Camera::Shadow> &shadows);
+	virtual void Render(Graphics::Renderer *renderer, const matrix4x4d &modelView, vector3d campos, const float radius, const std::vector<Camera::Shadow> &shadows);
 
 	virtual double GetHeight(const vector3d &p) const {
 		const double h = m_terrain->GetHeight(p);
@@ -94,10 +94,14 @@ private:
 
 	bool m_hasTempCampos;
 	vector3d m_tempCampos;
+	Graphics::Frustum m_tempFrustum;
 
 	static RefCountedPtr<GeoPatchContext> s_patchContext;
 
 	virtual void SetUpMaterials();
+
+	RefCountedPtr<Graphics::Texture> m_texHi;
+	RefCountedPtr<Graphics::Texture> m_texLo;
 
 	enum EGSInitialisationStage {
 		eBuildFirstPatches=0,

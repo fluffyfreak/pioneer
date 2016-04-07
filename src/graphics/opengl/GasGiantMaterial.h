@@ -6,7 +6,7 @@
 /*
  * Programs & Materials used by terrain
  */
-#include "libs.h"
+#include "OpenGLLibs.h"
 #include "MaterialGL.h"
 #include "Program.h"
 #include "galaxy/StarSystem.h"
@@ -22,8 +22,7 @@ namespace Graphics {
 			Uniform geosphereAtmosInvScaleHeight;
 			Uniform geosphereAtmosTopRad; // in planet radii
 			Uniform geosphereCenter;
-			Uniform geosphereScale;
-			Uniform geosphereScaledRadius; // (planet radius) / scale
+			Uniform geosphereRadius; // planet radius
 
 			Uniform shadows;
 			Uniform occultedLight;

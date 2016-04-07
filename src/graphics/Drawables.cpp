@@ -3,6 +3,7 @@
 
 #include "Drawables.h"
 #include "Texture.h"
+#include "TextureBuilder.h"
 
 namespace Graphics {
 
@@ -129,8 +130,8 @@ Line3D::Line3D() : m_refreshVertexBuffer(true), m_width(2.0f), m_va( new Graphic
 	PROFILE_SCOPED()
 	assert(m_va.get());
 	// XXX bug in Radeon drivers will cause crash in glLineWidth if width >= 3
-	m_va->Add(vector3f(0.f), Color(0));
-	m_va->Add(vector3f(0.f), Color(255));
+	m_va->Add(vector3f(0.f), Color::BLANK);
+	m_va->Add(vector3f(0.f), Color::WHITE);
 }
 
 Line3D::Line3D(const Line3D& b) : Line3D()
@@ -215,7 +216,7 @@ void Line3D::Dirty() {
 }
 //------------------------------------------------------------
 
-Lines::Lines() : m_refreshVertexBuffer(true), m_width(2.0f), m_va(new VertexArray(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_DIFFUSE))
+Lines::Lines() : m_refreshVertexBuffer(true), m_va(new VertexArray(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_DIFFUSE))
 {
 	PROFILE_SCOPED()
 	// XXX bug in Radeon drivers will cause crash in glLineWidth if width >= 3
@@ -534,7 +535,7 @@ Sphere3D::Sphere3D(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 	//m_surface.reset(new Surface(TRIANGLES, new VertexArray(ATTRIB_POSITION | ATTRIB_NORMAL | ATTRIB_UV0), mat));
 	//reserve some data
 	VertexArray vts(ATTRIB_POSITION | ATTRIB_NORMAL | ATTRIB_UV0, 256);
-	std::vector<Uint16> indices;
+	std::vector<Uint32> indices;
 
 	//initial vertices
 	int vi[12];
@@ -568,7 +569,7 @@ Sphere3D::Sphere3D(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 	m_vertexBuffer->Populate(vts);
 
 	m_indexBuffer.reset(renderer->CreateIndexBuffer(indices.size(), BUFFER_USAGE_STATIC));
-	Uint16 *idxPtr = m_indexBuffer->Map(Graphics::BUFFER_MAP_WRITE);
+	Uint32 *idxPtr = m_indexBuffer->Map(Graphics::BUFFER_MAP_WRITE);
 	for (auto it : indices) {
 		*idxPtr = it;
 		idxPtr++;
@@ -592,7 +593,7 @@ int Sphere3D::AddVertex(VertexArray &vts, const vector3f &v, const vector3f &n)
 	return vts.GetNumVerts() - 1;
 }
 
-void Sphere3D::AddTriangle(std::vector<Uint16> &indices, int i1, int i2, int i3)
+void Sphere3D::AddTriangle(std::vector<Uint32> &indices, int i1, int i2, int i3)
 {
 	PROFILE_SCOPED()
 	indices.push_back(i1);
@@ -600,7 +601,7 @@ void Sphere3D::AddTriangle(std::vector<Uint16> &indices, int i1, int i2, int i3)
 	indices.push_back(i3);
 }
 
-void Sphere3D::Subdivide(VertexArray &vts, std::vector<Uint16> &indices,
+void Sphere3D::Subdivide(VertexArray &vts, std::vector<Uint32> &indices,
 		const matrix4x4f &trans, const vector3f &v1, const vector3f &v2, const vector3f &v3,
 		const int i1, const int i2, const int i3, int depth)
 {
@@ -622,6 +623,48 @@ void Sphere3D::Subdivide(VertexArray &vts, std::vector<Uint16> &indices,
 	Subdivide(vts, indices, trans, v12, v23, v31, i12, i23, i31, depth-1);
 }
 //------------------------------------------------------------
+
+TexturedQuad::TexturedQuad(Graphics::Renderer *r, const std::string &filename)
+{
+	PROFILE_SCOPED()
+
+	Graphics::TextureBuilder texbuilder = Graphics::TextureBuilder::UI(filename);
+	m_texture.Reset(texbuilder.GetOrCreateTexture(r, "ui"));
+	Graphics::RenderStateDesc rsd;
+	rsd.blendMode = Graphics::BLEND_ALPHA;
+	rsd.depthTest = false;
+	rsd.depthWrite = false;
+	m_renderState = r->CreateRenderState(rsd);
+
+	VertexArray vertices(ATTRIB_POSITION | ATTRIB_UV0);
+	Graphics::MaterialDescriptor desc;
+	desc.effect = Graphics::EFFECT_DEFAULT;
+	desc.textures = 1;
+	desc.lighting = false;
+	desc.vertexColors = false;
+	m_material.reset(r->CreateMaterial(desc));
+	m_material->texture0 = m_texture.Get();
+
+	// these might need to be reversed
+	const vector2f texSize = m_texture->GetDescriptor().texSize;
+	const vector2f halfsz = 0.5f * m_texture->GetDescriptor().GetOriginalSize();
+
+	vertices.Add(vector3f(-halfsz.x, -halfsz.y, 0.0f), vector2f(0.0f,      texSize.y));
+	vertices.Add(vector3f(-halfsz.x,  halfsz.y, 0.0f), vector2f(0.0f,      0.0f));
+	vertices.Add(vector3f( halfsz.x, -halfsz.y, 0.0f), vector2f(texSize.x, texSize.y));
+	vertices.Add(vector3f( halfsz.x,  halfsz.y, 0.0f), vector2f(texSize.x, 0.0f));
+
+	//Create vtx & index buffers and copy data
+	VertexBufferDesc vbd;
+	vbd.attrib[0].semantic = ATTRIB_POSITION;
+	vbd.attrib[0].format   = ATTRIB_FORMAT_FLOAT3;
+	vbd.attrib[1].semantic = ATTRIB_UV0;
+	vbd.attrib[1].format   = ATTRIB_FORMAT_FLOAT2;
+	vbd.numVertices = vertices.GetNumVerts();
+	vbd.usage = BUFFER_USAGE_STATIC;
+	m_vertexBuffer.reset(r->CreateVertexBuffer(vbd));
+	m_vertexBuffer->Populate(vertices);
+}
 
 // a textured quad with reversed winding
 TexturedQuad::TexturedQuad(Graphics::Renderer *r, Graphics::Texture *texture, const vector2f &pos, const vector2f &size, RenderState *state)
@@ -664,8 +707,17 @@ TexturedQuad::TexturedQuad(Graphics::Renderer *r, Graphics::Texture *texture, co
 void TexturedQuad::Draw(Graphics::Renderer *r)
 {
 	PROFILE_SCOPED()
+	m_material->diffuse = Color4ub(255, 255, 255, 255);
 	r->DrawBuffer(m_vertexBuffer.get(), m_renderState, m_material.get(), TRIANGLE_STRIP);
 }
+
+void TexturedQuad::Draw(Graphics::Renderer *r, const Color4ub &tint)
+{
+	PROFILE_SCOPED()
+	m_material->diffuse = tint;
+	r->DrawBuffer(m_vertexBuffer.get(), m_renderState, m_material.get(), TRIANGLE_STRIP);
+}
+
 //------------------------------------------------------------
 Rect::Rect(Graphics::Renderer *r, const vector2f &pos, const vector2f &size, const Color &c, RenderState *state, const bool bIsStatic /*= true*/) : m_renderState(state)
 {

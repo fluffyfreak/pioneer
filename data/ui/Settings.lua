@@ -120,9 +120,29 @@ ui.templates.Settings = function (args)
 			Engine.GetCockpitEnabled, Engine.SetCockpitEnabled,
 			l.ENABLE_COCKPIT)
 
+		local enableAutosave = optionCheckBox(
+			Engine.GetAutosaveEnabled, Engine.SetAutosaveEnabled,
+			l.ENABLE_AUTOSAVE)
+
 		local fullScreenCheckBox = optionCheckBox(
 			Engine.GetFullscreen, Engine.SetFullscreen,
 			l.FULL_SCREEN)
+			
+		local anisoCheckBox = optionCheckBox(
+			Engine.GetAnisoFiltering, Engine.SetAnisoFiltering,
+			l.ENABLE_ANISOTROPIC_FILTERING)
+
+		local starDensity = function (caption, getter, setter)
+			local initial_value = getter()
+			local slider = ui:HSlider()
+			local label = ui:Label(caption .. " " .. math.floor(initial_value * 100) .. "%")
+			slider:SetValue(initial_value)
+			slider.onValueChanged:Connect(function (new_value)
+					label:SetText(caption .. " " .. math.floor(new_value * 100) .. "%")
+					setter(new_value)
+				end)
+			return ui:HBox():PackEnd({label, slider})
+		end
 
 		return ui:Grid({1,1}, 1)
 			:SetCell(0,0, ui:Margin(5, 'ALL', ui:VBox(5):PackEnd({
@@ -131,6 +151,7 @@ ui.templates.Settings = function (args)
 				aaDropDown,
 				fullScreenCheckBox,
 				vsyncCheckBox,
+				anisoCheckBox,
 			})))
 			:SetCell(1,0, ui:Margin(5, 'ALL', ui:VBox(5):PackEnd({
 				planetDetailDropDown,
@@ -141,8 +162,10 @@ ui.templates.Settings = function (args)
 				speedLinesCheckBox,
 				hudTrailsCheckBox,
 				cockpitCheckBox,
+				enableAutosave,
 				compactScannerCheckBox,
 				confirmQuit,
+				starDensity(l.STAR_FIELD_DENSITY, Engine.GetAmountStars, Engine.SetAmountStars),
 			})))
 	end
 

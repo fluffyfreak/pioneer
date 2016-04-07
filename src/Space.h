@@ -68,6 +68,7 @@ public:
 	const IterationProxy<const std::list<Body*> > GetBodies() const { return MakeIterationProxy(m_bodies); }
 
 	Background::Container *GetBackground() { return m_background.get(); }
+	void RefreshBackground();
 
 	// body finder delegates
 	typedef std::vector<Body*> BodyNearList;
@@ -83,7 +84,7 @@ public:
 private:
 	void GenSectorCache(RefCountedPtr<Galaxy> galaxy, const SystemPath* here);
 	void UpdateStarSystemCache(const SystemPath* here);
-	void GenBody(double at_time, SystemBody *b, Frame *f);
+	void GenBody(const double at_time, SystemBody *b, Frame *f, std::vector<vector3d> &posAccum);
 	// make sure SystemBody* is in Pi::currentSystem
 	Frame *GetFrameWithSystemBody(const SystemBody *b) const;
 

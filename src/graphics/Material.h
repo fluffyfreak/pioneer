@@ -33,6 +33,7 @@ enum EffectType {
 	EFFECT_GEOSPHERE_TERRAIN_WITH_LAVA,
 	EFFECT_GEOSPHERE_TERRAIN_WITH_WATER,
 	EFFECT_GEOSPHERE_SKY,
+	EFFECT_GEOSPHERE_STAR,
 	EFFECT_GASSPHERE_TERRAIN,
 	EFFECT_FRESNEL_SPHERE,
 	EFFECT_SHIELD,
@@ -47,7 +48,8 @@ enum EffectType {
 enum MaterialQuality {
 	HAS_ATMOSPHERE		= 1 << 0,
 	HAS_ECLIPSES		= 1 << 1,
-	HAS_HEAT_GRADIENT   = 1 << 2
+	HAS_HEAT_GRADIENT   = 1 << 2,
+	HAS_DETAIL_MAPS		= 1 << 3
 };
 
 // Renderer creates a material that best matches these requirements.
@@ -60,6 +62,7 @@ public:
 	bool glowMap;
 	bool ambientMap;
 	bool lighting;
+	bool normalMap;
 	bool specularMap;
 	bool usePatterns; //pattern/color system
 	bool vertexColors;
