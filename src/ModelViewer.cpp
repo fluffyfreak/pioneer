@@ -140,7 +140,7 @@ ModelViewer::ModelViewer(Graphics::Renderer *r, LuaManager *lm)
 	Graphics::TextureDescriptor texDesc(
 		Graphics::TEXTURE_DEPTH,
 		vector2f(s_shadowMapDimensions, s_shadowMapDimensions),
-		Graphics::LINEAR_CLAMP, false, false, 0);
+		Graphics::LINEAR_CLAMP, false, false, false, 0, Graphics::TEXTURE_2D);
 	m_depthTexture.Reset(m_renderer->CreateTexture(texDesc));
 	m_pShadowRT->SetDepthTexture(m_depthTexture.Get());
 }
@@ -291,7 +291,7 @@ bool ModelViewer::OnRandomColor(UI::Widget*)
 
 	SceneGraph::ModelSkin skin;
 	skin.SetRandomColors(m_rng);
-	skin.Apply(m_model);
+	skin.Apply(m_model.get());
 
 	// We need this flag setting so that we don't override what we're changing in OnModelColorsChanged
 	m_settingColourSliders = true;

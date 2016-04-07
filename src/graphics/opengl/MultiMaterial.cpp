@@ -90,7 +90,7 @@ void MultiMaterial::Apply()
 	p->texture4.Set(this->texture4, 4);
 	p->texture5.Set(this->texture5, 5);
 	p->texture6.Set(this->texture6, 6);
-	p->texture6.Set(m_renderer->GetShadowTexture(), 7);
+	p->texture7.Set(m_renderer->GetShadowTexture(), 7);
 
 	p->heatGradient.Set(this->heatGradient, 8);
 	if(nullptr!=specialParameter0) {

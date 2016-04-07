@@ -106,7 +106,7 @@ void main(void)
 		   shadowMapTexCoordProj.y >= 0.0 && shadowMapTexCoordProj.y < 1.0 &&
 		   shadowMapTexCoordProj.z >= 0.0 && shadowMapTexCoordProj.z < 1.0)
 		{
-			if(texture(texture6, shadowMapTexCoordProj.xy).r <= shadowMapTexCoordProj.z)
+			if(texture(texture7, shadowMapTexCoordProj.xy).r <= shadowMapTexCoordProj.z)
 			{
 				// in shadow so reset to ambient
 				light = scene.ambient;
