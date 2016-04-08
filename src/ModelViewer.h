@@ -46,6 +46,7 @@ private:
 	void CreateTestResources();
 	void DrawBackground();
 	void DrawGrid(const matrix4x4f &trans, float radius);
+	void DrawLights(const matrix4x4f &trans);
 	void DrawLog();
 	void DrawModel(const matrix4x4f &mv, const eRenderPasses eRP);
 	void MainLoop();

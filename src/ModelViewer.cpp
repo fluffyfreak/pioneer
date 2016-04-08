@@ -522,6 +522,21 @@ void ModelViewer::DrawGrid(const matrix4x4f &trans, float radius)
 	Graphics::Drawables::GetAxes3DDrawable(m_renderer)->Draw(m_renderer);
 }
 
+//Draw lights
+#pragma optimize("",off)
+void ModelViewer::DrawLights(const matrix4x4f &trans)
+{
+	//assert(m_options.showGrid);
+	const Uint32 numLights = m_renderer->GetNumLights();
+	for(Uint32 li=0; li<numLights; li++) {
+		const Graphics::Light &light = m_renderer->GetLight(li);
+		const matrix4x4f mv = trans * matrix4x4f::Translation(light.GetPosition()*20) * matrix4x4f::ScaleMatrix(5);
+		
+		m_renderer->SetTransform(mv);
+		Graphics::Drawables::GetAxes3DDrawable(m_renderer)->Draw(m_renderer);
+	}
+}
+
 void ModelViewer::DrawModel(const matrix4x4f &mv, const eRenderPasses eRP)
 {
 	assert(m_model);
@@ -586,7 +601,10 @@ void ModelViewer::MainLoop()
 			rot.RotateY(DEG2RAD(-m_rotY));
 			depthModelMatrix = (matrix4x4f::Translation(0.0f, 0.0f, -zoom_distance(m_baseDistance, m_zoom)) * rot);
 		}
-		matrix4x4f depthMVP = depthProjectionMatrix * depthViewMatrix * depthModelMatrix;
+		const matrix4x4f depthMVP = depthProjectionMatrix * depthViewMatrix * depthModelMatrix;
+		static const float biasValues[16] = {0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.5f, 0.0f, 0.5f, 0.5f, 0.5f, 1.0f};
+		static const matrix4x4f BiasMatrix(biasValues);
+		const matrix4x4f biasDepthMVP = BiasMatrix * depthMVP;
  
 		for( int pass = RENDER_SHADOW_MAP; pass<RENDER_PASS_MAX; pass++)
 		{
@@ -623,11 +641,8 @@ void ModelViewer::MainLoop()
 					
 				// setup rendering
 				m_renderer->SetPerspectiveProjection(85, Graphics::GetScreenWidth()/float(Graphics::GetScreenHeight()), near_plane, far_plane);
-
-				static const float biasValues[16] = {0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.5f, 0.0f, 0.5f, 0.5f, 0.5f, 1.0f};
-				static const matrix4x4f BiasMatrix(biasValues);
-				matrix4x4f ShadowMatrix = BiasMatrix * depthMVP;
-				m_renderer->SetShadowMatrix(ShadowMatrix);
+				
+				m_renderer->SetShadowMatrix(biasDepthMVP);
 				m_renderer->SetShadowTexture(m_pShadowRT->GetDepthTexture());
 				break;
 			} 
@@ -655,6 +670,9 @@ void ModelViewer::MainLoop()
 				if (m_options.showGrid) {
 					DrawGrid(mv, m_model->GetDrawClipRadius());
 				}
+
+				if(RENDER_REGULAR==pass)
+					DrawLights(mv);
 
 				// draw the model itself
 				DrawModel(mv, eRenderPasses(pass));
