@@ -172,7 +172,8 @@ GeoPatch::~GeoPatch() {
 	normals.reset();
 	colors.reset();
 }
-
+static Sint32 depth_test = 12;
+#pragma optimize("",off)
 void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 {
 	PROFILE_SCOPED()
@@ -341,7 +342,7 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 		// end of mapping
 		m_vertexBuffer->Unmap();
 
-		if( (GEOPATCH_MAX_DEPTH - m_depth) < 2 )
+		if( (geosphere->GetMaxDepth() - m_depth) < depth_test )
 		{
 			// allocate space for instances
 			const Uint32 MaxInstances = 5;
@@ -411,6 +412,7 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 
 // the default sphere we do the horizon culling against
 static const SSphere s_sph;
+#pragma optimize("",off)
 void GeoPatch::Render(Graphics::Renderer *renderer, const vector3d &campos, const matrix4x4d &modelView, const Graphics::Frustum &frustum)
 {
 	PROFILE_SCOPED()
@@ -464,7 +466,8 @@ void GeoPatch::Render(Graphics::Renderer *renderer, const vector3d &campos, cons
 				transforms[in] = mt;
 			}
 			SceneGraph::Model *pModel = ctx->GetModelLibrary();
-			pModel->Render(transforms);
+			if(pModel)
+				pModel->Render(transforms);
 		}
 
 #ifdef DEBUG_BOUNDING_SPHERES

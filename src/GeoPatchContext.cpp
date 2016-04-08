@@ -97,6 +97,8 @@ void GeoPatchContext::Init()
 	numTris = 2*(edgeLen-1)*(edgeLen-1);
 
 	GenerateIndices();
+
+	rock = Pi::FindModel("Rock1");
 }
 
 SceneGraph::Model* GeoPatchContext::GetModelLibrary()
