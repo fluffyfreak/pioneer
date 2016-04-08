@@ -287,6 +287,10 @@
       "description" : "",
       "message" : "Ìslich an luaths suidhichte"
    },
+   "DECREASE_TIME_ACCELERATION" : {
+      "description" : "",
+      "message" : "Lùghdaich luathachadh an ama"
+   },
    "DEMOGRAPHICS" : {
       "description" : "",
       "message" : "Eòlas-sluaigh"
@@ -429,7 +433,7 @@
    },
    "GAME_LOAD_CANNOT_OPEN" : {
       "description" : "",
-      "message" : "'S dòcha gu bheil cead a dhìth gus am faidhle fhosgladh."
+      "message" : "Cha do lorg sinn am faidhle air a shàbhaladh \"%filename\" (no chan eil inntrigeadh aig a' gheama dha gus fhosgladh)."
    },
    "GAME_LOAD_CORRUPT" : {
       "description" : "",
@@ -595,6 +599,10 @@
       "description" : "",
       "message" : "Suidhich luaths nas àirde"
    },
+   "INCREASE_TIME_ACCELERATION" : {
+      "description" : "",
+      "message" : "Meudaich luathachadh an ama"
+   },
    "INDUSTRIAL_COLONY" : {
       "description" : "",
       "message" : "Tuineachadh gnìomhachail."
@@ -637,7 +645,11 @@
    },
    "KM_S_RELATIVE_TO" : {
       "description" : "",
-      "message" : "%speed{f.2} km/s a-rèir %frame"
+      "message" : "%speed{f.2} km/s an taca ri %frame"
+   },
+   "L4L5_DISPLAY_MODE_TOGGLE" : {
+      "description" : "Either show L4/L5 points or don't",
+      "message" : "Gearr leum eadar modhan sealltainn puing Lagrange L4/L5."
    },
    "LANDED" : {
       "description" : "",
@@ -658,6 +670,10 @@
    "LASER_FIRE_DETECTED" : {
       "description" : "",
       "message" : "Mhothaich sinn air losgadh leusair."
+   },
+   "LATITUDE" : {
+      "description" : "Short for latitude",
+      "message" : "D-leud:"
    },
    "LEGAL_CURRENT_SYSTEM" : {
       "description" : "Short (tooltip) description of commodity (singular) status in the system the player is currently in",
@@ -683,13 +699,13 @@
       "description" : "",
       "message" : "Beathaichean beò"
    },
-   "LOCAL_ARM" : {
-      "description" : "Arm of the Milky Way galaxy",
-      "message" : "Gobhal ionadail"
-   },
    "LOCKED" : {
       "description" : "to lock a hyperspace target",
       "message" : "glaiste"
+   },
+   "LONGITUDE" : {
+      "description" : "Short for longitude",
+      "message" : "D-fhad:"
    },
    "MAJOR_EXPORTS" : {
       "description" : "",
@@ -909,7 +925,7 @@
    },
    "M_S_RELATIVE_TO" : {
       "description" : "",
-      "message" : "%speed{f.0} m/s a-rèir %frame"
+      "message" : "%speed{f.0} m/s an taca ri %frame"
    },
    "NAME_OBJECT" : {
       "description" : "For an item or object",
@@ -935,10 +951,6 @@
       "description" : "",
       "message" : "Nearbh-ghas"
    },
-   "NORMA_ARM" : {
-      "description" : "Arm of the Milky Way galaxy",
-      "message" : "Gobhal na Riaghailte"
-   },
    "NOT_FOUND" : {
       "description" : "searching star system in sector view",
       "message" : "Cha deach a lorg"
@@ -946,6 +958,10 @@
    "NOT_FOUND_BEST_MATCH_X" : {
       "description" : "",
       "message" : "Cha deach a lorg, am maids as fearr: %system"
+   },
+   "NOW" : {
+      "description" : "In System Orbit View",
+      "message" : "An-dràsta"
    },
    "NO_ALERT" : {
       "description" : "",
@@ -1063,10 +1079,6 @@
       "description" : "",
       "message" : "Saoghal àiteachais le sluagh a' fuireach a-muigh."
    },
-   "OUTER_ARM" : {
-      "description" : "Arm of the Milky Way galaxy",
-      "message" : "Gobhal a-muigh"
-   },
    "OVER_N_BILLION" : {
       "description" : "",
       "message" : "Còrr is %population billean "
@@ -1090,10 +1102,6 @@
    "PERIAPSIS_DISTANCE" : {
       "description" : "",
       "message" : "Astar a' pheriapsis"
-   },
-   "PERSEUS_ARM" : {
-      "description" : "Arm of the Milky Way galaxy",
-      "message" : "Gobhal Pherseus"
    },
    "PIONEER" : {
       "description" : "",
@@ -1255,10 +1263,6 @@
       "description" : "",
       "message" : "Sgudal"
    },
-   "SAGITTARIUS_ARM" : {
-      "description" : "Arm of the Milky Way galaxy",
-      "message" : "Gobhal a' Bhoghadair"
-   },
    "SCANNER_CONTROL" : {
       "description" : "",
       "message" : "Smachd an sganair"
@@ -1270,10 +1274,6 @@
    "SCREENSHOT_FILENAME_TEMPLATE" : {
       "description" : "",
       "message" : "glacadh-sgrìn%index{d08}.png"
-   },
-   "SCUTUM_CENTAURUS_ARM" : {
-      "description" : "Arm of the Milky Way galaxy",
-      "message" : "Gobhal Scutum-Centaurus"
    },
    "SEARCH" : {
       "description" : "",
@@ -1635,10 +1635,6 @@
       "description" : "",
       "message" : "tana"
    },
-   "THREE_KPC_ARM" : {
-      "description" : "Arm of the Milky Way galaxy",
-      "message" : "Gobhal 3kpc"
-   },
    "THRIVING_OUTDOOR_WORLD" : {
       "description" : "",
       "message" : "Saoghal soirbheachail le sluagh a' fuireach a-muigh."
@@ -1675,6 +1671,10 @@
       "description" : "",
       "message" : "Beag bìodach"
    },
+   "TOGGLE_EQUIPMENT_VIEW" : {
+      "description" : "Tooltip for the Equipment View button",
+      "message" : "Sealladh na h-uidheamachd"
+   },
    "TOGGLE_HUD_MODE" : {
       "description" : "",
       "message" : "Toglaich modh a' HUD"
@@ -1686,6 +1686,10 @@
    "TOGGLE_ROTATION_DAMPING" : {
       "description" : "",
       "message" : "Toglaich lasachadh a' chuairteachaidh"
+   },
+   "TOGGLE_SCANNER_VIEW" : {
+      "description" : "Tooltip for the Scanner View button",
+      "message" : "Sealladh an sganair"
    },
    "TOGGLE_SCAN_MODE" : {
       "description" : "",

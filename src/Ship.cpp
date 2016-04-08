@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Ship.h"
@@ -315,7 +315,7 @@ Ship::Ship(ShipType::Id shipId): DynamicBody(),
 	m_launchLockTimeout = 0;
 	m_wheelTransition = 0;
 	m_wheelState = 0;
-	m_dockedWith = 0;
+	m_dockedWith = nullptr;
 	m_dockedWithPort = 0;
 	SetShipId(shipId);
 	m_thrusters.x = m_thrusters.y = m_thrusters.z = 0;

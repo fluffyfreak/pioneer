@@ -1,9 +1,10 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaObject.h"
 #include "LuaUtils.h"
 #include "LuaConstants.h"
+#include "LuaVector.h"
 #include "EnumStrings.h"
 #include "Ship.h"
 #include "Missile.h"
@@ -180,17 +181,17 @@ static int l_ship_set_fuel_percent(lua_State *l)
 
 	Ship *s = LuaObject<Ship>::CheckFromLua(1);
 
-	float percent = 100;
+	double percent = 100;
 	if (lua_isnumber(l, 2)) {
-		percent = float(luaL_checknumber(l, 2));
-		if (percent < 0.0f || percent > 100.0f) {
+		percent = luaL_checknumber(l, 2);
+		if (percent < 0.0 || percent > 100.0) {
 			pi_lua_warn(l,
 				"argument out of range: Ship{%s}:SetFuelPercent(%g)",
 				s->GetLabel().c_str(), percent);
 		}
 	}
 
-	s->SetFuel(percent/100.f);
+	s->SetFuel(percent/100.0);
 
 	LUA_DEBUG_END(l, 0);
 
@@ -528,6 +529,7 @@ static int l_ship_use_ecm(lua_State *l)
  *   path - a <SystemPath> for the destination system
  *
  *   warmup - the time, in seconds, needed for the engines to warm up.
+ *            Minimum time is one second, for saftey reasons.
  *
  *   duration - travel time, in seconds.
  *
@@ -917,6 +919,51 @@ static int l_ship_update_equip_stats(lua_State *l)
 	return 0;
 }
 
+/*
+ * Method: GetVelocity
+ *
+ * Get the ships velocity
+ *
+ * > ship:GetVelocity()
+ *
+ * Availability:
+ *
+ *  April 2016
+ *
+ * Status:
+ *
+ *  experimental
+ */
+static int l_ship_get_velocity(lua_State *l)
+{
+	Ship *s = LuaObject<Ship>::CheckFromLua(1);
+	LuaVector::PushToLua(l, s->GetVelocity());
+	return 1;
+}
+
+/*
+ * Method: GetPosition
+ *
+ * Get the ships velocity
+ *
+ * > ship:GetPosition()
+ *
+ * Availability:
+ *
+ *  April 2016
+ *
+ * Status:
+ *
+ *  experimental
+ */
+static int l_ship_get_position(lua_State *l)
+{
+	Ship *s = LuaObject<Ship>::CheckFromLua(1);
+	LuaVector::PushToLua(l, s->GetPosition());
+	return 1;
+}
+
+
 template <> const char *LuaObject<Ship>::s_type = "Ship";
 
 template <> void LuaObject<Ship>::RegisterClass()
@@ -962,6 +1009,9 @@ template <> void LuaObject<Ship>::RegisterClass()
 		{ "SetInvulnerable", l_ship_set_invulnerable },
 
 		{ "UpdateEquipStats", l_ship_update_equip_stats },
+
+		{ "GetVelocity", l_ship_get_velocity },
+ 		{ "GetPosition", l_ship_get_position },
 
 		{ 0, 0 }
 	};

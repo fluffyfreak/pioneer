@@ -1,4 +1,4 @@
--- Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local Engine = import("Engine")
@@ -343,7 +343,8 @@ local onChat = function (form, ref, option)
 		form:SetMessage(howmuch)
 
 	elseif option == 3 then
-		if Game.player.freeCapacity < ad.amount then
+		if (not ad.pickup and Game.player.freeCapacity < ad.amount) or
+			(ad.pickup and Game.player.totalCargo < ad.amount) then
 			form:SetMessage(l.YOU_DO_NOT_HAVE_ENOUGH_CARGO_SPACE_ON_YOUR_SHIP)
 			return
 		end
