@@ -172,8 +172,7 @@ GeoPatch::~GeoPatch() {
 	normals.reset();
 	colors.reset();
 }
-static Sint32 depth_test = 12;
-#pragma optimize("",off)
+
 void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 {
 	PROFILE_SCOPED()
@@ -342,7 +341,7 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 		// end of mapping
 		m_vertexBuffer->Unmap();
 
-		if( (geosphere->GetMaxDepth() - m_depth) < depth_test )
+		if( (geosphere->GetMaxDepth() - m_depth) < 12 )
 		{
 			// allocate space for instances
 			const Uint32 MaxInstances = 5;
@@ -454,20 +453,32 @@ void GeoPatch::Render(Graphics::Renderer *renderer, const vector3d &campos, cons
 		geosphere->GetMaterialParameters().patchDepth = m_depth;
 
 		renderer->DrawBufferIndexed(m_vertexBuffer.get(), ctx->GetIndexBuffer(), rs, mat.Get());
-
-		if(m_numInstances>0)
+		SceneGraph::Model *pModel = ctx->GetModelLibrary();
+		if(m_numInstances>0 && pModel)
 		{
+			renderer->SetTransform(matrix4x4f::Identity());
+#if 1
+			const vector3f yaxis = vector3f(campos.Normalized());
+			const vector3f zaxis = vector3f(1.0, 0.0, 0.0).Cross(yaxis).Normalized();
+			const vector3f xaxis = yaxis.Cross(zaxis);
+			matrix4x4f invrot = matrix4x4f::MakeRotMatrix(xaxis, yaxis, zaxis).Inverse();
+#endif
 			matrix4x4f mv;
 			matrix4x4dtof(modelView * matrix4x4d::Translation(relpos), mv);
+			matrix4x4f mt(invrot.GetOrient());
+#if 0 // instanced
 			std::vector<matrix4x4f> transforms(m_numInstances);
 			for(Uint32 in=0; in<m_numInstances; in++) {
-				matrix4x4f mt(matrix4x4f::Identity());
 				mt.SetTranslate(mv * instances[in]);
 				transforms[in] = mt;
 			}
-			SceneGraph::Model *pModel = ctx->GetModelLibrary();
-			if(pModel)
-				pModel->Render(transforms);
+			pModel->Render(transforms);
+#else
+			for(Uint32 in=0; in<m_numInstances; in++) {
+				mt.SetTranslate(mv * instances[in]);
+				pModel->Render(mt);
+			}
+#endif		
 		}
 
 #ifdef DEBUG_BOUNDING_SPHERES
