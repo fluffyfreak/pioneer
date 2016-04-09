@@ -457,26 +457,34 @@ void GeoPatch::Render(Graphics::Renderer *renderer, const vector3d &campos, cons
 		if(m_numInstances>0 && pModel)
 		{
 			renderer->SetTransform(matrix4x4f::Identity());
-#if 1
-			const vector3f yaxis = vector3f(campos.Normalized());
-			const vector3f zaxis = vector3f(1.0, 0.0, 0.0).Cross(yaxis).Normalized();
-			const vector3f xaxis = yaxis.Cross(zaxis);
-			matrix4x4f invrot = matrix4x4f::MakeRotMatrix(xaxis, yaxis, zaxis).Inverse();
-#endif
 			matrix4x4f mv;
 			matrix4x4dtof(modelView * matrix4x4d::Translation(relpos), mv);
-			matrix4x4f mt(invrot.GetOrient());
-#if 0 // instanced
+#if 1 // instanced
 			std::vector<matrix4x4f> transforms(m_numInstances);
 			for(Uint32 in=0; in<m_numInstances; in++) {
-				mt.SetTranslate(mv * instances[in]);
-				transforms[in] = mt;
+				transforms[in] = mv * matrix4x4f::Translation(instances[in]) * matrix4x4f::ScaleMatrix(clipRadius*0.001);
 			}
 			pModel->Render(transforms);
 #else
+			renderer->SetTransform(modelView * matrix4x4d::Translation(relpos));
 			for(Uint32 in=0; in<m_numInstances; in++) {
-				mt.SetTranslate(mv * instances[in]);
-				pModel->Render(mt);
+				//mt.SetTranslate(mv * instances[in]);
+				pModel->Render(mv * matrix4x4f::Translation(instances[in]) * matrix4x4f::ScaleMatrix(clipRadius*0.001));
+
+				if(0)
+				{
+					renderer->SetTransform(mv * matrix4x4f::Translation(instances[in]));
+					//Graphics::Drawables::GetAxes3DDrawable(renderer)->Draw(renderer);
+				
+					static std::unique_ptr<Graphics::Drawables::Sphere3D> ballball;
+					if(!ballball) {
+						RefCountedPtr<Graphics::Material> mat(Pi::renderer->CreateMaterial(Graphics::MaterialDescriptor()));
+						ballball.reset( new Graphics::Drawables::Sphere3D(Pi::renderer, mat, Pi::renderer->CreateRenderState(Graphics::RenderStateDesc()), 1, clipRadius*0.001) );
+					}
+					renderer->SetWireFrameMode(true);
+					ballball->Draw(renderer);
+					renderer->SetWireFrameMode(false);
+				}
 			}
 #endif		
 		}
