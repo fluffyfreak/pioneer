@@ -10,11 +10,13 @@
 #include "graphics/Material.h"
 #include "graphics/TextureBuilder.h"
 #include "graphics/RenderState.h"
+#include "graphics/Drawables.h"
 
 namespace SceneGraph {
 
 static const std::string thrusterTextureFilename("textures/thruster.png");
 static const std::string thrusterGlowTextureFilename("textures/halo.png");
+static const std::string thrusterConeTextureFilename("textures/high.dds");
 static Color baseColor(178, 153, 255, 255);
 
 Thruster::Thruster(Graphics::Renderer *r, bool _linear, const vector3f &_pos, const vector3f &_dir)
@@ -34,6 +36,10 @@ Thruster::Thruster(Graphics::Renderer *r, bool _linear, const vector3f &_pos, co
 	m_glowMat.Reset(r->CreateMaterial(desc));
 	m_glowMat->texture0 = Graphics::TextureBuilder::Billboard(thrusterGlowTextureFilename).GetOrCreateTexture(r, "billboard");
 	m_glowMat->diffuse = baseColor;
+
+	m_sphereMat.Reset(r->CreateMaterial(desc));
+	m_sphereMat->texture0 = Graphics::TextureBuilder::Billboard(thrusterConeTextureFilename).GetOrCreateTexture(r, "billboard");
+	m_sphereMat->diffuse = baseColor;
 
 	Graphics::RenderStateDesc rsd;
 	rsd.blendMode = Graphics::BLEND_ALPHA_ONE;
@@ -90,21 +96,29 @@ void Thruster::Render(const matrix4x4f &trans, const RenderData *rd)
 	m_tMat->diffuse = m_glowMat->diffuse = baseColor * power;
 
 	//directional fade
-	vector3f cdir = vector3f(trans * -dir).Normalized();
-	vector3f vdir = vector3f(trans[2], trans[6], -trans[10]).Normalized();
+	const vector3f cdir = vector3f(trans * -dir).Normalized();
+	const vector3f vdir = vector3f(trans[2], trans[6], -trans[10]).Normalized();
 	// XXX check this for transition to new colors.
 	m_glowMat->diffuse.a = Easing::Circ::EaseIn(Clamp(vdir.Dot(cdir), 0.f, 1.f), 0.f, 1.f, 1.f) * 255;
 	m_tMat->diffuse.a = 255 - m_glowMat->diffuse.a;
+	//m_sphereMat->diffuse.a = m_glowMat->diffuse.a;
 
 	Graphics::Renderer *r = GetRenderer();
 	if( !m_tBuffer.Valid() ) {
 		m_tBuffer.Reset(CreateThrusterGeometry(r, m_tMat.Get()));
 		m_glowBuffer.Reset(CreateGlowGeometry(r, m_glowMat.Get()));
+		CreateThrustSpheres(r);
 	}
 
 	r->SetTransform(trans);
 	r->DrawBuffer(m_tBuffer.Get(), m_renderState, m_tMat.Get());
 	r->DrawBuffer(m_glowBuffer.Get(), m_renderState, m_glowMat.Get());
+	for(Uint32 ls=0;ls<NUM_SPHERES;ls++) {
+		if( m_sphere[ls].first > 0 ) {
+			r->SetTransform(trans * matrix4x4f::Translation((dir*(1.0f/NUM_SPHERES))*ls));
+			m_sphere[ls].second->Draw(r);
+		}
+	}
 }
 
 void Thruster::Save(NodeDatabase &db)
@@ -218,6 +232,16 @@ Graphics::VertexBuffer *Thruster::CreateGlowGeometry(Graphics::Renderer *r, Grap
 	vb->Populate(verts);
 
 	return vb;
+}
+
+void Thruster::CreateThrustSpheres(Graphics::Renderer *r)
+{
+	const float step = (0.1 - 0.01) / NUM_SPHERES;
+	float scale = 0.1;
+	for(Uint32 ls=0;ls<NUM_SPHERES;ls++) {
+		m_sphere[ls] = LifetimeSphere(1, new Graphics::Drawables::Sphere3D(r, m_sphereMat, m_renderState, 2, scale));
+		scale-=step;
+	}
 }
 
 }

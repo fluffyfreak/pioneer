@@ -14,6 +14,9 @@ namespace Graphics {
 	class VertexBuffer;
 	class Material;
 	class RenderState;
+	namespace Drawables {
+		class Sphere3D;
+	}
 }
 
 namespace SceneGraph {
@@ -32,10 +35,15 @@ public:
 private:
 	static Graphics::VertexBuffer* CreateThrusterGeometry(Graphics::Renderer*, Graphics::Material*);
 	static Graphics::VertexBuffer* CreateGlowGeometry(Graphics::Renderer*, Graphics::Material*);
+	void CreateThrustSpheres(Graphics::Renderer*);
 	RefCountedPtr<Graphics::Material> m_tMat;
 	RefCountedPtr<Graphics::Material> m_glowMat;
+	RefCountedPtr<Graphics::Material> m_sphereMat;
 	RefCountedPtr<Graphics::VertexBuffer> m_tBuffer;
 	RefCountedPtr<Graphics::VertexBuffer> m_glowBuffer;
+	static const Uint32 NUM_SPHERES = 10;
+	typedef std::pair<Uint32, std::unique_ptr<Graphics::Drawables::Sphere3D>> LifetimeSphere;
+	LifetimeSphere m_sphere[NUM_SPHERES];
 	Graphics::RenderState *m_renderState;
 	bool linearOnly;
 	vector3f dir;
