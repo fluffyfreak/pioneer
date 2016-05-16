@@ -462,19 +462,17 @@ void GeoPatch::Render(Graphics::Renderer *renderer, const vector3d &campos, cons
 #if 1 // instanced
 			std::vector<matrix4x4f> transforms(m_numInstances);
 			for(Uint32 in=0; in<m_numInstances; in++) {
-				transforms[in] = mv * matrix4x4f::Translation(instances[in]) * matrix4x4f::ScaleMatrix(clipRadius*0.001);
+				transforms[in] = mv * matrix4x4f::Translation(instances[in]) * matrix4x4f::ScaleMatrix(0.00000006537);
 			}
 			pModel->Render(transforms);
 #else
 			renderer->SetTransform(modelView * matrix4x4d::Translation(relpos));
 			for(Uint32 in=0; in<m_numInstances; in++) {
-				//mt.SetTranslate(mv * instances[in]);
 				pModel->Render(mv * matrix4x4f::Translation(instances[in]) * matrix4x4f::ScaleMatrix(clipRadius*0.001));
 
 				if(0)
 				{
 					renderer->SetTransform(mv * matrix4x4f::Translation(instances[in]));
-					//Graphics::Drawables::GetAxes3DDrawable(renderer)->Draw(renderer);
 				
 					static std::unique_ptr<Graphics::Drawables::Sphere3D> ballball;
 					if(!ballball) {
