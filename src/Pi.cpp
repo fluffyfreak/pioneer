@@ -558,7 +558,7 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 	draw_progress(gauge, label, 0.75f);
 
 	Output("Sfx::Init\n");
-	Sfx::Init(Pi::renderer);
+	SfxManager::Init(Pi::renderer);
 	draw_progress(gauge, label, 0.8f);
 
 	if (!no_gui && !config->Int("DisableSound")) {
@@ -711,7 +711,7 @@ void Pi::Quit()
 	delete Pi::luaConsole;
 	NavLights::Uninit();
 	Shields::Uninit();
-	Sfx::Uninit();
+	SfxManager::Uninit();
 	Sound::Uninit();
 	CityOnPlanet::Uninit();
 	BaseSphere::Uninit();
@@ -1090,6 +1090,7 @@ void Pi::StartGame()
 {
 	Pi::player->onDock.connect(sigc::ptr_fun(&OnPlayerDockOrUndock));
 	Pi::player->onUndock.connect(sigc::ptr_fun(&OnPlayerDockOrUndock));
+	Pi::player->onLanded.connect(sigc::ptr_fun(&OnPlayerDockOrUndock));
 	Pi::game->GetCpan()->ShowAll();
 	DrawGUI = true;
 	Pi::game->GetCpan()->SetAlertState(Ship::ALERT_NONE);

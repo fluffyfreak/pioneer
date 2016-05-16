@@ -53,8 +53,8 @@ public:
 
 	virtual void WriteRendererInfo(std::ostream &out) const;
 
-	virtual void CheckRenderErrors() const { CheckErrors(); }
-	static void CheckErrors();
+	virtual void CheckRenderErrors(const char *func = nullptr, const int line = -1) const final { CheckErrors(func, line); }
+	static void CheckErrors(const char *func = nullptr, const int line = -1);
 
 	virtual bool GetNearFarRange(float &near_, float &far_) const;
 
@@ -89,6 +89,7 @@ public:
 
 	virtual bool DrawTriangles(const VertexArray *vertices, RenderState *state, Material *material, PrimitiveType type=TRIANGLES) override;
 	virtual bool DrawPointSprites(const Uint32 count, const vector3f *positions, RenderState *rs, Material *material, float size) override;
+	virtual bool DrawPointSprites(const Uint32 count, const vector3f *positions, const vector2f *offsets, const float *sizes, RenderState *rs, Material *material) override;
 	virtual bool DrawBuffer(VertexBuffer*, RenderState*, Material*, PrimitiveType) override;
 	virtual bool DrawBufferIndexed(VertexBuffer*, IndexBuffer*, RenderState*, Material*, PrimitiveType) override;
 	virtual bool DrawBufferInstanced(VertexBuffer*, RenderState*, Material*, InstanceBuffer*, PrimitiveType type=TRIANGLES) override;
@@ -173,6 +174,7 @@ private:
 	typedef AttribBufferMap::iterator AttribBufferIter;
 	static AttribBufferMap s_AttribBufferMap;
 };
+#define CHECKERRORS() RendererOGL::CheckErrors(__FUNCTION__, __LINE__)
 
 }
 

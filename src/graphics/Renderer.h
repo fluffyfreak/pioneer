@@ -51,7 +51,7 @@ public:
 
 	virtual void WriteRendererInfo(std::ostream &out) const {}
 
-	virtual void CheckRenderErrors() const {}
+	virtual void CheckRenderErrors(const char *func = nullptr, const int line = -1) const {}
 
 	WindowSDL *GetWindow() const { return m_window.get(); }
 	float GetDisplayAspect() const { return static_cast<float>(m_width) / static_cast<float>(m_height); }
@@ -104,6 +104,7 @@ public:
 	virtual bool DrawTriangles(const VertexArray *vertices, RenderState *state, Material *material, PrimitiveType type=TRIANGLES) = 0;
 	//high amount of textured quads for particles etc
 	virtual bool DrawPointSprites(const Uint32 count, const vector3f *positions, RenderState *rs, Material *material, float size) = 0;
+	virtual bool DrawPointSprites(const Uint32 count, const vector3f *positions, const vector2f *offsets, const float *sizes, RenderState *rs, Material *material) = 0;
 	//complex unchanging geometry that is worthwhile to store in VBOs etc.
 	virtual bool DrawBuffer(VertexBuffer*, RenderState*, Material*, PrimitiveType type=TRIANGLES) = 0;
 	virtual bool DrawBufferIndexed(VertexBuffer*, IndexBuffer*, RenderState*, Material*, PrimitiveType=TRIANGLES) = 0;
