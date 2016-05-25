@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Gui.h"
@@ -20,7 +20,7 @@ Gui::Fixed *Screen::baseContainer;
 Gui::Widget *Screen::focusedWidget;
 matrix4x4f Screen::modelMatrix;
 matrix4x4f Screen::projMatrix;
-GLint Screen::viewport[4];
+Sint32 Screen::viewport[4];
 
 FontCache Screen::s_fontCache;
 std::stack< RefCountedPtr<Text::TextureFont> > Screen::s_fontStack;
@@ -299,18 +299,27 @@ void Screen::RenderStringBuffer(RefCountedPtr<Graphics::VertexBuffer> vb, const 
 	r->Translate(floor(x/Screen::fontScale[0])*Screen::fontScale[0], floor(y/Screen::fontScale[1])*Screen::fontScale[1], 0);
 	r->Scale(Screen::fontScale[0], Screen::fontScale[1], 1);
 
-	Graphics::VertexArray va(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_DIFFUSE | Graphics::ATTRIB_UV0);
-	font->PopulateString(va, s.c_str(), 0, 0, color);
+	// temporary, owned by the font
+	Graphics::VertexBuffer *pVB = font->GetCachedVertexBuffer(s);
+	if (pVB) {
+		// found the buffer
+		font->RenderBuffer(pVB, color);
+	}
+	else
+	{
+		Graphics::VertexArray va(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_DIFFUSE | Graphics::ATTRIB_UV0);
+		font->PopulateString(va, s.c_str(), 0, 0, color);
 
-	if( va.GetNumVerts() > 0 ) {
-		if( !vb.Valid() || vb->GetVertexCount() != va.GetNumVerts() ) {
-			vb.Reset( font->CreateVertexBuffer(va) );
+		if (va.GetNumVerts() > 0) {
+			if (!vb.Valid() || vb->GetVertexCount() != va.GetNumVerts()) {
+				vb.Reset(font->CreateVertexBuffer(va, s, true));
+			}
+
+			vb->Populate(va);
+
+			font->RenderBuffer(vb.Get(), color);
 		}
-
-		vb->Populate(va);
-		
-		font->RenderBuffer(vb.Get(), color);
-	} 
+	}
 }
 
 void Screen::RenderMarkupBuffer(RefCountedPtr<Graphics::VertexBuffer> vb, const std::string &s, const Color &color, Text::TextureFont *font)
@@ -329,18 +338,27 @@ void Screen::RenderMarkupBuffer(RefCountedPtr<Graphics::VertexBuffer> vb, const 
 	r->Translate(floor(x/Screen::fontScale[0])*Screen::fontScale[0], floor(y/Screen::fontScale[1])*Screen::fontScale[1], 0);
 	r->Scale(Screen::fontScale[0], Screen::fontScale[1], 1);
 
-	Graphics::VertexArray va(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_DIFFUSE | Graphics::ATTRIB_UV0);
-	font->PopulateMarkup(va, s.c_str(), 0, 0, color);
+	// temporary, owned by the font
+	Graphics::VertexBuffer *pVB = font->GetCachedVertexBuffer(s);
+	if (pVB) {
+		// found the buffer
+		font->RenderBuffer(pVB, color);
+	}
+	else
+	{
+		Graphics::VertexArray va(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_DIFFUSE | Graphics::ATTRIB_UV0);
+		font->PopulateMarkup(va, s.c_str(), 0, 0, color);
 
-	if( va.GetNumVerts() > 0 ) {
-		if( !vb.Valid() || vb->GetVertexCount() != va.GetNumVerts() ) {
-			vb.Reset( font->CreateVertexBuffer(va) );
+		if (va.GetNumVerts() > 0) {
+			if (!vb.Valid() || vb->GetVertexCount() != va.GetNumVerts()) {
+				vb.Reset(font->CreateVertexBuffer(va, s, true));
+			}
+
+			vb->Populate(va);
+
+			font->RenderBuffer(vb.Get());
 		}
-
-		vb->Populate(va);
-		
-		font->RenderBuffer(vb.Get());
-	} 
+	}
 }
 
 void Screen::AddShortcutWidget(Widget *w)

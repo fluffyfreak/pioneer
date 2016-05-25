@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _GEOM_H
@@ -42,7 +42,6 @@ private:
 	void CollideEdgesTris(int &maxContacts, const BVHNode *edgeNode, const matrix4x4d &transToB,
 		Geom *b, const BVHNode *btriNode, void (*callback)(CollisionContact*));
 	int m_mailboxIndex; // used to avoid duplicate collisions
-	void CollideEdges(const matrix4x4d &transToB, Geom *b, void (*callback)(CollisionContact*));
 	// double-buffer position so we can keep previous position
 	matrix4x4d m_orient, m_invOrient;
 	bool m_active;

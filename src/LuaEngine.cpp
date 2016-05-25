@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaEngine.h"
@@ -362,6 +362,38 @@ static int l_engine_set_cockpit_enabled(lua_State *l)
 	return 0;
 }
 
+static int l_engine_get_aniso_enabled(lua_State *l)
+{
+	lua_pushboolean(l, Pi::config->Int("UseAnisotropicFiltering") != 0);
+	return 1;
+}
+
+static int l_engine_set_aniso_enabled(lua_State *l)
+{
+	if (lua_isnone(l, 1))
+		return luaL_error(l, "SetAnisoEnabled takes one boolean argument");
+	const bool enabled = lua_toboolean(l, 1);
+	Pi::config->SetInt("UseAnisotropicFiltering", (enabled ? 1 : 0));
+	Pi::config->Save();
+	return 0;
+}
+
+static int l_engine_get_autosave_enabled(lua_State *l)
+{
+	lua_pushboolean(l, Pi::config->Int("EnableAutosave") != 0);
+	return 1;
+}
+
+static int l_engine_set_autosave_enabled(lua_State *l)
+{
+	if (lua_isnone(l, 1))
+		return luaL_error(l, "SetAutopilotEnabled takes one boolean argument");
+	const bool enabled = lua_toboolean(l, 1);
+	Pi::config->SetInt("EnableAutosave", (enabled ? 1 : 0));
+	Pi::config->Save();
+	return 0;
+}
+
 static int l_engine_get_display_hud_trails(lua_State *l)
 {
 	lua_pushboolean(l, Pi::config->Int("HudTrails") != 0);
@@ -377,6 +409,21 @@ static int l_engine_set_display_hud_trails(lua_State *l)
 	Pi::config->Save();
 	Pi::SetHudTrailsDisplayed(enabled);
 	return 0;
+}
+
+static int l_engine_set_amount_stars(lua_State *l)
+{
+	const float amount = Clamp(luaL_checknumber(l, 1), 0.01, 1.0);
+	Pi::config->SetFloat("AmountOfBackgroundStars", amount);
+	Pi::config->Save();
+	Pi::SetAmountBackgroundStars(amount);
+	return 0;
+}
+
+static int l_engine_get_amount_stars(lua_State *l)
+{
+	lua_pushnumber(l, Pi::config->Float("AmountOfBackgroundStars"));
+	return 1;
 }
 
 static void set_master_volume(const bool muted, const float volume)
@@ -791,6 +838,12 @@ void LuaEngine::Register()
 		{ "GetCockpitEnabled", l_engine_get_cockpit_enabled },
 		{ "SetCockpitEnabled", l_engine_set_cockpit_enabled },
 
+		{ "GetAnisoFiltering", l_engine_get_aniso_enabled },
+		{ "SetAnisoFiltering", l_engine_set_aniso_enabled },
+
+		{ "GetAutosaveEnabled", l_engine_get_autosave_enabled },
+		{ "SetAutosaveEnabled", l_engine_set_autosave_enabled },
+
 		{ "GetDisplayHudTrails", l_engine_get_display_hud_trails },
 		{ "SetDisplayHudTrails", l_engine_set_display_hud_trails },
 
@@ -799,6 +852,9 @@ void LuaEngine::Register()
 
 		{ "GetConfirmQuit", l_engine_get_confirm_quit },
 		{ "SetConfirmQuit", l_engine_set_confirm_quit },
+
+		{ "SetAmountStars", l_engine_set_amount_stars },
+		{ "GetAmountStars", l_engine_get_amount_stars },
 
 		{ "GetMasterMuted", l_engine_get_master_muted },
 		{ "SetMasterMuted", l_engine_set_master_muted },

@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Background.h"
@@ -25,7 +25,7 @@ using namespace Graphics;
 
 namespace
 {
-	static std::unique_ptr<Graphics::Texture> s_defaultCubeMap;
+	static RefCountedPtr<Graphics::Texture> s_defaultCubeMap;
 
 	static Uint32 GetNumSkyboxes()
 	{
@@ -68,7 +68,7 @@ struct SkyboxVert {
 
 void BackgroundElement::SetIntensity(float intensity)
 {
-	m_material->emissive = Color(intensity*255);
+	m_material->emissive = Color(intensity * 255, intensity * 255, intensity*255);
 }
 
 UniverseBox::UniverseBox(Graphics::Renderer *renderer)
@@ -84,9 +84,9 @@ UniverseBox::~UniverseBox()
 void UniverseBox::Init()
 {
 	// Load default cubemap
-	if(!s_defaultCubeMap.get()) {
+	if(!s_defaultCubeMap.Valid()) {
 		TextureBuilder texture_builder = TextureBuilder::Cube("textures/skybox/default.dds");
-		s_defaultCubeMap.reset( texture_builder.CreateTexture(m_renderer) );
+		s_defaultCubeMap.Reset( texture_builder.GetOrCreateTexture(m_renderer,std::string("cube")) );
 	}
 
 	// Create skybox geometry
@@ -178,13 +178,13 @@ void UniverseBox::LoadCubeMap(Random &rand)
 			// Load new one
 			const std::string os = stringf("textures/skybox/ub%0{d}.dds", (new_ubox_index - 1));
 			TextureBuilder texture_builder = TextureBuilder::Cube(os.c_str());
-			m_cubemap.reset( texture_builder.CreateTexture(m_renderer) );
-			m_material->texture0 = m_cubemap.get();
+			m_cubemap.Reset( texture_builder.GetOrCreateTexture(m_renderer, std::string("cube")) );
+			m_material->texture0 = m_cubemap.Get();
 		}
 	} else {
 		// use default cubemap
-		m_cubemap.reset();
-		m_material->texture0 = s_defaultCubeMap.get();
+		m_cubemap.Reset();
+		m_material->texture0 = s_defaultCubeMap.Get();
 	}
 }
 
@@ -202,33 +202,38 @@ void Starfield::Init()
 	desc.vertexColors = true;
 	m_material.Reset(m_renderer->CreateMaterial(desc));
 	m_material->emissive = Color::WHITE;
-
-	Graphics::VertexBufferDesc vbd;
-	vbd.attrib[0].semantic = Graphics::ATTRIB_POSITION;
-	vbd.attrib[0].format = Graphics::ATTRIB_FORMAT_FLOAT3;
-	vbd.attrib[1].semantic = Graphics::ATTRIB_DIFFUSE;
-	vbd.attrib[1].format = Graphics::ATTRIB_FORMAT_UBYTE4;
-	vbd.usage = Graphics::BUFFER_USAGE_DYNAMIC;
-	vbd.numVertices = BG_STAR_MAX*2;
-	m_animBuffer.reset(m_renderer->CreateVertexBuffer(vbd));
 }
 
 void Starfield::Fill(Random &rand)
 {
+	const Sint32 NUM_BG_STARS = Clamp(Sint32(Pi::GetAmountBackgroundStars() * BG_STAR_MAX), BG_STAR_MIN, BG_STAR_MAX);
+
+	// setup the animated stars buffer (streaks in Hyperspace)
+	{
+		Graphics::VertexBufferDesc vbd;
+		vbd.attrib[0].semantic = Graphics::ATTRIB_POSITION;
+		vbd.attrib[0].format = Graphics::ATTRIB_FORMAT_FLOAT3;
+		vbd.attrib[1].semantic = Graphics::ATTRIB_DIFFUSE;
+		vbd.attrib[1].format = Graphics::ATTRIB_FORMAT_UBYTE4;
+		vbd.usage = Graphics::BUFFER_USAGE_DYNAMIC;
+		vbd.numVertices = NUM_BG_STARS*2;
+		m_animBuffer.reset(m_renderer->CreateVertexBuffer(vbd));
+	}
+
 	Graphics::VertexBufferDesc vbd;
 	vbd.attrib[0].semantic = Graphics::ATTRIB_POSITION;
 	vbd.attrib[0].format = Graphics::ATTRIB_FORMAT_FLOAT3;
 	vbd.attrib[1].semantic = Graphics::ATTRIB_DIFFUSE;
 	vbd.attrib[1].format = Graphics::ATTRIB_FORMAT_UBYTE4;
 	vbd.usage = Graphics::BUFFER_USAGE_STATIC;
-	vbd.numVertices = BG_STAR_MAX;
+	vbd.numVertices = NUM_BG_STARS;
 	m_vertexBuffer.reset(m_renderer->CreateVertexBuffer(vbd));
 
 	assert(sizeof(StarVert) == 16);
 	assert(m_vertexBuffer->GetDesc().stride == sizeof(StarVert));
 	auto vtxPtr = m_vertexBuffer->Map<StarVert>(Graphics::BUFFER_MAP_WRITE);
 	//fill the array
-	for (int i=0; i<BG_STAR_MAX; i++) {
+	for (int i=0; i<NUM_BG_STARS; i++) {
 		const Uint8 col = rand.Double(0.2,0.7)*255;
 
 		// this is proper random distribution on a sphere's surface
@@ -242,8 +247,8 @@ void Starfield::Fill(Random &rand)
 		vtxPtr->col = Color(col, col, col,	255);
 
 		//need to keep data around for HS anim - this is stupid
-		m_hyperVtx[BG_STAR_MAX * 2 + i] = vtxPtr->pos;
-		m_hyperCol[BG_STAR_MAX * 2 + i] = vtxPtr->col;
+		m_hyperVtx[NUM_BG_STARS * 2 + i] = vtxPtr->pos;
+		m_hyperCol[NUM_BG_STARS * 2 + i] = vtxPtr->col;
 
 		vtxPtr++;
 	}
@@ -267,12 +272,14 @@ void Starfield::Draw(Graphics::RenderState *rs)
 
 		const double hyperspaceProgress = Pi::game->GetHyperspaceProgress();
 
-		const vector3d pz = Pi::player->GetOrient().VectorZ();	//back vector
-		for (int i=0; i<BG_STAR_MAX; i++) {
-			vector3f v = m_hyperVtx[BG_STAR_MAX * 2 + i] + vector3f(pz*hyperspaceProgress*mult);
-			const Color &c = m_hyperCol[BG_STAR_MAX * 2 + i];
+		const Sint32 NUM_STARS = m_animBuffer->GetDesc().numVertices / 2;
 
-			vtxPtr[i*2].pos = m_hyperVtx[i*2] = m_hyperVtx[BG_STAR_MAX * 2 + i] + v;
+		const vector3d pz = Pi::player->GetOrient().VectorZ();	//back vector
+		for (int i=0; i<NUM_STARS; i++) {
+			vector3f v = m_hyperVtx[NUM_STARS * 2 + i] + vector3f(pz*hyperspaceProgress*mult);
+			const Color &c = m_hyperCol[NUM_STARS * 2 + i];
+
+			vtxPtr[i*2].pos = m_hyperVtx[i*2] = m_hyperVtx[NUM_STARS * 2 + i] + v;
 			vtxPtr[i*2].col = m_hyperCol[i*2] = c;
 
 			vtxPtr[i*2+1].pos = m_hyperVtx[i*2+1] = v;
@@ -291,7 +298,7 @@ MilkyWay::MilkyWay(Graphics::Renderer *renderer)
 	std::unique_ptr<Graphics::VertexArray> bottom(new VertexArray(ATTRIB_POSITION | ATTRIB_DIFFUSE));
 	std::unique_ptr<Graphics::VertexArray> top(new VertexArray(ATTRIB_POSITION | ATTRIB_DIFFUSE));
 
-	const Color dark(0);
+	const Color dark(Color::BLANK);
 	const Color bright(13, 13, 13, 13);
 
 	//bottom

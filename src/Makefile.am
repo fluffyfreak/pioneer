@@ -39,10 +39,7 @@ noinst_HEADERS = \
 	Factions.h \
 	FileSystem.h \
 	FontCache.h \
-	Form.h \
-	FormController.h \
 	Frame.h \
-	GalacticView.h \
 	Game.h \
 	GameLog.h \
 	GasGiant.h \
@@ -109,6 +106,8 @@ noinst_HEADERS = \
 	PropertyMap.h \
 	Quaternion.h \
 	Random.h \
+	RandomColor.h \
+	Range.h \
 	RefCounted.h \
 	SDLWrappers.h \
 	SectorView.h \
@@ -163,6 +162,7 @@ pioneer_SOURCES	= \
 	CameraController.cpp \
 	CargoBody.cpp \
 	Color.cpp \
+	CollMesh.cpp \
 	CityOnPlanet.cpp \
 	CRC32.cpp \
 	DateTime.cpp \
@@ -174,9 +174,7 @@ pioneer_SOURCES	= \
 	FileSourceZip.cpp \
 	FileSystem.cpp \
 	FontCache.cpp \
-	FormController.cpp \
 	Frame.cpp \
-	GalacticView.cpp \
 	Game.cpp \
 	GameLog.cpp \
 	GasGiant.cpp \
@@ -250,6 +248,7 @@ pioneer_SOURCES	= \
 	Polit.cpp \
 	Projectile.cpp \
 	PropertyMap.cpp \
+	RandomColor.cpp \
 	SDLWrappers.cpp \
 	SectorView.cpp \
 	Sensors.cpp \
@@ -309,6 +308,7 @@ pioneer_LDADD += \
 
 if BUILD_WIN32
 pioneer_LDFLAGS = -Wl,-Map=pioneer.map
+modelcompiler_LDFLAGS = -Wl,-Map=modelcompiler.map
 endif
 
 if !HAVE_LUA
@@ -349,6 +349,7 @@ tests_LDADD = \
 uitest_SOURCES = \
 	uitest.cpp \
 	Color.cpp \
+	DateTime.cpp \
 	FileSystem.cpp \
 	SDLWrappers.cpp \
 	FontCache.cpp \
@@ -373,6 +374,7 @@ uitest_LDADD = \
 	gui/libgui.a \
 	text/libtext.a \
 	graphics/libgraphics.a \
+	graphics/opengl/libgraphicsopengl.a \
 	posix/libposix.a \
 	../contrib/jenkins/libjenkins.a \
 	../contrib/PicoDDS/libpicodds.a \
@@ -417,6 +419,7 @@ endif
 modelcompiler_SOURCES = \
 	modelcompiler.cpp \
 	Color.cpp \
+	CollMesh.cpp \
 	DateTime.cpp \
 	FileSourceZip.cpp \
 	FileSystem.cpp \

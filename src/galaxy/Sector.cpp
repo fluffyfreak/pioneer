@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Sector.h"
@@ -67,7 +67,7 @@ void Sector::System::SetExplored(StarSystem::ExplorationState e, double time)
 void Sector::Dump(FILE* file, const char* indent) const
 {
 	fprintf(file, "Sector(%d,%d,%d) {\n", sx, sy, sz);
-	fprintf(file, "\t%zu systems\n", m_systems.size());
+	fprintf(file, "\t" SIZET_FMT " systems\n", m_systems.size());
 	for (const Sector::System& sys : m_systems) {
 		assert(sx == sys.sx && sy == sys.sy && sz == sys.sz);
 		assert(sys.idx >= 0);

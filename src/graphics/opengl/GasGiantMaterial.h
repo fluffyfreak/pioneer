@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _OGL_GASGIANTMATERIAL_H
@@ -6,7 +6,7 @@
 /*
  * Programs & Materials used by terrain
  */
-#include "libs.h"
+#include "OpenGLLibs.h"
 #include "MaterialGL.h"
 #include "Program.h"
 #include "galaxy/StarSystem.h"
@@ -22,8 +22,7 @@ namespace Graphics {
 			Uniform geosphereAtmosInvScaleHeight;
 			Uniform geosphereAtmosTopRad; // in planet radii
 			Uniform geosphereCenter;
-			Uniform geosphereScale;
-			Uniform geosphereScaledRadius; // (planet radius) / scale
+			Uniform geosphereRadius; // planet radius
 
 			Uniform shadows;
 			Uniform occultedLight;
@@ -39,8 +38,8 @@ namespace Graphics {
 		};
 
 		class GasGiantSurfaceMaterial : public Material {
-			virtual Program *CreateProgram(const MaterialDescriptor &);
-			virtual void Apply();
+			virtual Program *CreateProgram(const MaterialDescriptor &) override;
+			virtual void Apply() override;
 
 		protected:
 			void SetGSUniforms();

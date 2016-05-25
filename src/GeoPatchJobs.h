@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _GEOPATCHJOBS_H
@@ -40,8 +40,7 @@ public:
 
 protected:
 	// deliberately prevent copy constructor access
-	SBaseRequest(const SBaseRequest &r) : v0(0.0), v1(0.0), v2(0.0), v3(0.0), centroid(0.0), depth(0), 
-		patchID(0), edgeLen(0), fracStep(0.0), pTerrain(NULL) { assert(false); }
+	SBaseRequest(const SBaseRequest &r) = delete;
 };
 
 class SQuadSplitRequest : public SBaseRequest {
@@ -75,7 +74,7 @@ public:
 
 protected:
 	// deliberately prevent copy constructor access
-	SQuadSplitRequest(const SQuadSplitRequest &r) : SBaseRequest(r)	{ assert(false); }
+	SQuadSplitRequest(const SQuadSplitRequest &r) = delete;
 };
 
 class SSingleSplitRequest : public SBaseRequest {
@@ -106,7 +105,7 @@ public:
 
 protected:
 	// deliberately prevent copy constructor access
-	SSingleSplitRequest(const SSingleSplitRequest &r) : SBaseRequest(r)	{ assert(false); }
+	SSingleSplitRequest(const SSingleSplitRequest &r) = delete;
 };
 
 class SBaseSplitResult {

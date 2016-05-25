@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _WORLDVIEW_H
@@ -67,6 +67,8 @@ public:
 	int GetActiveWeapon() const;
 	void OnClickBlastoff();
 
+	void ResetHyperspaceButton();
+
 	sigc::signal<void> onChangeCamType;
 
 protected:
@@ -123,13 +125,17 @@ private:
 	void OnClickLowThrustPower();
 	void OnSelectLowThrustPower(float power);
 
-	void OnClickHyperspace();
+	void OnClickHyperspace(Gui::MultiStateImageButton *b);
 	void OnChangeWheelsState(Gui::MultiStateImageButton *b);
 	void OnChangeFlightState(Gui::MultiStateImageButton *b);
 	void OnHyperspaceTargetChanged();
 	void OnPlayerDockOrUndock();
 	void OnPlayerChangeTarget();
 	void OnPlayerChangeFlightControlState();
+	/// Handler for "requestTimeAccelerationInc" event
+	void OnRequestTimeAccelInc();
+	/// Handler for "requestTimeAccelerationDec" event
+	void OnRequestTimeAccelDec();
 	void SelectBody(Body *, bool reselectIsDeselect);
 	Body* PickBody(const double screenX, const double screenY) const;
 	void MouseWheel(bool up);
@@ -142,8 +148,6 @@ private:
 	NavTunnelWidget *m_navTunnel;
 	std::unique_ptr<SpeedLines> m_speedLines;
 
-	Gui::ImageButton *m_hyperspaceButton;
-
 	Gui::Label *m_pauseText;
 	Gui::Label *m_showCameraName;
 	Gui::Fixed *m_commsOptions;
@@ -154,6 +158,7 @@ private:
 	Gui::ImageButton *m_launchButton;
 	Gui::MultiStateImageButton *m_wheelsButton;
 	Gui::MultiStateImageButton *m_flightControlButton;
+	Gui::MultiStateImageButton *m_hyperspaceButton;
 	bool m_labelsOn;
 	enum CamType m_camType;
 	Uint32 m_showTargetActionsTimeout;
@@ -179,6 +184,7 @@ private:
 	Gui::MeterBar *m_hudHullTemp, *m_hudWeaponTemp, *m_hudHullIntegrity, *m_hudShieldIntegrity;
 	Gui::MeterBar *m_hudTargetHullIntegrity, *m_hudTargetShieldIntegrity;
 	Gui::MeterBar *m_hudFuelGauge;
+	Gui::VBox *m_hudSensorGaugeStack;
 
 	sigc::connection m_onHyperspaceTargetChangedCon;
 	sigc::connection m_onPlayerChangeTargetCon;
@@ -216,7 +222,6 @@ private:
 	Graphics::RenderState *m_blendState;
 
 	Graphics::Drawables::Line3D m_edgeMarker;
-	Graphics::Drawables::Lines m_crossHair;
 	Graphics::Drawables::Lines m_indicator;
 };
 

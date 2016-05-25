@@ -285,7 +285,7 @@
    },
    "PIRATE_TAUNTS_0" : {
       "description" : "",
-      "message" : "You're going to regret dealing with {client}"
+      "message" : "Kau akan menyesal berhubungan dengan [client]"
    },
    "PIRATE_TAUNTS_1" : {
       "description" : "",
@@ -305,7 +305,7 @@
    },
    "PIRATE_TAUNTS_5" : {
       "description" : "",
-      "message" : "Today isn't your lucky day! Prepare to die."
+      "message" : "Hari ini bukan hari keberuntunganmu! Bersiaplah untuk mati."
    },
    "PIRATE_TAUNTS_6" : {
       "description" : "",
@@ -313,7 +313,7 @@
    },
    "PIRATE_TAUNTS_7" : {
       "description" : "",
-      "message" : "That package isn't going to reach it's destination today."
+      "message" : "That package isn't going to reach its destination today."
    },
    "PIRATE_TAUNTS_8" : {
       "description" : "",

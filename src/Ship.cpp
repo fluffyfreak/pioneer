@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Ship.h"
@@ -31,7 +31,6 @@
 #include <algorithm>
 
 static const float TONS_HULL_PER_SHIELD = 10.f;
-static const double KINETIC_ENERGY_MULT	= 0.01;
 HeatGradientParameters_t Ship::s_heatGradientParams;
 const float Ship::DEFAULT_SHIELD_COOLDOWN_TIME = 1.0f;
 
@@ -316,7 +315,7 @@ Ship::Ship(ShipType::Id shipId): DynamicBody(),
 	m_launchLockTimeout = 0;
 	m_wheelTransition = 0;
 	m_wheelState = 0;
-	m_dockedWith = 0;
+	m_dockedWith = nullptr;
 	m_dockedWithPort = 0;
 	SetShipId(shipId);
 	m_thrusters.x = m_thrusters.y = m_thrusters.z = 0;
@@ -382,7 +381,7 @@ void Ship::SetPercentHull(float p)
 
 void Ship::UpdateMass()
 {
-	SetMass((m_stats.total_mass + GetFuel()*GetShipType()->fuelTankMass)*1000);
+	SetMass((m_stats.static_mass + GetFuel()*GetShipType()->fuelTankMass)*1000);
 }
 
 void Ship::SetFuel(const double f)
@@ -434,18 +433,12 @@ bool Ship::OnDamage(Object *attacker, float kgDamage, const CollisionContact& co
 			if (attacker) {
 				if (attacker->IsType(Object::BODY))
 					LuaEvent::Queue("onShipDestroyed", this, dynamic_cast<Body*>(attacker));
-
-				if (attacker->IsType(Object::SHIP))
-					Polit::NotifyOfCrime(static_cast<Ship*>(attacker), Polit::CRIME_MURDER);
 			}
 
 			Explode();
 		} else {
-			if (attacker && attacker->IsType(Object::SHIP))
-				Polit::NotifyOfCrime(static_cast<Ship*>(attacker), Polit::CRIME_PIRACY);
-
 			if (Pi::rng.Double() < kgDamage)
-				Sfx::Add(this, Sfx::TYPE_DAMAGE);
+				SfxManager::Add(this, TYPE_DAMAGE);
 
 			if (dam < 0.01 * float(GetShipType()->hullMass))
 				Sound::BodyMakeNoise(this, "Hull_hit_Small", 1.0f);
@@ -474,7 +467,7 @@ bool Ship::OnCollision(Object *b, Uint32 flags, double relVel)
 			Pi::game->GetSpace()->KillBody(dynamic_cast<Body*>(b));
 			if (this->IsType(Object::PLAYER))
 				Pi::game->log->Add(stringf(Lang::CARGO_SCOOP_ACTIVE_1_TONNE_X_COLLECTED, formatarg("item", ScopedTable(item).CallMethod<std::string>("GetName"))));
-			// XXX Sfx::Add(this, Sfx::TYPE_SCOOP);
+			// XXX SfxManager::Add(this, TYPE_SCOOP);
 			UpdateEquipStats();
 			return true;
 		}
@@ -516,7 +509,7 @@ void Ship::Explode()
 
 	Pi::game->GetSpace()->KillBody(this);
 	if (this->GetFrame() == Pi::player->GetFrame()) {
-		Sfx::AddExplosion(this, Sfx::TYPE_EXPLOSION);
+		SfxManager::AddExplosion(this);
 		Sound::BodyMakeNoise(this, "Explosion_1", 1.0f);
 	}
 	ClearThrusterState();
@@ -575,12 +568,13 @@ void Ship::UpdateEquipStats()
 	m_stats.used_cargo = 0;
 
 	m_stats.free_capacity = m_type->capacity - m_stats.used_capacity;
-	m_stats.total_mass = m_stats.used_capacity + m_type->hullMass;
+	m_stats.static_mass = m_stats.used_capacity + m_type->hullMass;
 
 	p.Set("usedCapacity", m_stats.used_capacity);
 
 	p.Set("freeCapacity", m_stats.free_capacity);
-	p.Set("totalMass", m_stats.total_mass);
+	p.Set("totalMass", m_stats.static_mass);
+	p.Set("staticMass", m_stats.static_mass);
 
 	int shield_cap = 0;
 	Properties().Get("shield_cap", shield_cap);
@@ -717,7 +711,7 @@ void Ship::SetFlightState(Ship::FlightState newState)
 
 	if (newState == FLYING) {
 		m_testLanded = false;
-		if (m_flightState == DOCKING || m_flightState == DOCKED) 
+		if (m_flightState == DOCKING || m_flightState == DOCKED)
 			onUndock.emit();
 
 		m_dockedWith = nullptr;
@@ -735,6 +729,7 @@ void Ship::SetFlightState(Ship::FlightState newState)
 	{
 		case FLYING:		SetMoving(true);	SetColliding(true);		SetStatic(false);	break;
 		case DOCKING:		SetMoving(false);	SetColliding(false);	SetStatic(false);	break;
+		case UNDOCKING:	SetMoving(false);	SetColliding(false);	SetStatic(false);	break;
 // TODO: set collision index? dynamic stations... use landed for open-air?
 		case DOCKED:		SetMoving(false);	SetColliding(false);	SetStatic(false);	break;
 		case LANDED:		SetMoving(false);	SetColliding(true);		SetStatic(true);	break;
@@ -786,6 +781,7 @@ void Ship::TestLanded()
 				SetFlightState(LANDED);
 				Sound::BodyMakeNoise(this, "Rough_Landing", 1.0f);
 				LuaEvent::Queue("onShipLanded", this, GetFrame()->GetBody());
+				onLanded.emit();
 			}
 		}
 	}
@@ -807,6 +803,7 @@ void Ship::SetLandedOn(Planet *p, float latitude, float longitude)
 	ClearThrusterState();
 	SetFlightState(LANDED);
 	LuaEvent::Queue("onShipLanded", this, p);
+	onLanded.emit();
 }
 
 void Ship::SetFrame(Frame *f)
@@ -890,7 +887,7 @@ void Ship::TimeAccelAdjust(const float timeStep)
 
 void Ship::FireWeapon(int num)
 {
-	if (m_flightState != FLYING) 
+	if (m_flightState != FLYING)
 		return;
 
 	std::string prefix(num?"laser_rear_":"laser_front_");
@@ -929,7 +926,6 @@ void Ship::FireWeapon(int num)
 		Projectile::Add(this, lifespan, damage, length, width, mining, c, pos, baseVel, dirVel);
 	}
 
-	Polit::NotifyOfCrime(this, Polit::CRIME_WEAPON_DISCHARGE);
 	Sound::BodyMakeNoise(this, "Pulse_Laser", 1.0f);
 	lua_pop(prop.GetLua(), 1);
 	LuaEvent::Queue("onShipFiring", this);
@@ -1026,7 +1022,7 @@ void Ship::UpdateAlertState()
 			if (ship_is_near) {
 				SetAlertState(ALERT_SHIP_NEARBY);
 				changed = true;
-            }
+			}
 			if (ship_is_firing) {
 				m_lastFiringAlert = Pi::game->GetTime();
 				SetAlertState(ALERT_SHIP_FIRING);
@@ -1249,10 +1245,13 @@ void Ship::StaticUpdate(const float timeStep)
 	}
 
 	//Add smoke trails for missiles on thruster state
-	if (m_type->tag == ShipType::TAG_MISSILE && m_thrusters.z < 0.0 && 0.1*Pi::rng.Double() < timeStep) {
+	static double s_timeAccum = 0.0;
+	s_timeAccum += timeStep;
+	if (m_type->tag == ShipType::TAG_MISSILE && !is_equal_exact(m_thrusters.LengthSqr(), 0.0) && (s_timeAccum > 4 || 0.1*Pi::rng.Double() < timeStep)) {
+		s_timeAccum = 0.0;
 		const vector3d pos = GetOrient() * vector3d(0, 0 , 5);
-		const float speed = std::min(10.0*GetVelocity().Length()*abs(m_thrusters.z),100.0);
-		Sfx::AddThrustSmoke(this, Sfx::TYPE_SMOKE, speed, pos);
+		const float speed = std::min(10.0*GetVelocity().Length()*std::max(1.0,fabs(m_thrusters.z)),100.0);
+		SfxManager::AddThrustSmoke(this, speed, pos);
 	}
 }
 
@@ -1337,7 +1336,7 @@ void Ship::Render(Graphics::Renderer *renderer, const Camera *camera, const vect
 			c.a = (m_ecmRecharge / totalRechargeTime) * 255;
 		}
 
-		Sfx::ecmParticle->diffuse = c;
+		SfxManager::ecmParticle->diffuse = c;
 
 		matrix4x4f t;
 		for (int i=0; i<12; i++) t[i] = float(viewTransform[i]);
@@ -1347,7 +1346,7 @@ void Ship::Render(Graphics::Renderer *renderer, const Camera *camera, const vect
 		t[15] = 1.0f;
 
 		renderer->SetTransform(t);
-		renderer->DrawPointSprites(100, v, Sfx::additiveAlphaState, Sfx::ecmParticle.get(), 50.f);
+		renderer->DrawPointSprites(100, v, SfxManager::additiveAlphaState, SfxManager::ecmParticle.get(), 50.f);
 	}
 }
 

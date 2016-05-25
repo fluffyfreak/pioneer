@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _BACKGROUND_H
@@ -44,7 +44,7 @@ namespace Background
 		void Init();
 
 		std::unique_ptr<Graphics::VertexBuffer> m_vertexBuffer;
-		std::unique_ptr<Graphics::Texture> m_cubemap;
+		RefCountedPtr<Graphics::Texture> m_cubemap;
 
 		Uint32 m_numCubemaps;
 	};
@@ -60,7 +60,8 @@ namespace Background
 
 	private:
 		void Init();
-		static const int BG_STAR_MAX = 100000;
+		#define BG_STAR_MAX 100000
+		#define BG_STAR_MIN 1000
 		std::unique_ptr<Graphics::VertexBuffer> m_vertexBuffer;
 
 		//hyperspace animation vertex data
@@ -94,12 +95,13 @@ namespace Background
 
 		Container(Graphics::Renderer*, Random &rand);
 		void Draw(const matrix4x4d &transform);
-		void Refresh(Random &rand);
 
 		void SetIntensity(float intensity);
 		void SetDrawFlags(const Uint32 flags);
 
 	private:
+		void Refresh(Random &rand);
+
 		Graphics::Renderer *m_renderer;
 		MilkyWay m_milkyWay;
 		Starfield m_starField;

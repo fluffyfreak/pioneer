@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Camera.h"
@@ -124,6 +124,7 @@ void Camera::Update()
 	for (Body* b : Pi::game->GetSpace()->GetBodies()) {
 		BodyAttrs attrs;
 		attrs.body = b;
+		attrs.billboard = false; // false by default
 
 		// determine position and transform for draw
 		Frame::GetFrameTransform(b->GetFrame(), camFrame, attrs.viewTransform);
@@ -139,16 +140,14 @@ void Camera::Update()
 
 		// approximate pixel width (disc diameter) of body on screen
 		const float pixSize = Graphics::GetScreenHeight() * 2.0 * rad / (attrs.camDist * Graphics::GetFovFactor());
-		if (pixSize < OBJECT_HIDDEN_PIXEL_THRESHOLD)
-			continue;
 
 		// terrain objects are visible from distance but might not have any discernable features
-		attrs.billboard = false;
 		if (b->IsType(Object::TERRAINBODY)) {
 			if (pixSize < BILLBOARD_PIXEL_THRESHOLD) {
 				attrs.billboard = true;
 				vector3d pos;
-				double size = rad * 2.0 * m_context->GetFrustum().TranslatePoint(attrs.viewCoords, pos);
+				// limit the minimum billboard size for planets so they're always a little visible
+				const double size = std::max(0.5, rad * 2.0 * m_context->GetFrustum().TranslatePoint(attrs.viewCoords, pos));
 				attrs.billboardPos = vector3f(pos);
 				attrs.billboardSize = float(size);
 				if (b->IsType(Object::STAR)) {
@@ -158,11 +157,21 @@ void Camera::Update()
 					// XXX this should incorporate some lighting effect
 					// (ie, colour of the illuminating star(s))
 					attrs.billboardColor = b->GetSystemBody()->GetAlbedo();
-					attrs.billboardColor.a = 255; // no alpha, these things are hard enough to see as it is
 				}
-				else
+				else {
 					attrs.billboardColor = Color::WHITE;
+				}
+
+				// this should always be the main star in the system - except for the star itself!
+				if( !m_lightSources.empty() && !b->IsType(Object::STAR) ) {
+					const Graphics::Light& light = m_lightSources[0].GetLight();
+					attrs.billboardColor *= light.GetDiffuse(); // colour the billboard a little with the Starlight
+				}
+
+				attrs.billboardColor.a = 255; // no alpha, these things are hard enough to see as it is
 			}
+		} else if (pixSize < OBJECT_HIDDEN_PIXEL_THRESHOLD) {
+			continue;
 		}
 
 		m_sortedBodies.push_back(attrs);
@@ -191,8 +200,7 @@ void Camera::Draw(const Body *excludeBody, ShipCockpit* cockpit)
 
 	if (m_lightSources.empty()) {
 		// no lights means we're somewhere weird (eg hyperspace). fake one
-		const Color col(255);
-		m_lightSources.push_back(LightSource(0, Graphics::Light(Graphics::Light::LIGHT_DIRECTIONAL, vector3f(0.f), col, col)));
+		m_lightSources.push_back(LightSource(0, Graphics::Light(Graphics::Light::LIGHT_DIRECTIONAL, vector3f(0.f), Color::WHITE, Color::WHITE)));
 	}
 
 	//fade space background based on atmosphere thickness and light angle
@@ -249,13 +257,13 @@ void Camera::Draw(const Body *excludeBody, ShipCockpit* cockpit)
 			Graphics::Renderer::MatrixTicket mt(m_renderer, Graphics::MatrixMode::MODELVIEW);
 			m_renderer->SetTransform(matrix4x4d::Identity());
 			m_billboardMaterial->diffuse = attrs->billboardColor;
-			m_renderer->DrawPointSprites(1, &attrs->billboardPos, Sfx::additiveAlphaState, m_billboardMaterial.get(), attrs->billboardSize);
+			m_renderer->DrawPointSprites(1, &attrs->billboardPos, SfxManager::additiveAlphaState, m_billboardMaterial.get(), attrs->billboardSize);
 		}
 		else
 			attrs->body->Render(m_renderer, this, attrs->viewCoords, attrs->viewTransform);
 	}
 
-	Sfx::RenderAll(m_renderer, Pi::game->GetSpace()->GetRootFrame(), camFrame);
+	SfxManager::RenderAll(m_renderer, Pi::game->GetSpace()->GetRootFrame(), camFrame);
 
 	// NB: Do any screen space rendering after here:
 	// Things like the cockpit and AR features like hudtrails, space dust etc.

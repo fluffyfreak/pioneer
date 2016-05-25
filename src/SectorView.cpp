@@ -1,9 +1,8 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
 #include "Factions.h"
-#include "GalacticView.h"
 #include "Game.h"
 #include "Lang.h"
 #include "LuaConstants.h"
@@ -45,7 +44,7 @@ enum DetailSelection {
 static const float ZOOM_SPEED = 15;
 static const float WHEEL_SENSITIVITY = .03f;		// Should be a variable in user settings.
 
-SectorView::SectorView(Game* game) : UIView(), m_game(game), m_galaxy(game->GetGalaxy())
+SectorView::SectorView(Game* game) : UIView(), m_galaxy(game->GetGalaxy())
 {
 	InitDefaults();
 
@@ -76,7 +75,7 @@ SectorView::SectorView(Game* game) : UIView(), m_game(game), m_galaxy(game->GetG
 	InitObject();
 }
 
-SectorView::SectorView(const Json::Value &jsonObj, Game* game) : UIView(), m_game(game), m_galaxy(game->GetGalaxy())
+SectorView::SectorView(const Json::Value &jsonObj, Game* game) : UIView(), m_galaxy(game->GetGalaxy())
 {
 	InitDefaults();
 
@@ -529,15 +528,17 @@ void SectorView::Draw3D()
 	m_renderer->SetTransform(matrix4x4f::Identity());
 
 	//draw star billboards in one go
-	m_renderer->SetAmbientColor(Color(30));
+	m_renderer->SetAmbientColor(Color(30, 30, 30));
 	m_renderer->DrawTriangles(m_starVerts.get(), m_solidState, m_starMaterial.Get());
 
 	//draw sector legs in one go
-	if (m_lineVerts->GetNumVerts() > 2) {
+	if(!m_lineVerts->IsEmpty()) {
+		m_lines.SetData(m_lineVerts->GetNumVerts(), &m_lineVerts->position[0], &m_lineVerts->diffuse[0]);
 		m_lines.Draw(m_renderer, m_alphaBlendState);
 	}
 
-	if (m_secLineVerts->GetNumVerts() > 2) {
+	if (!m_secLineVerts->IsEmpty()) {
+		m_sectorlines.SetData( m_secLineVerts->GetNumVerts(), &m_secLineVerts->position[0], &m_secLineVerts->diffuse[0]);
 		m_sectorlines.Draw(m_renderer, m_alphaBlendState);
 	}
 
@@ -950,16 +951,21 @@ void SectorView::DrawNearSector(const int sx, const int sy, const int sz, const 
 	m_renderer->SetTransform(trans);
 	RefCountedPtr<Sector> ps = GetCached(SystemPath(sx, sy, sz));
 
-	int cz = int(floor(m_pos.z+0.5f));
+	const int cz = int(floor(m_pos.z+0.5f));
 
 	if (cz == sz) {
-		const Color darkgreen(0, 51, 0, 255);
+		static const Color darkgreen(0, 51, 0, 255);
 		const vector3f vts[] = {
 			trans * vector3f(0.f, 0.f, 0.f),
 			trans * vector3f(0.f, Sector::SIZE, 0.f),
 			trans * vector3f(Sector::SIZE, Sector::SIZE, 0.f),
 			trans * vector3f(Sector::SIZE, 0.f, 0.f)
 		};
+
+		// reserve some more space
+		const size_t newNum = m_secLineVerts->GetNumVerts() + 8;
+		m_secLineVerts->position.reserve(newNum);
+		m_secLineVerts->diffuse.reserve(newNum);
 
 		m_secLineVerts->Add(vts[0], darkgreen);	// line segment 1
 		m_secLineVerts->Add(vts[1], darkgreen);
@@ -969,9 +975,11 @@ void SectorView::DrawNearSector(const int sx, const int sy, const int sz, const 
 		m_secLineVerts->Add(vts[3], darkgreen);
 		m_secLineVerts->Add(vts[3], darkgreen);	// line segment 4
 		m_secLineVerts->Add(vts[0], darkgreen);
-
-		m_sectorlines.SetData( m_secLineVerts->GetNumVerts(), &m_secLineVerts->position[0], &m_secLineVerts->diffuse[0]);
 	}
+
+	const size_t numLineVerts = ps->m_systems.size() * 8;
+	m_lineVerts->position.reserve(numLineVerts);
+	m_lineVerts->diffuse.reserve(numLineVerts);
 
 	Uint32 sysIdx = 0;
 	for (std::vector<Sector::System>::iterator i = ps->m_systems.begin(); i != ps->m_systems.end(); ++i, ++sysIdx) {
@@ -1025,8 +1033,8 @@ void SectorView::DrawNearSector(const int sx, const int sy, const int sz, const 
 		// for out-of-range systems draw leg only if we draw label
 		if ((m_drawSystemLegButton->GetPressed() && (inRange || m_drawOutRangeLabelButton->GetPressed()) && (i->GetPopulation() > 0 || m_drawUninhabitedLabelButton->GetPressed())) || !can_skip) {
 
-			const Color light(128);
-			const Color dark(51);
+			const Color light(128, 128, 128);
+			const Color dark(51, 51, 51);
 
 			// draw system "leg"
 			float z = -i->GetPosition().z;
@@ -1044,8 +1052,6 @@ void SectorView::DrawNearSector(const int sx, const int sy, const int sz, const 
 			m_lineVerts->Add(systrans * vector3f(0.1f, 0.1f, z), light);
 			m_lineVerts->Add(systrans * vector3f(-0.1f, 0.1f, z), light);
 			m_lineVerts->Add(systrans * vector3f(0.1f, -0.1f, z), light);
-
-			m_lines.SetData(m_lineVerts->GetNumVerts(), &m_lineVerts->position[0], &m_lineVerts->diffuse[0]);
 		}
 
 		if (i->IsSameSystem(m_selected)) {
@@ -1104,7 +1110,7 @@ void SectorView::DrawNearSector(const int sx, const int sy, const int sz, const 
 		// hyperspace target indicator (if different from selection)
 		if (i->IsSameSystem(m_hyperspaceTarget) && m_hyperspaceTarget != m_selected && (!m_inSystem || m_hyperspaceTarget != m_current)) {
 			m_renderer->SetDepthRange(0.1,1.0);
-			m_disk->SetColor(Color(77));
+			m_disk->SetColor(Color(77, 77, 77));
 			m_renderer->SetTransform(systrans * matrix4x4f::ScaleMatrix(2.f));
 			m_disk->Draw(m_renderer);
 		}

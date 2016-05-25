@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "ModelViewer.h"
@@ -12,6 +12,7 @@
 #include "scenegraph/DumpVisitor.h"
 #include "scenegraph/FindNodeVisitor.h"
 #include "scenegraph/BinaryConverter.h"
+#include "scenegraph/ModelSkin.h"
 #include "OS.h"
 #include "Pi.h"
 #include "StringF.h"
@@ -88,6 +89,7 @@ ModelViewer::ModelViewer(Graphics::Renderer *r, LuaManager *lm)
 : m_done(false)
 , m_screenshotQueued(false)
 , m_shieldIsHit(false)
+, m_settingColourSliders(false)
 , m_shieldHitPan(-1.48f)
 , m_frameTime(0.0)
 , m_renderer(r)
@@ -99,6 +101,7 @@ ModelViewer::ModelViewer(Graphics::Renderer *r, LuaManager *lm)
 , m_model(0)
 , m_modelName("")
 {
+	OS::RedirectStdio();
 	m_ui.Reset(new UI::Context(lm, r, Graphics::GetScreenWidth(), Graphics::GetScreenHeight()));
 	m_ui->SetMousePointer("icons/cursors/mouse_cursor_2.png", UI::Point(15, 8));
 
@@ -154,6 +157,7 @@ void ModelViewer::Run(const std::string &modelName)
 	videoSettings.requestedSamples = config->Int("AntiAliasingMode");
 	videoSettings.vsync = (config->Int("VSync") != 0);
 	videoSettings.useTextureCompression = (config->Int("UseTextureCompression") != 0);
+	videoSettings.useAnisotropicFiltering = (config->Int("UseAnisotropicFiltering") != 0);
 	videoSettings.iconFile = OS::GetIconFilename();
 	videoSettings.title = "Model viewer";
 	Graphics::Renderer *renderer = Graphics::Init(videoSettings);
@@ -180,8 +184,7 @@ void ModelViewer::Run(const std::string &modelName)
 
 bool ModelViewer::OnPickModel(UI::List *list)
 {
-	SetModel(list->GetSelectedOption());
-	ResetCamera();
+	m_requestedModelName = list->GetSelectedOption();
 	return true;
 }
 
@@ -244,20 +247,45 @@ bool ModelViewer::OnToggleGuns(UI::CheckBox *w)
 	}
 
 	m_options.attachGuns = !m_options.attachGuns;
-	SceneGraph::Group *tagL = m_model->FindTagByName("tag_gun_left");
-	SceneGraph::Group *tagR = m_model->FindTagByName("tag_gun_right");
-	if (!tagL || !tagR) {
-		AddLog("Missing tags gun_left and gun_right in model");
+	SceneGraph::Model::TVecMT tags;
+	m_model->FindTagsByStartOfName("tag_gun_", tags);
+	if (tags.empty()) {
+		AddLog("Missing tags \"tag_gun_XXX\" in model");
 		return false;
 	}
 	if (m_options.attachGuns) {
-		tagL->AddChild(new SceneGraph::ModelNode(m_gunModel.get()));
-		tagR->AddChild(new SceneGraph::ModelNode(m_gunModel.get()));
+		for (auto tag : tags) {
+			tag->AddChild(new SceneGraph::ModelNode(m_gunModel.get()));
+		}
 	} else { //detach
 		//we know there's nothing else
-		tagL->RemoveChildAt(0);
-		tagR->RemoveChildAt(0);
+		for (auto tag : tags) {
+			tag->RemoveChildAt(0);
+		}
 	}
+	return true;
+}
+
+bool ModelViewer::OnRandomColor(UI::Widget*)
+{
+	if (!m_model || !m_model->SupportsPatterns()) return false;
+
+	SceneGraph::ModelSkin skin;
+	skin.SetRandomColors(m_rng);
+	skin.Apply(m_model);
+
+	// We need this flag setting so that we don't override what we're changing in OnModelColorsChanged
+	m_settingColourSliders = true;
+	const std::vector<Color> &colors = skin.GetColors();
+	for(unsigned int i=0; i<3; i++) {
+		for(unsigned int j=0; j<3; j++) {
+			// use ToColor4f to get the colours in 0..1 range required
+			if( colorSliders[(i*3)+j] )
+				colorSliders[(i*3)+j]->SetValue(colors[i].ToColor4f()[j]);
+		}
+	}
+	m_settingColourSliders = false;
+
 	return true;
 }
 
@@ -408,19 +436,34 @@ void ModelViewer::DrawBackground()
 	m_renderer->SetOrthographicProjection(0.f, 1.f, 0.f, 1.f, -1.f, 1.f);
 	m_renderer->SetTransform(matrix4x4f::Identity());
 
-	static Graphics::VertexArray va(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_DIFFUSE);
-	va.Clear();
-	const Color top = Color::BLACK;
-	const Color bottom = Color(77);
-	va.Add(vector3f(0.f, 0.f, 0.f), bottom);
-	va.Add(vector3f(1.f, 0.f, 0.f), bottom);
-	va.Add(vector3f(1.f, 1.f, 0.f), top);
+	if(!m_bgBuffer.Valid())
+	{
+		const Color top = Color::BLACK;
+		const Color bottom = Color(77, 77, 77);
+		Graphics::VertexArray bgArr(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_DIFFUSE, 6);
+		// triangle 1
+		bgArr.Add(vector3f(0.f, 0.f, 0.f), bottom);
+		bgArr.Add(vector3f(1.f, 0.f, 0.f), bottom);
+		bgArr.Add(vector3f(1.f, 1.f, 0.f), top);
+		// triangle 2
+		bgArr.Add(vector3f(0.f, 0.f, 0.f), bottom);
+		bgArr.Add(vector3f(1.f, 1.f, 0.f), top);
+		bgArr.Add(vector3f(0.f, 1.f, 0.f), top);
 
-	va.Add(vector3f(0.f, 0.f, 0.f), bottom);
-	va.Add(vector3f(1.f, 1.f, 0.f), top);
-	va.Add(vector3f(0.f, 1.f, 0.f), top);
-
-	m_renderer->DrawTriangles(&va, m_bgState, Graphics::vtxColorMaterial);
+		Graphics::VertexBufferDesc vbd;
+		vbd.attrib[0].semantic	= Graphics::ATTRIB_POSITION;
+		vbd.attrib[0].format	= Graphics::ATTRIB_FORMAT_FLOAT3;
+		vbd.attrib[1].semantic	= Graphics::ATTRIB_DIFFUSE;
+		vbd.attrib[1].format	= Graphics::ATTRIB_FORMAT_UBYTE4;
+		vbd.numVertices = 6;
+		vbd.usage = Graphics::BUFFER_USAGE_STATIC;
+	
+		// VertexBuffer
+		m_bgBuffer.Reset( m_renderer->CreateVertexBuffer(vbd) );
+		m_bgBuffer->Populate(bgArr);
+	}
+	
+	m_renderer->DrawBuffer(m_bgBuffer.Get(), m_bgState, Graphics::vtxColorMaterial, Graphics::TRIANGLES);
 }
 
 //Draw grid and axes
@@ -453,7 +496,7 @@ void ModelViewer::DrawGrid(const matrix4x4f &trans, float radius)
 	}
 
 	m_renderer->SetTransform(trans);
-	m_gridLines.SetData(points.size(), &points[0], Color(128));
+	m_gridLines.SetData(points.size(), &points[0], Color(128, 128, 128));
 	m_gridLines.Draw(m_renderer, m_bgState);
 
 	// industry-standard red/green/blue XYZ axis indiactor
@@ -461,24 +504,9 @@ void ModelViewer::DrawGrid(const matrix4x4f &trans, float radius)
 	Graphics::Drawables::GetAxes3DDrawable(m_renderer)->Draw(m_renderer);
 }
 
-void ModelViewer::DrawModel()
+void ModelViewer::DrawModel(const matrix4x4f &mv)
 {
 	assert(m_model);
-
-	m_renderer->SetPerspectiveProjection(85, Graphics::GetScreenWidth()/float(Graphics::GetScreenHeight()), 0.1f, 100000.f);
-	m_renderer->SetTransform(matrix4x4f::Identity());
-	UpdateLights();
-
-	matrix4x4f mv;
-	if (m_options.mouselookEnabled) {
-		mv = m_viewRot.Transpose() * matrix4x4f::Translation(-m_viewPos);
-	} else {
-		m_rotX = Clamp(m_rotX, -90.0f, 90.0f);
-		matrix4x4f rot = matrix4x4f::Identity();
-		rot.RotateX(DEG2RAD(-m_rotX));
-		rot.RotateY(DEG2RAD(-m_rotY));
-		mv = matrix4x4f::Translation(0.0f, 0.0f, -zoom_distance(m_baseDistance, m_zoom)) * rot;
-	}
 
 	m_model->UpdateAnimations();
 
@@ -491,14 +519,6 @@ void ModelViewer::DrawModel()
 	);
 
 	m_model->Render(mv);
-
-	if (m_options.showLandingPad) {
-		if (!m_scaleModel) CreateTestResources();
-		m_scaleModel->Render(mv * matrix4x4f::Translation(0.f, m_landingMinOffset, 0.f));
-	}
-
-	if (m_options.showGrid)
-		DrawGrid(mv, m_model->GetDrawClipRadius());
 }
 
 void ModelViewer::MainLoop()
@@ -510,12 +530,15 @@ void ModelViewer::MainLoop()
 		m_frameTime = (ticks - lastTime);
 		lastTime = ticks;
 
-		m_renderer->ClearScreen();
-
+		// logic update
 		PollEvents();
+
+		m_renderer->ClearScreen();
+		UpdateLights();
 		UpdateCamera();
 		UpdateShield();
 
+		// render the gradient backdrop
 		DrawBackground();
 
 		//update animations, draw model etc.
@@ -524,13 +547,41 @@ void ModelViewer::MainLoop()
 			m_shields->SetEnabled(m_options.showShields || m_shieldIsHit);
 
 			//Calculate the impact's radius dependant on time
-			float dif1 = 0.34 - (-1.48f);
-			float dif2 = m_shieldHitPan - (-1.48f);
+			const float dif1 = 0.34 - (-1.48f);
+			const float dif2 = m_shieldHitPan - (-1.48f);
 			//Range from start (0.0) to end (1.0)
-			float dif = dif2 / (dif1 * 1.0f);
+			const float dif = dif2 / (dif1 * 1.0f);
 
 			m_shields->Update(m_options.showShields ? 1.0f : (1.0f - dif), 1.0f);
-			DrawModel();
+			
+			// setup rendering
+			m_renderer->SetPerspectiveProjection(85, Graphics::GetScreenWidth()/float(Graphics::GetScreenHeight()), 0.1f, 100000.f);
+			m_renderer->SetTransform(matrix4x4f::Identity());
+
+			// calc camera info
+			matrix4x4f mv;
+			if (m_options.mouselookEnabled) {
+				mv = m_viewRot.Transpose() * matrix4x4f::Translation(-m_viewPos);
+			} else {
+				m_rotX = Clamp(m_rotX, -90.0f, 90.0f);
+				matrix4x4f rot = matrix4x4f::Identity();
+				rot.RotateX(DEG2RAD(-m_rotX));
+				rot.RotateY(DEG2RAD(-m_rotY));
+				mv = matrix4x4f::Translation(0.0f, 0.0f, -zoom_distance(m_baseDistance, m_zoom)) * rot;
+			}
+
+			// draw the model itself
+			DrawModel(mv);
+
+			// helper rendering
+			if (m_options.showLandingPad) {
+				if (!m_scaleModel) CreateTestResources();
+				m_scaleModel->Render(mv * matrix4x4f::Translation(0.f, m_landingMinOffset, 0.f));
+			}
+
+			if (m_options.showGrid) {
+				DrawGrid(mv, m_model->GetDrawClipRadius());
+			}
 		}
 
 		m_ui->Update();
@@ -542,7 +593,15 @@ void ModelViewer::MainLoop()
 			Screenshot();
 		}
 
+		// end scene
 		m_renderer->SwapBuffers();
+
+		// if we've requested a different model then switch too it
+		if(!m_requestedModelName.empty()) {
+			SetModel(m_requestedModelName);
+			m_requestedModelName.clear();
+			ResetCamera();
+		}
 	}
 }
 
@@ -590,7 +649,8 @@ void ModelViewer::OnLightPresetChanged(unsigned int index, const std::string&)
 
 void ModelViewer::OnModelColorsChanged(float)
 {
-	if (!m_model) return;
+	if (!m_model || m_settingColourSliders) return;
+
 	//don't care about the float. Fetch values from all sliders.
 	std::vector<Color> colors;
 	colors.push_back(get_slider_color(colorSliders[0], colorSliders[1], colorSliders[2]));
@@ -851,6 +911,7 @@ void ModelViewer::SetModel(const std::string &filename)
 				it != loader.GetLogMessages().end(); ++it)
 			{
 				AddLog(*it);
+				Output("%s\n", (*it).c_str());
 			}
 		}
 
@@ -859,6 +920,7 @@ void ModelViewer::SetModel(const std::string &filename)
 		//set decal textures, max 4 supported.
 		//Identical texture at the moment
 		OnDecalChanged(0, "pioneer");
+		Output("\n\n");
 
 		SceneGraph::DumpVisitor d(m_model);
 		m_model->GetRoot()->Accept(d);
@@ -944,6 +1006,7 @@ void ModelViewer::SetupUI()
 	UI::SmallButton *reloadButton = nullptr;
 	UI::SmallButton *toggleGridButton = nullptr;
 	UI::SmallButton *hitItButton = nullptr;
+	UI::SmallButton *randomColours = nullptr;
 	UI::CheckBox *collMeshCheck = nullptr;
 	UI::CheckBox *showShieldsCheck = nullptr;
 	UI::CheckBox *gunsCheck = nullptr;
@@ -985,6 +1048,11 @@ void ModelViewer::SetupUI()
 		add_pair(c, mainBox, hitItButton = c->SmallButton(), "Hit it!");
 		hitItButton->onClick.connect(sigc::bind(sigc::mem_fun(*this, &ModelViewer::OnHitIt), hitItButton));
 	}
+
+	
+	add_pair(c, mainBox, randomColours = c->SmallButton(), "Random Colours");
+	randomColours->onClick.connect(sigc::bind(sigc::mem_fun(*this, &ModelViewer::OnRandomColor), randomColours));
+	
 
 	//pattern selector
 	if (m_model->SupportsPatterns()) {
@@ -1222,25 +1290,25 @@ void ModelViewer::UpdateLights()
 	switch(m_options.lightPreset) {
 	case 0:
 		//Front white
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(90,0), Color(255), Color(255)));
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0,-90), Color(13, 13, 26), Color(255)));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(90,0), Color::WHITE, Color::WHITE));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0,-90), Color(13, 13, 26), Color::WHITE));
 		break;
 	case 1:
 		//Two-point
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(120,0), Color(230, 204, 204), Color(255)));
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(-30,-90), Color(178, 128, 0), Color(255)));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(120,0), Color(230, 204, 204), Color::WHITE));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(-30,-90), Color(178, 128, 0), Color::WHITE));
 		break;
 	case 2:
 		//Backlight
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(-75,20), Color(255), Color(255)));
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0,-90), Color(13, 13, 26), Color(255)));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(-75,20), Color::WHITE, Color::WHITE));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0,-90), Color(13, 13, 26), Color::WHITE));
 		break;
 	case 3:
 		//4 lights
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, 90), Color::YELLOW, Color(255)));
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, -90), Color::GREEN, Color(255)));
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, 45), Color::BLUE, Color(255)));
-		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, -45), Color::WHITE, Color(255)));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, 90), Color::YELLOW, Color::WHITE));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, -90), Color::GREEN, Color::WHITE));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, 45), Color::BLUE, Color::WHITE));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, -45), Color::WHITE, Color::WHITE));
 		break;
 	};
 

@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _BASESPHERE_H
@@ -26,7 +26,7 @@ public:
 	virtual ~BaseSphere();
 
 	virtual void Update()=0;
-	virtual void Render(Graphics::Renderer *renderer, const matrix4x4d &modelView, vector3d campos, const float radius, const float scale, const std::vector<Camera::Shadow> &shadows)=0;
+	virtual void Render(Graphics::Renderer *renderer, const matrix4x4d &modelView, vector3d campos, const float radius, const std::vector<Camera::Shadow> &shadows)=0;
 
 	virtual double GetHeight(const vector3d &p) const { return 0.0; }
 
@@ -34,9 +34,10 @@ public:
 	static void Uninit();
 	static void UpdateAllBaseSphereDerivatives();
 	static void OnChangeDetailLevel();
-	static void DrawAtmosphereSurface(Graphics::Renderer *renderer,
+
+	void DrawAtmosphereSurface(Graphics::Renderer *renderer,
 		const matrix4x4d &modelView, const vector3d &campos, float rad,
-		Graphics::RenderState *rs, Graphics::Material *mat);
+		Graphics::RenderState *rs, RefCountedPtr<Graphics::Material> mat);
 
 	// in sbody radii
 	virtual double GetMaxFeatureHeight() const { return 0.0; }
@@ -44,6 +45,8 @@ public:
 	struct MaterialParameters {
 		SystemBody::AtmosphereParameters atmosphere;
 		std::vector<Camera::Shadow> shadows;
+		Sint32 patchDepth;
+		Sint32 maxPatchDepth;
 	};
 
 	virtual void Reset()=0;
@@ -52,7 +55,8 @@ public:
 	Terrain* GetTerrain() const { return m_terrain.Get(); }
 
 	Graphics::RenderState* GetSurfRenderState() const { return m_surfRenderState; }
-	Graphics::Material* GetSurfaceMaterial() const { return m_surfaceMaterial.get(); }
+	RefCountedPtr<Graphics::Material> GetSurfaceMaterial() const { return m_surfaceMaterial; }
+	MaterialParameters& GetMaterialParameters() { return m_materialParameters; }
 
 protected:
 	const SystemBody *m_sbody;
@@ -64,9 +68,12 @@ protected:
 
 	Graphics::RenderState *m_surfRenderState;
 	Graphics::RenderState *m_atmosRenderState;
-	std::unique_ptr<Graphics::Material> m_surfaceMaterial;
-	std::unique_ptr<Graphics::Material> m_atmosphereMaterial;
+	RefCountedPtr<Graphics::Material> m_surfaceMaterial;
+	RefCountedPtr<Graphics::Material> m_atmosphereMaterial;
 	RefCountedPtr<Graphics::Material> m_cloudMaterial;
+
+	// atmosphere geometry
+	std::unique_ptr<Graphics::Drawables::Sphere3D> m_atmos;
 
 	//special parameters for shaders
 	MaterialParameters m_materialParameters;

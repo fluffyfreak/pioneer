@@ -31,8 +31,7 @@ void CloudSphereProgram::InitUniforms()
 	geosphereAtmosInvScaleHeight.Init("geosphereAtmosInvScaleHeight", m_program);
 	geosphereAtmosTopRad.Init("geosphereAtmosTopRad", m_program);
 	geosphereCenter.Init("geosphereCenter", m_program);
-	geosphereScale.Init("geosphereScale", m_program);
-	geosphereScaledRadius.Init("geosphereScaledRadius", m_program);
+	geosphereRadius.Init("geosphereRadius", m_program);
 
 	shadows.Init("shadows", m_program);
 	occultedLight.Init("occultedLight", m_program);
@@ -49,7 +48,7 @@ void CloudSphereProgram::InitUniforms()
 // CloudSphereMaterial -----------------------------------
 Program *CloudSphereMaterial::CreateProgram(const MaterialDescriptor &desc)
 {
-	assert(desc.effect == EFFECT_GASSPHERE_TERRAIN);
+	assert(desc.effect == EFFECT_CLOUD_SPHERE);
 	assert(desc.dirLights < 5);
 	std::stringstream ss;
 	ss << stringf("#define NUM_LIGHTS %0{u}\n", desc.dirLights);
@@ -88,8 +87,7 @@ void CloudSphereMaterial::SetGSUniforms()
 	p->geosphereAtmosInvScaleHeight.Set(ap.atmosInvScaleHeight);
 	p->geosphereAtmosTopRad.Set(ap.atmosRadius);
 	p->geosphereCenter.Set(ap.center);
-	p->geosphereScaledRadius.Set(ap.planetRadius / ap.scale);
-	p->geosphereScale.Set(ap.scale);
+	p->geosphereRadius.Set(ap.planetRadius);
 
 	//Light uniform parameters
 	for( Uint32 i=0 ; i<m_renderer->GetNumLights() ; i++ ) {

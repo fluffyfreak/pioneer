@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "ModelSkin.h"
@@ -102,7 +102,7 @@ static std::string _modelskin_serializer(LuaWrappable *o)
 	Serializer::Writer wr;
 	skin->Save(wr);
 	const std::string &ser = wr.GetData();
-	snprintf(buf, sizeof(buf), "%lu\n", ser.size());
+	snprintf(buf, sizeof(buf), SIZET_FMT "\n", ser.size());
 
 	return std::string(buf) + ser;
 }

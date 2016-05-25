@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "StarSystem.h"
@@ -701,7 +701,7 @@ void StarSystem::Dump()
 	}
 
 	FILE *f = fopen("starsystem.dump", "w");
-	fprintf(f, "%lu bodies\n", output.size());
+	fprintf(f, SIZET_FMT " bodies\n", output.size());
 	fprintf(f, "0 steps\n");
 	for (std::vector<thing_t>::iterator i = output.begin();
 			i != output.end(); ++i) {
@@ -988,7 +988,7 @@ void StarSystem::ExportToLua(const char *filename) {
 	if(f == 0)
 		return;
 
-	fprintf(f,"-- Copyright © 2008-2012 Pioneer Developers. See AUTHORS.txt for details\n");
+	fprintf(f,"-- Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details\n");
 	fprintf(f,"-- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt\n\n");
 
 	std::string stars_in_system = GetStarTypes(m_rootBody.Get());
@@ -1031,7 +1031,7 @@ void StarSystem::Dump(FILE* file, const char* indent, bool suppressSectorData) c
 			fprintf(file, "%s\t\t%s\n", indent, EnumStrings::GetString("BodyType", m_stars[i]->GetType()));
 		if (m_numStars > 0) fprintf(file, "%s\t}\n", indent);
 	}
-	fprintf(file, "%s\t%zu bodies, %zu spaceports \n", indent, m_bodies.size(), m_spaceStations.size());
+	fprintf(file, "%s\t" SIZET_FMT " bodies, " SIZET_FMT " spaceports \n", indent, m_bodies.size(), m_spaceStations.size());
 	fprintf(file, "%s\tpopulation %.0f\n", indent, m_totalPop.ToDouble() * 1e9);
 	fprintf(file, "%s\tgovernment %s/%s, lawlessness %.2f\n", indent, m_polit.GetGovernmentDesc(), m_polit.GetEconomicDesc(),
 		m_polit.lawlessness.ToDouble() * 100.0);
