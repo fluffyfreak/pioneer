@@ -41,7 +41,9 @@ void CloudSphereProgram::InitUniforms()
 	srad.Init("srad", m_program);
 	lrad.Init("lrad", m_program);
 	sdivlrad.Init("sdivlrad", m_program);
-
+	
+	permTexture.Init("permTexture", m_program);
+	gradTexture.Init("gradTexture", m_program);
 	time.Init("time", m_program);
 }
 
@@ -99,8 +101,8 @@ void CloudSphereMaterial::SetGSUniforms()
 	}
 
 	p->diffuse.Set(this->diffuse);
-	p->texture0.Set(this->texture0, 0);
-
+	p->permTexture.Set(this->texture0, 0);
+	p->gradTexture.Set(this->texture1, 1);
 	p->time.Set(float(1.0 + Pi::game->GetTime() * 0.0005));
 
 	// we handle up to three shadows at a time

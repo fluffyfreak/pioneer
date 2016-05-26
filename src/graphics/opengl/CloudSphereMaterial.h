@@ -33,6 +33,8 @@ namespace Graphics {
 			Uniform lrad;
 			Uniform sdivlrad;
 
+			Uniform permTexture;
+			Uniform gradTexture;
 			Uniform time;
 
 		protected:

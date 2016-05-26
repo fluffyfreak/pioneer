@@ -7,7 +7,7 @@
 
 out vec3 varyingEyepos;
 out vec3 varyingNormal;
-out vec3 varyingTexCoord0;
+out vec3 v_texCoord3D;
 
 uniform vec3 geosphereCenter;
 uniform float geosphereRadius;
@@ -17,5 +17,5 @@ void main(void)
 	gl_Position = logarithmicTransform();
 	varyingEyepos = vec3(uViewMatrix * a_vertex);
 	varyingNormal = vec3(uNormalMatrix * a_normal);
-	varyingTexCoord0 = a_normal.xyz;
+	v_texCoord3D = a_normal.xyz;
 }
