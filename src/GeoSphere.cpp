@@ -438,13 +438,13 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView
 	}
 
 	// display the terrain height control-mesh
-	static std::unique_ptr<Graphics::Drawables::Sphere3D> m_ball;
+	
 	const float rad = m_materialParameters.atmosphere.atmosRadius * 0.99f;
 	const matrix4x4d cloudsTrans(trans * matrix4x4d::ScaleMatrix(rad, rad, rad));
 	if(bHasAtmosphere)
 	{
 		// bunny, ball ball!
-		if( !m_ball.get() ) {
+		if( !m_cloudSphere.get() ) {
 			if(!m_cloudMaterial.Valid()) {
 				Graphics::MaterialDescriptor matDesc;
 				matDesc.effect = Graphics::EFFECT_CLOUD_SPHERE;
@@ -454,15 +454,15 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView
 				m_cloudMaterial->texture0 = Graphics::TextureBuilder::Raw("textures/permTexture.png").GetOrCreateTexture(Pi::renderer, "noise");
 				m_cloudMaterial->texture1 = Graphics::TextureBuilder::Raw("textures/gradTexture.png").GetOrCreateTexture(Pi::renderer, "noise");
 			}
-			m_cloudMaterial->specialParameter0 = &m_materialParameters;
 
 			//blended
 			Graphics::RenderStateDesc rsd;
 			rsd.blendMode = Graphics::BLEND_ALPHA;
 			rsd.depthWrite = false;
 			rsd.cullMode = Graphics::CULL_NONE;
-			m_ball.reset( new Graphics::Drawables::Sphere3D(Pi::renderer, m_cloudMaterial, Pi::renderer->CreateRenderState(rsd), 5, 1.0) );
+			m_cloudSphere.reset( new Graphics::Drawables::Sphere3D(Pi::renderer, m_cloudMaterial, Pi::renderer->CreateRenderState(rsd), 5, 1.0) );
 		}
+		m_cloudMaterial->specialParameter0 = &m_materialParameters;
 	}
 
 	Color ambient;
@@ -500,13 +500,11 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView
 
 	renderer->SetAmbientColor(oldAmbient);
 	
-	if( bHasAtmosphere )
+	if( bHasAtmosphere && m_cloudSphere )
 	{
 		// draw it
 		renderer->SetTransform(cloudsTrans);
-		if( m_ball.get() ) {
-			m_ball->Draw( Pi::renderer );
-		}
+		m_cloudSphere->Draw( Pi::renderer );
 	}
 
 	renderer->GetStats().AddToStatCount(Graphics::Stats::STAT_PLANETS, 1);

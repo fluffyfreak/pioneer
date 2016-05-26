@@ -41,7 +41,7 @@ void main(void)
 	
 	float thickness = max(rnoise * 2.0 + noise, 0.0);
 	thickness *= thickness;
-	vec4 texColor = vec4(max(vec3(1.0, 1.0, 1.0) * thickness, 0.0) * 2.0, clamp(thickness, 0.0, 1.0));
+	vec4 texColor = vec4(max(vec3(1.0, 1.0, 1.0) * thickness, 0.0) * 2.0, 1.0);
 	// end of noise clouds
 	
 	vec4 diff = texColor;
