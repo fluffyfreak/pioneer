@@ -196,7 +196,6 @@ void AsyncJobQueue::Finish(Job *job, const uint8_t threadIdx)
 // call OnFinish methods for completed jobs, and clean up
 Uint32 AsyncJobQueue::FinishJobs()
 {
-	PROFILE_SCOPED()
 	Uint32 finished = 0;
 
 	const uint32_t numRunners = m_runners.size();
@@ -225,7 +224,8 @@ Uint32 AsyncJobQueue::FinishJobs()
 	return finished;
 }
 
-void AsyncJobQueue::Cancel(Job *job) {
+void AsyncJobQueue::Cancel(Job *job) 
+{
 	// lock both queues, so we know that all jobs will stay put
 	SDL_LockMutex(m_queueLock);
 	const uint32_t numRunners = m_runners.size();
@@ -381,7 +381,6 @@ Job::Handle SyncJobQueue::Queue(Job *job, JobClient *client)
 // call OnFinish methods for completed jobs, and clean up
 Uint32 SyncJobQueue::FinishJobs()
 {
-	PROFILE_SCOPED()
 	Uint32 finished = 0;
 
 	while (!m_finished.empty()) {
@@ -400,7 +399,8 @@ Uint32 SyncJobQueue::FinishJobs()
 	return finished;
 }
 
-void SyncJobQueue::Cancel(Job *job) {
+void SyncJobQueue::Cancel(Job *job) 
+{
 	// check the waiting list. if its there then it hasn't run yet. just forget about it
 	for (std::deque<Job*>::iterator i = m_queue.begin(); i != m_queue.end(); ++i) {
 		if (*i == job) {

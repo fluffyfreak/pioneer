@@ -278,7 +278,6 @@ void ShipCpanel::OnMultiFuncUngrabFocus(multifuncfunc_t f)
 
 void ShipCpanel::Update()
 {
-	PROFILE_SCOPED()
 	int timeAccel = m_game->GetTimeAccel();
 	int requested = m_game->GetRequestedTimeAccel();
 
@@ -423,7 +422,6 @@ void ShipCpanel::SetAlertState(Ship::AlertState as)
 
 void ShipCpanel::TimeStepUpdate(float step)
 {
-	PROFILE_SCOPED()
 	m_scanner->TimeStepUpdate(step);
 }
 

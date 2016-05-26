@@ -92,7 +92,6 @@ void Screen::ClearFocus()
 
 bool Screen::Project(const vector3d &in, vector3d &out)
 {
-	PROFILE_SCOPED()
 	// implements gluProject (see the OpenGL documentation or the Mesa implementation of gluProject)
 	const float * const M = modelMatrix.Data();
 	const float * const P = projMatrix.Data();
@@ -132,8 +131,6 @@ bool Screen::Project(const vector3d &in, vector3d &out)
 
 void Screen::EnterOrtho()
 {
-	PROFILE_SCOPED()
-
 	Graphics::Renderer *r = GetRenderer();
 
 	modelMatrix = r->GetCurrentModelView();
@@ -146,8 +143,6 @@ void Screen::EnterOrtho()
 
 void Screen::LeaveOrtho()
 {
-	PROFILE_SCOPED()
-
 	Graphics::Renderer *r = GetRenderer();
 
 	r->SetProjection(projMatrix);
@@ -156,7 +151,6 @@ void Screen::LeaveOrtho()
 
 void Screen::Draw()
 {
-	PROFILE_SCOPED()
 	assert(Screen::initted);
 	EnterOrtho();
 	baseContainer->Draw();
@@ -165,7 +159,6 @@ void Screen::Draw()
 
 bool Screen::IsBaseWidget(const Widget *w)
 {
-	PROFILE_SCOPED()
 	return w == static_cast<const Widget*>(baseContainer);
 }
 
@@ -292,7 +285,6 @@ int Screen::PickCharacterInString(const std::string &s, float x, float y, Text::
 
 void Screen::RenderStringBuffer(RefCountedPtr<Graphics::VertexBuffer> vb, const std::string &s, float xoff, float yoff, const Color &color, Text::TextureFont *font)
 {
-	PROFILE_SCOPED()
     if (!font) font = GetFont().Get();
 
 	Graphics::Renderer *r = Gui::Screen::GetRenderer();
@@ -332,7 +324,6 @@ void Screen::RenderStringBuffer(RefCountedPtr<Graphics::VertexBuffer> vb, const 
 
 void Screen::RenderMarkupBuffer(RefCountedPtr<Graphics::VertexBuffer> vb, const std::string &s, const Color &color, Text::TextureFont *font)
 {
-	PROFILE_SCOPED()
     if (!font) font = GetFont().Get();
 
 	Graphics::Renderer *r = Gui::Screen::GetRenderer();

@@ -7,7 +7,7 @@
 
 ShipCpanel* View::s_cpan = nullptr;
 
-View::View(): Gui::Fixed(float(Gui::Screen::GetWidth()), float(Gui::Screen::GetHeight()-64)) {
+View::View() : Gui::Fixed(float(Gui::Screen::GetWidth()), float(Gui::Screen::GetHeight() - 64)) {
 	m_rightButtonBar = new Gui::Fixed(128, 26);
 	m_rightButtonBar->SetBgColor(Color(160,160,160,255));
 
