@@ -277,6 +277,157 @@ void GeoSphere::ProcessSplitResults()
 	}
 }
 
+#include "FileSystem.h"
+#include "PngWriter.h"
+#include "MathUtil.h"
+#include "perlin.h"
+
+double fbm(const vector3d &position, int octaves, float frequency, float persistence) {
+	double total = 0.0;
+	double maxAmplitude = 0.0;
+	double amplitude = 1.0;
+	for (int i = 0; i < octaves; i++) {
+		total += noise(position * frequency) * amplitude;
+		frequency *= 2.0;
+		maxAmplitude += amplitude;
+		amplitude *= persistence;
+	}
+	return total / maxAmplitude;
+}
+
+#pragma optimize("",off)
+void Analyse(GeoSphere *geo)
+{
+	const std::string name( geo->GetSystemBody()->GetName() );
+	if(name != "New Hope")
+		return;
+
+	// resolution of the maps we'll generate
+	const Uint32 hmWide = 1024;//64;
+	const Uint32 hmHigh = hmWide>>1;
+
+	// calculate storage for the maps
+	const Uint32 bpp = 4; // channels of info... one byte per thing?
+	const Uint32 stride = (bpp*hmWide + 3) & ~3;// pad rows to 4 bytes, which is the default row alignment for OpenGL
+	std::unique_ptr<Uint8[]> pixels(new Uint8[stride * hmHigh]);
+	std::unique_ptr<vector3d[]> spheremap(new vector3d[hmWide * hmHigh]);
+	std::unique_ptr<double[]> heightmap(new double[hmWide * hmHigh]);
+	std::unique_ptr<vector2d[]> winds(new vector2d[hmWide * hmHigh]);
+	std::unique_ptr<Uint8[]> windpixels(new Uint8[stride * hmHigh]);
+
+	static const Uint32 NUM_LAT_WINDS = 7;
+	static const Uint32 MAX_LAT_WINDS = NUM_LAT_WINDS-1;
+	static const vector2d latWinds[NUM_LAT_WINDS] = {
+		vector2d( 0,-1).Normalized(),
+		vector2d(-1, 0).Normalized(),
+		vector2d( 1, 1).Normalized(),
+		vector2d(-1, 0).Normalized(),
+		vector2d( 1,-1).Normalized(),
+		vector2d(-1, 1).Normalized(),
+		vector2d( 0, 1).Normalized()
+	};
+
+	// Create heightmap and data
+	double minH=DBL_MAX;
+	double maxH=DBL_MIN;
+	for(Uint32 h = 0; h<hmHigh; h++)
+	{
+		// normalised 2D coordinates (-1..1)
+		const double wy = ((double(h) / double(hmHigh)) * 2.0) - 1.0;
+		// 2D to polar
+		const double lat = -asin(wy);
+		// cache sin & cos latitude values
+		const double coslat = cos(lat);
+		const double sinlat = sin(lat);
+		// normalise from -rad..rad to 0..1 range
+		const double normLat = (-lat+(M_PI*0.5)) / M_PI;
+		// Horizontal / longitude loop
+		for(Uint32 w = 0; w<hmWide; w++)
+		{
+			// normalised 2D coordinates (-1..1)
+			const double wx = ((double(w) / double(hmWide)) * 2.0) - 1.0;
+			// 2D to polar
+			const double lon = (wx * M_PI);
+			// polar to 3D cartesian (normalised, no radius required/used)
+			const double x = coslat * cos(lon);
+			const double y = coslat * sin(lon);
+			const double z = sinlat;
+			const vector3d pos(x,y,z);
+			// height at point
+			const double height = geo->GetHeight(pos);
+			const Uint32 hmIndex = (h * hmWide) + (w);
+			spheremap[hmIndex] = pos;
+			heightmap[hmIndex] = height;
+			minH = std::max(minH, height);
+			maxH = std::max(maxH, height);
+
+			// invert latitude since image start is lower-left not top-left
+			const double distort = fbm(pos, 5, 2, 0.5) * 0.15;
+			const double latWindsIndexD = MAX_LAT_WINDS*Clamp((1.0-normLat)+distort, 0.0, 1.0);
+			const Uint32 latWindsIndexLower = Clamp(Uint32(latWindsIndexD), 0U, MAX_LAT_WINDS);
+			const Uint32 latWindsIndexUpper = (latWindsIndexLower<MAX_LAT_WINDS) ? latWindsIndexLower+1 : latWindsIndexLower;
+			const vector2d wind = MathUtil::mix(latWinds[latWindsIndexLower], latWinds[latWindsIndexUpper], (latWindsIndexD - latWindsIndexLower));
+			winds[hmIndex] = wind;
+		}
+	}
+	const double invMaxH = (is_equal_exact(maxH, 0.0)) ? 1.0 : (1.0 / maxH);
+
+	// Calculate surface property maps
+	for(Uint32 h = 0; h<hmHigh; h++)
+	{
+		// normalised 2D coordinates (-1..1)
+		const double wy = ((double(h) / double(hmHigh)) * 2.0) - 1.0;
+		const double lat = -asin(wy);
+		const double sinlat = sin(lat);
+		// Horizontal / longitude loop
+		for(Uint32 w = 0; w<hmWide; w++)
+		{
+			// height at point
+			const Uint32 hmIndex = (h * hmWide) + (w);
+			const double height = heightmap[hmIndex] * invMaxH;
+			// adjust for water if necessary
+			const bool bWater = (height<=0.0);
+
+			// calculate solar heating + height & water contributions
+			const double intensity = 1.0 - abs(sinlat);
+			static const double ESun = 1.0;
+			const double heatAbsorbtion = (((1.0-(bWater ? 0.5 : height))*intensity*intensity)+(intensity*0.5))*ESun;
+
+			// calculate friction
+			static const double CLand = 0.9f;
+			static const double CWater = 0.2f;
+			const double friction = MathUtil::mix(CWater,CLand,height);
+			
+			const Uint32 index = (h * stride) + (w*bpp);
+			{
+				pixels[index + 0] = Uint8(Clamp(heatAbsorbtion * 255.0, 0.0, 255.0));
+				pixels[index + 1] = Uint8(friction * 255);
+				pixels[index + 2] = 0;//Uint8(winds[hmIndex].x * 255);
+				pixels[index + 3] = 255;
+
+				windpixels[index + 0] = Uint8(((1.0+winds[hmIndex].x)/2) * 255);
+				windpixels[index + 1] = Uint8(((1.0+winds[hmIndex].y)/2) * 255);
+				windpixels[index + 2] = 0;
+				windpixels[index + 3] = 255;
+			}
+		}
+	}
+
+	// output images of what we've done
+	const std::string dir = "planetmaps";
+	FileSystem::userFiles.MakeDirectory(dir);
+	{
+		std::string destFile( name + std::string(".png") );
+		const std::string fname = FileSystem::JoinPathBelow(dir, destFile.c_str());
+		write_png(FileSystem::userFiles, fname, pixels.get(), hmWide, hmHigh, stride, bpp);
+	}
+	{
+		std::string destFile( name + std::string("_winds.png") );
+		const std::string fname = FileSystem::JoinPathBelow(dir, destFile.c_str());
+		write_png(FileSystem::userFiles, fname, windpixels.get(), hmWide, hmHigh, stride, bpp);
+	}
+}
+
 void GeoSphere::BuildFirstPatches()
 {
 	assert(!m_patches[0]);
@@ -307,6 +458,8 @@ void GeoSphere::BuildFirstPatches()
 	for (int i=0; i<NUM_PATCHES; i++) {
 		m_patches[i]->RequestSinglePatch();
 	}
+
+	Analyse(this);
 
 	m_initStage = eRequestedFirstPatches;
 }
