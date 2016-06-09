@@ -283,15 +283,6 @@ void GeoSphere::ProcessSplitResults()
 #include "perlin.h"
 #include "Color.h"
 
-inline int iwrap(int x, int y)
-{
-    if (x > 0)
-        return x % y;
-    if (x < 0)
-        return (x + 1) % y + y - 1;
-    return 0;
-}
-
 double fbm(const vector3d &position, const int octaves, float frequency, const float persistence) 
 {
 	PROFILE_SCOPED()
@@ -308,112 +299,7 @@ double fbm(const vector3d &position, const int octaves, float frequency, const f
 	return total / maxAmplitude;
 }
 
-class Cellular {
-public:
-	Cellular(const int cellSize, const int dimx, const int dimy, const std::vector<vector2d> &s, const std::vector<double> &h) 
-		: CELL_DIVISOR(cellSize), INV_CELL_DIVISOR(1.0/double(cellSize))
-		, size_x(dimx), size_y(dimy), half_size_x(dimx>>1), half_size_y(dimy>>1)
-		, cellsX(dimx / cellSize), cellsY(dimy / cellSize)
-		, heights(h) 
-	{
-		PROFILE_SCOPED()
-		cells.reset(new Cell[cellsX * cellsY]);
-		const size_t count = s.size();
-		for( size_t c=0; c<count; c++ )
-		{
-			// find which Cell to put the values into
-			const Uint32 xi = s[c].x * INV_CELL_DIVISOR;
-			const Uint32 yi = s[c].y * INV_CELL_DIVISOR;
-			const Uint32 index = (yi * cellsX) + xi;
-			cells[index].points.push_back(s[c]);
-			cells[index].indices.push_back(c);
-		}
-		Output("Cellular :: CellsX %u, CellsY %u\n", cellsX, cellsY);
-
-		GenMap();
-	}
-
-	double* CellularMap() const { return buf.get(); }
-private:
-	const int CELL_DIVISOR;
-	const double INV_CELL_DIVISOR;
-
-	const int size_x, size_y, half_size_x, half_size_y;
-	const Uint32 cellsX, cellsY;
-	const std::vector<double> &heights;
-	std::unique_ptr<double[]> buf;
-
-	class Cell 
-	{
-	public:
-		Cell() {
-			PROFILE_SCOPED()
-			points.reserve(20);
-			indices.reserve(20);
-		}
-		std::vector<vector2d>	points;
-		std::vector<size_t>		indices;
-	};
-	std::unique_ptr<Cell[]> cells;
-	
-	inline double WrapDist( int x, int y, const vector2d &p) const
-	{
-		PROFILE_SCOPED()
-		double dx = abs(x-p.x);
-		double dy = abs(y-p.y);
-		if (dx > half_size_x ) // only wrap on the horizontal
-			dx = size_x-dx;
-		//if (dy > half_size_y )
-		//	dy = size_y-dy;
-		// return squared distance
-		return dx*dx + dy*dy;
-	}
-
-#define CELL_OFFSET 2
-	size_t NearestSite( const int x, const int y ) const
-	{
-		PROFILE_SCOPED()
-		size_t site=0xFFFFFFFF;
- 		double mindist = DBL_MAX;
-
-		// find this cell
-		const int cellX = x * INV_CELL_DIVISOR;
-		const int cellY = y * INV_CELL_DIVISOR;
-		// search through the NxN grid of cells centred on cellX|cellY;
-		for(int yi = std::max(cellY-CELL_OFFSET,0); yi<std::min(cellY+CELL_OFFSET,int(cellsY)); yi++) 
-		{
-			for(int xi = (cellX-CELL_OFFSET); xi<(cellX+CELL_OFFSET); xi++) 
-			{
-				const Uint32 index = (yi * cellsX) + iwrap(xi, cellsX);
-				const std::vector<vector2d> &pts = cells[index].points;
-				for (size_t i=0 ; i<pts.size() ; ++i)
-				{
-					double dist = WrapDist(x,y,pts[i]);
-					if (dist < mindist) 
-					{
-						mindist = dist;
-						site = cells[index].indices[i];
-					}
-				}
-			}
-		}
- 		return site;
-	}
-	
-	void GenMap()
-	{
-		PROFILE_SCOPED()
-		buf.reset(new double[size_y * size_x]);
-		double *ptr = buf.get();
-
-		for (int i = 0; i < size_y; i++ ) {
-			for (int j = 0; j < size_x; j++ ) {
-				(*ptr) = heights[NearestSite(j, i)];
-				++ptr;
-			}
-		}
-	}
-};
+#include "Cellular.h"
 
 static const double NORT = 1.0;
 static const double EAST = 1.0;
@@ -624,7 +510,7 @@ void Analyse(GeoSphere *geo)
 				// move the water around
 				const vector2d &windDir = winds[hmIndex];
 				const Sint32 newW = (Sint32(w) + (windDir.x < 0.0 ? -1 : 1));
-				const Uint32 xmov = iwrap(newW, (hmWide-1));
+				const Uint32 xmov = MathUtil::iwrap(newW, (hmWide-1));
 				const Uint32 ymov = Clamp(h + (windDir.y < 0.0 ? -1 : 1), 0U, hmHigh-1U);
 
 				const Uint32 xIndex = (h * hmWide) + xmov;

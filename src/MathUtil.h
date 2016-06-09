@@ -34,6 +34,16 @@ namespace MathUtil {
 	// matrix3x3f utility functions
 	matrix3x3f Inverse(const matrix3x3f &);
 	matrix3x3f Transpose(const matrix3x3f &);
+
+	// integer wrapping method
+	inline int iwrap(int x, int y)
+	{
+		if (x > 0)
+			return x % y;
+		if (x < 0)
+			return (x + 1) % y + y - 1;
+		return 0;
+	}
 }
 
 #endif
