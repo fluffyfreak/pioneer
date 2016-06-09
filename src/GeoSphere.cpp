@@ -292,11 +292,14 @@ inline int iwrap(int x, int y)
     return 0;
 }
 
-double fbm(const vector3d &position, int octaves, float frequency, float persistence) {
+double fbm(const vector3d &position, const int octaves, float frequency, const float persistence) 
+{
+	PROFILE_SCOPED()
 	double total = 0.0;
 	double maxAmplitude = 0.0;
 	double amplitude = 1.0;
-	for (int i = 0; i < octaves; i++) {
+	for (int i = 0; i < octaves; i++) 
+	{
 		total += noise(position * frequency) * amplitude;
 		frequency *= 2.0;
 		maxAmplitude += amplitude;
@@ -305,54 +308,101 @@ double fbm(const vector3d &position, int octaves, float frequency, float persist
 	return total / maxAmplitude;
 }
 
-
 class Cellular {
 public:
+	Cellular(const int cellSize, const int dimx, const int dimy, const std::vector<vector2d> &s, const std::vector<double> &h) 
+		: CELL_DIVISOR(cellSize), INV_CELL_DIVISOR(1.0/double(cellSize))
+		, size_x(dimx), size_y(dimy), half_size_x(dimx>>1), half_size_y(dimy>>1)
+		, cellsX(dimx / cellSize), cellsY(dimy / cellSize)
+		, heights(h) 
+	{
+		PROFILE_SCOPED()
+		cells.reset(new Cell[cellsX * cellsY]);
+		const size_t count = s.size();
+		for( size_t c=0; c<count; c++ )
+		{
+			// find which Cell to put the values into
+			const Uint32 xi = s[c].x * INV_CELL_DIVISOR;
+			const Uint32 yi = s[c].y * INV_CELL_DIVISOR;
+			const Uint32 index = (yi * cellsX) + xi;
+			cells[index].points.push_back(s[c]);
+			cells[index].indices.push_back(c);
+		}
+		Output("Cellular :: CellsX %u, CellsY %u\n", cellsX, cellsY);
+
+		GenMap();
+	}
+
+	double* CellularMap() const { return buf.get(); }
+private:
+	const int CELL_DIVISOR;
+	const double INV_CELL_DIVISOR;
+
+	const int size_x, size_y, half_size_x, half_size_y;
+	const Uint32 cellsX, cellsY;
+	const std::vector<double> &heights;
+	std::unique_ptr<double[]> buf;
+
+	class Cell 
+	{
+	public:
+		Cell() {
+			PROFILE_SCOPED()
+			points.reserve(20);
+			indices.reserve(20);
+		}
+		std::vector<vector2d>	points;
+		std::vector<size_t>		indices;
+	};
+	std::unique_ptr<Cell[]> cells;
+	
 	inline double WrapDist( int x, int y, const vector2d &p) const
 	{
+		PROFILE_SCOPED()
 		double dx = abs(x-p.x);
 		double dy = abs(y-p.y);
-		if (dx > half_size_x )
+		if (dx > half_size_x ) // only wrap on the horizontal
 			dx = size_x-dx;
 		//if (dy > half_size_y )
 		//	dy = size_y-dy;
+		// return squared distance
 		return dx*dx + dy*dy;
 	}
 
-	double NearestDistance( const int x, const int y ) const
-	{
- 		double mindist = DBL_MAX;
- 		for (size_t i=0 ; i<sites.size() ; ++i)
-		{
-			double dist=0.0f;
-			dist = WrapDist(x,y,sites[i]);
-			if (dist < mindist) 
-			{
-				mindist = dist;
-			}
-		}
- 		return mindist;
-	}
-
+#define CELL_OFFSET 2
 	size_t NearestSite( const int x, const int y ) const
 	{
+		PROFILE_SCOPED()
 		size_t site=0xFFFFFFFF;
  		double mindist = DBL_MAX;
- 		for (size_t i=0 ; i<sites.size() ; ++i)
+
+		// find this cell
+		const int cellX = x * INV_CELL_DIVISOR;
+		const int cellY = y * INV_CELL_DIVISOR;
+		// search through the NxN grid of cells centred on cellX|cellY;
+		for(int yi = std::max(cellY-CELL_OFFSET,0); yi<std::min(cellY+CELL_OFFSET,int(cellsY)); yi++) 
 		{
-			double dist=0.0f;
-			dist = WrapDist(x,y,sites[i]);
-			if (dist < mindist) 
+			for(int xi = (cellX-CELL_OFFSET); xi<(cellX+CELL_OFFSET); xi++) 
 			{
-				mindist = dist;
-				site = i;
+				const Uint32 index = (yi * cellsX) + iwrap(xi, cellsX);
+				const std::vector<vector2d> &pts = cells[index].points;
+				for (size_t i=0 ; i<pts.size() ; ++i)
+				{
+					double dist = WrapDist(x,y,pts[i]);
+					if (dist < mindist) 
+					{
+						mindist = dist;
+						site = cells[index].indices[i];
+					}
+				}
 			}
 		}
  		return site;
 	}
 	
-	void gen_map()
+	void GenMap()
 	{
+		PROFILE_SCOPED()
 		buf.reset(new double[size_y * size_x]);
 		double *ptr = buf.get();
 
@@ -362,47 +412,7 @@ public:
 				++ptr;
 			}
 		}
-
-#if 1
-		// output images of what we've done
-		const std::string dir = "planetmaps";
-		FileSystem::userFiles.MakeDirectory(dir);
-		char res[256];
-		sprintf(res, "_%ux%u", size_x, size_y);
-		const Uint32 bpp = 4; // channels of info... one byte per thing?
-		const Uint32 stride = (bpp*size_x + 3) & ~3;// pad rows to 4 bytes, which is the default row alignment for OpenGL
-		assert(heights.size() == (size_x+size_y));
-		std::unique_ptr<Uint8[]> pixels(new Uint8[stride * size_y]);
-		for(int y=0; y<size_y; y++) 
-		{
-			for(int x=0; x<size_x; x++) 
-			{
-				const double h = buf[(y * size_x + x)];
-				const Uint32 index = (y * stride) + (x*bpp);
-				pixels[index + 0] = h * 255;
-				pixels[index + 1] = h * 255;
-				pixels[index + 2] = h * 255;
-				pixels[index + 3] = 255;
-			}
-		}
-		{
-			std::string destFile( "voronoi" + std::string(res) + std::string(".png") );
-			const std::string fname = FileSystem::JoinPathBelow(dir, destFile.c_str());
-			write_png(FileSystem::userFiles, fname, pixels.get(), size_x, size_y, stride, bpp);
-		}
-#endif 
 	}
-
-	Cellular(const int dimx, const int dimy, const std::vector<vector2d> &s, const std::vector<double> &h) 
-		: size_x(dimx), size_y(dimy), half_size_x(dimx>>1), half_size_y(dimy>>1), sites(s), heights(h) 
-	{
-		gen_map();
-	}
-private:
-	const int size_x, size_y, half_size_x, half_size_y;
-	const std::vector<vector2d> &sites;
-	const std::vector<double> &heights;
-	std::unique_ptr<double[]> buf;
 };
 
 static const double NORT = 1.0;
@@ -423,59 +433,113 @@ static const vector2d latWinds[NUM_LAT_WINDS] = {
 	vector2d(NONE,NORT).Normalized()
 };
 
-#pragma optimize("",off)
+void ReadVector2dValues(std::vector<vector2d> &out, FileSystem::FileSource &fs, const std::string &path, const Uint32 scaleX, const Uint32 scaleY)
+{
+	PROFILE_SCOPED()
+	RefCountedPtr<FileSystem::FileData> data = fs.ReadFile(path);
+	StringRange buffer = data->AsStringRange();
+	buffer = buffer.StripUTF8BOM();
+
+	std::string section_name;
+
+	while (!buffer.Empty()) 
+	{
+		StringRange line = buffer.ReadLine().StripSpace();
+
+		// if the line is a comment, skip it
+		if (line.Empty()) 
+			continue;
+
+		const char *kmid = line.FindChar(',');
+		// if there's no '=' sign, skip the line
+		if (kmid == line.end) {
+			Output("WARNING: ignoring invalid line in file:\n   '%.*s'\n", int(line.Size()), line.begin);
+			continue;
+		}
+
+		StringRange xval(line.begin, kmid);
+		StringRange yval(kmid + 1, line.end);
+
+		double x = atof( xval.ToString().c_str() );
+		double y = atof( yval.ToString().c_str() );
+
+		out.push_back(vector2d(x*scaleX,y*scaleY));
+	}
+}
+
 void Analyse(GeoSphere *geo)
 {
-	const std::string name( geo->GetSystemBody()->GetName() );
-	if(name != "New Hope")
-		return;
+	PROFILE_SCOPED()
 
 	// resolution of the maps we'll generate
 	const Uint32 hmWide = 1024;//64;
 	const Uint32 hmHigh = hmWide>>1;
+	const double dWide = hmWide;
+	const double dHigh = hmHigh;
 
 	// generate sampling points
-	Random rng(geo->GetSystemBody()->GetSeed()+4609837U);
-	#define frand(x) (rng.Double() * x)
-	std::vector<vector2d> site;
-	#define N_SITES 256
-	site.resize(N_SITES);
 	std::vector<double> heights;
-	heights.resize(N_SITES);
-	for (int k = 0; k < N_SITES; k++ ) {
-		site[k].x = frand(1024);
-		site[k].y = frand(512);
-		heights[k] = frand(1.0);
+	std::vector<vector2d> poisson;
+	poisson.reserve(6254);
+	ReadVector2dValues(poisson, FileSystem::gameDataFiles, "Poisson.txt", hmWide-1, hmHigh-1);
+	heights.resize(	poisson.size() );
+	double minH=DBL_MAX;
+	double maxH=DBL_MIN;
+	for (size_t k = 0; k < poisson.size(); k++ ) 
+	{
+		PROFILE_SCOPED_DESC("poisson heights")
+		const double wx = ((poisson[k].x / dWide) * 2.0) - 1.0;
+		const double wy = ((poisson[k].y / dHigh) * 2.0) - 1.0;
+		// 2D to polar
+		const double lat = -asin(wy);
+		const double lon = (wx * M_PI);
+		// polar to 3D cartesian (normalised, no radius required/used)
+		const double x = cos(lat) * cos(lon);
+		const double y = cos(lat) * sin(lon);
+		const double z = sin(lat);
+		const double height = geo->GetHeight(vector3d(x,y,z));
+		minH = std::min(minH, height);
+		maxH = std::max(maxH, height);
+		heights[k] = height;
 	}
-	Cellular vor(1024, 512, site, heights);
+	const double invMaxH = (is_equal_exact(maxH, 0.0)) ? 1.0 : (1.0 / maxH);
+	for (size_t k = 0; k < heights.size(); k++ ) 
+	{
+		PROFILE_SCOPED_DESC("poisson heights normalised")
+		heights[k] *= invMaxH;
+	}
+	Cellular vor(8, hmWide, hmHigh, poisson, heights);
 
 	// calculate storage for the maps
 	const Uint32 bpp = 4; // channels of info... one byte per thing?
 	const Uint32 stride = (bpp*hmWide + 3) & ~3;// pad rows to 4 bytes, which is the default row alignment for OpenGL
 	std::unique_ptr<Uint8[]> pixels(new Uint8[stride * hmHigh]);
 	std::unique_ptr<vector3d[]> spheremap(new vector3d[hmWide * hmHigh]);
-	std::unique_ptr<double[]> heightmap(new double[hmWide * hmHigh]);
 	std::unique_ptr<vector2d[]> winds(new vector2d[hmWide * hmHigh]);
 	std::unique_ptr<Uint8[]> windpixels(new Uint8[stride * hmHigh]);
 	std::unique_ptr<Uint8[]> accumprecippixels(new Uint8[stride * hmHigh]);
+	const double* heightmap = vor.CellularMap();
 
-	// Create heightmap and data
-	double minH=DBL_MAX;
-	double maxH=DBL_MIN;
+	// Calculate surface property maps
+	Random rng(geo->GetSystemBody()->GetSeed()+4609837U);
 	for(Uint32 h = 0; h<hmHigh; h++)
 	{
+		PROFILE_SCOPED_DESC("Surface properties Y")
 		// normalised 2D coordinates (-1..1)
-		const double wy = ((double(h) / double(hmHigh)) * 2.0) - 1.0;
+		const double wy = ((double(h) / dHigh) * 2.0) - 1.0;
 		// 2D to polar
 		const double lat = -asin(wy);
 		// cache sin & cos latitude values
 		const double coslat = cos(lat);
 		const double sinlat = sin(lat);
+		// normalise from -rad..rad to 0..1 range
+		const double normLat = (-lat+1.0) * 0.5;
 		// Horizontal / longitude loop
 		for(Uint32 w = 0; w<hmWide; w++)
 		{
+			PROFILE_SCOPED_DESC("Surface properties X")
 			// normalised 2D coordinates (-1..1)
-			const double wx = ((double(w) / double(hmWide)) * 2.0) - 1.0;
+			const double wx = ((double(w) / dWide) * 2.0) - 1.0;
 			// 2D to polar
 			const double lon = (wx * M_PI);
 			// polar to 3D cartesian (normalised, no radius required/used)
@@ -483,29 +547,7 @@ void Analyse(GeoSphere *geo)
 			const double y = coslat * sin(lon);
 			const double z = sinlat;
 			const vector3d pos(x,y,z);
-			// height at point
-			const double height = geo->GetHeight(pos);
-			const Uint32 hmIndex = (h * hmWide) + (w);
-			spheremap[hmIndex] = pos;
-			heightmap[hmIndex] = height;
-			minH = std::min(minH, height);
-			maxH = std::max(maxH, height);
-		}
-	}
-	const double invMaxH = (is_equal_exact(maxH, 0.0)) ? 1.0 : (1.0 / maxH);
 
-	// Calculate surface property maps
-	for(Uint32 h = 0; h<hmHigh; h++)
-	{
-		// normalised 2D coordinates (-1..1)
-		const double wy = ((double(h) / double(hmHigh)) * 2.0) - 1.0;
-		const double lat = -asin(wy);
-		const double sinlat = sin(lat);
-		// normalise from -rad..rad to 0..1 range
-		const double normLat = (-lat+1.0) * 0.5;
-		// Horizontal / longitude loop
-		for(Uint32 w = 0; w<hmWide; w++)
-		{
 			// height at point
 			const Uint32 hmIndex = (h * hmWide) + (w);
 			const double height = heightmap[hmIndex] * invMaxH;
@@ -513,7 +555,6 @@ void Analyse(GeoSphere *geo)
 			const bool bWater = (height<=0.0);
 
 			// invert latitude since image start is lower-left not top-left
-			const vector3d &pos = spheremap[hmIndex];
 			const double distort = fbm(pos, 5, 2, 0.5) * 0.15;
 			const double latWindsIndexD = MAX_LAT_WINDS*Clamp((1.0-normLat)+distort, 0.0, 1.0);
 			const Uint32 latWindsIndexLower = Clamp(Uint32(floor(latWindsIndexD)), 0U, MAX_LAT_WINDS);
@@ -559,13 +600,15 @@ void Analyse(GeoSphere *geo)
 	double maxAccum = DBL_MIN;
 	double minPrecip = DBL_MAX;
 	double maxPrecip = DBL_MIN;
-	for(Uint32 simLoop = 0; simLoop<250; simLoop++)
+	//for(Uint32 simLoop = 0; simLoop<250; simLoop++)
 	{
+		PROFILE_SCOPED_DESC("simLoop")
 		for(Uint32 h = 0; h<hmHigh; h++)
 		{
 			// Horizontal / longitude loop
 			for(Uint32 w = 0; w<hmWide; w++)
 			{
+				PROFILE_SCOPED_DESC("simLoop inner")
 				// indexes
 				const Uint32 hmIndex = (h * hmWide) + (w);
 				const Uint32 pixIndex = (h * stride) + (w*bpp);
@@ -629,24 +672,50 @@ void Analyse(GeoSphere *geo)
 	}
 
 	// output images of what we've done
-	const std::string dir = "planetmaps";
-	FileSystem::userFiles.MakeDirectory(dir);
-	char res[256];
-	sprintf(res, "_%ux%u", hmWide, hmHigh);
+	if(false)
 	{
-		std::string destFile( name + std::string(res) + std::string(".png") );
-		const std::string fname = FileSystem::JoinPathBelow(dir, destFile.c_str());
-		write_png(FileSystem::userFiles, fname, pixels.get(), hmWide, hmHigh, stride, bpp);
-	}
-	{
-		std::string destFile( name + std::string(res) + std::string("_winds.png") );
-		const std::string fname = FileSystem::JoinPathBelow(dir, destFile.c_str());
-		write_png(FileSystem::userFiles, fname, windpixels.get(), hmWide, hmHigh, stride, bpp);
-	}
-	{
-		std::string destFile( name + std::string(res) + std::string("_precip.png") );
-		const std::string fname = FileSystem::JoinPathBelow(dir, destFile.c_str());
-		write_png(FileSystem::userFiles, fname, accumprecippixels.get(), hmWide, hmHigh, stride, bpp);
+		PROFILE_SCOPED_DESC("Output Images")
+
+		const std::string dir = "planetmaps";
+		FileSystem::userFiles.MakeDirectory(dir);
+		char res[256];
+		sprintf(res, "_%ux%u", hmWide, hmHigh);
+		
+		const std::string name( geo->GetSystemBody()->GetName() );
+		{
+			std::string destFile( name + std::string(res) + std::string(".png") );
+			const std::string fname = FileSystem::JoinPathBelow(dir, destFile.c_str());
+			write_png(FileSystem::userFiles, fname, pixels.get(), hmWide, hmHigh, stride, bpp);
+		}
+		{
+			std::string destFile( name + std::string(res) + std::string("_winds.png") );
+			const std::string fname = FileSystem::JoinPathBelow(dir, destFile.c_str());
+			write_png(FileSystem::userFiles, fname, windpixels.get(), hmWide, hmHigh, stride, bpp);
+		}
+		{
+			std::string destFile( name + std::string(res) + std::string("_precip.png") );
+			const std::string fname = FileSystem::JoinPathBelow(dir, destFile.c_str());
+			write_png(FileSystem::userFiles, fname, accumprecippixels.get(), hmWide, hmHigh, stride, bpp);
+		}
+		std::unique_ptr<Uint8[]> voronoi(new Uint8[stride * hmHigh]);
+		const double* buf = vor.CellularMap();
+		for(int y=0; y<hmHigh; y++) 
+		{
+			for(int x=0; x<hmWide; x++) 
+			{
+				const double h = buf[(y * hmWide + x)];
+				const Uint32 index = (y * stride) + (x*bpp);
+				voronoi[index + 0] = h * 255;
+				voronoi[index + 1] = h * 255;
+				voronoi[index + 2] = h * 255;
+				voronoi[index + 3] = 255;
+			}
+		}
+		{
+			std::string destFile( name + std::string(res) + std::string("_voronoi.png") );
+			const std::string fname = FileSystem::JoinPathBelow(dir, destFile.c_str());
+			write_png(FileSystem::userFiles, fname, voronoi.get(), hmWide, hmHigh, stride, bpp);
+		}
 	}
 }
 
@@ -681,7 +750,22 @@ void GeoSphere::BuildFirstPatches()
 		m_patches[i]->RequestSinglePatch();
 	}
 
-	Analyse(this);
+	const std::string name( GetSystemBody()->GetName() );
+	if(name == "New Hope")
+	{
+#ifdef PIONEER_PROFILER
+		Profiler::reset();
+		FileSystem::userFiles.MakeDirectory("GeoSphere");
+		const std::string profilerPath = FileSystem::JoinPathBelow(FileSystem::userFiles.GetRoot(), "GeoSphere");
+#endif
+		{
+			PROFILE_SCOPED_DESC("GeoSphere-Analyse")
+			Analyse(this);
+		}
+#ifdef PIONEER_PROFILER
+		Profiler::dumphtml(profilerPath.c_str());
+#endif
+	}
 
 	m_initStage = eRequestedFirstPatches;
 }
