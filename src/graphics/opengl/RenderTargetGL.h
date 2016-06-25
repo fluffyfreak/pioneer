@@ -35,10 +35,11 @@ protected:
 class RenderTarget : public Graphics::RenderTarget {
 public:
 	~RenderTarget();
-	virtual Texture *GetColorTexture() const;
-	virtual Texture *GetDepthTexture() const;
-	virtual void SetColorTexture(Texture*);
-	virtual void SetDepthTexture(Texture*);
+	virtual Texture *GetColorTexture() const override final;
+	virtual Texture *GetDepthTexture() const override final;
+	virtual void SetCubeFaceTexture(const Uint32 face, Texture* t) override final;
+	virtual void SetColorTexture(Texture*) override final;
+	virtual void SetDepthTexture(Texture*) override final;
 
 protected:
 	friend class Graphics::RendererOGL;

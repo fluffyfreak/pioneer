@@ -129,7 +129,7 @@ bool Pi::joystickEnabled;
 bool Pi::mouseYInvert;
 bool Pi::compactScanner;
 std::map<SDL_JoystickID,Pi::JoystickState> Pi::joysticks;
-bool Pi::navTunnelDisplayed;
+bool Pi::navTunnelDisplayed = false;
 bool Pi::speedLinesDisplayed = false;
 bool Pi::hudTrailsDisplayed = false;
 bool Pi::bRefreshBackgroundStars = true;
@@ -1223,12 +1223,12 @@ void Pi::MainLoop()
 	double accumulator = Pi::game->GetTimeStep();
 	Pi::gameTickAlpha = 0;
 
-	while (Pi::game) {
-		PROFILE_SCOPED()
 
 #ifdef PIONEER_PROFILER
 		Profiler::reset();
 #endif
+	while (Pi::game) {
+		PROFILE_SCOPED()
 
 		Pi::serverAgent->ProcessResponses();
 
@@ -1287,7 +1287,7 @@ void Pi::MainLoop()
 		}
 
 		Pi::BeginRenderTarget();
-
+		Pi::renderer->SetViewport(0, 0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
 		Pi::renderer->BeginFrame();
 		Pi::renderer->SetTransform(matrix4x4f::Identity());
 
@@ -1445,6 +1445,9 @@ void Pi::MainLoop()
 			Screendump(fname.c_str(), Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
 		}
 #endif /* MAKING_VIDEO */
+#ifdef PIONEER_PROFILER
+		Profiler::reset();
+#endif
 	}
 }
 
