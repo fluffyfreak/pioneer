@@ -3,6 +3,7 @@
 
 #include "libs.h"
 #include "GeoSphere.h"
+#include "GeoSphereAnalyse.h"
 #include "GeoPatchContext.h"
 #include "GeoPatch.h"
 #include "GeoPatchJobs.h"
@@ -308,6 +309,23 @@ void GeoSphere::BuildFirstPatches()
 		m_patches[i]->RequestSinglePatch();
 	}
 
+	const std::string name( GetSystemBody()->GetName() );
+	if(name == "New Hope" || name == "Earth")
+	{
+#ifdef PIONEER_PROFILER
+		Profiler::reset();
+		FileSystem::userFiles.MakeDirectory("GeoSphere");
+		const std::string profilerPath = FileSystem::JoinPathBelow(FileSystem::userFiles.GetRoot(), "GeoSphere");
+#endif
+		{
+			PROFILE_SCOPED_DESC("GeoSphere-Analyse")
+			Analyse(this);
+		}
+#ifdef PIONEER_PROFILER
+		Profiler::dumphtml(profilerPath.c_str());
+#endif
+	}
+
 	m_initStage = eRequestedFirstPatches;
 }
 
@@ -410,6 +428,7 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView
 	if (!m_surfaceMaterial)
 		SetUpMaterials();
 
+	bool bHasAtmosphere = false;
 	{
 		//Update material parameters
 		//XXX no need to calculate AP every frame
@@ -422,8 +441,9 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView
 		m_materialParameters.maxPatchDepth = GetMaxDepth();
 
 		m_surfaceMaterial->specialParameter0 = &m_materialParameters;
-
-		if (m_materialParameters.atmosphere.atmosDensity > 0.0) {
+		
+		bHasAtmosphere = (m_materialParameters.atmosphere.atmosDensity > 0.0);
+		if (bHasAtmosphere) {
 			m_atmosphereMaterial->specialParameter0 = &m_materialParameters;
 
 			// make atmosphere sphere slightly bigger than required so

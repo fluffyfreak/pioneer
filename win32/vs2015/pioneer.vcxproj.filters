@@ -429,6 +429,12 @@
     <ClCompile Include="..\..\src\RandomColor.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\GeoSphereAnalyse.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Cellular.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Aabb.h">
@@ -864,6 +870,12 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\RandomColor.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\GeoSphereAnalyse.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Cellular.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
