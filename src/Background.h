@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _BACKGROUND_H
@@ -44,7 +44,7 @@ namespace Background
 		void Init();
 
 		std::unique_ptr<Graphics::VertexBuffer> m_vertexBuffer;
-		std::unique_ptr<Graphics::Texture> m_cubemap;
+		RefCountedPtr<Graphics::Texture> m_cubemap;
 
 		Uint32 m_numCubemaps;
 	};

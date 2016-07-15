@@ -15,6 +15,28 @@
 #include "StringF.h"
 #include <algorithm>
 
+#define DUMP_TO_TEXTURE 1
+
+#if DUMP_TO_TEXTURE
+#include "FileSystem.h"
+#include "PngWriter.h"
+#include "graphics/opengl/TextureGL.h"
+void textureDump(const char* destFile, const int width, const int height, const Color* buf)
+{
+	const std::string dir = "cubemaps";
+	FileSystem::userFiles.MakeDirectory(dir);
+	const std::string fname = FileSystem::JoinPathBelow(dir, destFile);
+
+	// pad rows to 4 bytes, which is the default row alignment for OpenGL
+	//const int stride = (3*width + 3) & ~3;
+	const int stride = width * 4;
+
+	write_png(FileSystem::userFiles, fname, &buf[0].r, width, height, stride, 4);
+
+	printf("texture %s saved\n", fname.c_str());
+}
+#endif
+
 const size_t EnvProbe::NUM_VIEW_DIRECTIONS = 6;
 
 namespace
@@ -59,9 +81,9 @@ EnvProbe::EnvProbe(Graphics::Renderer *r, const int sizeInPixels)
 	for (int i = 0; i<EnvProbe::NUM_VIEW_DIRECTIONS; i++)
 	{
 		Graphics::TextureDescriptor texDesc(
-			Graphics::TEXTURE_RGB_888,
+			Graphics::TEXTURE_RGBA_8888,
 			vector2f(m_sizeInPixels, m_sizeInPixels),
-			Graphics::LINEAR_CLAMP, false, false, 0);
+			Graphics::LINEAR_CLAMP, false, false, false, 0, Graphics::TextureType::TEXTURE_2D);
 		Graphics::Texture* pTexture = Pi::renderer->CreateTexture(texDesc);
 
 		// Complete the RT description so we can request a buffer.
@@ -146,6 +168,7 @@ void EnvProbe::Draw()
 
 	const Color oldSceneAmbientColor = m_renderer->GetAmbientColor();
 	m_renderer->SetAmbientColor(Color(0.f));
+	m_renderer->BeginFrame();
 	
 	Graphics::TextureCubeData tcd;
 	memset(&tcd, 0, sizeof(Graphics::TextureCubeData));
@@ -153,6 +176,7 @@ void EnvProbe::Draw()
 	for (int c = 0; c < EnvProbe::NUM_VIEW_DIRECTIONS; c++)
 	{
 		// current  pointers
+		m_cameraContexts[c]->SetFrame(Pi::player->GetFrame());
 		Graphics::RenderTarget *it = m_renderTargets[c];
 		CameraContext *pCamContext = m_cameraContexts[c].Get();
 		Camera *pCamera = m_cameras[c].get();
@@ -201,7 +225,7 @@ void EnvProbe::Draw()
 		// pad rows to 4 bytes, which is the default row alignment for OpenGL
 		const int stride = (3* m_sizeInPixels + 3) & ~3;
 
-		std::vector<Uint8> pixel_data(stride * m_sizeInPixels);
+		std::vector<Uint8> pixel_data(stride * m_sizeInPixels * m_sizeInPixels);
 		pGL->Bind();
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, &pixel_data[0]);
 		pGL->Unbind();
@@ -220,6 +244,25 @@ void EnvProbe::Draw()
 		m_renderer->PopMatrix();
 		pCamContext->EndFrame();
 	}
+	m_renderer->EndFrame();
+	m_renderer->SwapBuffers();
+	static int s_count = 0;
+	for (int c = 0; c < EnvProbe::NUM_VIEW_DIRECTIONS; c++)
+	{
+		// current  pointers
+		Graphics::RenderTarget *it = m_renderTargets[c];
+#if DUMP_TO_TEXTURE
+		std::unique_ptr<Color, FreeDeleter> buffer(static_cast<Color*>(malloc(m_sizeInPixels*m_sizeInPixels*4)));
+		Graphics::TextureGL* pGLTex = static_cast<Graphics::TextureGL*>(it->GetColorTexture());
+		pGLTex->Bind();
+		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer.get());
+		pGLTex->Unbind();
+
+		const std::string destFile = stringf("cube_face_%0{d}_%1{d}.png", s_count, c);
+		textureDump(destFile.c_str(), m_sizeInPixels, m_sizeInPixels, buffer.get());
+#endif
+	}
+	++s_count;
 
 	m_renderer->SetAmbientColor(oldSceneAmbientColor);
 }
