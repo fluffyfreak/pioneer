@@ -15,7 +15,7 @@
 #include "StringF.h"
 #include <algorithm>
 
-#define DUMP_TO_TEXTURE 1
+#define DUMP_TO_TEXTURE 0
 
 #if DUMP_TO_TEXTURE
 #include "FileSystem.h"
@@ -23,6 +23,7 @@
 #include "graphics/opengl/TextureGL.h"
 void textureDump(const char* destFile, const int width, const int height, const Color* buf)
 {
+	PROFILE_SCOPED()
 	const std::string dir = "cubemaps";
 	FileSystem::userFiles.MakeDirectory(dir);
 	const std::string fname = FileSystem::JoinPathBelow(dir, destFile);
@@ -64,6 +65,7 @@ EnvProbe::EnvProbe(Graphics::Renderer *r, const int sizeInPixels)
 	: m_sizeInPixels(sizeInPixels)
 	, m_renderer(r)
 {
+	PROFILE_SCOPED()
 	//get near & far clipping distances
 	float znear, zfar;
 	Pi::renderer->GetNearFarRange(znear, zfar);
@@ -77,37 +79,27 @@ EnvProbe::EnvProbe(Graphics::Renderer *r, const int sizeInPixels)
 		m_cameras[i].reset(new Camera(pContext, Pi::renderer));
 	}
 
-	// setup render targets
-	for (int i = 0; i<EnvProbe::NUM_VIEW_DIRECTIONS; i++)
-	{
-		Graphics::TextureDescriptor texDesc(
-			Graphics::TEXTURE_RGBA_8888,
-			vector2f(m_sizeInPixels, m_sizeInPixels),
-			Graphics::LINEAR_CLAMP, false, false, false, 0, Graphics::TextureType::TEXTURE_2D);
-		Graphics::Texture* pTexture = Pi::renderer->CreateTexture(texDesc);
+	Graphics::TextureDescriptor texDesc(
+		Graphics::TEXTURE_RGBA_8888,
+		vector2f(m_sizeInPixels, m_sizeInPixels),
+		Graphics::LINEAR_CLAMP, false, false, false, 0, Graphics::TEXTURE_CUBE_MAP);
+	m_cubemap.Reset( Pi::renderer->CreateTexture(texDesc) );
 
-		// Complete the RT description so we can request a buffer.
-		// NB: we don't want it to create use a texture because we share it with the textured quad created above.
-		Graphics::RenderTargetDesc rtDesc(
-			m_sizeInPixels,
-			m_sizeInPixels,
-			Graphics::TEXTURE_NONE,    // don't create a texture
-			Graphics::TEXTURE_DEPTH,
-			false);
+	// setup render target
+	// Complete the RT description so we can request a buffer.
+	// NB: we don't want it to create use a texture because we share it with the textured quad created above.
+	Graphics::RenderTargetDesc rtDesc(
+		m_sizeInPixels,
+		m_sizeInPixels,
+		Graphics::TEXTURE_NONE,    // don't create a texture
+		Graphics::TEXTURE_DEPTH,
+		false);
 
-		Graphics::RenderTarget* pRTarget = Pi::renderer->CreateRenderTarget(rtDesc);
-
-		pRTarget->SetColorTexture(pTexture);
-
-		m_renderTargets.push_back(pRTarget);
-	}
+	m_renderTarget.reset( Pi::renderer->CreateRenderTarget(rtDesc) );
 }
 
 EnvProbe::~EnvProbe()
 {
-	for (auto rt : m_renderTargets) {
-		delete rt;
-	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -115,6 +107,7 @@ EnvProbe::~EnvProbe()
 ///////////////////////////////////////////////////////////////////////////////
 void lookAtToAxes(const vector3f& pos, const vector3f& target, const vector3f& upDir, vector3f& left, vector3f& up, vector3f& forward)
 {
+	PROFILE_SCOPED()
     // compute the forward vector
     forward = (target - pos).Normalized();
 
@@ -130,6 +123,7 @@ void lookAtToAxes(const vector3f& pos, const vector3f& target, const vector3f& u
 ///////////////////////////////////////////////////////////////////////////////
 void lookAtMatrix(const vector3f& pos, const vector3f& target, const vector3f& upDir, matrix4x4f& matOut)
 {
+	PROFILE_SCOPED()
     vector3f forward, left, up;
 	lookAtToAxes(pos, target, upDir, left, up, forward);
 
@@ -138,6 +132,7 @@ void lookAtMatrix(const vector3f& pos, const vector3f& target, const vector3f& u
 
 void lookAtMatrix(const vector3f& pos, const vector3f& target, const vector3f& upDir, matrix3x3f& matOut)
 {
+	PROFILE_SCOPED()
 	vector3f forward, left, up;
 	lookAtToAxes(pos, target, upDir, left, up, forward);
 	matOut = matrix3x3f::FromVectors(left, up, forward);
@@ -145,6 +140,7 @@ void lookAtMatrix(const vector3f& pos, const vector3f& target, const vector3f& u
 
 void EnvProbe::BeginRenderTarget(Graphics::RenderTarget* pTarget) 
 {
+	PROFILE_SCOPED()
 	assert(pTarget);
 	const bool bTargetSet = m_renderer->SetRenderTarget(pTarget);
 	assert(bTargetSet);
@@ -152,11 +148,13 @@ void EnvProbe::BeginRenderTarget(Graphics::RenderTarget* pTarget)
 
 void EnvProbe::EndRenderTarget() 
 {
+	PROFILE_SCOPED()
 	m_renderer->SetRenderTarget(NULL);
 }
 
 void EnvProbe::Draw()
 {
+	PROFILE_SCOPED()
 	m_renderer->SetViewport(0, 0, m_sizeInPixels, m_sizeInPixels);
 	m_renderer->SetPerspectiveProjection(90.0f, 1.f, 1.f, 10000.f);
 	m_renderer->SetTransform(matrix4x4f::Identity());
@@ -168,7 +166,6 @@ void EnvProbe::Draw()
 
 	const Color oldSceneAmbientColor = m_renderer->GetAmbientColor();
 	m_renderer->SetAmbientColor(Color(0.f));
-	m_renderer->BeginFrame();
 	
 	Graphics::TextureCubeData tcd;
 	memset(&tcd, 0, sizeof(Graphics::TextureCubeData));
@@ -177,7 +174,6 @@ void EnvProbe::Draw()
 	{
 		// current  pointers
 		m_cameraContexts[c]->SetFrame(Pi::player->GetFrame());
-		Graphics::RenderTarget *it = m_renderTargets[c];
 		CameraContext *pCamContext = m_cameraContexts[c].Get();
 		Camera *pCamera = m_cameras[c].get();
 
@@ -197,72 +193,38 @@ void EnvProbe::Draw()
 		// render state
 		Graphics::Renderer::StateTicket ticket(m_renderer);
 		m_renderer->PushMatrix();
+
+		m_renderTarget->SetCubeFaceTexture(c, m_cubemap.Get());
 		
 		// render each face of the cubemap
-		BeginRenderTarget(it);
+		BeginRenderTarget(m_renderTarget.get());
 		{
 			// don't ever draw the player when drawing from the players location.
 			pCamera->Draw(Pi::player);
 		}
 		EndRenderTarget();
 
-		Graphics::Texture* pTex = it->GetColorTexture();
-
-		switch (c)
-		{
-		case 0: tcd.posX = pTex; break;
-		case 1: tcd.negX = pTex; break;
-		case 2: tcd.posY = pTex; break;
-		case 3: tcd.negY = pTex; break;
-		case 4: tcd.posZ = pTex; break;
-		case 5: tcd.negZ = pTex; break;
-		default:
-			assert(false);
-			break;
-		}
-#if 0
-		Graphics::TextureGL* pGL = static_cast<Graphics::TextureGL*>(it->GetColorTexture());
-		// pad rows to 4 bytes, which is the default row alignment for OpenGL
-		const int stride = (3* m_sizeInPixels + 3) & ~3;
-
-		std::vector<Uint8> pixel_data(stride * m_sizeInPixels * m_sizeInPixels);
-		pGL->Bind();
-		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, &pixel_data[0]);
-		pGL->Unbind();
-		glFinish();
-
-		const std::string dir = "cubemaps";
-		FileSystem::userFiles.MakeDirectory(dir);
-		const std::string destFile = stringf("cube_face_%0{d}.png", c);
-		const std::string fname = FileSystem::JoinPathBelow(dir, destFile);
-
-		write_png(FileSystem::userFiles, fname, &pixel_data[0], m_sizeInPixels, m_sizeInPixels, stride, 3);
-
-		printf("cubemap %s saved\n", fname.c_str());
-#endif
-
 		m_renderer->PopMatrix();
 		pCamContext->EndFrame();
 	}
-	m_renderer->EndFrame();
-	m_renderer->SwapBuffers();
+
+#if DUMP_TO_TEXTURE
 	static int s_count = 0;
+	Graphics::TextureGL* pGLTex = static_cast<Graphics::TextureGL*>(m_renderTarget->GetColorTexture());
 	for (int c = 0; c < EnvProbe::NUM_VIEW_DIRECTIONS; c++)
 	{
 		// current  pointers
-		Graphics::RenderTarget *it = m_renderTargets[c];
-#if DUMP_TO_TEXTURE
 		std::unique_ptr<Color, FreeDeleter> buffer(static_cast<Color*>(malloc(m_sizeInPixels*m_sizeInPixels*4)));
-		Graphics::TextureGL* pGLTex = static_cast<Graphics::TextureGL*>(it->GetColorTexture());
+		
 		pGLTex->Bind();
-		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer.get());
+		glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_X + c, 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer.get());
 		pGLTex->Unbind();
 
 		const std::string destFile = stringf("cube_face_%0{d}_%1{d}.png", s_count, c);
 		textureDump(destFile.c_str(), m_sizeInPixels, m_sizeInPixels, buffer.get());
-#endif
 	}
 	++s_count;
+#endif
 
 	m_renderer->SetAmbientColor(oldSceneAmbientColor);
 }

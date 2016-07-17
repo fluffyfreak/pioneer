@@ -16,13 +16,16 @@ public:
 
 	static const size_t NUM_VIEW_DIRECTIONS;
 
+	Graphics::Texture* GetCubemap() const { return m_cubemap.Get(); }
+
 private:
 	void BeginRenderTarget(Graphics::RenderTarget* pTarget);
 	void EndRenderTarget();
 
 	int m_sizeInPixels;
 	Graphics::Renderer *m_renderer;
-	std::vector<Graphics::RenderTarget*> m_renderTargets;
+	RefCountedPtr<Graphics::Texture> m_cubemap;
+	std::unique_ptr<Graphics::RenderTarget> m_renderTarget;
 	std::vector<RefCountedPtr<CameraContext>> m_cameraContexts;
 	std::vector<std::unique_ptr<Camera>> m_cameras;
 };
