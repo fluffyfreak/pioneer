@@ -51,6 +51,11 @@ void Player::SetShipType(const ShipType::Id &shipId) {
 	InitCockpit();
 }
 
+void Player::SetEnvMap(Graphics::Texture *pEnvTexture)
+{
+	s_heatGradientParams.pEnvTexture = pEnvTexture;
+}
+
 void Player::SaveToJson(Json::Value &jsonObj, Space *space)
 {
 	Ship::SaveToJson(jsonObj, space);

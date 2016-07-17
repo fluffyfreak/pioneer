@@ -47,6 +47,8 @@ public:
 	virtual void StaticUpdate(const float timeStep);
 	sigc::signal<void> onChangeEquipment;
 
+	void SetEnvMap(Graphics::Texture*);
+
 protected:
 	virtual void SaveToJson(Json::Value &jsonObj, Space *space);
 	virtual void LoadFromJson(const Json::Value &jsonObj, Space *space);

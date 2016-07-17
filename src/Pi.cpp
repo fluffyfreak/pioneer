@@ -88,6 +88,8 @@
 	#endif
 #endif
 
+std::unique_ptr<EnvProbe> envProbe;//(Pi::renderer, 256);
+
 float Pi::gameTickAlpha;
 sigc::signal<void, SDL_Keysym*> Pi::onKeyPress;
 sigc::signal<void, SDL_Keysym*> Pi::onKeyRelease;
@@ -1345,6 +1347,14 @@ void Pi::MainLoop()
 			}
 		}
 
+		if(bProbeEnv) {
+			bProbeEnv = false;
+			if(!envProbe)
+				envProbe.reset(new EnvProbe(Pi::renderer, 256));
+			envProbe->Draw();
+			Pi::player->SetEnvMap(envProbe->GetCubemap());
+		}
+
 		Pi::BeginRenderTarget();
 		Pi::renderer->SetViewport(0, 0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
 		Pi::renderer->BeginFrame();
@@ -1504,12 +1514,6 @@ void Pi::MainLoop()
 			Screendump(fname.c_str(), Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
 		}
 #endif /* MAKING_VIDEO */
-		
-		if(bProbeEnv) {
-			bProbeEnv = false;
-			EnvProbe envProbe(Pi::renderer, 256);
-			envProbe.Draw();
-		}
 
 #ifdef PIONEER_PROFILER
 		Profiler::reset();

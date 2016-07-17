@@ -65,6 +65,7 @@ public:
 	bool lighting;
 	bool normalMap;
 	bool specularMap;
+	bool environmentMap;
 	bool usePatterns; //pattern/color system
 	bool vertexColors;
 	bool instanced;

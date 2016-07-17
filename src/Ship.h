@@ -32,6 +32,7 @@ struct HeatGradientParameters_t {
 	matrix3x3f heatingMatrix;
 	vector3f heatingNormal; // normalised
 	float heatingAmount; // 0.0 to 1.0 used for `u` component of heatGradient texture
+	Graphics::Texture *pEnvTexture;
 };
 
 struct shipstats_t {
@@ -294,6 +295,8 @@ protected:
 
 	LuaRef m_equipSet;
 
+	static HeatGradientParameters_t s_heatGradientParams;
+
 private:
 	float GetECMRechargeTime();
 	void DoThrusterSounds() const;
@@ -356,8 +359,6 @@ private:
 
 	SceneGraph::Animation *m_landingGearAnimation;
 	std::unique_ptr<NavLights> m_navLights;
-
-	static HeatGradientParameters_t s_heatGradientParams;
 
 	std::unique_ptr<Sensors> m_sensors;
 	std::unordered_map<Body*, Uint8> m_relationsMap;

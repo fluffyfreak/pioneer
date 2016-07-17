@@ -44,6 +44,8 @@ MultiProgram::MultiProgram(const MaterialDescriptor &desc, int numLights)
 		ss << "#define HEAT_COLOURING\n";
 	if (desc.instanced) 
 		ss << "#define USE_INSTANCING\n";
+	if (desc.environmentMap) 
+		ss << "#define ENVIRONMENT_MAPPING\n";
 
 	m_name = "multi";
 	m_defines = ss.str();
@@ -107,10 +109,17 @@ void MultiMaterial::Apply()
 void LitMultiMaterial::Apply()
 {
 	//request a new light variation
-	if (m_curNumLights != m_renderer->m_numDirLights) {
+	bool bNeedsEnvMap = false;
+	if(nullptr!=specialParameter0) {
+		HeatGradientParameters_t *pMGP = static_cast<HeatGradientParameters_t*>(specialParameter0);
+		if(pMGP->pEnvTexture)
+			bNeedsEnvMap = true;
+	}
+	if (m_curNumLights != m_renderer->m_numDirLights || m_descriptor.environmentMap != bNeedsEnvMap) {
 		m_curNumLights = m_renderer->m_numDirLights;
-		if (m_programs[m_curNumLights] == 0) {
+		if (m_programs[m_curNumLights] == 0 || m_descriptor.environmentMap != bNeedsEnvMap) {
 			m_descriptor.dirLights = m_curNumLights; //hax
+			m_descriptor.environmentMap = bNeedsEnvMap;
 			m_programs[m_curNumLights] = m_renderer->GetOrCreateProgram(this);
 		}
 		m_program = m_programs[m_curNumLights];
@@ -123,6 +132,12 @@ void LitMultiMaterial::Apply()
 	p->specular.Set(this->specular);
 	p->shininess.Set(float(this->shininess));
 	p->sceneAmbient.Set(m_renderer->GetAmbientColor());
+	
+	if(nullptr!=specialParameter0) {
+		HeatGradientParameters_t *pMGP = static_cast<HeatGradientParameters_t*>(specialParameter0);
+		if(pMGP->pEnvTexture)
+			p->texture0.Set(pMGP->pEnvTexture, 0);
+	}
 
 	//Light uniform parameters
 	for( Uint32 i=0 ; i<m_renderer->GetNumLights() ; i++ ) {

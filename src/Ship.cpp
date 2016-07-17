@@ -31,7 +31,7 @@
 #include <algorithm>
 
 static const float TONS_HULL_PER_SHIELD = 10.f;
-HeatGradientParameters_t Ship::s_heatGradientParams;
+HeatGradientParameters_t Ship::s_heatGradientParams = {	matrix3x3f(0.0), vector3f(0.0),	0.0, nullptr };
 const float Ship::DEFAULT_SHIELD_COOLDOWN_TIME = 1.0f;
 
 void Ship::SaveToJson(Json::Value &jsonObj, Space *space)

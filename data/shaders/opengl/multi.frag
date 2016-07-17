@@ -6,7 +6,11 @@
 #include "lib.glsl"
 
 #ifdef TEXTURE0
+#ifdef ENVIRONMENT_MAPPING
+uniform samplerCube texture0; //diffuse
+#else
 uniform sampler2D texture0; //diffuse
+#endif
 uniform sampler2D texture1; //specular
 uniform sampler2D texture2; //glow
 uniform sampler2D texture3; //ambient
@@ -59,6 +63,9 @@ void ads(in int lightNum, in vec3 pos, in vec3 n, inout vec4 light, inout vec4 s
 
 void main(void)
 {
+#ifdef ENVIRONMENT_MAPPING
+	frag_color = texture(texture0, normal);
+#else
 #ifdef VERTEXCOLOR
 	vec4 color = vertexColor;
 #else
@@ -130,5 +137,6 @@ void main(void)
 #else
 	frag_color = color;
 #endif
+#endif // ENVIRONMENT_MAPPING
 	SetFragDepth();
 }
