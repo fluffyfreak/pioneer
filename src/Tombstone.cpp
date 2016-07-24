@@ -26,7 +26,7 @@ Tombstone::Tombstone(Graphics::Renderer *r, int width, int height)
 
 void Tombstone::Draw(float _time)
 {
-	m_renderer->SetClearColor(Color::BLACK);
+	m_renderer->SetClearColor(Color4f::BLACK);
 	m_renderer->ClearScreen();
 
 	m_renderer->SetPerspectiveProjection(75, m_aspectRatio, 1.f, 10000.f);

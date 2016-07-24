@@ -895,7 +895,8 @@ void Pi::HandleEvents()
 						
 						case SDLK_e: // alert it that we want to profile
 							{
-								bProbeEnv = true;
+								bProbeEnv = !bProbeEnv;
+								Pi::player->SetEnvMap(nullptr);
 							}
 							break;
 	
@@ -1348,10 +1349,9 @@ void Pi::MainLoop()
 		}
 
 		if(bProbeEnv) {
-			bProbeEnv = false;
 			if(!envProbe)
-				envProbe.reset(new EnvProbe(Pi::renderer, 256));
-			envProbe->Draw();
+				envProbe.reset(new EnvProbe(Pi::renderer, 512));
+			envProbe->Draw(Pi::player);
 			Pi::player->SetEnvMap(envProbe->GetCubemap());
 		}
 

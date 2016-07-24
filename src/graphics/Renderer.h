@@ -71,7 +71,7 @@ public:
 	virtual bool ClearScreen() = 0;
 	//clear depth buffer
 	virtual bool ClearDepthBuffer() = 0;
-	virtual bool SetClearColor(const Color &c) = 0;
+	virtual bool SetClearColor(const Color4f &c) = 0;
 
 	virtual bool SetViewport(int x, int y, int width, int height) = 0;
 

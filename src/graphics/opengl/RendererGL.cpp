@@ -113,7 +113,7 @@ RendererOGL::RendererOGL(WindowSDL *window, const Graphics::Settings &vs)
 	m_modelViewStack.push(matrix4x4f::Identity());
 	m_projectionStack.push(matrix4x4f::Identity());
 
-	SetClearColor(Color4f(0.f, 0.f, 0.f, 0.f));
+	SetClearColor(Color4f::BLACK);
 	SetViewport(0, 0, m_width, m_height);
 
 	if (vs.enableDebugMessages)
@@ -424,7 +424,7 @@ bool RendererOGL::ClearDepthBuffer()
 	return true;
 }
 
-bool RendererOGL::SetClearColor(const Color &c)
+bool RendererOGL::SetClearColor(const Color4f &c)
 {
 	glClearColor(c.r, c.g, c.b, c.a);
 	return true;

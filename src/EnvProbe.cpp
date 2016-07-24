@@ -46,18 +46,26 @@ namespace
 	static const vector3f target[EnvProbe::NUM_VIEW_DIRECTIONS] = {
 		vector3f(  1.0f,  0.0f,  0.0f ),
 		vector3f( -1.0f,  0.0f,  0.0f ),
-		vector3f(  0.0f,  1.0f,  0.0f ),
 		vector3f(  0.0f, -1.0f,  0.0f ),
+		vector3f(  0.0f,  1.0f,  0.0f ),
 		vector3f(  0.0f,  0.0f,  1.0f ),
 		vector3f(  0.0f,  0.0f, -1.0f )
 	};
 	static const vector3f upDir[EnvProbe::NUM_VIEW_DIRECTIONS] = {
-		vector3f(  0.0f,  1.0f,  0.0f ),
-		vector3f(  0.0f,  1.0f,  0.0f ),
+		vector3f(  0.0f, -1.0f,  0.0f ),
+		vector3f(  0.0f, -1.0f,  0.0f ),
 		vector3f(  0.0f,  0.0f, -1.0f ),
 		vector3f(  0.0f,  0.0f,  1.0f ),
-		vector3f(  0.0f,  1.0f,  0.0f ),
-		vector3f(  0.0f,  1.0f,  0.0f )
+		vector3f(  0.0f, -1.0f,  0.0f ),
+		vector3f(  0.0f, -1.0f,  0.0f )
+	};
+	static const Color4f colorDir[EnvProbe::NUM_VIEW_DIRECTIONS] = {
+		Color4f(  Color4f::RED ),
+		Color4f(  Color4f::RED * 0.25f ),
+		Color4f(  Color4f::GREEN ),
+		Color4f(  Color4f::GREEN * 0.25f ),
+		Color4f(  Color4f::BLUE ),
+		Color4f(  Color4f::BLUE * 0.25f )
 	};
 };
 
@@ -121,14 +129,14 @@ void lookAtToAxes(const vector3f& pos, const vector3f& target, const vector3f& u
 ///////////////////////////////////////////////////////////////////////////////
 // compute transform axis from object position, target and up direction
 ///////////////////////////////////////////////////////////////////////////////
-void lookAtMatrix(const vector3f& pos, const vector3f& target, const vector3f& upDir, matrix4x4f& matOut)
+/*void lookAtMatrix(const vector3f& pos, const vector3f& target, const vector3f& upDir, matrix4x4f& matOut)
 {
 	PROFILE_SCOPED()
     vector3f forward, left, up;
 	lookAtToAxes(pos, target, upDir, left, up, forward);
 
 	matOut.LoadFrom3x3Matrix( &matrix3x3f::FromVectors(left, up, forward)[0] );
-}
+}*/
 
 void lookAtMatrix(const vector3f& pos, const vector3f& target, const vector3f& upDir, matrix3x3f& matOut)
 {
@@ -152,7 +160,8 @@ void EnvProbe::EndRenderTarget()
 	m_renderer->SetRenderTarget(NULL);
 }
 
-void EnvProbe::Draw()
+static bool s_hacky_clear = false;
+void EnvProbe::Draw(Body *pBody)
 {
 	PROFILE_SCOPED()
 	m_renderer->SetViewport(0, 0, m_sizeInPixels, m_sizeInPixels);
@@ -173,7 +182,7 @@ void EnvProbe::Draw()
 	for (int c = 0; c < EnvProbe::NUM_VIEW_DIRECTIONS; c++)
 	{
 		// current  pointers
-		m_cameraContexts[c]->SetFrame(Pi::player->GetFrame());
+		m_cameraContexts[c]->SetFrame(pBody->GetFrame());
 		CameraContext *pCamContext = m_cameraContexts[c].Get();
 		Camera *pCamera = m_cameras[c].get();
 
@@ -182,8 +191,8 @@ void EnvProbe::Draw()
 		matrix3x3d transform;
 		matrix3x3ftod(matOut, transform);
 
-		pCamContext->SetPosition(Pi::player->GetPosition());
-		pCamContext->SetOrient(Pi::player->GetOrient() * transform);
+		pCamContext->SetPosition(pBody->GetPosition());
+		pCamContext->SetOrient(pBody->GetOrient() * transform);
 
 		// apply camera settings
 		pCamContext->ApplyDrawTransforms(m_renderer);
@@ -199,8 +208,13 @@ void EnvProbe::Draw()
 		// render each face of the cubemap
 		BeginRenderTarget(m_renderTarget.get());
 		{
-			// don't ever draw the player when drawing from the players location.
-			pCamera->Draw(Pi::player);
+			// don't ever draw the body itself.
+			if(s_hacky_clear) {
+				Pi::renderer->SetClearColor(colorDir[c]);
+				Pi::renderer->ClearScreen();
+			} else {
+				pCamera->Draw(pBody);
+			}
 		}
 		EndRenderTarget();
 

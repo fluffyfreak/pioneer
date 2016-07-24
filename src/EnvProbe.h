@@ -12,7 +12,7 @@ class EnvProbe {
 public:
 	EnvProbe(Graphics::Renderer *r, const int sizeInPixels);
 	~EnvProbe();
-	void Draw();
+	void Draw(Body*);
 
 	static const size_t NUM_VIEW_DIRECTIONS;
 

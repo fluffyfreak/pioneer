@@ -70,7 +70,7 @@ public:
 
 	virtual bool ClearScreen() override final;
 	virtual bool ClearDepthBuffer() override final;
-	virtual bool SetClearColor(const Color &c) override final;
+	virtual bool SetClearColor(const Color4f &c) override final;
 
 	virtual bool SetViewport(int x, int y, int width, int height) override final;
 

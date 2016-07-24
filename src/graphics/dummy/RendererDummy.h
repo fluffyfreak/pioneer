@@ -38,7 +38,7 @@ public:
 
 	virtual bool ClearScreen() override final { return true; }
 	virtual bool ClearDepthBuffer() override final { return true; }
-	virtual bool SetClearColor(const Color &c) override final { return true; }
+	virtual bool SetClearColor(const Color4f &c) override final { return true; }
 
 	virtual bool SetViewport(int x, int y, int width, int height) override final { return true; }
 

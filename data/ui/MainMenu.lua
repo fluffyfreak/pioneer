@@ -19,7 +19,7 @@ local ui = Engine.ui
 local l = Lang.GetResource("ui-core");
 
 local setupPlayerSol = function ()
-	Game.player:SetShipType("sinonatrix")
+	Game.player:SetShipType("molamola")
 	Game.player:SetLabel(Ship.MakeRandomLabel())
 	Game.player:AddEquip(hyperspace["hyperdrive_"..ShipDef[Game.player.shipId].hyperdriveClass])
 	Game.player:AddEquip(laser.pulsecannon_1mw)

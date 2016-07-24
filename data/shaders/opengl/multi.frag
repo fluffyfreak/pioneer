@@ -64,7 +64,7 @@ void ads(in int lightNum, in vec3 pos, in vec3 n, inout vec4 light, inout vec4 s
 void main(void)
 {
 #ifdef ENVIRONMENT_MAPPING
-	frag_color = texture(texture0, normal);
+	frag_color = texture(texture0, reflect(eyePos,normal));
 #else
 #ifdef VERTEXCOLOR
 	vec4 color = vertexColor;
