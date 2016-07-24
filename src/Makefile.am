@@ -35,6 +35,7 @@ noinst_HEADERS = \
 	DynamicBody.h \
 	Easing.h \
 	EnumStrings.h \
+	EnvProbe.h \
 	FaceParts.h \
 	Factions.h \
 	FileSystem.h \
@@ -170,6 +171,7 @@ pioneer_SOURCES	= \
 	DeathView.cpp \
 	DynamicBody.cpp \
 	EnumStrings.cpp \
+	EnvProbe.cpp \
 	FaceParts.cpp \
 	Factions.cpp \
 	FileSourceZip.cpp \
