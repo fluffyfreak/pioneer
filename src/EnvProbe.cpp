@@ -15,12 +15,13 @@
 #include "StringF.h"
 #include <algorithm>
 
-#define DUMP_TO_TEXTURE 0
+#define DUMP_TO_TEXTURE 1
 
 #if DUMP_TO_TEXTURE
 #include "FileSystem.h"
 #include "PngWriter.h"
 #include "graphics/opengl/TextureGL.h"
+static bool s_bDoDump = true;
 void textureDump(const char* destFile, const int width, const int height, const Color* buf)
 {
 	PROFILE_SCOPED()
@@ -223,21 +224,25 @@ void EnvProbe::Draw(Body *pBody)
 	}
 
 #if DUMP_TO_TEXTURE
-	static int s_count = 0;
-	Graphics::TextureGL* pGLTex = static_cast<Graphics::TextureGL*>(m_renderTarget->GetColorTexture());
-	for (int c = 0; c < EnvProbe::NUM_VIEW_DIRECTIONS; c++)
+	if(s_bDoDump)
 	{
-		// current  pointers
-		std::unique_ptr<Color, FreeDeleter> buffer(static_cast<Color*>(malloc(m_sizeInPixels*m_sizeInPixels*4)));
+		s_bDoDump = false;
+		static int s_count = 0;
+		Graphics::TextureGL* pGLTex = static_cast<Graphics::TextureGL*>(m_renderTarget->GetColorTexture());
+		for (int c = 0; c < EnvProbe::NUM_VIEW_DIRECTIONS; c++)
+		{
+			// current  pointers
+			std::unique_ptr<Color, FreeDeleter> buffer(static_cast<Color*>(malloc(m_sizeInPixels*m_sizeInPixels*4)));
 		
-		pGLTex->Bind();
-		glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_X + c, 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer.get());
-		pGLTex->Unbind();
+			pGLTex->Bind();
+			glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_X + c, 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer.get());
+			pGLTex->Unbind();
 
-		const std::string destFile = stringf("cube_face_%0{d}_%1{d}.png", s_count, c);
-		textureDump(destFile.c_str(), m_sizeInPixels, m_sizeInPixels, buffer.get());
+			const std::string destFile = stringf("cube_face_%0{d}_%1{d}.png", s_count, c);
+			textureDump(destFile.c_str(), m_sizeInPixels, m_sizeInPixels, buffer.get());
+		}
+		++s_count;
 	}
-	++s_count;
 #endif
 
 	m_renderer->SetAmbientColor(oldSceneAmbientColor);
