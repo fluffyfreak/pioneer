@@ -133,7 +133,7 @@ local mars = CustomSystemBody:new('Mars', 'PLANET_TERRESTRIAL')
 	:temp(278)
 	:semi_major_axis(f(152,100))
 	:eccentricity(f(933,10000))
-	:height_map('mars.hmap',0)  --	
+	:json_file('mars.json')
 	:inclination(math.deg2rad(1.85))
 	:rotation_period(f(1027,1000))
 	:axial_tilt(fixed.deg2rad(f(2519,100)))

@@ -5,7 +5,7 @@
             {
 				"name": "Heightmap",
                 "type": "heightmap",
-				"file": "earth.hmap"
+				"file": "mars.hmap"
             }
         ]
     },

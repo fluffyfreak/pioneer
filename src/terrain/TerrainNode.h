@@ -86,7 +86,7 @@ public:
 			m_nodeType = NT_NOISE_CUBED;
 		} else if (str == "heightmap") {
 			m_nodeType = NT_HEIGHTMAP;
-		} 
+		}
 	}
 
 	void ClampNoise(const double lower, const double upper) {
@@ -100,7 +100,7 @@ public:
 		m_children.push_back(child);
 	}
 
-	double Call(const vector3d& p);
+	double Call(const vector3d& p, const vector3d& pNorm);
 
 private:
 	inline double Scale(const double h)
@@ -157,7 +157,8 @@ public:
 	enum EnumSourceTypes {
 		ST_HEIGHT=0,
 		ST_HUMIDITY,
-		ST_TEMPERATURE
+		ST_TEMPERATURE,
+		ST_JITTER
 	};
 
 	void SetType(const EnumSourceTypes type)

@@ -13,10 +13,12 @@
         "base": 128,
         "funcs": [
             {
+				"name": "humidity",
                 "frequency": 0.0008,
 				"scale": [-128,128],
                 "octaves": 6,
-                "persistence": 0.9
+                "persistence": 0.9,
+				"type": "noise"
             }
         ]
     },
@@ -24,10 +26,12 @@
         "base": 172,
         "funcs": [
             {
+				"name": "temperature",
                 "frequency": 0.0006,
 				"scale": [-64,64],
                 "octaves": 6,
-                "persistence": 0.9
+                "persistence": 0.9,
+				"type": "noise"
             }
         ]
     }

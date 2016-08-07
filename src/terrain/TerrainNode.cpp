@@ -8,6 +8,8 @@
 #include <math.h>
 #include "MathUtil.h"
 
+#include "Easing.h"
+
 #include "FileSystem.h"
 #include "json/json.h"
 
@@ -315,7 +317,7 @@ double noise_cellular_squared(const int octaves, double frequency, const double 
 }
 
 
-double TerrainNodeData::Call(const vector3d& p)
+double TerrainNodeData::Call(const vector3d& p, const vector3d& pNorm)
 {
 	// A good way to fix this is to use another low frequency noise function that is scaled between 0 and 1.
 	// If we multiply the output of that noise function with our mountain function, then mountains will exists where it is 1, but not where it is 0.
@@ -328,7 +330,7 @@ double TerrainNodeData::Call(const vector3d& p)
 	double childH = 0.0;
 	for (auto child = m_children.begin(), end = m_children.end(); child!=end; ++child)
 	{
-		childH += child->Call(p);
+		childH += child->Call(p, pNorm);
 	}
 
 	// now our local value
@@ -340,7 +342,8 @@ double TerrainNodeData::Call(const vector3d& p)
 	case NT_NOISE_CELLULAR_SQUARED:	localH = Clamp(Scale(noise_cellular_squared(m_octaves, m_frequency, m_persistence, p)));	break;
 	case NT_NOISE_RIDGED:			localH = Clamp(Scale(noise_ridged(m_octaves, m_frequency, m_persistence, p)));				break;
 	case NT_NOISE_CUBED:			localH = Clamp(Scale(noise_cubed(m_octaves, m_frequency, m_persistence, p)));				break;
-	case NT_HEIGHTMAP:				localH = Clamp(GetHeightMapValue(p));														break;
+		// heightmaps are a data source not a noise time
+	case NT_HEIGHTMAP:				localH = Clamp(GetHeightMapValue(pNorm));													break;
 	}
 
 	// mix the values together
@@ -364,7 +367,7 @@ static size_t bufread_or_die(void *ptr, size_t size, size_t nmemb, ByteRange &bu
 	}
 	return read_count;
 }
-#pragma optimize("",off)
+
 bool TerrainNodeData::LoadHeightmap(const std::string &filename)
 {
 	if (!filename.empty()) 
@@ -436,7 +439,7 @@ bool TerrainNodeData::LoadHeightmap(const std::string &filename)
 	}
 	return false;
 }
-#pragma optimize("",off)
+
 double TerrainNodeData::GetHeightMapValue(const vector3d& p)
 {
 	if(!m_heightMap)
@@ -600,6 +603,9 @@ void LoadTerrainJSON(const std::string& path, std::vector<TerrainSource>& source
 		}
 		else if (key == "temperature") {
 			source.SetType(TerrainSource::ST_TEMPERATURE);
+		}
+		else if (key == "jitter") {
+			source.SetType(TerrainSource::ST_JITTER);
 		}
 
 		// get base height
