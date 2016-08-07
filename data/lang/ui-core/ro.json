@@ -1095,6 +1095,10 @@
       "description" : "",
       "message" : "Nava e prea mică pentru echipajul curent."
    },
+   "TOO_SMALL_TO_TRANSSHIP" : {
+      "description" : "",
+      "message" : "Nava e prea mică pentru a transporta marfa dvs."
+   },
    "TOTAL" : {
       "description" : "",
       "message" : "Total:"

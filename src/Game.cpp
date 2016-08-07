@@ -249,7 +249,7 @@ void Game::TimeStep(float step)
 
 	// XXX ui updates, not sure if they belong here
 	m_gameViews->m_cpan->TimeStepUpdate(step);
-	Sfx::TimeStepAll(step, m_space->GetRootFrame());
+	SfxManager::TimeStepAll(step, m_space->GetRootFrame());
 	log->Update(m_timeAccel == Game::TIMEACCEL_PAUSED);
 
 	if (m_state == STATE_HYPERSPACE) {
@@ -842,6 +842,17 @@ Game *Game::LoadGame(const std::string &filename)
 	} else {
 		throw SavedGameCorruptException();
 	}
+	// file data is freed here
+}
+
+bool Game::CanLoadGame(const std::string &filename)
+{
+	Output("Game::CanLoadGame('%s')\n", filename.c_str());
+	auto file = FileSystem::userFiles.ReadFile(FileSystem::JoinPathBelow(Pi::SAVE_DIR_NAME, filename));
+	if (!file) 
+		return false;
+
+	return true;
 	// file data is freed here
 }
 

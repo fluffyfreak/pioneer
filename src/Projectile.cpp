@@ -38,7 +38,7 @@ void Projectile::BuildModel()
 	s_sideMat.reset(Pi::renderer->CreateMaterial(desc));
 	s_glowMat.reset(Pi::renderer->CreateMaterial(desc));
 	s_sideMat->texture0 = Graphics::TextureBuilder::Billboard("textures/projectile_l.dds").GetOrCreateTexture(Pi::renderer, "billboard");
-	s_glowMat->texture0 = Graphics::TextureBuilder::Billboard("textures/projectile_w.DDS").GetOrCreateTexture(Pi::renderer, "billboard");
+	s_glowMat->texture0 = Graphics::TextureBuilder::Billboard("textures/projectile_w.dds").GetOrCreateTexture(Pi::renderer, "billboard");
 
 	//zero at projectile position
 	//+x down
@@ -276,7 +276,7 @@ void Projectile::StaticUpdate(const float timeStep)
 				if (b->GetType() == SystemBody::TYPE_PLANET_ASTEROID) {
 					vector3d n = GetPosition().Normalized();
 					MiningLaserSpawnTastyStuff(planet->GetFrame(), b, n*terrainHeight + 5.0*n);
-					Sfx::Add(this, Sfx::TYPE_EXPLOSION);
+					SfxManager::Add(this, TYPE_EXPLOSION);
 				}
 				Pi::game->GetSpace()->KillBody(this);
 			}

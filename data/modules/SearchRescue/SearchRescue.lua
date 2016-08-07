@@ -6,7 +6,8 @@
 -- - All station/planet location references in ad/mission are stored as paths for consistency because
 --   some can't be accessed as bodies until the player enters the respective system and getting a path from
 --   systembody needs to go through body. Variable "location" is a SystemsBody.
-
+-- - Any cargo commodity that needs to be delivered/picked up needs to be intered into "verifyCommodity" function.
+--   Some users have issues with commodities not beeing recognized otherwise. 
 
 -- TODO:
 -- - add degToDegMinSec function to src/LuaFormat.cpp
@@ -292,6 +293,15 @@ end
 -- basic mission functions
 -- =======================
 
+local verifyCommodity = function (item)
+   -- Reloads the actual cargo equipment as object. Somehow that can get lost in some
+   -- setups and for some users. All commodities used for any mission flavor have to
+   -- be accounted for here.
+   if item.l10n_key == 'HYDROGEN' then
+      return Equipment.cargo.hydrogen
+   end
+end
+
 local triggerAdCreation = function ()
    -- Return if ad should be created based on lawlessness and min/max frequency values.
    -- Ad number per system is based on how many stations a system has so a player will
@@ -419,7 +429,8 @@ end
 
 local cargoPresent = function (ship, item)
    -- Check if this cargo item is present on the ship.
-   if ship:CountEquip(item) > 0 then
+   cargotype = verifyCommodity(item)  -- necessary for some users
+   if ship:CountEquip(cargotype) > 0 then
       return true
    else
       return false
@@ -474,13 +485,15 @@ end
 local addCargo = function (ship, item)
    -- Add a ton of the supplied cargo item to the ship.
    if not cargoSpace(ship) then return end
-   ship:AddEquip(item, 1)
+   cargotype = verifyCommodity(item)  -- necessary for some users
+   ship:AddEquip(cargotype, 1)
 end
 
 local removeCargo = function (ship, item)
    -- Remove a ton of the supplied cargo item from the ship.
    if not cargoPresent(ship, item) then return end
-   ship:RemoveEquip(item, 1)
+   cargotype = verifyCommodity(item)  -- necessary for some users
+   ship:RemoveEquip(cargotype, 1)
 end
 
 local passEquipmentRequirements = function (requirements)
@@ -684,7 +697,7 @@ local onChat = function (form, ref, option)
       if ad.flavour.loctype == "CLOSE_PLANET" or ad.flavour.loctype == "CLOSE_SPACE" then
 	 dist = string.format("%.0f", ad.dist/1000)
       else
-	 dist = string.format("%.2f", ad.dist/1000)
+	 dist = string.format("%.2f", ad.dist)
       end
       
       local locationtext = string.interp(ad.flavour.locationtext, {
@@ -750,7 +763,7 @@ local onChat = function (form, ref, option)
 	 problem            = ad.problem,
 	 dist               = ad.dist,
 	 flavour            = ad.flavour,
-	 target             = "NIL",
+	 target             = nil,
 	 lat                = ad.lat,
 	 long               = ad.long,
 	 shipdef_name       = ad.shipdef_name,
@@ -989,7 +1002,7 @@ local discardShip = function (ship)
    local nearbysystems = findNearbySystems(with_stations)
    if #nearbysystems > 0 then
       Timer:CallAt(Game.time + Engine.rand:Integer(5,10), function () 
-		      ship:AIEnterLowOrbit(ship:FindNearestTo("PLANET") or ship:FindeNearestTo("STAR"))
+		      ship:AIEnterLowOrbit(ship:FindNearestTo("PLANET") or ship:FindNearestTo("STAR"))
 		      Timer:CallAt(Game.time + 5, function () ship:InitiateHyperjumpTo(nearbysystems[1], 3, 10) end)
       end)
    else
@@ -997,7 +1010,7 @@ local discardShip = function (ship)
       nearbysystems = findNearbySystems(with_stations)
       if #nearbysystems > 0 then
 	 Timer:CallAt(Game.time + Engine.rand:Integer(5,10), function ()
-			 ship:AIEnterLowOrbit(ship:FindNearestTo("PLANET") or ship:FindeNearestTo("STAR"))
+			 ship:AIEnterLowOrbit(ship:FindNearestTo("PLANET") or ship:FindNearestTo("STAR"))
 			 Timer:CallAt(Game.time + 5, function () ship:InitiateHyperjumpTo(nearbysystems[1], 3, 10) end)
 	 end)
       end
@@ -1569,7 +1582,7 @@ local interactWithTarget = function (mission)
 		      
 		      -- abort if interaciton distance was not held or target ship destroyed
 		      -- TODO: set the check mark for each mission right
-		      if not targetInteractionDistance(mission) or mission.target == "NIL" then
+		      if not targetInteractionDistance(mission) or mission.target == nil then
 			 Comms.ImportantMessage(l.INTERACTION_ABORTED)
 			 searchForTarget(mission)
 			 return true
@@ -1651,7 +1664,7 @@ end
 function searchForTarget (mission)
    -- Measure distance to target every second until interaction distance reached.
 
-   if mission.searching == true or mission.target == "NIL" then return end
+   if mission.searching == true or mission.target == nil then return end
    mission.searching = true
 
    -- Counter to show messages only once and not every loop
@@ -1813,6 +1826,8 @@ local onEnterSystem = function (player)
 	 mission.target = createTargetShip(mission)
       end
    end
+	  
+      discarded_ships = {}
 end
 
 local onLeaveSystem = function (ship)
@@ -1824,28 +1839,30 @@ local onLeaveSystem = function (ship)
       -- remove references to ships that are left behind (cause serialization crash otherwise)
       for _,mission in pairs(missions) do
 	 if mission.system_target:IsSameSystem(syspath) then
-	    mission.target = 'NIL'
+	    mission.target = nil
 	 end
       end
-      
+	  
+      discarded_ships = {}
       -- TODO: put in tracker to recreate mission targets (already transferred personnel, cargo, etc.)
    end
 end
 
 local onShipDocked = function (ship, station)
-   if ship:IsPlayer() then
-      for _,mission in pairs(missions) do
-	 if Space.GetBody(mission.station_local.bodyIndex) == station then
-	    closeMission(mission)
-	 end
-      end
-   else
-      for _,discarded_ship in pairs(discarded_ships) do
-	 if ship == discarded_ship then
-	    discardShip(ship)
-	 end
-      end
-   end
+	if ship:IsPlayer() then
+		for _,mission in pairs(missions) do
+			if Space.GetBody(mission.station_local.bodyIndex) == station then
+				closeMission(mission)
+			end
+		end
+	else
+		for i,discarded_ship in pairs(discarded_ships) do
+			if ship == discarded_ship then
+				discardShip(ship)
+				table.remove(discarded_ships,i)
+			end
+		end
+	end
 end
 
 local onReputationChanged = function (oldRep, oldKills, newRep, newKills)
@@ -1889,7 +1906,7 @@ local onGameStart = function ()
 
    -- check if player is within frame of any mission targets to resume search
    for _,mission in pairs(missions) do
-      if Game.player.frameBody == mission.target.frameBody then
+      if mission.target and Game.player.frameBody == mission.target.frameBody then
 	 searchForTarget(mission)
       end
    end
@@ -1905,7 +1922,7 @@ local onClick = function (mission)
       if au > 0.01 then
 	 dist_for_text = string.format("%.2f", au).." "..l.AU
       else
-	 dist_for_text = string.format("%.0f", mission.dist).." "..l.KM
+	 dist_for_text = string.format("%.0f", mission.dist/1000).." "..l.KM
       end
    else
       dist_for_text = dist.." "..l.LY
@@ -2017,7 +2034,7 @@ end
 local onShipDestroyed = function (ship, attacker)
    for _,mission in pairs(missions) do
       if ship == mission.target then
-	 mission.target = "NIL"
+	 mission.target = nil
       end
    end
 end

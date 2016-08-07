@@ -619,10 +619,6 @@
       "description" : "",
       "message" : "Vista interna"
    },
-   "INT_LY" : {
-      "description" : "integer number of light years",
-      "message" : "%scale al"
-   },
    "IN_TRANSIT" : {
       "description" : "",
       "message" : "Em transito"
@@ -1722,6 +1718,34 @@
    "UNEXPLORED_SYSTEM_STAR_INFO_ONLY" : {
       "description" : "",
       "message" : "Sistema inexplorado. As informações sobre a estrela foram recolhidas pelo telescópio remoto, mas não está disponível nenhuma informação planetária."
+   },
+   "UNIT_AU" : {
+      "description" : "Distance unit: an astronomical unit, radius of Earth's orbit",
+      "message" : "AU"
+   },
+   "UNIT_DAYS" : {
+      "description" : "Duration unit: one 24-hour day",
+      "message" : "d"
+   },
+   "UNIT_HOURS" : {
+      "description" : "Duration unit: one 60-minute hour",
+      "message" : "h"
+   },
+   "UNIT_LY" : {
+      "description" : "Distance unit: a light year",
+      "message" : "ly"
+   },
+   "UNIT_MINUTES" : {
+      "description" : "Duration unit: one 60-second minute",
+      "message" : "m"
+   },
+   "UNIT_SECONDS" : {
+      "description" : "Duration unit: one second",
+      "message" : "s"
+   },
+   "UNIT_WEEKS" : {
+      "description" : "Duration unit: one 7-day week",
+      "message" : "w"
    },
    "UNKNOWN" : {
       "description" : "",

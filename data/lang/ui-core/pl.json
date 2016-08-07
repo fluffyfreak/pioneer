@@ -1095,6 +1095,10 @@
       "description" : "",
       "message" : "Statek jest zbyt mały dla obecnej ilości załogi."
    },
+   "TOO_SMALL_TO_TRANSSHIP" : {
+      "description" : "",
+      "message" : "Statek jest zbyt mały na to by przeładować ładunek."
+   },
    "TOTAL" : {
       "description" : "",
       "message" : "Łącznie: "

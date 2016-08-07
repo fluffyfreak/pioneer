@@ -619,10 +619,6 @@
       "description" : "",
       "message" : "Tampilan internal"
    },
-   "INT_LY" : {
-      "description" : "integer number of light years",
-      "message" : "%scale ly"
-   },
    "IN_TRANSIT" : {
       "description" : "",
       "message" : "Dalam perjalanan"
@@ -1722,6 +1718,34 @@
    "UNEXPLORED_SYSTEM_STAR_INFO_ONLY" : {
       "description" : "",
       "message" : "Unexplored System. Star information has been gathered by remote telescope, but no planetary information is available."
+   },
+   "UNIT_AU" : {
+      "description" : "Distance unit: an astronomical unit, radius of Earth's orbit",
+      "message" : "AU"
+   },
+   "UNIT_DAYS" : {
+      "description" : "Duration unit: one 24-hour day",
+      "message" : "d"
+   },
+   "UNIT_HOURS" : {
+      "description" : "Duration unit: one 60-minute hour",
+      "message" : "h"
+   },
+   "UNIT_LY" : {
+      "description" : "Distance unit: a light year",
+      "message" : "ly"
+   },
+   "UNIT_MINUTES" : {
+      "description" : "Duration unit: one 60-second minute",
+      "message" : "m"
+   },
+   "UNIT_SECONDS" : {
+      "description" : "Duration unit: one second",
+      "message" : "s"
+   },
+   "UNIT_WEEKS" : {
+      "description" : "Duration unit: one 7-day week",
+      "message" : "w"
    },
    "UNKNOWN" : {
       "description" : "",

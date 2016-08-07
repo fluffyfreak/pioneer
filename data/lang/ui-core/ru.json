@@ -1095,6 +1095,10 @@
       "description" : "",
       "message" : "Корабль слишком мал для вашей команды."
    },
+   "TOO_SMALL_TO_TRANSSHIP" : {
+      "description" : "",
+      "message" : "Корабль слишком мал для погрузки вашего груза."
+   },
    "TOTAL" : {
       "description" : "",
       "message" : "Всего: "
