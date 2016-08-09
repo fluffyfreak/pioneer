@@ -1,0 +1,14 @@
+material DefaultMaterial
+tex_diff windmill_diff.png
+#tex_glow glowmap.dds
+#tex_spec specular.dds
+diffuse 1.0 1.0 1.0
+specular 0.6 0.6 0.8
+shininess 40
+
+lod 100
+mesh windmill.dae
+
+anim idle 1 360
+
+#collision newbuilding1LQ.obj
