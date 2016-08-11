@@ -163,7 +163,7 @@ public:
 	TexturedQuad(Graphics::Renderer *r, const std::string &filename);
 
 	// Build a textured quad to display an arbitrary texture.
-	TexturedQuad(Graphics::Renderer *r, Graphics::Texture *texture, const vector2f &pos, const vector2f &size, RenderState *state);
+	TexturedQuad(Graphics::Renderer *r, Graphics::Texture *texture, const vector2f &pos, const vector2f &size, RenderState *state, const bool isInverted = false);
 	TexturedQuad(Graphics::Renderer *r, RefCountedPtr<Graphics::Material> &material, const Graphics::VertexArray &va, RenderState *state);
 
 	void Draw(Graphics::Renderer *r);

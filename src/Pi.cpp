@@ -152,7 +152,7 @@ std::unique_ptr<AsyncJobQueue> Pi::asyncJobQueue;
 std::unique_ptr<SyncJobQueue> Pi::syncJobQueue;
 
 // Leaving define in place in case of future rendering problems.
-#define USE_RTT 0
+#define USE_RTT 1
 
 //static
 void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
@@ -175,7 +175,7 @@ void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 	Graphics::TextureDescriptor texDesc(
 		Graphics::TEXTURE_RGBA_8888,
 		vector2f(width, height),
-		Graphics::LINEAR_CLAMP, false, false, 0);
+		Graphics::LINEAR_CLAMP, false, false, false, 0, Graphics::TEXTURE_2D);
 	Pi::renderTexture.Reset(Pi::renderer->CreateTexture(texDesc));
 	Pi::renderQuad.reset(new Graphics::Drawables::TexturedQuad(
 		Pi::renderer, Pi::renderTexture.Get(),
@@ -229,7 +229,7 @@ void Pi::DrawRenderTarget() {
 void Pi::BeginRenderTarget() {
 #if USE_RTT
 	Pi::renderer->SetRenderTarget(Pi::renderTarget);
-	Pi::renderer->ClearScreen();
+	//Pi::renderer->ClearScreen();
 #endif
 }
 
@@ -1254,7 +1254,7 @@ void Pi::EndGame()
 	game = 0;
 	player = 0;
 }
-
+#pragma optimize("",off)
 void Pi::MainLoop()
 {
 	double time_player_died = 0;
@@ -1270,6 +1270,19 @@ void Pi::MainLoop()
 	char fps_readout[2048];
 	memset(fps_readout, 0, sizeof(fps_readout));
 #endif
+
+	// xxx - variables
+	RefCountedPtr<Graphics::Texture> UItex(Pi::renderer->CreateTexture(renderTexture->GetDescriptor()));
+	std::unique_ptr<Graphics::RenderState> quadRenderState;
+	Graphics::RenderStateDesc rsd;
+	rsd.depthTest  = false;
+	rsd.depthWrite = false;
+	rsd.cullMode = Graphics::CULL_NONE;
+	rsd.blendMode = Graphics::BLEND_ALPHA;
+	quadRenderState.reset(Pi::renderer->CreateRenderState(rsd));
+	std::unique_ptr<Graphics::Drawables::TexturedQuad> Quad(
+		new Graphics::Drawables::TexturedQuad(Pi::renderer, UItex.Get(), vector2f(-400.0f,-300.0f), vector2f(800.0f, 600.0f), quadRenderState.get(), true));
+	// xxx - endof
 
 	int MAX_PHYSICS_TICKS = Pi::config->Int("MaxPhysicsCyclesPerRender");
 	if (MAX_PHYSICS_TICKS <= 0)
@@ -1374,7 +1387,15 @@ void Pi::MainLoop()
 
 		Pi::renderer->EndFrame();
 
-		Pi::renderer->ClearDepthBuffer();
+		{
+			// UI pass
+			// set this to be the temporary UItex that we'll blat onto a 3D quad later on
+			Pi::renderTarget->SetColorTexture(UItex.Get());
+			Pi::BeginRenderTarget();
+			Pi::renderer->BeginFrame();
+			Pi::renderer->SetViewport(0, 0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
+		}
+
 		if( DrawGUI ) {
 			Gui::Draw();
 			if (game)
@@ -1419,7 +1440,43 @@ void Pi::MainLoop()
 		}
 #endif
 
-		Pi::EndRenderTarget();
+		{
+			// end of 1st pass
+			Pi::renderer->EndFrame();
+			Pi::EndRenderTarget();
+
+			// 2nd pass
+			// use the default renderTexture now and draw the scene texture onto a quad
+			Pi::renderTarget->SetColorTexture(renderTexture.Get());
+			Pi::BeginRenderTarget();
+			//Pi::renderer->BeginFrame();
+
+			matrix3x3f orientation = matrix3x3f::Identity();
+			const bool bInternalCam = !Pi::game->GetWorldView()->GetCameraController()->IsExternal();
+			if(bInternalCam) {
+				InternalCameraController* icc = static_cast<InternalCameraController*>(Pi::game->GetWorldView()->GetCameraController());
+				double rotX;
+				double rotY;
+				icc->getRots(rotX, rotY);
+				orientation.RotateX(rotX);
+				orientation.RotateY(rotY);
+			}
+			matrix4x4f transform(matrix4x4f::Identity());
+			transform.Translate( 0, 0, -400.0f );
+		
+			const Uint32 halfScreenW = Uint32(Graphics::GetScreenWidth())>>1;
+		
+			// render quad
+			{
+				Pi::renderer->SetViewport(0, 0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
+				Pi::renderer->SetPerspectiveProjection(85, Pi::renderer->GetDisplayAspect(), 0.1f, 100000.f);
+				Pi::renderer->SetTransform(orientation * transform);
+				Quad->Draw(Pi::renderer);
+			}
+
+			//Pi::renderer->EndFrame();
+			Pi::EndRenderTarget();
+		}
 		Pi::DrawRenderTarget();
 		Pi::renderer->SwapBuffers();
 
