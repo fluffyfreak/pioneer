@@ -350,8 +350,7 @@ CityOnPlanet::CityOnPlanet(Planet *planet, SpaceStation *station, const Uint32 s
 	m_clipRadius = buildAABB.GetRadius();
 	AddStaticGeomsToCollisionSpace();
 }
-static bool sbUseInstancing = false;
-#pragma optimize("",off)
+
 void CityOnPlanet::Render(Graphics::Renderer *r, const Graphics::Frustum &frustum, const SpaceStation *station, const vector3d &viewCoords, const matrix4x4d &viewTransform)
 {
 	// Early frustum test of whole city.
@@ -391,10 +390,9 @@ void CityOnPlanet::Render(Graphics::Renderer *r, const Graphics::Frustum &frustu
 	}
 	
 	Uint32 uCount = 0;
-	if(sbUseInstancing)
+	std::vector<Uint32> instCount;
+	std::vector< std::vector<matrix4x4f> > transform;
 	{
-		std::vector<Uint32> instCount;
-		std::vector< std::vector<matrix4x4f> > transform;
 		instCount.resize(s_buildingList.numBuildings);
 		transform.resize(s_buildingList.numBuildings);
 		memset(&instCount[0], 0, sizeof(Uint32) * s_buildingList.numBuildings);
@@ -418,29 +416,13 @@ void CityOnPlanet::Render(Graphics::Renderer *r, const Graphics::Frustum &frustu
 
 			++uCount;
 		}
-	
-		// render the building models using instancing
-		for(Uint32 i=0; i<s_buildingList.numBuildings; i++) {
-			if(!transform[i].empty()) {
-				s_buildingList.buildings[i].resolvedModel->Render(transform[i]);
-			}
-		}
 	}
-	else
-	{
-		for (std::vector<BuildingDef>::const_iterator iter=m_enabledBuildings.begin(), itEND=m_enabledBuildings.end(); iter != itEND; ++iter)
-		{
-			const vector3d pos = viewTransform * (*iter).pos;
-			const vector3f posf(pos);
-			if (!frustum.TestPoint(pos, (*iter).clipRadius))
-				continue;
-
-			matrix4x4f _rot(rotf[(*iter).rotation]);
-			_rot.SetTranslate(posf);
-
-			s_buildingList.buildings[(*iter).instIndex].resolvedModel->Render(_rot);
-
-			++uCount;
+	
+	// render the building models using instancing
+	for(Uint32 i=0; i<s_buildingList.numBuildings; i++) {
+		SceneGraph::Model *pModel = s_buildingList.buildings[i].resolvedModel;
+		for(size_t wtf = 0; wtf<transform[i].size(); wtf++) {
+			pModel->Render(transform[i][wtf]);
 		}
 	}
 
