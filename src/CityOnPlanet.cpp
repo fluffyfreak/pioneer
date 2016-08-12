@@ -393,23 +393,6 @@ void CityOnPlanet::Render(Graphics::Renderer *r, const Graphics::Frustum &frustu
 	Uint32 uCount = 0;
 	if(sbUseInstancing)
 	{
-		for (std::vector<BuildingDef>::const_iterator iter=m_enabledBuildings.begin(), itEND=m_enabledBuildings.end(); iter != itEND; ++iter)
-		{
-			const vector3d pos = viewTransform * (*iter).pos;
-			const vector3f posf(pos);
-			if (!frustum.TestPoint(pos, (*iter).clipRadius))
-				continue;
-
-			matrix4x4f _rot(rotf[(*iter).rotation]);
-			_rot.SetTranslate(posf);
-
-			s_buildingList.buildings[(*iter).instIndex].resolvedModel->Render(_rot);
-
-			++uCount;
-		}
-	}
-	else
-	{
 		std::vector<Uint32> instCount;
 		std::vector< std::vector<matrix4x4f> > transform;
 		instCount.resize(s_buildingList.numBuildings);
@@ -429,8 +412,6 @@ void CityOnPlanet::Render(Graphics::Renderer *r, const Graphics::Frustum &frustu
 			matrix4x4f _rot(rotf[(*iter).rotation]);
 			_rot.SetTranslate(posf);
 
-			s_buildingList.buildings[(*iter).instIndex].resolvedModel->Render(_rot);
-
 			// increment the instance count and store the transform
 			instCount[(*iter).instIndex]++;
 			transform[(*iter).instIndex].push_back( _rot );
@@ -443,6 +424,23 @@ void CityOnPlanet::Render(Graphics::Renderer *r, const Graphics::Frustum &frustu
 			if(!transform[i].empty()) {
 				s_buildingList.buildings[i].resolvedModel->Render(transform[i]);
 			}
+		}
+	}
+	else
+	{
+		for (std::vector<BuildingDef>::const_iterator iter=m_enabledBuildings.begin(), itEND=m_enabledBuildings.end(); iter != itEND; ++iter)
+		{
+			const vector3d pos = viewTransform * (*iter).pos;
+			const vector3f posf(pos);
+			if (!frustum.TestPoint(pos, (*iter).clipRadius))
+				continue;
+
+			matrix4x4f _rot(rotf[(*iter).rotation]);
+			_rot.SetTranslate(posf);
+
+			s_buildingList.buildings[(*iter).instIndex].resolvedModel->Render(_rot);
+
+			++uCount;
 		}
 	}
 
