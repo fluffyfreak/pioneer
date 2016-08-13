@@ -388,42 +388,37 @@ void CityOnPlanet::Render(Graphics::Renderer *r, const Graphics::Frustum &frustu
 			pAnim->Interpolate();
 		}
 	}
-	
+
 	Uint32 uCount = 0;
 	std::vector<Uint32> instCount;
 	std::vector< std::vector<matrix4x4f> > transform;
+	instCount.resize(s_buildingList.numBuildings);
+	transform.resize(s_buildingList.numBuildings);
+	memset(&instCount[0], 0, sizeof(Uint32) * s_buildingList.numBuildings);
+	for(Uint32 i=0; i<s_buildingList.numBuildings; i++) {
+		transform[i].reserve(m_buildingCounts[i]);
+	}
+
+	for (std::vector<BuildingDef>::const_iterator iter=m_enabledBuildings.begin(), itEND=m_enabledBuildings.end(); iter != itEND; ++iter)
 	{
-		instCount.resize(s_buildingList.numBuildings);
-		transform.resize(s_buildingList.numBuildings);
-		memset(&instCount[0], 0, sizeof(Uint32) * s_buildingList.numBuildings);
-		for(Uint32 i=0; i<s_buildingList.numBuildings; i++) {
-			transform[i].reserve(m_buildingCounts[i]);
-		}
+		const vector3d pos = viewTransform * (*iter).pos;
+		const vector3f posf(pos);
+		if (!frustum.TestPoint(pos, (*iter).clipRadius))
+			continue;
 
-		for (std::vector<BuildingDef>::const_iterator iter=m_enabledBuildings.begin(), itEND=m_enabledBuildings.end(); iter != itEND; ++iter)
-		{
-			const vector3d pos = viewTransform * (*iter).pos;
-			const vector3f posf(pos);
-			if (!frustum.TestPoint(pos, (*iter).clipRadius))
-				continue;
+		matrix4x4f _rot(rotf[(*iter).rotation]);
+		_rot.SetTranslate(posf);
 
-			matrix4x4f _rot(rotf[(*iter).rotation]);
-			_rot.SetTranslate(posf);
+		// increment the instance count and store the transform
+		instCount[(*iter).instIndex]++;
+		transform[(*iter).instIndex].push_back( _rot );
 
-			// increment the instance count and store the transform
-			instCount[(*iter).instIndex]++;
-			transform[(*iter).instIndex].push_back( _rot );
-
-			++uCount;
-		}
+		++uCount;
 	}
 	
 	// render the building models using instancing
 	for(Uint32 i=0; i<s_buildingList.numBuildings; i++) {
-		SceneGraph::Model *pModel = s_buildingList.buildings[i].resolvedModel;
-		for(size_t wtf = 0; wtf<transform[i].size(); wtf++) {
-			pModel->Render(transform[i][wtf]);
-		}
+		s_buildingList.buildings[i].resolvedModel->Render(transform[i]);
 	}
 
 	r->GetStats().AddToStatCount(Graphics::Stats::STAT_BUILDINGS, uCount);
