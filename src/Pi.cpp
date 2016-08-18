@@ -1450,6 +1450,7 @@ void Pi::MainLoop()
 			int lua_memMB = int(lua_mem >> 20);
 			const Graphics::Stats::TFrameData &stats = Pi::renderer->GetStats().FrameStatsPrevious();
 			const Uint32 numDrawCalls			= stats.m_stats[Graphics::Stats::STAT_DRAWCALL];
+			const Uint32 numDrawCallsInstanced	= stats.m_stats[Graphics::Stats::STAT_DRAWCALLINSTANCED];
 			const Uint32 numBuffersCreated		= stats.m_stats[Graphics::Stats::STAT_CREATE_BUFFER];
 			const Uint32 numDrawTris			= stats.m_stats[Graphics::Stats::STAT_DRAWTRIS];
 			const Uint32 numDrawPointSprites	= stats.m_stats[Graphics::Stats::STAT_DRAWPOINTSPRITES];
@@ -1468,14 +1469,14 @@ void Pi::MainLoop()
 				fps_readout, sizeof(fps_readout),
 				"%d fps (%.1f ms/f), %d phys updates, %d triangles, %.3f M tris/sec, %d glyphs/sec, %d patches/frame\n"
 				"Lua mem usage: %d MB + %d KB + %d bytes (stack top: %d)\n\n"
-				"Draw Calls (%u), of which were:\n Tris (%u)\n Point Sprites (%u)\n Billboards (%u)\n"
+				"Draw Calls (%u) & Instanced Objects (%u), of which were:\n Tris (%u)\n Point Sprites (%u)\n Billboards (%u)\n"
 				"Buildings (%u), Cities (%u), GroundStations (%u), SpaceStations (%u), Atmospheres (%u)\n"
 				"Patches (%u), Planets (%u), GasGiants (%u), Stars (%u), Ships (%u)\n"
 				"Buffers Created(%u)\n",
 				frame_stat, (1000.0/frame_stat), phys_stat, Pi::statSceneTris, Pi::statSceneTris*frame_stat*1e-6,
 				Text::TextureFont::GetGlyphCount(), Pi::statNumPatches,
 				lua_memMB, lua_memKB, lua_memB, lua_gettop(Lua::manager->GetLuaState()),
-				numDrawCalls, numDrawTris, numDrawPointSprites, numDrawBillBoards,
+				numDrawCalls, numDrawCallsInstanced, numDrawTris, numDrawPointSprites, numDrawBillBoards,
 				numDrawBuildings, numDrawCities, numDrawGroundStations, numDrawSpaceStations, numDrawAtmospheres,
 				numDrawPatches, numDrawPlanets, numDrawGasGiants, numDrawStars, numDrawShips, numBuffersCreated
 			);

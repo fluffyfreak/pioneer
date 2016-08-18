@@ -17,6 +17,7 @@ public:
 	enum StatType {
 		// renderer entries
 		STAT_DRAWCALL = 0,
+		STAT_DRAWCALLINSTANCED,
 		STAT_DRAWTRIS,
 		STAT_DRAWPOINTSPRITES,
 

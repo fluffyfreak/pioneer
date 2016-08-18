@@ -786,6 +786,8 @@ bool RendererOGL::DrawBufferInstanced(VertexBuffer* vb, RenderState* state, Mate
 	CheckRenderErrors(__FUNCTION__,__LINE__);
 
 	m_stats.AddToStatCount(Stats::STAT_DRAWCALL, 1);
+	m_stats.AddToStatCount(Stats::STAT_DRAWCALLINSTANCED, instb->GetInstanceCount());
+	
 
 	return true;
 }
@@ -808,6 +810,7 @@ bool RendererOGL::DrawBufferIndexedInstanced(VertexBuffer *vb, IndexBuffer *ib, 
 	CheckRenderErrors(__FUNCTION__,__LINE__);
 
 	m_stats.AddToStatCount(Stats::STAT_DRAWCALL, 1);
+	m_stats.AddToStatCount(Stats::STAT_DRAWCALLINSTANCED, instb->GetInstanceCount());
 
 	return true;
 }

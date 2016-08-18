@@ -344,28 +344,22 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 		if( (geosphere->GetMaxDepth() - m_depth) < 12 )
 		{
 			// allocate space for instances
-			const Uint32 MaxInstances = 5;
-			assert(MaxInstances > 0);
-			instances.reset( new vector3f[MaxInstances] );
+			instances.reset( new vector3f[(edgeLen-2)*(edgeLen-2)] );
 			m_numInstances = 0;
 
 			const double *pHts = heights.get();
 			const vector3f *pNorm = normals.get();
 			const Color3ub *pColr = colors.get();
-			for (Sint32 y=0; y<edgeLen; y++) {
-				for (Sint32 x=0; x<edgeLen; x++) {
+			for (Sint32 y=1; y<edgeLen-1; y++) {
+				for (Sint32 x=1; x<edgeLen-1; x++) {
 					const double height = *pHts;
-					const double xFrac = double(x)*frac;
-					const double yFrac = double(y)*frac;
+					const double xFrac = double(x - 1) * frac;
+					const double yFrac = double(y - 1) * frac;
 					const vector3d p((GetSpherePoint(xFrac, yFrac) * (height + 1.0)) - clipCentroid);
 					clipRadius = std::max(clipRadius, p.Length());
 					instances.get()[m_numInstances++] = vector3f(p);
 					++pHts;	// next height
-					if(MaxInstances == m_numInstances)
-						break;
 				}
-				if(MaxInstances == m_numInstances)
-					break;
 			}
 
 			// populate
@@ -459,32 +453,12 @@ void GeoPatch::Render(Graphics::Renderer *renderer, const vector3d &campos, cons
 			renderer->SetTransform(matrix4x4f::Identity());
 			matrix4x4f mv;
 			matrix4x4dtof(modelView * matrix4x4d::Translation(relpos), mv);
-#if 1 // instanced
+
 			std::vector<matrix4x4f> transforms(m_numInstances);
 			for(Uint32 in=0; in<m_numInstances; in++) {
 				transforms[in] = mv * matrix4x4f::Translation(instances[in]) * matrix4x4f::ScaleMatrix(0.00000006537);
 			}
 			pModel->Render(transforms);
-#else
-			renderer->SetTransform(modelView * matrix4x4d::Translation(relpos));
-			for(Uint32 in=0; in<m_numInstances; in++) {
-				pModel->Render(mv * matrix4x4f::Translation(instances[in]) * matrix4x4f::ScaleMatrix(clipRadius*0.001));
-
-				if(0)
-				{
-					renderer->SetTransform(mv * matrix4x4f::Translation(instances[in]));
-				
-					static std::unique_ptr<Graphics::Drawables::Sphere3D> ballball;
-					if(!ballball) {
-						RefCountedPtr<Graphics::Material> mat(Pi::renderer->CreateMaterial(Graphics::MaterialDescriptor()));
-						ballball.reset( new Graphics::Drawables::Sphere3D(Pi::renderer, mat, Pi::renderer->CreateRenderState(Graphics::RenderStateDesc()), 1, clipRadius*0.001) );
-					}
-					renderer->SetWireFrameMode(true);
-					ballball->Draw(renderer);
-					renderer->SetWireFrameMode(false);
-				}
-			}
-#endif		
 		}
 
 #ifdef DEBUG_BOUNDING_SPHERES

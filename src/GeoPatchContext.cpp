@@ -99,7 +99,8 @@ void GeoPatchContext::Init()
 	GenerateIndices();
 
 	//rock = Pi::FindModel("cargo");//"Rock1");
-	rock = Pi::FindModel("Rock1");
+	//rock = Pi::FindModel("Rock1");
+	rock = Pi::FindModel("snowtree");
 }
 
 SceneGraph::Model* GeoPatchContext::GetModelLibrary()
