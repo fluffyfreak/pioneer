@@ -467,6 +467,10 @@
       "description" : "",
       "message" : "Portata iperspaziale"
    },
+   "ILLEGAL_JUMP" : {
+      "description" : "A finable crime",
+      "message" : "Salto pericoloso illegale registrato"
+   },
    "IM_TIRED_OF_WORKING_FOR_NOTHING_DONT_YOU_KNOW_WHAT_A_CONTRACT_IS" : {
       "description" : "",
       "message" : "Sono stanco di lavorare gratis. Ha idea di cosa sia un contratto?"
@@ -999,6 +1003,10 @@
       "description" : "",
       "message" : "Sensori e difesa"
    },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Imposta la destinazione come destinazione di navigazione."
+   },
    "SHIP" : {
       "description" : "",
       "message" : "Astronave"
@@ -1094,6 +1102,10 @@
    "TOO_SMALL_FOR_CURRENT_CREW" : {
       "description" : "",
       "message" : "L'astronave è troppo piccola per questo equipaggio."
+   },
+   "TOO_SMALL_TO_TRANSSHIP" : {
+      "description" : "",
+      "message" : "L'astronave è troppo piccola per trasbordarvi il carico."
    },
    "TOTAL" : {
       "description" : "",

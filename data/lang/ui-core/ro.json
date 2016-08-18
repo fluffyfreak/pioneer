@@ -467,6 +467,10 @@
       "description" : "",
       "message" : "Rază de acțiune salt hiperspațiu"
    },
+   "ILLEGAL_JUMP" : {
+      "description" : "A finable crime",
+      "message" : "Reckless hyperjump registered"
+   },
    "IM_TIRED_OF_WORKING_FOR_NOTHING_DONT_YOU_KNOW_WHAT_A_CONTRACT_IS" : {
       "description" : "",
       "message" : "M-am săturat să muncesc pe degeaba. Nu știți ce înseamnă un contract?"
@@ -999,6 +1003,10 @@
       "description" : "",
       "message" : "Senzori și apărare"
    },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Set destination as navigation target."
+   },
    "SHIP" : {
       "description" : "",
       "message" : "Nava"
@@ -1094,6 +1102,10 @@
    "TOO_SMALL_FOR_CURRENT_CREW" : {
       "description" : "",
       "message" : "Nava e prea mică pentru echipajul curent."
+   },
+   "TOO_SMALL_TO_TRANSSHIP" : {
+      "description" : "",
+      "message" : "Nava e prea mică pentru a transporta marfa dvs."
    },
    "TOTAL" : {
       "description" : "",

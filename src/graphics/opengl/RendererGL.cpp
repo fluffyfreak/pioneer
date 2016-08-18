@@ -13,6 +13,7 @@
 #include "GLDebug.h"
 #include "GasGiantMaterial.h"
 #include "GeoSphereMaterial.h"
+#include "GenGasGiantColourMaterial.h"
 #include "MaterialGL.h"
 #include "RenderStateGL.h"
 #include "RenderTargetGL.h"
@@ -97,6 +98,8 @@ RendererOGL::RendererOGL(WindowSDL *window, const Graphics::Settings &vs)
 	glFrontFace(GL_CCW);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+	glDepthRange(0.0,1.0);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
@@ -393,15 +396,16 @@ bool RendererOGL::SetRenderTarget(RenderTarget *rt)
 	return true;
 }
 
-bool RendererOGL::SetDepthRange(double near, double far)
+bool RendererOGL::SetDepthRange(double znear, double zfar)
 {
-	glDepthRange(near, far);
+	glDepthRange(znear, zfar);
 	return true;
 }
 
 bool RendererOGL::ClearScreen()
 {
 	m_activeRenderState = nullptr;
+	glEnable(GL_DEPTH_TEST);
 	glDepthMask(GL_TRUE);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	CheckRenderErrors(__FUNCTION__,__LINE__);
@@ -412,6 +416,7 @@ bool RendererOGL::ClearScreen()
 bool RendererOGL::ClearDepthBuffer()
 {
 	m_activeRenderState = nullptr;
+	glEnable(GL_DEPTH_TEST);
 	glDepthMask(GL_TRUE);
 	glClear(GL_DEPTH_BUFFER_BIT);
 	CheckRenderErrors(__FUNCTION__,__LINE__);
@@ -859,6 +864,9 @@ Material *RendererOGL::CreateMaterial(const MaterialDescriptor &d)
 		break;
 	case EFFECT_GASSPHERE_TERRAIN:
 		mat = new OGL::GasGiantSurfaceMaterial();
+		break;
+	case EFFECT_GEN_GASGIANT_TEXTURE:
+		mat = new OGL::GenGasGiantColourMaterial();
 		break;
 	case EFFECT_BILLBOARD_ATLAS:
 	case EFFECT_BILLBOARD:

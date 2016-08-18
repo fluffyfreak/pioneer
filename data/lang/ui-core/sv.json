@@ -293,7 +293,7 @@
    },
    "ENABLE_ANISOTROPIC_FILTERING" : {
       "description" : "Use Anisotropic Filtering",
-      "message" : "Anisotropic Filtering"
+      "message" : "Anisotropiskt filter"
    },
    "ENABLE_AUTOSAVE" : {
       "description" : "Allow the game to autosave when docking",
@@ -466,6 +466,10 @@
    "HYPERSPACE_RANGE" : {
       "description" : "",
       "message" : "Hyperrymdsräckvidd"
+   },
+   "ILLEGAL_JUMP" : {
+      "description" : "A finable crime",
+      "message" : "Reckless hyperjump registered"
    },
    "IM_TIRED_OF_WORKING_FOR_NOTHING_DONT_YOU_KNOW_WHAT_A_CONTRACT_IS" : {
       "description" : "",
@@ -999,6 +1003,10 @@
       "description" : "",
       "message" : "Sensorer och försvar"
    },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Använd destination som navigationsmål"
+   },
    "SHIP" : {
       "description" : "",
       "message" : "Skepp"
@@ -1094,6 +1102,10 @@
    "TOO_SMALL_FOR_CURRENT_CREW" : {
       "description" : "",
       "message" : "Skeppet för litet för nuvarande besättning"
+   },
+   "TOO_SMALL_TO_TRANSSHIP" : {
+      "description" : "",
+      "message" : "Skeppet är förlitet för att rymma din last."
    },
    "TOTAL" : {
       "description" : "",

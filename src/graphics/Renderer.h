@@ -86,7 +86,7 @@ public:
 	virtual bool SetRenderState(RenderState*) = 0;
 
 	// XXX maybe GL-specific. maybe should be part of the render state
-	virtual bool SetDepthRange(double near, double far) = 0;
+	virtual bool SetDepthRange(double znear, double zfar) = 0;
 
 	virtual bool SetWireFrameMode(bool enabled) = 0;
 
@@ -117,7 +117,7 @@ public:
 	virtual Texture *CreateTexture(const TextureDescriptor &descriptor) = 0;
 	virtual RenderState *CreateRenderState(const RenderStateDesc &) = 0;
 	//returns 0 if unsupported
-	virtual RenderTarget *CreateRenderTarget(const RenderTargetDesc &) { return 0; }
+	virtual RenderTarget *CreateRenderTarget(const RenderTargetDesc &) = 0;
 	virtual VertexBuffer *CreateVertexBuffer(const VertexBufferDesc&) = 0;
 	virtual IndexBuffer *CreateIndexBuffer(Uint32 size, BufferUsage) = 0;
 	virtual InstanceBuffer *CreateInstanceBuffer(Uint32 size, BufferUsage) = 0;

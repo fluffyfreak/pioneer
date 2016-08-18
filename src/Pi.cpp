@@ -129,7 +129,7 @@ bool Pi::joystickEnabled;
 bool Pi::mouseYInvert;
 bool Pi::compactScanner;
 std::map<SDL_JoystickID,Pi::JoystickState> Pi::joysticks;
-bool Pi::navTunnelDisplayed;
+bool Pi::navTunnelDisplayed = false;
 bool Pi::speedLinesDisplayed = false;
 bool Pi::hudTrailsDisplayed = false;
 bool Pi::bRefreshBackgroundStars = true;
@@ -344,6 +344,53 @@ std::string Pi::GetSaveDir()
 	return FileSystem::JoinPath(FileSystem::GetUserDir(), Pi::SAVE_DIR_NAME);
 }
 
+void TestGPUJobsSupport()
+{
+	bool supportsGPUJobs = (Pi::config->Int("EnableGPUJobs") == 1);
+	if (supportsGPUJobs) 
+	{
+		Uint32 octaves = 8;
+		for (Uint32 i = 0; i<6; i++) 
+		{
+			std::unique_ptr<Graphics::Material> material;
+			Graphics::MaterialDescriptor desc;
+			desc.effect = Graphics::EFFECT_GEN_GASGIANT_TEXTURE;
+			desc.quality = (octaves << 16) | i;
+			desc.textures = 3;
+			material.reset(Pi::renderer->CreateMaterial(desc));
+			supportsGPUJobs &= material->IsProgramLoaded();
+		}
+		if (!supportsGPUJobs) 
+		{
+			// failed - retry
+
+			// reset the GPU jobs flag
+			supportsGPUJobs = true;
+
+			// retry the shader compilation
+			octaves = 5; // reduce the number of octaves
+			for (Uint32 i = 0; i<6; i++)
+			{
+				std::unique_ptr<Graphics::Material> material;
+				Graphics::MaterialDescriptor desc;
+				desc.effect = Graphics::EFFECT_GEN_GASGIANT_TEXTURE;
+				desc.quality = (octaves << 16) | i;
+				desc.textures = 3;
+				material.reset(Pi::renderer->CreateMaterial(desc));
+				supportsGPUJobs &= material->IsProgramLoaded();
+			}
+			
+			if (!supportsGPUJobs)
+			{
+				// failed
+				Warning("EnableGPUJobs DISABLED");
+				Pi::config->SetInt("EnableGPUJobs", 0);		// disable GPU Jobs
+				Pi::config->Save();
+			}
+		}
+	}
+}
+
 void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 {
 #ifdef PIONEER_PROFILER
@@ -439,6 +486,8 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 	speedLinesDisplayed = (config->Int("SpeedLines")) ? true : false;
 	hudTrailsDisplayed = (config->Int("HudTrails")) ? true : false;
 
+	TestGPUJobsSupport();
+
 	EnumStrings::Init();
 
 	// get threads up
@@ -449,7 +498,7 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 	asyncJobQueue.reset(new AsyncJobQueue(numThreads));
 	Output("started %d worker threads\n", numThreads);
 	syncJobQueue.reset(new SyncJobQueue);
-
+	
 	Output("ShipType::Init()\n");
 	// XXX early, Lua init needs it
 	ShipType::Init();
@@ -1096,6 +1145,13 @@ void Pi::StartGame()
 	Pi::game->GetCpan()->SetAlertState(Ship::ALERT_NONE);
 	SetView(game->GetWorldView());
 
+#ifdef REMOTE_LUA_REPL
+	#ifndef REMOTE_LUA_REPL_PORT
+	#define REMOTE_LUA_REPL_PORT 12345
+	#endif
+	luaConsole->OpenTCPDebugConnection(REMOTE_LUA_REPL_PORT);
+#endif
+
 	// fire event before the first frame
 	LuaEvent::Queue("onGameStart");
 	LuaEvent::Emit();
@@ -1223,12 +1279,12 @@ void Pi::MainLoop()
 	double accumulator = Pi::game->GetTimeStep();
 	Pi::gameTickAlpha = 0;
 
+#ifdef PIONEER_PROFILER
+	Profiler::reset();
+#endif
+
 	while (Pi::game) {
 		PROFILE_SCOPED()
-
-#ifdef PIONEER_PROFILER
-		Profiler::reset();
-#endif
 
 		Pi::serverAgent->ProcessResponses();
 
@@ -1287,7 +1343,7 @@ void Pi::MainLoop()
 		}
 
 		Pi::BeginRenderTarget();
-
+		Pi::renderer->SetViewport(0, 0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
 		Pi::renderer->BeginFrame();
 		Pi::renderer->SetTransform(matrix4x4f::Identity());
 
@@ -1304,6 +1360,11 @@ void Pi::MainLoop()
 		// Gui::Draw so that labels drawn to screen can have mouse events correctly
 		// detected. Gui::Draw wipes memory of label positions.
 		Pi::HandleEvents();
+
+#ifdef REMOTE_LUA_REPL
+		Pi::luaConsole->HandleTCPDebugConnections();
+#endif
+
 		if( Pi::bRequestEndGame ) {
 			Pi::EndGame();
 		}
@@ -1445,6 +1506,10 @@ void Pi::MainLoop()
 			Screendump(fname.c_str(), Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
 		}
 #endif /* MAKING_VIDEO */
+
+#ifdef PIONEER_PROFILER
+		Profiler::reset();
+#endif
 	}
 }
 

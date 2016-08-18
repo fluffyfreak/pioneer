@@ -559,9 +559,17 @@
       "description" : "",
       "message" : "Chaidh sgur dhen leum os-fhànais."
    },
+   "HYPERSPACE_JUMP_DISABLED" : {
+      "description" : "Mouse over text for hyperdrive button on ship control panel",
+      "message" : "Hyperdrive disabled"
+   },
    "HYPERSPACE_JUMP_ENGAGE" : {
       "description" : "Mouse over text for hyperdrive button on ship control panel",
       "message" : "Cuir an draibh os-fhànais air"
+   },
+   "HYPERSPACE_JUMP_FORBIDDEN" : {
+      "description" : "Mouse over text for hyperdrive button on ship control panel",
+      "message" : "Hyperdrive forbidden zone"
    },
    "HYPERSPACE_TARGET" : {
       "description" : "",
@@ -618,10 +626,6 @@
    "INTERNAL_VIEW" : {
       "description" : "",
       "message" : "Sealladh taobh a-staigh"
-   },
-   "INT_LY" : {
-      "description" : "integer number of light years",
-      "message" : "%scale bl-shol"
    },
    "IN_TRANSIT" : {
       "description" : "",
@@ -1722,6 +1726,34 @@
    "UNEXPLORED_SYSTEM_STAR_INFO_ONLY" : {
       "description" : "",
       "message" : "Siostam gun rùrachadh. Chaidh fiosrachadh rèile a chruinneachadh le prosbaig aig astar, ach chan eil fiosrachadh mu na planaidean ri làimh."
+   },
+   "UNIT_AU" : {
+      "description" : "Distance unit: an astronomical unit, radius of Earth's orbit",
+      "message" : "AU"
+   },
+   "UNIT_DAYS" : {
+      "description" : "Duration unit: one 24-hour day",
+      "message" : "l"
+   },
+   "UNIT_HOURS" : {
+      "description" : "Duration unit: one 60-minute hour",
+      "message" : "u"
+   },
+   "UNIT_LY" : {
+      "description" : "Distance unit: a light year",
+      "message" : "bl-shol"
+   },
+   "UNIT_MINUTES" : {
+      "description" : "Duration unit: one 60-second minute",
+      "message" : "m"
+   },
+   "UNIT_SECONDS" : {
+      "description" : "Duration unit: one second",
+      "message" : "d"
+   },
+   "UNIT_WEEKS" : {
+      "description" : "Duration unit: one 7-day week",
+      "message" : "s"
    },
    "UNKNOWN" : {
       "description" : "",

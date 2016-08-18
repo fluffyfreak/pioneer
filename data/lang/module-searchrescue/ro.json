@@ -441,7 +441,7 @@
    },
    "MISSING_CREW" : {
       "description" : "",
-      "message" : "Cannot complete transfer. Crew missing."
+      "message" : "Transferul nu poate fi finalizat. Lipsește echipaj."
    },
    "MISSING_PASS" : {
       "description" : "",
@@ -449,7 +449,7 @@
    },
    "MISSING_PASSENGER" : {
       "description" : "",
-      "message" : "Cannot complete transfer. Passenger missing."
+      "message" : "Transferul nu poate fi finalizat. Lipsește un pasager."
    },
    "OK_AGREED" : {
       "description" : "",
@@ -461,7 +461,7 @@
    },
    "PARTIAL" : {
       "description" : "",
-      "message" : "Thank you for your efforts. I hope you will return to complete the task!"
+      "message" : "Mulțumim pentru efort. Sper să vă întoarceți ca să terminați treaba!"
    },
    "PASSENGERS" : {
       "description" : "",
@@ -639,6 +639,14 @@
       "description" : "",
       "message" : "Căutare & Salvare"
    },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Set as navigation target"
+   },
+   "SET_RETURN_ROUTE" : {
+      "description" : "",
+      "message" : "Set return route"
+   },
    "SHIP_UNRESPONSIVE" : {
       "description" : "",
       "message" : "Target ship unresponsive."
@@ -657,7 +665,7 @@
    },
    "TONS_OF_FREE_CARGO_SPACE" : {
       "description" : "",
-      "message" : "tons of free cargo space"
+      "message" : "tone de spațiu liber de depozitare"
    },
    "TRANSFER_ABORTED" : {
       "description" : "",

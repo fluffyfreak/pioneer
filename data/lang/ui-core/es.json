@@ -467,6 +467,10 @@
       "description" : "",
       "message" : "Alcance hiperespacial"
    },
+   "ILLEGAL_JUMP" : {
+      "description" : "A finable crime",
+      "message" : "Reckless hyperjump registered"
+   },
    "IM_TIRED_OF_WORKING_FOR_NOTHING_DONT_YOU_KNOW_WHAT_A_CONTRACT_IS" : {
       "description" : "",
       "message" : "Estoy cansado de trabajar por nada. ¿No sabe lo que es un contrato?"
@@ -999,6 +1003,10 @@
       "description" : "",
       "message" : "Detección y defensa"
    },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Establecer destino como objetivo de navegación."
+   },
    "SHIP" : {
       "description" : "",
       "message" : "Nave"
@@ -1094,6 +1102,10 @@
    "TOO_SMALL_FOR_CURRENT_CREW" : {
       "description" : "",
       "message" : "La nave es demasiado pequeña para la tripulación actual."
+   },
+   "TOO_SMALL_TO_TRANSSHIP" : {
+      "description" : "",
+      "message" : "La nave es demasiado pequeña para transbordar su carga."
    },
    "TOTAL" : {
       "description" : "",

@@ -639,6 +639,14 @@
       "description" : "",
       "message" : "Search & Rescue"
    },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Ustaw jako cel nawigacyjny."
+   },
+   "SET_RETURN_ROUTE" : {
+      "description" : "",
+      "message" : "Ustaw drogę powrotną."
+   },
    "SHIP_UNRESPONSIVE" : {
       "description" : "",
       "message" : "Target ship unresponsive."

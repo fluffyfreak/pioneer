@@ -639,6 +639,14 @@
       "description" : "",
       "message" : "Ricerca & Soccorso"
    },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Imposta come destinazione di navigazione"
+   },
+   "SET_RETURN_ROUTE" : {
+      "description" : "",
+      "message" : "Imposta rotta di ritorno"
+   },
    "SHIP_UNRESPONSIVE" : {
       "description" : "",
       "message" : "La nave bersaglio non risponde."
