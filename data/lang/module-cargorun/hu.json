@@ -443,6 +443,14 @@
       "description" : "custom cargo",
       "message" : "Félkész termékek"
    },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Navigációs célnak beállít."
+   },
+   "SET_RETURN_ROUTE" : {
+      "description" : "",
+      "message" : "Visszaút"
+   },
    "SPACEPORT" : {
       "description" : "",
       "message" : "Kikötő:"
@@ -577,7 +585,7 @@
    },
    "WHYSOMUCH_INFRASTRUCTURE_1" : {
       "description" : "",
-      "message" : "These goods crucial for a construction project."
+      "message" : "Létfontosságú rakomány egy építkezéshez."
    },
    "WHYSOMUCH_MINING_1" : {
       "description" : "",

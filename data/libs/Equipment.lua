@@ -64,7 +64,7 @@ function EquipType:Serialize()
 			ret[k] = v
 		end
 	end
-	
+
 	if debug.dmodeenabled() and self.slots == "cargo" then
 		for _,v in pairs(cargo) do
 			if (v.l10n_key == self.key and v.l10n_resource == self.l10n_resource) then
@@ -73,7 +73,7 @@ function EquipType:Serialize()
 			end
 		end
 	end
-	
+
 	ret.volatile = nil
 	return ret
 end
@@ -295,7 +295,8 @@ HyperdriveType.HyperjumpTo = function (self, ship, destination)
 		return "INSUFFICIENT_FUEL"
 	end
 	ship:setprop('nextJumpFuelUse', fuel_use)
-	return ship:InitiateHyperjumpTo(destination, self.capabilities.hyperclass, duration), fuel_use, duration
+	local warmup_time = 5 + self.capabilities.hyperclass*1.5
+	return ship:InitiateHyperjumpTo(destination, warmup_time, duration), fuel_use, duration
 end
 
 HyperdriveType.OnEnterHyperspace = function (self, ship)
@@ -756,7 +757,7 @@ misc.hull_autorepair = EquipType.New({
 })
 misc.trade_analyzer = EquipType.New({
 	l10n_key="TRADE_ANALYZER", slots="trade_analyzer", price=400,
-	capabilities={mass=0, trade_analyzer=1, software=1}, purchasable=true, tech_level=9
+	capabilities={mass=0, trade_analyzer=1}, purchasable=true, tech_level=9
 })
 misc.planetscanner = BodyScannerType.New({
 	l10n_key = 'PLANETSCANNER', slots="sensor", price=15000,

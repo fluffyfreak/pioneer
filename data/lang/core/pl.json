@@ -559,9 +559,17 @@
       "description" : "",
       "message" : "Skok w nadprzestrzeń przerwany."
    },
+   "HYPERSPACE_JUMP_DISABLED" : {
+      "description" : "Mouse over text for hyperdrive button on ship control panel",
+      "message" : "Hipernapęd jest wyłączony"
+   },
    "HYPERSPACE_JUMP_ENGAGE" : {
       "description" : "Mouse over text for hyperdrive button on ship control panel",
       "message" : "Uruchomienie hipernapędu"
+   },
+   "HYPERSPACE_JUMP_FORBIDDEN" : {
+      "description" : "Mouse over text for hyperdrive button on ship control panel",
+      "message" : "Strefa zakazu używania hipernapędu"
    },
    "HYPERSPACE_TARGET" : {
       "description" : "",
@@ -619,10 +627,6 @@
       "description" : "",
       "message" : "Widok wewnętrzny"
    },
-   "INT_LY" : {
-      "description" : "integer number of light years",
-      "message" : "%scale lś"
-   },
    "IN_TRANSIT" : {
       "description" : "",
       "message" : "Przelot"
@@ -642,6 +646,10 @@
    "JOY_AXIS" : {
       "description" : "Regarding joystick",
       "message" : "%joyname oś %{sign}%axis"
+   },
+   "JUMP_COMPLETE" : {
+      "description" : "",
+      "message" : "Jump complete: %percent%%"
    },
    "KM_S_RELATIVE_TO" : {
       "description" : "",
@@ -1174,10 +1182,6 @@
    "PRESSURE_N_ATMOSPHERES" : {
       "description" : "",
       "message" : "C: %pressure{f.2} atm"
-   },
-   "PROBABILITY_OF_ARRIVAL_X_PERCENT" : {
-      "description" : "",
-      "message" : "Prawdopodobieństwo przylotu: %probability%%"
    },
    "QUADRUPLE_SYSTEM" : {
       "description" : "",
@@ -1722,6 +1726,34 @@
    "UNEXPLORED_SYSTEM_STAR_INFO_ONLY" : {
       "description" : "",
       "message" : "System niezbadany. Informacje o gwieździe uzyskano przez teleskop, brak danych o planetach."
+   },
+   "UNIT_AU" : {
+      "description" : "Distance unit: an astronomical unit, radius of Earth's orbit",
+      "message" : "AU"
+   },
+   "UNIT_DAYS" : {
+      "description" : "Duration unit: one 24-hour day",
+      "message" : "d"
+   },
+   "UNIT_HOURS" : {
+      "description" : "Duration unit: one 60-minute hour",
+      "message" : "h"
+   },
+   "UNIT_LY" : {
+      "description" : "Distance unit: a light year",
+      "message" : "lś"
+   },
+   "UNIT_MINUTES" : {
+      "description" : "Duration unit: one 60-second minute",
+      "message" : "m"
+   },
+   "UNIT_SECONDS" : {
+      "description" : "Duration unit: one second",
+      "message" : "s"
+   },
+   "UNIT_WEEKS" : {
+      "description" : "Duration unit: one 7-day week",
+      "message" : "t"
    },
    "UNKNOWN" : {
       "description" : "",

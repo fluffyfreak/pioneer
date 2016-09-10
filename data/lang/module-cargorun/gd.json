@@ -1,7 +1,7 @@
 {
    "ACCEPTED_1" : {
       "description" : "",
-      "message" : "Sgoinneil. Luchdaidh mi am bathar dhan t-soitheach agad."
+      "message" : "Sgoinneil. Luchdaichidh mi am bathar dhan t-soitheach agad."
    },
    "ACCEPTED_2" : {
       "description" : "",
@@ -442,6 +442,14 @@
    "SEMI_FINISHED_PRODUCTS" : {
       "description" : "custom cargo",
       "message" : "Bathar leth-dhèanta"
+   },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Cuir ceann-uidhe na seòladaireachd air"
+   },
+   "SET_RETURN_ROUTE" : {
+      "description" : "",
+      "message" : "Suidhich cùrsa tillidh"
    },
    "SPACEPORT" : {
       "description" : "",
