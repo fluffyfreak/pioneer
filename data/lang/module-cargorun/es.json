@@ -443,6 +443,14 @@
       "description" : "custom cargo",
       "message" : "Artículos semi-acabados"
    },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Establecer como objetivo de navegación"
+   },
+   "SET_RETURN_ROUTE" : {
+      "description" : "",
+      "message" : "Establecer ruta de retorno"
+   },
    "SPACEPORT" : {
       "description" : "",
       "message" : "Puerto espacial:"

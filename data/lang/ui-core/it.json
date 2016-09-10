@@ -467,6 +467,10 @@
       "description" : "",
       "message" : "Portata iperspaziale"
    },
+   "ILLEGAL_JUMP" : {
+      "description" : "A finable crime",
+      "message" : "Salto pericoloso illegale registrato"
+   },
    "IM_TIRED_OF_WORKING_FOR_NOTHING_DONT_YOU_KNOW_WHAT_A_CONTRACT_IS" : {
       "description" : "",
       "message" : "Sono stanco di lavorare gratis. Ha idea di cosa sia un contratto?"
@@ -791,6 +795,10 @@
       "description" : "",
       "message" : "Ok"
    },
+   "OPEN_USER_FOLDER" : {
+      "description" : "",
+      "message" : "Cartella Utente"
+   },
    "OPTIONS" : {
       "description" : "",
       "message" : "Opzioni"
@@ -998,6 +1006,10 @@
    "SENSORS_AND_DEFENCE" : {
       "description" : "",
       "message" : "Sensori e difesa"
+   },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Imposta la destinazione come destinazione di navigazione."
    },
    "SHIP" : {
       "description" : "",

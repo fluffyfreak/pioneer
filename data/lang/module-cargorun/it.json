@@ -443,6 +443,14 @@
       "description" : "custom cargo",
       "message" : "Prodotti semilavorati"
    },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Imposta come destinazione di navigazione"
+   },
+   "SET_RETURN_ROUTE" : {
+      "description" : "",
+      "message" : "Imposta rotta di ritorno"
+   },
    "SPACEPORT" : {
       "description" : "",
       "message" : "Astroporto:"

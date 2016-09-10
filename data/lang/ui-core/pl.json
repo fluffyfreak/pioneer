@@ -467,6 +467,10 @@
       "description" : "",
       "message" : "Zasięg w nadprzestrzeni"
    },
+   "ILLEGAL_JUMP" : {
+      "description" : "A finable crime",
+      "message" : "Wykryto nieprzemyślany skok nadprzestrzenny"
+   },
    "IM_TIRED_OF_WORKING_FOR_NOTHING_DONT_YOU_KNOW_WHAT_A_CONTRACT_IS" : {
       "description" : "",
       "message" : "Odczuwam zmęczenie pracując za darmo. Czy Ty wiesz co to kontrakt?"
@@ -791,6 +795,10 @@
       "description" : "",
       "message" : "Ok"
    },
+   "OPEN_USER_FOLDER" : {
+      "description" : "",
+      "message" : "Folder użytkownika"
+   },
    "OPTIONS" : {
       "description" : "",
       "message" : "Opcje"
@@ -998,6 +1006,10 @@
    "SENSORS_AND_DEFENCE" : {
       "description" : "",
       "message" : "Sensory i obrona"
+   },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Ustaw jako cel nawigacyjny."
    },
    "SHIP" : {
       "description" : "",

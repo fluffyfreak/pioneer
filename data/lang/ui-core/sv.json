@@ -467,6 +467,10 @@
       "description" : "",
       "message" : "Hyperrymdsräckvidd"
    },
+   "ILLEGAL_JUMP" : {
+      "description" : "A finable crime",
+      "message" : "Vårdslös hyperhopp registrerat"
+   },
    "IM_TIRED_OF_WORKING_FOR_NOTHING_DONT_YOU_KNOW_WHAT_A_CONTRACT_IS" : {
       "description" : "",
       "message" : "Jag är trött på att arbeta för ingenting. Vet du inte vad ett kontrakt är?"
@@ -791,6 +795,10 @@
       "description" : "",
       "message" : "Ok"
    },
+   "OPEN_USER_FOLDER" : {
+      "description" : "",
+      "message" : "Användarkatalog"
+   },
    "OPTIONS" : {
       "description" : "",
       "message" : "Alternativ"
@@ -998,6 +1006,10 @@
    "SENSORS_AND_DEFENCE" : {
       "description" : "",
       "message" : "Sensorer och försvar"
+   },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Använd destination som navigationsmål"
    },
    "SHIP" : {
       "description" : "",
