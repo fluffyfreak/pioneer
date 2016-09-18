@@ -402,6 +402,13 @@ bool Ship::OnDamage(Object *attacker, float kgDamage, const CollisionContact& co
 {
 	if (m_invulnerable) {
 		Sound::BodyMakeNoise(this, "Hull_hit_Small", 0.5f);
+		m_shieldCooldown = DEFAULT_SHIELD_COOLDOWN_TIME;
+		// transform the collision location into the models local space (from world space) and add it as a hit.
+		matrix4x4d mtx = GetOrient();
+		mtx.SetTranslate( GetPosition() );
+		const matrix4x4d invmtx = mtx.Inverse();
+		const vector3d localPos = invmtx * contactData.pos;
+		GetShields()->AddHit(localPos);
 		return true;
 	}
 
@@ -1303,7 +1310,7 @@ bool Ship::SetWheelState(bool down)
 	return true;
 }
 
-void Ship::Render(Graphics::Renderer *renderer, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform)
+void Ship::Render(Graphics::Renderer *renderer, Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform)
 {
 	if (IsDead()) return;
 

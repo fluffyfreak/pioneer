@@ -22,10 +22,10 @@ public:
 	explicit ShipCockpit(const std::string &modelName);
 	virtual ~ShipCockpit();
 
-	virtual void Render(Graphics::Renderer *r, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform) override;
+	virtual void Render(Graphics::Renderer *r, Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform) override final;
 
 	void Update(float timeStep);
-	void RenderCockpit(Graphics::Renderer* renderer, const Camera* camera, Frame* frame);
+	void RenderCockpit(Graphics::Renderer* renderer, Camera* camera, Frame* frame);
 	void OnActivated();
        void resetInternalCameraController(void);
 
@@ -34,7 +34,7 @@ protected:
 
 private:
 	ShipCockpit(const ShipCockpit&);
-	ShipCockpit& operator=(const ShipCockpit&);
+	ShipCockpit& operator=(const ShipCockpit&) = delete;
 
 	vector3d m_shipDir;        // current ship direction
 	vector3d m_shipYaw;        // current ship yaw vector

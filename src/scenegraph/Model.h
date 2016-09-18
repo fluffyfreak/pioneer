@@ -109,6 +109,10 @@ public:
 	float GetDrawClipRadius() const { return m_boundingRadius; }
 	void SetDrawClipRadius(float clipRadius) { m_boundingRadius = clipRadius; }
 	
+	bool ContainsNodeMask(const Uint32 nm) const { 
+		return true;//(m_root->GetNodeMask() & nm);
+	}
+	
 	void Render(const matrix4x4f &trans, const RenderData *rd = 0); //ModelNode can override RD
 	void Render(const std::vector<matrix4x4f> &trans, const RenderData *rd = 0); //ModelNode can override RD
 

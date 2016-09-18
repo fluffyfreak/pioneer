@@ -65,7 +65,6 @@ ModelBody::ModelBody()
 : m_isStatic(false)
 , m_colliding(true)
 , m_geom(0)
-, m_model(0)
 {
 }
 
@@ -75,7 +74,7 @@ ModelBody::~ModelBody()
 	DeleteGeoms();
 
 	//delete instanced model
-	delete m_model;
+	m_model.reset();
 }
 
 void ModelBody::SaveToJson(Json::Value &jsonObj, Space *space)
@@ -172,21 +171,19 @@ void ModelBody::RebuildCollisionMesh()
 
 void ModelBody::SetModel(const char *modelName)
 {
-	//remove old instance
-	delete m_model;
-	m_model = 0;
-
 	m_modelName = modelName;
 
 	//create model instance (some modelbodies, like missiles could avoid this)
-	m_model = Pi::FindModel(m_modelName)->MakeInstance();
+	m_model.reset(Pi::FindModel(m_modelName)->MakeInstance());
 	m_idleAnimation = m_model->FindAnimation("idle");
 
 	SetClipRadius(m_model->GetDrawClipRadius());
 
-	m_shields.reset(new Shields(m_model));
+	m_shields.reset(new Shields(m_model.get()));
 
 	RebuildCollisionMesh();
+
+	m_transparentModelGraphic.reset(new ModelGraphic(m_model.get(), SceneGraph::NODE_TRANSPARENT));
 }
 
 void ModelBody::SetPosition(const vector3d &p)
@@ -412,13 +409,8 @@ void ModelBody::SetLighting(Graphics::Renderer *r, const Camera *camera, std::ve
 		newLights.push_back(light);
 	}
 
-	if (newLights.empty()) {
-		// no lights means we're somewhere weird (eg hyperspace, ObjectViewer). fake one
-		newLights.push_back(Graphics::Light(Graphics::Light::LIGHT_DIRECTIONAL, vector3f(0.f), Color::WHITE, Color::WHITE));
-	}
-
 	oldAmbient = r->GetAmbientColor();
-	r->SetAmbientColor(Color(ambient*255, ambient * 255, ambient * 255));
+	r->SetAmbientColor(Color(ambient*255));
 	r->SetLights(newLights.size(), &newLights[0]);
 }
 
@@ -428,9 +420,11 @@ void ModelBody::ResetLighting(Graphics::Renderer *r, const std::vector<Graphics:
 		r->SetLights(oldLights.size(), &oldLights[0]);
 	r->SetAmbientColor(oldAmbient);
 }
-
-void ModelBody::RenderModel(Graphics::Renderer *r, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform, const bool setLighting)
+#pragma optimize("",off)
+void ModelBody::RenderModel(Graphics::Renderer *r, Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform, const bool setLighting)
 {
+	Graphics::Renderer::MatrixTicket mt(r, Graphics::MatrixMode::MODELVIEW);
+
 	std::vector<Graphics::Light> oldLights;
 	Color oldAmbient;
 	if (setLighting)
@@ -448,7 +442,14 @@ void ModelBody::RenderModel(Graphics::Renderer *r, const Camera *camera, const v
 	trans[14] = viewCoords.z;
 	trans[15] = 1.0f;
 
-	m_model->Render(trans);
+	SceneGraph::RenderData rd;
+	if (m_model->ContainsNodeMask(SceneGraph::NODE_SOLID)) {
+		rd.nodemask = SceneGraph::NODE_SOLID;
+		m_model->Render(trans, &rd);
+	} else if (m_model->ContainsNodeMask(SceneGraph::NODE_TRANSPARENT)) {
+		m_transparentModelGraphic->SetTransform(trans);
+		camera->GetCollector().AddAdditive(m_transparentModelGraphic.get());
+	}
 
 	if (setLighting)
 		ResetLighting(r, oldLights, oldAmbient);

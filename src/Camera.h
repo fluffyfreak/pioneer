@@ -12,6 +12,8 @@
 #include "Background.h"
 #include "Body.h"
 
+#include "RenderableCollector.h"
+
 class Frame;
 class ShipCockpit;
 namespace Graphics { class Renderer; }
@@ -105,7 +107,13 @@ public:
 	const std::vector<LightSource> &GetLightSources() const { return m_lightSources; }
 	const int GetNumLightSources() const { return m_lightSources.size(); }
 
+	RenderableCollector &GetCollector() { return m_collector; }
+
 private:
+	void DrawOpaque();
+	void DrawTransparent();
+	void DrawAdditive();
+
 	RefCountedPtr<CameraContext> m_context;
 	Graphics::Renderer *m_renderer;
 
@@ -152,6 +160,7 @@ private:
 
 	std::list<BodyAttrs> m_sortedBodies;
 	std::vector<LightSource> m_lightSources;
+	RenderableCollector m_collector;
 };
 
 #endif

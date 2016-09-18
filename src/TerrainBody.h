@@ -16,8 +16,8 @@ class TerrainBody : public Body {
 public:
 	OBJDEF(TerrainBody, Body, TERRAINBODY);
 
-	virtual void Render(Graphics::Renderer *r, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform);
-	virtual void SubRender(Graphics::Renderer *r, const matrix4x4d &modelView, const vector3d &camPos) {}
+	virtual void Render(Graphics::Renderer *r, Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform) override;
+	virtual void SubRender(Graphics::Renderer *r, const matrix4x4d &modelView, const vector3d &camPos) = 0;
 	virtual void SetFrame(Frame *f);
 	virtual bool OnCollision(Object *b, Uint32 flags, double relVel) { return true; }
 	virtual double GetMass() const { return m_mass; }

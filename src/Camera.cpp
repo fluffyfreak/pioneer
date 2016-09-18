@@ -4,6 +4,7 @@
 #include "Camera.h"
 #include "Frame.h"
 #include "galaxy/StarSystem.h"
+#include "Renderable.h"
 #include "Space.h"
 #include "Player.h"
 #include "Pi.h"
@@ -187,6 +188,8 @@ void Camera::Draw(const Body *excludeBody, ShipCockpit* cockpit)
 
 	Frame *camFrame = m_context->GetCamFrame();
 
+	m_collector.Reset();
+
 	m_renderer->ClearScreen();
 
 	matrix4x4d trans2bg;
@@ -273,6 +276,53 @@ void Camera::Draw(const Body *excludeBody, ShipCockpit* cockpit)
 	// should really be in WorldView, immediately after camera draw
 	if(cockpit)
 		cockpit->RenderCockpit(m_renderer, this, camFrame);
+	
+	DrawOpaque();
+	DrawTransparent();
+	DrawAdditive();
+}
+
+void Camera::DrawOpaque()
+{
+	Graphics::Renderer::StateTicket ticket(m_renderer);
+	Graphics::RenderStateDesc rsd;
+	rsd.depthTest  = true;
+	rsd.depthWrite = true;
+	Graphics::RenderState *prsd = m_renderer->CreateRenderState(rsd);
+
+	RenderableCollector::GraphicList::const_iterator grit;
+	for (grit = m_collector.BeginOpaque(); grit != m_collector.EndOpaque(); ++grit) {
+		//(sort) and draw
+		(*grit)->Draw(prsd);
+	}
+}
+
+void Camera::DrawTransparent()
+{
+	Graphics::Renderer::StateTicket ticket(m_renderer);
+	Graphics::RenderStateDesc rsd;
+	rsd.blendMode  = BLEND_ALPHA_ONE;
+	rsd.depthWrite = false;
+	Graphics::RenderState *prsd = m_renderer->CreateRenderState(rsd);
+
+	RenderableCollector::GraphicList::const_iterator grit;
+	for (grit = m_collector.BeginTransparent(); grit != m_collector.EndTransparent(); ++grit) {
+		//sort and draw
+		(*grit)->Draw(prsd);
+	}
+}
+
+void Camera::DrawAdditive()
+{
+	Graphics::Renderer::StateTicket ticket(m_renderer);
+	Graphics::RenderStateDesc rsd;
+	rsd.blendMode = BLEND_ADDITIVE;
+	Graphics::RenderState *prsd = m_renderer->CreateRenderState(rsd);
+
+	RenderableCollector::GraphicList::const_iterator grit;
+	for (grit = m_collector.BeginAdditive(); grit != m_collector.EndAdditive(); ++grit) {
+		(*grit)->Draw(prsd);
+	}
 }
 
 void Camera::CalcShadows(const int lightNum, const Body *b, std::vector<Shadow> &shadowsOut) const {

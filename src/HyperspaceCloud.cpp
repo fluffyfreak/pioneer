@@ -47,16 +47,16 @@ HyperspaceCloud::HyperspaceCloud() : m_isBeingKilled(false)
 
 void HyperspaceCloud::InitGraphics()
 {
-	m_graphic.vertices.reset(new Graphics::VertexArray(ATTRIB_POSITION | ATTRIB_DIFFUSE));
-
 	Graphics::MaterialDescriptor desc;
 	desc.vertexColors = true;
-	m_graphic.material.reset(Pi::renderer->CreateMaterial(desc));
+	material.Reset(Pi::renderer->CreateMaterial(desc));
 
 	Graphics::RenderStateDesc rsd;
 	rsd.blendMode  = BLEND_ALPHA_ONE;
 	rsd.depthWrite = false;
-	m_graphic.renderState = Pi::renderer->CreateRenderState(rsd);
+	renderState = Pi::renderer->CreateRenderState(rsd);
+
+	m_graphic.reset(new TriangleGraphic(Pi::renderer, renderState, new Graphics::VertexArray(ATTRIB_POSITION | ATTRIB_DIFFUSE), material, Graphics::TRIANGLE_FAN));
 }
 
 HyperspaceCloud::~HyperspaceCloud()
@@ -161,13 +161,14 @@ Ship *HyperspaceCloud::EvictShip()
 	return s;
 }
 
-static void make_circle_thing(VertexArray &va, float radius, const Color &colCenter, const Color &colEdge)
+static void make_circle_thing(VertexArray *va, float radius, const Color &colCenter, const Color &colEdge)
 {
-	va.Add(vector3f(0.f, 0.f, 0.f), colCenter);
+	va->Clear();
+	va->Add(vector3f(0.f, 0.f, 0.f), colCenter);
 	for (float ang=0; ang<float(M_PI)*2.f; ang+=0.1f) {
-		va.Add(vector3f(radius*sin(ang), radius*cos(ang), 0.0f), colEdge);
+		va->Add(vector3f(radius*sin(ang), radius*cos(ang), 0.0f), colEdge);
 	}
-	va.Add(vector3f(0.f, radius, 0.f), colEdge);
+	va->Add(vector3f(0.f, radius, 0.f), colEdge);
 }
 
 void HyperspaceCloud::UpdateInterpTransform(double alpha)
@@ -177,20 +178,20 @@ void HyperspaceCloud::UpdateInterpTransform(double alpha)
 	m_interpPos = alpha*GetPosition() + (1.0-alpha)*oldPos;
 }
 
-void HyperspaceCloud::Render(Renderer *renderer, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform)
+void HyperspaceCloud::Render(Renderer *renderer, Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform)
 {
 	if( m_isBeingKilled )
 		return;
 
-	matrix4x4d trans = matrix4x4d::Identity();
+	matrix4x4f trans = matrix4x4f::Identity();
 	trans.Translate(float(viewCoords.x), float(viewCoords.y), float(viewCoords.z));
 
 	// face the camera dammit
-	vector3d zaxis = viewCoords.NormalizedSafe();
-	vector3d xaxis = vector3d(0,1,0).Cross(zaxis).Normalized();
-	vector3d yaxis = zaxis.Cross(xaxis);
-	matrix4x4d rot = matrix4x4d::MakeRotMatrix(xaxis, yaxis, zaxis).Inverse();
-	renderer->SetTransform(trans * rot);
+	vector3f zaxis = vector3f(viewCoords.NormalizedSafe());
+	vector3f xaxis = vector3f(0,1,0).Cross(zaxis).Normalized();
+	vector3f yaxis = zaxis.Cross(xaxis);
+	matrix4x4f rot = matrix4x4f::MakeRotMatrix(xaxis, yaxis, zaxis).Inverse();
+	//renderer->SetTransform(trans * rot);
 
 	// precise to the rendered frame (better than PHYSICS_HZ granularity)
 	const double preciseTime = Pi::game->GetTime() + Pi::GetGameTickAlpha()*Pi::game->GetTimeStep();
@@ -198,9 +199,12 @@ void HyperspaceCloud::Render(Renderer *renderer, const Camera *camera, const vec
 	// Flickering gradient circle, departure clouds are red and arrival clouds blue
 	// XXX could just alter the scale instead of recreating the model
 	const float radius = 1000.0f + 200.0f*float(noise(vector3d(10.0*preciseTime, 0, 0)));
-	m_graphic.vertices->Clear();
+	
 	Color outerColor = m_isArrival ? Color::BLUE : Color::RED;
 	outerColor.a = 0;
-	make_circle_thing(*m_graphic.vertices.get(), radius, Color::WHITE, outerColor);
-	renderer->DrawTriangles(m_graphic.vertices.get(), m_graphic.renderState, m_graphic.material.get(), TRIANGLE_FAN);
+	make_circle_thing(m_graphic->GetVertexArray(), radius, Color::WHITE, outerColor);
+	//renderer->DrawTriangles(vertices.get(), renderState, material.get(), TRIANGLE_FAN);
+
+	m_graphic->SetTransform(trans * rot);
+	camera->GetCollector().AddTransparent(m_graphic.get());
 }
