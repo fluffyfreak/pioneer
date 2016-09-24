@@ -295,14 +295,14 @@ void Ship::PostLoadFixup(Space *space)
 	m_controller->PostLoadFixup(space);
 }
 
-Ship::Ship(ShipType::Id shipId): DynamicBody(),
+Ship::Ship(const ShipType::Id &shipId): DynamicBody(),
+	m_flightState(FLYING),
+	m_alertState(ALERT_NONE),
 	m_controller(0),
 	m_thrusterFuel(1.0),
 	m_reserveFuel(0.0),
 	m_landingGearAnimation(nullptr)
 {
-	m_flightState = FLYING;
-	m_alertState = ALERT_NONE;
 	Properties().Set("flightState", EnumStrings::GetString("ShipFlightState", m_flightState));
 	Properties().Set("alertStatus", EnumStrings::GetString("ShipAlertStatus", m_alertState));
 
@@ -341,7 +341,8 @@ Ship::Ship(ShipType::Id shipId): DynamicBody(),
 	m_skin.SetRandomColors(Pi::rng);
 	m_skin.SetDecal(m_type->manufacturer);
 	m_skin.Apply(GetModel());
-	GetModel()->SetPattern(Pi::rng.Int32(0, GetModel()->GetNumPatterns()));
+	if(GetModel()->SupportsPatterns())
+		GetModel()->SetPattern(Pi::rng.Int32(0, GetModel()->GetNumPatterns()-1));
 
 	Init();
 	SetController(new ShipController());
@@ -1463,6 +1464,11 @@ void Ship::SetSkin(const SceneGraph::ModelSkin &skin)
 {
 	m_skin = skin;
 	m_skin.Apply(GetModel());
+}
+
+void Ship::SetPattern(const unsigned int num)
+{
+	GetModel()->SetPattern(num);
 }
 
 Uint8 Ship::GetRelations(Body *other) const

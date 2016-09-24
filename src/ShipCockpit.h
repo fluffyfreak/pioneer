@@ -22,18 +22,18 @@ public:
 	explicit ShipCockpit(const std::string &modelName);
 	virtual ~ShipCockpit();
 
-	virtual void Render(Graphics::Renderer *r, Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform) override final;
+	virtual void Render(Graphics::Renderer *r, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform) override;
 
 	void Update(float timeStep);
-	void RenderCockpit(Graphics::Renderer* renderer, Camera* camera, Frame* frame);
+	void RenderCockpit(Graphics::Renderer* renderer, const Camera* camera, Frame* frame);
 	void OnActivated();
        void resetInternalCameraController(void);
 
 protected:
-	float CalculateSignedForwardVelocity(vector3d forward, vector3d velocity);
+	float CalculateSignedForwardVelocity(const vector3d &forward, const vector3d &velocity);
 
 private:
-	ShipCockpit(const ShipCockpit&);
+	ShipCockpit(const ShipCockpit&) = delete;
 	ShipCockpit& operator=(const ShipCockpit&) = delete;
 
 	vector3d m_shipDir;        // current ship direction
