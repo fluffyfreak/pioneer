@@ -124,7 +124,7 @@ void Analyse(GeoSphere *geo)
 	{
 		heights[k] *= invMaxH;
 	}
-	Cellular vor(8, hmWide, hmHigh, poisson, heights);
+	Cellular vor(16, hmWide, hmHigh, poisson, heights);
 
 	// calculate storage for the maps
 	const Uint32 bpp = 4; // channels of info... one byte per thing?

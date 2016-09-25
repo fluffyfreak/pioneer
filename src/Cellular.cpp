@@ -23,9 +23,23 @@ Cellular::Cellular(const int cellSize, const int dimx, const int dimy, const std
 		const Uint32 xi = s[c].x * INV_CELL_DIVISOR;
 		const Uint32 yi = s[c].y * INV_CELL_DIVISOR;
 		const Uint32 index = (yi * cellsX) + xi;
-		cells[index].points.push_back(s[c]);
-		cells[index].indices.push_back(c);
+		cells[index].AddEntry(s[c],c);
 	}
+#if 1//def _DEBUG
+	Uint32 maxPoint=0;
+	Uint32 minPoint=1000;
+	Uint32 ptCount[CELL_ENTRIES] = {0,0,0,0};
+	for( size_t c=0; c<(cellsX * cellsY); c++ ) {
+		maxPoint = std::max(maxPoint, cells[c].count);
+		minPoint = std::min(minPoint, cells[c].count);
+		ptCount[cells[c].count]++;
+	}
+	Output("Cellular :: Max Count in Cell %u, and Min %u\n", maxPoint, minPoint);
+	for( int i=0; i<CELL_ENTRIES; i++ ) {
+		
+	Output("Cellular :: Point count %d, instances %u\n", i, ptCount[i]);
+	}
+#endif // _DEBUG
 	Output("Cellular :: CellsX %u, CellsY %u\n", cellsX, cellsY);
 
 	GenMap();
@@ -41,20 +55,55 @@ size_t Cellular::NearestSite( const int x, const int y ) const
 	// find this cell
 	const int cellX = x * INV_CELL_DIVISOR;
 	const int cellY = y * INV_CELL_DIVISOR;
-	// search through the NxN grid of cells centred on cellX|cellY;
-	for(int yi = std::max(cellY-CELL_OFFSET,0); yi<std::min(cellY+CELL_OFFSET,int(cellsY)); yi++) 
+	const int cellXStart = (cellX-CELL_OFFSET); 
+	const int cellXEnd = (cellX+CELL_OFFSET);
+	const int cellYStart = std::max(cellY-CELL_OFFSET,0); 
+	const int cellYEnd = std::min(cellY+CELL_OFFSET,int(cellsY));
+	const double xd = x;
+	const double yd = y;
+	const vector2d xyd(x,y);
+	if(cellXStart<0 || cellXEnd>=cellsX) 
 	{
-		for(int xi = (cellX-CELL_OFFSET); xi<(cellX+CELL_OFFSET); xi++) 
+		PROFILE_SCOPED_DESC("NearestSiteWrap")
+		// search through the NxN grid of cells centred on cellX|cellY;
+		for(int yi = cellYStart; yi<cellYEnd; yi++) 
 		{
-			const Uint32 index = (yi * cellsX) + MathUtil::iwrap(xi, cellsX);
-			const std::vector<vector2d> &pts = cells[index].points;
-			for (size_t i=0 ; i<pts.size() ; ++i)
+			for(int xi = cellXStart; xi<cellXEnd; xi++) 
 			{
-				double dist = WrapDist(x,y,pts[i]);
-				if (dist < mindist) 
+				const Uint32 index = (yi * cellsX) + MathUtil::iwrap(xi, cellsX);
+				const Cell &cell = cells[index];
+				const size_t count = cell.count;
+				for (size_t i=0 ; i<count ; ++i)
 				{
-					mindist = dist;
-					site = cells[index].indices[i];
+					const double dist = WrapHorizontalDist(xyd,cell.points[i]);
+					if (dist < mindist) 
+					{
+						mindist = dist;
+						site = cell.indices[i];
+					}
+				}
+			}
+		}
+	}
+	else 
+	{
+		PROFILE_SCOPED_DESC("NearestSiteDist")
+		// search through the NxN grid of cells centred on cellX|cellY;
+		for(int yi = cellYStart; yi<cellYEnd; yi++) 
+		{
+			for(int xi = cellXStart; xi<cellXEnd; xi++) 
+			{
+				const Uint32 index = (yi * cellsX) + MathUtil::iwrap(xi, cellsX);
+				const Cell &cell = cells[index];
+				const size_t count = cell.count;
+				for (size_t i=0 ; i<count ; ++i)
+				{
+					const double dist = Dist(xyd,cell.points[i]);
+					if (dist < mindist) 
+					{
+						mindist = dist;
+						site = cell.indices[i];
+					}
 				}
 			}
 		}

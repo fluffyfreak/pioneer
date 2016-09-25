@@ -19,37 +19,42 @@ private:
 	const double INV_CELL_DIVISOR;
 
 	const int size_x, size_y, half_size_x, half_size_y;
-	const Uint32 cellsX, cellsY;
+	const int cellsX, cellsY;
 	const std::vector<double> &heights;
 	std::unique_ptr<double[]> buf;
 
 	class Cell 
 	{
 	public:
-		Cell() {
-			PROFILE_SCOPED()
-			points.reserve(20);
-			indices.reserve(20);
+		// Hardcoded for the size of cell and density of points
+		#define CELL_ENTRIES 4
+		Cell() : count(0) {}
+		__forceinline void AddEntry(const vector2d &point, const size_t index) {
+			assert(count<CELL_ENTRIES);
+			points[count] = point;
+			indices[count] = index;
+			++count;
 		}
-		std::vector<vector2d>	points;
-		std::vector<size_t>		indices;
+		vector2d	points[CELL_ENTRIES];
+		size_t		indices[CELL_ENTRIES];
+		Uint32		count;
 	};
 	std::unique_ptr<Cell[]> cells;
 	
-	inline double WrapDist( int x, int y, const vector2d &p) const
+	__forceinline double WrapHorizontalDist( const vector2d &xy, const vector2d &p) const
 	{
-		PROFILE_SCOPED()
-		double dx = abs(x-p.x);
-		double dy = abs(y-p.y);
-		if (dx > half_size_x ) // only wrap on the horizontal
-			dx = size_x-dx;
-		//if (dy > half_size_y )
-		//	dy = size_y-dy;
-		// return squared distance
-		return dx*dx + dy*dy;
+		double dx = fabs(xy.x-p.x);
+		const double dy = (xy.y-p.y);
+		// only wrap on the horizontal
+		dx = (dx > half_size_x) ? (size_x-dx) : dx;
+		return (dx*dx) + (dy*dy);
+	}
+	
+	__forceinline double Dist( const vector2d &xy, const vector2d &p) const
+	{
+		return (xy-p).LengthSqr();
 	}
 
-#define CELL_OFFSET 2
 	size_t NearestSite( const int x, const int y ) const;
 	
 	void GenMap();
