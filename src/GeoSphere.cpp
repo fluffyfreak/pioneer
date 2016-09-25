@@ -312,18 +312,7 @@ void GeoSphere::BuildFirstPatches()
 	const std::string name( GetSystemBody()->GetName() );
 	if(name == "New Hope" || name == "Earth")
 	{
-#ifdef PIONEER_PROFILER
-		Profiler::reset();
-		FileSystem::userFiles.MakeDirectory("GeoSphere");
-		const std::string profilerPath = FileSystem::JoinPathBelow(FileSystem::userFiles.GetRoot(), "GeoSphere");
-#endif
-		{
-			PROFILE_SCOPED_DESC("GeoSphere-Analyse")
-			Analyse(this);
-		}
-#ifdef PIONEER_PROFILER
-		Profiler::dumphtml(profilerPath.c_str());
-#endif
+		Pi::GetAsyncJobQueue()->Queue(new AnalyseJob(this));
 	}
 
 	m_initStage = eRequestedFirstPatches;
