@@ -1,6 +1,23 @@
 September 2016
+   * New Features
+     * Set ship texture patterns from lua (#3811)
+
+   * Fixes
+     * Model pattern range and status checking (#3814)
+     * New seed and new locations of star ports for New Hope in Epsilon Eridani (#3818)
+
    * Internal Changes
      * Update GasGiant config, detail and initialisation timing (#3792)
+     * Change SAR mission rewards (#3806)
+     * Made NavLights responsible for their billboard rendering (#3809)
+     * Adding an editorconfig file to define coding style (#3810)
+     * Add annotations to ShipDef (#3812)
+     * Additional mesh optimisation (#3813)
+     * Unused files from JobSwarm experiments 4 years ago! (#3816)
+     * Belt and braces approach to sanity checking for patterns (#3817)
+     * Brighter luminosity for random colours (#3815)
+     * Minor performance cleanup (#3820)
+     * Use a function to access the s_patchFaces to silence a gcc warning (#3822)
 
 August 2016
    * New Features
