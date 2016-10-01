@@ -23,10 +23,6 @@
       "description" : "",
       "message" : "Zpět"
    },
-   "HANG_UP" : {
-      "description" : "",
-      "message" : "Konec"
-   },
    "IM_SORRY_IM_NOT_PREPARED_TO_GO_ANY_LOWER" : {
       "description" : "",
       "message" : "Promiňte, ale níž už nepůjdu."
@@ -43,9 +39,9 @@
       "description" : "",
       "message" : "Krátký čas sloužil(a) na palubě lodi"
    },
-   "NAVIGATOR" : {
+   "NO_CREW_AVAILABLE" : {
       "description" : "",
-      "message" : "Navigátor"
+      "message" : "Sorry, no candidates are currently seeking employment at {station}"
    },
    "NO_EXPERIENCE" : {
       "description" : "",
@@ -55,21 +51,9 @@
       "description" : "",
       "message" : "OK, domnívám se, že je to v pořádku."
    },
-   "PILOT" : {
-      "description" : "",
-      "message" : "Pilot"
-   },
    "POTENTIAL_CREW_MEMBERS" : {
       "description" : "",
       "message" : "Potencionální členové posádky, hledající práci, registrovaní na stanici {station}:"
-   },
-   "SENSORS_AND_DEFENCE" : {
-      "description" : "",
-      "message" : "Senzory a obrana lodi"
-   },
-   "SHIPS_ENGINEER" : {
-      "description" : "",
-      "message" : "Údržba lodi"
    },
    "SIMULATOR_TRAINING_ONLY" : {
       "description" : "",

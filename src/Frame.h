@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _FRAME_H
@@ -7,6 +7,7 @@
 #include "libs.h"
 #include "Serializer.h"
 #include "IterationProxy.h"
+#include "json/json.h"
 #include <string>
 #include <list>
 
@@ -14,22 +15,22 @@ class Body;
 class CollisionSpace;
 class Geom;
 class SystemBody;
-class Sfx;
+class SfxManager;
 class Space;
 
 // Frame of reference.
 
 class Frame {
 public:
-	enum { FLAG_ROTATING=(1<<1), FLAG_HAS_ROT=(1<<2) };
+	enum { FLAG_DEFAULT=(0), FLAG_ROTATING=(1<<1), FLAG_HAS_ROT=(1<<2) };
 
 	Frame();
 	Frame(Frame *parent, const char *label);
 	Frame(Frame *parent, const char *label, unsigned int flags);
 	~Frame();
-	static void Serialize(Serializer::Writer &wr, Frame *f, Space *space);
+	static void ToJson(Json::Value &jsonObj, Frame *f, Space *space);
 	static void PostUnserializeFixup(Frame *f, Space *space);
-	static Frame *Unserialize(Serializer::Reader &rd, Space *space, Frame *parent, double at_time);
+	static Frame *FromJson(const Json::Value &jsonObj, Space *space, Frame *parent, double at_time);
 	const std::string &GetLabel() const { return m_label; }
 	void SetLabel(const char *label) { m_label = label; }
 
@@ -91,7 +92,7 @@ public:
 
 	static void GetFrameTransform(const Frame *fFrom, const Frame *fTo, matrix4x4d &m);
 
-	Sfx *m_sfx;			// the last survivor. actually m_children is pretty grim too.
+	std::unique_ptr<SfxManager> m_sfx;			// the last survivor. actually m_children is pretty grim too.
 
 private:
 	void Init(Frame *parent, const char *label, unsigned int flags);

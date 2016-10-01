@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _SHIP_H
@@ -13,6 +13,7 @@
 #include "Sensors.h"
 #include "Serializer.h"
 #include "ShipType.h"
+#include "Space.h"
 #include "scenegraph/SceneGraph.h"
 #include "scenegraph/ModelSkin.h"
 #include "LuaTable.h"
@@ -38,7 +39,7 @@ struct shipstats_t {
 	int used_capacity;
 	int used_cargo;
 	int free_capacity;
-	int total_mass; // cargo, equipment + hull
+	int static_mass; // cargo, equipment + hull
 	float hull_mass_left; // effectively hitpoints
 	float hyperspace_range;
 	float hyperspace_range_max;
@@ -52,7 +53,7 @@ class Ship: public DynamicBody {
 	friend class PlayerShipController;
 public:
 	OBJDEF(Ship, DynamicBody, SHIP);
-	Ship(ShipType::Id shipId);
+	Ship(const ShipType::Id &shipId);
 	Ship() {} //default constructor used before Load
 	virtual ~Ship();
 
@@ -113,6 +114,7 @@ public:
 	enum FlightState { // <enum scope='Ship' name=ShipFlightState public>
 		FLYING,     // open flight (includes autopilot)
 		DOCKING,    // in docking animation
+		UNDOCKING,  // in docking animation
 		DOCKED,     // docked with station
 		LANDED,     // rough landed (not docked)
 		JUMPING,    // between space and hyperspace ;)
@@ -132,6 +134,7 @@ public:
 	void SetHyperspaceDest(const SystemPath &dest) { m_hyperspace.dest = dest; }
 	const SystemPath &GetHyperspaceDest() const { return m_hyperspace.dest; }
 	double GetHyperspaceDuration() const { return m_hyperspace.duration; }
+	double GetECMRechargeRemain() const { return m_ecmRecharge; }
 
 	enum HyperjumpStatus { // <enum scope='Ship' name=ShipJumpStatus prefix=HYPERJUMP_ public>
 		HYPERJUMP_OK,
@@ -152,7 +155,17 @@ public:
 
 	// 0 to 1.0 is alive, > 1.0 = death
 	double GetHullTemperature() const;
-	void UseECM();
+	// Calculate temperature we would have with wheels down
+	double ExtrapolateHullTemperature() const;
+
+	enum ECMResult {
+		ECM_NOT_INSTALLED,
+		ECM_ACTIVATED,
+		ECM_RECHARGING,
+	};
+
+	ECMResult UseECM();
+
 	virtual Missile * SpawnMissile(ShipType::Id missile_type, int power=-1);
 
 	enum AlertState { // <enum scope='Ship' name=ShipAlertStatus prefix=ALERT_ public>
@@ -206,7 +219,10 @@ public:
 	const SceneGraph::ModelSkin &GetSkin() const { return m_skin; }
 	void SetSkin(const SceneGraph::ModelSkin &skin);
 
+	void SetPattern(unsigned int num);
+
 	void SetLabel(const std::string &label);
+	void SetShipName(const std::string &shipName);
 
 	float GetPercentShields() const;
 	float GetPercentHull() const;
@@ -239,6 +255,7 @@ public:
 
 	sigc::signal<void> onDock;				// JJ: check what these are for
 	sigc::signal<void> onUndock;
+	sigc::signal<void> onLanded;
 
 	// mutable because asking to know when state changes is not the same as
 	// actually changing state
@@ -255,8 +272,8 @@ public:
 	double GetLandingPosOffset() const { return m_landingMinOffset; }
 
 protected:
-	virtual void Save(Serializer::Writer &wr, Space *space);
-	virtual void Load(Serializer::Reader &rd, Space *space);
+	virtual void SaveToJson(Json::Value &jsonObj, Space *space);
+	virtual void LoadFromJson(const Json::Value &jsonObj, Space *space);
 	void RenderLaserfire();
 
 	bool AITimeStep(float timeStep); // Called by controller. Returns true if complete
@@ -319,7 +336,11 @@ private:
 	vector3d m_angThrusters;
 
 	AlertState m_alertState;
+	double m_lastAlertUpdate;
 	double m_lastFiringAlert;
+	bool m_shipNear;
+	bool m_shipFiring;
+	Space::BodyNearList m_nearbyBodies;
 
 	struct HyperspacingOut {
 		SystemPath dest;
@@ -335,7 +356,7 @@ private:
 	AIError m_aiMessage;
 	bool m_decelerating;
 
-	double m_thrusterFuel; 	// remaining fuel 0.0-1.0
+	double m_thrusterFuel;	// remaining fuel 0.0-1.0
 	double m_reserveFuel;	// 0-1, fuel not to touch for the current AI program
 
 	double m_landingMinOffset;	// offset from the centre of the ship used during docking
@@ -349,10 +370,10 @@ private:
 
 	std::unique_ptr<Sensors> m_sensors;
 	std::unordered_map<Body*, Uint8> m_relationsMap;
+
+	std::string m_shipName;
 };
 
 
 
 #endif /* _SHIP_H */
-
-

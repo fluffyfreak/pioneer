@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef GRAPHICS_TYPES_H
@@ -6,6 +6,8 @@
 #include "libs.h"
 
 namespace Graphics {
+
+typedef Uint32 AttributeSet;
 
 //Vertex attribute semantic
 enum VertexAttrib {
@@ -15,7 +17,7 @@ enum VertexAttrib {
 	ATTRIB_DIFFUSE   = (1u << 2),
 	ATTRIB_UV0       = (1u << 3),
 	//ATTRIB_UV1       = (1u << 4),
-	//ATTRIB_TANGENT   = (1u << 5),
+	ATTRIB_TANGENT   = (1u << 5),
 	//ATTRIB_BITANGENT = (1u << 6)
 	//etc.
 };
@@ -39,17 +41,14 @@ enum BufferMapMode {
 	BUFFER_MAP_READ
 };
 
-enum LineType {
-	LINE_SINGLE = GL_LINES, //draw one line per two vertices
-	LINE_STRIP = GL_LINE_STRIP,  //connect vertices
-	LINE_LOOP = GL_LINE_LOOP    //connect vertices,  connect start & end
-};
-
 enum PrimitiveType {
-	TRIANGLES = GL_TRIANGLES,
-	TRIANGLE_STRIP = GL_TRIANGLE_STRIP,
-	TRIANGLE_FAN = GL_TRIANGLE_FAN,
-	POINTS = GL_POINTS
+	POINTS = 0,		//GL_POINTS,
+	LINE_SINGLE,	//GL_LINES,				//draw one line per two vertices
+	LINE_LOOP,		//GL_LINE_LOOP,			//connect vertices,  connect start & end
+	LINE_STRIP,		//GL_LINE_STRIP,		//connect vertices
+	TRIANGLES,		//GL_TRIANGLES,
+	TRIANGLE_STRIP, //GL_TRIANGLE_STRIP,
+	TRIANGLE_FAN,	//GL_TRIANGLE_FAN
 };
 
 enum BlendMode {

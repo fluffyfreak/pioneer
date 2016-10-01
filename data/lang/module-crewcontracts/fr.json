@@ -5,7 +5,7 @@
    },
    "CREWDETAILSHEETBB" : {
       "description" : "",
-      "message" : "Name: {name}\nExperience: {experience}\nAsking wage: {wage} per week\n\n{response}\n"
+      "message" : "Nom: {name}\nExpérience: {experience}\nSalaire souhaité: {wage} par semaine\n\n{response}\n"
    },
    "CREWMEMBER_WAGE_PER_WEEK" : {
       "description" : "",
@@ -23,10 +23,6 @@
       "description" : "",
       "message" : "Retour"
    },
-   "HANG_UP" : {
-      "description" : "",
-      "message" : "Raccrochez."
-   },
    "IM_SORRY_IM_NOT_PREPARED_TO_GO_ANY_LOWER" : {
       "description" : "",
       "message" : "Désolé, je ne suis pas prêt à baisser plus."
@@ -43,9 +39,9 @@
       "description" : "",
       "message" : "Temps minimal servi à bord"
    },
-   "NAVIGATOR" : {
+   "NO_CREW_AVAILABLE" : {
       "description" : "",
-      "message" : "Navigateur"
+      "message" : "Désolé, personne n'est actuellement en recherche d'emploi à {station}."
    },
    "NO_EXPERIENCE" : {
       "description" : "",
@@ -55,21 +51,9 @@
       "description" : "",
       "message" : "Ok, je suppose que c'est correct."
    },
-   "PILOT" : {
-      "description" : "",
-      "message" : "Pilote"
-   },
    "POTENTIAL_CREW_MEMBERS" : {
       "description" : "",
       "message" : "Membres d'équipage potentiels enregistrés comme demandeurs d'emploi à {station}:"
-   },
-   "SENSORS_AND_DEFENCE" : {
-      "description" : "",
-      "message" : "Senseurs et défense"
-   },
-   "SHIPS_ENGINEER" : {
-      "description" : "",
-      "message" : "Ingénieur de vaisseau"
    },
    "SIMULATOR_TRAINING_ONLY" : {
       "description" : "",

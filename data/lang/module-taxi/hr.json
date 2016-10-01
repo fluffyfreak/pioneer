@@ -523,10 +523,6 @@
       "description" : "",
       "message" : "Group details:"
    },
-   "HANG_UP" : {
-      "description" : "",
-      "message" : "Prekini."
-   },
    "HEY_YOU_ARE_GOING_TO_PAY_FOR_THIS" : {
       "description" : "",
       "message" : "Hey!?! You are going to pay for this!!!"
@@ -567,6 +563,10 @@
       "description" : "",
       "message" : "You're not going to dock today!"
    },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Set as navigation target"
+   },
    "TAXI" : {
       "description" : "",
       "message" : "Taxi"
@@ -586,6 +586,10 @@
    "WILL_I_BE_IN_ANY_DANGER" : {
       "description" : "",
       "message" : "Will I be in any danger?"
+   },
+   "WRONG_SYSTEM" : {
+      "description" : "Shown if system name is right, but coordinates are wrong",
+      "message" : "The system name is right, but not the coordinates."
    },
    "YOU_DO_NOT_HAVE_ENOUGH_CABIN_SPACE_ON_YOUR_SHIP" : {
       "description" : "",

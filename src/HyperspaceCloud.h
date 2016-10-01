@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _HYPERSPACECLOUD_H
@@ -14,9 +14,6 @@ namespace Graphics {
 	class VertexArray;
 	class RenderState;
 }
-
-/** XXX TODO XXX Not applied to yet... */
-#define HYPERCLOUD_DURATION (60.0*60.0*24.0*2.0)
 
 class HyperspaceCloud: public Body {
 public:
@@ -36,8 +33,8 @@ public:
 	bool IsArrival() const { return m_isArrival; }
 	virtual void UpdateInterpTransform(double alpha);
 protected:
-	virtual void Save(Serializer::Writer &wr, Space *space);
-	virtual void Load(Serializer::Reader &rd, Space *space);
+	virtual void SaveToJson(Json::Value &jsonObj, Space *space);
+	virtual void LoadFromJson(const Json::Value &jsonObj, Space *space);
 
 private:
 	void InitGraphics();
@@ -47,6 +44,7 @@ private:
 	double m_birthdate;
 	double m_due;
 	bool m_isArrival;
+	bool m_isBeingKilled;
 
 	struct Graphic {
 		std::unique_ptr<Graphics::VertexArray> vertices;

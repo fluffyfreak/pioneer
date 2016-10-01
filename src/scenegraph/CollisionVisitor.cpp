@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "CollisionVisitor.h"
@@ -21,6 +21,7 @@ CollisionVisitor::CollisionVisitor()
 
 void CollisionVisitor::ApplyStaticGeometry(StaticGeometry &g)
 {
+	PROFILE_SCOPED()
 	if (m_matrixStack.empty()) {
 		m_collMesh->GetAabb().Update(g.m_boundingBox.min);
 		m_collMesh->GetAabb().Update(g.m_boundingBox.max);
@@ -35,6 +36,7 @@ void CollisionVisitor::ApplyStaticGeometry(StaticGeometry &g)
 
 void CollisionVisitor::ApplyMatrixTransform(MatrixTransform &m)
 {
+	PROFILE_SCOPED()
 	matrix4x4f matrix = matrix4x4f::Identity();
 	if (!m_matrixStack.empty()) matrix = m_matrixStack.back();
 
@@ -45,6 +47,7 @@ void CollisionVisitor::ApplyMatrixTransform(MatrixTransform &m)
 
 void CollisionVisitor::ApplyCollisionGeometry(CollisionGeometry &cg)
 {
+	PROFILE_SCOPED()
 	using std::vector;
 
 	if (cg.IsDynamic()) return ApplyDynamicCollisionGeometry(cg);
@@ -59,7 +62,7 @@ void CollisionVisitor::ApplyCollisionGeometry(CollisionGeometry &cg)
 		m_collMesh->GetAabb().Update(pos.x, pos.y, pos.z);
 	}
 
-	for (vector<Uint16>::const_iterator it = cg.GetIndices().begin(); it != cg.GetIndices().end(); ++it)
+	for (vector<Uint32>::const_iterator it = cg.GetIndices().begin(); it != cg.GetIndices().end(); ++it)
 		m_indices.push_back(*it + idxOffset);
 
 	//at least some of the geoms should be default collision
@@ -72,13 +75,14 @@ void CollisionVisitor::ApplyCollisionGeometry(CollisionGeometry &cg)
 
 void CollisionVisitor::ApplyDynamicCollisionGeometry(CollisionGeometry &cg)
 {
+	PROFILE_SCOPED()
 	//don't transform geometry, one geomtree per cg, create tree right away
 
 	const int numVertices = cg.GetVertices().size();
 	const int numIndices = cg.GetIndices().size();
 	const int numTris = numIndices / 3;
-	vector3f *vertices = new vector3f[numVertices];
-	Uint16 *indices = new Uint16[numIndices];
+	std::vector<vector3f> vertices(numVertices);
+	Uint32 *indices = new Uint32[numIndices];
 	unsigned int *triFlags = new unsigned int[numTris];
 
 	for (int i = 0; i < numVertices; i++)
@@ -94,7 +98,7 @@ void CollisionVisitor::ApplyDynamicCollisionGeometry(CollisionGeometry &cg)
 	//takes ownership of data
 	GeomTree *gt = new GeomTree(
 		numVertices, numTris,
-		reinterpret_cast<float*>(vertices),
+		vertices,
 		indices, triFlags);
 	cg.SetGeomTree(gt);
 
@@ -105,8 +109,9 @@ void CollisionVisitor::ApplyDynamicCollisionGeometry(CollisionGeometry &cg)
 
 void CollisionVisitor::AabbToMesh(const Aabb &bb)
 {
+	PROFILE_SCOPED()
 	std::vector<vector3f> &vts = m_vertices;
-	std::vector<Uint16> &ind = m_indices;
+	std::vector<Uint32> &ind = m_indices;
 	const int offs = vts.size();
 
 	const vector3f min(bb.min.x, bb.min.y, bb.min.z);
@@ -166,6 +171,10 @@ void CollisionVisitor::AabbToMesh(const Aabb &bb)
 
 RefCountedPtr<CollMesh> CollisionVisitor::CreateCollisionMesh()
 {
+	PROFILE_SCOPED()
+	Profiler::Timer timer;
+	timer.Start();
+
 	//convert from model AABB if no collisiongeoms found
 	if (!m_properData)
 		AabbToMesh(m_collMesh->GetAabb());
@@ -174,29 +183,29 @@ RefCountedPtr<CollMesh> CollisionVisitor::CreateCollisionMesh()
 	assert(!m_vertices.empty() && !m_indices.empty());
 
 	//duplicate data again for geomtree...
-	const int numVertices = m_vertices.size();
-	const int numIndices = m_indices.size();
-	const int numTris = numIndices / 3;
-	vector3f *vertices = new vector3f[numVertices];
-	Uint16 *indices = new Uint16[numIndices];
-	unsigned int *triFlags = new unsigned int[numTris];
+	const size_t numVertices = m_vertices.size();
+	const size_t numIndices = m_indices.size();
+	const size_t numTris = numIndices / 3;
+	std::vector<vector3f> vertices(numVertices);
+	Uint32 *indices = new Uint32[numIndices];
+	Uint32 *triFlags = new Uint32[numTris];
 
 	m_totalTris += numTris;
 
-	for (int i = 0; i < numVertices; i++)
+	for (size_t i = 0; i < numVertices; i++)
 		vertices[i] = m_vertices[i];
 
-	for (int i = 0; i < numIndices; i++)
+	for (size_t i = 0; i < numIndices; i++)
 		indices[i] = m_indices[i];
 
-	for (int i = 0; i < numTris; i++)
+	for (size_t i = 0; i < numTris; i++)
 		triFlags[i] = m_flags[i];
 
 	//create geomtree
 	//takes ownership of data
 	GeomTree *gt = new GeomTree(
 		numVertices, numTris,
-		reinterpret_cast<float*>(vertices),
+		vertices,
 		indices, triFlags);
 	m_collMesh->SetGeomTree(gt);
 	m_collMesh->SetNumTriangles(m_totalTris);
@@ -205,6 +214,9 @@ RefCountedPtr<CollMesh> CollisionVisitor::CreateCollisionMesh()
 	m_vertices.clear();
 	m_indices.clear();
 	m_flags.clear();
+
+	timer.Stop();
+	//Output(" - CreateCollisionMesh took: %lf milliseconds\n", timer.millicycles());
 
 	return m_collMesh;
 }

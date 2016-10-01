@@ -1,4 +1,4 @@
-dnl Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+dnl Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 dnl Licensed under the terms of the GPL v3. See COPYING.txt for details
 
 dnl Process this file with autoconf to create configure.
@@ -20,7 +20,7 @@ AC_DEFUN([MXE_SETUP], [
 			AC_MSG_ERROR([Cannot specify --host with --with-mxe])
 		fi
 		AC_MSG_CHECKING([for MXE])
-		MXE_CMAKE_TOOLCHAIN_FILE="$MXE_BASE/usr/i686-pc-mingw32/share/cmake/mxe-conf.cmake"
+		MXE_CMAKE_TOOLCHAIN_FILE="$MXE_BASE/usr/i686-w64-mingw32.static/share/cmake/mxe-conf.cmake"
 		if ! test -f "$MXE_CMAKE_TOOLCHAIN_FILE" ; then
 			AC_MSG_RESULT([no])
 			AC_MSG_ERROR([MXE not found in $MXE_BASE])
@@ -29,7 +29,7 @@ AC_DEFUN([MXE_SETUP], [
 		MXE_CROSS=yes
 		MXE_PATH="$MXE_BASE/usr/bin"
 		PATH="$MXE_PATH:$PATH"
-		host_alias=i686-pc-mingw32
+		host_alias=i686-w64-mingw32.static
 		ac_tool_prefix=$host_alias-
 		cross_compiling=yes
 		HAVE_WINDRES=yes
@@ -68,10 +68,11 @@ dnl ###########################################################################
 
 STD_CXXFLAGS=
 
-EXTRA_CFLAGS=
-EXTRA_CXXFLAGS=
-EXTRA_CPPFLAGS=
-EXTRA_LIBS=
+dnl allow extra stuff from environment too
+EXTRA_CFLAGS="$CFLAGS"
+EXTRA_CXXFLAGS="$CXXFLAGS"
+EXTRA_CPPFLAGS="$CPPFLAGS"
+EXTRA_LIBS="$LIBS"
 
 WARN_CFLAGS=
 WARN_CXXFLAGS=
@@ -114,7 +115,7 @@ AC_DEFUN([PIONEER_WARN_C_CXX_FLAG],
 dnl Early check for C++11
 dnl     -std=c++11 defines __STRICT_ANSI__, which causes MinGW some problems so use gnu++11 on it instead
 case "$host" in
-  i686-pc-mingw32|x86_64-pc-mingw64)
+  i686-w64-mingw32.static)
 	_PIONEER_COMPILER_FLAG([C++], [STD], [CXX], [-std=gnu++11], [$CXX], [], [AC_MSG_ERROR([No compiler support for C++11. Unable to build])])
 	;;
   *)
@@ -132,6 +133,7 @@ AC_SUBST([OPTIMISE])
 
 dnl Debug stuff
 AC_ARG_ENABLE([debug], AS_HELP_STRING([--enable-debug], [Enable debugging code (stack checks, debug tools features, etc)]), [EXTRA_CPPFLAGS="$EXTRA_CPPFLAGS -DDEBUG"])
+AC_ARG_ENABLE([remote-lua-repl], AS_HELP_STRING([--enable-remote-lua-repl], [Enable remote lua repl (tcp port 12345 or -DREMOTE_LUA_REPL_PORT=54321]), [EXTRA_CPPFLAGS="$EXTRA_CPPFLAGS -DREMOTE_LUA_REPL"])
 AC_ARG_ENABLE([ldb], AS_HELP_STRING([--enable-ldb], [Enable ldb support.]), [EXTRA_CPPFLAGS="$EXTRA_CPPFLAGS -DENABLE_LDB" ; EXTRA_LIBS="$EXTRA_LIBS -lldbcore"])
 AC_ARG_ENABLE([profiler], AS_HELP_STRING([--enable-profiler], [Enable internal profiler]), [EXTRA_CPPFLAGS="$EXTRA_CPPFLAGS -DPIONEER_PROFILER"])
 
@@ -163,7 +165,10 @@ AC_ARG_WITH([extra-version], AS_HELP_STRING([--with-extra-version], [Additional 
 
 EXTRA_CPPFLAGS="$EXTRA_CPPFLAGS -DPIONEER_VERSION=\\\"$PIONEER_VERSION\\\" -DPIONEER_EXTRAVERSION=\\\"$PIONEER_EXTRAVERSION\\\""
 
-EXTRA_CPPFLAGS="$EXTRA_CPPFLAGS -DGLEW_STATIC"
+dnl __STDC_LIMIT_MACROS is defined so that GCC 4.7 will provide limit macros (eg, INT64_MAX) as part of cstdint
+dnl (note, __STDC_LIMIT_MACROS is not needed in GCC 4.8 or later; those macros are part of the C++11 standard)
+dnl __STDC_FORMAT_MACROS is the same deal for the (PRI|SCN)[ud](32|64) macros
+EXTRA_CPPFLAGS="$EXTRA_CPPFLAGS -D__STDC_LIMIT_MACROS -D__STDC_FORMAT_MACROS"
 
 
 dnl Compiler warning options
@@ -238,11 +243,12 @@ AC_DEFUN([PIONEER_CHECK_LIB],
 AC_ARG_WITH([thirdparty], AS_HELP_STRING([--with-thirdparty], [Location of pioneer-thirdparty repository]), [
 	AC_MSG_NOTICE([using pioneer-thirdparty repository in $withval])
     if test "x$MXE_CROSS" = "xyes" ; then
-	    PKG_CONFIG_PATH_i686_pc_mingw32="$withval/usr/lib/pkgconfig:$PKG_CONFIG_PATH"
-	    export PKG_CONFIG_PATH_i686_pc_mingw32
+	    PKG_CONFIG_PATH_i686-w64-mingw32.static="$withval/usr/lib/pkgconfig:$PKG_CONFIG_PATH"
+	    export PKG_CONFIG_PATH_i686-w64-mingw32.static
     else
 	    PKG_CONFIG_PATH="$withval/usr/lib/pkgconfig:$PKG_CONFIG_PATH"
 	    export PKG_CONFIG_PATH
+	    EXTRA_LIBS="$EXTRA_LIBS -ldl -lrt -lz"
     fi
 	CFLAGS="-isystem $withval/usr/include"
 	LIBS="-L$withval/usr/lib -Wl,-rpath,$withval/usr/lib"
@@ -272,21 +278,20 @@ ASSIMP_CFLAGS=`echo $ASSIMP_CFLAGS | sed -e 's/\/assimp$//'`
 
 if test "x$cross_compiling" = "xno" ; then
 
-	dnl Extra version checks for assimp. Last release was 2.0, we need 3.0+ (git
-	dnl version). Unfortunately the pkg-config version has not yet been updated
-	dnl upstream, so we have to test the library directly
-	AC_MSG_CHECKING(for ASSIMP version >= 3.0)
+	dnl Extra version checks for assimp. Last release was 2.0, we need
+	dnl 3.2+. The .pc file is unversioned, so we need extra tests
+	AC_MSG_CHECKING(for ASSIMP version >= 3.2)
 	dnl Convert -Lfoo to -rpath=, as the wanted dir might not be visible to the dynamic linker
 	assimp_rpath=`echo $ASSIMP_LIBS | sed -e 's/-[^L] *[^ ]\+ *//g' | sed -e 's/-L */-Wl,-rpath,/g'`
 	old_cxxflags="$CXXFLAGS"
 	old_libs="$LIBS"
-	CXXFLAGS="$ASSIMP_CFLAGS"
-	LIBS="$ASSIMP_LIBS $assimp_rpath"
+	CXXFLAGS="$ASSIMP_CFLAGS $EXTRA_CXXFLAGS"
+	LIBS="$ASSIMP_LIBS $EXTRA_LIBS $assimp_rpath"
 	AC_LANG_PUSH([C++])
 	AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <assimp/defs.h>
 	                                 #include <assimp/version.h>]],
 	                            [[do {
-	                                if (aiGetVersionMajor() >= 3 && aiGetVersionMinor() >= 0)
+	                                if (aiGetVersionMajor() >= 3 && aiGetVersionMinor() >= 2)
 	                                    return 0;
 	                                return 1;
 	                              } while(0)]])],
@@ -295,12 +300,15 @@ if test "x$cross_compiling" = "xno" ; then
 	                            [AC_MSG_RESULT(no)])
 	AC_LANG_POP
 	if test "x$have_assimp_version" != "xyes" ; then
-		AC_MSG_ERROR("assimp version >= 3.0 not found. Get it from https://assimp.sourceforge.net/")
+		AC_MSG_ERROR("assimp version >= 3.2 not found. Get it from https://assimp.sourceforge.net/")
 	fi
 	CXXFLAGS="$old_cxxflags"
 	LIBS="$old_libs"
 
 fi
+
+dnl Check for libcurl
+PKG_CHECK_MODULES([CURL], [libcurl])
 
 dnl Optionally use external liblua
 AC_ARG_WITH([external-liblua], AS_HELP_STRING([--with-external-liblua], [Use external liblua in place of our internal copy]), [], [with_external_liblua=no; HAVE_LUA=no])
@@ -311,11 +319,15 @@ if test "$with_external_liblua" = yes; then
   fi
 fi
 AM_CONDITIONAL([HAVE_LUA], [test "$HAVE_LUA" = yes])
+
+LUA_CFLAGS="$LUA_CFLAGS -DLUA_USE_APICHECK"
 case "$host" in
-  i686-pc-mingw32|x86_64-pc-mingw64)
+  i686-w64-mingw32.static)
+	LUA_CFLAGS="$LUA_CFLAGS -DLUA_USE_WIN"
 	;;
   *)
-	LUA_CFLAGS="$LUA_CFLAGS -DLUA_USE_POSIX -DLUA_USE_APICHECK"
+	LUA_CFLAGS="$LUA_CFLAGS -DLUA_USE_POSIX"
+	;;
 esac
 
 dnl Check for OpenGL libs
@@ -332,7 +344,7 @@ dnl ###########################################################################
 
 AC_MSG_CHECKING([platform type])
 case "$host" in
-  i686-pc-mingw32|x86_64-pc-mingw64)
+  i686-w64-mingw32.static)
 	PLATFORM=win32
 	;;
   *)
@@ -350,7 +362,7 @@ dnl System-specific stuff not covered above
 dnl ###########################################################################
 
 case "$host" in
-  i686-pc-mingw32|x86_64-pc-mingw64)
+  i686-w64-mingw32.static)
 	MINGW_LIBS="-lshlwapi"
 	SDL_LIBS="$SDL_LIBS -ltiff -lpng -ljpeg -lz"
 	;;
@@ -390,6 +402,8 @@ AC_CONFIG_FILES([
 	src/gameui/Makefile
 	src/gui/Makefile
 	src/graphics/Makefile
+	src/graphics/opengl/Makefile
+	src/graphics/dummy/Makefile
 	src/scenegraph/Makefile
 	src/galaxy/Makefile
 	src/terrain/Makefile
@@ -404,7 +418,6 @@ AC_CONFIG_FILES([
 	contrib/json/Makefile
 	contrib/PicoDDS/Makefile
 	contrib/vcacheopt/Makefile
-	contrib/glew/Makefile
 	contrib/profiler/Makefile
 	osx/Makefile
 	win32/Makefile])

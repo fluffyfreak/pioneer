@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Terrain.h"
@@ -28,7 +28,6 @@ double TerrainHeightFractal<TerrainHeightBarrenRock>::GetHeight(const vector3d &
 			GetFracDef(1).amplitude * crater_function(GetFracDef(1), p)));*/
 			//fuck the fracdefs, direct control is better:
 	double n = ridged_octavenoise(16, 0.5*octavenoise(8, 0.4, 2.5, p),Clamp(5.0*octavenoise(8, 0.257, 4.0, p), 1.0, 5.0), p);
-	n = m_maxHeight*2.0*n*n;
 
-	return (n > 0.0? n : 0.0);
+	return (n > 0.0 ? m_maxHeight*n : 0.0);
 }

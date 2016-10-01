@@ -29,21 +29,21 @@ noinst_HEADERS = \
 	Color.h \
 	Cutscene.h \
 	CRC32.h \
+	DateTime.h \
 	DeathView.h \
 	DeleteEmitter.h \
 	DynamicBody.h \
 	Easing.h \
 	EnumStrings.h \
-	FaceGenManager.h \
+	FaceParts.h \
 	Factions.h \
 	FileSystem.h \
 	FontCache.h \
-	Form.h \
-	FormController.h \
 	Frame.h \
-	GalacticView.h \
 	Game.h \
+	GameLog.h \
 	GasGiant.h \
+	GasGiantJobs.h \
 	GeoSphere.h \
 	HudTrail.h \
 	HyperspaceCloud.h \
@@ -78,6 +78,7 @@ noinst_HEADERS = \
 	LuaRef.h \
 	LuaSerializer.h \
 	LuaShipDef.h \
+	LuaServerAgent.h \
 	LuaSpace.h \
 	LuaTable.h \
 	LuaTimer.h \
@@ -96,6 +97,7 @@ noinst_HEADERS = \
 	OS.h \
 	PersistSystemData.h \
 	Pi.h \
+	Plane.h \
 	Planet.h \
 	Player.h \
 	PngWriter.h \
@@ -105,6 +107,8 @@ noinst_HEADERS = \
 	PropertyMap.h \
 	Quaternion.h \
 	Random.h \
+	RandomColor.h \
+	Range.h \
 	RefCounted.h \
 	SDLWrappers.h \
 	SectorView.h \
@@ -127,6 +131,7 @@ noinst_HEADERS = \
 	SpaceStation.h \
 	SpaceStationType.h \
 	SpeedLines.h \
+	Sphere.h \
 	Star.h \
 	SystemInfoView.h \
 	SystemView.h \
@@ -137,6 +142,7 @@ noinst_HEADERS = \
 	VideoLink.h \
 	View.h \
 	WorldView.h \
+	ServerAgent.h \
 	SmartPtr.h \
 	buildopts.h \
 	fixed.h \
@@ -158,21 +164,23 @@ pioneer_SOURCES	= \
 	CameraController.cpp \
 	CargoBody.cpp \
 	Color.cpp \
+	CollMesh.cpp \
 	CityOnPlanet.cpp \
 	CRC32.cpp \
+	DateTime.cpp \
 	DeathView.cpp \
 	DynamicBody.cpp \
 	EnumStrings.cpp \
-	FaceGenManager.cpp \
+	FaceParts.cpp \
 	Factions.cpp \
 	FileSourceZip.cpp \
 	FileSystem.cpp \
 	FontCache.cpp \
-	FormController.cpp \
 	Frame.cpp \
-	GalacticView.cpp \
 	Game.cpp \
+	GameLog.cpp \
 	GasGiant.cpp \
+	GasGiantJobs.cpp \
 	GeoPatch.cpp \
 	GeoPatchContext.cpp \
 	GeoPatchID.cpp \
@@ -214,6 +222,7 @@ pioneer_SOURCES	= \
 	LuaPropertiedObject.cpp \
 	LuaRand.cpp \
 	LuaRef.cpp \
+	LuaServerAgent.cpp \
 	LuaSystemBody.cpp \
 	LuaSystemPath.cpp \
 	LuaSerializer.cpp \
@@ -235,16 +244,19 @@ pioneer_SOURCES	= \
 	ObjectViewerView.cpp \
 	Orbit.cpp \
 	Pi.cpp \
+	Plane.cpp \
 	Planet.cpp \
 	Player.cpp \
 	PngWriter.cpp \
 	Polit.cpp \
 	Projectile.cpp \
 	PropertyMap.cpp \
+	RandomColor.cpp \
 	SDLWrappers.cpp \
 	SectorView.cpp \
 	Sensors.cpp \
 	Serializer.cpp \
+	ServerAgent.cpp \
 	StringF.cpp \
 	Sfx.cpp \
 	Shields.cpp \
@@ -262,6 +274,7 @@ pioneer_SOURCES	= \
 	SpaceStation.cpp \
 	SpaceStationType.cpp \
 	SpeedLines.cpp \
+	Sphere.cpp \
 	Star.cpp \
 	SystemInfoView.cpp \
 	SystemView.cpp \
@@ -280,6 +293,7 @@ pioneer_LDADD = \
 	collider/libcollider.a \
 	gui/libgui.a \
 	graphics/libgraphics.a \
+	graphics/opengl/libgraphicsopengl.a \
 	galaxy/libgalaxy.a \
 	scenegraph/libscenegraph.a \
 	text/libtext.a \
@@ -289,16 +303,16 @@ pioneer_LDADD = \
 	../contrib/PicoDDS/libpicodds.a \
 	../contrib/jenkins/libjenkins.a \
 	../contrib/json/libjson.a \
-	../contrib/glew/libglew.a \
 	../contrib/profiler/libprofiler.a
 
 pioneer_LDADD += \
 	$(FREETYPE_LIBS) $(GL_LIBS) \
 	$(SDL2_LIBS) $(SIGC_LIBS) $(LUA_LIBS) $(VORBIS_LIBS) \
-	$(PNG_LIBS) $(ASSIMP_LIBS) $(EXTRA_LIBS)
+	$(PNG_LIBS) $(CURL_LIBS) $(ASSIMP_LIBS) $(EXTRA_LIBS)
 
 if BUILD_WIN32
 pioneer_LDFLAGS = -Wl,-Map=pioneer.map
+modelcompiler_LDFLAGS = -Wl,-Map=modelcompiler.map
 endif
 
 if !HAVE_LUA
@@ -319,13 +333,12 @@ endif
 check_PROGRAMS = tests uitest textstress
 tests_SOURCES = \
 	StringF.cpp \
+	DateTime.cpp \
 	tests.cpp \
 	test_Frame.cpp \
 	test_StringF.cpp \
-	FileSystem.cpp \
-	FileSourceZip.cpp \
-	test_FileSystem.cpp \
-	test_Random.cpp
+	test_Random.cpp \
+	test_DateTime.cpp
 TESTS = tests
 tests_LDADD = \
 	collider/libcollider.a \
@@ -340,6 +353,7 @@ tests_LDADD = \
 uitest_SOURCES = \
 	uitest.cpp \
 	Color.cpp \
+	DateTime.cpp \
 	FileSystem.cpp \
 	SDLWrappers.cpp \
 	FontCache.cpp \
@@ -353,6 +367,7 @@ uitest_SOURCES = \
 	LuaConstants.cpp \
 	LuaRef.cpp \
 	LuaPropertiedObject.cpp \
+	LuaSerializer.cpp \
 	PngWriter.cpp \
 	EnumStrings.cpp \
 	PropertyMap.cpp \
@@ -363,11 +378,11 @@ uitest_LDADD = \
 	gui/libgui.a \
 	text/libtext.a \
 	graphics/libgraphics.a \
+	graphics/opengl/libgraphicsopengl.a \
 	posix/libposix.a \
 	../contrib/jenkins/libjenkins.a \
 	../contrib/PicoDDS/libpicodds.a \
 	../contrib/json/libjson.a \
-	../contrib/glew/libglew.a \
 	../contrib/profiler/libprofiler.a
 
 uitest_LDADD += \
@@ -395,7 +410,6 @@ textstress_LDADD = \
 	graphics/libgraphics.a \
 	posix/libposix.a \
 	../contrib/json/libjson.a \
-	../contrib/glew/libglew.a \
 	../contrib/profiler/libprofiler.a
 
 textstress_LDADD += \
@@ -408,149 +422,38 @@ endif
 
 modelcompiler_SOURCES = \
 	modelcompiler.cpp \
-	AmbientSounds.cpp \
-	Background.cpp \
-	BaseSphere.cpp \
-	Body.cpp \
-	Camera.cpp \
-	CameraController.cpp \
-	CargoBody.cpp \
 	Color.cpp \
-	CityOnPlanet.cpp \
-	CRC32.cpp \
-	DeathView.cpp \
-	DynamicBody.cpp \
-	EnumStrings.cpp \
-	FaceGenManager.cpp \
-	Factions.cpp \
+	CollMesh.cpp \
+	DateTime.cpp \
 	FileSourceZip.cpp \
 	FileSystem.cpp \
 	FontCache.cpp \
-	FormController.cpp \
-	Frame.cpp \
-	GalacticView.cpp \
-	Game.cpp \
-	GasGiant.cpp \
-	GeoPatch.cpp \
-	GeoPatchContext.cpp \
-	GeoPatchID.cpp \
-	GeoPatchJobs.cpp \
-	GeoSphere.cpp \
-	HudTrail.cpp \
-	HyperspaceCloud.cpp \
 	IniConfig.cpp \
-	Intro.cpp \
-	JobQueue.cpp \
 	GameConfig.cpp \
-	KeyBindings.cpp \
+	JobQueue.cpp \
 	Lang.cpp \
-	Lua.cpp \
-	LuaBody.cpp \
-	LuaCargoBody.cpp \
-	LuaComms.cpp \
-	LuaConsole.cpp \
-	LuaConstants.cpp \
-	LuaDev.cpp \
-	LuaEngine.cpp \
-	LuaEvent.cpp \
-	LuaFaction.cpp \
-	LuaFileSystem.cpp \
-	LuaFormat.cpp \
-	LuaGame.cpp \
-	LuaLang.cpp \
-	LuaMatrix.cpp \
-	LuaVector.cpp \
-	LuaFixed.cpp \
-	LuaManager.cpp \
-	LuaMissile.cpp \
-	LuaModelBody.cpp \
-	LuaMusic.cpp \
-	LuaNameGen.cpp \
-	LuaObject.cpp \
-	LuaPlanet.cpp \
-	LuaPlayer.cpp \
-	LuaPropertiedObject.cpp \
-	LuaRand.cpp \
-	LuaRef.cpp \
-	LuaSystemBody.cpp \
-	LuaSystemPath.cpp \
-	LuaSerializer.cpp \
-	LuaShip.cpp \
-	LuaShipDef.cpp \
-	LuaSpace.cpp \
-	LuaSpaceStation.cpp \
-	LuaStar.cpp \
-	LuaStarSystem.cpp \
-	LuaTimer.cpp \
-	LuaUtils.cpp \
-	MathUtil.cpp \
-	Missile.cpp \
-	ModelBody.cpp \
-	ModelCache.cpp \
 	ModManager.cpp \
-	ModelViewer.cpp \
 	NavLights.cpp \
-	ObjectViewerView.cpp \
-	Orbit.cpp \
-	Pi.cpp \
-	Planet.cpp \
-	Player.cpp \
 	PngWriter.cpp \
-	Polit.cpp \
-	Projectile.cpp \
-	PropertyMap.cpp \
 	SDLWrappers.cpp \
-	SectorView.cpp \
-	Sensors.cpp \
 	Serializer.cpp \
 	StringF.cpp \
-	Sfx.cpp \
-	Shields.cpp \
-	Ship-AI.cpp \
-	Ship.cpp \
-	ShipAICmd.cpp \
-	ShipCockpit.cpp \
-	ShipController.cpp \
-	ShipCpanel.cpp \
-	ShipCpanelMultiFuncDisplays.cpp \
-	ShipType.cpp \
-	Sound.cpp \
-	SoundMusic.cpp \
-	Space.cpp \
-	SpaceStation.cpp \
-	SpaceStationType.cpp \
-	SpeedLines.cpp \
-	Star.cpp \
-	SystemInfoView.cpp \
-	SystemView.cpp \
-	TerrainBody.cpp \
-	Tombstone.cpp \
-	UIView.cpp \
-	View.cpp \
-	WorldView.cpp \
-	perlin.cpp \
-	utils.cpp \
-	enum_table.cpp
+	utils.cpp
 
 modelcompiler_LDADD = \
-	collider/libcollider.a \
 	gui/libgui.a \
 	graphics/libgraphics.a \
-	galaxy/libgalaxy.a \
+	graphics/dummy/libgraphicsdummy.a \
 	scenegraph/libscenegraph.a \
+	collider/libcollider.a \
 	text/libtext.a \
-	terrain/libterrain.a \
-	ui/libui.a \
-	gameui/libgameui.a \
 	../contrib/PicoDDS/libpicodds.a \
-	../contrib/jenkins/libjenkins.a \
 	../contrib/json/libjson.a \
-	../contrib/glew/libglew.a \
 	../contrib/profiler/libprofiler.a
 
 modelcompiler_LDADD += \
-	$(FREETYPE_LIBS) $(GL_LIBS) \
-	$(SDL2_LIBS) $(SIGC_LIBS) $(LUA_LIBS) $(VORBIS_LIBS) \
+	$(FREETYPE_LIBS) \
+	$(SDL2_LIBS) $(SIGC_LIBS) $(LUA_LIBS) \
 	$(PNG_LIBS) $(ASSIMP_LIBS) $(EXTRA_LIBS)
 
 if !HAVE_LUA

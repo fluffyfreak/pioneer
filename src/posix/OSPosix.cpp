@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "OS.h"
@@ -41,13 +41,9 @@ void RedirectStdio()
 
 	f = freopen(output_path.c_str(), "w", stderr);
 	if (!f)
-		f = fopen(output_path.c_str(), "w");
-	if (!f)
 		Output("ERROR: Couldn't redirect output to '%s': %s\n", output_path.c_str(), strerror(errno));
-	else {
+	else
 		setvbuf(f, 0, _IOLBF, BUFSIZ);
-		*stderr = *f;
-	}
 }
 
 void EnableFPE()
@@ -111,7 +107,7 @@ const std::string GetOSInfoString()
 	}
 
 	char infoString[2048];
-#if defined(__APPLE__)
+#if !defined(_GNU_SOURCE)
 	snprintf(infoString, 2048, "System Name: %s\nHost Name: %s\nRelease(Kernel) Version: %s\nKernel Build Timestamp: %s\nMachine Arch: %s\n",
 		uts.sysname, uts.nodename, uts.release, uts.version, uts.machine);
 #else
@@ -120,6 +116,24 @@ const std::string GetOSInfoString()
 #endif
 
 	return std::string(infoString);
+}
+
+void EnableBreakpad()
+{
+	// Support for Mac and Linux should be added
+}
+
+// Open the Explorer/Finder/etc
+bool SupportsFolderBrowser()
+{
+	return false;
+}
+
+void OpenUserFolderBrowser()
+{
+	// Support for Mac and Linux should be added
+	// Display the path instead for now
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Pioneer", FileSystem::userFiles.GetRoot().c_str(), 0);
 }
 
 } // namespace OS

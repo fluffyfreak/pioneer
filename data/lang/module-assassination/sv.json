@@ -167,10 +167,6 @@
       "description" : "",
       "message" : "Meddelande om {target}s avslutade karriär glatt mottaget. Här är dina {cash}"
    },
-   "HANG_UP" : {
-      "description" : "",
-      "message" : "Lägg på."
-   },
    "HOW_SOON_MUST_IT_BE_DONE" : {
       "description" : "",
       "message" : "Hur snabbt måste det göras?"
@@ -194,6 +190,14 @@
    "RETURN_HERE_ON_THE_COMPLETION_OF_THE_CONTRACT_AND_YOU_WILL_BE_PAID" : {
       "description" : "",
       "message" : "Kom tillbaka hit efter slutfört uppdrag för betalning."
+   },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Använd destination som navigationsmål"
+   },
+   "SET_RETURN_ROUTE" : {
+      "description" : "",
+      "message" : "Sätt som returmål"
    },
    "SHIP" : {
       "description" : "",

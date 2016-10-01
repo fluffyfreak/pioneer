@@ -21,7 +21,7 @@
    },
    "FLAVOUR_1_RESPONSE" : {
       "description" : "",
-      "message" : "Я провел сервисное обслуживание вашего двигателя."
+      "message" : "Мной проведено сервисное обслуживание вашего гипердвигателя."
    },
    "FLAVOUR_1_TITLE" : {
       "description" : "",
@@ -95,13 +95,9 @@
       "description" : "",
       "message" : "Давайте начнём обслуживание."
    },
-   "HANG_UP" : {
-      "description" : "",
-      "message" : "Спасибо за информацию, конец связи."
-   },
    "I_DONT_HAVE_ENOUGH_MONEY" : {
       "description" : "",
-      "message" : "У меня недостаточно денег."
+      "message" : "У меня недостаточно средств"
    },
    "I_FIXED_THE_HYPERDRIVE_BEFORE_IT_BROKE_DOWN" : {
       "description" : "",
@@ -117,7 +113,7 @@
    },
    "YOUR_DRIVE_WAS_LAST_SERVICED_ON" : {
       "description" : "",
-      "message" : "В последний раз ваш двигатель обслуживался {date} в {company}"
+      "message" : "В последний раз ваш двигатель обслуживали {date} году {company}"
    },
    "YOU_DO_NOT_HAVE_A_DRIVE_TO_SERVICE" : {
       "description" : "",

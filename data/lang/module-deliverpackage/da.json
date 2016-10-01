@@ -255,10 +255,6 @@
       "description" : "",
       "message" : "Vores levebrød afhænger af det."
    },
-   "HANG_UP" : {
-      "description" : "",
-      "message" : "Afbryd linjen."
-   },
    "HOW_SOON_MUST_IT_BE_DELIVERED" : {
       "description" : "",
       "message" : "Hvornår skal den afleveres?"
@@ -326,6 +322,10 @@
    "PIRATE_TAUNTS_9" : {
       "description" : "",
       "message" : "Du skal betale for den last, med dit liv."
+   },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Set as navigation target"
    },
    "SPACEPORT" : {
       "description" : "",

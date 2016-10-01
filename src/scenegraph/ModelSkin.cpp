@@ -1,10 +1,14 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "ModelSkin.h"
 #include "Model.h"
 #include "StringF.h"
 #include "graphics/TextureBuilder.h"
+#include "json/JsonUtils.h"
+
+#include "RandomColor.h"
+
 #include <SDL_stdinc.h>
 
 namespace SceneGraph {
@@ -49,18 +53,9 @@ void ModelSkin::SetTrimColor(const Color &color)
 
 void ModelSkin::SetRandomColors(Random &rand)
 {
-	// primary colour is random, but try to avoid ridiculous extremes
-	m_colors[0] = Color(rand.Int32(192)+32, rand.Int32(192)+32, rand.Int32(192)+32);
-
-	// secondary is the inverse of the primary, so has identical hue
-	m_colors[1] = Color(256-m_colors[0].r, 256-m_colors[0].g, 256-m_colors[0].b);
-
-	// trim is a darker version of the primary
-	m_colors[2] = Color(
-		std::max(m_colors[0].r,static_cast<Uint8>(32))-32,
-		std::max(m_colors[0].g,static_cast<Uint8>(32))-32,
-		std::max(m_colors[0].b,static_cast<Uint8>(32))-32
-	);
+	using namespace RandomColorGenerator;
+	static RandomColor s_randomColor;
+	m_colors = RandomColor::GetColors(rand, SCHEME_RANDOM, LUMINOSITY_BRIGHT, 3);
 }
 
 void ModelSkin::SetDecal(const std::string &name, unsigned int index)
@@ -98,6 +93,38 @@ void ModelSkin::Load(Serializer::Reader &rd)
 	m_label = rd.String();
 }
 
+void ModelSkin::LoadFromJson(const Json::Value &jsonObj)
+{
+	if (!jsonObj.isMember("model_skin")) throw SavedGameCorruptException();
+	Json::Value modelSkinObj = jsonObj["model_skin"];
+
+	if (!modelSkinObj.isMember("colors")) throw SavedGameCorruptException();
+	if (!modelSkinObj.isMember("decals")) throw SavedGameCorruptException();
+	if (!modelSkinObj.isMember("label")) throw SavedGameCorruptException();
+
+	Json::Value colorsArray = modelSkinObj["colors"];
+	if (!colorsArray.isArray()) throw SavedGameCorruptException();
+	if (colorsArray.size() != 3) throw SavedGameCorruptException();
+	for (unsigned int i = 0; i < 3; i++)
+	{
+		Json::Value colorsArrayEl = colorsArray[i];
+		if (!colorsArrayEl.isMember("color")) throw SavedGameCorruptException();
+		JsonToColor(&(m_colors[i]), colorsArrayEl, "color");
+	}
+
+	Json::Value decalsArray = modelSkinObj["decals"];
+	if (!decalsArray.isArray()) throw SavedGameCorruptException();
+	if (decalsArray.size() != MAX_DECAL_MATERIALS) throw SavedGameCorruptException();
+	for (unsigned int i = 0; i < MAX_DECAL_MATERIALS; i++)
+	{
+		Json::Value decalsArrayEl = decalsArray[i];
+		if (!decalsArrayEl.isMember("decal")) throw SavedGameCorruptException();
+		m_decals[i] = decalsArrayEl["decal"].asString();
+	}
+
+	m_label = modelSkinObj["label"].asString();
+}
+
 void ModelSkin::Save(Serializer::Writer &wr) const
 {
 	for (unsigned int i = 0; i < 3; i++) {
@@ -108,6 +135,33 @@ void ModelSkin::Save(Serializer::Writer &wr) const
 	for (unsigned int i = 0; i < MAX_DECAL_MATERIALS; i++)
 		wr.String(m_decals[i]);
 	wr.String(m_label);
+}
+
+void ModelSkin::SaveToJson(Json::Value &jsonObj) const
+{
+	Json::Value modelSkinObj(Json::objectValue); // Create JSON object to contain model skin data.
+
+	Json::Value colorsArray(Json::arrayValue); // Create JSON array to contain colors data.
+	for (unsigned int i = 0; i < 3; i++)
+	{
+		Json::Value colorsArrayEl(Json::objectValue); // Create JSON object to contain color.
+		ColorToJson(colorsArrayEl, m_colors[i], "color");
+		colorsArray.append(colorsArrayEl); // Append color object to colors array.
+	}
+	modelSkinObj["colors"] = colorsArray; // Add colors array to model skin object.
+
+	Json::Value decalsArray(Json::arrayValue); // Create JSON array to contain decals data.
+	for (unsigned int i = 0; i < MAX_DECAL_MATERIALS; i++)
+	{
+		Json::Value decalsArrayEl(Json::objectValue); // Create JSON object to contain decal.
+		decalsArrayEl["decal"] = m_decals[i];
+		decalsArray.append(decalsArrayEl); // Append decal object to decals array.
+	}
+	modelSkinObj["decals"] = decalsArray; // Add decals array to model skin object.
+
+	modelSkinObj["label"] = m_label;
+
+	jsonObj["model_skin"] = modelSkinObj; // Add model skin object to supplied object.
 }
 
 }

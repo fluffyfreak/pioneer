@@ -1,3 +1,613 @@
+September 2016
+   * New Features
+     * Set ship texture patterns from lua (#3811)
+
+   * Fixes
+     * Model pattern range and status checking (#3814)
+     * New seed and new locations of star ports for New Hope in Epsilon Eridani (#3818)
+
+   * Internal Changes
+     * Update GasGiant config, detail and initialisation timing (#3792)
+     * Change SAR mission rewards (#3806)
+     * Made NavLights responsible for their billboard rendering (#3809)
+     * Adding an editorconfig file to define coding style (#3810)
+     * Add annotations to ShipDef (#3812)
+     * Additional mesh optimisation (#3813)
+     * Unused files from JobSwarm experiments 4 years ago! (#3816)
+     * Belt and braces approach to sanity checking for patterns (#3817)
+     * Brighter luminosity for random colours (#3815)
+     * Minor performance cleanup (#3820)
+     * Use a function to access the s_patchFaces to silence a gcc warning (#3822)
+	 * Multi-Threading modelcompiler (#3821)
+
+August 2016
+   * New Features
+     * F3 and F4 Toggles between worldview and their thing (#3765)
+     * Navbutton added to mission screens (#3736)
+     * Add a TCP Lua console (#3768)
+     * Low altitude hyperjumps are illegal (#3753)
+     * Add button to Settings menus so user can open their Pioneer folder (#3790)
+     * Navigation button update to allow for dynamicBodies as nav targets (SAR and general) (#3789)
+     * Loads of SAR improvements ! (#3795)
+
+   * Fixes
+     * Fix crash in by Search & Rescue missions (#3770)
+     * NaN in your numbers (#3772)
+     * Fix hyperspace star streaks (#3773)
+     * prefix std:: to isnan so it builds on Linux (#3775)
+     * Use ImageMagick to fix the iCCP profile problem (#3778)
+     * Fix crash when jumping into empty system (#3791)
+     * Fix risk of game crash from SAR when landing on wrong planet (#3797)
+     * Fix potential instability in SAR (#3802)
+
+   * Internal Changes
+     * Add a function for typesetting time intervals (#3764)
+     * Restore Starfield colourisation (#3774)
+     * Animated city buildings, instancing improvement (#3777)
+     * Small code cleanup in SAR (#3798)
+     * Make colour range of stars more narrow (#3793)
+
+July 2016
+   * New Features
+     * Point sprite background stars (#3757)
+
+   * Fixes
+     * SAR: fix fuel transfer (#3755)
+     * SAR: fix wrong distance (#3650)
+     * Fix grammar error in module-cargorun (#3748)
+
+   * Internal Changes
+     * Swap LuaVector for a table (#3747)
+     * Faster float convert (#3751)
+     * Revert my changes to use atoi and atoll (#3754)
+     * XCode now compiles again (#3759)
+
+June 2016
+   * New Features
+     * Improve distance format, by introducing ly and Mm (#3745)
+     * GPU jobs for generating gas giant textures (#3719)
+     * Add some flare for black market, through flavoured slogans (#3744)
+     * Passenger warns when jumping to wrong system with right name (#3746)
+
+   * Fixes
+     * Prevent the galaxy map from crashing if in hyperspace (#3714)
+     * Eclipse r600 (#3721)
+
+   * Internal Changes
+     * Enable using dedicated nVidia GPUs in Windows laptops with Optimus (#3715)
+     * Minor Noise library improvements (#3716)
+     * Add AMD Power Xpress performance flag keyword and value (#3717)
+     * Add EXTRA_CXXFLAGS to CXXFLAGS for assimp's version check (#3718)
+     * Keep cargo if buying a new ship (#3725)
+     * Disable Continue button if no saved game to load (#3731)
+     * Don't hard code strings we already have in translation system (#3728)
+     * Make trade analyzer removable again. Undo #3474, close #3742 (#3743)
+
+May 2016
+   * New Features
+     * Sfx ini configuration file (#3697)
+
+   * Fixes
+     * Textures can be anonymous (#3693)
+     * Fix ship systeminfo crash (#3699)
+     * Make Autopilot purchasable from everywhere (#3701)
+     * Fix CTD for missile target hyperjumps (#3704)
+     * Fix CTD caused by S&R after-mission states (#3648)
+     * Fix crash when player explodes in-dock (#3710)
+     * Clean up the police tables on ship destruction (#3709)
+
+   * Internal Changes
+     * Landing resets time compression (#3696)
+     * Rework SFX rendering to fix giant sprites (#3695)
+     * Internal renderer cleanup (#3702)
+     * Small filename consistency fix (#3707)
+     * Change the Lua AIKill command to check how legit is its target (#3708)
+     * Optimise Eclipse Calculations (#3711)
+
+April 2016
+   * New Features
+     * First commit of the Bluenose frieghter (#3668)
+     * Change to GetPosition and GetVelocity LuaShip functions (#3679)
+     * Back port some of Marcels hometowns mod (#3676)
+
+   * Fixes
+     * Fix ModelViewer crash (#3672)
+     * Fix editing the gas giants in ObjectViewer editor mode (#3677)
+     * Legal custom cargo (#3692)
+
+   * Internal Changes
+     * NavLight Billboard Gathering (#3667)
+     * Change DrawPointSprites to really use Point Sprites (#3670)
+     * Lua debug tools, part one (#3675)
+     * Updated Xcode project to fix "missing vtable" error (#3686)
+     * Saving changes (#3684)
+     * SpawnShipNear velocity matching (#3674)
+     * Pre-convert to DDS more textures (#3687)
+     * Fire once warnings (#3689)
+     * Texture code tidy (#3691)
+
+March 2016
+   * New Features
+     * Ship stat planner addon for Blender. Exports ship.json (#3639)
+     * Bowfin fighter for Kaluri/CIW (#3641)
+     * Invisible disabled button for commodity market (#3605)
+     * Include modelcompiler in OSX build (#3660)
+
+   * Minor changes and tweaks
+     * gun locator tag fix (#3633)
+     * Ability to set Combat and Nav targets to null validly (#3634)
+     * Redirect stdout for modelviewer mode (#3640)
+     * Kanara resize (75%) (#3642)
+     * RandomColor Port for better random colours (#3644)
+     * Bowfin: Deleting some duplicate .dae mesh files (#3653)
+
+   * Fixes
+     * Fix rare crash. #3645
+     * Fix OSX shader compilation (#3652)
+     * Fix wrong price for Kanara (#3666)
+     * Fix crash on del/bkspc in sector map search for non-UTF8 char (#3662)
+
+   * Internal Changes
+     * Remove redundant LuaAPI function: SetEnabled() (#3491)
+     * vector2 template class (#3646)
+     * vector2 template class (#3646)
+     * Fix some GCC build warnings (#3661)
+     * Don't compress normal maps (#3663)
+
+February 2016
+   * Minor changes and tweaks
+     * New behaviour of ESC button (#3618)
+
+   * Fixes
+     * Fix Character.lua / Ship.lua import relationship (#3617)
+     * Fix Search and Rescue bug not recognizing a competed mission (#3621)
+     * Only get the SystemBody pointer on system bodies and NOT on ships (#3632)
+
+   * Internal Changes
+     * GL_INVALID_OPERATION warning (win32) (#3620)
+     * Reduce size of terrain patch skirts (#3622)
+     * Rendering cleanup, possible perf improvements (#3623)
+     * Cleaning up Pi.h (#3624)
+     * Fix terrain cracks (#3625)
+     * Remove IGNORE_FLAG etc (#3628)
+     * Moar profiling (#3629)
+
+January 2016
+   * New Features
+     * Barnard's star update (#3584)
+     * Anisotropic Texture Filtering (#3586)
+
+   * Minor changes and tweaks
+     * Search and rescue missions tweaked and fixed #3589
+
+   * Fixes
+     * TextureDescriptor usage updated (#3591)
+     * Fix ObjectViewer crash/hang (#3588)
+     * Fix for broken SGM file loading (#3597)
+     * Show the correct pattern on the ship info screen (#3598)
+     * Fix serialization bug in S&R missions (#3607)
+     * Missing text fix (#3608)
+     * Fix for console window crash (#3611)
+     * Fix for #3602 and #3517 (#3603)
+     * Fix bad text size (#3612)
+     * Fix the vcacheopt type narrowing conversions that I caused (#3613)
+     * Fix number of police ships being opposite of lawlessness (#3614)
+
+   * Internal Changes
+     * Optional use of std::chrono for Profiler (#3593)
+     * SGM graceful failure (#3592)
+     * Convert geometry to use 32-bit indices (#3585)
+     * Remove TextureDescriptor default constructor arguments (#3594)
+     * Text rendering performance improvements (#3599)
+     * Fix #ifdef to allow compilation on various BSDs (#3600)
+     * MERRY HAPPY 2016 (#3615)
+
+December 2015
+   * New Features
+     * PgUp/PgDn increments time acceleration (configurable) (#3544)
+     * New-UI galactic view (#3549)
+     * Search & Rescue mission script (#3529)
+     * New config value UIScaleFactor to scale text and images in the UI (#3552)
+     * Add return location to mission screen for Search & Rescue missions (#3570)
+     * One button (F9) is sufficient for changing missile/scanner view (#3556)
+     * Added pump down button to the EconTrade screen (#3567)
+
+   * Fixes
+     * Fix typo in language strings (#3382)
+     * Fix crash upon illegal activity in uninhabited system (#3555)
+     * Fix BBS icon for new S-R mission module (#3558)
+     * Galactic view fixes (#3557)
+     * Fix rounding of the 'heading' display (#3550, #3561)
+     * Fix UI scaling for small displays (#3568)
+     * Launch ship if necessary at start of AIDockWith (#3563)
+     * Deimos Seed (#3572)
+     * Flying empty fix (#3516)
+     * Fixed translations for the names of the Galactic arms (#3566)
+     * Fixed OS X 10.11 OpenSSL issue (#3579)
+     * Remove incorrect assertion on max planet detail (#3577)
+     * Fixed deprecated libraries in OS X 10.11 (#3580)
+
+   * Internal Changes
+     * Face parts (head/hair/eyes/nose/mouth) can now be non-gendered (#3548)
+     * Face parts can now all be the same size to make alignment easier (#3548)
+     * Added forgotten strings to translation system (#3551)
+     * Minor code adjustment to make ccache effective again (#3562)
+     * Remove the neighbour system from GeoPatch (#3569)
+     * Make DetailLevel a class and initialise all members (#3575)
+     * Improve the error message when a save game cannot be opened (#3578)
+
+November 2015
+   * New Features
+     * New random number generator! (#3485)
+     * More moons for Jupiter, and a low Earth orbit station (#3503)
+     * Three new faction specific police ships, and new crimes added (#3254)
+     * Three new faction specific fuel clubs (#3504)
+     * All stations now have a Tech Level, in range 1-12 (#3505)
+     * Compact Use Equip Widget (#3507)
+     * Normal Mapping for objects (ships, stations etc) (#3515)
+     * Make Autosave optional (#3518)
+     * Show stable Lagrange point in system view (#3536)
+
+   * Fixes
+     * Fix stations placed on top of each other (#3498)
+     * Updated premake script to generate usable CodeBlocks project (#3521)
+     * Fix negative latitude longitude issue (#3531)
+     * Fix AIWarning giving the wrong errror msg (#3532)
+     * Fix strings not in translation system (#3538)
+     * Lagrange Points in turquoise-ish (#3539)
+     * Fix the broken win32 cross compile (#3542)
+     * Fixed XCode Project file (#3540)
+     * Fix cockpit loading (#3546)
+
+   * Internal Changes
+     * All crime handling moved to Lua (#3254)
+     * CargoRun missions first unload all mission cargo (#3510)
+     * Change OpenGL Extensions from Compatibility to Core (#3514)
+     * Direct buffer population (#3513)
+     * Deprecate Visual Studio 2013 (#3519)
+     * Updated vs2015 libraries and DLLs (#3520)
+     * Clang warnings (#3524)
+     * Clean up OpenGL pollution (#3526)
+     * Fix the last real Clang warning (#3528)
+     * Delete Form/FormController, which are no longer used (#3533)
+     * Minor code cleanup (#3545)
+
+October 2015
+   * New Features
+     * Fade orbits faster and darker (#3469)
+     * Commodity Market rewrite (#3467)
+     * OS X Homebrew Build script (#3447)
+     * Make trade analyzer module into a software module (#3474)
+     * Show latitude/longitude ()#3499)
+
+   * Fixes
+     * Miscellaneous warnings fixes (#3472)
+     * Commodity language fix (#3476)
+     * Split the flightstate DOCKING into an UNDOCKING state as well (#3481)
+     * Account for the fuel mass in hyperspace range calculation (#3489)
+     * Bad Terrain, no cookie! (#3490)
+     * Small time acceleration limitation fix (#3506)
+
+   * Internal Changes
+     * Exposing full color values instead of only alphas in skin.ini (#3486)
+     * GLSL preprocessor includes (#3488)
+     * Simplified Star Shader (#3487)
+     * Change forced time acceleration around ships (#3445)
+     * Present a clearer warning to the user if OpenGL fails to initialise (#3496)
+     * Eclipse tidy (#3501)
+
+September 2015
+   * New Features
+     * Control how many stars in the sky (#3431)
+     * Two state hyperspace button (#3438)
+     * Terrain detail textures (#3448)
+     * Progress bar during start up better scaled (#3261, #3462)
+     * Orbit fading (#3460)
+
+   * Fixes
+     * Fix undefined symbols for static const members (#3446)
+     * Resolve Detail Texturing abort (#3452)
+     * Fix compilation issue due to BG_STARS_MAX/MIN (#3457)
+     * Fix empty crew for hire advert (#3465)
+     * Fix crew for hire load glitch (#3468)
+     * Fix Crew-for-hire duplicate/disappear (#3466)
+
+   * Internal Changes
+     * Remove planetary scaling during rendering (#3434)
+     * Remove the animation Interpolate optimisation (#3435)
+     * Add license badge to README, markdown now supports it (#3464)
+
+August 2015
+   * New Features
+     * Orbital planner got some new features (#3426)
+
+   * Fixes
+     * Fix NAN for planned orbit (#3437)
+     * Fix math typo (#3440)
+
+   * Internal Changes
+     * Changed/removed some non-portable C++11 usage (#3444)
+
+July 2015
+   * New Features
+     * Add first initial support for Arab fonts (#3416)
+     * New (smaller) space station added (#3414)
+     * Allow custom stations to have realistic orbit heights (#3410)
+     * New SensorType API and BodyScanner equipment (#3287, #3396)
+
+   * Fixes
+     * Proposed fix for the MINGW32 issue #3409 (#3418)
+     * Fixed color of labels starting with empty strings (#3425)
+
+   * Internal Changes
+     * Numerous optimisations (#3419)
+     * Remove output spamming messages (#3421)
+     * Sort terrain gen (#3420)
+     * Inactivate BodyScanner equipment testing code (#3422)
+     * Drawing optimisations (#3424)
+     * Render far away (#3428)
+     * Modelviewer refactor (#3429)
+     * Cleanup build warnings (#3433)
+
+June 2015
+   * New Features
+     * Allow up to 3 orbits a spacestation can occupy (#3392)
+
+   * Fixes
+     * Calculate the correct distribution of orbitals, may affect saved games (#3389)
+     * Fix crash on start and crash on game load (#3399, #3387, #3400, #3402)
+     * Fix crash when using Chinese languge (#3405)
+     * Init model label in SpaceStation and CargoBody LoadFromJson (#3406)
+     * Fix redirection of stderr to avoid undefined behaviour on posix (#3373)
+     * Fix save/load crash (#3387) for real this time (#3407)
+     * Fix another save/load crash triggered by floating cargo (#3412, #3413)
+     * Fix terrain max depth calculation (#3411)
+
+May 2015
+   * New Features
+     * New mission: cargo run (#3274)
+
+April 2015
+   * New Features
+     * Confirm quit question added (#3374)
+     * Enable vsync (#3385)
+
+   * Fixes
+     * Broken cockpit rotations using headlook (#3381)
+
+   * Internal Changes
+     * luacheck changes (#3383)
+     * Cppcheck changes (#3384)
+
+March 2015
+   * Fixes
+     * Fix modelcompiler (#3356)
+     * Attempt to avoid calling methods on a nil object (#3357)
+     * Fix missing specular highlights (#3367)
+     * Fix compilation of planetrings shader (#3370)
+
+   * New Features
+     * Mouselook for internal camera (#3361)
+     * Migrating the save-game serialisation from a binary flat file to JSON (#3355)
+
+   * Internal Changes
+     * Fix VS2013 profiling configuration (#3368)
+     * Rendering statistics (#3371)
+     * Instanced model rendering for cities (#3372)
+     * Update the sgm file version (#3375)
+
+February 2015
+   * Fixes
+     * Romanian characters added, fixes #3314 (#3318)
+     * Fix the libcurl linking for Profile, PreRelease and Debug (#3354)
+
+   * Script and UI API changes
+     * ServerAgent class for simple network communication (#3342)
+
+   * Internal Changes
+     * LuaSerializer refactoring to diminish coupling with LuaObject (#3349)
+
+January 2015
+   * New Features
+     * Many point stars on starless galaxy (#3321)
+
+   * Fixes
+     * Fix 3310 (#3312)
+     * Fix 3313 (#3316)
+     * Fix Ship:onShipEquipmentChanged (#3326)
+     * Ship launch thrust timer fix (#3330)
+     * Fix the UI strange rendering (#3332)
+     * Update the ToolTip text layout (#3334)
+     * Prevent issue #3340 assert (#3341)
+
+   * Internal Chnages
+     * Remove DrawPoints & DrawLines methods (#3303)
+     * Dummy renderer for headless tools (#3306)
+     * Fix scanner drawing post-load (#3309)
+     * Faster text buffer rendering (#3304)
+     * Ignore any sgm files in the repository (#3315)
+     * Faster deduplication of collision data (#3319)
+     * Stop vs2013 using the whole program optimisation (#3333)
+     * Equipment strings moved to new translation module (#3295)
+     * modelcompiler no GL, no SDL, build support for compiled models (#3339)
+
+   * Optimisation
+     * Animation interpolation optimisation (#3327)
+     * Ship nearby optimise (#3328)
+
+December 2014
+   * New Features
+     * New Multi Scoop equipment, and merge cargo and fuel scoop slots
+       to a single one (#3267)
+     * New OPLI ship Storeria (#3257)
+     * Our two space stations decommissioned (hoop and big_crappy) and three new jaw
+       dropping amazing ones enter service! (#3099)
+
+   * Fixes
+     * Fix string "NONE" in ShipInfo not using the translated version (#3268)
+     * Require OpenGL 3.1 context when opening the SDL window (#3269)
+     * Move parentheses to correct position for ATLAS_SIZE test (#3299)
+
+   * Minor changes and tweaks
+     * Switch font texture U/V coordinates to unsigned int (#3273)
+     * README updated to markdown format (#3276)
+     * Ship and station labels can now include line breaks (#3188)
+     * Changed to compile as c++ for all build configurations (#3288)
+     * Handle non-core strings for lua equipment (#3279)
+     * Use counter not named bays for stations (#3291)
+
+   * Internal Changes
+     * Fix spelling error in DeliverPackage
+     * Better descriptions for translation strings in ui-/core (#3272)
+     * Change the Star Color structures to use Color instead of Uint8 (#3285)
+     * Remove the Colours.h/cpp files (#3289)
+     * Several bugfixes to the Lua serializer triggered by recent code (#3279)
+     * Remove redundant code and translation strings (#3294)
+     * Optimise VertexBuffer usage for SG Nodes (#3300)
+     * Bundle Collision with SGM file (#3297)
+
+November 2014
+   * New Features
+     * Update to use OpenGL 3.2 (#3219)
+
+   * Script and UI API changes
+     * Added random number from Poisson distribution (#3242)
+
+   * Minor changes and tweaks
+     * Introduce special footer when player is in equipment market,
+       fixes #3117 (#3238)
+     * A smarter ShipMarket in SpaceStation (#3243)
+     * Fix Anti-Aliasing (#3246)
+     * Remove defunct shader programs (#3258)
+     * Extra checking for program creation (#3253)
+     * Fix (unnoticeable) logical error in cargo code (#3261)
+     * Add CppCheck file. (#3266)
+
+   * Fixes
+     * Update deprecated gun tag on Lunar shuttle (#3245)
+     * Fix Open GL errors causing MXE build not working (#3251)
+
+   * Internal Changes
+     * The OSX build showed these might be shadowed (#3248)
+     * Json ship definitions (#3252)
+     * Disable shader validation due to OSX bug (#3260)
+     * Remove GLEW, use glLoadGen, downgrade to OpenGL 3.1 (#3265)
+
+October 2014
+   * Art
+     * Lunar Shuttle facelift (#3230)
+     * Apsis icon and crosshair polish (#3223)
+
+   * Minor changes and tweaks
+     * More variation in city size / dimension (#3227)
+
+   * New Features
+     * We now have a build script for NixOS Linux (#3208)
+     * Flying with gears down increases drag (#2509, #3207)
+     * New Trade Analyzer ship component (#3200)
+     * Added Horizon Culling for planets (#3216)
+     * Second Hand ship equipment advert for BBS (#3220)
+     * Google Breakpad (MSVC only) (#3211)
+
+   * Fixes
+     * Remove detail changes (#3213)
+     * Replace #pragma once by traditional include guards. (#3215)
+     * Fix #3224 (#3225)
+     * Re-init the cockpit when we buy a new ship (#3226)
+     * Fix ObjectViewer crash for non-planets (#3228)
+     * Fix alpha blending and render to texture (#3229)
+     * Fix the crosshair rendering (#3232)
+     * Match the BeginFrame with an EndFrame (#3235)
+     * Deadzone (#3236)
+
+September 2014
+   * New Features
+     * System exploration (#3201)
+
+   * Fixes
+     * Fix wrong reinitialization of random generator (#3156)
+     * Fix crash at Daniel's Haven (#3157)
+     * Cargo body needs to save/load its self destruct timer (#3170)
+     * Fix mismatch between saving/loading code (#3172)
+     * Fix behaviour of autosave system (#3163, #3101)
+     * Fix possible crash when accepting mission in paused (#2732, #3169)
+     * Fix compilation errors on Mac OS X (#3182,#3183)
+     * Fix the Line3D rendering issue (#3190)
+     * Fix the construction of the Circle drawables. (#3192)
+     * Fix orientation of galaxy density map (#3197)
+     * Remove invalid asserts (#3206)
+     * Attributes for uv coords should be vec4 not vec2 (#3205)
+
+   * Minor changes and tweaks
+     * Show buy and sell prices in commodity market (#3153)
+     * Add new author's names to name generator (#3155)
+     * Commodity sell price too low (#3161)
+     * Make Stars visible during eclipse (#3100)
+     * Cap maximum number of police GoodsTraders (#3165)
+     * Better background intensity calculation for Eclipse (#3171)
+     * Randomize planet phase angle (#3135)
+     * Terrain detail / depth changes (#3184)
+     * Output SDL version on start (#3196)
+     * Player defined Ship names (#3176)
+     * Update galaxy colour image (#3197)
+
+   * Script and UI API changes
+     * Allow to set lawlessness in custom systems (#3166)
+     * FileSystem.ReadDirectory now includes timestamps for files (#3163)
+     * Expose pause/unpause events to Lua (#3169)
+
+   * Internal Changes
+     * Improve galaxy image handling (#3154)
+     * Refactor galaxy generation code (#2773, #3167)
+     * Recreate folder structure for sgm batch export (#3162)
+     * Cargo body improvement (#3168)
+     * Easier to model docking - Part 1 (#3075)
+     * Const-correctness in CustomSystems and Factions (#3174)
+     * Restrict FreeType to a single translation unit (#3175, #1203)
+     * Game views refactoring (#3181)
+     * More drawable classes, minor fixes (#3187)
+     * More cache unification (#3193)
+     * Refactor face generator code to support some future changes (#3180)
+     * Shader Attributes and required refactoring (#3194)
+     * Refactoring: Get rid of global Galaxy object (#3198)
+     * Galaxy density map, factions, custom systems controlled by GalaxyGenerator (#3199)
+
+August 2014
+
+   * New features
+     * Bring Luomu's game msg log over from the SSP fork (#2527)
+     * Display ships in system view (#3115)
+     * Display ship heading and pitch (#3108)
+     * Advanced radar mapper works in system orbital view (#3122)
+     * Draw periapsis/apoapsis as icons on system view orbits (#3133)
+     * Improved Joystick Binding (#3141)
+
+   * Minor changes and tweaks
+     * Consistent set nav target on click in SystemView (#3125)
+     * Write opengl.txt earlier to help debugging (#3138, #3137, #3132)
+     * Bigger font for msg log (3143)
+     * Add support for patterns to space stations (#3151)
+
+   * Script and UI API changes
+     * Ship:UseECM() returns recharge time and success state.
+     * Update COMPILING.txt, and add Doxygen support (#3136)
+
+   * Fixes
+     * Fix trade ship without atmoshield causing crash in system with only
+       stations on worlds with atmosphere (#3107)
+     * Fix crash when clicking a view change button (F1-F4) while a new-ui
+       message box is being displayed (#3111, #3110)
+     * Zoom out button before zoom in in system,sector,galactic view (#3112)
+     * Fix an Exit Game widget crash. (#3106)
+     * Fix bad faction colour only being applied to uninhabited (#3116)
+     * Destroy Hyperspace clouds after 2 days of ingame time (#3118)
+     * Fix system view ship crash (#3119)
+     * Fix refreshing assertion in SystemInfoView (#3120)
+     * Fix unnecessary limit on ship base price (#3129, #3130)
+     * Fix crash from TradeShips trying to serialize dead ships (#3126, #3123)
+     * Fix Fuel club discount not being applied (#3140)
+     * Fix system information updating during hyperjump (#3150)
+
 July 2014
 
    * New features

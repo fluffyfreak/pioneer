@@ -5,7 +5,7 @@
    },
    "ACTIVE" : {
       "description" : "",
-      "message" : "Ativo"
+      "message" : "Ativo(a)"
    },
    "AFTER_TRADE_IN" : {
       "description" : "",
@@ -13,7 +13,7 @@
    },
    "ALLEGIANCE" : {
       "description" : "",
-      "message" : "Aliança:"
+      "message" : "Fidelidade:"
    },
    "ALL_UP_WEIGHT" : {
       "description" : "",
@@ -26,6 +26,10 @@
    "AN_ERROR_HAS_OCCURRED" : {
       "description" : "",
       "message" : "Ocorreu um erro"
+   },
+   "ATMOSPHERIC_SHIELDING" : {
+      "description" : "Used in ShipInfo view, followed by a yes/no depending on if the ship can carry atmospheric shields",
+      "message" : "Blindagem atmosférica"
    },
    "ATTEMPT_TO_REPAIR_HULL" : {
       "description" : "",
@@ -49,22 +53,22 @@
    },
    "BUY" : {
       "description" : "Commodities and equipment prices",
-      "message" : "Buy"
+      "message" : "Comprar"
    },
    "BUY_SHIP" : {
       "description" : "",
       "message" : "Comprar Nave"
    },
    "CABINS" : {
-      "description" : "",
+      "description" : "For passengers",
       "message" : "Cabines"
    },
    "CABIN_FREE" : {
-      "description" : "",
+      "description" : "Free capacity for passengers",
       "message" : "{quantia} livre"
    },
    "CABIN_USED" : {
-      "description" : "",
+      "description" : "Passengers using cabins",
       "message" : "{quantia} usada"
    },
    "CANCEL" : {
@@ -72,7 +76,7 @@
       "message" : "Cancelar"
    },
    "CAPACITY" : {
-      "description" : "",
+      "description" : "Capacity of ship to fit more equipment",
       "message" : "Capacidade"
    },
    "CAPACITY_USED" : {
@@ -87,12 +91,16 @@
       "description" : "",
       "message" : "Espaço para carga"
    },
-   "CARGO_T_FREE" : {
+   "CARGO_SPACE_USED" : {
       "description" : "",
+      "message" : "Espaço de carga utilizado"
+   },
+   "CARGO_T_FREE" : {
+      "description" : "t for tonne",
       "message" : "{quantia}t livre"
    },
    "CARGO_T_USED" : {
-      "description" : "",
+      "description" : "t for tonne",
       "message" : "{quantia}t usada"
    },
    "CASH" : {
@@ -104,8 +112,8 @@
       "message" : "Dinheiro: {dinheiro}"
    },
    "CHANGE_BINDING" : {
-      "description" : "",
-      "message" : "Mudar Contrato"
+      "description" : "Key binding option",
+      "message" : "Mudar Função"
    },
    "CHIEF_MECHANIC" : {
       "description" : "",
@@ -116,15 +124,15 @@
       "message" : "Velocidade de órbita circular"
    },
    "CITY_DETAIL_LEVEL" : {
-      "description" : "",
-      "message" : "Nível de detalhamento da cidade"
+      "description" : "Game graphics option",
+      "message" : "Nível de detalhamento de cidade"
    },
    "CLEAN" : {
-      "description" : "",
+      "description" : "Legal status of player",
       "message" : "Limpar"
    },
    "CLEAR" : {
-      "description" : "",
+      "description" : "Clear an option in game settings/options menu",
       "message" : "Apagar"
    },
    "CLIENT" : {
@@ -132,7 +140,7 @@
       "message" : "Cliente"
    },
    "COMBAT" : {
-      "description" : "",
+      "description" : "Headline for kills and combat rating",
       "message" : "Combate"
    },
    "COMMANDER" : {
@@ -143,8 +151,12 @@
       "description" : "",
       "message" : "Mercado de Utilidades"
    },
+   "COMPACT_SCANNER" : {
+      "description" : "Game settings option",
+      "message" : "Escaneador compacto"
+   },
    "COMPETENT" : {
-      "description" : "",
+      "description" : "Combat rating",
       "message" : "Competente"
    },
    "COMPLETED" : {
@@ -152,8 +164,16 @@
       "message" : "Completo"
    },
    "COMPRESS_TEXTURES" : {
-      "description" : "",
+      "description" : "graphics option in game settings menu ",
       "message" : "Texturas de Compressão"
+   },
+   "CONFIRM_PURCHASE" : {
+      "description" : "",
+      "message" : "Confirm purchase"
+   },
+   "CONFIRM_SALE" : {
+      "description" : "",
+      "message" : "Confirm sale"
    },
    "CONSTABLE" : {
       "description" : "",
@@ -173,7 +193,7 @@
    },
    "COULD_NOT_LOAD_GAME" : {
       "description" : "",
-      "message" : "Não foi possível baixar o jogo:"
+      "message" : "Não foi possível carregar o jogo:"
    },
    "CREDIBLE" : {
       "description" : "For player reputation",
@@ -181,23 +201,23 @@
    },
    "CREW_CABINS" : {
       "description" : "",
-      "message" : "Cabine de tripulação"
+      "message" : "Cabines de tripulação"
    },
    "CREW_ROSTER" : {
       "description" : "",
       "message" : "Rol de Tripulação"
    },
    "CRIMINAL_RECORD" : {
-      "description" : "",
+      "description" : "Past crimes / crime history of character",
       "message" : "Gravação criminal"
    },
    "DANGEROUS" : {
-      "description" : "",
+      "description" : "Player combat rating",
       "message" : "Perigoso"
    },
    "DEADLY" : {
-      "description" : "",
-      "message" : "Mortalmente"
+      "description" : "Player combat rating",
+      "message" : "Mortal"
    },
    "DELTA_V" : {
       "description" : "",
@@ -224,7 +244,7 @@
       "message" : "Destruir nave inimiga"
    },
    "DISMISS" : {
-      "description" : "",
+      "description" : "Terminate crew memeber's contract",
       "message" : "Dispensar"
    },
    "DISPLAY_HUD_TRAILS" : {
@@ -232,11 +252,11 @@
       "message" : "Exibir trilhas HUD"
    },
    "DISPLAY_NAV_TUNNELS" : {
-      "description" : "",
+      "description" : "Settings option: hyperspace tunnel effect",
       "message" : "Exibir túneis de navegação"
    },
    "DISPLAY_SPEED_LINES" : {
-      "description" : "",
+      "description" : "Settings option: effect when travelling in space",
       "message" : "Exibir linhas de velocidade"
    },
    "DOCK_AT_CURRENT_TARGET" : {
@@ -244,8 +264,12 @@
       "message" : "Atracar no atual alvo"
    },
    "DUE" : {
-      "description" : "",
+      "description" : "mission deadline date",
       "message" : "Devido a"
+   },
+   "DUMPING" : {
+      "description" : "The illegal act of dumping waste",
+      "message" : "Descarte"
    },
    "D_DAYS_LEFT" : {
       "description" : "",
@@ -260,23 +284,31 @@
       "message" : "Efeitos:"
    },
    "ELITE" : {
-      "description" : "",
+      "description" : "Player combat rating",
       "message" : "ELITE"
    },
    "EMPLOYMENT" : {
       "description" : "",
       "message" : "Emprego"
    },
+   "ENABLE_ANISOTROPIC_FILTERING" : {
+      "description" : "Use Anisotropic Filtering",
+      "message" : "Anisotropic Filtering"
+   },
+   "ENABLE_AUTOSAVE" : {
+      "description" : "Allow the game to autosave when docking",
+      "message" : "Enable Autosave"
+   },
    "ENABLE_COCKPIT" : {
-      "description" : "",
+      "description" : "Game settings option: to use a cockpit 3D model",
       "message" : "Ativar cabina (EXPERIMENTAL)"
    },
    "ENABLE_JOYSTICK" : {
       "description" : "",
-      "message" : "Ativar controle"
+      "message" : "Ativar joystick"
    },
    "ENGINEERING" : {
-      "description" : "",
+      "description" : "Engineering skills of crew",
       "message" : "Engenharia:"
    },
    "EQUIPMENT" : {
@@ -312,7 +344,7 @@
       "message" : "Especialista"
    },
    "FAILED" : {
-      "description" : "",
+      "description" : "When failed mission",
       "message" : "Falha"
    },
    "FEMALE" : {
@@ -376,7 +408,7 @@
       "message" : "Desligamento."
    },
    "HARMLESS" : {
-      "description" : "",
+      "description" : "Player combat rating",
       "message" : "Inofensivo"
    },
    "HEAVY_CARGO_SHUTTLE" : {
@@ -404,7 +436,7 @@
       "message" : "Transporte pesado de passageiros"
    },
    "HIGH" : {
-      "description" : "",
+      "description" : "Game settings option: for graphics resolution",
       "message" : "Alto"
    },
    "HULL_DOES_NOT_REQUIRE_REPAIR" : {
@@ -421,7 +453,7 @@
    },
    "HULL_REPAIR_ATTEMPT_FAILED_HULL_SUFFERED_MINOR_DAMAGE" : {
       "description" : "",
-      "message" : "Tentativa de reparo da fuselagem falhou. Fuselagem sofreu dano menor."
+      "message" : "Tentativa de reparo da fuselagem falhou. Fuselagem sofreu danos pouco significativos."
    },
    "HYPERDRIVE" : {
       "description" : "",
@@ -433,7 +465,11 @@
    },
    "HYPERSPACE_RANGE" : {
       "description" : "",
-      "message" : "Variação no hiper espaço"
+      "message" : "Alcance de hiperespaço"
+   },
+   "ILLEGAL_JUMP" : {
+      "description" : "A finable crime",
+      "message" : "Reckless hyperjump registered"
    },
    "IM_TIRED_OF_WORKING_FOR_NOTHING_DONT_YOU_KNOW_WHAT_A_CONTRACT_IS" : {
       "description" : "",
@@ -451,9 +487,13 @@
       "description" : "For player reputation",
       "message" : "Inexperiente"
    },
+   "INSUFFICIENT_FUNDS" : {
+      "description" : "",
+      "message" : "Insufficient funds."
+   },
    "INVERT_MOUSE_Y" : {
       "description" : "",
-      "message" : "Inverter Mouse Y"
+      "message" : "Inverter Eixo Y do Mouse"
    },
    "IN_CARGO_HOLD" : {
       "description" : "",
@@ -477,7 +517,7 @@
    },
    "KILLS" : {
       "description" : "",
-      "message" : "Mortes:"
+      "message" : "Assassinatos:"
    },
    "LANGUAGE" : {
       "description" : "",
@@ -493,7 +533,7 @@
    },
    "LAUNCH_PERMISSION_DENIED_CREW" : {
       "description" : "",
-      "message" : "Permissão para lançamento negada: tripulação insuficiente para manejar esta nave."
+      "message" : "Permission to launch denied: not enough crew to handle this ship."
    },
    "LAUNCH_PERMISSION_DENIED_FINED" : {
       "description" : "",
@@ -529,19 +569,23 @@
    },
    "LOAD" : {
       "description" : "",
-      "message" : "Baixar"
+      "message" : "Carregar"
    },
    "LOAD_GAME" : {
       "description" : "",
-      "message" : "Baixar jogo"
+      "message" : "Carregar jogo"
    },
    "LOBBY" : {
       "description" : "",
       "message" : "Saguão"
    },
+   "LOCAL_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Braço local"
+   },
    "LOCATED_N_KM_FROM_THE_CENTRE_OF_NAME" : {
       "description" : "",
-      "message" : "Localizado a {distância} km do centro de {nome}:"
+      "message" : "Localizado a {distance}km do centro de {name}:"
    },
    "LOCATION" : {
       "description" : "",
@@ -552,7 +596,7 @@
       "message" : "Baixo"
    },
    "LY" : {
-      "description" : "",
+      "description" : "Light year",
       "message" : "Ano-luz"
    },
    "MAKE_NEW_FACE" : {
@@ -562,6 +606,14 @@
    "MALE" : {
       "description" : "",
       "message" : "Masculino"
+   },
+   "MARKET_BUYLINE" : {
+      "description" : "",
+      "message" : "Comprar {amount} unidades por {price}"
+   },
+   "MARKET_SELLINE" : {
+      "description" : "",
+      "message" : "Vender {amount} unidades por {price}"
    },
    "MASS" : {
       "description" : "",
@@ -577,15 +629,15 @@
    },
    "MAX" : {
       "description" : "",
-      "message" : "máximo"
+      "message" : "máx"
    },
    "MAXIMUM_CREW" : {
       "description" : "",
       "message" : "Tripulação máxima"
    },
    "MEDIUM" : {
-      "description" : "",
-      "message" : "Médio"
+      "description" : "Game settings option: graphics resolution",
+      "message" : "Média"
    },
    "MEDIUM_CARGO_SHUTTLE" : {
       "description" : "",
@@ -671,6 +723,10 @@
       "description" : "",
       "message" : "Navegação:"
    },
+   "NAVIGATOR" : {
+      "description" : "",
+      "message" : "Navegador"
+   },
    "NEGOTIATE" : {
       "description" : "",
       "message" : "Negociar"
@@ -691,13 +747,21 @@
       "description" : "",
       "message" : "Nenhum"
    },
+   "NONE_FOR_SALE_IN_THIS_STATION" : {
+      "description" : "",
+      "message" : "None for sale in this station."
+   },
+   "NORMA_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Braço de Norma"
+   },
    "NOTES" : {
       "description" : "",
       "message" : "Notas:"
    },
    "NOT_ENOUGH_ALLOY_TO_ATTEMPT_A_REPAIR" : {
       "description" : "",
-      "message" : "Sem {liga} suficiente para tentar um reparo"
+      "message" : "Sem {alloy} suficiente para tentar um reparo"
    },
    "NOT_SUPPORTED_ON_THIS_SHIP" : {
       "description" : "",
@@ -709,15 +773,15 @@
    },
    "N_LIGHT_YEARS_N_MAX" : {
       "description" : "",
-      "message" : "{variação} anos-luz ({Variaçãomáxima} máxima)"
+      "message" : "{range} anos luz ({maxRange} máx)"
    },
    "N_OCCUPIED_PASSENGER_CABINS" : {
       "description" : "",
-      "message" : "{quantidade} Cabines de Passageiros Ocupadas"
+      "message" : "{quantity} Cabines de Passageiros Ocupadas"
    },
    "N_SHIELD_GENERATORS" : {
       "description" : "",
-      "message" : "{quantidade} Geradores de Defesa"
+      "message" : "{quantity} Geradores de Escudo"
    },
    "N_UNOCCUPIED_PASSENGER_CABINS" : {
       "description" : "",
@@ -730,6 +794,10 @@
    "OK" : {
       "description" : "",
       "message" : "Ok"
+   },
+   "OPEN_USER_FOLDER" : {
+      "description" : "",
+      "message" : "User Folder"
    },
    "OPTIONS" : {
       "description" : "",
@@ -747,21 +815,37 @@
       "description" : "",
       "message" : "Velocidade da órbita circular é dada pela velocidade tangencial. A nave deveria estar se movendo em em uma direção a 90° para a nave/{nome} eixo.%s\n%s\nVelocidade descentee é um mínimo absoluto, e é também tangencial. Uma velocidade mais baixa ou um ângulo mais baixo resultará em um caminho que cruza a superfície de {nome}.%s\n%s\nVelocidade de escape teoricamente trabalhará em qualquer direção, enquanto a nave não colidir com {nome} no caminho.%s\n⇥⇥"
    },
+   "OUTER_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Braço de Outer"
+   },
+   "OUTSTANDING_FINES" : {
+      "description" : "Unpaid fines for crimes committed",
+      "message" : "Multas pendentes"
+   },
    "OWED" : {
-      "description" : "",
+      "description" : "Player owing money to crew members",
       "message" : "Devido"
    },
    "PAY_FINE_OF_N" : {
       "description" : "",
       "message" : "Pagar multa de {quantia}"
    },
+   "PERSEUS_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Braço de Perseu"
+   },
    "PERSONAL_INFORMATION" : {
       "description" : "",
       "message" : "Informações Pessoais"
    },
+   "PILOT" : {
+      "description" : "",
+      "message" : "Piloto"
+   },
    "PILOTING" : {
       "description" : "",
-      "message" : "Pilotando:"
+      "message" : "Pilotagem:"
    },
    "PILOT_SEAT_IS_NOW_OCCUPIED_BY_NAME" : {
       "description" : "",
@@ -777,18 +861,18 @@
    },
    "PLANET_TEXTURES" : {
       "description" : "",
-      "message" : "Texturas do planeta"
+      "message" : "Texturas planetárias"
    },
    "POLICE" : {
       "description" : "",
       "message" : "Polícia"
    },
    "POOR" : {
-      "description" : "",
+      "description" : "Player combat rating",
       "message" : "Pobre"
    },
    "POSITION" : {
-      "description" : "",
+      "description" : "The job title/position of crew memeber",
       "message" : "Posição"
    },
    "PRESS_A_KEY_OR_CONTROLLER_BUTTON" : {
@@ -803,6 +887,10 @@
       "description" : "For player reputation",
       "message" : "Profissional"
    },
+   "PUMP_DOWN" : {
+      "description" : "Drain the fuel tank",
+      "message" : "Pump down"
+   },
    "QUALIFICATION_SCORES" : {
       "description" : "",
       "message" : "Pontuações de qualificação"
@@ -811,9 +899,13 @@
       "description" : "",
       "message" : "Parar"
    },
+   "QUIT_CONFIRMATION" : {
+      "description" : "For the checkbox in settings window",
+      "message" : "Confirmação de saída"
+   },
    "RANK" : {
       "description" : "",
-      "message" : "Classificado:"
+      "message" : "Classificação:"
    },
    "RATING" : {
       "description" : "",
@@ -847,6 +939,10 @@
       "description" : "",
       "message" : "Soliciitar Lançamento"
    },
+   "RESET" : {
+      "description" : "",
+      "message" : "Reset"
+   },
    "RETURN_TO_GAME" : {
       "description" : "",
       "message" : "Voltar ao jogo"
@@ -867,9 +963,21 @@
       "description" : "",
       "message" : "Recompensa"
    },
+   "SAGITTARIUS_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Braço de Sagitário"
+   },
    "SAVE" : {
       "description" : "",
       "message" : "Salvar"
+   },
+   "SCOOP_MOUNTS" : {
+      "description" : "How many slots or mounts exist on the ship for fitting SCOOPS (e.g. cargo scoop, fuel scoop, multi-scoop) ",
+      "message" : "Slots para coletores"
+   },
+   "SCUTUM_CENTAURUS_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Braço de Scutum-Centaurus"
    },
    "SELECT" : {
       "description" : "",
@@ -885,23 +993,35 @@
    },
    "SELECT_GAME_TO_LOAD" : {
       "description" : "",
-      "message" : "Selecione jogo para baixar..."
+      "message" : "Selecione jogo para carregar..."
    },
    "SELL" : {
       "description" : "Commodities and equipment prices",
-      "message" : "Sell"
+      "message" : "Vender"
    },
    "SENSORS" : {
       "description" : "",
       "message" : "Sensores:"
    },
+   "SENSORS_AND_DEFENCE" : {
+      "description" : "",
+      "message" : "Sensores e defesa"
+   },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Set destination as navigation target."
+   },
    "SHIP" : {
       "description" : "",
       "message" : "Nave"
    },
+   "SHIPS_ENGINEER" : {
+      "description" : "",
+      "message" : "Engenheiro espacial"
+   },
    "SHIP_INFORMATION" : {
       "description" : "",
-      "message" : "Informação sobre a Nave"
+      "message" : "Informações sobre a Nave"
    },
    "SHIP_IS_ALREADY_FULLY_REPAIRED" : {
       "description" : "",
@@ -940,8 +1060,12 @@
       "message" : "Começar na Terra"
    },
    "START_AT_NEW_HOPE" : {
-      "description" : "",
+      "description" : "New Hope is an in game location",
       "message" : "Começar em Nova Esperança"
+   },
+   "STAR_FIELD_DENSITY" : {
+      "description" : "",
+      "message" : "Densidade do campo Estelar"
    },
    "STATION_MANAGER" : {
       "description" : "",
@@ -950,6 +1074,14 @@
    "STATUS" : {
       "description" : "",
       "message" : "Status"
+   },
+   "TECH_CERTIFIED" : {
+      "description" : "Lobby screen shows the tech level (an integer number) of the station",
+      "message" : "Esta estação possui um certificado de tecnologia de nível {tech_level}."
+   },
+   "TECH_CERTIFIED_MILITARY" : {
+      "description" : "Lobby screen shows the tech level of the station",
+      "message" : "Esta instalação possui uma autorização de tecnologia militar."
    },
    "THANKS_AND_REMEMBER_TO_BUY_FUEL" : {
       "description" : "",
@@ -963,13 +1095,21 @@
       "description" : "",
       "message" : "A nave está sob controle da estação, Comandante."
    },
+   "THREE_KPC_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "braço 3kpc"
+   },
    "TOGGLE_MALE_FEMALE" : {
-      "description" : "",
-      "message" : "Alternar masculino/ feminino"
+      "description" : "player gender",
+      "message" : "Alternar masculino/feminino"
    },
    "TOO_SMALL_FOR_CURRENT_CREW" : {
       "description" : "",
       "message" : "Nave pequena demais para a tripulação atual."
+   },
+   "TOO_SMALL_TO_TRANSSHIP" : {
+      "description" : "",
+      "message" : "Ship is too small to transship your cargo."
    },
    "TOTAL" : {
       "description" : "",
@@ -1008,12 +1148,12 @@
       "message" : "Usado"
    },
    "VERY_HIGH" : {
-      "description" : "",
+      "description" : "Game settings option: graphic resolution",
       "message" : "Muito alto"
    },
    "VERY_LOW" : {
-      "description" : "",
-      "message" : "Muito baixo"
+      "description" : "Game settings option: graphic resolution",
+      "message" : "Muito baixa"
    },
    "VIDEO" : {
       "description" : "",
@@ -1027,8 +1167,12 @@
       "description" : "",
       "message" : "Resolução de Vídeo"
    },
+   "VSYNC" : {
+      "description" : "For the checkbox in settings window",
+      "message" : "Sincronização Vertical"
+   },
    "WAGE" : {
-      "description" : "",
+      "description" : "Salary of crew shown in crew roster",
       "message" : "Salário"
    },
    "WEIGHT_EMPTY" : {
@@ -1044,8 +1188,12 @@
       "message" : "Estamos no hiperespaço, Comandante."
    },
    "WE_HAVE_NO_BUSINESS_WITH_YOU" : {
-      "description" : "",
+      "description" : "Said by the police to law abiding player",
       "message" : "Não temos negócios com você neste momento."
+   },
+   "X_CANNOT_BE_TOLERATED_HERE" : {
+      "description" : "Message to be sent over comms by police when crime is committed by player",
+      "message" : "{crime} não será tolerado aqui!"
    },
    "YES" : {
       "description" : "Positive answer to a question",
@@ -1062,6 +1210,10 @@
    "YOU_DONT_HAVE_ENOUGH_MONEY_FOR_THAT_OPTION" : {
       "description" : "",
       "message" : "Você não tem dinheiro suficiente para aquela opção."
+   },
+   "YOU_HAVE_X_UNITS_IN_YOUR_CARGOHOLD" : {
+      "description" : "",
+      "message" : "You have {units} units in your cargohold"
    },
    "YOU_MUST_FIRST_SELECT_A_COMBAT_TARGET_COMMANDER" : {
       "description" : "",
@@ -1082,5 +1234,9 @@
    "YOU_NOT_ENOUGH_MONEY" : {
       "description" : "",
       "message" : "Você não tem dinheiro suficiente."
+   },
+   "ZOOM" : {
+      "description" : "Label for a zoom (magnification) control bar.",
+      "message" : "Zoom"
    }
 }

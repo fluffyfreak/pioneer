@@ -23,10 +23,6 @@
       "description" : "",
       "message" : "Nazad"
    },
-   "HANG_UP" : {
-      "description" : "",
-      "message" : "Prekini."
-   },
    "IM_SORRY_IM_NOT_PREPARED_TO_GO_ANY_LOWER" : {
       "description" : "",
       "message" : "I'm sorry, I'm not prepared to go any lower."
@@ -43,9 +39,9 @@
       "description" : "",
       "message" : "Minimal time served aboard ship"
    },
-   "NAVIGATOR" : {
+   "NO_CREW_AVAILABLE" : {
       "description" : "",
-      "message" : "Navigator"
+      "message" : "Sorry, no candidates are currently seeking employment at {station}"
    },
    "NO_EXPERIENCE" : {
       "description" : "",
@@ -55,21 +51,9 @@
       "description" : "",
       "message" : "OK, I suppose that's all right."
    },
-   "PILOT" : {
-      "description" : "",
-      "message" : "Pilot"
-   },
    "POTENTIAL_CREW_MEMBERS" : {
       "description" : "",
       "message" : "Potential crew members are registered as seeking employment at {station}:"
-   },
-   "SENSORS_AND_DEFENCE" : {
-      "description" : "",
-      "message" : "Sensors and defence"
-   },
-   "SHIPS_ENGINEER" : {
-      "description" : "",
-      "message" : "Ship's Engineer"
    },
    "SIMULATOR_TRAINING_ONLY" : {
       "description" : "",

@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Widget.h"
@@ -19,20 +19,15 @@ public:
 		return 1;
 	}
 
-	static int l_set_enabled(lua_State *l) {
-		UI::Widget *w = LuaObject<UI::Widget>::CheckFromLua(1);
-		const bool enable = lua_toboolean(l, 2);
-		if (enable) {
-			w->Enable();
-		} else {
-			w->Disable();
-		}
-		return 0;
-	}
-
 	static int l_disable(lua_State *l) {
 		UI::Widget *w = LuaObject<UI::Widget>::CheckFromLua(1);
 		w->Disable();
+		return 0;
+	}
+
+	static int l_hide(lua_State *l) {
+		UI::Widget *w = LuaObject<UI::Widget>::CheckFromLua(1);
+		w->Hidden();
 		return 0;
 	}
 
@@ -69,6 +64,18 @@ public:
 	static int l_attr_disabled(lua_State *l) {
 		UI::Widget *w = LuaObject<UI::Widget>::CheckFromLua(1);
 		lua_pushboolean(l, w->IsDisabled());
+		return 1;
+	}
+
+	static int l_attr_width(lua_State *l) {
+		UI::Widget *w = LuaObject<UI::Widget>::CheckFromLua(1);
+		lua_pushnumber(l, w->GetSize().x);
+		return 1;
+	}
+
+	static int l_attr_height(lua_State *l) {
+		UI::Widget *w = LuaObject<UI::Widget>::CheckFromLua(1);
+		lua_pushnumber(l, w->GetSize().y);
 		return 1;
 	}
 
@@ -133,6 +140,12 @@ public:
 		return 1;
 	}
 
+	static int l_attr_on_visibility_changed(lua_State *l) {
+		UI::Widget *w = LuaObject<UI::Widget>::CheckFromLua(1);
+		LuaSignal<bool>().Wrap(l, w->onVisibilityChanged);
+		return 1;
+	}
+
 };
 
 }
@@ -146,8 +159,8 @@ template <> void LuaObject<UI::Widget>::RegisterClass()
 	static const luaL_Reg l_methods[] = {
 		{ "SetFont", LuaWidget::l_set_font_size },
 
-		{ "SetEnabled", LuaWidget::l_set_enabled },
 		{ "Disable", LuaWidget::l_disable       },
+		{ "Hide", LuaWidget::l_hide             },
 		{ "Enable",  LuaWidget::l_enable        },
 
 		{ "AddShortcut",    LuaWidget::l_add_shortcut    },
@@ -159,18 +172,21 @@ template <> void LuaObject<UI::Widget>::RegisterClass()
 	};
 
 	static const luaL_Reg l_attrs[] = {
-		{ "disabled",     LuaWidget::l_attr_disabled       },
+		{ "disabled",            LuaWidget::l_attr_disabled              },
+		{ "width",               LuaWidget::l_attr_width                 },
+		{ "height",              LuaWidget::l_attr_height                },
 
-		{ "onKeyDown",    LuaWidget::l_attr_on_key_down    },
-		{ "onKeyUp",      LuaWidget::l_attr_on_key_up      },
-		{ "onTextInput",  LuaWidget::l_attr_on_text_input  },
-		{ "onMouseDown",  LuaWidget::l_attr_on_mouse_down  },
-		{ "onMouseUp",    LuaWidget::l_attr_on_mouse_up    },
-		{ "onMouseMove",  LuaWidget::l_attr_on_mouse_move  },
-		{ "onMouseWheel", LuaWidget::l_attr_on_mouse_wheel },
-		{ "onMouseOver",  LuaWidget::l_attr_on_mouse_over  },
-		{ "onMouseOut",   LuaWidget::l_attr_on_mouse_out   },
-		{ "onClick",      LuaWidget::l_attr_on_click       },
+		{ "onKeyDown",           LuaWidget::l_attr_on_key_down           },
+		{ "onKeyUp",             LuaWidget::l_attr_on_key_up             },
+		{ "onTextInput",         LuaWidget::l_attr_on_text_input         },
+		{ "onMouseDown",         LuaWidget::l_attr_on_mouse_down         },
+		{ "onMouseUp",           LuaWidget::l_attr_on_mouse_up           },
+		{ "onMouseMove",         LuaWidget::l_attr_on_mouse_move         },
+		{ "onMouseWheel",        LuaWidget::l_attr_on_mouse_wheel        },
+		{ "onMouseOver",         LuaWidget::l_attr_on_mouse_over         },
+		{ "onMouseOut",          LuaWidget::l_attr_on_mouse_out          },
+		{ "onClick",             LuaWidget::l_attr_on_click              },
+		{ "onVisibilityChanged", LuaWidget::l_attr_on_visibility_changed },
 
 		{ 0, 0 }
 	};

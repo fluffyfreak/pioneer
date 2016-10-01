@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _LIBS_H
@@ -18,14 +18,13 @@
 #include <cstdlib>
 #include <cerrno>
 #include <cstring>
+#include <cinttypes>
 #include <string>
 #include <deque>
 #include <vector>
 #include <map>
 #include <algorithm>
 #include <memory>
-
-#include "glew/glew.h"
 
 #ifdef _WIN32
 #	include <malloc.h>
@@ -45,7 +44,7 @@
 #	endif
 #endif
 
-#ifdef _MSC_VER // MSVC doesn't support the %z specifier, but has its own %I specifier
+#ifdef _WIN32 // MSVC doesn't support the %z specifier, but has its own %I specifier
 #define SIZET_FMT "%Iu"
 #else
 #define SIZET_FMT "%zu"

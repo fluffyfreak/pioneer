@@ -167,10 +167,6 @@
       "description" : "",
       "message" : "Messaggio sulla liquidazione di {target} felicemente arrivato. Ecco i suoi {cash}."
    },
-   "HANG_UP" : {
-      "description" : "",
-      "message" : "Riaggancia."
-   },
    "HOW_SOON_MUST_IT_BE_DONE" : {
       "description" : "",
       "message" : "Per quando deve essere fatto?"
@@ -194,6 +190,14 @@
    "RETURN_HERE_ON_THE_COMPLETION_OF_THE_CONTRACT_AND_YOU_WILL_BE_PAID" : {
       "description" : "",
       "message" : "Torni qui a contratto completato e verrà pagato."
+   },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Imposta come destinazione di navigazione"
+   },
+   "SET_RETURN_ROUTE" : {
+      "description" : "",
+      "message" : "Imposta rotta di ritorno"
    },
    "SHIP" : {
       "description" : "",

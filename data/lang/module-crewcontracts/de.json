@@ -5,7 +5,7 @@
    },
    "CREWDETAILSHEETBB" : {
       "description" : "",
-      "message" : "Name: {name}\nErfahrung: {experience}\nLohnforderung: {wage} per week\n\n{response}\n"
+      "message" : "Name: {name}\nErfahrung: {experience}\nLohnforderung: {wage} pro Woche\n\n{response}\n"
    },
    "CREWMEMBER_WAGE_PER_WEEK" : {
       "description" : "",
@@ -23,10 +23,6 @@
       "description" : "",
       "message" : "Zurück"
    },
-   "HANG_UP" : {
-      "description" : "",
-      "message" : "Auflegen."
-   },
    "IM_SORRY_IM_NOT_PREPARED_TO_GO_ANY_LOWER" : {
       "description" : "",
       "message" : "Entschuldigung, Ich kann wirklich nicht mehr tiefer gehen."
@@ -43,9 +39,9 @@
       "description" : "",
       "message" : "Kurzzeitig angestellt auf Schiffen"
    },
-   "NAVIGATOR" : {
+   "NO_CREW_AVAILABLE" : {
       "description" : "",
-      "message" : "Navigator"
+      "message" : "Schade, keine Kandidaten wollen sich momentan auf {station} um eine Stelle bewerben"
    },
    "NO_EXPERIENCE" : {
       "description" : "",
@@ -55,21 +51,9 @@
       "description" : "",
       "message" : "OK, ich denke, dass das klar geht."
    },
-   "PILOT" : {
-      "description" : "",
-      "message" : "Pilot"
-   },
    "POTENTIAL_CREW_MEMBERS" : {
       "description" : "",
       "message" : "Die folgenden potentiellen Crewmitglieder sind bei {station} als arbeitssuchend registriert:"
-   },
-   "SENSORS_AND_DEFENCE" : {
-      "description" : "",
-      "message" : "Sensoren und Abwehr"
-   },
-   "SHIPS_ENGINEER" : {
-      "description" : "",
-      "message" : "Schiffsingenieur"
    },
    "SIMULATOR_TRAINING_ONLY" : {
       "description" : "",

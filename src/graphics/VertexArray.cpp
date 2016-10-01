@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "VertexArray.h"
@@ -20,6 +20,8 @@ VertexArray::VertexArray(AttributeSet attribs, int size)
 			normal.reserve(size);
 		if (attribs & ATTRIB_UV0)
 			uv0.reserve(size);
+		if (attribs & ATTRIB_TANGENT)
+			tangent.reserve(size);
 	}
 }
 
@@ -28,43 +30,28 @@ VertexArray::~VertexArray()
 
 }
 
-bool VertexArray::HasAttrib(VertexAttrib v) const
-{
-	PROFILE_SCOPED()
-	return (m_attribs & v) != 0;
-}
-
-unsigned int VertexArray::GetNumVerts() const
-{
-	PROFILE_SCOPED()
-	return position.size();
-}
-
 void VertexArray::Clear()
 {
-	PROFILE_SCOPED()
 	position.clear();
 	diffuse.clear();
 	normal.clear();
 	uv0.clear();
+	tangent.clear();
 }
 
 void VertexArray::Add(const vector3f &v)
 {
-	PROFILE_SCOPED()
 	position.push_back(v);
 }
 
 void VertexArray::Add(const vector3f &v, const Color &c)
 {
-	PROFILE_SCOPED()
 	position.push_back(v);
 	diffuse.push_back(c);
 }
 
 void VertexArray::Add(const vector3f &v, const Color &c, const vector3f &n)
 {
-	PROFILE_SCOPED()
 	position.push_back(v);
 	diffuse.push_back(c);
 	normal.push_back(n);
@@ -72,7 +59,6 @@ void VertexArray::Add(const vector3f &v, const Color &c, const vector3f &n)
 
 void VertexArray::Add(const vector3f &v, const Color &c, const vector2f &uv)
 {
-	PROFILE_SCOPED()
 	position.push_back(v);
 	diffuse.push_back(c);
 	uv0.push_back(uv);
@@ -80,35 +66,44 @@ void VertexArray::Add(const vector3f &v, const Color &c, const vector2f &uv)
 
 void VertexArray::Add(const vector3f &v, const vector2f &uv)
 {
-	PROFILE_SCOPED()
 	position.push_back(v);
 	uv0.push_back(uv);
 }
 
+void VertexArray::Add(const vector3f &v, const vector3f &n)
+{
+	position.push_back(v);
+	normal.push_back(n);
+}
+
 void VertexArray::Add(const vector3f &v, const vector3f &n, const vector2f &uv)
 {
-	PROFILE_SCOPED()
 	position.push_back(v);
 	normal.push_back(n);
 	uv0.push_back(uv);
 }
 
+void VertexArray::Add(const vector3f &v, const vector3f &n, const vector2f &uv, const vector3f &tang)
+{
+	position.push_back(v);
+	normal.push_back(n);
+	uv0.push_back(uv);
+	tangent.push_back(tang);
+}
+
 void VertexArray::Set(const Uint32 idx, const vector3f &v)
 {
-	PROFILE_SCOPED()
 	position[idx] = v;
 }
 
 void VertexArray::Set(const Uint32 idx, const vector3f &v, const Color &c)
 {
-	PROFILE_SCOPED()
 	position[idx] = v;
 	diffuse[idx] = c;
 }
 
 void VertexArray::Set(const Uint32 idx, const vector3f &v, const Color &c, const vector3f &n)
 {
-	PROFILE_SCOPED()
 	position[idx] = v;
 	diffuse[idx] = c;
 	normal[idx] = n;
@@ -116,7 +111,6 @@ void VertexArray::Set(const Uint32 idx, const vector3f &v, const Color &c, const
 
 void VertexArray::Set(const Uint32 idx, const vector3f &v, const Color &c, const vector2f &uv)
 {
-	PROFILE_SCOPED()
 	position[idx] = v;
 	diffuse[idx] = c;
 	uv0[idx] = uv;
@@ -124,17 +118,29 @@ void VertexArray::Set(const Uint32 idx, const vector3f &v, const Color &c, const
 
 void VertexArray::Set(const Uint32 idx, const vector3f &v, const vector2f &uv)
 {
-	PROFILE_SCOPED()
 	position[idx] = v;
 	uv0[idx] = uv;
 }
 
+void VertexArray::Set(const Uint32 idx, const vector3f &v, const vector3f &n)
+{
+	position[idx] = v;
+	normal[idx] = n;
+}
+
 void VertexArray::Set(const Uint32 idx, const vector3f &v, const vector3f &n, const vector2f &uv)
 {
-	PROFILE_SCOPED()
 	position[idx] = v;
 	normal[idx] = n;
 	uv0[idx] = uv;
+}
+
+void VertexArray::Set(const Uint32 idx, const vector3f &v, const vector3f &n, const vector2f &uv, const vector3f &tang)
+{
+	position[idx] = v;
+	normal[idx] = n;
+	uv0[idx] = uv;
+	tangent[idx] = tang;
 }
 
 }

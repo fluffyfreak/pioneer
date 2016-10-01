@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -11,7 +11,6 @@
 #include "SectorView.h"
 #include "SystemView.h"
 #include "SystemInfoView.h"
-#include "GalacticView.h"
 #include "UIView.h"
 #include "Lang.h"
 #include "Game.h"
@@ -19,20 +18,25 @@
 // XXX duplicated in WorldView. should probably be a theme variable
 static const Color s_hudTextColor(0,255,0,204);
 
-ShipCpanel::ShipCpanel(Graphics::Renderer *r): Gui::Fixed(float(Gui::Screen::GetWidth()), 80)
+ShipCpanel::ShipCpanel(Graphics::Renderer *r, Game* game): Gui::Fixed(float(Gui::Screen::GetWidth()), 80), m_game(game)
 {
 	m_scanner = new ScannerWidget(r);
 
 	InitObject();
 }
 
-ShipCpanel::ShipCpanel(Serializer::Reader &rd, Graphics::Renderer *r): Gui::Fixed(float(Gui::Screen::GetWidth()), 80)
+ShipCpanel::ShipCpanel(const Json::Value &jsonObj, Graphics::Renderer *r, Game* game) : Gui::Fixed(float(Gui::Screen::GetWidth()), 80),
+m_game(game)
 {
-	m_scanner = new ScannerWidget(r, rd);
+	if (!jsonObj.isMember("ship_c_panel")) throw SavedGameCorruptException();
+	Json::Value shipCPanelObj = jsonObj["ship_c_panel"];
+
+	m_scanner = new ScannerWidget(r, shipCPanelObj);
 
 	InitObject();
 
-	m_camButton->SetActiveState(rd.Int32());
+	if (!shipCPanelObj.isMember("cam_button_state")) throw SavedGameCorruptException();
+	m_camButton->SetActiveState(shipCPanelObj["cam_button_state"].asInt());
 }
 
 void ShipCpanel::InitObject()
@@ -45,22 +49,23 @@ void ShipCpanel::InitObject()
 
 	m_currentMapView = MAP_SECTOR;
 	m_useEquipWidget = new UseEquipWidget();
-	m_msglog = new MsgLogWidget();
 
 	m_userSelectedMfuncWidget = MFUNC_SCANNER;
 
 	m_scanner->onGrabFocus.connect(sigc::bind(sigc::mem_fun(this, &ShipCpanel::OnMultiFuncGrabFocus), MFUNC_SCANNER));
 	m_useEquipWidget->onGrabFocus.connect(sigc::bind(sigc::mem_fun(this, &ShipCpanel::OnMultiFuncGrabFocus), MFUNC_EQUIPMENT));
-	m_msglog->onGrabFocus.connect(sigc::bind(sigc::mem_fun(this, &ShipCpanel::OnMultiFuncGrabFocus), MFUNC_MSGLOG));
 
 	m_scanner->onUngrabFocus.connect(sigc::bind(sigc::mem_fun(this, &ShipCpanel::OnMultiFuncUngrabFocus), MFUNC_SCANNER));
 	m_useEquipWidget->onUngrabFocus.connect(sigc::bind(sigc::mem_fun(this, &ShipCpanel::OnMultiFuncUngrabFocus), MFUNC_EQUIPMENT));
-	m_msglog->onUngrabFocus.connect(sigc::bind(sigc::mem_fun(this, &ShipCpanel::OnMultiFuncUngrabFocus), MFUNC_MSGLOG));
 
-	// where the scanner is
-	m_mfsel = new MultiFuncSelectorWidget();
-	m_mfsel->onSelect.connect(sigc::mem_fun(this, &ShipCpanel::OnUserChangeMultiFunctionDisplay));
-	Add(m_mfsel, 656, 18);
+	// Toggle Scanner / Equipment View
+	m_scannerEquipButton = new Gui::MultiStateImageButton();
+	m_scannerEquipButton->SetShortcut(SDLK_F9, KMOD_NONE);
+	m_scannerEquipButton->AddState(0, "icons/multifunc_scanner.png", Lang::TOGGLE_SCANNER_VIEW);
+	m_scannerEquipButton->AddState(1, "icons/multifunc_equip.png", Lang::TOGGLE_EQUIPMENT_VIEW);
+	m_scannerEquipButton->onClick.connect(sigc::mem_fun(this, &ShipCpanel::OnClickScannerEquip));
+	m_scannerEquipButton->SetRenderDimensions(34, 17);
+	Add(m_scannerEquipButton, 675, 35);
 	ChangeMultiFunctionDisplay(MFUNC_SCANNER);
 
 //	Gui::RadioGroup *g = new Gui::RadioGroup();
@@ -211,24 +216,33 @@ void ShipCpanel::InitObject()
 	m_overlay[OVERLAY_TOP_RIGHT]    = (new Gui::Label(""))->Color(s_hudTextColor);
 	m_overlay[OVERLAY_BOTTOM_LEFT]  = (new Gui::Label(""))->Color(s_hudTextColor);
 	m_overlay[OVERLAY_BOTTOM_RIGHT] = (new Gui::Label(""))->Color(s_hudTextColor);
+	m_overlay[OVERLAY_OVER_PANEL_RIGHT_1] = (new Gui::Label(""))->Color(s_hudTextColor);
+	m_overlay[OVERLAY_OVER_PANEL_RIGHT_2] = (new Gui::Label(""))->Color(s_hudTextColor);
+	m_overlay[OVERLAY_OVER_PANEL_RIGHT_3] = (new Gui::Label(""))->Color(s_hudTextColor);
+	m_overlay[OVERLAY_OVER_PANEL_RIGHT_4] = (new Gui::Label(""))->Color(s_hudTextColor);
 	Add(m_overlay[OVERLAY_TOP_LEFT],     170.0f, 2.0f);
 	Add(m_overlay[OVERLAY_TOP_RIGHT],    500.0f, 2.0f);
 	Add(m_overlay[OVERLAY_BOTTOM_LEFT],  150.0f, 62.0f);
 	Add(m_overlay[OVERLAY_BOTTOM_RIGHT], 520.0f, 62.0f);
+	Add(m_overlay[OVERLAY_OVER_PANEL_RIGHT_1], 691.0f, -17.0f);
+	Add(m_overlay[OVERLAY_OVER_PANEL_RIGHT_2], 723.0f, -17.0f);
+	Add(m_overlay[OVERLAY_OVER_PANEL_RIGHT_3], 691.0f, -4.0f);
+	Add(m_overlay[OVERLAY_OVER_PANEL_RIGHT_4], 723.0f, -4.0f);
+
+	View::SetCpanel(this);
 }
 
 ShipCpanel::~ShipCpanel()
 {
+	View::SetCpanel(nullptr);
 	delete m_leftButtonGroup;
 	delete m_rightButtonGroup;
 	Remove(m_scanner);
 	Remove(m_useEquipWidget);
-	Remove(m_msglog);
-	Remove(m_mfsel);
+	Remove(m_scannerEquipButton);
 	delete m_scanner;
 	delete m_useEquipWidget;
-	delete m_msglog;
-	delete m_mfsel;
+	delete m_scannerEquipButton;
 	m_connOnRotationDampingChanged.disconnect();
 }
 
@@ -243,13 +257,10 @@ void ShipCpanel::ChangeMultiFunctionDisplay(multifuncfunc_t f)
 	Gui::Widget *selected = 0;
 	if (f == MFUNC_SCANNER) selected = m_scanner;
 	if (f == MFUNC_EQUIPMENT) selected = m_useEquipWidget;
-	if (f == MFUNC_MSGLOG) selected = m_msglog;
 
 	Remove(m_scanner);
 	Remove(m_useEquipWidget);
-	Remove(m_msglog);
 	if (selected) {
-		m_mfsel->SetSelected(f);
 		Add(selected, 200, 18);
 		selected->ShowAll();
 	}
@@ -268,10 +279,10 @@ void ShipCpanel::OnMultiFuncUngrabFocus(multifuncfunc_t f)
 void ShipCpanel::Update()
 {
 	PROFILE_SCOPED()
-	int timeAccel = Pi::game->GetTimeAccel();
-	int requested = Pi::game->GetRequestedTimeAccel();
+	int timeAccel = m_game->GetTimeAccel();
+	int requested = m_game->GetRequestedTimeAccel();
 
-	for (int i=0; i<6; i++) {
+	for (int i=0; i<Game::TimeAccel::TIMEACCEL_HYPERSPACE; i++) {
 		m_timeAccelButtons[i]->SetSelected(timeAccel == i);
 	}
 	// make requested but not selected icon blink
@@ -281,18 +292,22 @@ void ShipCpanel::Update()
 
 	m_scanner->Update();
 	m_useEquipWidget->Update();
-	m_msglog->Update();
+
+	View *cur = Pi::GetView();
+	if ((cur != m_game->GetSectorView()) && (cur != m_game->GetSystemView()) &&
+		(cur != m_game->GetSystemInfoView()) && (cur != m_game->GetGalacticView())) {
+		HideMapviewButtons();
+	}
 }
 
 void ShipCpanel::Draw()
 {
-	std::string time = format_date(Pi::game->GetTime());
-	m_clock->SetText(time);
-
-	View *cur = Pi::GetView();
-	if ((cur != Pi::sectorView) && (cur != Pi::systemView) &&
-	    (cur != Pi::systemInfoView) && (cur != Pi::galacticView)) {
-		HideMapviewButtons();
+	static double prevTime = -1.0;
+	const double currTime = m_game->GetTime();
+	if(!is_equal_exact(prevTime, currTime)) {
+		prevTime = currTime;
+		const std::string time = format_date(currTime);
+		m_clock->SetText(time);
 	}
 
 	Gui::Fixed::Draw();
@@ -303,15 +318,17 @@ void ShipCpanel::OnChangeCamView(Gui::MultiStateImageButton *b)
 	Pi::BoinkNoise();
 	const int newState = b->GetState();
 	b->SetActiveState(newState);
-	Pi::worldView->SetCamType(WorldView::CamType(newState));
-	Pi::SetView(Pi::worldView);
+	m_game->GetWorldView()->SetCamType(WorldView::CamType(newState));
+	Pi::SetView(m_game->GetWorldView());
 }
 
 void ShipCpanel::OnChangeInfoView(Gui::MultiStateImageButton *b)
 {
 	Pi::BoinkNoise();
-	if (Pi::GetView() != Pi::infoView)
-		Pi::SetView(Pi::infoView);
+	if (Pi::GetView() != m_game->GetInfoView())
+		Pi::SetView(m_game->GetInfoView());
+	else
+		Pi::SetView(m_game->GetWorldView());
 }
 
 void ShipCpanel::OnChangeToMapView(Gui::MultiStateImageButton *b)
@@ -324,16 +341,16 @@ void ShipCpanel::OnChangeMapView(enum MapView view)
 {
 	m_currentMapView = view;
 	switch (m_currentMapView) {
-		case MAP_SECTOR: Pi::SetView(Pi::sectorView); break;
-		case MAP_SYSTEM: Pi::SetView(Pi::systemView); break;
+		case MAP_SECTOR: Pi::SetView(m_game->GetSectorView()); break;
+		case MAP_SYSTEM: Pi::SetView(m_game->GetSystemView()); break;
 		case MAP_INFO:
-			if (Pi::GetView() == Pi::systemInfoView) {
-				Pi::systemInfoView->NextPage();
+			if (Pi::GetView() == m_game->GetSystemInfoView()) {
+				m_game->GetSystemInfoView()->NextPage();
 			} else {
-				Pi::SetView(Pi::systemInfoView);
+				Pi::SetView(m_game->GetSystemInfoView());
 			}
 			break;
-		case MAP_GALACTIC: Pi::SetView(Pi::galacticView); break;
+		case MAP_GALACTIC: Pi::SetView(m_game->GetGalacticView()); break;
 	}
 	for (int i=0; i<4; i++) m_mapViewButtons[i]->Show();
 }
@@ -346,32 +363,42 @@ void ShipCpanel::HideMapviewButtons()
 void ShipCpanel::OnClickTimeaccel(Game::TimeAccel val)
 {
 	Pi::BoinkNoise();
-	if ((Pi::game->GetTimeAccel() == val) && (val == Game::TIMEACCEL_PAUSED)) {
-		if (Pi::GetView() != Pi::settingsView)
-			Pi::SetView(Pi::settingsView);
+	if ((m_game->GetTimeAccel() == val) && (val == Game::TIMEACCEL_PAUSED)) {
+		if (Pi::GetView() != m_game->GetSettingsView())
+			Pi::SetView(m_game->GetSettingsView());
 		else
-			Pi::SetView(Pi::worldView);
+			Pi::SetView(m_game->GetWorldView());
 	}
 	else {
-		if (Pi::GetView() == Pi::settingsView)
-			Pi::SetView(Pi::worldView);
-		Pi::game->RequestTimeAccel(val, Pi::KeyState(SDLK_LCTRL) || Pi::KeyState(SDLK_RCTRL));
+		if (Pi::GetView() == m_game->GetSettingsView())
+			Pi::SetView(m_game->GetWorldView());
+		m_game->RequestTimeAccel(val, Pi::KeyState(SDLK_LCTRL) || Pi::KeyState(SDLK_RCTRL));
 	}
 }
 
 void ShipCpanel::OnClickComms(Gui::MultiStateImageButton *b)
 {
 	Pi::BoinkNoise();
-	if (Pi::player->GetFlightState() == Ship::DOCKED) Pi::SetView(Pi::spaceStationView);
+	if (Pi::player->GetFlightState() == Ship::DOCKED)
+		if (Pi::GetView() == m_game->GetSpaceStationView())
+			Pi::SetView(m_game->GetWorldView());
+		else
+			Pi::SetView(m_game->GetSpaceStationView());
 	else {
-		Pi::SetView(Pi::worldView);
-		Pi::worldView->ToggleTargetActions();
+		Pi::SetView(m_game->GetWorldView());
+		m_game->GetWorldView()->ToggleTargetActions();
 	}
 }
 
 void ShipCpanel::OnClickRotationDamping(Gui::MultiStateImageButton *b)
 {
 	Pi::player->GetPlayerController()->ToggleRotationDamping();
+}
+
+void ShipCpanel::OnClickScannerEquip(Gui::MultiStateImageButton *b)
+{
+	int state = m_scannerEquipButton->GetState();
+	ChangeMultiFunctionDisplay((0==state) ? MFUNC_SCANNER : MFUNC_EQUIPMENT);
 }
 
 void ShipCpanel::OnRotationDampingChanged()
@@ -406,10 +433,12 @@ void ShipCpanel::TimeStepUpdate(float step)
 	m_scanner->TimeStepUpdate(step);
 }
 
-void ShipCpanel::Save(Serializer::Writer &wr)
+void ShipCpanel::SaveToJson(Json::Value &jsonObj)
 {
-	m_scanner->Save(wr);
-	wr.Int32(m_camButton->GetState());
+	Json::Value shipCPanelObj(Json::objectValue); // Create JSON object to contain ship control panel data.
+	m_scanner->SaveToJson(shipCPanelObj);
+	shipCPanelObj["cam_button_state"] = m_camButton->GetState();
+	jsonObj["ship_c_panel"] = shipCPanelObj; // Add ship control panel object to supplied object.
 }
 
 void ShipCpanel::SetOverlayText(OverlayTextPos pos, const std::string &text)
@@ -428,8 +457,15 @@ void ShipCpanel::SetOverlayToolTip(OverlayTextPos pos, const std::string &text)
 
 void ShipCpanel::ClearOverlay()
 {
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < OVERLAY_MAX; i++) {
 		m_overlay[i]->SetText("");
 		m_overlay[i]->SetToolTip("");
 	}
+}
+
+void ShipCpanel::SelectGroupButton(int gid, int idx)
+{
+	Pi::BoinkNoise();
+	Gui::RadioGroup* group = (gid==1) ? m_rightButtonGroup : m_leftButtonGroup;
+	group->SetSelected(idx);
 }

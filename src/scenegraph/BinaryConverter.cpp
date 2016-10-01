@@ -1,4 +1,4 @@
-// Copyright © 2008-2013 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 #include "BinaryConverter.h"
 #include "NodeVisitor.h"
@@ -6,12 +6,25 @@
 #include "FileSystem.h"
 #include "StringF.h"
 
+extern "C" {
+#include "miniz/miniz.h"
+}
+
 using namespace SceneGraph;
 
 // Attempt at version history:
 // 1: prototype
 // 2: converted StaticMesh to VertexBuffer
-const Uint32 SGM_VERSION = 2;
+// 3: store processed collision mesh
+// 4: compressed SGM files and instancing support
+// 5: normal mapping
+// 6: 32-bit indicies
+const Uint32 SGM_VERSION = 6;
+union SGM_STRING_VALUE{
+	char name[4];
+	Uint32 value;
+};
+const SGM_STRING_VALUE SGM_STRING_ID = { {'s', 'g', 'm', SGM_VERSION} };
 const std::string SGM_EXTENSION = ".sgm";
 const std::string SAVE_TARGET_DIR = "binarymodels";
 
@@ -61,20 +74,34 @@ void BinaryConverter::RegisterLoader(const std::string &typeName, std::function<
 
 void BinaryConverter::Save(const std::string& filename, Model* m)
 {
+	PROFILE_SCOPED()
 	static const std::string s_EmptyString;
-	Save(filename, s_EmptyString, m);
+	Save(filename, s_EmptyString, m, false);
 }
 
-void BinaryConverter::Save(const std::string& filename, const std::string& savepath, Model* m)
+void BinaryConverter::Save(const std::string& filename, const std::string& savepath, Model* m, const bool bInPlace)
 {
+	PROFILE_SCOPED()
+	printf("Saving file (%s)\n", filename.c_str());
 	FILE *f = nullptr;
 	FileSystem::FileSourceFS newFS(FileSystem::GetDataDir());
-	if (savepath.empty()) {
+	if (!bInPlace) {
 		if (!FileSystem::userFiles.MakeDirectory(SAVE_TARGET_DIR))
 			throw CouldNotOpenFileException();
 
+		std::string newpath = savepath.substr(0, savepath.size()-filename.size());
+		size_t pos = newpath.find_first_of("/", 0);
+		while(pos<savepath.size()-filename.size()) {
+			newpath = savepath.substr(0, pos);
+			pos = savepath.find_first_of("/", pos+1);
+			if (!FileSystem::userFiles.MakeDirectory(FileSystem::JoinPathBelow(SAVE_TARGET_DIR,newpath)))
+				throw CouldNotOpenFileException();
+			printf("Made directory (%s)\n", FileSystem::JoinPathBelow(SAVE_TARGET_DIR,newpath).c_str());
+		}
+
 		f = FileSystem::userFiles.OpenWriteStream(
-			FileSystem::JoinPathBelow(SAVE_TARGET_DIR, filename + SGM_EXTENSION));
+			FileSystem::JoinPathBelow(SAVE_TARGET_DIR, savepath + SGM_EXTENSION));
+		printf("Save file (%s)\n", FileSystem::JoinPathBelow(SAVE_TARGET_DIR, savepath + SGM_EXTENSION).c_str());
 		if (!f) throw CouldNotOpenFileException();
 	} else {
 		f = newFS.OpenWriteStream(savepath + SGM_EXTENSION);
@@ -83,10 +110,7 @@ void BinaryConverter::Save(const std::string& filename, const std::string& savep
 
 	Serializer::Writer wr;
 
-	wr.Byte('S');
-	wr.Byte('G');
-	wr.Byte('M');
-	wr.Byte('1');
+	wr.Int32(SGM_STRING_ID.value);
 
 	wr.Int32(SGM_VERSION);
 
@@ -97,6 +121,9 @@ void BinaryConverter::Save(const std::string& filename, const std::string& savep
 	SaveHelperVisitor sv(&wr, m);
 	m->GetRoot()->Accept(sv);
 
+	m->GetCollisionMesh()->Save(wr);
+	wr.Float(m->GetDrawClipRadius());
+
 	SaveAnimations(wr, m);
 
 	//save tags
@@ -104,8 +131,15 @@ void BinaryConverter::Save(const std::string& filename, const std::string& savep
 	for (unsigned int i = 0; i < m->GetNumTags(); i++)
 		wr.String(m->GetTagByIndex(i)->GetName().c_str());
 
+	// compress in memory, write to open file 
+	size_t outSize = 0;
+	size_t nwritten = 0;
 	const std::string& data = wr.GetData();
-	const size_t nwritten = fwrite(data.data(), data.length(), 1, f);
+	void *pCompressedData = tdefl_compress_mem_to_heap(data.data(), data.length(), &outSize, 128);
+	if (pCompressedData) {
+		nwritten = fwrite(pCompressedData, outSize, 1, f);
+		mz_free(pCompressedData);
+	}
 	fclose(f);
 
 	if (nwritten != 1) throw CouldNotWriteToFileException();
@@ -113,12 +147,14 @@ void BinaryConverter::Save(const std::string& filename, const std::string& savep
 
 Model *BinaryConverter::Load(const std::string &filename)
 {
+	PROFILE_SCOPED()
 	Model *m = Load(filename, "models");
 	return m;
 }
 
 Model *BinaryConverter::Load(const std::string &shortname, const std::string &basepath)
 {
+	PROFILE_SCOPED()
 	FileSystem::FileSource &fileSource = FileSystem::gameDataFiles;
 	for (FileSystem::FileEnumerator files(fileSource, basepath, FileSystem::FileEnumerator::Recurse); !files.Finished(); files.Next()) {
 		const FileSystem::FileInfo &info = files.Current();
@@ -139,8 +175,17 @@ Model *BinaryConverter::Load(const std::string &shortname, const std::string &ba
 
 				RefCountedPtr<FileSystem::FileData> binfile = info.Read();
 				if (binfile.Valid()) {
-					Serializer::Reader rd(binfile->AsByteRange());
-					Model* model = CreateModel(rd);
+					Model* model(nullptr);
+					size_t outSize(0);
+					// decompress the loaded ByteRange in memory
+					const ByteRange bin = binfile->AsByteRange();
+					void *pDecompressedData = tinfl_decompress_mem_to_heap(&bin[0], bin.Size(), &outSize, 0);
+					if (pDecompressedData) {
+						// now parse in-memory representation as new ByteRange.
+						Serializer::Reader rd(ByteRange(static_cast<char*>(pDecompressedData), outSize));
+						model = CreateModel(name, rd);
+						mz_free(pDecompressedData);
+					}
 					return model;
 				}
 			}
@@ -151,16 +196,21 @@ Model *BinaryConverter::Load(const std::string &shortname, const std::string &ba
 	return nullptr;
 }
 
-Model *BinaryConverter::CreateModel(Serializer::Reader &rd)
+Model *BinaryConverter::CreateModel(const std::string& filename, Serializer::Reader &rd)
 {
+	PROFILE_SCOPED()
 	//verify signature
 	const Uint32 sig = rd.Int32();
-	if (sig != 0x314D4753) //'SGM1'
-		throw LoadingError("Not a binary model file");
+	if (sig != SGM_STRING_ID.value) { //'SGM#'
+		Warning("Error whilst loading %s\nSGM versioning (%u) did not match the supported SGM STRING ID (%u)\nSGM file will be ignored\n", filename.c_str(), sig, SGM_STRING_ID.value);
+		return nullptr;
+	}
 
 	const Uint32 version = rd.Int32();
-	if (version != 2)
-		throw LoadingError("Unsupported file version");
+	if (version != SGM_VERSION) {
+		Warning("Error whilst loading %s\nSGM versioning (%u) did not match the supported SGM_VERSION (%u)\nSGM file will be ignored\n", filename.c_str(), version, SGM_VERSION);
+		return nullptr;
+	}
 
 	const std::string modelName = rd.String();
 
@@ -173,10 +223,15 @@ Model *BinaryConverter::CreateModel(Serializer::Reader &rd)
 	if (!root) throw LoadingError("Expected root");
 	m_model->m_root.Reset(root);
 
+	RefCountedPtr<CollMesh> collMesh(new CollMesh());
+	collMesh->Load(rd);
+	m_model->SetCollisionMesh(collMesh);
+	m_model->SetDrawClipRadius(rd.Float());
+
 	LoadAnimations(rd);
 
 	m_model->UpdateAnimations();
-	m_model->CreateCollisionMesh();
+	//m_model->CreateCollisionMesh();
 	if (m_patternsUsed) SetUpPatterns();
 
 	return m_model;
@@ -184,6 +239,7 @@ Model *BinaryConverter::CreateModel(Serializer::Reader &rd)
 
 void BinaryConverter::SaveMaterials(Serializer::Writer& wr, Model* model)
 {
+	PROFILE_SCOPED()
 	//Look for the .model definition and parse it
 	//for material definitions
 	const ModelDefinition &modelDef = FindModelDefinition(model->GetName());
@@ -195,6 +251,8 @@ void BinaryConverter::SaveMaterials(Serializer::Writer& wr, Model* model)
 		wr.String(m.tex_diff);
 		wr.String(m.tex_spec);
 		wr.String(m.tex_glow);
+		wr.String(m.tex_ambi);
+		wr.String(m.tex_norm);
 		wr.Color4UB(m.diffuse);
 		wr.Color4UB(m.specular);
 		wr.Color4UB(m.ambient);
@@ -209,12 +267,15 @@ void BinaryConverter::SaveMaterials(Serializer::Writer& wr, Model* model)
 
 void BinaryConverter::LoadMaterials(Serializer::Reader &rd)
 {
+	PROFILE_SCOPED()
 	for (Uint32 numMats = rd.Int32(); numMats > 0; numMats--) {
 		MaterialDefinition m("");
 		m.name = rd.String();
 		m.tex_diff = rd.String();
 		m.tex_spec = rd.String();
 		m.tex_glow = rd.String();
+		m.tex_ambi = rd.String();
+		m.tex_norm = rd.String();
 		m.diffuse = rd.Color4UB();
 		m.specular = rd.Color4UB();
 		m.ambient = rd.Color4UB();
@@ -233,6 +294,7 @@ void BinaryConverter::LoadMaterials(Serializer::Reader &rd)
 
 void BinaryConverter::SaveAnimations(Serializer::Writer &wr, Model *m)
 {
+	PROFILE_SCOPED()
 	const auto& anims = m->GetAnimations();
 	wr.Int32(anims.size());
 	for (const auto& anim : anims) {
@@ -263,6 +325,7 @@ void BinaryConverter::SaveAnimations(Serializer::Writer &wr, Model *m)
 
 void BinaryConverter::LoadAnimations(Serializer::Reader &rd)
 {
+	PROFILE_SCOPED()
 	//load channels and PRS keys
 	const Uint32 numAnims = rd.Int32();
 	for (Uint32 i = 0; i < numAnims; i++) {
@@ -297,6 +360,7 @@ void BinaryConverter::LoadAnimations(Serializer::Reader &rd)
 
 ModelDefinition BinaryConverter::FindModelDefinition(const std::string &shortname)
 {
+	PROFILE_SCOPED()
 	const std::string basepath = "models";
 
 	FileSystem::FileSource &fileSource = FileSystem::gameDataFiles;
@@ -335,6 +399,7 @@ ModelDefinition BinaryConverter::FindModelDefinition(const std::string &shortnam
 
 Node* BinaryConverter::LoadNode(Serializer::Reader &rd)
 {
+	PROFILE_SCOPED()
 	const std::string ntype = rd.String();
 	const std::string nname = rd.String();
 	//Output("Loading: %s %s\n", ntype.c_str(), nname.c_str());
@@ -370,6 +435,7 @@ Node* BinaryConverter::LoadNode(Serializer::Reader &rd)
 
 void BinaryConverter::LoadChildren(Serializer::Reader &rd, Group *parent)
 {
+	PROFILE_SCOPED()
 	const Uint32 numChildren = rd.Int32();
 	for (Uint32 i = 0; i < numChildren; i++)
 		parent->AddChild(LoadNode(rd));
@@ -377,6 +443,7 @@ void BinaryConverter::LoadChildren(Serializer::Reader &rd, Group *parent)
 
 Label3D *BinaryConverter::LoadLabel3D(NodeDatabase &db)
 {
+	PROFILE_SCOPED()
 	Label3D* lbl = new Label3D(db.loader->GetRenderer(), db.loader->GetLabel3DFont());
 	lbl->SetText("NCC-1982");
 	return lbl;

@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _VECTOR3_H
@@ -7,6 +7,7 @@
 #include <math.h>
 #include <stdio.h>
 #include "FloatComparison.h"
+#include "vector2.h"
 
 // Need this pragma due to operator[] implementation.
 #pragma pack(4)
@@ -24,6 +25,7 @@ public:
 	// only float and double versions are possible.
 	vector3();
 	vector3(const vector3<T> &v);
+	vector3(const vector2f &v, T t);
 	explicit vector3(const T  vals[3]);
 	explicit vector3(T val);
 	vector3(T _x, T _y, T _z);
@@ -45,14 +47,23 @@ public:
 	vector3 operator-(const vector3 &a) const { return vector3(x-a.x, y-a.y, z-a.z); }
 	vector3 operator-() const { return vector3(-x, -y, -z); }
 
+	bool operator==(const vector3 &a) const { 
+		return is_equal_exact(a.x, x) && is_equal_exact(a.y, y) && is_equal_exact(a.z, z);
+	}
 	bool ExactlyEqual(const vector3 &a) const {
 		return is_equal_exact(a.x, x) && is_equal_exact(a.y, y) && is_equal_exact(a.z, z);
 	}
 
-	friend vector3 operator*(const vector3 &a, const float  scalar) { return vector3(T(a.x*scalar), T(a.y*scalar), T(a.z*scalar)); }
-	friend vector3 operator*(const vector3 &a, const double scalar) { return vector3(T(a.x*scalar), T(a.y*scalar), T(a.z*scalar)); }
-	friend vector3 operator*(const float  scalar, const vector3 &a) { return a*scalar; }
-	friend vector3 operator*(const double scalar, const vector3 &a) { return a*scalar; }
+	friend vector3 operator+(const vector3 &a, const T &scalar) { return vector3(a.x + scalar, a.y + scalar, a.z + scalar); }
+	friend vector3 operator+(const T scalar, const vector3 &a) { return a+scalar; }
+	friend vector3 operator-(const vector3 &a, const T &scalar) { return vector3(a.x - scalar, a.y - scalar, a.z - scalar); }
+	friend vector3 operator-(const T scalar, const vector3 &a) { return a - scalar; }
+
+	friend vector3 operator*(const vector3 &a, const vector3 &b) { return vector3(T(a.x*b.x), T(a.y*b.y), T(a.z*b.z)); }
+	friend vector3 operator*(const vector3 &a, const T scalar) { return vector3(T(a.x*scalar), T(a.y*scalar), T(a.z*scalar)); }
+	//friend vector3 operator*(const vector3 &a, const double scalar) { return vector3(T(a.x*scalar), T(a.y*scalar), T(a.z*scalar)); }
+	friend vector3 operator*(const T scalar, const vector3 &a) { return a*scalar; }
+	//friend vector3 operator*(const double scalar, const vector3 &a) { return a*scalar; }
 	friend vector3 operator/(const vector3 &a, const float  scalar) { const T inv = 1.0/scalar; return vector3(a.x*inv, a.y*inv, a.z*inv); }
 	friend vector3 operator/(const vector3 &a, const double scalar) { const T inv = 1.0/scalar; return vector3(a.x*inv, a.y*inv, a.z*inv); }
 
@@ -117,15 +128,27 @@ public:
 		t.z *= inv_poo;
 		*this = t;
 	}
+
+	void xy(const vector2<T> &v2) { x = v2.x; y = v2.y; }
+	void xz(const vector2<T> &v2) { x = v2.x; z = v2.y; }
+	void yz(const vector2<T> &v2) { y = v2.x; z = v2.y; }
+
+	vector2<T> xy() { return vector2<T>(x,y); }
+	vector2<T> xz() { return vector2<T>(x,z); }
+	vector2<T> yz() { return vector2<T>(y,z); }
+	vector2<T> yx() { return vector2<T>(y,x); }
+	vector2<T> zx() { return vector2<T>(z,x); }
 };
 
 // These are here in this manner to enforce that only float and double versions are possible.
 template<> inline vector3<float >::vector3() {}
 template<> inline vector3<double>::vector3() {}
 template<> inline vector3<float >::vector3(const vector3<float > &v): x(v.x), y(v.y), z(v.z) {}
+template<> inline vector3<float >::vector3(const vector2f &v, float t): x(v.x), y(v.y), z(t) {}
 template<> inline vector3<float >::vector3(const vector3<double> &v): x(float(v.x)), y(float(v.y)), z(float(v.z)) {}
 template<> inline vector3<double>::vector3(const vector3<float > &v): x(v.x), y(v.y), z(v.z) {}
 template<> inline vector3<double>::vector3(const vector3<double> &v): x(v.x), y(v.y), z(v.z) {}
+template<> inline vector3<double>::vector3(const vector2f &v, double t): x(v.x), y(v.y), z(t) {}
 template<> inline vector3<float >::vector3(float  val): x(val), y(val), z(val) {}
 template<> inline vector3<double>::vector3(double val): x(val), y(val), z(val) {}
 template<> inline vector3<float >::vector3(float  _x, float  _y, float  _z): x(_x), y(_y), z(_z) {}

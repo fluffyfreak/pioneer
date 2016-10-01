@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _PI_H
@@ -14,30 +14,24 @@
 #include "CargoBody.h"
 #include "Space.h"
 #include "JobQueue.h"
+#include "galaxy/Galaxy.h"
 #include <map>
 #include <string>
 #include <vector>
 
-class DeathView;
-class GalacticView;
-class Galaxy;
 class Intro;
 class LuaConsole;
 class LuaNameGen;
 class ModelCache;
 class Player;
-class SectorView;
 class Ship;
-class ShipCpanel;
 class SpaceStation;
 class StarSystem;
-class SystemInfoView;
-class SystemView;
 class TransferPlanner;
 class UIView;
 class View;
-class WorldView;
 class SDLGraphics;
+class ServerAgent;
 namespace Graphics { class Renderer; }
 namespace SceneGraph { class Model; }
 namespace Sound { class MusicPlayer; }
@@ -47,16 +41,13 @@ namespace UI { class Context; }
 class ObjectViewerView;
 #endif
 
-struct DetailLevel {
+class DetailLevel {
+public:
+	DetailLevel() : planets(0), textures(0), fracmult(0), cities(0) {}
 	int planets;
 	int textures;
 	int fracmult;
 	int cities;
-};
-
-enum MsgLevel {
-	MSG_NORMAL,
-	MSG_IMPORTANT
 };
 
 class Frame;
@@ -66,8 +57,8 @@ class Pi {
 public:
 	static void Init(const std::map<std::string,std::string> &options, bool no_gui = false);
 	static void InitGame();
-	static void StarportStart(Uint32 starport);
 	static void StartGame();
+	static void RequestEndGame(); // request that the game is ended as soon as safely possible
 	static void EndGame();
 	static void Start();
 	static void MainLoop();
@@ -84,6 +75,15 @@ public:
 	static float JoystickAxisState(int joystick, int axis);
 	static bool IsJoystickEnabled() { return joystickEnabled; }
 	static void SetJoystickEnabled(bool state) { joystickEnabled = state; }
+	// User display name for the joystick from the API/OS.
+	static std::string JoystickName(int joystick);
+	static std::string JoystickGUIDString(int joystick);
+	// reverse map a JoystickGUID to the actual internal ID.
+	static int JoystickFromGUIDString(const std::string &guid);
+	static int JoystickFromGUIDString(const char *guid);
+	static int JoystickFromGUID(SDL_JoystickGUID guid);
+	// fetch the GUID for the named joystick
+	static SDL_JoystickGUID JoystickGUID(int joystick);
 	static void SetMouseYInvert(bool state) { mouseYInvert = state; }
 	static bool IsMouseYInvert() { return mouseYInvert; }
 	static void SetCompactScanner(bool state) { compactScanner = state; }
@@ -95,16 +95,14 @@ public:
 	static bool AreHudTrailsDisplayed() { return hudTrailsDisplayed; }
 	static void SetHudTrailsDisplayed(bool state) { hudTrailsDisplayed = state; }
 	static int MouseButtonState(int button) { return mouseButton[button]; }
-	/// Get the default speed modifier to apply to movement (scrolling, zooming...), depending on the "shift" keys.
-	/// This is a default value only, centralized here to promote uniform user expericience.
+	// Get the default speed modifier to apply to movement (scrolling, zooming...), depending on the "shift" keys.
+	// This is a default value only, centralized here to promote uniform user expericience.
 	static float GetMoveSpeedShiftModifier();
 	static void GetMouseMotion(int motion[2]) {
 		memcpy(motion, mouseMotion, sizeof(int)*2);
 	}
 	static void SetMouseGrab(bool on);
-	static void FlushCaches();
 	static void BoinkNoise();
-	static void Message(const std::string &message, const std::string &from = "", enum MsgLevel level = MSG_NORMAL);
 	static std::string GetSaveDir();
 	static SceneGraph::Model *FindModel(const std::string&, bool allowPlaceholder = true);
 
@@ -128,13 +126,24 @@ public:
 
 	static LuaNameGen *luaNameGen;
 
+	static ServerAgent *serverAgent;
+
 	static RefCountedPtr<UI::Context> ui;
 
 	static Random rng;
 	static int statSceneTris;
+	static int statNumPatches;
 
 	static void SetView(View *v);
 	static View *GetView() { return currentView; }
+
+	static void SetAmountBackgroundStars(const float pc) { amountOfBackgroundStarsDisplayed = Clamp(pc, 0.01f, 1.0f); bRefreshBackgroundStars = true; }
+	static float GetAmountBackgroundStars() { return amountOfBackgroundStarsDisplayed; }
+	static bool MustRefreshBackgroundClearFlag() { 
+		const bool bRet = bRefreshBackgroundStars;
+		bRefreshBackgroundStars = false;
+		return bRet; 
+	}
 
 #if WITH_DEVKEYS
 	static bool showDebugInfo;
@@ -146,49 +155,34 @@ public:
 #endif
 
 	static Player *player;
-	static SectorView *sectorView;
-	static GalacticView *galacticView;
-	static UIView *settingsView;
-	static SystemInfoView *systemInfoView;
-	static SystemView *systemView;
 	static TransferPlanner *planner;
-	static WorldView *worldView;
-	static DeathView *deathView;
-	static UIView *spaceStationView;
-	static UIView *infoView;
 	static LuaConsole *luaConsole;
-	static ShipCpanel *cpan;
 	static Sound::MusicPlayer &GetMusicPlayer() { return musicPlayer; }
-	static Graphics::Renderer *renderer; // blargh
+	static Graphics::Renderer *renderer;
 	static ModelCache *modelCache;
 	static Intro *intro;
 	static SDLGraphics *sdl;
 
-#if WITH_OBJECTVIEWER
-	static ObjectViewerView *objectViewerView;
-#endif
-
 	static Game *game;
 
-	static struct DetailLevel detail;
+	static DetailLevel detail;
 	static GameConfig *config;
 
 	static JobQueue *GetAsyncJobQueue() { return asyncJobQueue.get();}
 	static JobQueue *GetSyncJobQueue() { return syncJobQueue.get();}
 
-	static Galaxy* GetGalaxy() { return s_galaxy; }
-
 	static bool DrawGUI;
 
 private:
 	static void HandleEvents();
+	// Handler for ESC key press
+	static void HandleEscKey();
 	static void InitJoysticks();
 
 	static const Uint32 SYNC_JOBS_PER_LOOP = 1;
 	static std::unique_ptr<AsyncJobQueue> asyncJobQueue;
 	static std::unique_ptr<SyncJobQueue> syncJobQueue;
 
-	static Galaxy* s_galaxy;
 	static bool menuDone;
 
 	static View *currentView;
@@ -212,6 +206,7 @@ private:
 	static bool compactScanner;
 	struct JoystickState {
 		SDL_Joystick *joystick;
+		SDL_JoystickGUID guid;
 		std::vector<bool> buttons;
 		std::vector<int> hats;
 		std::vector<float> axes;
@@ -222,6 +217,8 @@ private:
 	static bool navTunnelDisplayed;
 	static bool speedLinesDisplayed;
 	static bool hudTrailsDisplayed;
+	static bool bRefreshBackgroundStars;
+	static float amountOfBackgroundStarsDisplayed;
 
 	static Gui::Fixed *menu;
 
@@ -229,6 +226,8 @@ private:
 	static RefCountedPtr<Graphics::Texture> renderTexture;
 	static std::unique_ptr<Graphics::Drawables::TexturedQuad> renderQuad;
 	static Graphics::RenderState *quadRenderState;
+
+	static bool bRequestEndGame;
 };
 
 #endif /* _PI_H */

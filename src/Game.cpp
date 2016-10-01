@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Game.h"
@@ -15,7 +15,6 @@
 #include "SectorView.h"
 #include "WorldView.h"
 #include "DeathView.h"
-#include "GalacticView.h"
 #include "SystemView.h"
 #include "SystemInfoView.h"
 #include "UIView.h"
@@ -24,12 +23,19 @@
 #include "ObjectViewerView.h"
 #include "FileSystem.h"
 #include "graphics/Renderer.h"
+#include "ui/Context.h"
+#include "galaxy/GalaxyGenerator.h"
 
-static const int  s_saveVersion   = 75;
+extern "C" {
+#include "miniz/miniz.h"
+}
+
+static const int  s_saveVersion   = 83;
 static const char s_saveStart[]   = "PIONEER";
 static const char s_saveEnd[]     = "END";
 
 Game::Game(const SystemPath &path, double time) :
+	m_galaxy(GalaxyGenerator::Create()),
 	m_time(time),
 	m_state(STATE_NORMAL),
 	m_wantHyperspace(false),
@@ -37,35 +43,26 @@ Game::Game(const SystemPath &path, double time) :
 	m_requestedTimeAccel(TIMEACCEL_1X),
 	m_forceTimeAccel(false)
 {
-	Pi::FlushCaches();
+	// Now that we have a Galaxy, check the starting location
+	if (!path.IsBodyPath())
+		throw InvalidGameStartLocation("SystemPath is not a body path");
+	RefCountedPtr<const Sector> s = m_galaxy->GetSector(path);
+	if (size_t(path.systemIndex) >= s->m_systems.size()) {
+		char buf[128];
+		std::sprintf(buf, "System %u in sector <%d,%d,%d> does not exist",
+			unsigned(path.systemIndex), int(path.sectorX), int(path.sectorY), int(path.sectorZ));
+		throw InvalidGameStartLocation(std::string(buf));
+	}
+	RefCountedPtr<StarSystem> sys = m_galaxy->GetStarSystem(path);
+	if (path.bodyIndex >= sys->GetNumBodies()) {
+		char buf[256];
+		std::sprintf(buf, "Body %d in system <%d,%d,%d : %d ('%s')> does not exist", unsigned(path.bodyIndex),
+			int(path.sectorX), int(path.sectorY), int(path.sectorZ), unsigned(path.systemIndex), sys->GetName().c_str());
+		throw InvalidGameStartLocation(std::string(buf));
+	}
 
-	m_space.reset(new Space(this, path));
-	SpaceStation *station = static_cast<SpaceStation*>(m_space->FindBodyForPath(&path));
-	assert(station);
+	m_space.reset(new Space(this, m_galaxy, path));
 
-	m_player.reset(new Player("kanara"));
-
-	m_space->AddBody(m_player.get());
-
-	m_player->SetFrame(station->GetFrame());
-	m_player->SetDockedWith(station, 0);
-
-	Polit::Init();
-
-	CreateViews();
-}
-
-Game::Game(const SystemPath &path, const vector3d &pos, double time) :
-	m_time(time),
-	m_state(STATE_NORMAL),
-	m_wantHyperspace(false),
-	m_timeAccel(TIMEACCEL_1X),
-	m_requestedTimeAccel(TIMEACCEL_1X),
-	m_forceTimeAccel(false)
-{
-	Pi::FlushCaches();
-
-	m_space.reset(new Space(this, path));
 	Body *b = m_space->FindBodyForPath(&path);
 	assert(b);
 
@@ -75,12 +72,17 @@ Game::Game(const SystemPath &path, const vector3d &pos, double time) :
 
 	m_player->SetFrame(b->GetFrame());
 
-	m_player->SetPosition(pos);
-	m_player->SetVelocity(vector3d(0,0,0));
-
-	Polit::Init();
+	if (b->GetType() == Object::SPACESTATION) {
+		m_player->SetDockedWith(static_cast<SpaceStation*>(b), 0);
+	} else {
+		const SystemBody *sbody = b->GetSystemBody();
+		m_player->SetPosition(vector3d(0, 1.5*sbody->GetRadius(), 0));
+		m_player->SetVelocity(vector3d(0,0,0));
+	}
 
 	CreateViews();
+
+	EmitPauseState(IsPaused());
 }
 
 Game::~Game()
@@ -106,151 +108,132 @@ Game::~Game()
 	m_space->RemoveBody(m_player.get());
 	m_space.reset();
 	m_player.reset();
+	m_galaxy->FlushCaches();
 }
 
-Game::Game(Serializer::Reader &rd) :
-	m_timeAccel(TIMEACCEL_PAUSED),
-	m_requestedTimeAccel(TIMEACCEL_PAUSED),
-	m_forceTimeAccel(false)
+Game::Game(const Json::Value &jsonObj) :
+m_timeAccel(TIMEACCEL_PAUSED),
+m_requestedTimeAccel(TIMEACCEL_PAUSED),
+m_forceTimeAccel(false)
 {
 	// signature check
-	for (Uint32 i = 0; i < strlen(s_saveStart)+1; i++)
-		if (rd.Byte() != s_saveStart[i]) throw SavedGameCorruptException();
+	if (!jsonObj.isMember("signature")) throw SavedGameCorruptException();
+	Json::Value signature = jsonObj["signature"];
+	if (signature.isString() && signature.asString().compare(s_saveStart) == 0) {}
+	else throw SavedGameCorruptException();
 
 	// version check
-	rd.SetStreamVersion(rd.Int32());
-	Output("savefile version: %d\n", rd.StreamVersion());
-	if (rd.StreamVersion() != s_saveVersion) {
+	if (!jsonObj.isMember("version")) throw SavedGameCorruptException();
+	Json::Value version = jsonObj["version"];
+	if (!version.isInt()) throw SavedGameCorruptException();
+	Output("savefile version: %d\n", version.asInt());
+	if (version.asInt() == s_saveVersion) {}
+	else
+	{
 		Output("can't load savefile, expected version: %d\n", s_saveVersion);
 		throw SavedGameWrongVersionException();
 	}
 
-	// XXX This must be done after loading sectors once we can change them in game
-	Pi::FlushCaches();
-
-	Serializer::Reader section;
-
 	// Preparing the Lua stuff
-	LuaRef::InitLoad();
 	Pi::luaSerializer->InitTableRefs();
 
-	// game state
-	section = rd.RdSection("Game");
-	m_time = section.Double();
-	m_state = State(section.Int32());
+	// galaxy generator
+	m_galaxy = Galaxy::LoadFromJson(jsonObj);
 
-	m_wantHyperspace = section.Bool();
-	m_hyperspaceProgress = section.Double();
-	m_hyperspaceDuration = section.Double();
-	m_hyperspaceEndTime = section.Double();
+	// game state
+	if (!jsonObj.isMember("time")) throw SavedGameCorruptException();
+	if (!jsonObj.isMember("state")) throw SavedGameCorruptException();
+	m_time = StrToDouble(jsonObj["time"].asString());
+	m_state = State(jsonObj["state"].asInt());
+
+	if (!jsonObj.isMember("want_hyperspace")) throw SavedGameCorruptException();
+	if (!jsonObj.isMember("hyperspace_progress")) throw SavedGameCorruptException();
+	if (!jsonObj.isMember("hyperspace_duration")) throw SavedGameCorruptException();
+	if (!jsonObj.isMember("hyperspace_end_time")) throw SavedGameCorruptException();
+	m_wantHyperspace = jsonObj["want_hyperspace"].asBool();
+	m_hyperspaceProgress = StrToDouble(jsonObj["hyperspace_progress"].asString());
+	m_hyperspaceDuration = StrToDouble(jsonObj["hyperspace_duration"].asString());
+	m_hyperspaceEndTime = StrToDouble(jsonObj["hyperspace_end_time"].asString());
 
 	// space, all the bodies and things
-	section = rd.RdSection("Space");
-	m_space.reset(new Space(this, section, m_time));
-	m_player.reset(static_cast<Player*>(m_space->GetBodyByIndex(section.Int32())));
+	if (!jsonObj.isMember("player")) throw SavedGameCorruptException();
+	m_space.reset(new Space(this, m_galaxy, jsonObj, m_time));
+	m_player.reset(static_cast<Player*>(m_space->GetBodyByIndex(jsonObj["player"].asUInt())));
 
 	assert(!m_player->IsDead()); // Pioneer does not support necromancy
 
-	// space transition state
-	section = rd.RdSection("HyperspaceClouds");
-
 	// hyperspace clouds being brought over from the previous system
-	Uint32 nclouds = section.Int32();
-	for (Uint32 i = 0; i < nclouds; i++)
-		m_hyperspaceClouds.push_back(static_cast<HyperspaceCloud*>(Body::Unserialize(section, 0)));
-
-	// system political stuff
-	section = rd.RdSection("Polit");
-	Polit::Unserialize(section);
-
+	if (!jsonObj.isMember("hyperspace_clouds")) throw SavedGameCorruptException();
+	Json::Value hyperspaceCloudArray = jsonObj["hyperspace_clouds"];
+	if (!hyperspaceCloudArray.isArray()) throw SavedGameCorruptException();
+	for (Uint32 i = 0; i < hyperspaceCloudArray.size(); i++)
+		m_hyperspaceClouds.push_back(static_cast<HyperspaceCloud*>(Body::FromJson(hyperspaceCloudArray[i], 0)));
 
 	// views
-	LoadViews(rd);
-
+	LoadViewsFromJson(jsonObj);
 
 	// lua
-	section = rd.RdSection("LuaModules");
-	Pi::luaSerializer->Unserialize(section);
+	Pi::luaSerializer->FromJson(jsonObj);
 
 	Pi::luaSerializer->UninitTableRefs();
-	LuaRef::UninitLoad();
-	// signature check
-	for (Uint32 i = 0; i < strlen(s_saveEnd)+1; i++)
-		if (rd.Byte() != s_saveEnd[i]) throw SavedGameCorruptException();
+
+	// signature check (don't really need this anymore)
+	if (!jsonObj.isMember("trailing_signature")) throw SavedGameCorruptException();
+	Json::Value trailingSignature = jsonObj["trailing_signature"];
+	if (trailingSignature.isString() && trailingSignature.asString().compare(s_saveEnd) == 0) {}
+	else throw SavedGameCorruptException();
+
+	EmitPauseState(IsPaused());
 }
 
-void Game::Serialize(Serializer::Writer &wr)
+void Game::ToJson(Json::Value &jsonObj)
 {
+	PROFILE_SCOPED()
 	// preparing the lua serializer
 	Pi::luaSerializer->InitTableRefs();
-	// leading signature
-	for (Uint32 i = 0; i < strlen(s_saveStart)+1; i++)
-		wr.Byte(s_saveStart[i]);
+
+	// signature
+	jsonObj["signature"] = s_saveStart;
 
 	// version
-	wr.Int32(s_saveVersion);
+	jsonObj["version"] = s_saveVersion;
 
-	Serializer::Writer section;
+	// galaxy generator
+	m_galaxy->ToJson(jsonObj);
 
 	// game state
-	section.Double(m_time);
-	section.Int32(Uint32(m_state));
+	jsonObj["time"] = DoubleToStr(m_time);
+	jsonObj["state"] = Uint32(m_state);
 
-	section.Bool(m_wantHyperspace);
-	section.Double(m_hyperspaceProgress);
-	section.Double(m_hyperspaceDuration);
-	section.Double(m_hyperspaceEndTime);
-
-	wr.WrSection("Game", section.GetData());
-
+	jsonObj["want_hyperspace"] = m_wantHyperspace;
+	jsonObj["hyperspace_progress"] = DoubleToStr(m_hyperspaceProgress);
+	jsonObj["hyperspace_duration"] = DoubleToStr(m_hyperspaceDuration);
+	jsonObj["hyperspace_end_time"] = DoubleToStr(m_hyperspaceEndTime);
 
 	// space, all the bodies and things
-	section = Serializer::Writer();
-	m_space->Serialize(section);
-	section.Int32(m_space->GetIndexForBody(m_player.get()));
-	wr.WrSection("Space", section.GetData());
-
-
-	// space transition state
-	section = Serializer::Writer();
+	m_space->ToJson(jsonObj);
+	jsonObj["player"] = m_space->GetIndexForBody(m_player.get());
 
 	// hyperspace clouds being brought over from the previous system
-	section.Int32(m_hyperspaceClouds.size());
+	Json::Value hyperspaceCloudArray(Json::arrayValue); // Create JSON array to contain hyperspace cloud data.
 	for (std::list<HyperspaceCloud*>::const_iterator i = m_hyperspaceClouds.begin(); i != m_hyperspaceClouds.end(); ++i)
-		(*i)->Serialize(section, m_space.get());
-
-	wr.WrSection("HyperspaceClouds", section.GetData());
-
-
-	// system political data (crime etc)
-	section = Serializer::Writer();
-	Polit::Serialize(section);
-	wr.WrSection("Polit", section.GetData());
-
+	{
+		Json::Value hyperspaceCloudArrayEl(Json::objectValue); // Create JSON object to contain hyperspace cloud.
+		(*i)->ToJson(hyperspaceCloudArrayEl, m_space.get());
+		hyperspaceCloudArray.append(hyperspaceCloudArrayEl); // Append hyperspace cloud object to array.
+	}
+	jsonObj["hyperspace_clouds"] = hyperspaceCloudArray; // Add hyperspace cloud array to supplied object.
 
 	// views. must be saved in init order
-	section = Serializer::Writer();
-	Pi::cpan->Save(section);
-	wr.WrSection("ShipCpanel", section.GetData());
-
-	section = Serializer::Writer();
-	Pi::sectorView->Save(section);
-	wr.WrSection("SectorView", section.GetData());
-
-	section = Serializer::Writer();
-	Pi::worldView->Save(section);
-	wr.WrSection("WorldView", section.GetData());
-
+	m_gameViews->m_cpan->SaveToJson(jsonObj);
+	m_gameViews->m_sectorView->SaveToJson(jsonObj);
+	m_gameViews->m_worldView->SaveToJson(jsonObj);
 
 	// lua
-	section = Serializer::Writer();
-	Pi::luaSerializer->Serialize(section);
-	wr.WrSection("LuaModules", section.GetData());
-
+	Pi::luaSerializer->ToJson(jsonObj);
 
 	// trailing signature
-	for (Uint32 i = 0; i < strlen(s_saveEnd)+1; i++)
-		wr.Byte(s_saveEnd[i]);
+	jsonObj["trailing_signature"] = s_saveEnd; // Don't really need this anymore.
 
 	Pi::luaSerializer->UninitTableRefs();
 }
@@ -265,8 +248,9 @@ void Game::TimeStep(float step)
 	m_space->TimeStep(step);
 
 	// XXX ui updates, not sure if they belong here
-	Pi::cpan->TimeStepUpdate(step);
-	Sfx::TimeStepAll(step, m_space->GetRootFrame());
+	m_gameViews->m_cpan->TimeStepUpdate(step);
+	SfxManager::TimeStepAll(step, m_space->GetRootFrame());
+	log->Update(m_timeAccel == Game::TIMEACCEL_PAUSED);
 
 	if (m_state == STATE_HYPERSPACE) {
 		if (Pi::game->GetTime() >= m_hyperspaceEndTime) {
@@ -304,7 +288,9 @@ bool Game::UpdateTimeAccel()
 	}
 
 	// force down to timeaccel 1 during the docking sequence or when just initiating hyperspace
-	else if (m_player->GetFlightState() == Ship::DOCKING || m_player->GetFlightState() == Ship::JUMPING) {
+	else if (m_player->GetFlightState() == Ship::DOCKING ||
+			 m_player->GetFlightState() == Ship::JUMPING ||
+			 m_player->GetFlightState() == Ship::UNDOCKING) {
 		newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_10X);
 		RequestTimeAccel(newTimeAccel);
 	}
@@ -312,32 +298,37 @@ bool Game::UpdateTimeAccel()
 	// normal flight
 	else if (m_player->GetFlightState() == Ship::FLYING) {
 
-		// special timeaccel lock rules while in alert
-		if (m_player->GetAlertState() == Ship::ALERT_SHIP_NEARBY)
-			newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_10X);
-		else if (m_player->GetAlertState() == Ship::ALERT_SHIP_FIRING)
+		// limit timeaccel to 1x when fired on (no forced acceleration allowed)
+		if (m_player->GetAlertState() == Ship::ALERT_SHIP_FIRING)
 			newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_1X);
 
-		else if (!m_forceTimeAccel) {
-			// check we aren't too near to objects for timeaccel //
-			for (const Body* b : m_space->GetBodies()) {
-				if (b == m_player.get()) continue;
-				if (b->IsType(Object::HYPERSPACECLOUD)) continue;
+		if (!m_forceTimeAccel) {
 
-				vector3d toBody = m_player->GetPosition() - b->GetPositionRelTo(m_player->GetFrame());
-				double dist = toBody.Length();
-				double rad = b->GetPhysRadius();
+				// if not forced - limit timeaccel to 10x when other ships are close
+			if (m_player->GetAlertState() == Ship::ALERT_SHIP_NEARBY)
+				newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_10X);
 
-				if (dist < 1000.0) {
-					newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_1X);
-				} else if (dist < std::min(rad+0.0001*AU, rad*1.1)) {
-					newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_10X);
-				} else if (dist < std::min(rad+0.001*AU, rad*5.0)) {
-					newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_100X);
-				} else if (dist < std::min(rad+0.01*AU,rad*10.0)) {
-					newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_1000X);
-				} else if (dist < std::min(rad+0.1*AU, rad*1000.0)) {
-					newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_10000X);
+				// if not forced - check if we aren't too near to objects for timeaccel
+			else {
+				for (const Body* b : m_space->GetBodies()) {
+					if (b == m_player.get()) continue;
+					if (b->IsType(Object::HYPERSPACECLOUD)) continue;
+
+					vector3d toBody = m_player->GetPosition() - b->GetPositionRelTo(m_player->GetFrame());
+					double dist = toBody.Length();
+					double rad = b->GetPhysRadius();
+
+					if (dist < 1000.0) {
+						newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_1X);
+					} else if (dist < std::min(rad+0.0001*AU, rad*1.1)) {
+						newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_10X);
+					} else if (dist < std::min(rad+0.001*AU, rad*5.0)) {
+						newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_100X);
+					} else if (dist < std::min(rad+0.01*AU,rad*10.0)) {
+						newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_1000X);
+					} else if (dist < std::min(rad+0.1*AU, rad*1000.0)) {
+						newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_10000X);
+					}
 				}
 			}
 
@@ -377,6 +368,11 @@ double Game::GetHyperspaceArrivalProbability() const
 	const double fudge = 4.0;
 	const double scale = 1.0 / (1.0 - exp(-fudge));
 	return scale * (1.0 - exp(-fudge * progress));
+}
+
+void Game::RemoveHyperspaceCloud(HyperspaceCloud* cloud)
+{
+	m_hyperspaceClouds.remove(cloud);
 }
 
 void Game::SwitchToHyperspace()
@@ -425,9 +421,13 @@ void Game::SwitchToHyperspace()
 	m_space->RemoveBody(m_player.get());
 
 	// create hyperspace :)
-	m_space.reset(new Space(this));
+	m_space.reset(new Space(this, m_galaxy, m_space.get()));
 
 	m_space->GetBackground()->SetDrawFlags( Background::Container::DRAW_STARS );
+
+	// Reset planner
+	Pi::planner->ResetStartTime();
+	Pi::planner->ResetDv();
 
 	// put the player in it
 	m_player->SetFrame(m_space->GetRootFrame());
@@ -457,7 +457,7 @@ void Game::SwitchToNormalSpace()
 	m_space->RemoveBody(m_player.get());
 
 	// create a new space for the system
-	m_space.reset(new Space(this, m_hyperspaceDest));
+	m_space.reset(new Space(this, m_galaxy, m_hyperspaceDest, m_space.get()));
 
 	// put the player in it
 	m_player->SetFrame(m_space->GetRootFrame());
@@ -605,7 +605,18 @@ void Game::SetTimeAccel(TimeAccel t)
 			if (b->IsType(Object::SHIP))
 				(static_cast<Ship*>(b))->TimeAccelAdjust(0.5f * GetTimeStep());
 
+	bool emitPaused = (t == TIMEACCEL_PAUSED && t != m_timeAccel);
+	bool emitResumed = (m_timeAccel == TIMEACCEL_PAUSED && t != TIMEACCEL_PAUSED);
+
 	m_timeAccel = t;
+
+	if (emitPaused) {
+		EmitPauseState(true);
+	}
+
+	if (emitResumed) {
+		EmitPauseState(false);
+	}
 
 	if (m_timeAccel == TIMEACCEL_PAUSED || m_timeAccel == TIMEACCEL_HYPERSPACE) {
 		m_requestedTimeAccel = m_timeAccel;
@@ -617,6 +628,137 @@ void Game::RequestTimeAccel(TimeAccel t, bool force)
 {
 	m_requestedTimeAccel = t;
 	m_forceTimeAccel = force;
+}
+
+void Game::RequestTimeAccelInc(bool force)
+{
+    switch(m_requestedTimeAccel) {
+        case Game::TIMEACCEL_1X:
+            m_requestedTimeAccel = Game::TIMEACCEL_10X;
+            break;
+        case Game::TIMEACCEL_10X:
+            m_requestedTimeAccel = Game::TIMEACCEL_100X;
+            break;
+        case Game::TIMEACCEL_100X:
+            m_requestedTimeAccel = Game::TIMEACCEL_1000X;
+            break;
+        case Game::TIMEACCEL_1000X:
+            m_requestedTimeAccel = Game::TIMEACCEL_10000X;
+            break;
+        default:
+            // ignore if paused, hyperspace or 10000X
+            break;
+    }
+    m_forceTimeAccel = force;
+}
+
+void Game::RequestTimeAccelDec(bool force)
+{
+    switch(m_requestedTimeAccel) {
+        case Game::TIMEACCEL_10X:
+            m_requestedTimeAccel = Game::TIMEACCEL_1X;
+            break;
+        case Game::TIMEACCEL_100X:
+            m_requestedTimeAccel = Game::TIMEACCEL_10X;
+            break;
+        case Game::TIMEACCEL_1000X:
+            m_requestedTimeAccel = Game::TIMEACCEL_100X;
+            break;
+        case Game::TIMEACCEL_10000X:
+            m_requestedTimeAccel = Game::TIMEACCEL_1000X;
+            break;
+        default:
+            // ignore if paused, hyperspace or 1X
+            break;
+    }
+    m_forceTimeAccel = force;
+}
+
+Game::Views::Views()
+	: m_sectorView(nullptr)
+	, m_galacticView(nullptr)
+	, m_settingsView(nullptr)
+	, m_systemInfoView(nullptr)
+	, m_systemView(nullptr)
+	, m_worldView(nullptr)
+	, m_deathView(nullptr)
+	, m_spaceStationView(nullptr)
+	, m_infoView(nullptr)
+	, m_cpan(nullptr)
+{ }
+
+void Game::Views::SetRenderer(Graphics::Renderer *r)
+{
+	// view manager will handle setting this probably
+	m_infoView->SetRenderer(r);
+	m_sectorView->SetRenderer(r);
+	m_systemInfoView->SetRenderer(r);
+	m_systemView->SetRenderer(r);
+	m_worldView->SetRenderer(r);
+	m_deathView->SetRenderer(r);
+
+#if WITH_OBJECTVIEWER
+	m_objectViewerView->SetRenderer(r);
+#endif
+}
+
+void Game::Views::Init(Game* game)
+{
+	m_cpan = new ShipCpanel(Pi::renderer, game);
+	m_sectorView = new SectorView(game);
+	m_worldView = new WorldView(game);
+	m_galacticView = new UIView("GalacticView");
+	m_systemView = new SystemView(game);
+	m_systemInfoView = new SystemInfoView(game);
+	m_spaceStationView = new UIView("StationView");
+	m_infoView = new UIView("InfoView");
+	m_deathView = new DeathView(game);
+	m_settingsView = new UIView("SettingsInGame");
+
+#if WITH_OBJECTVIEWER
+	m_objectViewerView = new ObjectViewerView();
+#endif
+
+	SetRenderer(Pi::renderer);
+}
+
+void Game::Views::LoadFromJson(const Json::Value &jsonObj, Game* game)
+{
+	m_cpan = new ShipCpanel(jsonObj, Pi::renderer, game);
+	m_sectorView = new SectorView(jsonObj, game);
+	m_worldView = new WorldView(jsonObj, game);
+
+	m_galacticView = new UIView("GalacticView");
+	m_systemView = new SystemView(game);
+	m_systemInfoView = new SystemInfoView(game);
+	m_spaceStationView = new UIView("StationView");
+	m_infoView = new UIView("InfoView");
+	m_deathView = new DeathView(game);
+	m_settingsView = new UIView("SettingsInGame");
+
+#if WITH_OBJECTVIEWER
+	m_objectViewerView = new ObjectViewerView();
+#endif
+
+	SetRenderer(Pi::renderer);
+}
+
+Game::Views::~Views()
+{
+#if WITH_OBJECTVIEWER
+	delete m_objectViewerView;
+#endif
+
+	delete m_settingsView;
+	delete m_deathView;
+	delete m_infoView;
+	delete m_spaceStationView;
+	delete m_systemInfoView;
+	delete m_systemView;
+	delete m_galacticView;
+	delete m_worldView;
+	delete m_sectorView;
+	delete m_cpan;
 }
 
 // XXX this should be in some kind of central UI management class that
@@ -633,34 +775,17 @@ void Game::CreateViews()
 	Pi::game = this;
 	Pi::player = m_player.get();
 
-	Pi::cpan = new ShipCpanel(Pi::renderer);
-	Pi::sectorView = new SectorView();
-	Pi::worldView = new WorldView();
-	Pi::galacticView = new GalacticView();
-	Pi::systemView = new SystemView();
-	Pi::systemInfoView = new SystemInfoView();
-	Pi::spaceStationView = new UIView("StationView");
-	Pi::infoView = new UIView("InfoView");
-	Pi::deathView = new DeathView();
-	Pi::settingsView = new UIView("SettingsInGame");
+	m_gameViews.reset(new Views);
+	m_gameViews->Init(this);
 
-	// view manager will handle setting this probably
-	Pi::galacticView->SetRenderer(Pi::renderer);
-	Pi::infoView->SetRenderer(Pi::renderer);
-	Pi::sectorView->SetRenderer(Pi::renderer);
-	Pi::systemInfoView->SetRenderer(Pi::renderer);
-	Pi::systemView->SetRenderer(Pi::renderer);
-	Pi::worldView->SetRenderer(Pi::renderer);
-	Pi::deathView->SetRenderer(Pi::renderer);
-
-#if WITH_OBJECTVIEWER
-	Pi::objectViewerView = new ObjectViewerView();
-	Pi::objectViewerView->SetRenderer(Pi::renderer);
-#endif
+	UI::Point scrSize = Pi::ui->GetContext()->GetSize();
+	log = new GameLog(
+		Pi::ui->GetContext()->GetFont(UI::Widget::FONT_NORMAL),
+		vector2f(scrSize.x, scrSize.y));
 }
 
 // XXX mostly a copy of CreateViews
-void Game::LoadViews(Serializer::Reader &rd)
+void Game::LoadViewsFromJson(const Json::Value &jsonObj)
 {
 	Pi::SetView(0);
 
@@ -668,67 +793,35 @@ void Game::LoadViews(Serializer::Reader &rd)
 	Pi::game = this;
 	Pi::player = m_player.get();
 
-	Serializer::Reader section = rd.RdSection("ShipCpanel");
-	Pi::cpan = new ShipCpanel(section, Pi::renderer);
+	m_gameViews.reset(new Views);
+	m_gameViews->LoadFromJson(jsonObj, this);
 
-	section = rd.RdSection("SectorView");
-	Pi::sectorView = new SectorView(section);
-
-	section = rd.RdSection("WorldView");
-	Pi::worldView = new WorldView(section);
-
-	Pi::galacticView = new GalacticView();
-	Pi::systemView = new SystemView();
-	Pi::systemInfoView = new SystemInfoView();
-	Pi::spaceStationView = new UIView("StationView");
-	Pi::infoView = new UIView("InfoView");
-	Pi::deathView = new DeathView();
-	Pi::settingsView = new UIView("SettingsInGame");
-
-#if WITH_OBJECTVIEWER
-	Pi::objectViewerView = new ObjectViewerView();
-	Pi::objectViewerView->SetRenderer(Pi::renderer);
-#endif
-
-	Pi::galacticView->SetRenderer(Pi::renderer);
-	Pi::infoView->SetRenderer(Pi::renderer);
-	Pi::sectorView->SetRenderer(Pi::renderer);
-	Pi::systemInfoView->SetRenderer(Pi::renderer);
-	Pi::systemView->SetRenderer(Pi::renderer);
-	Pi::worldView->SetRenderer(Pi::renderer);
-	Pi::deathView->SetRenderer(Pi::renderer);
+	UI::Point scrSize = Pi::ui->GetContext()->GetSize();
+	log = new GameLog(
+		Pi::ui->GetContext()->GetFont(UI::Widget::FONT_NORMAL),
+		vector2f(scrSize.x, scrSize.y));
 }
 
 void Game::DestroyViews()
 {
 	Pi::SetView(0);
 
-#if WITH_OBJECTVIEWER
-	delete Pi::objectViewerView;
-#endif
+	m_gameViews.reset();
 
-	delete Pi::settingsView;
-	delete Pi::deathView;
-	delete Pi::infoView;
-	delete Pi::spaceStationView;
-	delete Pi::systemInfoView;
-	delete Pi::systemView;
-	delete Pi::galacticView;
-	delete Pi::worldView;
-	delete Pi::sectorView;
-	delete Pi::cpan;
+	delete log;
+	log = 0;
+}
 
-	Pi::objectViewerView = 0;
-	Pi::settingsView = 0;
-	Pi::deathView = 0;
-	Pi::infoView = 0;
-	Pi::spaceStationView = 0;
-	Pi::systemInfoView = 0;
-	Pi::systemView = 0;
-	Pi::galacticView = 0;
-	Pi::worldView = 0;
-	Pi::sectorView = 0;
-	Pi::cpan = 0;
+void Game::EmitPauseState(bool paused)
+{
+	if (paused)	{
+		// Notify UI that time is paused.
+		LuaEvent::Queue("onGamePaused");
+	} else {
+		// Notify the UI that time is running again.
+		LuaEvent::Queue("onGameResumed");
+	}
+	LuaEvent::Emit();
 }
 
 Game *Game::LoadGame(const std::string &filename)
@@ -736,13 +829,36 @@ Game *Game::LoadGame(const std::string &filename)
 	Output("Game::LoadGame('%s')\n", filename.c_str());
 	auto file = FileSystem::userFiles.ReadFile(FileSystem::JoinPathBelow(Pi::SAVE_DIR_NAME, filename));
 	if (!file) throw CouldNotOpenFileException();
-	Serializer::Reader rd(file->AsByteRange());
-	return new Game(rd);
+	Json::Value rootNode; // Create the root JSON value for receiving the game data.
+	Json::Reader jsonReader; // Create reader for parsing the JSON string.
+	const auto data = file->AsByteRange();
+	size_t outSize = 0;
+	void *pDecompressedData = tinfl_decompress_mem_to_heap(&data[0], data.Size(), &outSize, 0);
+	if (pDecompressedData) {
+		jsonReader.parse(static_cast<char*>(pDecompressedData), static_cast<char*>(pDecompressedData)+outSize, rootNode); // Parse the JSON string.
+		mz_free(pDecompressedData);
+		if (!rootNode.isObject()) throw SavedGameCorruptException();
+		return new Game(rootNode); // Decode the game data from JSON and create the game.
+	} else {
+		throw SavedGameCorruptException();
+	}
+	// file data is freed here
+}
+
+bool Game::CanLoadGame(const std::string &filename)
+{
+	Output("Game::CanLoadGame('%s')\n", filename.c_str());
+	auto file = FileSystem::userFiles.ReadFile(FileSystem::JoinPathBelow(Pi::SAVE_DIR_NAME, filename));
+	if (!file) 
+		return false;
+
+	return true;
 	// file data is freed here
 }
 
 void Game::SaveGame(const std::string &filename, Game *game)
 {
+	PROFILE_SCOPED()
 	assert(game);
 
 	if (game->IsHyperspace())
@@ -755,16 +871,39 @@ void Game::SaveGame(const std::string &filename, Game *game)
 		throw CouldNotOpenFileException();
 	}
 
-	Serializer::Writer wr;
-	game->Serialize(wr);
+#ifdef PIONEER_PROFILER
+	std::string profilerPath;
+	FileSystem::userFiles.MakeDirectory("profiler");
+	FileSystem::userFiles.MakeDirectory("profiler/saving");
+	profilerPath = FileSystem::JoinPathBelow(FileSystem::userFiles.GetRoot(), "profiler/saving");
+	Profiler::reset();
+#endif
 
-	const std::string data = wr.GetData();
+	Json::Value rootNode; // Create the root JSON value for receiving the game data.
+	game->ToJson(rootNode); // Encode the game data as JSON and give to the root value.
+	Json::FastWriter jsonWriter; // Create writer for writing the JSON data to string.
+	const std::string jsonDataStr = jsonWriter.write(rootNode); // Write the JSON data.
 
 	FILE *f = FileSystem::userFiles.OpenWriteStream(FileSystem::JoinPathBelow(Pi::SAVE_DIR_NAME, filename));
 	if (!f) throw CouldNotOpenFileException();
 
-	size_t nwritten = fwrite(data.data(), data.length(), 1, f);
-	fclose(f);
-
-	if (nwritten != 1) throw CouldNotWriteToFileException();
+	// compress in memory, write to open file 
+	size_t outSize = 0;
+	void *pCompressedData = tdefl_compress_mem_to_heap(jsonDataStr.data(), jsonDataStr.length(), &outSize, 128);
+	if (pCompressedData) 
+	{
+		size_t nwritten = fwrite(pCompressedData, outSize, 1, f);
+		mz_free(pCompressedData);
+		fclose(f);
+		if (nwritten != 1) throw CouldNotWriteToFileException();
+	}
+	else
+	{
+		fclose(f);
+		throw CouldNotWriteToFileException();
+	}
+	
+#ifdef PIONEER_PROFILER
+	Profiler::dumphtml(profilerPath.c_str());
+#endif
 }

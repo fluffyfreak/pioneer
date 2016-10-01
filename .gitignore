@@ -6,6 +6,7 @@ PreRelease/
 Profile/
 Release/
 ipch/
+__pycache__/
 src/data
 debian/autoreconf*
 debian/files
@@ -15,6 +16,8 @@ debian/pioneer*/
 autom4te.cache/
 codedoc/
 nd/Data/
+doxygen/html
+doxygen/latex
 *.vcxproj.user
 *.user
 *.ncb
@@ -60,3 +63,7 @@ gmon.out
 .project
 .cproject
 .dirstamp
+result
+*.sgm
+.vs/
+*.user

@@ -1,4 +1,4 @@
--- Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local Engine = import("Engine")
@@ -77,20 +77,34 @@ local doSettingsScreen = function()
 	ui.layer:SetInnerWidget(
 		ui.templates.Settings({
 			closeButtons = {
-				{ text = l.RETURN_TO_MENU, onClick = function () ui.layer:SetInnerWidget(ui.templates.MainMenu()) end }
+				{ text = l.RETURN_TO_MENU, onClick = function () ui.layer:SetInnerWidget(ui.templates.MainMenu()) end },
+				{ text = l.OPEN_USER_FOLDER, onClick = Engine.OpenBrowseUserFolder, toDisable = function () return Engine.CanBrowseUserFolder==false end }
 			}
 		})
 	)
 end
 
+local doQuitConfirmation = function()
+	if Engine.GetConfirmQuit() then
+		ui:NewLayer(
+			ui.templates.QuitConfirmation({
+				onConfirm = function () Engine.Quit() end,
+				onCancel  = function () ui:DropLayer() end
+			})
+		)
+	else
+		Engine.Quit()
+	end
+end
+
 local buttonDefs = {
 	{ l.CONTINUE_GAME,          function () loadGame("_exit") end },
-	{ l.START_AT_EARTH,         function () Game.StartGame(SystemPath.New(0,0,0,0,6),48600)   setupPlayerSol() end },
+	{ l.START_AT_EARTH,         function () Game.StartGame(SystemPath.New(0,0,0,0,9),48600)   setupPlayerSol() end },
 	{ l.START_AT_NEW_HOPE,      function () Game.StartGame(SystemPath.New(1,-1,-1,0,4)) setupPlayerEridani() end },
-	{ l.START_AT_BARNARDS_STAR, function () Game.StartGame(SystemPath.New(-1,0,0,0,1))  setupPlayerBarnard() end },
+	{ l.START_AT_BARNARDS_STAR, function () Game.StartGame(SystemPath.New(-1,0,0,0,16))  setupPlayerBarnard() end },
 	{ l.LOAD_GAME,              doLoadDialog },
 	{ l.OPTIONS,                doSettingsScreen },
-	{ l.QUIT,                   function () Engine.Quit() end },
+	{ l.QUIT,                   doQuitConfirmation },
 }
 
 local anims = {}
@@ -102,6 +116,11 @@ for i = 1,#buttonDefs do
 	button.onClick:Connect(def[2])
 	if i < 10 then button:AddShortcut(i) end
 	if i == 10 then button:AddShortcut("0") end
+	if 1 == i then
+		if not Game.CanLoadGame("_exit") then
+			button:Disable()
+		end
+	end
 	buttonSet[i] = button
 	table.insert(anims, {
 		widget = button,
@@ -137,7 +156,7 @@ table.insert(anims, {
 	duration = 0.4,
 })
 
-local menu = 
+local menu =
 	ui:Grid(1, { 0.2, 0.6, 0.2 })
 		:SetRow(0, {
 			ui:Grid({ 0.1, 0.8, 0.1 }, 1)

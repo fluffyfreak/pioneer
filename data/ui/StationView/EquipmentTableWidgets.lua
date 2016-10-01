@@ -1,4 +1,4 @@
--- Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local Engine = import("Engine")
@@ -11,9 +11,6 @@ local Equipment = import("Equipment")
 local MessageBox = import("ui/MessageBox")
 
 local l = Lang.GetResource("ui-core")
-
--- XXX equipment strings are in core. this sucks
-local lcore = Lang.GetResource("core")
 
 local ui = Engine.ui
 
@@ -38,7 +35,7 @@ local defaultFuncs = {
 
 	-- what do we get for this item if we are selling
 	getSellPrice = function (e)
-		basePrice = Game.player:GetDockedWith():GetEquipmentPrice(e)
+		local basePrice = Game.player:GetDockedWith():GetEquipmentPrice(e)
 		if basePrice > 0 then
 			return sellPriceReduction * basePrice
 		else
@@ -92,6 +89,12 @@ local defaultStationColumnValue = {
 	name  = function (e, funcs) return e:GetName() end,
 	price = function (e, funcs) return Format.Money(funcs.getBuyPrice(e)) end,
 	buy   = function (e, funcs) return Format.Money(funcs.getBuyPrice(e)) end,
+	sell  = function (e, funcs)
+		if e.capabilities.software then
+			return "--"
+		end
+		return Format.Money(funcs.getSellPrice(e))
+	end,
 	sell  = function (e, funcs) return Format.Money(funcs.getSellPrice(e)) end,
 	stock = function (e, funcs) return funcs.getStock(e) end,
 	mass  = function (e, funcs) return string.format("%dt", e.capabilities.mass) end,

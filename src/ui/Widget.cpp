@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Widget.h"
@@ -18,6 +18,7 @@ Widget::Widget(Context *context) :
 	m_activeArea(0),
 	m_font(FONT_INHERIT),
 	m_disabled(false),
+	m_hidden(false),
 	m_mouseOver(false),
 	m_visible(false),
 	m_animatedOpacity(1.0f),
@@ -80,6 +81,7 @@ void Widget::NotifyVisible(bool visible)
 {
 	if (m_visible != visible) {
 		m_visible = visible;
+		TriggerVisibilityChanged();
 		if (m_visible) { HandleVisible(); } else { HandleInvisible(); }
 	}
 }
@@ -122,15 +124,16 @@ Point Widget::CalcSize(const Point &avail)
 
 	const Point preferredSize = PreferredSize();
 
-	float wantRatio = float(preferredSize.x) / float(preferredSize.y);
+	const float wantRatio = float(preferredSize.x) / float(preferredSize.y);
+	const float haveRatio = float(avail.x) / float(avail.y);
 
-	// more room on X than Y, use full X, scale Y
-	if (avail.x > avail.y)
-		return Point(float(avail.y) * wantRatio, avail.y);
-
-	// more room on Y than X, use full Y, scale X
-	else
+	if (wantRatio > haveRatio) {
+		// limited by width
 		return Point(avail.x, float(avail.x) / wantRatio);
+	} else {
+		// limited by height
+		return Point(float(avail.y) * wantRatio, avail.y);
+	}
 }
 
 Widget::Font Widget::GetFont() const
@@ -159,8 +162,8 @@ bool Widget::IsOnTopLayer() const
 	while (scan) {
 		if (scan == topLayer)
 			return true;
-        scan = scan->GetContainer();
-    }
+		  scan = scan->GetContainer();
+	 }
 	return false;
 }
 
@@ -170,9 +173,16 @@ void Widget::Disable()
 	GetContext()->DisableWidget(this);
 }
 
+void Widget::Hidden()
+{
+	SetHidden(true);
+	GetContext()->DisableWidget(this);
+}
+
 void Widget::Enable()
 {
 	SetDisabled(false);
+	SetHidden(false);
 	GetContext()->EnableWidget(this);
 }
 
@@ -330,6 +340,11 @@ void Widget::TriggerDeselect()
 	HandleDeselect();
 }
 
+void Widget::TriggerVisibilityChanged()
+{
+	onVisibilityChanged.emit(m_visible);
+}
+
 void Widget::RegisterBindPoint(const std::string &bindName, sigc::slot<void,PropertyMap &,const std::string &> method)
 {
 	m_bindPoints[bindName] = method;
@@ -337,13 +352,13 @@ void Widget::RegisterBindPoint(const std::string &bindName, sigc::slot<void,Prop
 
 void Widget::Bind(const std::string &bindName, PropertiedObject *object, const std::string &propertyName)
 {
-	std::map< std::string,sigc::slot<void,PropertyMap &,const std::string &> >::const_iterator bindPointIter = m_bindPoints.find(bindName);
+	const auto bindPointIter = m_bindPoints.find(bindName);
 	if (bindPointIter == m_bindPoints.end())
 		return;
 
 	sigc::connection conn = object->Properties().Connect(propertyName, (*bindPointIter).second);
 
-	std::map<std::string,sigc::connection>::iterator bindIter = m_binds.find(bindName);
+	const auto bindIter = m_binds.find(bindName);
 	if (bindIter != m_binds.end()) {
 		(*bindIter).second.disconnect();
 		(*bindIter).second = conn;

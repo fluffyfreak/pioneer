@@ -167,10 +167,6 @@
       "description" : "",
       "message" : "Message of {target}'s ending career happily acquired. Here is your {cash}."
    },
-   "HANG_UP" : {
-      "description" : "",
-      "message" : "Prekini."
-   },
    "HOW_SOON_MUST_IT_BE_DONE" : {
       "description" : "",
       "message" : "How soon must it be done?"
@@ -194,6 +190,14 @@
    "RETURN_HERE_ON_THE_COMPLETION_OF_THE_CONTRACT_AND_YOU_WILL_BE_PAID" : {
       "description" : "",
       "message" : "Return here on the completion of the contract and you will be paid."
+   },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Set as navigation target"
+   },
+   "SET_RETURN_ROUTE" : {
+      "description" : "",
+      "message" : "Set return route"
    },
    "SHIP" : {
       "description" : "",

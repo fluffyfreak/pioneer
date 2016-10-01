@@ -167,10 +167,6 @@
       "description" : "",
       "message" : "Besked om {target}s afsluttede karierre blev modtaget med glæde. Her er dine {cash}."
    },
-   "HANG_UP" : {
-      "description" : "",
-      "message" : "Afbryd linjen."
-   },
    "HOW_SOON_MUST_IT_BE_DONE" : {
       "description" : "",
       "message" : "Hvor hurtigt skal det gøres?"
@@ -194,6 +190,14 @@
    "RETURN_HERE_ON_THE_COMPLETION_OF_THE_CONTRACT_AND_YOU_WILL_BE_PAID" : {
       "description" : "",
       "message" : "Kom tilbage hertil når kontrakten er gennemført, for at modtage din betaling."
+   },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Set as navigation target"
+   },
+   "SET_RETURN_ROUTE" : {
+      "description" : "",
+      "message" : "Set return route"
    },
    "SHIP" : {
       "description" : "",

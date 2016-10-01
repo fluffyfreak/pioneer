@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Player.h"
@@ -38,7 +38,7 @@ static void registerEquipChangeListener(Player *player) {
 	LUA_DEBUG_END(l, 0);
 }
 
-Player::Player(ShipType::Id shipId): Ship(shipId)
+Player::Player(const ShipType::Id &shipId): Ship(shipId)
 {
 	SetController(new PlayerShipController());
 	InitCockpit();
@@ -48,17 +48,18 @@ Player::Player(ShipType::Id shipId): Ship(shipId)
 void Player::SetShipType(const ShipType::Id &shipId) {
 	Ship::SetShipType(shipId);
 	registerEquipChangeListener(this);
+	InitCockpit();
 }
 
-void Player::Save(Serializer::Writer &wr, Space *space)
+void Player::SaveToJson(Json::Value &jsonObj, Space *space)
 {
-	Ship::Save(wr, space);
+	Ship::SaveToJson(jsonObj, space);
 }
 
-void Player::Load(Serializer::Reader &rd, Space *space)
+void Player::LoadFromJson(const Json::Value &jsonObj, Space *space)
 {
 	Pi::player = this;
-	Ship::Load(rd, space);
+	Ship::LoadFromJson(jsonObj, space);
 	InitCockpit();
 	registerEquipChangeListener(this);
 }
@@ -132,24 +133,24 @@ void Player::SetAlertState(Ship::AlertState as)
 	switch (as) {
 		case ALERT_NONE:
 			if (prev != ALERT_NONE)
-				Pi::cpan->MsgLog()->Message("", Lang::ALERT_CANCELLED);
+				Pi::game->log->Add(Lang::ALERT_CANCELLED);
 			break;
 
 		case ALERT_SHIP_NEARBY:
 			if (prev == ALERT_NONE)
-				Pi::cpan->MsgLog()->ImportantMessage("", Lang::SHIP_DETECTED_NEARBY);
+				Pi::game->log->Add(Lang::SHIP_DETECTED_NEARBY);
 			else
-				Pi::cpan->MsgLog()->ImportantMessage("", Lang::DOWNGRADING_ALERT_STATUS);
+				Pi::game->log->Add(Lang::DOWNGRADING_ALERT_STATUS);
 			Sound::PlaySfx("OK");
 			break;
 
 		case ALERT_SHIP_FIRING:
-			Pi::cpan->MsgLog()->ImportantMessage("", Lang::LASER_FIRE_DETECTED);
+			Pi::game->log->Add(Lang::LASER_FIRE_DETECTED);
 			Sound::PlaySfx("warning", 0.2f, 0.2f, 0);
 			break;
 	}
 
-	Pi::cpan->SetAlertState(as);
+	Pi::game->GetCpan()->SetAlertState(as);
 
 	Ship::SetAlertState(as);
 }
@@ -159,7 +160,7 @@ void Player::NotifyRemoved(const Body* const removedBody)
 	if (GetNavTarget() == removedBody)
 		SetNavTarget(0);
 
-	else if (GetCombatTarget() == removedBody) {
+	if (GetCombatTarget() == removedBody) {
 		SetCombatTarget(0);
 
 		if (!GetNavTarget() && removedBody->IsType(Object::SHIP))
@@ -176,7 +177,7 @@ void Player::OnEnterHyperspace()
 	SetNavTarget(0);
 	SetCombatTarget(0);
 
-	Pi::worldView->HideTargetActions(); // hide the comms menu
+	Pi::game->GetWorldView()->HideTargetActions(); // hide the comms menu
 	m_controller->SetFlightControlState(CONTROL_MANUAL); //could set CONTROL_HYPERDRIVE
 	ClearThrusterState();
 	Pi::game->WantHyperspace();
@@ -186,7 +187,8 @@ void Player::OnEnterSystem()
 {
 	m_controller->SetFlightControlState(CONTROL_MANUAL);
 	//XXX don't call sectorview from here, use signals instead
-	Pi::sectorView->ResetHyperspaceTarget();
+	Pi::game->GetSectorView()->ResetHyperspaceTarget();
+	Pi::game->GetWorldView()->ResetHyperspaceButton();
 }
 
 //temporary targeting stuff

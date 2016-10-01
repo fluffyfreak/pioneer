@@ -5,14 +5,12 @@
 #include "Ship.h"
 #include "ShipType.h"
 #include "Body.h"
-#include "EquipType.h"
 #include "Projectile.h"
 #include "Polit.h"
 #include "Sound.h"
 
 Turret::Turret(Ship *parent, const TurretData &turret) :
 	m_parent(parent),
-	m_weapontype(Equip::NONE),
 	m_coolrate(0.01f),
 	m_firing(false),
 	m_temperature(0.f),
@@ -46,10 +44,9 @@ void Turret::Load(Serializer::Reader &rd)
 	m_skill = rd.Float();
 }
 
-void Turret::SetWeapon(Equip::Type weapontype, float coolfactor)
+void Turret::SetWeapon(float coolfactor)
 {
 	m_coolrate = 0.01f * coolfactor;
-	m_weapontype = weapontype;
 }
 
 void Turret::Update(float timeStep)
@@ -132,7 +129,7 @@ void Turret::AutoTarget(float timeStep)
 
 // XXX: Put last acceleration value in body? It's quite useful...
 	//	vector3d targaccel = (targvel - m_lastVel) / timeStep;
-	const vector3d leaddir = m_parent->AIGetLeadDir(m_target, vector3d(0.0), m_weapontype);
+	const vector3d leaddir = m_parent->AIGetLeadDir(m_target, vector3d(0.0), 0);
 
 	// turn towards target lead direction, add inaccuracy
 	// trigger recheck when angular velocity reaches zero or after certain time

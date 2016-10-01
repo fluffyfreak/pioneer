@@ -1,15 +1,41 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
+#define WIN32_LEAN_AND_MEAN 
+#define NOMINMAX
 #include "Win32Setup.h"
 
 #include "OS.h"
 #include "FileSystem.h"
 #include "TextUtils.h"
+#ifdef WITH_BREAKPAD
+#include "breakpad/exception_handler.h"
+#endif
 #include <SDL.h>
 #include <stdio.h>
 #include <wchar.h>
 #include <windows.h>
+#include <shellapi.h>
+
+
+extern "C" {
+	// This is the quickest and easiest way to enable using the nVidia GPU on a Windows laptop with a dedicated nVidia GPU and Optimus tech.
+	// enable optimus!
+    __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+
+	// AMD have one too!!!
+	__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+}
+
+
+#ifdef RegisterClass
+#undef RegisterClass
+#endif
+
+#ifdef WITH_BREAKPAD
+using namespace google_breakpad;
+ExceptionHandler* exceptionHandler = nullptr;
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(disable: 4996)
@@ -111,8 +137,8 @@ const std::string GetHardwareInfo()
 		Number of processors: %u\n  \
 		Page size: %u\n  \
 		Processor type: %u\n  \
-		Minimum application address: %lx\n  \
-		Maximum application address: %lx\n  \
+		Minimum application address: %p\n  \
+		Maximum application address: %p\n  \
 		Active processor mask: %u\n\n", 
 		siSysInfo.dwOemId, 
 		siSysInfo.dwNumberOfProcessors, 
@@ -147,7 +173,7 @@ const std::string GetOSInfoString()
 	OSVERSIONINFOA osv;
 	osv.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
 	GetVersionExA(&osv);
-
+	
 	std::string name;
 	for (const OSVersion *scan = osVersions; scan->name; scan++) {
 		if (osv.dwMajorVersion == scan->major && osv.dwMinorVersion == scan->minor) {
@@ -164,6 +190,68 @@ const std::string GetOSInfoString()
 		return hwInfo + name;
 
 	return hwInfo + name + " (" + patchName + ")";
+}
+
+#ifdef WITH_BREAKPAD
+/////////////////////////////////////////////////////// Google Breakpad
+bool FilterCallback(void* context, EXCEPTION_POINTERS* exinfo,
+	MDRawAssertionInfo* assertion) 
+{	
+	return true;
+}
+
+bool MinidumpCallback(const wchar_t* dump_path,
+	const wchar_t* minidump_id,
+	void* context,
+	EXCEPTION_POINTERS* exinfo,
+	MDRawAssertionInfo* assertion,
+	bool succeeded)
+{
+	std::wstring msg = L"Unhandled exception occured.\n";
+	msg.append(L"Crash information dump was written to: \n    ");
+	msg.append(transcode_utf8_to_utf16(FileSystem::userFiles.GetRoot() + "\\crashdumps"));
+	msg.append(L"\nMini-dump id: \n    ");
+	msg.append(minidump_id);
+	MessageBoxW(NULL,
+		msg.c_str(), L"Game crashed!", MB_OK | MB_ICONERROR);
+
+	return succeeded;
+}
+#endif
+
+void EnableBreakpad()
+{
+#ifdef WITH_BREAKPAD
+	CustomClientInfo cci;
+	cci.count = 0;
+	cci.entries = nullptr;
+	std::wstring dumps_path;
+	dumps_path = transcode_utf8_to_utf16(FileSystem::userFiles.GetRoot());
+	FileSystem::userFiles.MakeDirectory("crashdumps");
+	dumps_path.append(L"\\crashdumps");
+	exceptionHandler = new ExceptionHandler(
+		dumps_path,													// Dump path
+		FilterCallback,												// Filter callback
+		MinidumpCallback,											// Minidumps callback
+		nullptr,													// Callback context
+		ExceptionHandler::HandlerType::HANDLER_ALL,					// Handler types
+		MINIDUMP_TYPE::MiniDumpWithDataSegs,
+		L"",														// Minidump server pipe name
+		&cci);														// Custom client information
+#endif
+}
+
+// Open the Explorer/Finder/etc
+bool SupportsFolderBrowser()
+{
+	return true;
+}
+
+void OpenUserFolderBrowser()
+{
+	std::wstring dumps_path;
+	dumps_path = transcode_utf8_to_utf16(FileSystem::userFiles.GetRoot());
+	ShellExecuteW(NULL, L"open", dumps_path.c_str(), NULL, NULL, SW_SHOWNORMAL);
 }
 
 } // namespace OS

@@ -523,10 +523,6 @@
       "description" : "",
       "message" : "Detail skupiny:"
    },
-   "HANG_UP" : {
-      "description" : "",
-      "message" : "Konec"
-   },
    "HEY_YOU_ARE_GOING_TO_PAY_FOR_THIS" : {
       "description" : "",
       "message" : "Hej!?! Za tohle zaplatíš!!!"
@@ -567,6 +563,10 @@
       "description" : "",
       "message" : "Ty už dnes do cíle nedorazíš!"
    },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Set as navigation target"
+   },
    "TAXI" : {
       "description" : "",
       "message" : "Taxi"
@@ -586,6 +586,10 @@
    "WILL_I_BE_IN_ANY_DANGER" : {
       "description" : "",
       "message" : "Ocitnu se v nějakém nebezpečí?"
+   },
+   "WRONG_SYSTEM" : {
+      "description" : "Shown if system name is right, but coordinates are wrong",
+      "message" : "The system name is right, but not the coordinates."
    },
    "YOU_DO_NOT_HAVE_ENOUGH_CABIN_SPACE_ON_YOUR_SHIP" : {
       "description" : "",

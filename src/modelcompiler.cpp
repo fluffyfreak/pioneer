@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -10,6 +10,8 @@
 
 #include "FileSystem.h"
 #include "GameConfig.h"
+#include "JobQueue.h"
+#include "graphics/dummy/RendererDummy.h"
 #include "graphics/Graphics.h"
 #include "graphics/Light.h"
 #include "graphics/Renderer.h"
@@ -27,11 +29,39 @@
 
 std::unique_ptr<GameConfig> s_config;
 std::unique_ptr<Graphics::Renderer> s_renderer;
+std::unique_ptr<AsyncJobQueue> asyncJobQueue;
 
 static const std::string s_dummyPath("");
 
+// fwd decl'
+void RunCompiler(const std::string &modelName, const std::string &filepath, const bool bInPlace);
+
+// ********************************************************************************
+// Overloaded PureJob class to handle compiling each model
+// ********************************************************************************
+class CompileJob : public Job
+{
+public:
+	CompileJob() {};
+	CompileJob(const std::string &name, const std::string &path, const bool inPlace)
+		: m_name(name), m_path(path), m_inPlace(inPlace) {}
+
+	virtual void OnRun() override final { RunCompiler(m_name, m_path, m_inPlace); }    // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
+	virtual void OnFinish() override final {}
+	virtual void OnCancel() override final {}
+
+protected:
+	std::string	m_name;
+	std::string	m_path;
+	bool		m_inPlace;
+};
+
+// ********************************************************************************
+// functions
+// ********************************************************************************
 void SetupRenderer()
 {
+	PROFILE_SCOPED()
 	s_config.reset(new GameConfig);
 
 	OS::RedirectStdio();
@@ -43,8 +73,11 @@ void SetupRenderer()
 
 	ModManager::Init();
 
+	Graphics::RendererDummy::RegisterRenderer();
+
 	//video
 	Graphics::Settings videoSettings = {};
+	videoSettings.rendererType = Graphics::RENDERER_DUMMY;
 	videoSettings.width = s_config->Int("ScrWidth");
 	videoSettings.height = s_config->Int("ScrHeight");
 	videoSettings.fullscreen = false;
@@ -52,36 +85,49 @@ void SetupRenderer()
 	videoSettings.requestedSamples = s_config->Int("AntiAliasingMode");
 	videoSettings.vsync = false;
 	videoSettings.useTextureCompression = true;
+	videoSettings.useAnisotropicFiltering = true;
 	videoSettings.iconFile = OS::GetIconFilename();
 	videoSettings.title = "Model Compiler";
 	s_renderer.reset(Graphics::Init(videoSettings));
+
+	// get threads up
+	Uint32 numThreads = s_config->Int("WorkerThreads");
+	const int numCores = OS::GetNumCores();
+	assert(numCores > 0);
+	if (numThreads == 0) 
+		numThreads = std::max(Uint32(numCores), 1U); // this is a tool, we can use all of the cores for processing unlike Pioneer
+	asyncJobQueue.reset(new AsyncJobQueue(numThreads));
+	Output("started %d worker threads\n", numThreads);
 }
 
-void RunCompiler(const std::string &modelName, const std::string &filepath)
+void RunCompiler(const std::string &modelName, const std::string &filepath, const bool bInPlace)
 {
+	PROFILE_SCOPED()
 	Profiler::Timer timer;
 	timer.Start();
+	Output("\n---\nStarting compiler for (%s)\n", modelName.c_str());
 
 	//load the current model in a pristine state (no navlights, shields...)
 	//and then save it into binary
 	std::unique_ptr<SceneGraph::Model> model;
 	try {
-		SceneGraph::Loader ld(s_renderer.get(), false, false);
+		SceneGraph::Loader ld(s_renderer.get(), true, false);
 		model.reset(ld.LoadModel(modelName));
+		//dump warnings
+		for (std::vector<std::string>::const_iterator it = ld.GetLogMessages().begin();
+			it != ld.GetLogMessages().end(); ++it)
+		{
+			Output("%s\n", (*it).c_str());
+		}
 	} catch (...) {
 		//minimal error handling, this is not expected to happen since we got this far.
 		return;
 	}
 
 	try {
-		if (filepath.empty()) {
-			SceneGraph::BinaryConverter bc(s_renderer.get());
-			bc.Save(modelName, model.get());
-		} else {
-			const std::string DataPath = FileSystem::NormalisePath(filepath.substr(0, filepath.size()-6));
-			SceneGraph::BinaryConverter bc(s_renderer.get());
-			bc.Save(modelName, DataPath, model.get());
-		}
+		const std::string DataPath = FileSystem::NormalisePath(filepath.substr(0, filepath.size()-6));
+		SceneGraph::BinaryConverter bc(s_renderer.get());
+		bc.Save(modelName, DataPath, model.get(), bInPlace);
 	} catch (const CouldNotOpenFileException&) {
 	} catch (const CouldNotWriteToFileException&) {
 	}
@@ -91,6 +137,9 @@ void RunCompiler(const std::string &modelName, const std::string &filepath)
 }
 
 
+// ********************************************************************************
+// functions
+// ********************************************************************************
 enum RunMode {
 	MODE_MODELCOMPILER=0,
 	MODE_MODELBATCHEXPORT,
@@ -143,15 +192,46 @@ start:
 	
 	// Init here since we'll need it for both batch and RunCompiler modes.
 	FileSystem::Init();
+	FileSystem::userFiles.MakeDirectory(""); // ensure the config directory exists
+#ifdef PIONEER_PROFILER
+	FileSystem::userFiles.MakeDirectory("profiler");
+	const std::string profilerPath = FileSystem::JoinPathBelow(FileSystem::userFiles.GetRoot(), "profiler");
+#endif
 
 	// what mode are we in?
 	switch (mode) {
 		case MODE_MODELCOMPILER: {
 			std::string modelName;
+			std::string filePath;
 			if (argc > 2) {
-				modelName = argv[2];
+				filePath = modelName = argv[2];
+				// determine if we're meant to be writing these in the source directory
+				bool isInPlace = false;
+				if (argc > 3) {
+					std::string arg3 = argv[3];
+					isInPlace = (arg3 == "inplace" || arg3 == "true");
+
+					// find all of the models
+					FileSystem::FileSource &fileSource = FileSystem::gameDataFiles;
+					for (FileSystem::FileEnumerator files(fileSource, "models", FileSystem::FileEnumerator::Recurse); !files.Finished(); files.Next())
+					{
+						const FileSystem::FileInfo &info = files.Current();
+						const std::string &fpath = info.GetPath();
+
+						//check it's the expected type
+						if (info.IsFile()) {
+							if (ends_with_ci(fpath, ".model")) {	// store the path for ".model" files
+								const std::string shortname(info.GetName().substr(0, info.GetName().size() - 6));
+								if (shortname == modelName) {
+									filePath = fpath;
+									break;
+								}
+							}
+						}
+					}
+				}
 				SetupRenderer();
-				RunCompiler(modelName, s_dummyPath);
+				RunCompiler(modelName, filePath, isInPlace);
 			}
 			break;
 		}
@@ -181,12 +261,19 @@ start:
 			}
 
 			SetupRenderer();
+			std::deque<Job::Handle> handles;
 			for (auto &modelName : list_model) {
-				if(isInPlace) {
-					RunCompiler(modelName.first, modelName.second);
-				} else {
-					RunCompiler(modelName.first, s_dummyPath);
-				}
+				handles.push_back( asyncJobQueue->Queue(new CompileJob(modelName.first, modelName.second, isInPlace)) );
+			}
+
+			while(true) {
+				asyncJobQueue->FinishJobs();
+				bool hasJobs = false;
+				for(auto &handle : handles) 
+					hasJobs |= handle.HasJob();
+
+				if(!hasJobs)
+					break;
 			}
 			break;
 		}
@@ -206,14 +293,19 @@ start:
 			Output(
 				"usage: modelcompiler [mode] [options...]\n"
 				"available modes:\n"
-				"    -compile          [-c]          model compiler\n"
-				"    -batch            [-b]          batch mode output into users home/Pioneer directory\n"
-				"    -batch inplace    [-b inplace]  batch mode output into the source folder\n"
-				"    -version          [-v]          show version\n"
-				"    -help             [-h,-?]       this help\n"
+				"    -compile          [-c ...]          model compiler\n"
+				"    -compile inplace  [-c ... inplace]  model compiler\n"
+				"    -batch            [-b]              batch mode output into users home/Pioneer directory\n"
+				"    -batch inplace    [-b inplace]      batch mode output into the source folder\n"
+				"    -version          [-v]              show version\n"
+				"    -help             [-h,-?]           this help\n"
 			);
 			break;
 	}
+
+#ifdef PIONEER_PROFILER
+	Profiler::dumphtml(profilerPath.c_str());
+#endif
 
 	return 0;
 }

@@ -1,4 +1,4 @@
--- Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local Engine = import("Engine")
@@ -60,7 +60,7 @@ local e = import ("Equipment")
 		approached without atmospheric shields,	updated by spawnInitialShips
 
 	imports, exports - in the current system, indexed array of
-		Constants.EquipType strings, updated by spawnInitialShips
+		equipment objects (from the 'Equipment' module), updated by spawnInitialShips
 --]]
 local trade_ships, system_updated, from_paths, starports, vacuum_starports, imports, exports
 
@@ -241,7 +241,7 @@ local getSystem = function (ship)
 		min_range = 7.5
 	end
 	local systems_in_range = Game.system:GetNearbySystems(min_range)
-	if #systems_in_range == 0 then 
+	if #systems_in_range == 0 then
 		systems_in_range = Game.system:GetNearbySystems(max_range)
 	end
 	if #systems_in_range == 0 then return nil end
@@ -311,7 +311,7 @@ local getSystemAndJump = function (ship)
 end
 
 local getAcceptableShips = function ()
-    -- only accept ships with enough capacity that are capable of landing in atmospheres
+	-- only accept ships with enough capacity that are capable of landing in atmospheres
 	local filter_function
 	if #vacuum_starports == 0 then
 		filter_function = function(k,def)
@@ -483,8 +483,8 @@ local spawnInitialShips = function (game_start)
 			if fuel_added and fuel_added > 0 then
 				ship:RemoveEquip(e.cargo.hydrogen, Engine.rand:Integer(1, fuel_added))
 			end
-			if trader.status == 'inbound' then 
-				ship:AIDockWith(trader.starport) 
+			if trader.status == 'inbound' then
+				ship:AIDockWith(trader.starport)
 			end
 		end
 	end
@@ -569,16 +569,17 @@ local onEnterSystem = function (ship)
 	if trade_ships[ship] ~= nil then
 		local trader = trade_ships[ship]
 		print(ship.label..' '..trader.ship_name..' entered '..Game.system.name..' from '..trader.from_path:GetStarSystem().name)
-		if #starports == 0 then
-			-- this only happens if player has followed ship to empty system
 
-			getSystemAndJump(ship)
-			-- if we couldn't reach any systems wait for player to attack
-		else
-			local starport = getNearestStarport(ship)
+		local starport = getNearestStarport(ship)
+		if starport then
 			ship:AIDockWith(starport)
 			trade_ships[ship]['starport'] = starport
 			trade_ships[ship]['status'] = 'inbound'
+		else
+			-- starport == nil happens if player has followed ship to empty system, or
+			-- no suitable port found (e.g. all stations atmospheric for ship without atmoshield)
+			getSystemAndJump(ship)
+			-- if we couldn't reach any systems wait for player to attack
 		end
 	end
 end
@@ -756,6 +757,8 @@ end
 Event.Register("onShipAlertChanged", onShipAlertChanged)
 
 local onShipHit = function (ship, attacker)
+	if attacker == nil then return end-- XX
+	
 	-- XXX this whole thing might be better if based on amount of damage sustained
 	if trade_ships[ship] == nil then return end
 	local trader = trade_ships[ship]
@@ -830,6 +833,7 @@ end
 Event.Register("onShipCollided", onShipCollided)
 
 local onShipDestroyed = function (ship, attacker)
+	if attacker == nil then return end-- XX
 	if trade_ships[ship] ~= nil then
 		local trader = trade_ships[ship]
 
@@ -893,9 +897,9 @@ local onGameStart = function ()
 				local v = Game.system:GetCommodityBasePriceAlterations(equip)
 				if key ~= 'rubbish' and key ~= 'radioactives' and Game.system:IsCommodityLegal(equip) then
 					if v > 2 then
-						table.insert(imports, k)
+						table.insert(imports, equip)
 					elseif v < -2 then
-						table.insert(exports, k)
+						table.insert(exports, equip)
 					end
 				end
 			end
@@ -942,6 +946,21 @@ Event.Register("onGameEnd", onGameEnd)
 
 local serialize = function ()
 	-- all we need to save is trade_ships, the rest can be rebuilt on load
+
+	-- The serializer will crash if we try to serialize dead objects (issue #3123)
+	-- also, trade_ships may be nil, because it is cleared in 'onGameEnd', and this may
+	-- happen before the autosave module creates its '_exit' save
+	if trade_ships ~= nil then
+		local count = 0
+		for k,v in pairs(trade_ships) do
+			if type(k) == 'userdata' and not k:exists() then
+				count = count + 1
+				-- according to the Lua manual, removing items during iteration with pairs() or next() is ok
+				trade_ships[k] = nil
+			end
+		end
+		print('TradeShips: Removed ' .. count .. ' ships before serialization')
+	end
 	return trade_ships
 end
 

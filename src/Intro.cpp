@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Intro.h"
@@ -24,7 +24,7 @@ Intro::Intro(Graphics::Renderer *r, int width, int height)
 	using Graphics::Light;
 
 	m_background.reset(new Background::Container(r, Pi::rng));
-	m_ambientColor = Color(0);
+	m_ambientColor = Color::BLANK;
 
 	const Color one = Color::WHITE;
 	const Color two = Color(77, 77, 204, 0);
@@ -34,8 +34,8 @@ Intro::Intro(Graphics::Renderer *r, int width, int height)
 	m_skin.SetDecal("pioneer");
 	m_skin.SetLabel(Lang::PIONEER);
 
-	for (std::vector<ShipType::Id>::const_iterator i = ShipType::player_ships.begin(); i != ShipType::player_ships.end(); ++i) {
-		SceneGraph::Model *model = Pi::FindModel(ShipType::types[*i].modelName)->MakeInstance();
+	for (auto i : ShipType::player_ships) {
+		SceneGraph::Model *model = Pi::FindModel(ShipType::types[i].modelName)->MakeInstance();
 		model->SetThrust(vector3f(0.f, 0.f, -0.6f), vector3f(0.f));
 		const Uint32 numMats = model->GetNumMaterials();
 		for( Uint32 m=0; m<numMats; m++ ) {
@@ -74,7 +74,8 @@ void Intro::Reset(float _time)
 	if (m_modelIndex == m_models.size()) m_modelIndex = 0;
 	m_skin.SetRandomColors(Pi::rng);
 	m_skin.Apply(m_model);
-	m_model->SetPattern(Pi::rng.Int32(0, m_model->GetNumPatterns()));
+	if(m_model->SupportsPatterns())
+		m_model->SetPattern(Pi::rng.Int32(0, m_model->GetNumPatterns()-1));
 	m_zoomBegin = -10000.0f;
 	m_zoomEnd = -m_model->GetDrawClipRadius()*1.7f;
 	m_dist = m_zoomBegin;

@@ -23,10 +23,6 @@
       "description" : "",
       "message" : "Volte"
    },
-   "HANG_UP" : {
-      "description" : "",
-      "message" : "Desligamento."
-   },
    "IM_SORRY_IM_NOT_PREPARED_TO_GO_ANY_LOWER" : {
       "description" : "",
       "message" : "Desculpe, não estou preparado para reduzir nada"
@@ -43,9 +39,9 @@
       "description" : "",
       "message" : "Tempo mínimo servindo a bordo da nave"
    },
-   "NAVIGATOR" : {
+   "NO_CREW_AVAILABLE" : {
       "description" : "",
-      "message" : "Navegador"
+      "message" : "Desculpe, nenhum candidato está procurando por emprego em {station}"
    },
    "NO_EXPERIENCE" : {
       "description" : "",
@@ -55,21 +51,9 @@
       "description" : "",
       "message" : "Ok, acho que está tudo bem."
    },
-   "PILOT" : {
-      "description" : "",
-      "message" : "Piloto"
-   },
    "POTENTIAL_CREW_MEMBERS" : {
       "description" : "",
       "message" : "Potenciais membros da tripulação estão registrados como à procura de emprego em {estação}:"
-   },
-   "SENSORS_AND_DEFENCE" : {
-      "description" : "",
-      "message" : "Sensores e defesa"
-   },
-   "SHIPS_ENGINEER" : {
-      "description" : "",
-      "message" : "Engenheiro espacial"
    },
    "SIMULATOR_TRAINING_ONLY" : {
       "description" : "",

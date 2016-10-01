@@ -23,10 +23,6 @@
       "description" : "",
       "message" : "Gå tilbage"
    },
-   "HANG_UP" : {
-      "description" : "",
-      "message" : "Afbryd linjen."
-   },
    "IM_SORRY_IM_NOT_PREPARED_TO_GO_ANY_LOWER" : {
       "description" : "",
       "message" : "Beklager, jeg vil ikke gå lavere end dét."
@@ -43,9 +39,9 @@
       "description" : "",
       "message" : "Minimal tid tjent ombord"
    },
-   "NAVIGATOR" : {
+   "NO_CREW_AVAILABLE" : {
       "description" : "",
-      "message" : "Navigatør"
+      "message" : "Sorry, no candidates are currently seeking employment at {station}"
    },
    "NO_EXPERIENCE" : {
       "description" : "",
@@ -55,21 +51,9 @@
       "description" : "",
       "message" : "OK, det er vel i orden."
    },
-   "PILOT" : {
-      "description" : "",
-      "message" : "Pilot"
-   },
    "POTENTIAL_CREW_MEMBERS" : {
       "description" : "",
       "message" : "Potentielle besætningsmedlemmer er registreret som jobsøgende på {station}:"
-   },
-   "SENSORS_AND_DEFENCE" : {
-      "description" : "",
-      "message" : "Sensorer og forsvar"
-   },
-   "SHIPS_ENGINEER" : {
-      "description" : "",
-      "message" : "Skibets mekaniker"
    },
    "SIMULATOR_TRAINING_ONLY" : {
       "description" : "",

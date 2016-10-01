@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "TextLayout.h"
@@ -6,11 +6,13 @@
 #include "RefCounted.h"
 #include "text/TextureFont.h"
 #include "Color.h"
+#include "graphics/VertexArray.h"
+#include "graphics/VertexBuffer.h"
 
 namespace UI {
 
-TextLayout::TextLayout(const RefCountedPtr<Text::TextureFont> &font, const std::string &text) :
-	m_font(font)
+TextLayout::TextLayout(const RefCountedPtr<Text::TextureFont> &font, const std::string &text)
+	: m_font(font),	m_lastDrawPos(Point(INT_MIN, INT_MIN)), m_lastDrawSize(Point(INT_MIN, INT_MIN)), m_prevColor(Color::WHITE)
 {
 	if (!text.size())
 		return;
@@ -107,15 +109,37 @@ Point TextLayout::ComputeSize(const Point &layoutSize)
 
 void TextLayout::Draw(const Point &layoutSize, const Point &drawPos, const Point &drawSize, const Color &color)
 {
-	ComputeSize(layoutSize);
+	// Has anything changed between passes
+	const bool bAnyNew = (layoutSize != m_lastRequested) || (m_lastDrawPos != drawPos) || (m_lastDrawSize != drawSize) || (m_prevColor != color);
+	if (bAnyNew)
+	{
+		ComputeSize(layoutSize);
+		const int top = -drawPos.y - m_font->GetHeight();
+		const int bottom = -drawPos.y + drawSize.y;
 
-	const int top = -drawPos.y - m_font->GetHeight();
-	const int bottom = -drawPos.y + drawSize.y;
+		Graphics::VertexArray va(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_DIFFUSE | Graphics::ATTRIB_UV0);
 
-	for (std::vector<Word>::iterator i = m_words.begin(); i != m_words.end(); ++i) {
-		if ((*i).pos.y >= top && (*i).pos.y < bottom)
-			m_font->RenderString((*i).text.c_str(), (*i).pos.x, (*i).pos.y, color);
+		for (std::vector<Word>::iterator i = m_words.begin(); i != m_words.end(); ++i) {
+			if ((*i).pos.y >= top && (*i).pos.y < bottom) {
+				m_font->PopulateString(va, (*i).text, (*i).pos.x, (*i).pos.y, color);
+			}
+		}
+
+		if (!m_vbuffer.Valid() || (m_vbuffer->GetVertexCount() != va.GetNumVerts())) {
+			m_vbuffer.Reset(m_font->CreateVertexBuffer(va, true));
+		}
+		else {
+			m_vbuffer->Populate(va);
+		}
 	}
+
+	m_font->RenderBuffer( m_vbuffer.Get() );
+
+	// store current params
+	m_lastRequested = layoutSize;
+	m_lastDrawPos = drawPos;
+	m_lastDrawSize = drawSize;
+	m_prevColor = color;
 }
 
 }

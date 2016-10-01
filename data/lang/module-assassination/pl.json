@@ -167,10 +167,6 @@
       "description" : "",
       "message" : "Wspaniałe wieści o zakończeniu kariery {target}. Przelewamy obiecane {cash}."
    },
-   "HANG_UP" : {
-      "description" : "",
-      "message" : "Rozłącz się."
-   },
    "HOW_SOON_MUST_IT_BE_DONE" : {
       "description" : "",
       "message" : "Jak powinienem to zrobić?"
@@ -194,6 +190,14 @@
    "RETURN_HERE_ON_THE_COMPLETION_OF_THE_CONTRACT_AND_YOU_WILL_BE_PAID" : {
       "description" : "",
       "message" : "Wróć tu po wypełnieniu kontraktu, otrzymasz zapłatę."
+   },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Ustaw jako cel nawigacyjny."
+   },
+   "SET_RETURN_ROUTE" : {
+      "description" : "",
+      "message" : "Ustaw drogę powrotną."
    },
    "SHIP" : {
       "description" : "",

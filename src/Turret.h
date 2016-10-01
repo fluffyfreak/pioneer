@@ -4,7 +4,6 @@
 #ifndef _GUNMOUNT_H
 #define _GUNMOUNT_H
 #include "vector3.h"
-#include "EquipType.h"
 #include "Serializer.h"
 
 class Body;
@@ -31,8 +30,7 @@ class Turret
 	void SetFiring(bool firing) { m_firing = firing; }
 	void Update(float timeStep);			// timestep process
 
-	void SetWeapon(Equip::Type weapontype, float coolfactor);
-	Equip::Type GetWeapon() const { return m_weapontype; }
+	void SetWeapon(float coolfactor);
 
 	float GetTemperature() const { return m_temperature; }
 	const vector3d& GetPos() const { return m_turret.pos; }
@@ -53,7 +51,6 @@ class Turret
 
 	TurretData m_turret;
 
-	Equip::Type m_weapontype;
 	float m_coolrate;
 
 	bool m_firing;			// needs saving

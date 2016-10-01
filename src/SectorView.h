@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _SECTORVIEW_H
@@ -17,10 +17,13 @@
 #include "graphics/RenderState.h"
 #include <set>
 
+class Game;
+class Galaxy;
+
 class SectorView: public UIView {
 public:
-	SectorView();
-	SectorView(Serializer::Reader &rd);
+	SectorView(Game* game);
+	SectorView(const Json::Value &jsonObj, Game* game);
 	virtual ~SectorView();
 
 	virtual void Update();
@@ -38,7 +41,7 @@ public:
 	void GotoCurrentSystem() { GotoSystem(m_current); }
 	void GotoSelectedSystem() { GotoSystem(m_selected); }
 	void GotoHyperspaceTarget() { GotoSystem(m_hyperspaceTarget); }
-	virtual void Save(Serializer::Writer &wr);
+	virtual void SaveToJson(Json::Value &jsonObj);
 
 	sigc::signal<void> onHyperspaceTargetChanged;
 
@@ -90,6 +93,8 @@ private:
 	void OnKeyPressed(SDL_Keysym *keysym);
 	void OnSearchBoxKeyPress(const SDL_Keysym *keysym);
 
+	RefCountedPtr<Galaxy> m_galaxy;
+
 	bool m_inSystem;
 
 	SystemPath m_current;
@@ -116,7 +121,6 @@ private:
 	Gui::Label *m_zoomLevelLabel;
 	Gui::ImageButton *m_zoomInButton;
 	Gui::ImageButton *m_zoomOutButton;
-	Gui::ImageButton *m_galaxyButton;
 	Gui::TextEntry *m_searchBox;
 	Gui::Label *m_statusLabel;
 	Gui::ToggleButton *m_drawOutRangeLabelButton;
@@ -181,9 +185,13 @@ private:
 
 	std::unique_ptr<Graphics::VertexArray> m_lineVerts;
 	std::unique_ptr<Graphics::VertexArray> m_secLineVerts;
+	RefCountedPtr<Graphics::Material> m_fresnelMat;
 	std::unique_ptr<Graphics::Drawables::Sphere3D> m_jumpSphere;
-	std::unique_ptr<Graphics::Drawables::Disk> m_jumpDisk;
 	std::unique_ptr<Graphics::VertexArray> m_starVerts;
+
+	Graphics::Drawables::Lines m_lines;
+	Graphics::Drawables::Lines m_sectorlines;
+	Graphics::Drawables::Points m_farstarsPoints;
 };
 
 #endif /* _SECTORVIEW_H */

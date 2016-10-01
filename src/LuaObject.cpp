@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -94,14 +94,17 @@
 static bool instantiated = false;
 
 static std::map< std::string, std::map<std::string,PromotionTest> > *promotions;
+static std::map< std::string, SerializerPair > *serializers;
 
 static void _teardown() {
 	delete promotions;
+	delete serializers;
 }
 
 static inline void _instantiate() {
 	if (!instantiated) {
 		promotions = new std::map< std::string, std::map<std::string,PromotionTest> >;
+		serializers = new std::map< std::string, SerializerPair >;
 
 		// XXX atexit is not a very nice way to deal with this in C++
 		atexit(_teardown);
@@ -472,32 +475,6 @@ void LuaObjectBase::GetNames(std::vector<std::string> &names, const std::string 
 	LUA_DEBUG_END(l, 0);
 }
 
-static int secure_trampoline(lua_State *l)
-{
-	// walk the stack
-	// pass through any C functions
-	// if we reach a non-C function, then check whether it's trusted and we're done
-	// (note: trusted defaults to true because if the loop bottoms out then we've only gone through C functions)
-
-	bool trusted = true;
-
-	lua_Debug ar;
-	int stack_pos = 1;
-	while (lua_getstack(l, stack_pos, &ar) && lua_getinfo(l, "S", &ar)) {
-		if (strcmp(ar.what, "C") != 0) {
-			trusted = (strncmp(ar.source, "[T]", 3) == 0);
-			break;
-		}
-		++stack_pos;
-	}
-
-	if (!trusted)
-		luaL_error(l, "attempt to access protected method or attribute from untrusted script blocked");
-
-	lua_CFunction fn = lua_tocfunction(l, lua_upvalueindex(1));
-	return fn(l);
-}
-
 static void register_functions(lua_State *l, const luaL_Reg *methods, bool protect, const char *prefix)
 {
 	const size_t prefix_len = prefix ? strlen(prefix) : 0;
@@ -747,13 +724,55 @@ void LuaObjectBase::Register(LuaObjectBase *lo)
 	lua_pop(l, 1);                                              // lo userdata
 
 	luaL_getmetatable(l, lo->m_type);                           // lo userdata, lo metatable
-	lua_setmetatable(l, -2);                                    // lo userdata
 
+	lua_pushvalue(l, -1);										// Copy the metatable to begin the search.
+
+	// Now let's go digging around to find a suitable constructor.
+	// Shameless lift from l_dispatch_index
+	// XXX: polish a bit the code, because while(1) is ugly as hell.
+	// I blame robn for that ;-)
+	while (1) {
+		get_next_method_table(l);
+
+		lua_pushstring(l, "Constructor");
+		if (get_method_or_attr(l)) {
+			// Removing the metatable, the method table, and the name copy. Apparently.
+			lua_remove(l, -2);
+			lua_remove(l, -2);
+			lua_remove(l, -2);
+			break;
+		}
+
+		// not found. remove name copy and method table
+		lua_pop(l, 2);
+
+		// if there's no parent metatable, get out
+		if (lua_isnil(l, -1)) {
+			break;
+		}
+	}
+
+	lua_pushvalue(l, -2); // Copy the metatable over the constructor.
+	lua_setmetatable(l, -4); // lo userdata, lo mt, lua cons
+
+	//
 	// attach properties table if available
 	PropertiedObject *po = dynamic_cast<PropertiedObject*>(lo->GetObject());
 	if (po) {
 		po->Properties().PushLuaTable();
-		lua_setuservalue(l, -2);
+		lua_setuservalue(l, -4);
+	}
+
+
+	// Call the lua constructor if it ain't nil
+	// We didn't do this when we got it, because one might want to use the nice stuff
+	// such as the properties in the bloody constructor. Setprop, anyone? :)
+	if (lua_isfunction(l, -1)) {
+		lua_pushvalue(l, -3);			// lo userdata, lo mt, cons, lo userdata
+		lua_call(l, 1, 0);				// lo userdata, lo mt
+		lua_pop(l, 1); // Pop the metatable, we're done with it
+	} else {
+		lua_pop(l, 2); // Pop the junk AND the metatable.
 	}
 
 	LUA_DEBUG_END(l, 0);
@@ -865,6 +884,49 @@ bool LuaObjectBase::Isa(const char *base) const
 void LuaObjectBase::RegisterPromotion(const char *base_type, const char *target_type, PromotionTest test_fn)
 {
 	(*promotions)[base_type][target_type] = test_fn;
+}
+
+void LuaObjectBase::RegisterSerializer(const char *type, SerializerPair pair)
+{
+	(*serializers)[type] = pair;
+}
+
+std::string LuaObjectBase::Serialize()
+{
+	static char buf[256];
+
+	lua_State *l = Lua::manager->GetLuaState();
+
+	auto i = serializers->find(m_type);
+	if (i == serializers->end()) {
+		luaL_error(l, "No registered serializer for type %s\n", m_type);
+		abort();
+	}
+
+	snprintf(buf, sizeof(buf), "%s\n", m_type);
+
+	return std::string(buf) + (*i).second.serialize(GetObject());
+}
+
+bool LuaObjectBase::Deserialize(const char *stream, const char **next)
+{
+	static char buf[256];
+
+	const char *end = strchr(stream, '\n');
+	int len = end - stream;
+	end++; // skip newline
+
+	snprintf(buf, sizeof(buf), "%.*s", len, stream);
+
+	lua_State *l = Lua::manager->GetLuaState();
+
+	auto i = serializers->find(buf);
+	if (i == serializers->end()) {
+		luaL_error(l, "No registered deserializer for type %s\n", buf);
+		abort();
+	}
+
+	return (*i).second.deserialize(end, next);
 }
 
 void *LuaObjectBase::Allocate(size_t n) {

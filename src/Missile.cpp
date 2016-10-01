@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Missile.h"
@@ -11,7 +11,7 @@
 #include "Game.h"
 #include "LuaEvent.h"
 
-Missile::Missile(ShipType::Id shipId, Body *owner, int power): Ship(shipId)
+Missile::Missile(const ShipType::Id &shipId, Body *owner, int power): Ship(shipId)
 {
 	if (power < 0) {
 		m_power = 0;
@@ -40,20 +40,33 @@ void Missile::PostLoadFixup(Space *space)
 	m_owner = space->GetBodyByIndex(m_ownerIndex);
 }
 
-void Missile::Save(Serializer::Writer &wr, Space *space)
+void Missile::SaveToJson(Json::Value &jsonObj, Space *space)
 {
-	Ship::Save(wr, space);
-	wr.Int32(space->GetIndexForBody(m_owner));
-	wr.Int32(m_power);
-	wr.Bool(m_armed);
+	Ship::SaveToJson(jsonObj, space);
+
+	Json::Value missileObj(Json::objectValue); // Create JSON object to contain missile data.
+
+	missileObj["index_for_body"] = space->GetIndexForBody(m_owner);
+	missileObj["power"] = m_power;
+	missileObj["armed"] = m_armed;
+
+	jsonObj["missile"] = missileObj; // Add missile object to supplied object.
 }
 
-void Missile::Load(Serializer::Reader &rd, Space *space)
+void Missile::LoadFromJson(const Json::Value &jsonObj, Space *space)
 {
-	Ship::Load(rd, space);
-	m_ownerIndex = rd.Int32();
-	m_power = rd.Int32();
-	m_armed = rd.Bool();
+	Ship::LoadFromJson(jsonObj, space);
+
+	if (!jsonObj.isMember("missile")) throw SavedGameCorruptException();
+	Json::Value missileObj = jsonObj["missile"];
+
+	if (!missileObj.isMember("index_for_body")) throw SavedGameCorruptException();
+	if (!missileObj.isMember("power")) throw SavedGameCorruptException();
+	if (!missileObj.isMember("armed")) throw SavedGameCorruptException();
+
+	m_ownerIndex = missileObj["index_for_body"].asUInt();
+	m_power = missileObj["power"].asInt();
+	m_armed = missileObj["armed"].asBool();
 }
 
 void Missile::TimeStepUpdate(const float timeStep)
@@ -114,7 +127,7 @@ void Missile::Explode()
 		}
 	}
 
-	Sfx::Add(this, Sfx::TYPE_EXPLOSION);
+	SfxManager::Add(this, TYPE_EXPLOSION);
 }
 
 void Missile::NotifyRemoved(const Body* const removedBody)
@@ -122,6 +135,7 @@ void Missile::NotifyRemoved(const Body* const removedBody)
 	if (m_owner == removedBody) {
 		m_owner = 0;
 	}
+	Ship::NotifyRemoved(removedBody);
 }
 
 void Missile::Arm()

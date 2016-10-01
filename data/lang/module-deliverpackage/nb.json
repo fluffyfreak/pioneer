@@ -253,11 +253,7 @@
    },
    "FLAVOUR_9_WHYSOMUCHTEXT" : {
       "description" : "",
-      "message" : "Our livelyhood depends on it."
-   },
-   "HANG_UP" : {
-      "description" : "",
-      "message" : "Legg på."
+      "message" : "Our livelihood depends on it."
    },
    "HOW_SOON_MUST_IT_BE_DELIVERED" : {
       "description" : "",
@@ -326,6 +322,10 @@
    "PIRATE_TAUNTS_9" : {
       "description" : "",
       "message" : "Du kan betale for lasten, med livet ditt."
+   },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Set as navigation target"
    },
    "SPACEPORT" : {
       "description" : "",

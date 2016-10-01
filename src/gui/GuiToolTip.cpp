@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Gui.h"
@@ -26,7 +26,7 @@ ToolTip::ToolTip(Widget *owner, std::string &text)
 
 ToolTip::~ToolTip()
 {
-	delete m_layout;
+	m_layout.reset();
 }
 
 void ToolTip::CalcSize()
@@ -35,14 +35,16 @@ void ToolTip::CalcSize()
 	m_layout->MeasureSize(400.0, size);
 	size[0] += 2*TOOLTIP_PADDING;
 	SetSize(size[0], size[1]);
+	m_layout->Update(size[0]);
 }
 
 void ToolTip::SetText(const char *text)
 {
-	m_text = text;
-	if (m_layout) delete m_layout;
-	m_layout = new TextLayout(text);
-	CalcSize();
+	if (m_text != text) {
+		m_text = text;
+		m_layout.reset(new TextLayout(text));
+		CalcSize();
+	}
 }
 
 void ToolTip::SetText(std::string &text)
@@ -57,15 +59,18 @@ void ToolTip::Draw()
 		return;
 
 	float size[2];
-	int age = SDL_GetTicks() - m_createdTime;
-	float alpha = std::min(age / FADE_TIME_MS, 0.75f);
+	const int age = SDL_GetTicks() - m_createdTime;
+	const float alpha = std::min(age / FADE_TIME_MS, 0.75f);
 
 	Graphics::Renderer *r = Gui::Screen::GetRenderer();
-	r->SetRenderState(Gui::Screen::alphaBlendState);
 
 	GetSize(size);
 	const Color color(Color4f(0.2f, 0.2f, 0.6f, alpha));
-	Theme::DrawRect(vector2f(0.f), vector2f(size[0], size[1]), color, Screen::alphaBlendState);
+	if(!m_background) {
+		m_background.reset( new Graphics::Drawables::Rect(r, vector2f(0.f), vector2f(size[0], size[1]), color, Screen::alphaBlendState, false));
+	}
+	m_background->Update(vector2f(0.f), vector2f(size[0], size[1]), color);
+	m_background->Draw(r);
 
 	const vector3f outlineVts[] = {
 		vector3f(size[0], 0, 0),
@@ -74,7 +79,8 @@ void ToolTip::Draw()
 		vector3f(0, 0, 0)
 	};
 	const Color outlineColor(Color4f(0,0,.8f,alpha));
-	r->DrawLines(4, &outlineVts[0], outlineColor, Screen::alphaBlendState, Graphics::LINE_LOOP);
+	m_outlines.SetData(2, &outlineVts[0], outlineColor);
+	m_outlines.Draw(r, Screen::alphaBlendState, Graphics::LINE_LOOP);
 
 	Graphics::Renderer::MatrixTicket ticket(r, Graphics::MatrixMode::MODELVIEW);
 

@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef UI_SKIN_H
@@ -42,6 +42,13 @@ public:
 	}
 	void DrawButtonActive(const Point &pos, const Point &size) const {
 		DrawBorderedRectElement(m_buttonActive, pos, size);
+	}
+
+	void DrawButtonHidden(const Point &pos, const Point &size) const {
+		DrawRectColor(m_buttonHidden, pos, size);
+	}
+	void DrawSmallButtonHidden(const Point &pos, const Point &size) const {
+		DrawRectColor(m_smallButtonHidden, pos, size);
 	}
 
 	void DrawSmallButtonDisabled(const Point &pos, const Point &size) const {
@@ -126,13 +133,13 @@ public:
 
 	void DrawRectColor(const Color &col, const Point &pos, const Point &size) const;
 	void DrawRectNormal(const Point &pos, const Point &size) const {
-		DrawRectColor(Color(0,0,0,AlphaNormal_ub()), pos, size);
+		DrawRectColor(m_normalColor, pos, size);
 	}
 	void DrawRectHover(const Point &pos, const Point &size) const {
-		DrawRectColor(Color(0,0,0,AlphaHover_ub()), pos, size);
+		DrawRectColor(m_hoverColor, pos, size);
 	}
 	void DrawRectSelect(const Point &pos, const Point &size) const {
-		DrawRectColor(Color(0,0,0,AlphaSelect_ub()), pos, size);
+		DrawRectColor(m_selectColor, pos, size);
 	}
 
 
@@ -146,7 +153,7 @@ public:
 	struct BorderedRectElement : public RectElement {
 		BorderedRectElement() : borderWidth(0), borderHeight(0), paddingX(0), paddingY(0) {}
 		BorderedRectElement(unsigned int x, unsigned int y, unsigned int w, unsigned int h,
-				            unsigned int _borderWidth, unsigned int _borderHeight, unsigned int _paddingX, unsigned int _paddingY) :
+								unsigned int _borderWidth, unsigned int _borderHeight, unsigned int _paddingX, unsigned int _paddingY) :
 			RectElement(x, y, w, h), borderWidth(_borderWidth), borderHeight(_borderHeight), paddingX(_paddingX), paddingY(_paddingY) {}
 		unsigned int borderWidth;
 		unsigned int borderHeight;
@@ -168,6 +175,9 @@ public:
 	const BorderedRectElement &ButtonNormal()   const { return m_buttonNormal; }
 	const BorderedRectElement &ButtonHover()    const { return m_buttonHover; }
 	const BorderedRectElement &ButtonActive()   const { return m_buttonActive; }
+
+	const Color &ButtonHidden() const { return m_buttonHidden; }
+	const Color &SmallButtonHidden() const { return m_smallButtonHidden; }
 
 	const RectElement &SmallButtonDisabled() const { return m_smallButtonDisabled; }
 	const RectElement &SmallButtonNormal()   const { return m_smallButtonNormal; }
@@ -200,13 +210,9 @@ public:
 
 	unsigned int ButtonMinInnerSize() const { return m_buttonMinInnerSize; }
 
-	float AlphaNormal() const { return m_alphaNormal; }
-	float AlphaSelect() const { return m_alphaSelect; }
-	float AlphaHover()  const { return m_alphaHover; }
-
-	Uint8 AlphaNormal_ub() const { return m_alphaNormal * 255; }
-	Uint8 AlphaSelect_ub() const { return m_alphaSelect * 255; }
-	Uint8 AlphaHover_ub()  const { return m_alphaHover * 255; }
+	Color GetNormalColor() const { return m_normalColor; }
+	Color GetHoverColor() const { return m_hoverColor; }
+	Color GetSelectColor() const { return m_selectColor; }
 
 	Graphics::RenderState *GetAlphaBlendState() const { return m_alphaBlendState; }
 	Graphics::RenderState *GetRenderState(Graphics::BlendMode) const;
@@ -234,6 +240,7 @@ private:
 	RectElement LoadRectElement(const std::string &spec);
 	BorderedRectElement LoadBorderedRectElement(const std::string &spec);
 	EdgedRectElement LoadEdgedRectElement(const std::string &spec);
+	Color LoadSkinColor(const std::string &spec);
 
 	BorderedRectElement m_backgroundNormal;
 	BorderedRectElement m_backgroundActive;
@@ -242,6 +249,10 @@ private:
 	BorderedRectElement m_buttonNormal;
 	BorderedRectElement m_buttonHover;
 	BorderedRectElement m_buttonActive;
+
+	// Used by Disable() button, to also hide border, and fill color
+	Color m_buttonHidden;
+	Color m_smallButtonHidden;
 
 	RectElement m_smallButtonDisabled;
 	RectElement m_smallButtonNormal;
@@ -275,9 +286,9 @@ private:
 
 	unsigned int m_buttonMinInnerSize;
 
-	float m_alphaNormal;
-	float m_alphaSelect;
-	float m_alphaHover;
+	Color m_normalColor;
+	Color m_hoverColor;
+	Color m_selectColor;
 };
 
 }

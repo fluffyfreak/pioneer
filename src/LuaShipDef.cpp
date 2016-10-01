@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Lua.h"
@@ -190,6 +190,36 @@
  *   experimental
  */
 
+/*
+ * Attribute: shipClass
+ *
+ * Class of the ship (i.e. "medium_courier").
+ *
+ * Status:
+ *
+ *   experimental
+ */
+
+/*
+ * Attribute: manufacturer
+ *
+ * Manufacturer of the ship (i.e. "kaluri").
+ *
+ * Status:
+ *
+ *   experimental
+ */
+
+/*
+ * Attribute: modelName
+ *
+ * Name for the model of this ship. Important for looking up the actual ship model (Engine.GetModel(ShipDef.modelName)).
+ *
+ * Status:
+ *
+ *   experimental
+ */
+
 void LuaShipDef::Register()
 {
 	lua_State *l = Lua::manager->GetLuaState();
@@ -198,12 +228,12 @@ void LuaShipDef::Register()
 
 	lua_newtable(l);
 
-	for (std::map<ShipType::Id,ShipType>::const_iterator i = ShipType::types.begin(); i != ShipType::types.end(); ++i)
+	for (auto iter : ShipType::types)
 	{
-		const ShipType &st = (*i).second;
+		const ShipType &st = iter.second;
 		lua_newtable(l);
 
-		pi_lua_settable(l, "id",                (*i).first.c_str());
+		pi_lua_settable(l, "id",                iter.first.c_str());
 		pi_lua_settable(l, "name",              st.name.c_str());
 		pi_lua_settable(l, "shipClass",         st.shipClass.c_str());
 		pi_lua_settable(l, "manufacturer",      st.manufacturer.c_str());
@@ -214,7 +244,7 @@ void LuaShipDef::Register()
 		pi_lua_settable(l, "capacity",          st.capacity);
 		pi_lua_settable(l, "hullMass",          st.hullMass);
 		pi_lua_settable(l, "fuelTankMass",      st.fuelTankMass);
-		pi_lua_settable(l, "basePrice",         double(st.baseprice)*0.01);
+		pi_lua_settable(l, "basePrice",         st.baseprice);
 		pi_lua_settable(l, "minCrew",           st.minCrew);
 		pi_lua_settable(l, "maxCrew",           st.maxCrew);
 		pi_lua_settable(l, "hyperdriveClass",   st.hyperdriveClass);
@@ -247,7 +277,7 @@ void LuaShipDef::Register()
 		lua_pop(l, 1);
 
 		pi_lua_readonly_table_proxy(l, -1);
-		lua_setfield(l, -3, (*i).first.c_str());
+		lua_setfield(l, -3, iter.first.c_str());
 		lua_pop(l, 1);
 	}
 

@@ -1,4 +1,4 @@
--- Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local Engine = import("Engine")
@@ -31,7 +31,13 @@ local function setupLayerAnim (clickWidget)
 			easing = "LINEAR",
 			target = "OPACITY",
 			duration = 0.1,
-			callback = function () ui:DropLayer() end,
+			callback = function ()
+				-- XXX mostly a hack to fix #3110
+				-- something may have dropped our messagebox layer before we get here
+				if ui.layer == layer then
+					ui:DropLayer()
+				end
+			end,
 		})
 	end)
 end

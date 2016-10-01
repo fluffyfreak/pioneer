@@ -523,10 +523,6 @@
       "description" : "",
       "message" : "Csoport:"
    },
-   "HANG_UP" : {
-      "description" : "",
-      "message" : "Kapcsolat megszakítása."
-   },
    "HEY_YOU_ARE_GOING_TO_PAY_FOR_THIS" : {
       "description" : "",
       "message" : "Hé?! Ezért fizetni fogsz!!"
@@ -567,6 +563,10 @@
       "description" : "",
       "message" : "Ma már nem fogsz sehol dokkolni!"
    },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Navigációs célnak beállít."
+   },
    "TAXI" : {
       "description" : "",
       "message" : "Taxi"
@@ -586,6 +586,10 @@
    "WILL_I_BE_IN_ANY_DANGER" : {
       "description" : "",
       "message" : "Lesz valamilyen veszély útközben?"
+   },
+   "WRONG_SYSTEM" : {
+      "description" : "Shown if system name is right, but coordinates are wrong",
+      "message" : "A rendszer neve stimmel, de a koordináták nem."
    },
    "YOU_DO_NOT_HAVE_ENOUGH_CABIN_SPACE_ON_YOUR_SHIP" : {
       "description" : "",

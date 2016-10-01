@@ -167,10 +167,6 @@
       "description" : "",
       "message" : "j'ai recu avec joie le message concernant la fin de carrière de  {target}. Voici vos {cash}."
    },
-   "HANG_UP" : {
-      "description" : "",
-      "message" : "Raccrochez."
-   },
    "HOW_SOON_MUST_IT_BE_DONE" : {
       "description" : "",
       "message" : "Quand cela doit-il être fait ?"
@@ -194,6 +190,14 @@
    "RETURN_HERE_ON_THE_COMPLETION_OF_THE_CONTRACT_AND_YOU_WILL_BE_PAID" : {
       "description" : "",
       "message" : "Revenez ici a l'accomplissement du contrat et vous serez payé."
+   },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Définir comme cible de navigation"
+   },
+   "SET_RETURN_ROUTE" : {
+      "description" : "",
+      "message" : "Définir le trajet de retour"
    },
    "SHIP" : {
       "description" : "",

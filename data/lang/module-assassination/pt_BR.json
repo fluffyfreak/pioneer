@@ -167,10 +167,6 @@
       "description" : "",
       "message" : "Mensagem do fim da carreira de {alvo} felizmente recebida. Aqui está seu {dinheiro}."
    },
-   "HANG_UP" : {
-      "description" : "",
-      "message" : "Desligamento."
-   },
    "HOW_SOON_MUST_IT_BE_DONE" : {
       "description" : "",
       "message" : "Quando será feito?"
@@ -194,6 +190,14 @@
    "RETURN_HERE_ON_THE_COMPLETION_OF_THE_CONTRACT_AND_YOU_WILL_BE_PAID" : {
       "description" : "",
       "message" : "Volte aqui na conclusão do contrato e você será pago."
+   },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Set as navigation target"
+   },
+   "SET_RETURN_ROUTE" : {
+      "description" : "",
+      "message" : "Set return route"
    },
    "SHIP" : {
       "description" : "",

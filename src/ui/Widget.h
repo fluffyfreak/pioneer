@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef UI_WIDGET_H
@@ -157,7 +157,11 @@ public:
 	// disabled widgets do not receive input
 	virtual void Disable();
 	virtual void Enable();
+	virtual void Hidden();
+
 	bool IsDisabled() const { return m_disabled; }
+
+	bool IsHidden() const { return m_hidden; }
 
 	bool IsMouseOver() const { return m_mouseOver; }
 
@@ -254,6 +258,8 @@ public:
 	// synthesised when keyboard shortcut is used
 	sigc::signal<bool>::accumulated<EventHandlerResultAccumulator> onClick;
 
+	// Widget events
+	sigc::signal<void,bool> onVisibilityChanged;
 
 protected:
 
@@ -283,6 +289,7 @@ protected:
 	bool IsVisible() const { return m_visible; }
 
 	void SetDisabled(bool disabled) { m_disabled = disabled; }
+	void SetHidden(bool hidden) { m_hidden = hidden; }
 
 	// internal event handlers. override to handle events. unlike the external
 	// on* signals, every widget in the stack is guaranteed to receive a call
@@ -373,6 +380,7 @@ private:
 	void TriggerSelect();
 	void TriggerDeselect();
 
+	void TriggerVisibilityChanged();
 
 	// let container set our attributes. none of them make any sense if
 	// we're not in a container
@@ -419,6 +427,7 @@ private:
 	Font m_font;
 
 	bool m_disabled;
+	bool m_hidden;
 
 	bool m_mouseOver;
 	bool m_visible;

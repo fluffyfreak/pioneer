@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef MODELVIEWER_H
@@ -29,6 +29,7 @@ private:
 	bool OnToggleGrid(UI::Widget*);
 	bool OnToggleGuns(UI::CheckBox*);
 	bool OnToggleTurrets(UI::CheckBox*);
+	bool OnRandomColor(UI::Widget*);
 	void UpdateShield();
 	bool OnHitIt(UI::Widget*);
 	void HitImpl();
@@ -41,7 +42,7 @@ private:
 	void DrawBackground();
 	void DrawGrid(const matrix4x4f &trans, float radius);
 	void DrawLog();
-	void DrawModel();
+	void DrawModel(const matrix4x4f &mv);
 	void MainLoop();
 	void OnAnimChanged(unsigned int, const std::string&);
 	void OnAnimSliderChanged(float);
@@ -87,6 +88,7 @@ private:
 	bool m_done;
 	bool m_screenshotQueued;
 	bool m_shieldIsHit;
+	bool m_settingColourSliders;
 	float m_shieldHitPan;
 	double m_frameTime;
 	Graphics::Renderer *m_renderer;
@@ -106,8 +108,10 @@ private:
 	std::unique_ptr<SceneGraph::Model> m_turretModel;
 	std::unique_ptr<SceneGraph::Model> m_scaleModel;
 	std::string m_modelName;
+	std::string m_requestedModelName;
 	RefCountedPtr<UI::Context> m_ui;
 	Graphics::RenderState *m_bgState;
+	RefCountedPtr<Graphics::VertexBuffer> m_bgBuffer;
 
 	//undecided on this input stuff
 	//updating the states of all inputs during PollEvents
@@ -131,6 +135,8 @@ private:
 	UI::Slider *thrustSliders[2*3]; //thruster sliders 2*xyz (linear & angular)
 
 	sigc::signal<void> onModelChanged;
+
+	Graphics::Drawables::Lines m_gridLines;
 };
 
 #endif

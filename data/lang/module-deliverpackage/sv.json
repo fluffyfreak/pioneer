@@ -253,11 +253,7 @@
    },
    "FLAVOUR_9_WHYSOMUCHTEXT" : {
       "description" : "",
-      "message" : "Vårt uppehälle beror på det."
-   },
-   "HANG_UP" : {
-      "description" : "",
-      "message" : "Lägg på."
+      "message" : "Ve är beroende av det för vårt levebröd."
    },
    "HOW_SOON_MUST_IT_BE_DELIVERED" : {
       "description" : "",
@@ -317,7 +313,7 @@
    },
    "PIRATE_TAUNTS_7" : {
       "description" : "",
-      "message" : "Det paketet kommer inte att nå sin destination idag."
+      "message" : "Det där paketet kommer inte nå sin slutdestination idag."
    },
    "PIRATE_TAUNTS_8" : {
       "description" : "",
@@ -326,6 +322,10 @@
    "PIRATE_TAUNTS_9" : {
       "description" : "",
       "message" : "Du kommer att få betala för den lasten med ditt liv."
+   },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Använd destination som navigationsmål"
    },
    "SPACEPORT" : {
       "description" : "",

@@ -255,10 +255,6 @@
       "description" : "",
       "message" : "Notre gagne-pain en dépend."
    },
-   "HANG_UP" : {
-      "description" : "",
-      "message" : "Raccrochez."
-   },
    "HOW_SOON_MUST_IT_BE_DELIVERED" : {
       "description" : "",
       "message" : "Quand ceci doit etre livré ? "
@@ -317,7 +313,7 @@
    },
    "PIRATE_TAUNTS_7" : {
       "description" : "",
-      "message" : "Ce colis n'arriveras pas a destination aujourd'hui."
+      "message" : "Ce paquet ne parviendra pas à sa destination aujourd'hui."
    },
    "PIRATE_TAUNTS_8" : {
       "description" : "",
@@ -326,6 +322,10 @@
    "PIRATE_TAUNTS_9" : {
       "description" : "",
       "message" : "Tu vas payer de ta vie pour ce transport."
+   },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Définir comme cible de navigation."
    },
    "SPACEPORT" : {
       "description" : "",

@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _PLAYER_H
@@ -17,7 +17,7 @@ namespace Graphics { class Renderer; }
 class Player: public Ship {
 public:
 	OBJDEF(Player, Ship, PLAYER);
-	Player(ShipType::Id shipId);
+	Player(const ShipType::Id &shipId);
 	Player() {}; //default constructor used before Load
 	virtual void SetDockedWith(SpaceStation *, int port);
 	virtual bool OnDamage(Object *attacker, float kgDamage, const CollisionContact& contactData);
@@ -48,8 +48,8 @@ public:
 	sigc::signal<void> onChangeEquipment;
 
 protected:
-	virtual void Save(Serializer::Writer &wr, Space *space);
-	virtual void Load(Serializer::Reader &rd, Space *space);
+	virtual void SaveToJson(Json::Value &jsonObj, Space *space);
+	virtual void LoadFromJson(const Json::Value &jsonObj, Space *space);
 
 	virtual void OnEnterSystem();
 	virtual void OnEnterHyperspace();

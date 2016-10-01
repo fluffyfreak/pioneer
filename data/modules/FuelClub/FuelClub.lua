@@ -1,4 +1,4 @@
--- Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local Engine = import("Engine")
@@ -43,16 +43,38 @@ local memberships = {
 -- }
 }
 
--- 1 / probability that you'll see one in a BBS
-local chance_of_availability = 3
-
 local flavours = {
-	{
+	{    -- Independent club
 		clubname = l.FLAVOUR_0_CLUBNAME,
 		welcome = l.FLAVOUR_0_WELCOME,
 		nonmember_intro = l.FLAVOUR_0_NONMEMBER_INTRO,
 		member_intro = l.FLAVOUR_0_MEMBER_INTRO,
 		annual_fee = 400,
+		availability = {FED = 0.1, CIW = 0.1, HABER = 0, IND = 0.4} -- probability for these factions
+	},
+	{   -- SolFed club (reuse some messages)
+		clubname = l.FLAVOUR_1_CLUBNAME,
+		welcome = l.FLAVOUR_0_WELCOME,
+		nonmember_intro = l.FLAVOUR_1_NONMEMBER_INTRO,
+		member_intro = l.FLAVOUR_0_MEMBER_INTRO,
+		annual_fee = 400,
+		availability = {FED = 0.4, CIW = 0, HABER = 0, IND = 0}
+	},
+	{   -- Confederation club
+		clubname = l.FLAVOUR_2_CLUBNAME,
+		welcome = l.FLAVOUR_2_WELCOME,
+		nonmember_intro = l.FLAVOUR_2_NONMEMBER_INTRO,
+		member_intro = l.FLAVOUR_0_MEMBER_INTRO,
+		annual_fee = 300,
+		availability = {FED = 0, CIW = 0.4, HABER = 0, IND = 0}
+	},
+	{   -- Haber fuel division
+		clubname = l.FLAVOUR_3_CLUBNAME,
+		welcome = l.FLAVOUR_0_WELCOME,
+		nonmember_intro = l.FLAVOUR_3_NONMEMBER_INTRO,
+		member_intro = l.FLAVOUR_3_MEMBER_INTRO,
+		annual_fee = 600,
+		availability = {FED = 0, CIW = 0, HABER=1, IND = 0}
 	}
 }
 
@@ -100,7 +122,14 @@ onChat = function (form, ref, option)
 				ad.stock[commodity] = cur
 				return cur
 			end,
-			getPrice = function (ref, commodity)
+			getBuyPrice = function (ref, commodity)
+				return ad.station:GetEquipmentPrice(commodity) * ({
+					[Equipment.cargo.hydrogen] = 0.5, -- half price Hydrogen
+					[Equipment.cargo.military_fuel] = 0.80, -- 20% off Milfuel
+					[Equipment.cargo.radioactives] = 0, -- Radioactives go free
+				})[commodity]
+			end,
+			getSellPrice = function (ref, commodity)
 				return ad.station:GetEquipmentPrice(commodity) * ({
 					[Equipment.cargo.hydrogen] = 0.5, -- half price Hydrogen
 					[Equipment.cargo.military_fuel] = 0.80, -- 20% off Milfuel
@@ -170,7 +199,7 @@ onChat = function (form, ref, option)
 
 	else
 		-- non-members get offered membership
-		message = ad.flavour.nonmember_intro:interp({clubname=ad.flavour.clubname}).."\n"..
+		local message = ad.flavour.nonmember_intro:interp({clubname=ad.flavour.clubname}).."\n"..
 			"\n\t* " ..l.LIST_BENEFITS_FUEL_INTRO..
 			"\n\t* "..string.interp(l.LIST_BENEFITS_FUEL, {fuel=Equipment.cargo.hydrogen:GetName()})..
 			"\n\t* "..string.interp(l.LIST_BENEFITS_FUEL, {fuel=Equipment.cargo.military_fuel:GetName()})..
@@ -185,26 +214,44 @@ onChat = function (form, ref, option)
 end
 
 local onCreateBB = function (station)
+
+	local faction = Game.system.faction.name
+
+	-- For convenes, map long faction name to shorter table key
+	local faction_key
+	if faction == "Solar Federation" then
+		faction_key = "FED"
+	elseif faction == "Commonwealth of Independent Worlds" then
+		faction_key = "CIW"
+	elseif faction == "Haber Corporation" then
+		faction_key = "HABER"
+	else
+		faction_key = "IND"
+	end
+
 	-- deterministically generate our instance
 	local rand = Rand.New(station.seed + seedbump)
-	if rand:Integer(1,chance_of_availability) == 1 then
-		-- Create our bulletin board ad
-		local ad = {station = station, stock = {}, price = {}}
-		ad.flavour = flavours[rand:Integer(1,#flavours)]
-		ad.character = Character.New({
-			title = ad.flavour.clubname,
-			armour = false,
-		})
-		ads[station:AddAdvert({
-			description = ad.flavour.clubname,
-			icon        = "fuel_club",
-			onChat      = onChat,
-			onDelete    = onDelete})] = ad
+
+	for k,flavour in pairs(flavours) do
+		if rand:Number(0,1) < flavour.availability[faction_key] then
+			-- Create our bulletin board ad
+			local ad = {station = station, stock = {}, price = {}}
+			ad.flavour = flavour
+			ad.character = Character.New({
+					title = ad.flavour.clubname,
+					armour = false,
+			})
+			ads[station:AddAdvert({
+						description = ad.flavour.clubname,
+						icon        = "fuel_club",
+						onChat      = onChat,
+						onDelete    = onDelete})] = ad
+		end
 	end
 end
 
 local onGameStart = function ()
-	local ref
+
 	if loaded_data then
 		-- rebuild saved adverts
 		for k,ad in pairs(loaded_data.ads) do
@@ -216,10 +263,6 @@ local onGameStart = function ()
 		end
 		-- load membership info
 		memberships = loaded_data.memberships
-		for k,v in pairs(memberships) do
-			for l,w in pairs(v) do
-			end
-		end
 		loaded_data = nil
 	else
 		-- Hopefully this won't be necessary after Pioneer handles Lua teardown

@@ -23,10 +23,6 @@
       "description" : "",
       "message" : "Indietro"
    },
-   "HANG_UP" : {
-      "description" : "",
-      "message" : "Riaggancia."
-   },
    "IM_SORRY_IM_NOT_PREPARED_TO_GO_ANY_LOWER" : {
       "description" : "",
       "message" : "Mi dispiace, non sono preparato a scendere più in basso."
@@ -43,9 +39,9 @@
       "description" : "",
       "message" : "Breve periodo di servizio a bordo di un'astronave"
    },
-   "NAVIGATOR" : {
+   "NO_CREW_AVAILABLE" : {
       "description" : "",
-      "message" : "Navigatore"
+      "message" : "Spiacente, nessun candidato è in cerca di lavoro a {station}"
    },
    "NO_EXPERIENCE" : {
       "description" : "",
@@ -55,21 +51,9 @@
       "description" : "",
       "message" : "OK, suppongo che sia tutto a posto."
    },
-   "PILOT" : {
-      "description" : "",
-      "message" : "Pilota"
-   },
    "POTENTIAL_CREW_MEMBERS" : {
       "description" : "",
       "message" : "Possibili membri dell'equipaggio registrati come in cerca di lavoro a {station}:"
-   },
-   "SENSORS_AND_DEFENCE" : {
-      "description" : "",
-      "message" : "Sensori e difesa"
-   },
-   "SHIPS_ENGINEER" : {
-      "description" : "",
-      "message" : "Ingegnere di bordo"
    },
    "SIMULATOR_TRAINING_ONLY" : {
       "description" : "",
@@ -101,7 +85,7 @@
    },
    "TIME_SERVED_CREW_MEMBER" : {
       "description" : "",
-      "message" : "Periodo di servizio come membro di equipaggio"
+      "message" : "Media esperienza come membro di equipaggio"
    },
    "VETERAN_TIME_SERVED_CREW_MEMBER" : {
       "description" : "",

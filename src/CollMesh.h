@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _COLLMESH_H
@@ -6,6 +6,7 @@
 #include "RefCounted.h"
 #include "Aabb.h"
 #include "collider/GeomTree.h"
+#include "Serializer.h"
 
 //This simply stores the collision GeomTrees
 //and AABB.
@@ -20,29 +21,32 @@ public:
 			delete *it;
 		delete m_geomTree;
 	}
-	virtual Aabb &GetAabb() { return m_aabb; }
+	inline Aabb &GetAabb() { return m_aabb; }
 
-	virtual double GetRadius() const { return m_aabb.GetRadius(); }
-	virtual void SetRadius(double v) {
+	inline double GetRadius() const { return m_aabb.GetRadius(); }
+	inline void SetRadius(double v) {
 		//0 radius = trouble
 		m_aabb.radius = std::max(v, 0.1);
 	}
 
-	virtual GeomTree *GetGeomTree() const { return m_geomTree; }
-	void SetGeomTree(GeomTree *t) {
+	inline GeomTree *GetGeomTree() const { return m_geomTree; }
+	inline void SetGeomTree(GeomTree *t) {
 		assert(t);
 		m_geomTree = t;
 	}
 
-	const std::vector<GeomTree*> &GetDynGeomTrees() const { return m_dynGeomTrees; }
-	void AddDynGeomTree(GeomTree *t) {
+	inline const std::vector<GeomTree*> &GetDynGeomTrees() const { return m_dynGeomTrees; }
+	inline void AddDynGeomTree(GeomTree *t) {
 		assert(t);
 		m_dynGeomTrees.push_back(t);
 	}
 
 	//for statistics
-	unsigned int GetNumTriangles() const { return m_totalTris; }
-	void SetNumTriangles(unsigned int i) { m_totalTris = i; }
+	inline unsigned int GetNumTriangles() const { return m_totalTris; }
+	inline void SetNumTriangles(unsigned int i) { m_totalTris = i; }
+
+	void Save(Serializer::Writer &wr) const;
+	void Load(Serializer::Reader &rd);
 
 protected:
 	Aabb m_aabb;

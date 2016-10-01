@@ -1,4 +1,4 @@
--- Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local Ship = import_core("Ship")
@@ -10,6 +10,7 @@ local ShipDef = import("ShipDef")
 local Equipment = import("Equipment")
 local Timer = import("Timer")
 local Lang = import("Lang")
+local Character = import("Character")
 
 local l = Lang.GetResource("ui-core")
 
@@ -172,7 +173,7 @@ function Ship:AddEquip(item, count, slot)
 	end
 	local ret = self.equipSet:Add(self, item, count, slot)
 	if ret > 0 then
-		Event.Queue("onShipEquipmentChange", self, item)
+		Event.Queue("onShipEquipmentChanged", self, item)
 	end
 	return ret
 end
@@ -281,7 +282,7 @@ compat.slots.old2new={
 	MISSILE="missile", ECM="ecm", SCANNER="scanner", RADARMAPPER="radar_mapper",
 	HYPERCLOUD="hypercloud", HULLAUTOREPAIR="hull_autorepair",
 	ENERGYBOOSTER="energy_booster", ATMOSHIELD="atmo_shield", CABIN="cabin",
-	SHIELD="shield", FUELSCOOP="fuel_scoop", CARGOSCOOP="cargo_scoop",
+	SHIELD="shield", FUELSCOOP="scoop", CARGOSCOOP="scoop",
 	LASERCOOLER="laser_cooler", CARGOLIFESUPPORT="cargo_life_support",
 	AUTOPILOT="autopilot"
 }
@@ -319,7 +320,7 @@ Ship.SetEquip = function (self, slot, index, item)
 		item = compat.equip.old2new[item]
 	end
 	self.equipSet:Set(self, slot, index, item)
-	Event.Queue("onShipEquipmentChange", self)
+	Event.Queue("onShipEquipmentChanged", self)
 end
 
 --
@@ -327,7 +328,7 @@ end
 --
 -- Remove one or more of a given equipment type from its appropriate cargo slot
 --
--- > num_removed = ship:RemoveEquip(item, count)
+-- > num_removed = ship:RemoveEquip(item, count, slot)
 --
 -- Parameters:
 --
@@ -361,18 +362,122 @@ Ship.RemoveEquip = function (self, item, count, slot)
 	end
 	local ret = self.equipSet:Remove(self, item, count, slot)
 	if ret > 0 then
-		Event.Queue("onShipEquipmentChange", self, item)
+		Event.Queue("onShipEquipmentChanged", self, item)
 	end
 	return ret
 end
 
-Ship.HyperjumpTo = function (self, path)
+
+--
+-- Method: IsHyperjumpAllowed
+--
+-- Check if hyperjump is allowed, return bool and minimum allowed
+-- altitude / distance.
+--
+-- > is_allowed, distance = ship:IsHyperjumpAllowed()
+--
+--
+-- Return:
+--
+--   is_allowed - Boolean. True if allowed at ships current position,
+--                flase otherwise
+--
+--   distance - The minimum allowed altitude from planetary body, or
+--              distance from orbital space station, for a legal hyper juump.
+--
+-- Availability:
+--
+--  2016 August
+--
+-- Status:
+--
+--  experimental
+--
+Ship.IsHyperjumpAllowed = function(self)
+
+	-- in meters
+	local MIN_PLANET_HYPERJUMP_ALTITUDE = 10000
+	local MIN_SPACESTATION_HYPERJUMP_DISTANCE = 1000
+
+	-- get closest non-dynamic (not ships, cargo, missiles) body of ship
+	local body = self.frameBody
+
+	-- If no body close by, anything goes
+	if not body then
+		return true, 0
+	end
+
+	-- if alt is nil, then outside frame of ref -> OK to jump
+	local check = function(alt, dist) return not alt or alt >= dist, dist end
+
+	-- if body exists and not a planet -> allowed
+	if body and body.type == 'STARPORT_ORBITAL' then
+		return check(body:DistanceTo(self), MIN_SPACESTATION_HYPERJUMP_DISTANCE)
+	end
+
+	-- if on a planet:
+	-- always allowed if not body.hasAtmosphere?
+
+	-- if body is a planet or a star:
+	if body and body.type ~= 'GRAVPOINT' then
+		local lat, long, altitude = self:GetGroundPosition()
+		return check(altitude, MIN_PLANET_HYPERJUMP_ALTITUDE)
+	end
+end
+
+--
+-- Method: HyperjumpTo
+--
+-- Hyperjump ship to system. Makes sure the ship has a hyper drive,
+-- that target is withn range, and ship has enough fuel, before
+-- initiating the hyperjump countdown. In addition, through the
+-- optional argument, the ship can fly to a safe distance, compliant
+-- with local authorities' regulation, before initiating the jump.
+--
+-- > status = ship:HyperjumpTo(path)
+-- > status = ship:HyperjumpTo(path, is_legal)
+--
+-- Parameters:
+--
+--   path - a <SystemPath> for the destination system
+--
+--   isLegal - an optional Boolean argument, defaults to false. If
+--             true AI will fly the ship ship to legal distance
+--             before jumping
+--
+-- Return:
+--
+--   status - a <Constants.ShipJumpStatus> string that tells if the ship can
+--            hyperspace and if not, describes the reason
+--
+-- Availability:
+--
+--  2015
+--
+-- Status:
+--
+--  experimental
+--
+Ship.HyperjumpTo = function (self, path, is_legal)
 	local engine = self:GetEquip("engine", 1)
 	if not engine then
 		return "NO_DRIVE"
 	end
+
+	-- default to false, if nil:
+	is_legal = not (is_legal == nil) or is_legal
+
+	-- only jump from safe distance
+	local is_allowed, distance = self:IsHyperjumpAllowed()
+
+	if is_legal and self.frameBody and not is_allowed then
+		print("---> Engage AI for safe distance of hyperjump")
+		self:AIEnterLowOrbit(self.frameBody)
+	end
+
 	return engine:HyperjumpTo(self, path)
 end
+
 
 Ship.CanHyperjumpTo = function(self, path)
 	return self:GetHyperspaceDetails(path) == 'OK'
@@ -533,6 +638,48 @@ function Ship:FireMissileAt(which_missile, target)
 	return missile_object
 end
 
+-- Method: StartSensor
+--
+-- Starts the equipped sensor
+--
+-- Parameters:
+--   idx - the index of the sensor in the equipment slots
+--
+-- Availability:
+--
+--   2015 June
+--
+-- Status:
+--
+--   experimental
+--
+
+function Ship:StartSensor(idx)
+	local sensor = self:GetEquip("sensor", idx)
+	sensor:BeginAcquisition(function(progress, state) end)
+end
+
+-- Method: StopSensor
+--
+-- Stops the equipped sensor
+--
+-- Parameters:
+--   idx - the index of the sensor in the equipment slots
+--
+-- Availability:
+--
+--   2015 June
+--
+-- Status:
+--
+--   experimental
+--
+
+function Ship:StopSensor(idx)
+	local sensor = self:GetEquip("sensor", idx)
+	sensor:ClearAcquisition()
+end
+
 --
 -- Method: Refuel
 --
@@ -563,12 +710,11 @@ Ship.Refuel = function (self,amount)
 		return 0
 	end
 	local fuelTankMass = ShipDef[self.shipId].fuelTankMass
-	local needed = math.clamp(math.ceil(fuelTankMass - self.fuelMassLeft), 0, amount)
+	local needed = math.clamp(math.floor(fuelTankMass - self.fuelMassLeft), 0, amount)
 	local removed = self:RemoveEquip(Equipment.cargo.hydrogen, needed)
 	self:SetFuelPercent(math.clamp(self.fuel + removed * 100 / fuelTankMass, 0, 100))
 	return removed
 end
-
 
 --
 -- Method: Jettison

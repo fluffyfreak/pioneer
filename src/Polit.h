@@ -1,24 +1,17 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _POLIT_H
 #define _POLIT_H
 
 #include "galaxy/Economy.h"
-#include "Serializer.h"
 
+class Galaxy;
 class StarSystem;
 class SysPolit;
 class Ship;
 
 namespace Polit {
-	enum Crime { // <enum scope='Polit' name=PolitCrime prefix=CRIME_ public>
-		CRIME_TRADING_ILLEGAL_GOODS = (1<<0),
-		CRIME_WEAPON_DISCHARGE = (1<<1),
-		CRIME_PIRACY = (1<<2),
-		CRIME_MURDER = (1<<3),
-	};
-
 	enum PolitEcon { // <enum scope='Polit' name=PolitEcon prefix=ECON_ public>
 		ECON_NONE,
 		ECON_VERY_CAPITALIST,
@@ -51,16 +44,7 @@ namespace Polit {
 		GOV_RAND_MAX = GOV_MAX-1, // <enum skip>
 	};
 
-	void NotifyOfCrime(Ship *s, enum Crime c);
-	void GetSysPolitStarSystem(const StarSystem *s, const fixed &human_infestedness, SysPolit &outSysPolit);
-	bool IsCommodityLegal(const StarSystem *s, const GalacticEconomy::Commodity t);
-	void Init();
-	void Serialize(Serializer::Writer &wr);
-	void Unserialize(Serializer::Reader &rd);
-	void AddCrime(Sint64 crimeBitset, Sint64 addFine);
-	void GetCrime(Sint64 *crimeBitset, Sint64 *fine);
-
-	extern const char *crimeNames[64];
+	fixed GetBaseLawlessness(GovType gov);
 }
 
 class SysPolit {

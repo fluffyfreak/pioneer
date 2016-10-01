@@ -1,4 +1,4 @@
-// Copyright © 2008-2014 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include <cstdlib>
@@ -7,6 +7,7 @@
 #include "FileSystem.h"
 #include "graphics/Graphics.h"
 #include "graphics/Renderer.h"
+#include "graphics/opengl/RendererGL.h"
 #include "Lua.h"
 #include "PropertiedObject.h"
 #include "OS.h"
@@ -119,7 +120,10 @@ int main(int argc, char **argv)
 		exit(-1);
 	}
 
+	Graphics::RendererOGL::RegisterRenderer();
+
 	Graphics::Settings videoSettings;
+	videoSettings.rendererType = Graphics::RENDERER_OPENGL;
 	videoSettings.width = WIDTH;
 	videoSettings.height = HEIGHT;
 	videoSettings.fullscreen = false;

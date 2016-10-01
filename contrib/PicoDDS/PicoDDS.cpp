@@ -76,7 +76,7 @@ size_t DDSImage::Read(const char* pData, const size_t dataSize)
 {
 	// Read in header and decode
 	if (!ReadHeader(pData, surfacedata_))
-		return -1;
+		return 0;
 
 	if (surfacedata_.mipmapcount==0)
 		surfacedata_.mipmapcount=1;
@@ -93,12 +93,12 @@ size_t DDSImage::Read(const char* pData, const size_t dataSize)
 	imgdata_.numMipMaps = surfacedata_.mipmapcount;
 	imgdata_.format = GetTextureFormat();
 	imgdata_.numImages = GetNumImages();
-	imgdata_.size = CalculateStoreageSize();
+	imgdata_.size = CalculateStorageSize();
 	if(0 >= imgdata_.size)
-		return -1;
+		return 0;
 			
-	if(-1 == imgdata_.format)
-		return -1;
+	if(FORMAT_NONE == imgdata_.format)
+		return 0;
 
 	const long headerSize=128;
 	const size_t DDSStructSize = sizeof(DDS::DDSStruct)+4;
@@ -116,21 +116,19 @@ int DDSImage::GetMinDXTSize() const
 	return GetMinSize(GetDXTFormat());
 }
 
-int DDSImage::CalculateStoreageSize() const
+int DDSImage::CalculateStorageSize() const
 {
 	int size = 0;
 	for(int i = 0; i < imgdata_.numImages; ++i)
 	{
 		int width=imgdata_.width;
 		int height=imgdata_.height;
-		int depth=imgdata_.depth;
 
 		for (int m=0; m<imgdata_.numMipMaps; ++m)
 		{
-			size+=GetMipLevelSize(width, height, depth, imgdata_.format);
+			size+=GetMipLevelSize(width, height, imgdata_.format);
 			width = std::max(width>>1, 1);
 			height = std::max(height>>1, 1);
-			depth = std::max(depth>>1, 1);
 		}
 	}
 
@@ -321,7 +319,7 @@ ImgFormat DDSImage::GetDXTFormat() const
 #ifdef PICODDS_OPENGL
 int DDSImage::GetOpenGLFormat()
 {
-	int format = -1;
+	int format = 0;
 	switch(surfacedata_.pixelformat.fourCC) 
 	{
 	case FOURCC('D','X','T','1'):
@@ -430,8 +428,13 @@ size_t DDSLoad(const char* filename, DDSImage& dds)
 		// read the dds file
 		const size_t sizeDDSRead = dds.Read(pData, sizeRead);
 		free(pData);
+
+		fclose(file);
 		return sizeDDSRead;
 	}
+
+	fclose(file);
+
 	return 0;
 }
 
