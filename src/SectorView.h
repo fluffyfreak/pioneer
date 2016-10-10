@@ -92,6 +92,7 @@ private:
 	void MouseWheel(bool up);
 	void OnKeyPressed(SDL_Keysym *keysym);
 	void OnSearchBoxKeyPress(const SDL_Keysym *keysym);
+	bool RayMarchSectors(const Sector &origin, const Sector &destination, std::vector<RefCountedPtr<Sector>> &sectors);
 
 	RefCountedPtr<Galaxy> m_galaxy;
 

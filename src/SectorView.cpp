@@ -35,6 +35,17 @@ static const float FAR_THRESHOLD = 7.5f;
 static const float FAR_LIMIT     = 36.f;
 static const float FAR_MAX       = 46.f;
 
+namespace {
+	int intbound(int s, int ds) 
+	{ 
+		return (ds > 0 ? ceil(s)-s : s-floor(s)) / abs(ds); 
+	}
+
+	int signum(int x) {
+		return (x > 0) ? 1 : (x < 0) ? -1 : 0;
+	}
+}
+
 enum DetailSelection {
 	DETAILBOX_NONE    = 0
 ,	DETAILBOX_INFO    = 1
@@ -135,6 +146,18 @@ void SectorView::InitDefaults()
 	m_cacheYMax = 0;
 
 	m_sectorCache = m_galaxy->NewSectorSlaveCache();
+
+	std::vector<RefCountedPtr<Sector>> sectors;
+	const bool bFound = RayMarchSectors(
+		*m_sectorCache->GetCached(SystemPath(0,0,0)),
+		*m_sectorCache->GetCached(SystemPath(-5,-5,-5)),
+		sectors);
+	Output("Found " SIZET_FMT " Sectors\n", sectors.size());
+	for(auto s : sectors)
+	{
+		Output("Sector %d,%d,%d\n", s->sx, s->sy, s->sz);
+	}
+	Output("END Sectors\n");
 }
 
 void SectorView::InitObject()
@@ -476,6 +499,83 @@ void SectorView::OnSearchBoxKeyPress(const SDL_Keysym *keysym)
 
 	else
 		m_statusLabel->SetText(Lang::NOT_FOUND);
+}
+
+bool SectorView::RayMarchSectors(const Sector &origin, const Sector &destination, std::vector<RefCountedPtr<Sector>> &sectors) 
+{
+	// From "A Fast Voxel Traversal Algorithm for Ray Tracing"
+	// by John Amanatides and Andrew Woo, 1987
+	// <http://www.cse.yorku.ca/~amana/research/grid.pdf>
+	// <http://citeseer.ist.psu.edu/viewdoc/summary?doi=10.1.1.42.3443>
+      
+	// The foundation of this algorithm is a parameterized representation of
+	// the provided ray,
+	//                    origin + t * direction,
+	// except that t is not actually stored; rather, at any given point in the
+	// traversal, we keep track of the *greater* t values which we would have
+	// if we took a step sufficient to cross a cube boundary along that axis
+	// (i.e. change the integer part of the coordinate) in the variables
+	// tMaxX, tMaxY, and tMaxZ.
+      
+	// Cube containing origin point.
+	int x = floor(origin.sx);
+	int y = floor(origin.sy);
+	int z = floor(origin.sz);
+	// Break out direction vector.
+	const double dx = destination.sx - origin.sx;
+	const double dy = destination.sy - origin.sy;
+	const double dz = destination.sz - origin.sz;
+	// Direction to increment x,y,z when stepping.
+	const int stepX = signum(dx);
+	const int stepY = signum(dy);
+	const int stepZ = signum(dz);
+	// See description above. The initial values depend on the fractional
+	// part of the origin.
+	double tMaxX = intbound(origin.sx, dx);
+	double tMaxY = intbound(origin.sy, dy);
+	double tMaxZ = intbound(origin.sz, dz);
+	// The change in t when taking a step (always positive).
+	const double tDeltaX = (dx==0.0) ? 0.0 : (stepX/dx);
+	const double tDeltaY = (dy==0.0) ? 0.0 : (stepY/dy);
+	const double tDeltaZ = (dz==0.0) ? 0.0 : (stepZ/dz);
+      
+	// Avoids an infinite loop.
+	if (dx == 0 && dy == 0 && dz == 0)
+		return false;
+      
+	while (	(x!=destination.sx) || 
+			(y!=destination.sy) || 
+			(z!=destination.sz) ) 
+	{
+		// tMaxX stores the t-value at which we cross a cube boundary along the
+		// X axis, and similarly for Y and Z. Therefore, choosing the least tMax
+		// chooses the closest cube boundary. Only the first case of the four
+		// has been commented in detail.
+		if (tMaxX < tMaxY) {
+			if (tMaxX < tMaxZ) {
+				// Update which cube we are now in.
+				x += stepX;
+				// Adjust tMaxX to the next X-oriented boundary crossing.
+				tMaxX += tDeltaX;
+			} else {
+				z += stepZ;
+				tMaxZ += tDeltaZ;
+			}
+		} else {
+			if (tMaxY < tMaxZ) {
+				y += stepY;
+				tMaxY += tDeltaY;
+			} else {
+				// Identical to the second case, repeated for simplicity in
+				// the conditionals.
+				z += stepZ;
+				tMaxZ += tDeltaZ;
+			}
+		}
+		// store the current sector
+		sectors.push_back( m_sectorCache->GetCached(SystemPath(x,y,z)) );
+	}
+	return true;
 }
 
 #define FFRAC(_x)	((_x)-floor(_x))
