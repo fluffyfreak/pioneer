@@ -15,6 +15,8 @@
 
 class GeoSphere;
 
+void GenerateSpiral();
+
 class SBaseRequest {
 public:
 	SBaseRequest(const vector3d &v0_, const vector3d &v1_, const vector3d &v2_, const vector3d &v3_, const vector3d &cn,
@@ -225,6 +227,7 @@ protected:
 	void GenerateMesh(double *heights, vector3f *normals, Color3ub *colors, double *borderHeights, vector3d *borderVertexs,
 		const vector3d &v0, const vector3d &v1, const vector3d &v2, const vector3d &v3,
 		const int edgeLen, const double fracStep, const Terrain *pTerrain) const;
+	double Occlusion(const vector3d &normal, const int x, const int y, const double fracStep, const vector3d &v0, const vector3d &v1, const vector3d &v2, const vector3d &v3, const Terrain *pTerrain) const;
 };
 
 // ********************************************************************************

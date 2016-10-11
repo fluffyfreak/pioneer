@@ -45,6 +45,7 @@ static std::vector<GeoSphere*> s_allGeospheres;
 void GeoSphere::Init()
 {
 	s_patchContext.Reset(new GeoPatchContext(detail_edgeLen[Pi::detail.planets > 4 ? 4 : Pi::detail.planets]));
+	GenerateSpiral();
 }
 
 void GeoSphere::Uninit()

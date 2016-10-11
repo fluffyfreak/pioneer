@@ -15,9 +15,53 @@ inline void setColour(Color3ub &r, const vector3d &v) {
 	r.b=static_cast<unsigned char>(Clamp(v.z*255.0, 0.0, 255.0));
 }
 
+#define NUM_SAMPLES 9 //17 //33
+static vector2d spiral[NUM_SAMPLES];
+void GenerateSpiral() {
+	spiral[0] = vector2d(0.0);
+	for ( int i = 1; i < NUM_SAMPLES; i++ ) 
+	{
+		double s = double(i) / (double(NUM_SAMPLES) - 1.0);
+		double a = sqrt(s*512.0);
+		double b = sqrt(s);
+		spiral[i].x = sin(a)*b;
+		spiral[i].y = cos(a)*b;
+	}
+}
+	
+
 // ********************************************************************************
 // Overloaded PureJob class to handle generating the mesh for each patch
 // ********************************************************************************
+
+#define USE_OCCLUSION
+double BasePatchJob::Occlusion(const vector3d &normal, const int x, const int y, const double fracStep, 
+	const vector3d &v0, const vector3d &v1, const vector3d &v2, const vector3d &v3,
+	const Terrain *pTerrain) const
+{
+#ifdef USE_OCCLUSION
+	const vector3d pos = GetSpherePoint(v0, v1, v2, v3, x*fracStep, y*fracStep);
+	double occlusion = 0.0;
+	double raylength = 2.0;
+
+	for(int i=1; i<NUM_SAMPLES; i++)
+	{
+		double srx = spiral[i].x * raylength;
+		double sry = spiral[i].y * raylength;
+		vector3d sample_pos = GetSpherePoint(v0, v1, v2, v3, (x+srx)*fracStep, (y+sry)*fracStep);
+		double h = pTerrain->GetHeight(sample_pos);
+		sample_pos *= h;
+		vector3d sample_dir = (sample_pos - pos).Normalized();
+		double lambert = Clamp(normal.Dot(sample_dir), 0.0, 1.0);
+		double dist_factor = 0.23/sqrt((sample_pos - pos).Length());
+		occlusion += dist_factor*lambert;
+	}
+	//return Clamp((occlusion/(double(NUM_SAMPLES) - 1.0)), 0.0, 1.0);
+	return 1.0 - (occlusion/(double(NUM_SAMPLES) - 1.0));
+#else
+	return 1.0;
+#endif
+}
 
 // Generates full-detail vertices, and also non-edge normals and colors 
 void BasePatchJob::GenerateMesh(double *heights, vector3f *normals, Color3ub *colors, 
@@ -72,7 +116,8 @@ void BasePatchJob::GenerateMesh(double *heights, vector3f *normals, Color3ub *co
 
 			// color
 			const vector3d p = GetSpherePoint(v0, v1, v2, v3, (x-1)*fracStep, (y-1)*fracStep);
-			setColour(*col, pTerrain->GetColor(p, height, n));
+			const double occ = Occlusion(n, (x-1), (y-1), fracStep, v0, v1, v2, v3,pTerrain);
+			setColour(*col, pTerrain->GetColor(p, height, n) * occ);
 			assert(col!=&colors[edgeLen*edgeLen]);
 			++col;
 		}
