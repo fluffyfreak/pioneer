@@ -91,6 +91,26 @@
       "description" : "",
       "message" : "Klasse-4-Militär-Hyperraumantrieb"
    },
+   "DRIVE_MIL5" : {
+      "description" : "",
+      "message" : "Klasse-5-Militär-Hyperraumantrieb"
+   },
+   "DRIVE_MIL6" : {
+      "description" : "",
+      "message" : "Klasse-6-Militär-Hyperraumantrieb"
+   },
+   "DRIVE_MIL7" : {
+      "description" : "",
+      "message" : "Klasse-7-Militär-Hyperraumantrieb"
+   },
+   "DRIVE_MIL8" : {
+      "description" : "",
+      "message" : "Klasse-8-Militär-Hyperraumantrieb"
+   },
+   "DRIVE_MIL9" : {
+      "description" : "",
+      "message" : "Klasse-9-Militär-Hyperraumantrieb"
+   },
    "ECM_ADVANCED" : {
       "description" : "",
       "message" : "Erweitertes EGM-System"

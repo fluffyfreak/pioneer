@@ -295,7 +295,8 @@ HyperdriveType.HyperjumpTo = function (self, ship, destination)
 		return "INSUFFICIENT_FUEL"
 	end
 	ship:setprop('nextJumpFuelUse', fuel_use)
-	return ship:InitiateHyperjumpTo(destination, self.capabilities.hyperclass, duration), fuel_use, duration
+	local warmup_time = 5 + self.capabilities.hyperclass*1.5
+	return ship:InitiateHyperjumpTo(destination, warmup_time, duration), fuel_use, duration
 end
 
 HyperdriveType.OnEnterHyperspace = function (self, ship)
@@ -754,6 +755,24 @@ misc.hull_autorepair = EquipType.New({
 	l10n_key="HULL_AUTOREPAIR", slots="hull_autorepair", price=16000,
 	capabilities={mass=40, hull_autorepair=1}, purchasable=true, tech_level="MILITARY"
 })
+misc.thrusters_basic = EquipType.New({
+	l10n_key="THRUSTERS_BASIC", slots="thruster", price=3000,
+	tech_level=1,
+	capabilities={mass=0, thruster_power=1}, purchasable=true,
+	icon_name="thrusters_basic"
+})
+misc.thrusters_medium = EquipType.New({
+	l10n_key="THRUSTERS_MEDIUM", slots="thruster", price=6500,
+	tech_level=1,
+	capabilities={mass=0, thruster_power=2}, purchasable=true,
+	icon_name="thrusters_medium"
+})
+misc.thrusters_best = EquipType.New({
+	l10n_key="THRUSTERS_BEST", slots="thruster", price=14000,
+	tech_level=1,
+	capabilities={mass=0, thruster_power=3}, purchasable=true,
+	icon_name="thrusters_best"
+})
 misc.trade_analyzer = EquipType.New({
 	l10n_key="TRADE_ANALYZER", slots="trade_analyzer", price=400,
 	capabilities={mass=0, trade_analyzer=1}, purchasable=true, tech_level=9
@@ -818,6 +837,26 @@ hyperspace.hyperdrive_mil3 = HyperdriveType.New({
 hyperspace.hyperdrive_mil4 = HyperdriveType.New({
 	l10n_key="DRIVE_MIL4", fuel=cargo.military_fuel, byproduct=cargo.radioactives, slots="engine",
 	price=214000, capabilities={mass=30, hyperclass=4}, purchasable=true, tech_level=12
+})
+hyperspace.hyperdrive_mil5 = HyperdriveType.New({
+	l10n_key="DRIVE_MIL5", fuel=cargo.military_fuel, byproduct=cargo.radioactives, slots="engine",
+	price=540000, capabilities={mass=53, hyperclass=5}, purchasable=false, tech_level="MILITARY"
+})
+hyperspace.hyperdrive_mil6 = HyperdriveType.New({
+	l10n_key="DRIVE_MIL6", fuel=cargo.military_fuel, byproduct=cargo.radioactives, slots="engine",
+	price=1350000, capabilities={mass=78, hyperclass=6}, purchasable=false, tech_level="MILITARY"
+})
+hyperspace.hyperdrive_mil7 = HyperdriveType.New({
+	l10n_key="DRIVE_MIL7", fuel=cargo.military_fuel, byproduct=cargo.radioactives, slots="engine",
+	price=3500000, capabilities={mass=128, hyperclass=7}, purchasable=false, tech_level="MILITARY"
+})
+hyperspace.hyperdrive_mil8 = HyperdriveType.New({
+	l10n_key="DRIVE_MIL8", fuel=cargo.military_fuel, byproduct=cargo.radioactives, slots="engine",
+	price=8500000, capabilities={mass=196, hyperclass=8}, purchasable=false, tech_level="MILITARY"
+})
+hyperspace.hyperdrive_mil9 = HyperdriveType.New({
+	l10n_key="DRIVE_MIL9", fuel=cargo.military_fuel, byproduct=cargo.radioactives, slots="engine",
+	price=22000000, capabilities={mass=285, hyperclass=9}, purchasable=false, tech_level="MILITARY"
 })
 
 laser = {}

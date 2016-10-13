@@ -91,6 +91,26 @@
       "description" : "",
       "message" : "Napęd Wojskowy Klasy 4"
    },
+   "DRIVE_MIL5" : {
+      "description" : "",
+      "message" : "Napęd Wojskowy Klasy 5"
+   },
+   "DRIVE_MIL6" : {
+      "description" : "",
+      "message" : "Napęd Wojskowy Klasy 6"
+   },
+   "DRIVE_MIL7" : {
+      "description" : "",
+      "message" : "Napęd Wojskowy Klasy 7"
+   },
+   "DRIVE_MIL8" : {
+      "description" : "",
+      "message" : "Napęd Wojskowy Klasy 8"
+   },
+   "DRIVE_MIL9" : {
+      "description" : "",
+      "message" : "Napęd Wojskowy Klasy 9"
+   },
    "ECM_ADVANCED" : {
       "description" : "",
       "message" : "Zaawansowany System ECM"

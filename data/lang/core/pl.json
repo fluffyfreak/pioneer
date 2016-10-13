@@ -559,9 +559,17 @@
       "description" : "",
       "message" : "Skok w nadprzestrzeń przerwany."
    },
+   "HYPERSPACE_JUMP_DISABLED" : {
+      "description" : "Mouse over text for hyperdrive button on ship control panel",
+      "message" : "Hipernapęd jest wyłączony"
+   },
    "HYPERSPACE_JUMP_ENGAGE" : {
       "description" : "Mouse over text for hyperdrive button on ship control panel",
       "message" : "Uruchomienie hipernapędu"
+   },
+   "HYPERSPACE_JUMP_FORBIDDEN" : {
+      "description" : "Mouse over text for hyperdrive button on ship control panel",
+      "message" : "Strefa zakazu używania hipernapędu"
    },
    "HYPERSPACE_TARGET" : {
       "description" : "",
@@ -638,6 +646,10 @@
    "JOY_AXIS" : {
       "description" : "Regarding joystick",
       "message" : "%joyname oś %{sign}%axis"
+   },
+   "JUMP_COMPLETE" : {
+      "description" : "",
+      "message" : "Skok kompletny w:"
    },
    "KM_S_RELATIVE_TO" : {
       "description" : "",
@@ -1133,19 +1145,19 @@
    },
    "PLANNER_RESET_FACTOR" : {
       "description" : "For system orbit view",
-      "message" : "Tempo wzrostu wartości delta-v. Kliknij, aby przywrócić domyślne."
+      "message" : "Rate of increase of delta-v values. Click to reset to default."
    },
    "PLANNER_RESET_NORMAL" : {
       "description" : "For system orbit view",
-      "message" : "Delta-v dla pozycji normalnej. Kliknij, aby wyzerować."
+      "message" : "Normal delta-v. Click to reset to zero."
    },
    "PLANNER_RESET_PROGRADE" : {
       "description" : "For system orbit view",
-      "message" : "Delta-v dla pozycji przodem. Kliknij, aby wyzerować."
+      "message" : "Prograde delta-v. Click to reset to zero."
    },
    "PLANNER_RESET_RADIAL" : {
       "description" : "For system orbit view",
-      "message" : "Delta-v dla pozycji radialnej. Kliknij, aby wyzerować."
+      "message" : "Radial delta-v. Click to reset to zero."
    },
    "PLANNER_RESET_START" : {
       "description" : "For system orbit view",
@@ -1170,10 +1182,6 @@
    "PRESSURE_N_ATMOSPHERES" : {
       "description" : "",
       "message" : "C: %pressure{f.2} atm"
-   },
-   "PROBABILITY_OF_ARRIVAL_X_PERCENT" : {
-      "description" : "",
-      "message" : "Prawdopodobieństwo przylotu: %probability%%"
    },
    "QUADRUPLE_SYSTEM" : {
       "description" : "",
@@ -1721,7 +1729,7 @@
    },
    "UNIT_AU" : {
       "description" : "Distance unit: an astronomical unit, radius of Earth's orbit",
-      "message" : "AU"
+      "message" : "JA"
    },
    "UNIT_DAYS" : {
       "description" : "Duration unit: one 24-hour day",

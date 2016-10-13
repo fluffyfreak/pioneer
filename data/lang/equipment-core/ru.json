@@ -91,6 +91,26 @@
       "description" : "",
       "message" : "Военный гипердвигатель 4 кл."
    },
+   "DRIVE_MIL5" : {
+      "description" : "",
+      "message" : "Военный гипердвигатель 5 кл."
+   },
+   "DRIVE_MIL6" : {
+      "description" : "",
+      "message" : "Военный гипердвигатель 6 кл."
+   },
+   "DRIVE_MIL7" : {
+      "description" : "",
+      "message" : "Военный гипердвигатель 7 кл."
+   },
+   "DRIVE_MIL8" : {
+      "description" : "",
+      "message" : "Военный гипердвигатель 8 кл."
+   },
+   "DRIVE_MIL9" : {
+      "description" : "",
+      "message" : "Военный гипердвигатель 9 кл."
+   },
    "ECM_ADVANCED" : {
       "description" : "",
       "message" : "Продвинутая система ПРО"
