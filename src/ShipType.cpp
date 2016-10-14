@@ -237,21 +237,6 @@ int _define_ship(lua_State *L, ShipType::Tag tag, std::vector<ShipType::Id> *lis
 	data["max_crew"] = s.maxCrew;
 	data["hyperdrive_class"] = s.hyperdriveClass;
 
-	Json::StyledWriter writer;
-	const std::string saveMe = writer.write( data );
-
-	const std::string path("ships/" + s_currentShipFile + ".json");
-	FileSystem::FileSourceFS newFS(FileSystem::GetDataDir());
-	FILE *f = newFS.OpenWriteStream(path);
-	if (!f) {
-		Output("couldn't open file for writing '%s'\n", path.c_str());
-		abort();
-	}
-	fwrite(saveMe.data(), saveMe.length(), 1, f);
-	fclose(f);
-
-	lua_pop(L, 1);
-
 	lua_pushstring(L, "turrets");
 	lua_gettable(L, -2);
 	if (lua_istable(L, -1)) {
@@ -269,14 +254,8 @@ int _define_ship(lua_State *L, ShipType::Tag tag, std::vector<ShipType::Id> *lis
 				const char *turret_name = lua_tostring(L,-1);
 				lua_pop(L, 1);
 
-				lua_pushinteger(L, 3);
-				lua_gettable(L, -2);
-				const Equip::Type equip = static_cast<Equip::Type>(LuaConstants::GetConstantFromArg(L, "EquipType", -1));
-				lua_pop(L, 1);
-
-				if( (equip >= Equip::PULSECANNON_1MW) && (equip <= Equip::LARGE_PLASMA_ACCEL) ) {
-					s.turretsMap[tag_name] = std::make_pair(turret_name, equip);
-				}
+				s.turretsMap[tag_name] = turret_name;
+				data["turrets"][tag_name] = turret_name;
 			}
 			lua_pop(L, 1);
 		}
@@ -284,6 +263,19 @@ int _define_ship(lua_State *L, ShipType::Tag tag, std::vector<ShipType::Id> *lis
 	lua_pop(L, 1);
 
 	LUA_DEBUG_END(L, 0);
+
+	Json::StyledWriter writer;
+	const std::string saveMe = writer.write( data );
+
+	const std::string path("ships/" + s_currentShipFile + ".json");
+	FileSystem::FileSourceFS newFS(FileSystem::GetDataDir());
+	FILE *f = newFS.OpenWriteStream(path);
+	if (!f) {
+		Output("couldn't open file for writing '%s'\n", path.c_str());
+		abort();
+	}
+	fwrite(saveMe.data(), saveMe.length(), 1, f);
+	fclose(f);
 
 	//sanity check
 	if (s.name.empty())
