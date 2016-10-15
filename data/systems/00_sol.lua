@@ -48,6 +48,24 @@ local venus = CustomSystemBody:new('Venus', 'PLANET_TERRESTRIAL')
 	:ice_cover(f(0,1))
 	:life(f(0,1))
 	:orbital_phase_at_start(fixed.deg2rad(f(248,1)))
+	
+local vavatch = CustomSystemBody:new('Vavatch', 'PLANET_ORBITAL')
+	:radius(f(950,100))
+	:mass(f(8150,1000))
+	:temp(288)
+	:semi_major_axis(f(1229,1000))
+	:eccentricity(f(444,10000))
+	:inclination(math.deg2rad(0.0))
+	:rotation_period(f(1,1))
+	:axial_tilt(fixed.deg2rad(f(2344,100)))
+	:metallicity(f(1,2))
+	:volcanicity(f(1,10))
+	:atmos_density(f(1,1))
+	:atmos_oxidizing(f(99,100))
+	:ocean_cover(f(5,10))
+	:ice_cover(f(5,10))
+	:life(f(1,1))
+	:orbital_phase_at_start(fixed.deg2rad(f(248,1)))
 
 local earth = CustomSystemBody:new('Earth', 'PLANET_TERRESTRIAL')
 	:radius(f(1,1))
@@ -621,6 +639,7 @@ local charon = {
 s:bodies(sol, {
 	mercury,
 	venus,
+	vavatch,
 	earth,
 		earth_starports,
 		moon,

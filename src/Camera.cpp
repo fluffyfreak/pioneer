@@ -143,7 +143,7 @@ void Camera::Update()
 		const float pixSize = Graphics::GetScreenHeight() * 2.0 * rad / (attrs.camDist * Graphics::GetFovFactor());
 
 		// terrain objects are visible from distance but might not have any discernable features
-		if (b->IsType(Object::TERRAINBODY)) {
+		if (b->IsType(Object::TERRAINBODY) || b->IsType(Object::ORBITAL)) {
 			if (pixSize < BILLBOARD_PIXEL_THRESHOLD) {
 				attrs.billboard = true;
 				vector3d pos;

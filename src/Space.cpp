@@ -7,6 +7,7 @@
 #include "Frame.h"
 #include "Star.h"
 #include "Planet.h"
+#include "Orbital.h"
 #include "CityOnPlanet.h"
 #include <algorithm>
 #include <functional>
@@ -778,8 +779,13 @@ void Space::GenBody(const double at_time, SystemBody *sbody, Frame *f, std::vect
 			SpaceStation *ss = new SpaceStation(sbody);
 			b = ss;
 		} else {
-			Planet *planet = new Planet(sbody);
-			b = planet;
+			if( SystemBody::TYPE_PLANET_ORBITAL == sbody->GetType() ) {
+				Orbital *orbital = new Orbital(sbody);
+				b = orbital;
+			} else {
+				Planet *planet = new Planet(sbody);
+				b = planet;
+			}
 			// reset this
 			posAccum.clear();
 		}

@@ -14,6 +14,7 @@
 #include "GLDebug.h"
 #include "GasGiantMaterial.h"
 #include "GeoSphereMaterial.h"
+#include "GeoRingMaterial.h"
 #include "GenGasGiantColourMaterial.h"
 #include "MaterialGL.h"
 #include "RenderStateGL.h"
@@ -852,6 +853,9 @@ Material *RendererOGL::CreateMaterial(const MaterialDescriptor &d)
 		break;
 	case EFFECT_GEOSPHERE_STAR:
 		mat = new OGL::GeoSphereStarMaterial();
+		break;
+	case EFFECT_GEORING_TERRAIN:
+		mat = new OGL::GeoRingSurfaceMaterial();
 		break;
 	case EFFECT_FRESNEL_SPHERE:
 		mat = new OGL::FresnelColourMaterial();

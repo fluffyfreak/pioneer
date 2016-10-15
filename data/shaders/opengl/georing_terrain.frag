@@ -1,0 +1,116 @@
+// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
+
+#include "attributes.glsl"
+#include "logz.glsl"
+#include "lib.glsl"
+#include "eclipse.glsl"
+
+uniform vec4 atmosColor;
+// to keep distances sane we do a nearer, smaller scam. this is how many times
+// smaller the geoRing has been made
+uniform float geoRingRadius;
+uniform float geoRingInvRadius;
+uniform float geoRingAtmosTopRad;
+uniform vec3 geoRingCenter;
+uniform float geoRingAtmosFogDensity;
+uniform float geoRingAtmosInvScaleHeight;
+
+#ifdef DETAIL_MAPS
+uniform sampler2D texture0;
+uniform sampler2D texture1;
+in vec2 texCoord0;
+#endif // DETAIL_MAPS
+
+in float dist;
+uniform float detailScaleHi;
+uniform float detailScaleLo;
+
+uniform Material material;
+uniform Scene scene;
+
+in vec3 varyingEyepos;
+in vec3 varyingNormal;
+in vec4 vertexColor;
+
+out vec4 frag_color;
+
+void main(void)
+{
+#ifdef DETAIL_MAPS
+	vec4 hidetail = texture(texture0, texCoord0 * detailScaleHi);
+	vec4 lodetail = texture(texture1, texCoord0 * detailScaleLo);
+#endif // DETAIL_MAPS
+	vec3 eyepos = varyingEyepos;
+	vec3 eyenorm = normalize(eyepos);
+	vec3 tnorm = normalize(varyingNormal);
+	vec4 diff = vec4(0.0);
+
+#ifdef DETAIL_MAPS
+	// calculte the detail texture contribution from hi and lo textures
+	float hiloMix = exp(-0.004 * dist);
+	float detailMix = exp(-0.001 * dist);
+	vec4 detailVal = mix(lodetail, hidetail, hiloMix);
+	vec4 detailMul = mix(vec4(1.0), detailVal, detailMix);
+#endif // DETAIL_MAPS
+
+	float nDotVP=0.0;
+	float nnDotVP=0.0;
+
+#if (NUM_LIGHTS > 0)
+	vec3 v = (eyepos - geoRingCenter) * geoRingInvRadius;
+	float lenInvSq = 1.0/(dot(v,v));
+	for (int i=0; i<NUM_LIGHTS; ++i) {
+		float uneclipsed = clamp(calcUneclipsed(i, v, normalize(vec3(uLight[i].position))), 0.0, 1.0);
+		nDotVP  = max(0.0, dot(tnorm, normalize(vec3(uLight[i].position))));
+		nnDotVP = max(0.0, dot(tnorm, normalize(-vec3(uLight[i].position)))); //need backlight to increase horizon
+		diff += uLight[i].diffuse * uneclipsed * 0.5*(nDotVP+0.5*clamp(1.0-nnDotVP*4.0,0.0,1.0) * INV_NUM_LIGHTS);
+	}
+
+#ifdef DETAIL_MAPS
+	// Use the detail value to multiply the final colour before lighting
+	vec4 final = vertexColor * detailMul;
+#else
+	vec4 final = vertexColor;
+#endif // DETAIL_MAPS
+	
+#ifdef ATMOSPHERE
+	// when does the eye ray intersect atmosphere
+	float atmosStart = findSphereEyeRayEntryDistance(geoRingCenter, eyepos, geoRingRadius * geoRingAtmosTopRad);
+	float ldprod=0.0;
+	float fogFactor=0.0;
+	{
+		float atmosDist = (length(eyepos) - atmosStart);
+		
+		// a&b scaled so length of 1.0 means planet surface.
+		vec3 a = (atmosStart * eyenorm - geoRingCenter) * geoRingInvRadius;
+		vec3 b = (eyepos - geoRingCenter) * geoRingInvRadius;
+		ldprod = AtmosLengthDensityProduct(a, b, atmosColor.w*geoRingAtmosFogDensity, atmosDist, geoRingAtmosInvScaleHeight);
+		fogFactor = clamp( 1.5 / exp(ldprod),0.0,1.0); 
+	}
+
+	//calculate sunset tone red when passing through more atmosphere, clamp everything.
+	float atmpower = (diff.r+diff.g+diff.b)/3.0;
+	vec4 sunset = vec4(0.8,clamp(pow(atmpower,0.8),0.0,1.0),clamp(pow(atmpower,1.2),0.0,1.0),1.0);
+
+	frag_color =
+		material.emission +
+		fogFactor *
+		((scene.ambient * vertexColor) +
+		(diff * final)) +
+		(1.0-fogFactor)*(diff*atmosColor) +
+		  (0.02-clamp(fogFactor,0.0,0.01))*diff*ldprod*sunset +	      //increase fog scatter				
+		  (pow((1.0-pow(fogFactor,0.75)),256.0)*0.4*diff*atmosColor)*sunset;  //distant fog.
+#else // atmosphere-less planetoids and dim stars
+	frag_color =
+		material.emission +
+		(scene.ambient * vertexColor) +
+		(diff * final * 2.0);
+#endif //ATMOSPHERE
+
+#else // NUM_LIGHTS > 0 -- unlit rendering - stars
+	//emission is used to boost colour of stars, which is a bit odd
+	frag_color = material.emission + vertexColor;
+#endif
+	SetFragDepth();
+}

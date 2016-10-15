@@ -512,7 +512,7 @@ static bool IsShownInInfoView(const SystemBody* sb)
 	SystemBody::BodySuperType superType = sb->GetSuperType();
 	return superType == SystemBody::SUPERTYPE_STAR || superType == SystemBody::SUPERTYPE_GAS_GIANT ||
 		superType == SystemBody::SUPERTYPE_ROCKY_PLANET ||
-		sb->GetType() == SystemBody::TYPE_STARPORT_ORBITAL;
+		sb->GetType() == SystemBody::TYPE_STARPORT_ORBITAL || sb->GetType() == SystemBody::TYPE_PLANET_ORBITAL;
 }
 
 SystemInfoView::RefreshType SystemInfoView::NeedsRefresh()

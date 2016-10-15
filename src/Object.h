@@ -19,6 +19,7 @@ public:
 		PLAYER,
 		SPACESTATION,
 		TERRAINBODY,    // <enum skip>
+		ORBITAL,
 		PLANET,
 		STAR,
 		CARGOBODY,

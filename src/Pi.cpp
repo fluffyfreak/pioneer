@@ -13,6 +13,7 @@
 #include "Frame.h"
 #include "Game.h"
 #include "BaseSphere.h"
+#include "GeoRing.h"
 #include "Intro.h"
 #include "Lang.h"
 #include "LuaComms.h"
@@ -592,6 +593,7 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 
 	Output("BaseSphere::Init\n");
 	BaseSphere::Init();
+	GeoRing::Init();
 	draw_progress(gauge, label, 0.5f);
 
 	Output("CityOnPlanet::Init\n");
@@ -796,6 +798,7 @@ void Pi::SetView(View *v)
 void Pi::OnChangeDetailLevel()
 {
 	BaseSphere::OnChangeDetailLevel();
+	GeoRing::OnChangeDetailLevel();
 }
 
 void Pi::HandleEvents()
@@ -1306,6 +1309,7 @@ void Pi::MainLoop()
 				}
 				game->TimeStep(step);
 				BaseSphere::UpdateAllBaseSphereDerivatives();
+				GeoRing::UpdateAllGeoRings();
 
 				accumulator -= step;
 			}
@@ -1322,6 +1326,7 @@ void Pi::MainLoop()
 			// paused
 			PROFILE_SCOPED_RAW("paused")
 			BaseSphere::UpdateAllBaseSphereDerivatives();
+			GeoRing::UpdateAllGeoRings();
 		}
 		frame_stat++;
 

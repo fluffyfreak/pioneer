@@ -231,6 +231,7 @@ SystemBody::BodySuperType SystemBody::GetSuperType() const
 		     return SUPERTYPE_GAS_GIANT;
 		case TYPE_PLANET_ASTEROID:
 		case TYPE_PLANET_TERRESTRIAL:
+		case TYPE_PLANET_ORBITAL:
 		     return SUPERTYPE_ROCKY_PLANET;
 		case TYPE_STARPORT_ORBITAL:
 		case TYPE_STARPORT_SURFACE:
@@ -289,6 +290,7 @@ std::string SystemBody::GetAstroDescription() const
 		if (m_mass > 80) return Lang::MEDIUM_GAS_GIANT;
 		else return Lang::SMALL_GAS_GIANT;
 	case TYPE_PLANET_ASTEROID: return Lang::ASTEROID;
+	case TYPE_PLANET_ORBITAL:
 	case TYPE_PLANET_TERRESTRIAL: {
 		std::string s;
 		if (m_mass > fixed(2,1)) s = Lang::MASSIVE;
@@ -438,6 +440,7 @@ const char *SystemBody::GetIcon() const
 		}
 	case TYPE_PLANET_ASTEROID:
 		return "icons/object_planet_asteroid.png";
+	case TYPE_PLANET_ORBITAL:
 	case TYPE_PLANET_TERRESTRIAL:
 		if (m_volatileLiquid > fixed(7,10)) {
 			if (m_averageTemp > 250) return "icons/object_planet_water.png";

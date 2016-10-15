@@ -75,6 +75,9 @@
     <ClCompile Include="..\..\..\src\graphics\opengl\BillboardMaterial.cpp">
       <Filter>opengl</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\graphics\opengl\GeoRingMaterial.cpp">
+      <Filter>opengl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\graphics\Drawables.h" />
@@ -177,6 +180,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\src\graphics\Types.h" />
     <ClInclude Include="..\..\..\src\graphics\opengl\BillboardMaterial.h">
+      <Filter>opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\graphics\opengl\GeoRingMaterial.h">
       <Filter>opengl</Filter>
     </ClInclude>
   </ItemGroup>

@@ -6,6 +6,7 @@
 #include "Frame.h"
 #include "Star.h"
 #include "Planet.h"
+#include "Orbital.h"
 #include "CargoBody.h"
 #include "SpaceStation.h"
 #include "Ship.h"
@@ -83,6 +84,7 @@ void Body::ToJson(Json::Value &jsonObj, Space *space)
 
 	switch (GetType()) {
 	case Object::STAR:
+	case Object::ORBITAL:
 	case Object::PLANET:
 	case Object::SPACESTATION:
 	case Object::SHIP:
@@ -107,6 +109,8 @@ Body *Body::FromJson(const Json::Value &jsonObj, Space *space)
 	switch (type) {
 	case Object::STAR:
 		b = new Star(); break;
+	case Object::ORBITAL:
+		b = new Orbital(); break;
 	case Object::PLANET:
 		b = new Planet(); break;
 	case Object::SPACESTATION:

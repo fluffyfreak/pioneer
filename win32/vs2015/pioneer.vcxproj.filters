@@ -432,6 +432,15 @@
     <ClCompile Include="..\..\src\RandomColor.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\GeoRing.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Orbital.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\LuaOrbital.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Aabb.h">
@@ -870,6 +879,12 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\RandomColor.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\GeoRing.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Orbital.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
