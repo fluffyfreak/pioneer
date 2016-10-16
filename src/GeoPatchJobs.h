@@ -157,7 +157,7 @@ public:
 
 	inline const SSplitResultData& data(const int32_t idx) const { return mData[idx]; }
 
-	virtual void OnCancel()
+	virtual void OnCancel() override final
 	{
 		for( int i=0; i<NUM_RESULT_DATA; ++i ) {
 			if( mData[i].heights ) {delete [] mData[i].heights;		mData[i].heights = NULL;}
@@ -186,7 +186,7 @@ public:
 
 	inline const SSplitResultData& data() const { return mData; }
 
-	virtual void OnCancel()
+	virtual void OnCancel() override final
 	{
 		{
 			if( mData.heights ) {delete [] mData.heights;	mData.heights = NULL;}
@@ -211,9 +211,9 @@ class BasePatchJob : public Job
 {
 public:
 	BasePatchJob() {}
-	virtual void OnRun() {}    // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
-	virtual void OnFinish() {}
-	virtual void OnCancel() {}
+	virtual void OnRun() override {}    // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
+	virtual void OnFinish() override {}
+	virtual void OnCancel() override {}
 };
 
 // ********************************************************************************
@@ -223,10 +223,10 @@ class SinglePatchJob : public BasePatchJob
 {
 public:
 	SinglePatchJob(SSingleSplitRequest *data) : mData(data), mpResults(NULL) { /* empty */ }
-	~SinglePatchJob();
+	virtual ~SinglePatchJob();
 
-	virtual void OnRun();      // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
-	virtual void OnFinish();   // runs in primary thread of the context
+	virtual void OnRun() override final;      // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
+	virtual void OnFinish() override final;   // runs in primary thread of the context
 
 private:
 	// Generates full-detail vertices, and also non-edge normals and colors 
@@ -245,10 +245,10 @@ class QuadPatchJob : public BasePatchJob
 {
 public:
 	QuadPatchJob(SQuadSplitRequest *data) : mData(data), mpResults(NULL) { /* empty */ }
-	~QuadPatchJob();
+	virtual ~QuadPatchJob();
 
-	virtual void OnRun();      // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
-	virtual void OnFinish();   // runs in primary thread of the context
+	virtual void OnRun() override final;      // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
+	virtual void OnFinish() override final;   // runs in primary thread of the context
 
 private:
 	// Generates full-detail vertices, and also non-edge normals and colors 

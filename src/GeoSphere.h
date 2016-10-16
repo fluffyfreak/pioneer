@@ -61,6 +61,7 @@ public:
 	virtual double GetMaxFeatureHeight() const override final { return m_terrain->GetMaxHeight(); }
 
 	bool AddQuadSplitResult(SQuadSplitResult *res);
+	void AddQuadSplitRequest(double, SQuadSplitRequest*, GeoPatch*);
 	bool AddSingleSplitResult(SSingleSplitResult *res);
 	void ProcessSplitResults();
 
@@ -68,7 +69,6 @@ public:
 
 	inline Sint32 GetMaxDepth() const { return m_maxDepth; }
 
-	void AddQuadSplitRequest(double, SQuadSplitRequest*, GeoPatch*);
 
 private:
 	void BuildFirstPatches();

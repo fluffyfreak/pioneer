@@ -1,4 +1,5 @@
 #include "libs.h"
+#include "GeoPatchID.h"
 #include "GeoRing.h"
 #include "perlin.h"
 #include "Pi.h"
@@ -32,10 +33,6 @@ static double GEOPLATEWALL_FRAC;
 
 #define lerp(t, a, b) ( a + t * (b - a) )
 
-#define PRINT_VECTOR(_v) printf("%f,%f,%f\n", (_v).x, (_v).y, (_v).z);
-
-#define SAFE_DELETE(d) delete d; d=0;
-#define SAFE_DELETE_ARRAY(d) delete[] d; d=0;
 
 #pragma pack(4)
 struct VBOVertex
@@ -56,12 +53,24 @@ typedef struct {
 	std::vector<unsigned short> v;
 } VecShortHolder;
 
+inline void SetColour(Color3ub *r, const vector3d &v) { 
+#if 1
+	r->r=static_cast<unsigned char>(Clamp(v.x*255.0, 0.0, 255.0)); 
+	r->g=static_cast<unsigned char>(Clamp(v.y*255.0, 0.0, 255.0)); 
+	r->b=static_cast<unsigned char>(Clamp(v.z*255.0, 0.0, 255.0));
+#else
+	r->r = 255;
+	r->g = 255;
+	r->b = 255;
+#endif
+}
+
 #define NUM_VBE 2
 
 class BaseGeo {
 public:
-	BaseGeo(const double halfLength, const double startAng, const double endAng, const double yoffset, const int depth)
-		: vertices(NULL), normals(NULL), colors(NULL), geoRing(NULL)
+	BaseGeo(GeoRing *geoRingPtr, const double halfLength, const double startAng, const double endAng, const double yoffset, const int depth)
+		: normals(NULL), colors(NULL), geoRing(geoRingPtr)
 	{
 		ang[0] = startAng; 
 		ang[1] = endAng;
@@ -91,16 +100,12 @@ public:
 		return res;
 	}
 
-	void SetGeoRingPtr( GeoRing *ptr ) { assert(ptr!=NULL); geoRing = ptr; }
-
 protected:
 	double ang[NUM_VBE];
 	double m_halfLen;
 	double m_yoffset;		// offset from the centre i.e. newyoffset = (m_yoffset + m_halfLen);
-	double *heights;
-	vector3d *vertices;
-	vector3d *normals;
-	Color3ub *colors;
+	std::unique_ptr<vector3f[]> normals;
+	std::unique_ptr<Color3ub[]> colors;
 	GeoRing *geoRing;
 	std::unique_ptr<Graphics::VertexBuffer> m_vertexBuffer;
 	double m_roughLength;
@@ -111,22 +116,20 @@ protected:
 class GeoPlateHull : public BaseGeo {
 public:
 	static RefCountedPtr<Graphics::IndexBuffer> indices;
+	std::unique_ptr<vector3d[]> vertices;
 
 	// params
 	// v0, v1 - define points on the line describing the loop of the ring/orbital.
 	// depth - 0 is the topmost plate with each depth+1 describing it's depth within the tree.
-	GeoPlateHull(const double halfLength, const double startAng, const double endAng, const double yoffset, const int depth) 
-		: BaseGeo(halfLength, startAng, endAng, yoffset, depth) 
+	GeoPlateHull(GeoRing *geoRingPtr, const double halfLength, const double startAng, const double endAng, const double yoffset, const int depth) 
+		: BaseGeo(geoRingPtr, halfLength, startAng, endAng, yoffset, depth) 
 	{
-		normals = new vector3d[GEOPLATE_NUMVERTICES];
-		vertices = new vector3d[GEOPLATE_NUMVERTICES];
-		colors = new Color3ub[GEOPLATE_NUMVERTICES];
+		normals.reset(new vector3f[GEOPLATE_NUMVERTICES]);
+		vertices.reset(new vector3d[GEOPLATE_NUMVERTICES]);
+		colors.reset(new Color3ub[GEOPLATE_NUMVERTICES]);
 	}
 
-	~GeoPlateHull() {
-		delete vertices;
-		delete normals;
-		delete colors;
+	virtual ~GeoPlateHull() {
 	}
 
 	static void Init() 
@@ -165,7 +168,7 @@ public:
 		indices->Unmap();
 	}
 
-	void UpdateVBOs() 
+	void NeedToUpdateVBOs() 
 	{
 		//create buffer and upload data
 		Graphics::VertexBufferDesc vbd;
@@ -184,9 +187,9 @@ public:
 		VBOVertex* VBOVtxPtr = m_vertexBuffer->Map<VBOVertex>(Graphics::BUFFER_MAP_WRITE);
 		assert(m_vertexBuffer->GetDesc().stride == sizeof(VBOVertex));
 
-		const vector3d *vtx = vertices;
-		const vector3d *pNorm = normals;
-		const Color3ub *pColr = colors;
+		const vector3d *vtx = vertices.get();
+		const vector3f *pNorm = normals.get();
+		const Color3ub *pColr = colors.get();
 
 		for (Sint32 y = 0; y<GEOPLATE_EDGELEN; y++) {
 			for (Sint32 x = 0; x<GEOPLATE_EDGELEN; x++) {
@@ -199,7 +202,7 @@ public:
 				clipRadius = std::max(clipRadius, p.Length());
 				++vtx;	// next height
 
-				vtxPtr->norm = vector3f(pNorm->Normalized());
+				vtxPtr->norm = pNorm->Normalized();
 				++pNorm; // next normal
 
 				vtxPtr->col[0] = pColr->r;
@@ -219,16 +222,18 @@ public:
 		// ----------------------------------------------------
 		// end of mapping
 		m_vertexBuffer->Unmap();
+
+		normals.reset();
+		vertices.reset();
+		colors.reset();
 	}
 
 	// Generates full-detail vertices, and also non-edge normals and colors
 	void GenerateMesh() {
-		vector3d *vts = vertices;
+		vector3d *vts = vertices.get();
 		double xfrac = 0;
 		double zfrac = 0;
-#ifdef _DEBUG
-		memset(normals, 0, sizeof(vector3d)*GEOPLATE_NUMVERTICES);
-#endif
+
 		const vector3d topEnd(0.0, m_yoffset + m_halfLen, 0.0);		// vertices at top edge of circle
 		const vector3d btmEnd(0.0, m_yoffset - m_halfLen, 0.0);		// vertices at bottom edge of circle
 
@@ -267,7 +272,7 @@ public:
 				vector3d y1 = vertices[x + (y+1)*GEOPLATE_EDGELEN];
 
 				vector3d n = (x1-xy).Cross(y1-xy);
-				normals[x + y*GEOPLATE_EDGELEN] = n.Normalized();
+				normals[x + y*GEOPLATE_EDGELEN] = vector3f(n.Normalized());
 			}
 		}
 	}
@@ -305,23 +310,21 @@ RefCountedPtr<Graphics::IndexBuffer> GeoPlateHull::indices;
 class GeoPlateWall : public BaseGeo {
 public:
 	static RefCountedPtr<Graphics::IndexBuffer> indices;
+	std::unique_ptr<vector3d[]> vertices;
 	bool bInnerWall;
 
 	// params
 	// v0, v1 - define points on the line describing the loop of the ring/orbital.
 	// depth - 0 is the topmost plate with each depth+1 describing it's depth within the tree.
-	GeoPlateWall(const bool isInnerWall, const double halfLength, const double startAng, const double endAng, const double yoffset, const int depth) 
-		: BaseGeo(halfLength, startAng, endAng, yoffset, depth), bInnerWall(isInnerWall)
+	GeoPlateWall(GeoRing *geoRingPtr, const bool isInnerWall, const double halfLength, const double startAng, const double endAng, const double yoffset, const int depth) 
+		: BaseGeo(geoRingPtr, halfLength, startAng, endAng, yoffset, depth), bInnerWall(isInnerWall)
 	{
-		normals = new vector3d[GEOPLATE_NUM_WALL_VERTICES];
-		vertices = new vector3d[GEOPLATE_NUM_WALL_VERTICES];
-		colors = new Color3ub[GEOPLATE_NUM_WALL_VERTICES];
+		normals.reset(new vector3f[GEOPLATE_NUM_WALL_VERTICES]);
+		vertices.reset(new vector3d[GEOPLATE_NUM_WALL_VERTICES]);
+		colors.reset(new Color3ub[GEOPLATE_NUM_WALL_VERTICES]);
 	}
 
-	~GeoPlateWall() {
-		delete vertices;
-		delete normals;
-		delete colors;
+	virtual ~GeoPlateWall() {
 	}
 
 	static void Init() {
@@ -359,7 +362,7 @@ public:
 		indices->Unmap();
 	}
 
-	void UpdateVBOs() {
+	void NeedToUpdateVBOs() {
 		//create buffer and upload data
 		Graphics::VertexBufferDesc vbd;
 		vbd.attrib[0].semantic = Graphics::ATTRIB_POSITION;
@@ -377,9 +380,9 @@ public:
 		VBOVertex* VBOVtxPtr = m_vertexBuffer->Map<VBOVertex>(Graphics::BUFFER_MAP_WRITE);
 		assert(m_vertexBuffer->GetDesc().stride == sizeof(VBOVertex));
 
-		const vector3d *vtx = vertices;
-		const vector3d *pNorm = normals;
-		const Color3ub *pColr = colors;
+		const vector3d *vtx = vertices.get();
+		const vector3f *pNorm = normals.get();
+		const Color3ub *pColr = colors.get();
 
 		for (Sint32 y = 0; y<GEOPLATE_WALL_LEN; y++) {
 			for (Sint32 x = 0; x<GEOPLATE_WALL_LEN; x++) {
@@ -392,7 +395,7 @@ public:
 				clipRadius = std::max(clipRadius, p.Length());
 				++vtx;	// next height
 
-				vtxPtr->norm = vector3f(pNorm->Normalized());
+				vtxPtr->norm = pNorm->Normalized();
 				++pNorm; // next normal
 
 				vtxPtr->col[0] = pColr->r;
@@ -412,6 +415,10 @@ public:
 		// ----------------------------------------------------
 		// end of mapping
 		m_vertexBuffer->Unmap();
+
+		normals.reset();
+		vertices.reset();
+		colors.reset();
 	}
 
 	const double heights[2][GEOPLATE_WALL_LEN] = {
@@ -455,13 +462,12 @@ public:
 	};
 
 	// Generates full-detail vertices, and also non-edge normals and colors
-	void GenerateMesh() {
-		vector3d *vts = vertices;
+	void GenerateMesh() 
+	{
+		vector3d *vts = vertices.get();
 		double xfrac = 0;
 		double zfrac = 0;
-#ifdef _DEBUG
-		memset(normals, 0, sizeof(vector3d)*GEOPLATE_NUM_WALL_VERTICES);
-#endif
+
 		const vector3d topEnd(0.0, m_yoffset + m_halfLen, 0.0);		// vertices at top edge of circle
 		const vector3d btmEnd(0.0, m_yoffset - m_halfLen, 0.0);		// vertices at bottom edge of circle
 
@@ -494,7 +500,7 @@ public:
 				vector3d y1 = vertices[x + (y+1)*GEOPLATE_WALL_LEN];
 
 				vector3d n = (x1-xy).Cross(y1-xy);
-				normals[x + y*GEOPLATE_WALL_LEN] = (n.Normalized());
+				normals[x + y*GEOPLATE_WALL_LEN] = vector3f(n.Normalized());
 			}
 		}
 
@@ -507,7 +513,7 @@ public:
 			vector3d y1 = vertices[x + (y+1)*GEOPLATE_WALL_LEN];
 
 			vector3d n = (xy-x1).Cross(y1-xy);
-			normals[x + y*GEOPLATE_WALL_LEN] = (n.Normalized());
+			normals[x + y*GEOPLATE_WALL_LEN] = vector3f(n.Normalized());
 		}
 
 		// Generate last col normals
@@ -520,7 +526,7 @@ public:
 				vector3d y1 = vertices[x + (y-1)*GEOPLATE_WALL_LEN];
 
 				vector3d n = (xy-x1).Cross(xy-y1);
-				normals[x + y*GEOPLATE_WALL_LEN] = (n.Normalized());
+				normals[x + y*GEOPLATE_WALL_LEN] = vector3f(n.Normalized());
 			}
 		}
 
@@ -535,7 +541,7 @@ public:
 				vector3d y1 = vertices[x + (y-1)*GEOPLATE_WALL_LEN];
 
 				vector3d n = (x1-xy).Cross(xy-y1);
-				normals[x + y*GEOPLATE_WALL_LEN] = (n.Normalized());
+				normals[x + y*GEOPLATE_WALL_LEN] = vector3f(n.Normalized());
 			}
 		}
 		{
@@ -548,7 +554,7 @@ public:
 				vector3d y1 = vertices[x + (y+1)*GEOPLATE_WALL_LEN];
 
 				vector3d n = (xy-x1).Cross(y1-xy);
-				normals[x + y*GEOPLATE_WALL_LEN] = (n.Normalized());
+				normals[x + y*GEOPLATE_WALL_LEN] = vector3f(n.Normalized());
 			}
 		}
 	}
@@ -579,48 +585,585 @@ public:
 //static 
 RefCountedPtr<Graphics::IndexBuffer> GeoPlateWall::indices;
 
+// ********************************************************************************
+//
+// ********************************************************************************
+#define BORDER_SIZE 1
+
+inline vector3d GetSurfacePointCyl(const double x, const double y, const double ang0, const double ang1, const double yoffset, const double halfLength) 
+{
+	double theta = lerp( x, ang1, ang0 );
+		
+	const vector3d topEndEdge(sin(theta), yoffset + (halfLength * 0.5), cos(theta));		// vertices at top edge of circle
+	const vector3d bottomEndEdge(sin(theta), yoffset - (halfLength * 0.5), cos(theta));	// vertices at bottom edge of circle
+		
+	const vector3d res = lerp( y, bottomEndEdge, topEndEdge );
+	return res;
+}
+
+class SBaseSplitRequest {
+public:
+	SBaseSplitRequest(const double ang0_, const double ang1_, const double yoffset_, const double halfLen_, const vector3d &vb0_, const vector3d &vb1_,
+		const uint32_t depth_, const SystemPath &sysPath_, const GeoPlateID &patchID_, const int edgeLen_, const double fracStep_,
+		Terrain *pTerrain_)
+		: ang0(ang0_), ang1(ang1_), yoffset(yoffset_), halfLen(halfLen_), vbe0(vb0_), vbe1(vb1_), depth(depth_), 
+		sysPath(sysPath_), patchID(patchID_), edgeLen(edgeLen_), fracStep(fracStep_), 
+		pTerrain(pTerrain_)
+	{
+	}
+
+	inline int NUMVERTICES(const int el) const { return el*el; }
+
+	const double ang0, ang1, yoffset, halfLen;
+	const vector3d vbe0, vbe1;
+	const uint32_t depth;
+	const SystemPath sysPath;
+	const GeoPlateID patchID;
+	const int edgeLen;
+	const double fracStep;
+	RefCountedPtr<Terrain> pTerrain;
+
+protected:
+	// deliberately prevent copy constructor access
+	SBaseSplitRequest(const SBaseSplitRequest &r) = delete;
+};
+
+class SQuadPlateRequest : public SBaseSplitRequest {
+public:
+	SQuadPlateRequest(const double ang0_, const double ang1_, const double yoffset_, const double halfLen_, const vector3d &vb0_, const vector3d &vb1_,
+		const uint32_t depth_, const SystemPath &sysPath_, const GeoPlateID &patchID_, const int edgeLen_, const double fracStep_,
+		Terrain *pTerrain_)
+		: SBaseSplitRequest(ang0_, ang1_, yoffset_, halfLen_, vb0_, vb1_, depth_, sysPath_, patchID_, edgeLen_, fracStep_, pTerrain_)
+	{
+		const int numVerts = NUMVERTICES(edgeLen_);
+		for( int i=0 ; i<4 ; ++i )
+		{
+			heights[i] = new double[numVerts];
+			normals[i] = new vector3f[numVerts];
+			colors[i] = new Color3ub[numVerts];
+		}
+		const int numBorderedVerts = NUMVERTICES((edgeLen_*2)+(BORDER_SIZE*2)-1);
+		borderHeights.reset(new double[numBorderedVerts]);
+		borderVertexs.reset(new vector3d[numBorderedVerts]);
+	}
+
+	// these are created with the request and are given to the resulting patches
+	vector3f *normals[4];
+	Color3ub *colors[4];
+	double *heights[4];
+
+	// these are created with the request but are destroyed when the request is finished
+	std::unique_ptr<double[]> borderHeights;
+	std::unique_ptr<vector3d[]> borderVertexs;
+
+protected:
+	// deliberately prevent copy constructor access
+	SQuadPlateRequest(const SQuadPlateRequest &r) = delete;
+};
+
+class SSinglePlateRequest : public SBaseSplitRequest {
+public:
+	SSinglePlateRequest(const double ang0_, const double ang1_, const double yoffset_, const double halfLen_, const vector3d &vb0_, const vector3d &vb1_,
+		const uint32_t depth_, const SystemPath &sysPath_, const GeoPlateID &patchID_, const int edgeLen_, const double fracStep_,
+		Terrain *pTerrain_)
+		: SBaseSplitRequest(ang0_, ang1_, yoffset_, halfLen_, vb0_, vb1_, depth_, sysPath_, patchID_, edgeLen_, fracStep_, pTerrain_)
+	{
+		const int numVerts = NUMVERTICES(edgeLen_);
+		heights = new double[numVerts];
+		normals = new vector3f[numVerts];
+		colors = new Color3ub[numVerts];
+		
+		const int numBorderedVerts = NUMVERTICES(edgeLen_+(BORDER_SIZE*2));
+		borderHeights.reset(new double[numBorderedVerts]);
+		borderVertexs.reset(new vector3d[numBorderedVerts]);
+	}
+
+	// these are created with the request and are given to the resulting patches
+	vector3f *normals;
+	Color3ub *colors;
+	double *heights;
+
+	// these are created with the request but are destroyed when the request is finished
+	std::unique_ptr<double> borderHeights;
+	std::unique_ptr<vector3d> borderVertexs;
+
+protected:
+	// deliberately prevent copy constructor access
+	SSinglePlateRequest(const SSinglePlateRequest &r) = delete;
+};
+
+class SBaseSplitResult {
+public:
+	struct SSplitResultData {
+		SSplitResultData() : patchID(0) {}
+		SSplitResultData(double *heights_, vector3f *n_, Color3ub *c_, const double ang0_, const double ang1_, const double yoffset_, const double halfLen_, const vector3d &vbe0_, const vector3d &vbe1_, const GeoPlateID &patchID_) :
+			heights(heights_), normals(n_), colors(c_), ang0(ang0_), ang1(ang1_), yoffset(yoffset_), halfLen(halfLen_), vbe0(vbe0_), vbe1(vbe1_), patchID(patchID_)
+		{}
+		SSplitResultData(const SSplitResultData &r) : 
+			normals(r.normals), colors(r.colors), ang0(r.ang0), ang1(r.ang1), yoffset(r.yoffset), halfLen(r.halfLen), vbe0(r.vbe0), vbe1(r.vbe1), patchID(r.patchID)
+		{}
+
+		double *heights;
+		vector3f *normals;
+		Color3ub *colors;
+		double ang0, ang1, yoffset, halfLen;
+		vector3d vbe0, vbe1;
+		GeoPlateID patchID;
+	};
+
+	SBaseSplitResult(const uint64_t plate_, const int32_t depth_) : mPlate(plate_), mDepth(depth_) {}
+	virtual ~SBaseSplitResult() {}
+
+	inline uint64_t plate() const { return mPlate; }
+	inline int32_t depth() const { return mDepth; }
+
+	virtual void OnCancel() = 0;
+
+protected:
+	// deliberately prevent copy constructor access
+	SBaseSplitResult(const SBaseSplitResult &r) : mPlate(0), mDepth(0) {}
+
+	const uint64_t mPlate;
+	const int32_t mDepth;
+};
+
+class SQuadPlateResult : public SBaseSplitResult {
+	static const int NUM_RESULT_DATA = 4;
+public:
+	SQuadPlateResult(const uint64_t plate_, const int32_t depth_) : SBaseSplitResult(plate_, depth_)
+	{
+	}
+
+	void addResult(const int kidIdx, double *h_, vector3f *n_, Color3ub *c_, const double ang0_, const double ang1_, const double yoffset_, const double halfLen_, const vector3d &vbe0, const vector3d &vbe1, const GeoPlateID &patchID_)
+	{
+		assert(kidIdx>=0 && kidIdx<NUM_RESULT_DATA);
+		mData[kidIdx] = (SSplitResultData(h_, n_, c_, ang0_, ang1_, yoffset_, halfLen_, vbe0, vbe1, patchID_));
+	}
+
+	inline const SSplitResultData& data(const int32_t idx) const { return mData[idx]; }
+
+	virtual void OnCancel()
+	{
+		for( int i=0; i<NUM_RESULT_DATA; ++i ) {
+			if( mData[i].heights ) {delete [] mData[i].heights;		mData[i].heights = NULL;}
+			if( mData[i].normals ) {delete [] mData[i].normals;		mData[i].normals = NULL;}
+			if( mData[i].colors ) {delete [] mData[i].colors;		mData[i].colors = NULL;}
+		}
+	}
+
+protected:
+	// deliberately prevent copy constructor access
+	SQuadPlateResult(const SQuadPlateResult &r) : SBaseSplitResult(r) {}
+
+	SSplitResultData mData[NUM_RESULT_DATA];
+};
+
+class SSinglePlateResult : public SBaseSplitResult {
+public:
+	SSinglePlateResult(const uint64_t plate_, const int32_t depth_) : SBaseSplitResult(plate_, depth_)
+	{
+	}
+
+	void addResult(double *h_, vector3f *n_, Color3ub *c_, const double ang0_, const double ang1_, const double yoffset_, const double halfLen_, const vector3d &vbe0, const vector3d &vbe1, const GeoPlateID &patchID_)
+	{
+		mData = (SSplitResultData(h_, n_, c_, ang0_, ang1_, yoffset_, halfLen_, vbe0, vbe1, patchID_));
+	}
+
+	inline const SSplitResultData& data() const { return mData; }
+
+	virtual void OnCancel()
+	{
+		{
+			if( mData.heights ) {delete [] mData.heights;	mData.heights = NULL;}
+			if( mData.normals ) {delete [] mData.normals;	mData.normals = NULL;}
+			if( mData.colors ) {delete [] mData.colors;		mData.colors = NULL;}
+		}
+	}
+
+protected:
+	// deliberately prevent copy constructor access
+	SSinglePlateResult(const SSinglePlateResult &r) : SBaseSplitResult(r) {}
+
+	SSplitResultData mData;
+};
+
+class GeoPatch;
+
+// ********************************************************************************
+// Overloaded PureJob class to handle generating the mesh for each patch
+// ********************************************************************************
+class BasePlateJob : public Job
+{
+public:
+	BasePlateJob() {}
+	virtual void OnRun() override {}    // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
+	virtual void OnFinish() override {}
+	virtual void OnCancel() override {}
+};
+
+// ********************************************************************************
+// Overloaded PureJob class to handle generating the mesh for each patch
+// ********************************************************************************
+class SinglePlateJob : public BasePlateJob
+{
+public:
+	SinglePlateJob(SSinglePlateRequest *data) : mData(data), mpResults(NULL) { /* empty */ }
+	virtual ~SinglePlateJob();
+
+	virtual void OnRun() override final;      // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
+	virtual void OnFinish() override final;   // runs in primary thread of the context
+
+private:
+	// Generates full-detail vertices, and also non-edge normals and colors 
+	void GenerateMesh(double *heights, vector3f *normals, Color3ub *colors, double *borderHeights, vector3d *borderVertexs,
+		const double ang0, const double ang1, const double yoffset, const double halfLen,
+		const int edgeLen, const double fracStep, const Terrain *pTerrain) const;
+
+	std::unique_ptr<SSinglePlateRequest> mData;
+	SSinglePlateResult *mpResults;
+};
+
+// Generates full-detail vertices, and also non-edge normals and colors 
+void SinglePlateJob::GenerateMesh(double *heights, vector3f *normals, Color3ub *colors, 
+								double *borderHeights, vector3d *borderVertexs,
+								const double ang0,
+								const double ang1,
+								const double yoffset,
+								const double halfLen,
+								const int edgeLen,
+								const double fracStep,
+								const Terrain *pTerrain) const
+{
+	const int borderedEdgeLen = edgeLen+(BORDER_SIZE*2);
+	const int numBorderedVerts = borderedEdgeLen*borderedEdgeLen;
+
+	const vector3d topEnd(0.0, yoffset + halfLen, 0.0);		// vertices at top edge of circle
+	const vector3d btmEnd(0.0, yoffset - halfLen, 0.0);		// vertices at bottom edge of circle
+
+	// generate heights plus a 1 unit border
+	double *bhts = borderHeights;
+	vector3d *vrts = borderVertexs;
+	for (int y=-BORDER_SIZE; y<borderedEdgeLen-BORDER_SIZE; y++) 
+	{
+		const double yfrac = double(y) * fracStep;
+		// point along z-axis by zfrac amount
+		const vector3d axisPt = lerp( yfrac, btmEnd, topEnd );
+		for (int x=-BORDER_SIZE; x<borderedEdgeLen-BORDER_SIZE; x++) 
+		{
+			const double xfrac = double(x) * fracStep;
+			const vector3d p = GetSurfacePointCyl(xfrac, yfrac, ang0, ang1, yoffset, halfLen);
+			// vector from axis to point-on-surface
+			const vector3d cDir = (p - axisPt).Normalized();
+			const double height = pTerrain->GetHeight(p);
+			assert(height >= 0.0f && height <= 1.0f);
+			*(bhts++) = -height;
+			*(vrts++) = p + (cDir * height);//p * (height + 1.0);
+		}
+	}
+	assert(bhts==&borderHeights[numBorderedVerts]);
+
+	// Generate normals & colors for non-edge vertices since they never change
+	Color3ub *col = colors;
+	vector3f *nrm = normals;
+	double *hts = heights;
+	vrts = borderVertexs;
+	for (int y=BORDER_SIZE; y<borderedEdgeLen-BORDER_SIZE; y++) {
+		for (int x=BORDER_SIZE; x<borderedEdgeLen-BORDER_SIZE; x++) {
+			// height
+			const double height = borderHeights[x + y*borderedEdgeLen];
+			assert(hts!=&heights[edgeLen*edgeLen]);
+			*(hts++) = height;
+
+			// normal
+			const vector3d &x1 = vrts[(x-1) + y*borderedEdgeLen];
+			const vector3d &x2 = vrts[(x+1) + y*borderedEdgeLen];
+			const vector3d &y1 = vrts[x + (y-1)*borderedEdgeLen];
+			const vector3d &y2 = vrts[x + (y+1)*borderedEdgeLen];
+			const vector3d n = ((x2-x1).Cross(y2-y1)).Normalized();
+			assert(nrm!=&normals[edgeLen*edgeLen]);
+			*(nrm++) = vector3f(n);
+
+			// color
+			const vector3d p = GetSurfacePointCyl((x-BORDER_SIZE)*fracStep, (y-BORDER_SIZE)*fracStep, ang0, ang1, yoffset, halfLen);
+			SetColour(col, pTerrain->GetColor(p, height, n));
+			assert(col!=&colors[edgeLen*edgeLen]);
+			++col;
+		}
+	}
+	assert(hts==&heights[edgeLen*edgeLen]);
+	assert(nrm==&normals[edgeLen*edgeLen]);
+	assert(col==&colors[edgeLen*edgeLen]);
+}
+
+// ********************************************************************************
+// Overloaded PureJob class to handle generating the mesh for each patch
+// ********************************************************************************
+void SinglePlateJob::OnFinish()  // runs in primary thread of the context
+{
+	GeoRing::OnAddSinglePlateResult( mData->sysPath, mpResults );
+	mpResults = nullptr;
+	BasePlateJob::OnFinish();
+}
+
+void SinglePlateJob::OnRun()    // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
+{
+	BasePlateJob::OnRun();
+
+	const SSinglePlateRequest &srd = *mData;
+
+	// fill out the data
+	GenerateMesh(srd.heights, srd.normals, srd.colors, srd.borderHeights.get(), srd.borderVertexs.get(),
+		srd.ang0, srd.ang1, srd.yoffset, srd.halfLen, 
+		srd.edgeLen, srd.fracStep, srd.pTerrain.Get());
+	// add this patches data
+	SSinglePlateResult *sr = new SSinglePlateResult(srd.patchID.GetPlateIdx(), srd.depth);
+	sr->addResult(srd.heights, srd.normals, srd.colors, 
+		srd.ang0, srd.ang1, srd.yoffset, srd.halfLen, srd.vbe0, srd.vbe1,
+		srd.patchID.NextPatchID(srd.depth+1, 0));
+	// store the result
+	mpResults = sr;
+}
+
+SinglePlateJob::~SinglePlateJob()
+{
+	if(mpResults) {
+		mpResults->OnCancel();
+		delete mpResults;
+		mpResults = nullptr;
+	}
+}
+
+// ********************************************************************************
+// Overloaded PureJob class to handle generating the mesh for each patch
+// ********************************************************************************
+class QuadPlateJob : public BasePlateJob
+{
+public:
+	QuadPlateJob(SQuadPlateRequest *data) : mData(data), mpResults(NULL) { /* empty */ }
+	virtual ~QuadPlateJob();
+
+	virtual void OnRun() override final;      // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
+	virtual void OnFinish() override final;   // runs in primary thread of the context
+
+private:
+	// Generates full-detail vertices, and also non-edge normals and colors 
+	void GenerateBorderedData(double *borderHeights, vector3d *borderVertexs,
+		const double ang0, const double ang1, const double yoffset, const double halfLen,
+		const int edgeLen, const double fracStep, const Terrain *pTerrain) const;
+	
+	void GenerateSubPatchData(double *heights, vector3f *normals, Color3ub *colors, double *borderHeights, vector3d *borderVertexs,
+		const double ang0, const double ang1, const double yoffset, const double halfLen,
+		const int edgeLen, const int xoff, const int yoff, const int borderedEdgeLen, const double fracStep, const Terrain *pTerrain) const;
+
+	std::unique_ptr<SQuadPlateRequest> mData;
+	SQuadPlateResult *mpResults;
+};
+
+void QuadPlateJob::OnFinish()  // runs in primary thread of the context
+{
+	GeoRing::OnAddQuadPlateResult( mData->sysPath, mpResults );
+	mpResults = nullptr;
+	BasePlateJob::OnFinish();
+}
+
+void QuadPlateJob::OnRun()    // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
+{
+	BasePlateJob::OnRun();
+
+	const SQuadPlateRequest &srd = *mData;
+
+	GenerateBorderedData(srd.borderHeights.get(), srd.borderVertexs.get(),
+			srd.ang0, srd.ang1, srd.yoffset, srd.halfLen,
+			srd.edgeLen, srd.fracStep, srd.pTerrain.Get());
+
+	
+	const vector3d halfVBE = srd.vbe0 + 0.5 * (srd.vbe1 - srd.vbe0);
+	const double halfAng = srd.ang0 + 0.5 * (srd.ang1 - srd.ang0);
+	const double newLength = (srd.halfLen*0.5);
+	const double yoffset0 = srd.yoffset + (newLength*0.5);
+	const double yoffset1 = srd.yoffset - (newLength*0.5);
+	
+	const double vecs[4][4] = {
+		{halfAng, srd.ang1, yoffset1, newLength},
+		{srd.ang0, halfAng, yoffset1, newLength},
+		{srd.ang0, halfAng, yoffset0, newLength},
+		{halfAng, srd.ang1, yoffset0, newLength}
+	};
+
+	const vector3d vbes[4][2] = {
+		{halfVBE, srd.vbe1},
+		{srd.vbe0, halfVBE},
+		{srd.vbe0, halfVBE},
+		{halfVBE, srd.vbe1}
+	};
+
+	const int borderedEdgeLen = (srd.edgeLen*2)+(BORDER_SIZE*2)-1;
+	const int offxy[4][2] = {
+		{0,0},
+		{srd.edgeLen-1,0},
+		{srd.edgeLen-1,srd.edgeLen-1},
+		{0,srd.edgeLen-1}
+	};
+
+	SQuadPlateResult *sr = new SQuadPlateResult(srd.patchID.GetPlateIdx(), srd.depth);
+	for (int i=0; i<4; i++)
+	{
+		// fill out the data
+		GenerateSubPatchData(srd.heights[i], srd.normals[i], srd.colors[i], srd.borderHeights.get(), srd.borderVertexs.get(),
+			vecs[i][0], vecs[i][1], vecs[i][2], vecs[i][3], 
+			srd.edgeLen, offxy[i][0], offxy[i][1], 
+			borderedEdgeLen, srd.fracStep, srd.pTerrain.Get());
+
+		// add this patches data
+		sr->addResult(i, srd.heights[i], srd.normals[i], srd.colors[i], 
+			vecs[i][0], vecs[i][1], vecs[i][2], vecs[i][3], vbes[i][0], vbes[i][1],
+			srd.patchID.NextPatchID(srd.depth+1, i));
+	}
+	mpResults = sr;
+}
+
+QuadPlateJob::~QuadPlateJob()
+{
+	if(mpResults) {
+		mpResults->OnCancel();
+		delete mpResults;
+		mpResults = NULL;
+	}
+}
+
+// Generates full-detail vertices, and also non-edge normals and colors 
+void QuadPlateJob::GenerateBorderedData(
+	double *borderHeights, vector3d *borderVertexs,
+	const double ang0,
+	const double ang1,
+	const double yoffset,
+	const double halfLen,
+	const int edgeLen,
+	const double fracStep,
+	const Terrain *pTerrain) const
+{
+	const int borderedEdgeLen = (edgeLen * 2) + (BORDER_SIZE * 2) - 1;
+	const int numBorderedVerts = borderedEdgeLen*borderedEdgeLen;
+
+	const vector3d topEnd(0.0, yoffset + halfLen, 0.0);		// vertices at top edge of circle
+	const vector3d btmEnd(0.0, yoffset - halfLen, 0.0);		// vertices at bottom edge of circle
+
+	// generate heights plus a N=BORDER_SIZE unit border
+	double *bhts = borderHeights;
+	vector3d *vrts = borderVertexs;
+	for ( int y = -BORDER_SIZE; y < (borderedEdgeLen - BORDER_SIZE); y++ ) 
+	{
+		const double yfrac = double(y) * (fracStep*0.5);
+		// point along z-axis by zfrac amount
+		const vector3d axisPt = lerp( yfrac, btmEnd, topEnd );
+		for ( int x = -BORDER_SIZE; x < (borderedEdgeLen - BORDER_SIZE); x++ ) 
+		{
+			const double xfrac = double(x) * fracStep;
+			const vector3d p = GetSurfacePointCyl(xfrac, yfrac, ang0, ang1, yoffset, halfLen);
+			// vector from axis to point-on-surface
+			const vector3d cDir = (p - axisPt).Normalized();
+			const double height = pTerrain->GetHeight(p);
+			assert(height >= 0.0f && height <= 1.0f);
+			*(bhts++) = -height;
+			*(vrts++) = p + (cDir * height);
+		}
+	}
+	assert(bhts == &borderHeights[numBorderedVerts]);
+}
+
+void QuadPlateJob::GenerateSubPatchData(
+	double *heights, vector3f *normals, Color3ub *colors, 
+	double *borderHeights, vector3d *borderVertexs,
+	const double ang0,
+	const double ang1,
+	const double yoffset,
+	const double halfLen,
+	const int edgeLen,
+	const int xoff, 
+	const int yoff,
+	const int borderedEdgeLen,
+	const double fracStep,
+	const Terrain *pTerrain) const
+{
+	// Generate normals & colors for vertices
+	vector3d *vrts = borderVertexs;
+	Color3ub *col = colors;
+	vector3f *nrm = normals;
+	double *hts = heights;
+
+	const vector3d topEnd(0.0, yoffset + halfLen, 0.0);		// vertices at top edge of circle
+	const vector3d btmEnd(0.0, yoffset - halfLen, 0.0);		// vertices at bottom edge of circle
+
+	// step over the small square
+	for ( int y = 0; y < edgeLen; y++ ) {
+		const int by = (y + BORDER_SIZE) + yoff;
+		for ( int x = 0; x < edgeLen; x++ ) {
+			const int bx = (x + BORDER_SIZE) + xoff;
+
+			// height
+			const double height = borderHeights[bx + (by * borderedEdgeLen)];
+			assert(hts != &heights[edgeLen * edgeLen]);
+			*(hts++) = height;
+
+			// normal
+			const vector3d &x1 = vrts[(bx - 1) + (by * borderedEdgeLen)];
+			const vector3d &x2 = vrts[(bx + 1) + (by * borderedEdgeLen)];
+			const vector3d &y1 = vrts[bx + ((by - 1) * borderedEdgeLen)];
+			const vector3d &y2 = vrts[bx + ((by + 1) * borderedEdgeLen)];
+			const vector3d n = ((x2 - x1).Cross(y2 - y1)).Normalized();
+			assert(nrm != &normals[edgeLen * edgeLen]);
+			*(nrm++) = vector3f(n);
+
+			// color
+			const vector3d p = GetSurfacePointCyl(x * fracStep, y * fracStep, ang0, ang1, yoffset, halfLen);
+			SetColour(col, pTerrain->GetColor(p, height, n));
+			assert(col != &colors[edgeLen * edgeLen]);
+			++col;
+		}
+	}
+	assert(hts == &heights[edgeLen*edgeLen]);
+	assert(nrm == &normals[edgeLen*edgeLen]);
+	assert(col == &colors[edgeLen*edgeLen]);
+}
+
+// ********************************************************************************
+//
+// ********************************************************************************
 class GeoPlate : public BaseGeo {
 public:
 	vector3d vbe[NUM_VBE];
-	GeoPlate *kids[4];
+	std::unique_ptr<GeoPlate> kids[4];
 	int m_depth;
 	bool m_needUpdateVBOs;
+	std::unique_ptr<double[]> heights;
+
+	const GeoPlateID mPatchID;
+	Job::Handle m_job;
+	bool mHasJobRequest;
 
 	static RefCountedPtr<Graphics::IndexBuffer> indices;
 	static int prevEdgeLen;
-	static Uint32 indices_vbo;
-	static VBOVertex *vbotemp;
 
 	// params
 	// v0, v1 - define points on the line describing the loop of the ring/orbital.
 	// depth - 0 is the topmost plate with each depth+1 describing it's depth within the tree.
-	GeoPlate(const double halfLength, const vector3d &startVBE, const vector3d &endVBE, 
-		const double startAng, const double endAng, 
-		const double yoffset, const int depth) 
-		: BaseGeo(halfLength, startAng, endAng, yoffset, depth), m_needUpdateVBOs(false)
+	GeoPlate(GeoRing *geoRingPtr, const double halfLength, const vector3d &startVBE, const vector3d &endVBE, 
+		const double startAng, const double endAng, const double yoffset, const int depth, const GeoPlateID ID) 
+		: BaseGeo(geoRingPtr, halfLength, startAng, endAng, yoffset, depth), m_needUpdateVBOs(false), mPatchID(ID), mHasJobRequest(false)
 	{
-		for( int i=0; i<4; ++i )
-		{
-			kids[i] = nullptr;
-		}
-
 		vbe[0] = startVBE;
 		vbe[1] = endVBE;
 		m_depth = depth;
 		m_needUpdateVBOs = false;
-		heights = new double[GEOPLATE_NUMVERTICES];
-		normals = new vector3d[GEOPLATE_NUMVERTICES];
-		vertices = new vector3d[GEOPLATE_NUMVERTICES];
-		colors = new Color3ub[GEOPLATE_NUMVERTICES];
+		heights.reset(new double[GEOPLATE_NUMVERTICES]);
+		normals.reset(new vector3f[GEOPLATE_NUMVERTICES]);
+		colors.reset(new Color3ub[GEOPLATE_NUMVERTICES]);
 	}
 
-	~GeoPlate() {
-		for (int i=0; i<4; i++) if (kids[i]) delete kids[i];
-		SAFE_DELETE_ARRAY(heights);
-		SAFE_DELETE_ARRAY(vertices);
-		SAFE_DELETE_ARRAY(normals);
-		SAFE_DELETE_ARRAY(colors);
+	virtual ~GeoPlate() {
 	}
+
+	bool HasData() const { return heights.get() != nullptr; }
 
 	static void Init() 
 	{
@@ -688,7 +1231,7 @@ public:
 		prevEdgeLen = GEOPLATE_EDGELEN;
 	}
 
-	void UpdateVBOs() 
+	void NeedToUpdateVBOs() 
 	{
 		m_needUpdateVBOs = true;
 	}
@@ -715,22 +1258,30 @@ public:
 			VBOVertex* VBOVtxPtr = m_vertexBuffer->Map<VBOVertex>(Graphics::BUFFER_MAP_WRITE);
 			assert(m_vertexBuffer->GetDesc().stride == sizeof(VBOVertex));
 
-			const vector3d *vtx = vertices;
-			const vector3d *pNorm = normals;
-			const Color3ub *pColr = colors;
+			const double *hgt = heights.get();
+			const vector3f *pNorm = normals.get();
+			const Color3ub *pColr = colors.get();
 
-			for (Sint32 y = 0; y<GEOPLATE_EDGELEN; y++) {
-				for (Sint32 x = 0; x<GEOPLATE_EDGELEN; x++) {
-					const double xFrac = double(x) * GEOPLATEHULL_FRAC;
-					const double yFrac = double(y) * GEOPLATEHULL_FRAC;
+			const vector3d topEnd(0.0, m_yoffset + m_halfLen, 0.0);		// vertices at top edge of circle
+			const vector3d btmEnd(0.0, m_yoffset - m_halfLen, 0.0);		// vertices at bottom edge of circle
+
+			for (Sint32 y = 0; y<GEOPLATE_EDGELEN; y++) 
+			{
+				const double yFrac = double(y) * GEOPLATE_FRAC;
+				// point along z-axis by zfrac amount
+				const vector3d axisPt = lerp( yFrac, btmEnd, topEnd );
+				for (Sint32 x = 0; x<GEOPLATE_EDGELEN; x++) 
+				{
+					const double xFrac = double(x) * GEOPLATE_FRAC;
 
 					VBOVertex* vtxPtr = &VBOVtxPtr[x + (y*GEOPLATE_EDGELEN)];
-					vector3d p(*vtx - clipCentroid);
-					vtxPtr->pos = vector3f(p);
+					const vector3d p = GetSurfacePointCyl(xFrac, yFrac, m_halfLen);// find point on _surface_ of the cylinder
+					const vector3d cDir = (p - axisPt).Normalized();// vector from axis to point-on-surface
+					vtxPtr->pos = vector3f((p + (cDir * (*hgt))) - clipCentroid);// vertex is moved in direction of point-in-axis FROM point-on-surface by height.
 					clipRadius = std::max(clipRadius, p.Length());
-					++vtx;	// next height
+					++hgt;	// next height
 
-					vtxPtr->norm = vector3f(pNorm->Normalized());
+					vtxPtr->norm = pNorm->Normalized();
 					++pNorm; // next normal
 
 					vtxPtr->col[0] = pColr->r;
@@ -750,26 +1301,19 @@ public:
 			// ----------------------------------------------------
 			// end of mapping
 			m_vertexBuffer->Unmap();
+
+			normals.reset();
+			//heights.reset();
+			colors.reset();
 		}
 	}
-	inline void SetColour(Color3ub *r, const vector3d &v) { 
-#if 1
-		r->r=static_cast<unsigned char>(Clamp(v.x*255.0, 0.0, 255.0)); 
-		r->g=static_cast<unsigned char>(Clamp(v.y*255.0, 0.0, 255.0)); 
-		r->b=static_cast<unsigned char>(Clamp(v.z*255.0, 0.0, 255.0));
-#else
-		r->r = 255;
-		r->g = 255;
-		r->b = 255;
-#endif
-	}
 	// Generates full-detail vertices, and also non-edge normals and colors
-	void GenerateMesh() 
+	/*void GenerateMesh() 
 	{
-		double *hgt = heights;
-		vector3d *vts = vertices;
-		vector3d *nrm = normals;
-		Color3ub *col = colors;
+		double *hgt = heights.get();
+		vector3d *vts = vertices.get();
+		vector3f *nrm = normals.get();
+		Color3ub *col = colors.get();
 		double xfrac;
 		double zfrac = 0;
 		vector3d axisPt(0.0, 0.0, 0.0);
@@ -798,7 +1342,7 @@ public:
 
 				xfrac += GEOPLATE_FRAC;
 
-				*(nrm++) = (cDir);
+				*(nrm++) = vector3f(cDir);
 
 				*(col++) = Color3ub::BLACK;
 			}
@@ -816,27 +1360,103 @@ public:
 				vector3d y1 = vertices[x + (y-1)*GEOPLATE_EDGELEN];
 				vector3d y2 = vertices[x + (y+1)*GEOPLATE_EDGELEN];
 
-				vector3d n = (x2-x1).Cross(y2-y1);
-				const vector3d &norm = normals[x + y*GEOPLATE_EDGELEN] = (n.Normalized());
+				const vector3d n = (x2-x1).Cross(y2-y1).Normalized();
+				normals[x + y*GEOPLATE_EDGELEN] = vector3f(n);
 				// color
 				vector3d p = GetSurfacePointCyl(x*GEOPLATE_FRAC, y*GEOPLATE_FRAC, m_halfLen);
 				const double height = heights[x + y*GEOPLATE_EDGELEN];
-				SetColour(&colors[x + y*GEOPLATE_EDGELEN], geoRing->GetColor(p, height, norm));
+				SetColour(&colors[x + y*GEOPLATE_EDGELEN], geoRing->GetColor(p, height, n));
 			}
+		}
+	}*/
+	
+	void ReceiveHeightmaps(SQuadPlateResult *psr)
+	{
+		PROFILE_SCOPED()
+		assert(NULL!=psr);
+		if (m_depth<psr->depth()) {
+			// this should work because each depth should have a common history
+			const Uint32 kidIdx = psr->data(0).patchID.GetPatchIdx(m_depth+1);
+			if( kids[kidIdx] ) {
+				kids[kidIdx]->ReceiveHeightmaps(psr);
+			} else {
+				psr->OnCancel();
+			}
+		} else {
+			assert(mHasJobRequest);
+			const int nD = m_depth+1;
+			for (int i=0; i<4; i++)
+			{
+				assert(!kids[i]);
+				const SQuadPlateResult::SSplitResultData& data = psr->data(i);
+				assert(i==data.patchID.GetPatchIdx(nD));
+				assert(0==data.patchID.GetPatchIdx(nD+1));
+				kids[i].reset(new GeoPlate(geoRing, data.halfLen, data.vbe0, data.vbe1, data.ang0, data.ang1, data.yoffset, nD, data.patchID));
+			}
+
+			for (int i=0; i<4; i++)
+			{
+				const SQuadPlateResult::SSplitResultData& data = psr->data(i);
+				kids[i]->heights.reset(data.heights);
+				kids[i]->normals.reset(data.normals);
+				kids[i]->colors.reset(data.colors);
+			}
+			for (int i=0; i<4; i++) {
+				kids[i]->NeedToUpdateVBOs();
+			}
+			mHasJobRequest = false;
+		}
+	}
+
+	void ReceiveHeightmap(const SSinglePlateResult *psr)
+	{
+		PROFILE_SCOPED()
+		assert(nullptr != psr);
+		assert(mHasJobRequest);
+		{
+			const SSinglePlateResult::SSplitResultData& data = psr->data();
+			heights.reset(data.heights);
+			normals.reset(data.normals);
+			colors.reset(data.colors);
+		}
+		mHasJobRequest = false;
+	}
+
+	void ReceiveJobHandle(Job::Handle job)
+	{
+		assert(!m_job.HasJob());
+		m_job = static_cast<Job::Handle&&>(job);
+	}
+
+	void RequestSinglePatch()
+	{
+		if( !heights ) {
+			assert(!mHasJobRequest);
+			mHasJobRequest = true;
+
+			SSinglePlateRequest *ssrd = new SSinglePlateRequest(ang[0], ang[1], m_yoffset, m_halfLen, vbe[0], vbe[1], m_depth, geoRing->GetSystemBody()->GetPath(), mPatchID, GEOPLATE_EDGELEN, GEOPLATE_FRAC, geoRing->GetTerrain());
+			m_job = Pi::GetAsyncJobQueue()->Queue(new SinglePlateJob(ssrd));
 		}
 	}
 	
 	void Render(Graphics::Renderer *renderer, const vector3d &campos, const matrix4x4d &modelView, const Graphics::Frustum &frustum) 
 	{
+		PROFILE_SCOPED()
+		// must update the VBOs to calculate the clipRadius...
+		_UpdateVBOs();
+
 		// Do frustum culling
 		if (!frustum.TestPoint(clipCentroid, clipRadius))
 			return; // nothing below this patch is visible
 
-		if (kids[0]) {
+		if (kids[0]) 
+		{
 			for (int i=0; i<4; i++) {
 				kids[i]->Render(renderer, campos, modelView, frustum);
 			}
-		} else {
+		} 
+		else if(m_vertexBuffer.get()) 
+		{
 			_UpdateVBOs();
 
 			RefCountedPtr<Graphics::Material> mat = geoRing->GetSurfaceMaterial();
@@ -850,53 +1470,52 @@ public:
 
 			// per-patch detail texture scaling value
 			geoRing->GetMaterialParameters().patchDepth = m_depth;
-
+			renderer->SetWireFrameMode(true);
 			renderer->DrawBufferIndexed(m_vertexBuffer.get(), indices.Get(), rs, mat.Get());
-
+			renderer->SetWireFrameMode(false);
 			renderer->GetStats().AddToStatCount(Graphics::Stats::STAT_PLATES, 1);
 		}
 	}
 
 	void LODUpdate(vector3d &campos) 
 	{
+		// there should be no LOD update when we have active split requests
+		if(mHasJobRequest)
+			return;
+
 		vector3d centroid = GetSurfacePointCyl(0.5, 0.5, m_halfLen);
 		centroid = (1.0 + (-geoRing->GetHeight(centroid))) * centroid;
+		const double centroidDist = (campos - centroid).Length();
 
 		bool canSplit = true;
 		if (!(canSplit && (m_depth < GEOPLATE_MAX_DEPTH) &&
-		    ((campos - centroid).Length() < m_roughLength))) {
+		    (centroidDist < m_roughLength))) {
 			canSplit = false;
 		}
 
 		bool canMerge = true;
 
 		if (canSplit) {
-			if (!kids[0]) {
-				const vector3d halfVBE = vbe[0] + 0.5 * (vbe[1] - vbe[0]);
+			if (!kids[0]) 
+			{
+				// we can see this patch so submit the jobs!
+				assert(!mHasJobRequest);
+				mHasJobRequest = true;
 
-				const double halfAng = ang[0] + 0.5 * (ang[1] - ang[0]);
-				const double newLength = (m_halfLen*0.5);
-				const double yoffset0 = m_yoffset + (newLength*0.5);
-				const double yoffset1 = m_yoffset - (newLength*0.5);
-				GeoPlate *_kids[4];
-				_kids[0] = new GeoPlate(newLength, halfVBE, vbe[1], halfAng, ang[1], yoffset1, m_depth+1);
-				_kids[1] = new GeoPlate(newLength, vbe[0], halfVBE, ang[0], halfAng, yoffset1, m_depth+1);
-				_kids[2] = new GeoPlate(newLength, vbe[0], halfVBE, ang[0], halfAng, yoffset0, m_depth+1);
-				_kids[3] = new GeoPlate(newLength, halfVBE, vbe[1], halfAng, ang[1], yoffset0, m_depth+1);
+				SQuadPlateRequest *ssrd = new SQuadPlateRequest(ang[0], ang[1], m_yoffset, m_halfLen, vbe[0], vbe[1], m_depth, geoRing->GetSystemBody()->GetPath(), mPatchID, GEOPLATE_EDGELEN, GEOPLATE_FRAC, geoRing->GetTerrain());
 
-				_kids[0]->geoRing = _kids[1]->geoRing = _kids[2]->geoRing = _kids[3]->geoRing = geoRing;
-
-				for (int i=0; i<4; ++i) _kids[i]->GenerateMesh();
-				for (int i=0; i<4; ++i) kids[i] = _kids[i];
-				for (int i=0; i<4; ++i) {
-					kids[i]->UpdateVBOs();
-				}
+				// add to the GeoSphere to be processed at end of all LODUpdate requests
+				geoRing->AddQuadPlateRequest(centroidDist, ssrd, this);
 			}
-			for (int i=0; i<4; ++i) kids[i]->LODUpdate(campos);
+			else 
+			{
+				for (int i=0; i<4; ++i) 
+					kids[i]->LODUpdate(campos);
+			}
 		} else {
 			if (canMerge && kids[0]) {
 				for (int i=0; i<4; ++i) { 
-					delete kids[i]; kids[i] = 0; 
+					kids[i].reset();
 				}
 			}
 		}
@@ -905,10 +1524,7 @@ public:
 //static 
 RefCountedPtr<Graphics::IndexBuffer> GeoPlate::indices;
 int GeoPlate::prevEdgeLen = 0;
-Uint32 GeoPlate::indices_vbo = 0;
-VBOVertex *GeoPlate::vbotemp;
 
-#define PLANET_AMBIENT	0.0
 static std::vector<GeoRing*> s_allGeoRings;
 
 void GeoRing::_UpdateLODs()
@@ -1052,48 +1668,43 @@ void GeoRing::BuildFirstPatches()
 
 	// build the terrain plates
 	m_plates.clear();
-	for( int i=0 ; i<points.size()-1 ; ++i ) {
-		m_plates.push_back( new GeoPlate(mRingWidth, points[i], points[i+1], angles[i], angles[i+1], 0.0, 0) );
+	for( size_t i=0 ; i<points.size()-1 ; ++i ) {
+		m_plates.push_back( new GeoPlate(this, mRingWidth, points[i], points[i+1], angles[i], angles[i+1], 0.0, 0, i) );
 	}
 
-	// set edge friends
+	// request meshes
 	for (size_t i=0; i<m_plates.size(); i++) {
-		m_plates[i]->SetGeoRingPtr( this );
+		m_plates[i]->RequestSinglePatch();
 	}
-
-	// create mesh(es)
-	for (size_t i=0; i<m_plates.size(); i++) m_plates[i]->GenerateMesh();
-	for (size_t i=0; i<m_plates.size(); i++) m_plates[i]->UpdateVBOs();
 
 	// create the outer hull
 	m_hull.clear();
-	for( int i=0 ; i<points.size()-1 ; ++i ) {
+	for( size_t i=0 ; i<points.size()-1 ; ++i ) {
 		double len = (points[i+1] - points[i]).Length();
-		m_hull.push_back( new GeoPlateHull(len, angles[i+1], angles[i], 0.0, 0) );
+		m_hull.push_back( new GeoPlateHull(this, len, angles[i+1], angles[i], 0.0, 0) );
 	}
-	for (size_t i=0; i<m_hull.size(); i++) m_hull[i]->SetGeoRingPtr( this );
 	for (size_t i=0; i<m_hull.size(); i++) m_hull[i]->GenerateMesh();
-	for (size_t i=0; i<m_hull.size(); i++) m_hull[i]->UpdateVBOs();
+	for (size_t i=0; i<m_hull.size(); i++) m_hull[i]->NeedToUpdateVBOs();
 
 	// create the inner wall
 	m_wallInner.clear();
-	for( int i=0 ; i<points.size()-1 ; ++i ) {
+	for( size_t i=0 ; i<points.size()-1 ; ++i ) {
 		double len = (points[i+1] - points[i]).Length();
-		m_wallInner.push_back( new GeoPlateWall(true, len, angles[i+1], angles[i], 0.0, 0) );
+		m_wallInner.push_back( new GeoPlateWall(this, true, len, angles[i+1], angles[i], 0.0, 0) );
 	}
-	for (size_t i=0; i<m_wallInner.size(); i++) m_wallInner[i]->SetGeoRingPtr( this );
 	for (size_t i=0; i<m_wallInner.size(); i++) m_wallInner[i]->GenerateMesh();
-	for (size_t i=0; i<m_wallInner.size(); i++) m_wallInner[i]->UpdateVBOs();
+	for (size_t i=0; i<m_wallInner.size(); i++) m_wallInner[i]->NeedToUpdateVBOs();
 
 	// create the outer wall
 	m_wallOuter.clear();
-	for( int i=0 ; i<points.size()-1 ; ++i ) {
+	for( size_t i=0 ; i<points.size()-1 ; ++i ) {
 		double len = (points[i+1] - points[i]).Length();
-		m_wallOuter.push_back( new GeoPlateWall(false, len, angles[i+1], angles[i], 0.0, 0) );
+		m_wallOuter.push_back( new GeoPlateWall(this, false, len, angles[i+1], angles[i], 0.0, 0) );
 	}
-	for (size_t i=0; i<m_wallOuter.size(); i++) m_wallOuter[i]->SetGeoRingPtr( this );
 	for (size_t i=0; i<m_wallOuter.size(); i++) m_wallOuter[i]->GenerateMesh();
-	for (size_t i=0; i<m_wallOuter.size(); i++) m_wallOuter[i]->UpdateVBOs();
+	for (size_t i=0; i<m_wallOuter.size(); i++) m_wallOuter[i]->NeedToUpdateVBOs();
+
+	m_initStage = eRequestedFirstPatches;
 }
 
 static const double gs_targetPatchTriLength(100.0);
@@ -1119,7 +1730,7 @@ void GeoRing::Update()
 		return;
 	}
 	_UpdateLODs();
-	/*switch(m_initStage)
+	switch(m_initStage)
 	{
 	case eBuildFirstPatches:
 		BuildFirstPatches();
@@ -1128,30 +1739,30 @@ void GeoRing::Update()
 		{
 			ProcessSplitResults();
 			uint8_t numValidPatches = 0;
-			for (int i=0; i<NUM_PATCHES; i++) {
-				if(m_patches[i]->HasHeightData()) {
+			for (size_t i=0; i<m_plates.size(); i++) {
+				if(m_plates[i]->HasData()) {
 					++numValidPatches;
 				}
 			}
-			m_initStage = (NUM_PATCHES==numValidPatches) ? eReceivedFirstPatches : eRequestedFirstPatches;
+			m_initStage = (m_plates.size()==numValidPatches) ? eReceivedFirstPatches : eRequestedFirstPatches;
 		} break;
 	case eReceivedFirstPatches:
 		{
-			for (int i=0; i<NUM_PATCHES; i++) {
-				m_patches[i]->NeedToUpdateVBOs();
+			for (size_t i=0; i<m_plates.size(); i++) {
+				m_plates[i]->NeedToUpdateVBOs();
 			}
 			m_initStage = eDefaultUpdateState;
 		} break;
 	case eDefaultUpdateState:
 		if(m_hasTempCampos) {
 			ProcessSplitResults();
-			for (int i=0; i<NUM_PATCHES; i++) {
-				m_patches[i]->LODUpdate(m_tempCampos, m_tempFrustum);
+			for (size_t i=0; i<m_plates.size(); i++) {
+				m_plates[i]->LODUpdate(m_tempCampos);//, m_tempFrustum);
 			}
-			ProcessQuadSplitRequests();
+			ProcessQuadPlateRequests();
 		}
 		break;
-	}*/
+	}
 }
 
 static const float g_ambient[4] = { 0, 0, 0, 1.0 };
@@ -1341,5 +1952,141 @@ void GeoRing::SetUpMaterials()
 	m_texLo.Reset( Graphics::TextureBuilder::Model("textures/low.dds").GetOrCreateTexture(Pi::renderer, "model") );
 	m_surfaceMaterial->texture0 = m_texHi.Get();
 	m_surfaceMaterial->texture1 = m_texLo.Get();
+}
+
+//static
+bool GeoRing::OnAddQuadPlateResult(const SystemPath &path, SQuadPlateResult *res)
+{
+	// Find the correct GeoSphere via it's system path, and give it the split result
+	for(std::vector<GeoRing*>::iterator i=s_allGeoRings.begin(), iEnd=s_allGeoRings.end(); i!=iEnd; ++i) {
+		if( path == (*i)->GetSystemBody()->GetPath() ) {
+			(*i)->AddQuadPlateResult(res);
+			return true;
+		}
+	}
+	// GeoSphere not found to return the data to, cancel and delete it instead
+	if( res ) {
+		res->OnCancel();
+		delete res;
+	}
+	return false;
+}
+
+//static
+bool GeoRing::OnAddSinglePlateResult(const SystemPath &path, SSinglePlateResult *res)
+{
+	// Find the correct GeoSphere via it's system path, and give it the split result
+	for(std::vector<GeoRing*>::iterator i=s_allGeoRings.begin(), iEnd=s_allGeoRings.end(); i!=iEnd; ++i) {
+		if( path == (*i)->GetSystemBody()->GetPath() ) {
+			(*i)->AddSinglePlateResult(res);
+			return true;
+		}
+	}
+	// GeoSphere not found to return the data to, cancel and delete it instead
+	if( res ) {
+		res->OnCancel();
+		delete res;
+	}
+	return false;
+}
+
+bool GeoRing::AddQuadPlateResult(SQuadPlateResult *res)
+{
+	bool result = false;
+	assert(res);
+	assert(mQuadPlateResults.size()<MAX_SPLIT_OPERATIONS);
+	if(mQuadPlateResults.size()<MAX_SPLIT_OPERATIONS) {
+		mQuadPlateResults.push_back(res);
+		result = true;
+	}
+	return result;
+}
+
+bool GeoRing::AddSinglePlateResult(SSinglePlateResult *res)
+{
+	bool result = false;
+	assert(res);
+	assert(mSinglePlateResults.size()<MAX_SPLIT_OPERATIONS);
+	if(mSinglePlateResults.size()<MAX_SPLIT_OPERATIONS) {
+		mSinglePlateResults.push_back(res);
+		result = true;
+	}
+	return result;
+}
+
+void GeoRing::ProcessSplitResults()
+{
+	// now handle the single split results that define the base level of the quad tree
+	{
+		std::deque<SSinglePlateResult*>::iterator iter = mSinglePlateResults.begin();
+		while(iter!=mSinglePlateResults.end())
+		{
+			// finally pass SplitResults
+			SSinglePlateResult *psr = (*iter);
+			assert(psr);
+
+			const uint64_t plateIdx = psr->plate();
+			if( m_plates[plateIdx] ) {
+				m_plates[plateIdx]->ReceiveHeightmap(psr);
+			} else {
+				psr->OnCancel();
+			}
+
+			// tidyup
+			delete psr;
+
+			// Next!
+			++iter;
+		}
+		mSinglePlateResults.clear();
+	}
+
+	// now handle the quad split results
+	{
+		std::deque<SQuadPlateResult*>::iterator iter = mQuadPlateResults.begin();
+		while(iter!=mQuadPlateResults.end())
+		{
+			// finally pass SplitResults
+			SQuadPlateResult *psr = (*iter);
+			assert(psr);
+
+			const uint64_t plateIdx = psr->plate();
+			if( m_plates[plateIdx] ) {
+				m_plates[plateIdx]->ReceiveHeightmaps(psr);
+			} else {
+				psr->OnCancel();
+			}
+
+			// tidyup
+			delete psr;
+
+			// Next!
+			++iter;
+		}
+		mQuadPlateResults.clear();
+	}
+}
+
+void GeoRing::AddQuadPlateRequest(double dist, SQuadPlateRequest *pReq, GeoPlate *pPlate)
+{
+	mQuadPlateRequests.push_back(TDistanceRequest(dist, pReq, pPlate));
+}
+
+void GeoRing::ProcessQuadPlateRequests()
+{
+	class RequestDistanceSort {
+	public:
+		bool operator()(const TDistanceRequest &a, const TDistanceRequest &b)
+		{
+			return a.mDistance < b.mDistance;
+		}
+	};
+	std::sort(mQuadPlateRequests.begin(), mQuadPlateRequests.end(), RequestDistanceSort());
+
+	for(auto iter : mQuadPlateRequests) {
+		SQuadPlateRequest *ssrd = iter.mpRequest;
+		iter.mpRequester->ReceiveJobHandle(Pi::GetAsyncJobQueue()->Queue(new QuadPlateJob(ssrd)));
+	}
+	mQuadPlateRequests.clear();
 }
 

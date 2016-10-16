@@ -17,6 +17,11 @@ class SystemBody;
 class GeoPlate;
 class GeoPlateHull;
 class GeoPlateWall;
+
+class SQuadPlateRequest;
+class SQuadPlateResult;
+class SSinglePlateResult;
+
 class GeoRing {
 public:
 	GeoRing(const SystemBody *body);
@@ -35,6 +40,15 @@ public:
 	static void Init();
 	static void UpdateAllGeoRings();
 	static void OnChangeDetailLevel();
+	static bool OnAddQuadPlateResult(const SystemPath &path, SQuadPlateResult *res);
+	static bool OnAddSinglePlateResult(const SystemPath &path, SSinglePlateResult *res);
+	
+	bool AddQuadPlateResult(SQuadPlateResult *res);
+	void AddQuadPlateRequest(double, SQuadPlateRequest*, GeoPlate*);
+	bool AddSinglePlateResult(SSinglePlateResult *res);
+	void ProcessSplitResults();
+	void ProcessQuadPlateRequests();
+
 	void GetAtmosphereFlavor(Color *outColor, double *outDensity) const {
 		m_sbody->GetAtmosphereFlavor(outColor, outDensity);
 	}
@@ -52,6 +66,8 @@ public:
 	}
 
 	inline Sint32 GetMaxDepth() const { return m_maxDepth; }
+	inline const SystemBody *GetSystemBody() const { return m_sbody; }
+	Terrain* GetTerrain() const { return m_terrain.Get(); }
 
 	struct MaterialParameters {
 		SystemBody::AtmosphereParameters atmosphere;
@@ -85,6 +101,14 @@ private:
 	RefCountedPtr<Graphics::Texture> m_texHi;
 	RefCountedPtr<Graphics::Texture> m_texLo;
 
+	enum EGSInitialisationStage {
+		eBuildFirstPatches=0,
+		eRequestedFirstPatches,
+		eReceivedFirstPatches,
+		eDefaultUpdateState
+	};
+	EGSInitialisationStage m_initStage;
+
 	Graphics::RenderState *m_surfRenderState;
 	RefCountedPtr<Graphics::Material> m_surfaceMaterial;
 	//special parameters for shaders
@@ -94,6 +118,19 @@ private:
 	vector3d m_tempCampos;
 	Graphics::Frustum m_tempFrustum;
 	//////////////////////////////
+
+	struct TDistanceRequest {
+		TDistanceRequest(double dist, SQuadPlateRequest *pRequest, GeoPlate *pRequester) :
+			mDistance(dist), mpRequest(pRequest), mpRequester(pRequester) {}
+		double mDistance;
+		SQuadPlateRequest *mpRequest;
+		GeoPlate *mpRequester;
+	};
+	std::deque<TDistanceRequest> mQuadPlateRequests;
+
+	static const uint32_t MAX_SPLIT_OPERATIONS = 256;
+	std::deque<SQuadPlateResult*> mQuadPlateResults;
+	std::deque<SSinglePlateResult*> mSinglePlateResults;
 
 	inline vector3d GetColor(const vector3d &p, double height, const vector3d &norm) {
 		//return vector3d(0.5, 0.5, 0.5);
