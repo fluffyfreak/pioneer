@@ -298,6 +298,287 @@ public:
 //static 
 RefCountedPtr<Graphics::IndexBuffer> GeoPlateHull::indices;
 
+// must be an odd number
+#define GEOPLATE_WALL_LEN 7
+#define GEOPLATE_NUM_WALL_VERTICES	(GEOPLATE_WALL_LEN*GEOPLATE_WALL_LEN)
+
+class GeoPlateWall : public BaseGeo {
+public:
+	static RefCountedPtr<Graphics::IndexBuffer> indices;
+	bool bInnerWall;
+
+	// params
+	// v0, v1 - define points on the line describing the loop of the ring/orbital.
+	// depth - 0 is the topmost plate with each depth+1 describing it's depth within the tree.
+	GeoPlateWall(const bool isInnerWall, const double halfLength, const double startAng, const double endAng, const double yoffset, const int depth) 
+		: BaseGeo(halfLength, startAng, endAng, yoffset, depth), bInnerWall(isInnerWall)
+	{
+		normals = new vector3d[GEOPLATE_NUM_WALL_VERTICES];
+		vertices = new vector3d[GEOPLATE_NUM_WALL_VERTICES];
+		colors = new Color3ub[GEOPLATE_NUM_WALL_VERTICES];
+	}
+
+	~GeoPlateWall() {
+		delete vertices;
+		delete normals;
+		delete colors;
+	}
+
+	static void Init() {
+		GEOPLATEWALL_FRAC = 1.0 / double(GEOPLATE_WALL_LEN-1);
+
+		std::vector<Uint32> pl_short;
+		pl_short.resize(VBO_COUNT_ALL_IDX);
+		Uint32 *idx = &pl_short[0];
+		for (int x=0; x<GEOPLATE_WALL_LEN-1; x++) 
+		{
+			for (int y=0; y<GEOPLATE_WALL_LEN-1; y++) 
+			{
+				idx[0] = x + GEOPLATE_WALL_LEN*y;		assert(idx[0] < GEOPLATE_NUMVERTICES);
+				idx[1] = x+1 + GEOPLATE_WALL_LEN*y;		assert(idx[1] < GEOPLATE_NUMVERTICES);
+				idx[2] = x + GEOPLATE_WALL_LEN*(y+1);	assert(idx[2] < GEOPLATE_NUMVERTICES);
+				idx+=3;
+
+				idx[0] = x+1 + GEOPLATE_WALL_LEN*y;		assert(idx[0] < GEOPLATE_NUMVERTICES);
+				idx[1] = x+1 + GEOPLATE_WALL_LEN*(y+1);	assert(idx[1] < GEOPLATE_NUMVERTICES);
+				idx[2] = x + GEOPLATE_WALL_LEN*(y+1);	assert(idx[2] < GEOPLATE_NUMVERTICES);
+				//assert(idx < indices+VBO_COUNT_ALL_IDX);
+				idx+=3;
+			}
+		}
+
+		VertexCacheOptimizerUInt vco;
+		VertexCacheOptimizerUInt::Result res = vco.Optimize(&pl_short[0], VBO_COUNT_ALL_IDX/3);
+		assert(0 == res);
+		//create buffer & copy
+		indices.Reset(Pi::renderer->CreateIndexBuffer(pl_short.size(), Graphics::BUFFER_USAGE_STATIC));
+		Uint32* idxPtr = indices->Map(Graphics::BUFFER_MAP_WRITE);
+		for (Uint32 j = 0; j < pl_short.size(); j++) {
+			idxPtr[j] = pl_short[j];
+		}
+		indices->Unmap();
+	}
+
+	void UpdateVBOs() {
+		//create buffer and upload data
+		Graphics::VertexBufferDesc vbd;
+		vbd.attrib[0].semantic = Graphics::ATTRIB_POSITION;
+		vbd.attrib[0].format   = Graphics::ATTRIB_FORMAT_FLOAT3;
+		vbd.attrib[1].semantic = Graphics::ATTRIB_NORMAL;
+		vbd.attrib[1].format   = Graphics::ATTRIB_FORMAT_FLOAT3;
+		vbd.attrib[2].semantic = Graphics::ATTRIB_DIFFUSE;
+		vbd.attrib[2].format   = Graphics::ATTRIB_FORMAT_UBYTE4;
+		vbd.attrib[3].semantic = Graphics::ATTRIB_UV0;
+		vbd.attrib[3].format   = Graphics::ATTRIB_FORMAT_FLOAT2;
+		vbd.numVertices = (GEOPLATE_WALL_LEN*GEOPLATE_WALL_LEN);
+		vbd.usage = Graphics::BUFFER_USAGE_STATIC;
+		m_vertexBuffer.reset(Pi::renderer->CreateVertexBuffer(vbd));
+
+		VBOVertex* VBOVtxPtr = m_vertexBuffer->Map<VBOVertex>(Graphics::BUFFER_MAP_WRITE);
+		assert(m_vertexBuffer->GetDesc().stride == sizeof(VBOVertex));
+
+		const vector3d *vtx = vertices;
+		const vector3d *pNorm = normals;
+		const Color3ub *pColr = colors;
+
+		for (Sint32 y = 0; y<GEOPLATE_WALL_LEN; y++) {
+			for (Sint32 x = 0; x<GEOPLATE_WALL_LEN; x++) {
+				const double xFrac = double(x) * GEOPLATEHULL_FRAC;
+				const double yFrac = double(y) * GEOPLATEHULL_FRAC;
+
+				VBOVertex* vtxPtr = &VBOVtxPtr[x + (y*GEOPLATE_WALL_LEN)];
+				vector3d p(*vtx - clipCentroid);
+				vtxPtr->pos = vector3f(p);
+				clipRadius = std::max(clipRadius, p.Length());
+				++vtx;	// next height
+
+				vtxPtr->norm = vector3f(pNorm->Normalized());
+				++pNorm; // next normal
+
+				vtxPtr->col[0] = pColr->r;
+				vtxPtr->col[1] = pColr->g;
+				vtxPtr->col[2] = pColr->b;
+				vtxPtr->col[3] = 255;
+				++pColr; // next colour
+
+				// uv coords
+				vtxPtr->uv.x = 1.0f - xFrac;
+				vtxPtr->uv.y = yFrac;
+
+				++vtxPtr; // next vertex
+			}
+		}
+
+		// ----------------------------------------------------
+		// end of mapping
+		m_vertexBuffer->Unmap();
+	}
+
+	const double heights[2][GEOPLATE_WALL_LEN] = {
+		{
+			0.005,	// start, bottom
+			-0.01,	// above start, top inner wall
+			-0.011,	// peak, top inner wall
+			-0.011,	// peak, top outer wall
+			-0.01,	// top edge outer wall
+			0.0,	// base, outer wall
+			0.005	// end==start, bottom
+		}, {
+			0.005,	// end==start, bottom
+			0.0,	// base, outer wall
+			-0.01,	// top edge outer wall
+			-0.011,	// peak, top outer wall
+			-0.011,	// peak, top inner wall
+			-0.01,	// above start, top inner wall
+			0.005	// start, bottom
+		}
+	};
+
+	const double zvals[2][GEOPLATE_WALL_LEN] = {
+		{
+			-0.0,	// start, bottom
+			-0.0,	// above start, top inner wall
+			-0.025,	// peak, top inner wall
+			-0.075,	// peak, top outer wall
+			-0.1,	// top edge outer wall
+			-0.1,	// base, outer wall
+			-0.0		// end==start, bottom
+		}, {
+			1.0,	// end==start, bottom
+			1.1,	// base, outer wall
+			1.1,	// top edge outer wall
+			1.075,	// peak, top outer wall
+			1.025,	// peak, top inner wall
+			1.0,	// above start, top inner wall
+			1.0	// start, bottom
+		}
+	};
+
+	// Generates full-detail vertices, and also non-edge normals and colors
+	void GenerateMesh() {
+		vector3d *vts = vertices;
+		double xfrac = 0;
+		double zfrac = 0;
+#ifdef _DEBUG
+		memset(normals, 0, sizeof(vector3d)*GEOPLATE_NUM_WALL_VERTICES);
+#endif
+		const vector3d topEnd(0.0, m_yoffset + m_halfLen, 0.0);		// vertices at top edge of circle
+		const vector3d btmEnd(0.0, m_yoffset - m_halfLen, 0.0);		// vertices at bottom edge of circle
+
+		const int PriIdx = bInnerWall ? 0 : 1;
+
+		vector3d p;
+		for (int y=0; y<GEOPLATE_WALL_LEN; ++y) {	// across the width
+			xfrac = 0;
+			const double height = heights[PriIdx][y];
+			const vector3d axisPt = lerp( zvals[PriIdx][y], btmEnd, topEnd );// point along z-axis by zfrac amount
+			for (int x=0; x<GEOPLATE_WALL_LEN; ++x) {	// along the length (circumference)
+				p = GetSurfacePointCyl(xfrac, zvals[PriIdx][y], m_halfLen);
+				
+				// vector from axis to point-on-surface
+				const vector3d cDir = (p - axisPt).Normalized();
+				// vertex is moved in direction of point-on-surface FROM point-in-axis by height.
+				*(vts++) = p + (cDir * height);
+
+				xfrac += GEOPLATEWALL_FRAC;
+				colors[x + y*GEOPLATE_WALL_LEN] = Color3ub(128, 128, 255);
+			}
+		}
+		assert(vts == &vertices[GEOPLATE_NUM_WALL_VERTICES]);
+		// Generate normals
+		for (int y=0; y<GEOPLATE_WALL_LEN-1; ++y) {
+			for (int x=0; x<GEOPLATE_WALL_LEN-1; ++x) {
+				// normal
+				vector3d xy = vertices[x + y*GEOPLATE_WALL_LEN];
+				vector3d x1 = vertices[x+1 + y*GEOPLATE_WALL_LEN];
+				vector3d y1 = vertices[x + (y+1)*GEOPLATE_WALL_LEN];
+
+				vector3d n = (x1-xy).Cross(y1-xy);
+				normals[x + y*GEOPLATE_WALL_LEN] = (n.Normalized());
+			}
+		}
+
+		// Generate bottom row normals
+		for (int y=0; y<GEOPLATE_WALL_LEN-1; ++y) {
+			const int x=GEOPLATE_WALL_LEN-1;
+			// normal
+			vector3d xy = vertices[x + y*GEOPLATE_WALL_LEN];
+			vector3d x1 = vertices[x-1 + y*GEOPLATE_WALL_LEN];
+			vector3d y1 = vertices[x + (y+1)*GEOPLATE_WALL_LEN];
+
+			vector3d n = (xy-x1).Cross(y1-xy);
+			normals[x + y*GEOPLATE_WALL_LEN] = (n.Normalized());
+		}
+
+		// Generate last col normals
+		{
+			const int y=GEOPLATE_WALL_LEN-1;
+			for (int x=1; x<GEOPLATE_WALL_LEN; ++x) {
+				// normal
+				vector3d xy = vertices[x + y*GEOPLATE_WALL_LEN];
+				vector3d x1 = vertices[x-1 + y*GEOPLATE_WALL_LEN];
+				vector3d y1 = vertices[x + (y-1)*GEOPLATE_WALL_LEN];
+
+				vector3d n = (xy-x1).Cross(xy-y1);
+				normals[x + y*GEOPLATE_WALL_LEN] = (n.Normalized());
+			}
+		}
+
+		// corner normals
+		{
+			const int y=GEOPLATE_WALL_LEN-1;
+			const int x=0;
+			{
+				// normal
+				vector3d xy = vertices[x + y*GEOPLATE_WALL_LEN];
+				vector3d x1 = vertices[x+1 + y*GEOPLATE_WALL_LEN];
+				vector3d y1 = vertices[x + (y-1)*GEOPLATE_WALL_LEN];
+
+				vector3d n = (x1-xy).Cross(xy-y1);
+				normals[x + y*GEOPLATE_WALL_LEN] = (n.Normalized());
+			}
+		}
+		{
+			const int y=0;
+			const int x=GEOPLATE_WALL_LEN-1;
+			{
+				// normal
+				vector3d xy = vertices[x + y*GEOPLATE_WALL_LEN];
+				vector3d x1 = vertices[x-1 + y*GEOPLATE_WALL_LEN];
+				vector3d y1 = vertices[x + (y+1)*GEOPLATE_WALL_LEN];
+
+				vector3d n = (xy-x1).Cross(y1-xy);
+				normals[x + y*GEOPLATE_WALL_LEN] = (n.Normalized());
+			}
+		}
+	}
+
+	void Render(Graphics::Renderer *renderer, const vector3d &campos, const matrix4x4d &modelView, const Graphics::Frustum &frustum)
+	{
+		// Do frustum culling
+		if (!frustum.TestPoint(clipCentroid, clipRadius))
+			return; // nothing below this patch is visible
+
+		RefCountedPtr<Graphics::Material> mat = geoRing->GetSurfaceMaterial();
+		Graphics::RenderState *rs = geoRing->GetSurfRenderState();
+
+		const vector3d relpos = clipCentroid - campos;
+		renderer->SetTransform(modelView * matrix4x4d::Translation(relpos));
+
+		Pi::statSceneTris += (GEOPLATE_WALL_LEN-1)*(GEOPLATE_WALL_LEN-1)*2;
+		++Pi::statNumPatches;
+
+		// per-patch detail texture scaling value
+		geoRing->GetMaterialParameters().patchDepth = 0;
+
+		renderer->DrawBufferIndexed(m_vertexBuffer.get(), indices.Get(), rs, mat.Get());
+
+		renderer->GetStats().AddToStatCount(Graphics::Stats::STAT_PLATES, 1);
+	}
+};
+//static 
+RefCountedPtr<Graphics::IndexBuffer> GeoPlateWall::indices;
+
 class GeoPlate : public BaseGeo {
 public:
 	vector3d vbe[NUM_VBE];
@@ -671,21 +952,21 @@ void GeoRing::OnChangeDetailLevel()
 		}
 		(*i)->m_hull.clear();
 
-		//// and strip away the walls:
-		//// inner first...
-		//for (size_t p=0; p<(*i)->m_wallInner.size(); p++) {
-		//	if ((*i)->m_wallInner[p]) {
-		//		delete (*i)->m_wallInner[p];
-		//	}
-		//}
-		//(*i)->m_wallInner.clear();
-		//// ... then outer
-		//for (size_t p=0; p<(*i)->m_wallOuter.size(); p++) {
-		//	if ((*i)->m_wallOuter[p]) {
-		//		delete (*i)->m_wallOuter[p];
-		//	}
-		//}
-		//(*i)->m_wallOuter.clear();
+		// and strip away the walls:
+		// inner first...
+		for (size_t p=0; p<(*i)->m_wallInner.size(); p++) {
+			if ((*i)->m_wallInner[p]) {
+				delete (*i)->m_wallInner[p];
+			}
+		}
+		(*i)->m_wallInner.clear();
+		// ... then outer
+		for (size_t p=0; p<(*i)->m_wallOuter.size(); p++) {
+			if ((*i)->m_wallOuter[p]) {
+				delete (*i)->m_wallOuter[p];
+			}
+		}
+		(*i)->m_wallOuter.clear();
 	}
 
 	switch (Pi::detail.planets) {
@@ -699,6 +980,7 @@ void GeoRing::OnChangeDetailLevel()
 	assert(GEOPLATE_EDGELEN <= GEOPLATE_MAX_EDGELEN);
 	GeoPlate::Init();
 	GeoPlateHull::Init();
+	GeoPlateWall::Init();
 	for(std::vector<GeoRing*>::iterator i = s_allGeoRings.begin(); i != s_allGeoRings.end(); ++i) {
 		(*i)->BuildFirstPatches();
 	}
@@ -730,12 +1012,12 @@ GeoRing::~GeoRing()
 		if (m_hull[i]) {
 			delete m_hull[i];
 		}
-		//if (m_wallInner[i]) {
-		//	delete m_wallInner[i];
-		//}
-		//if (m_wallOuter[i]) {
-		//	delete m_wallOuter[i];
-		//}
+		if (m_wallInner[i]) {
+			delete m_wallInner[i];
+		}
+		if (m_wallOuter[i]) {
+			delete m_wallOuter[i];
+		}
 	}
 }
 
@@ -792,6 +1074,26 @@ void GeoRing::BuildFirstPatches()
 	for (size_t i=0; i<m_hull.size(); i++) m_hull[i]->SetGeoRingPtr( this );
 	for (size_t i=0; i<m_hull.size(); i++) m_hull[i]->GenerateMesh();
 	for (size_t i=0; i<m_hull.size(); i++) m_hull[i]->UpdateVBOs();
+
+	// create the inner wall
+	m_wallInner.clear();
+	for( int i=0 ; i<points.size()-1 ; ++i ) {
+		double len = (points[i+1] - points[i]).Length();
+		m_wallInner.push_back( new GeoPlateWall(true, len, angles[i+1], angles[i], 0.0, 0) );
+	}
+	for (size_t i=0; i<m_wallInner.size(); i++) m_wallInner[i]->SetGeoRingPtr( this );
+	for (size_t i=0; i<m_wallInner.size(); i++) m_wallInner[i]->GenerateMesh();
+	for (size_t i=0; i<m_wallInner.size(); i++) m_wallInner[i]->UpdateVBOs();
+
+	// create the outer wall
+	m_wallOuter.clear();
+	for( int i=0 ; i<points.size()-1 ; ++i ) {
+		double len = (points[i+1] - points[i]).Length();
+		m_wallOuter.push_back( new GeoPlateWall(false, len, angles[i+1], angles[i], 0.0, 0) );
+	}
+	for (size_t i=0; i<m_wallOuter.size(); i++) m_wallOuter[i]->SetGeoRingPtr( this );
+	for (size_t i=0; i<m_wallOuter.size(); i++) m_wallOuter[i]->GenerateMesh();
+	for (size_t i=0; i<m_wallOuter.size(); i++) m_wallOuter[i]->UpdateVBOs();
 }
 
 static const double gs_targetPatchTriLength(100.0);
@@ -979,6 +1281,13 @@ void GeoRing::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView, 
 	for (size_t i=0; i<m_hull.size(); ++i) {
 		m_hull[i]->Render(renderer, campos, modelView, frustum);
 	}
+	for (size_t i=0; i<m_wallInner.size(); ++i) {
+		m_wallInner[i]->Render(renderer, campos, modelView, frustum);
+	}
+	for (size_t i=0; i<m_wallOuter.size(); ++i) {
+		m_wallOuter[i]->Render(renderer, campos, modelView, frustum);
+	}
+
 #if 1
 	for (size_t i=0; i<m_plates.size(); ++i) {
 		m_plates[i]->Render(renderer, campos, modelView, frustum);

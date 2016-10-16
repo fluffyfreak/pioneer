@@ -16,7 +16,7 @@ namespace Graphics {
 class SystemBody;
 class GeoPlate;
 class GeoPlateHull;
-//class GeoPlateWall;
+class GeoPlateWall;
 class GeoRing {
 public:
 	GeoRing(const SystemBody *body);
@@ -28,7 +28,7 @@ public:
 	double GetRingWidth() const { return mRingWidth; }
 	friend class GeoPlate;
 	friend class GeoPlateHull;
-	//friend class GeoPlateWall;
+	friend class GeoPlateWall;
 #if WITH_OBJECTVIEWER
 	friend class ObjectViewerView;
 #endif
@@ -73,8 +73,8 @@ private:
 	typedef std::vector<GeoPlate*>::iterator PlateIter;
 	std::vector<GeoPlate*>		m_plates;
 	std::vector<GeoPlateHull*>	m_hull;
-	//std::vector<GeoPlateWall*>	m_wallInner;
-	//std::vector<GeoPlateWall*>	m_wallOuter;
+	std::vector<GeoPlateWall*>	m_wallInner;
+	std::vector<GeoPlateWall*>	m_wallOuter;
 	float m_diffColor[4], m_ambColor[4];
 	const SystemBody *m_sbody;
 	RefCountedPtr<Terrain> m_terrain;
