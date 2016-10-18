@@ -28,9 +28,10 @@ private:
 	uint64_t mPatchID;
 public:
 	GeoPlateID(const uint64_t init) : mPlateID(init), mPatchID(0) {}
+	GeoPlateID(const uint64_t plate, const uint64_t patch) : mPlateID(plate), mPatchID(patch) {}
 	GeoPlateID(const GeoPlateID &init) : mPlateID(init.mPlateID), mPatchID(init.mPatchID) {}
 
-	uint64_t NextPatchID(const int depth, const int idx) const;
+	GeoPlateID NextPatchID(const int depth, const int idx) const;
 	int GetPatchIdx(const int depth) const;
 	inline uint64_t GetPlateIdx() const { return mPlateID; } 
 };
