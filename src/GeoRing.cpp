@@ -813,8 +813,6 @@ protected:
 	SSplitResultData mData;
 };
 
-class GeoPatch;
-
 // ********************************************************************************
 // Overloaded PureJob class to handle generating the mesh for each patch
 // ********************************************************************************
@@ -1549,7 +1547,7 @@ public:
 		merge &= !(mHasJobRequest);
 		return merge;
 	}
-#pragma optimize("",off)
+
 	void ReceiveHeightmaps(SQuadPlateResult *psr)
 	{
 		PROFILE_SCOPED()
@@ -1692,7 +1690,7 @@ public:
 					kids[i]->LODUpdate(campos);
 			}
 		} 
-		else 
+		else if (canMerge) 
 		{
 			for (int i=0; i<4; i++) 
 			{
@@ -1943,8 +1941,6 @@ void GeoRing::Update()
 		break;
 	}
 }
-
-static const float g_ambient[4] = { 0, 0, 0, 1.0 };
 
 static void DrawAtmosphereSurface(const vector3d &campos, float rad)
 {
