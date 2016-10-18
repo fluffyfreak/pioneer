@@ -36,14 +36,14 @@ int GeoPatchID::GetPatchFaceIdx() const
 // ----------------------------------------------------
 //
 // ----------------------------------------------------
-uint64_t GeoPlateID::NextPatchID(const int depth, const int idx) const
+GeoPlateID GeoPlateID::NextPatchID(const int depth, const int idx) const
 {
 	assert(idx>=0 && idx<4);
 	assert(depth<=MAX_PATCH_DEPTH);
 	const uint64_t idx64 = idx;
 	const uint64_t shiftDepth64 = depth*2ULL;
 	assert((mPatchID & (3ULL<<shiftDepth64))==0);
-	return uint64_t( mPatchID | (idx64<<shiftDepth64) );
+	return GeoPlateID(mPlateID, uint64_t( mPatchID | (idx64<<shiftDepth64) ));
 }
 
 int GeoPlateID::GetPatchIdx(const int depth) const
