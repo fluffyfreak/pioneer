@@ -156,7 +156,7 @@ public:
 
 	static void Init() 
 	{
-		edgeLen = GEOPLATE_HULL_LEN; // +2 for the skirt
+		edgeLen = GEOPLATE_HULL_LEN;
 		frac = 1.0 / double(edgeLen-1);
 		numTris = 2*(edgeLen-1)*(edgeLen-1);
 
@@ -1179,9 +1179,6 @@ public:
 		vbe[1] = endVBE;
 		m_depth = depth;
 		m_needUpdateVBOs = false;
-		heights.reset(new double[NUMVERTICES()]);
-		normals.reset(new vector3f[NUMVERTICES()]);
-		colors.reset(new Color3ub[NUMVERTICES()]);
 	}
 
 	virtual ~GeoPlate() {
@@ -1290,39 +1287,6 @@ public:
 
 			const vector3d topEnd(0.0, m_yoffset + m_halfLen, 0.0);		// vertices at top edge of circle
 			const vector3d btmEnd(0.0, m_yoffset - m_halfLen, 0.0);		// vertices at bottom edge of circle
-
-			for (Sint32 y = 0; y<edgeLen; y++) 
-			{
-				const double yFrac = double(y) * frac;
-				// point along z-axis by zfrac amount
-				const vector3d axisPt = lerp( yFrac, btmEnd, topEnd );
-				for (Sint32 x = 0; x<edgeLen; x++) 
-				{
-					const double xFrac = double(x) * frac;
-
-					VBOVertex* vtxPtr = &VBOVtxPtr[x + (y*edgeLen)];
-					const vector3d p = GetSurfacePointCyl(xFrac, yFrac, m_halfLen);// find point on _surface_ of the cylinder
-					const vector3d cDir = (p - axisPt).Normalized();// vector from axis to point-on-surface
-					vtxPtr->pos = vector3f((p + (cDir * (*hgt))) - clipCentroid);// vertex is moved in direction of point-in-axis FROM point-on-surface by height.
-					clipRadius = std::max(clipRadius, p.Length());
-					++hgt;	// next height
-
-					vtxPtr->norm = pNorm->Normalized();
-					++pNorm; // next normal
-
-					vtxPtr->col[0] = pColr->r;
-					vtxPtr->col[1] = pColr->g;
-					vtxPtr->col[2] = pColr->b;
-					vtxPtr->col[3] = 255;
-					++pColr; // next colour
-
-					// uv coords
-					vtxPtr->uv.x = 1.0f - xFrac;
-					vtxPtr->uv.y = yFrac;
-
-					++vtxPtr; // next vertex
-				}
-			}
 
 			const Sint32 innerTop = 1;
 			const Sint32 innerBottom = edgeLen - 2;
@@ -1474,68 +1438,6 @@ public:
 			colors.reset();
 		}
 	}
-	// Generates full-detail vertices, and also non-edge normals and colors
-	/*void GenerateMesh() 
-	{
-		double *hgt = heights.get();
-		vector3d *vts = vertices.get();
-		vector3f *nrm = normals.get();
-		Color3ub *col = colors.get();
-		double xfrac;
-		double zfrac = 0;
-		vector3d axisPt(0.0, 0.0, 0.0);
-
-		const vector3d topEnd(0.0, m_yoffset + m_halfLen, 0.0);		// vertices at top edge of circle
-		const vector3d btmEnd(0.0, m_yoffset - m_halfLen, 0.0);		// vertices at bottom edge of circle
-				
-		for (int y=0; y<edgeLen; ++y) 
-		{
-			xfrac = 0;
-			// point along z-axis by zfrac amount
-			const vector3d axisPt = lerp( zfrac, btmEnd, topEnd );
-			for (int x=0; x<edgeLen; ++x) 
-			{
-				// find point on _surface_ of the cylinder
-				const vector3d p = GetSurfacePointCyl(xfrac, zfrac, m_halfLen);
-				// vector from axis to point-on-surface
-				const vector3d cDir = (p - axisPt).Normalized();
-				// height
-				double height = -geoRing->GetHeight(p);
-				// vertex is moved in direction of point-in-axis FROM point-on-surface by height.
-				*(vts++) = p + (cDir * height);
-
-				// remember this -- we will need it later
-				*(hgt++) = -height;
-
-				xfrac += frac;
-
-				*(nrm++) = vector3f(cDir);
-
-				*(col++) = Color3ub::BLACK;
-			}
-			zfrac += frac;
-		}
-		assert(vts == &vertices[NUMVERTICES()]);
-		// Generate normals & colors for non-edge vertices since they never change
-		for (int y=1; y<edgeLen-1; y++) 
-		{
-			for (int x=1; x<edgeLen-1; x++) 
-			{
-				// normal
-				vector3d x1 = vertices[x-1 + y*edgeLen];
-				vector3d x2 = vertices[x+1 + y*edgeLen];
-				vector3d y1 = vertices[x + (y-1)*edgeLen];
-				vector3d y2 = vertices[x + (y+1)*edgeLen];
-
-				const vector3d n = (x2-x1).Cross(y2-y1).Normalized();
-				normals[x + y*edgeLen] = vector3f(n);
-				// color
-				vector3d p = GetSurfacePointCyl(x*frac, y*frac, m_halfLen);
-				const double height = heights[x + y*edgeLen];
-				SetColour(&colors[x + y*edgeLen], geoRing->GetColor(p, height, n));
-			}
-		}
-	}*/
 
 	bool canBeMerged() const {
 		bool merge = true;
