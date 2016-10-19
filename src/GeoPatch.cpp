@@ -299,7 +299,7 @@ void GeoPatch::LODUpdate(const vector3d &campos, const Graphics::Frustum &frustu
 		return;
 
 	bool canSplit = true;
-	bool canMerge = bool(kids[0]);
+	bool canMerge = bool(kids[0].get()!=nullptr);
 
 	// always split at first level
 	double centroidDist = DBL_MAX;
@@ -311,8 +311,10 @@ void GeoPatch::LODUpdate(const vector3d &campos, const Graphics::Frustum &frustu
 		}
 	}
 
-	if (canSplit) {
-		if (!kids[0]) {
+	if (canSplit) 
+	{
+		if (!kids[0]) 
+		{
 			// Test if this patch is visible
 			if (!frustum.TestPoint(clipCentroid, clipRadius))
 				return; // nothing below this patch is visible
@@ -343,17 +345,24 @@ void GeoPatch::LODUpdate(const vector3d &campos, const Graphics::Frustum &frustu
 
 			// add to the GeoSphere to be processed at end of all LODUpdate requests
 			geosphere->AddQuadSplitRequest(centroidDist, ssrd, this);
-		} else {
+		} 
+		else 
+		{
 			for (int i=0; i<NUM_KIDS; i++) {
 				kids[i]->LODUpdate(campos, frustum);
 			}
 		}
-	} else if (canMerge) {
-		for (int i=0; i<NUM_KIDS; i++) {
+	} 
+	else if (canMerge) 
+	{
+		for (int i=0; i<NUM_KIDS; i++) 
+		{
 			canMerge &= kids[i]->canBeMerged();
 		}
-		if( canMerge ) {
-			for (int i=0; i<NUM_KIDS; i++) {
+		if( canMerge ) 
+		{
+			for (int i=0; i<NUM_KIDS; i++) 
+			{
 				kids[i].reset();
 			}
 		}

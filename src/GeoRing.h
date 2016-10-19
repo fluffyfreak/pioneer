@@ -17,6 +17,7 @@ class SystemBody;
 class GeoPlate;
 class GeoPlateHull;
 class GeoPlateWall;
+class GeoPatchContext;
 
 class SQuadPlateRequest;
 class SQuadPlateResult;
@@ -128,6 +129,7 @@ private:
 	};
 	std::deque<TDistanceRequest> mQuadPlateRequests;
 
+	static RefCountedPtr<GeoPatchContext> s_patchContext;
 	static const uint32_t MAX_SPLIT_OPERATIONS = 256;
 	std::deque<SQuadPlateResult*> mQuadPlateResults;
 	std::deque<SSinglePlateResult*> mSinglePlateResults;
