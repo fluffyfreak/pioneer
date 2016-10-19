@@ -219,6 +219,7 @@
     <ClCompile Include="..\..\src\GeoPatchID.cpp" />
     <ClCompile Include="..\..\src\GeoPatchJobs.cpp" />
     <ClCompile Include="..\..\src\GeoRing.cpp" />
+    <ClCompile Include="..\..\src\GeoRingJobs.cpp" />
     <ClCompile Include="..\..\src\GeoSphere.cpp" />
     <ClCompile Include="..\..\src\HudTrail.cpp" />
     <ClCompile Include="..\..\src\HyperspaceCloud.cpp" />
@@ -379,6 +380,7 @@
     <ClInclude Include="..\..\src\GeoPatchID.h" />
     <ClInclude Include="..\..\src\GeoPatchJobs.h" />
     <ClInclude Include="..\..\src\GeoRing.h" />
+    <ClInclude Include="..\..\src\GeoRingJobs.h" />
     <ClInclude Include="..\..\src\GeoSphere.h" />
     <ClInclude Include="..\..\src\HudTrail.h" />
     <ClInclude Include="..\..\src\HyperspaceCloud.h" />
