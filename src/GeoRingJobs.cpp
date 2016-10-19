@@ -378,7 +378,7 @@ void QuadPlateJob::GenerateSubPatchData(
 
 			// color
 			const vector3d p = GetSurfacePointCyl(x * fracStep, y * fracStep, ang0, ang1, yoffset, halfLen);
-			SetColour(col, pTerrain->GetColor(p, height, n));
+			SetColour(col, pTerrain->GetColor(p, -height, -n));
 			assert(col != &colors[edgeLen * edgeLen]);
 			++col;
 		}
