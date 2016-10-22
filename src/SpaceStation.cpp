@@ -184,7 +184,7 @@ SpaceStation::SpaceStation(const SystemBody *sbody): ModelBody()
 
 void SpaceStation::InitStation()
 {
-	m_adjacentCity = 0;
+	m_adjacentCity.reset();
 	for(int i=0; i<NUM_STATIC_SLOTS; i++) m_staticSlot[i] = false;
 	Random rand(m_sbody->GetSeed());
 	const bool ground = m_sbody->GetType() == SystemBody::TYPE_STARPORT_ORBITAL ? false : true;
@@ -231,7 +231,6 @@ void SpaceStation::InitStation()
 
 SpaceStation::~SpaceStation()
 {
-	if (m_adjacentCity) delete m_adjacentCity;
 }
 
 void SpaceStation::NotifyRemoved(const Body* const removedBody)
@@ -613,7 +612,7 @@ void SpaceStation::Render(Graphics::Renderer *r, const Camera *camera, const vec
 		SetLighting(r, camera, oldLights, oldAmbient);
 
 		if (!m_adjacentCity) {
-			m_adjacentCity = new CityOnPlanet(static_cast<Planet*>(b), this, m_sbody->GetSeed());
+			m_adjacentCity.reset( new CityOnPlanet(static_cast<Planet*>(b), this, m_sbody->GetSeed()) );
 		}
 		m_adjacentCity->Render(r, camera->GetContext()->GetFrustum(), this, viewCoords, viewTransform);
 
