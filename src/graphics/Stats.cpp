@@ -10,11 +10,17 @@ namespace Graphics {
 	Stats::Stats() : m_currentFrame(0U)
 	{
 		memset(&m_frameStats[0], 0, sizeof(TFrameData) * MAX_FRAMES_STORE);
+		memset(&m_totalStats, 0, sizeof(TTotalData));
 	}
 
 	void Stats::AddToStatCount(const StatType type, const Uint32 count)
 	{
 		m_frameStats[m_currentFrame].m_stats[type] += count;
+	}
+	
+	void Stats::AddToStatTotal(const StatTotalType type, const Sint32 count)
+	{
+		m_totalStats.m_stats[type] += count;
 	}
 
 	void Stats::NextFrame()

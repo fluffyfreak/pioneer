@@ -371,7 +371,7 @@ bool RendererOGL::SwapBuffers()
 #endif
 
 	GetWindow()->SwapBuffers();
-	m_stats.NextFrame();
+	m_stats->NextFrame();
 	return true;
 }
 
@@ -614,7 +614,7 @@ bool RendererOGL::DrawTriangles(const VertexArray *v, RenderState *rs, Material 
 	const bool res = DrawBuffer(drawVB.Get(), rs, m, t);
 	CheckRenderErrors(__FUNCTION__,__LINE__);
 	
-	m_stats.AddToStatCount(Stats::STAT_DRAWTRIS, 1);
+	m_stats->AddToStatCount(Stats::STAT_DRAWTRIS, 1);
 
 	return res;
 }
@@ -748,7 +748,7 @@ bool RendererOGL::DrawBuffer(VertexBuffer* vb, RenderState* state, Material* mat
 	vb->Release();
 	CheckRenderErrors(__FUNCTION__,__LINE__);
 
-	m_stats.AddToStatCount(Stats::STAT_DRAWCALL, 1);
+	m_stats->AddToStatCount(Stats::STAT_DRAWCALL, 1);
 
 	return true;
 }
@@ -768,7 +768,7 @@ bool RendererOGL::DrawBufferIndexed(VertexBuffer *vb, IndexBuffer *ib, RenderSta
 	vb->Release();
 	CheckRenderErrors(__FUNCTION__,__LINE__);
 
-	m_stats.AddToStatCount(Stats::STAT_DRAWCALL, 1);
+	m_stats->AddToStatCount(Stats::STAT_DRAWCALL, 1);
 
 	return true;
 }
@@ -788,7 +788,7 @@ bool RendererOGL::DrawBufferInstanced(VertexBuffer* vb, RenderState* state, Mate
 	vb->Release();
 	CheckRenderErrors(__FUNCTION__,__LINE__);
 
-	m_stats.AddToStatCount(Stats::STAT_DRAWCALL, 1);
+	m_stats->AddToStatCount(Stats::STAT_DRAWCALL, 1);
 
 	return true;
 }
@@ -810,7 +810,7 @@ bool RendererOGL::DrawBufferIndexedInstanced(VertexBuffer *vb, IndexBuffer *ib, 
 	vb->Release();
 	CheckRenderErrors(__FUNCTION__,__LINE__);
 
-	m_stats.AddToStatCount(Stats::STAT_DRAWCALL, 1);
+	m_stats->AddToStatCount(Stats::STAT_DRAWCALL, 1);
 
 	return true;
 }
@@ -930,7 +930,7 @@ OGL::Program* RendererOGL::GetOrCreateProgram(OGL::Material *mat)
 Texture *RendererOGL::CreateTexture(const TextureDescriptor &descriptor)
 {
 	PROFILE_SCOPED()
-	return new TextureGL(descriptor, m_useCompressedTextures, m_useAnisotropicFiltering);
+	return new TextureGL(descriptor, m_useCompressedTextures, m_useAnisotropicFiltering, m_stats);
 }
 
 RenderState *RendererOGL::CreateRenderState(const RenderStateDesc &desc)
@@ -965,7 +965,7 @@ RenderTarget *RendererOGL::CreateRenderTarget(const RenderTargetDesc &desc)
 			false, 
 			false,
 			0, Graphics::TEXTURE_2D);
-		TextureGL *colorTex = new TextureGL(cdesc, false, false);
+		TextureGL *colorTex = new TextureGL(cdesc, false, false, m_stats);
 		rt->SetColorTexture(colorTex);
 	}
 	if (desc.depthFormat != TEXTURE_NONE) {
@@ -979,7 +979,7 @@ RenderTarget *RendererOGL::CreateRenderTarget(const RenderTargetDesc &desc)
 				false,
 				false,
 				0, Graphics::TEXTURE_2D);
-			TextureGL *depthTex = new TextureGL(ddesc, false, false);
+			TextureGL *depthTex = new TextureGL(ddesc, false, false, m_stats);
 			rt->SetDepthTexture(depthTex);
 		} else {
 			rt->CreateDepthRenderbuffer();
@@ -993,19 +993,19 @@ RenderTarget *RendererOGL::CreateRenderTarget(const RenderTargetDesc &desc)
 
 VertexBuffer *RendererOGL::CreateVertexBuffer(const VertexBufferDesc &desc)
 {
-	m_stats.AddToStatCount(Stats::STAT_CREATE_BUFFER, 1);
+	m_stats->AddToStatCount(Stats::STAT_CREATE_BUFFER, 1);
 	return new OGL::VertexBuffer(desc);
 }
 
 IndexBuffer *RendererOGL::CreateIndexBuffer(Uint32 size, BufferUsage usage)
 {
-	m_stats.AddToStatCount(Stats::STAT_CREATE_BUFFER, 1);
+	m_stats->AddToStatCount(Stats::STAT_CREATE_BUFFER, 1);
 	return new OGL::IndexBuffer(size, usage);
 }
 
 InstanceBuffer *RendererOGL::CreateInstanceBuffer(Uint32 size, BufferUsage usage)
 {
-	m_stats.AddToStatCount(Stats::STAT_CREATE_BUFFER, 1);
+	m_stats->AddToStatCount(Stats::STAT_CREATE_BUFFER, 1);
 	return new OGL::InstanceBuffer(size, usage);
 }
 

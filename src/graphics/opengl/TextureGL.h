@@ -4,6 +4,7 @@
 #ifndef _TEXTUREGL_H
 #define _TEXTUREGL_H
 
+#include "graphics/Stats.h"
 #include "graphics/Texture.h"
 #include "gl_core_3_x.h"
 
@@ -25,11 +26,13 @@ public:
 
 private:
 	friend class RendererOGL;
-	TextureGL(const TextureDescriptor &descriptor, const bool useCompressed, const bool useAnisoFiltering);
+	TextureGL(const TextureDescriptor &descriptor, const bool useCompressed, const bool useAnisoFiltering, RefCountedPtr<Stats> &stats);
 
 	GLenum m_target;
 	GLuint m_texture;
 	const bool m_useAnisoFiltering;
+	size_t m_accumSize;
+	RefCountedPtr<Stats> m_stats;
 };
 
 }

@@ -75,8 +75,8 @@ inline bool IsCompressed(TextureFormat format) {
 	return (format == TEXTURE_DXT1 || format == TEXTURE_DXT5);
 }
 
-TextureGL::TextureGL(const TextureDescriptor &descriptor, const bool useCompressed, const bool useAnisoFiltering) :
-	Texture(descriptor), m_useAnisoFiltering(useAnisoFiltering && descriptor.useAnisotropicFiltering)
+TextureGL::TextureGL(const TextureDescriptor &descriptor, const bool useCompressed, const bool useAnisoFiltering, RefCountedPtr<Stats> &stats) :
+	Texture(descriptor), m_useAnisoFiltering(useAnisoFiltering && descriptor.useAnisotropicFiltering), m_stats(stats)
 {
 	PROFILE_SCOPED()
 	m_target = GLTextureType(descriptor.type);
@@ -89,12 +89,20 @@ TextureGL::TextureGL(const TextureDescriptor &descriptor, const bool useCompress
 	// either both or neither might be true however only compress the texture when both are true.
 	const bool compressTexture = useCompressed && descriptor.allowCompression;
 
+	m_accumSize = 0;
+
 	switch (m_target) {
 		case GL_TEXTURE_2D:
 			if (!IsCompressed(descriptor.format)) {
 				if (!descriptor.generateMipmaps)
 					glTexParameteri(m_target, GL_TEXTURE_MAX_LEVEL, 0);
 				CHECKERRORS();
+
+				const GLint oglFormatMinSize = GetMinSize(descriptor.format);
+				size_t Width = descriptor.dataSize.x;
+				size_t Height = descriptor.dataSize.y;
+				size_t bufSize = ((Width + 3) / 4) * ((Height + 3) / 4) * oglFormatMinSize;
+				m_accumSize = descriptor.generateMipmaps ? (bufSize) + ((bufSize) * (1/3)) : bufSize;
 
 				glTexImage2D(
 					m_target, 0, compressTexture ? GLCompressedInternalFormat(descriptor.format) : GLInternalFormat(descriptor.format),
@@ -110,6 +118,7 @@ TextureGL::TextureGL(const TextureDescriptor &descriptor, const bool useCompress
 
 				GLint maxMip = 0;
 				for( unsigned int i=0; i < descriptor.numberOfMipMaps; ++i ) {
+					m_accumSize += bufSize;
 					maxMip = i;
 					glCompressedTexImage2D(GL_TEXTURE_2D, i, GLInternalFormat(descriptor.format), Width, Height, 0, bufSize, 0);
 					if( Width<=MIN_COMPRESSED_TEXTURE_DIMENSION || Height<=MIN_COMPRESSED_TEXTURE_DIMENSION ) {
@@ -129,6 +138,12 @@ TextureGL::TextureGL(const TextureDescriptor &descriptor, const bool useCompress
 				if(!descriptor.generateMipmaps)
 					glTexParameteri(m_target, GL_TEXTURE_MAX_LEVEL, 0);
 				CHECKERRORS();
+
+				const GLint oglFormatMinSize = GetMinSize(descriptor.format);
+				size_t Width = descriptor.dataSize.x;
+				size_t Height = descriptor.dataSize.y;
+				size_t bufSize = ((Width + 3) / 4) * ((Height + 3) / 4) * oglFormatMinSize;
+				m_accumSize = descriptor.generateMipmaps ? (bufSize * 6) + ((bufSize * 6) * (1/3)) : (bufSize * 6);
 
 				glTexImage2D(
 					GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, compressTexture ? GLCompressedInternalFormat(descriptor.format) : GLInternalFormat(descriptor.format),
@@ -169,6 +184,7 @@ TextureGL::TextureGL(const TextureDescriptor &descriptor, const bool useCompress
 
 				GLint maxMip = 0;
 				for( unsigned int i=0; i < descriptor.numberOfMipMaps; ++i ) {
+					m_accumSize += (bufSize * 6);
 					maxMip = i;
 					glCompressedTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, i, GLInternalFormat(descriptor.format), Width, Height, 0, bufSize, 0);
 					glCompressedTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, i, GLInternalFormat(descriptor.format), Width, Height, 0, bufSize, 0);
@@ -235,11 +251,16 @@ TextureGL::TextureGL(const TextureDescriptor &descriptor, const bool useCompress
 	}
 
 	CHECKERRORS();
+	m_accumSize = m_accumSize / 1024 / 1024; // byte -> KB -> MB
+	stats->AddToStatTotal(Stats::STAT_MEM_TEXTURE_MB, m_accumSize);
+	stats->AddToStatTotal(Stats::STAT_MEM_TEXTURES, (m_target==GL_TEXTURE_2D) ? 1 : 6);
 }
 
 TextureGL::~TextureGL()
 {
 	glDeleteTextures(1, &m_texture);
+	m_stats->AddToStatTotal(Stats::STAT_MEM_TEXTURE_MB, -Sint32(m_accumSize));
+	m_stats->AddToStatTotal(Stats::STAT_MEM_TEXTURES, (m_target==GL_TEXTURE_2D) ? -1 : -6);
 }
 
 void TextureGL::Update(const void *data, const vector2f &pos, const vector2f &dataSize, TextureFormat format, const unsigned int numMips)

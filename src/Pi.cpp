@@ -1301,7 +1301,7 @@ void Pi::MainLoop()
 	Uint32 last_stats = SDL_GetTicks();
 	int frame_stat = 0;
 	int phys_stat = 0;
-	char fps_readout[2048];
+	char fps_readout[4096];
 	memset(fps_readout, 0, sizeof(fps_readout));
 #endif
 
@@ -1504,6 +1504,9 @@ void Pi::MainLoop()
 			const Uint32 numDrawStars			= stats.m_stats[Graphics::Stats::STAT_STARS];
 			const Uint32 numDrawShips			= stats.m_stats[Graphics::Stats::STAT_SHIPS];
 			const Uint32 numDrawBillBoards		= stats.m_stats[Graphics::Stats::STAT_BILLBOARD];
+			const Graphics::Stats::TTotalData &total = Pi::renderer->GetStats().TotalStats();
+			const Uint32 mbTextures				= total.m_stats[Graphics::Stats::STAT_MEM_TEXTURE_MB];
+			const Uint32 numTextures			= total.m_stats[Graphics::Stats::STAT_MEM_TEXTURES];
 			snprintf(
 				fps_readout, sizeof(fps_readout),
 				"%d fps (%.1f ms/f), %d phys updates, %d triangles, %.3f M tris/sec, %d glyphs/sec, %d patches/frame\n"
@@ -1511,13 +1514,14 @@ void Pi::MainLoop()
 				"Draw Calls (%u), of which were:\n Tris (%u)\n Point Sprites (%u)\n Billboards (%u)\n"
 				"Buildings (%u), Cities (%u), GroundStations (%u), SpaceStations (%u), Atmospheres (%u)\n"
 				"Patches (%u), Planets (%u), GasGiants (%u), Stars (%u), Ships (%u)\n"
-				"Buffers Created(%u)\n",
+				"Buffers Created(%u)\n Textures (%u) is (%u MBs)\n",
 				frame_stat, (1000.0/frame_stat), phys_stat, Pi::statSceneTris, Pi::statSceneTris*frame_stat*1e-6,
 				Text::TextureFont::GetGlyphCount(), Pi::statNumPatches,
 				lua_memMB, lua_memKB, lua_memB, lua_gettop(Lua::manager->GetLuaState()),
 				numDrawCalls, numDrawTris, numDrawPointSprites, numDrawBillBoards,
 				numDrawBuildings, numDrawCities, numDrawGroundStations, numDrawSpaceStations, numDrawAtmospheres,
-				numDrawPatches, numDrawPlanets, numDrawGasGiants, numDrawStars, numDrawShips, numBuffersCreated
+				numDrawPatches, numDrawPlanets, numDrawGasGiants, numDrawStars, numDrawShips, numBuffersCreated,
+				numTextures, mbTextures
 			);
 			frame_stat = 0;
 			phys_stat = 0;

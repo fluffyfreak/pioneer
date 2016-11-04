@@ -5,12 +5,13 @@
 #define _STATS_H
 
 #include "SDL_stdinc.h"
+#include "RefCounted.h"
 #include <utility>
 #include <vector>
 
 namespace Graphics {
 
-class Stats
+class Stats : public RefCounted
 {
 public:
 	static const Uint32 MAX_FRAMES_STORE = 30U;
@@ -42,22 +43,38 @@ public:
 		MAX_STAT
 	};
 	
+	enum StatTotalType {
+		// Memory
+		STAT_MEM_TEXTURE_MB = 0,
+		STAT_MEM_TEXTURES,
+
+		MAX_TOTAL_STAT
+	};
+	
 	struct TFrameData {
 		Uint32 m_stats[MAX_STAT];
+	};
+	
+	struct TTotalData {
+		Uint32 m_stats[MAX_TOTAL_STAT];
 	};
 
 	Stats();
 	~Stats() {}
 
 	void AddToStatCount(const StatType type, const Uint32 count);
+	void AddToStatTotal(const StatTotalType type, const Sint32 count);
 	void NextFrame();
 
 	const TFrameData& FrameStats() const { return m_frameStats[m_currentFrame]; }
 	const TFrameData& FrameStatsPrevious() const;
+	
+	const TTotalData& TotalStats() const { return m_totalStats; }
 
 private:
 
 	TFrameData m_frameStats[MAX_FRAMES_STORE];
+	TTotalData m_totalStats;
 	Uint32 m_currentFrame;
 };
 
