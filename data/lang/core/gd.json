@@ -57,7 +57,7 @@
    },
    "AUTOPILOT_CONTROL" : {
       "description" : "Indicating that ship is flying under autopilot control",
-      "message" : "Smachd fèin-stiùiridh"
+      "message" : "Stiùireadh fèin-obrachail"
    },
    "AUTOPILOT_DOCK_WITH_STATION" : {
       "description" : "",
@@ -279,9 +279,9 @@
       "description" : "",
       "message" : "Faide latha"
    },
-   "DECREASE_SCAN_RANGE" : {
+   "DECREASE_RADAR_RANGE" : {
       "description" : "",
-      "message" : "Lùghdaich rainse an sganair"
+      "message" : "Lùghdaich rainse an rèideir"
    },
    "DECREASE_SET_SPEED" : {
       "description" : "",
@@ -599,9 +599,9 @@
       "description" : "",
       "message" : "Riaghladh impireil"
    },
-   "INCREASE_SCAN_RANGE" : {
+   "INCREASE_RADAR_RANGE" : {
       "description" : "",
-      "message" : "Meudaich rainse an sganair"
+      "message" : "Meudaich rainse an rèideir"
    },
    "INCREASE_SET_SPEED" : {
       "description" : "",
@@ -733,11 +733,11 @@
    },
    "MANUAL_CONTROL" : {
       "description" : "",
-      "message" : "Smachd a làimh"
+      "message" : "Stiùireadh a làimh"
    },
    "MANUAL_CONTROL_MODE" : {
       "description" : "",
-      "message" : "Modh smachd a làimh"
+      "message" : "Modh stiùireadh a làimh"
    },
    "MAP_LOCK_HYPERSPACE_TARGET" : {
       "description" : "",
@@ -1187,6 +1187,10 @@
       "description" : "",
       "message" : "Siostam ceithir-fillte"
    },
+   "RADAR_CONTROL" : {
+      "description" : "",
+      "message" : "Stiùireadh an rèideir"
+   },
    "RADIOACTIVES" : {
       "description" : "",
       "message" : "Sgudal rèidio-beò"
@@ -1266,10 +1270,6 @@
    "RUBBISH" : {
       "description" : "",
       "message" : "Sgudal"
-   },
-   "SCANNER_CONTROL" : {
-      "description" : "",
-      "message" : "Smachd an sganair"
    },
    "SCOOP" : {
       "description" : "Is followed by a number, repersenting scoop mounts/slots available to fit cargo scoop and/or fuel scoop",
@@ -1429,7 +1429,7 @@
    },
    "SPEED_CONTROL_MODE" : {
       "description" : "",
-      "message" : "Modh smachd air an luaths"
+      "message" : "Modh stiùireadh an luaiths"
    },
    "STABLE_SYSTEM_WITH_N_MAJOR_BODIES_STARPORTS" : {
       "description" : "",
@@ -1683,17 +1683,17 @@
       "description" : "",
       "message" : "Toglaich a' chonsoil Lua"
    },
+   "TOGGLE_RADAR_MODE" : {
+      "description" : "",
+      "message" : "Toglaich modh  an rèideir"
+   },
+   "TOGGLE_RADAR_VIEW" : {
+      "description" : "Tooltip for the Radar View button",
+      "message" : "Sealladh an rèideir"
+   },
    "TOGGLE_ROTATION_DAMPING" : {
       "description" : "",
       "message" : "Toglaich lasachadh a' chuairteachaidh"
-   },
-   "TOGGLE_SCANNER_VIEW" : {
-      "description" : "Tooltip for the Scanner View button",
-      "message" : "Sealladh an sganair"
-   },
-   "TOGGLE_SCAN_MODE" : {
-      "description" : "",
-      "message" : "Toglaich modh an sganair"
    },
    "TOMBSTONE_EPITAPH" : {
       "description" : "shown on tombstone when player dies",
