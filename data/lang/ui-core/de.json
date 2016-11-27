@@ -151,9 +151,9 @@
       "description" : "",
       "message" : "Warenbörse"
    },
-   "COMPACT_SCANNER" : {
+   "COMPACT_RADAR" : {
       "description" : "Game settings option",
-      "message" : "Kompakter Scanner"
+      "message" : "Compact radar"
    },
    "COMPETENT" : {
       "description" : "Combat rating",
@@ -469,7 +469,7 @@
    },
    "ILLEGAL_JUMP" : {
       "description" : "A finable crime",
-      "message" : "Reckless hyperjump registered"
+      "message" : "Grob fahrlässiger Hyperraumsprung erfasst"
    },
    "IM_TIRED_OF_WORKING_FOR_NOTHING_DONT_YOU_KNOW_WHAT_A_CONTRACT_IS" : {
       "description" : "",
@@ -795,6 +795,10 @@
       "description" : "",
       "message" : "OK"
    },
+   "OPEN_USER_FOLDER" : {
+      "description" : "",
+      "message" : "Benutzerordner"
+   },
    "OPTIONS" : {
       "description" : "",
       "message" : "Optionen"
@@ -1042,6 +1046,10 @@
    "SHIP_VIEWING_WAS_SOLD" : {
       "description" : "",
       "message" : "Das betrachtete Schiff wurde soeben verkauft"
+   },
+   "SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS" : {
+      "description" : "",
+      "message" : "Simuliere Evolution des Universums: {age} Milliarden Jahre ;-)"
    },
    "SOUND" : {
       "description" : "",

@@ -151,9 +151,9 @@
       "description" : "",
       "message" : "Piață de Produse"
    },
-   "COMPACT_SCANNER" : {
+   "COMPACT_RADAR" : {
       "description" : "Game settings option",
-      "message" : "Scaner compact"
+      "message" : "Compact radar"
    },
    "COMPETENT" : {
       "description" : "Combat rating",
@@ -795,6 +795,10 @@
       "description" : "",
       "message" : "Ok"
    },
+   "OPEN_USER_FOLDER" : {
+      "description" : "",
+      "message" : "User Folder"
+   },
    "OPTIONS" : {
       "description" : "",
       "message" : "Opțiuni"
@@ -1042,6 +1046,10 @@
    "SHIP_VIEWING_WAS_SOLD" : {
       "description" : "",
       "message" : "Nava pe care o vizionați a fost vândută"
+   },
+   "SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS" : {
+      "description" : "",
+      "message" : "Simulating evolution of the universe: {age} billion years ;-)"
    },
    "SOUND" : {
       "description" : "",

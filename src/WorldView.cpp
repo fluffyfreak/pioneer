@@ -330,9 +330,9 @@ void WorldView::InitObject()
 		Pi::onMouseWheel.connect(sigc::mem_fun(this, &WorldView::MouseWheel));
 
 	Pi::player->GetPlayerController()->SetMouseForRearView(GetCamType() == CAM_INTERNAL && m_internalCameraController->GetMode() == InternalCameraController::MODE_REAR);
-	KeyBindings::toggleHudMode.onPress.connect(sigc::mem_fun(this, &WorldView::OnToggleLabels));
-	KeyBindings::increaseTimeAcceleration.onPress.connect(sigc::mem_fun(this, &WorldView::OnRequestTimeAccelInc));
-	KeyBindings::decreaseTimeAcceleration.onPress.connect(sigc::mem_fun(this, &WorldView::OnRequestTimeAccelDec));
+	m_onToggleHudModeCon = KeyBindings::toggleHudMode.onPress.connect(sigc::mem_fun(this, &WorldView::OnToggleLabels));
+	m_onIncTimeAccelCon = KeyBindings::increaseTimeAcceleration.onPress.connect(sigc::mem_fun(this, &WorldView::OnRequestTimeAccelInc));
+	m_onDecTimeAccelCon = KeyBindings::decreaseTimeAcceleration.onPress.connect(sigc::mem_fun(this, &WorldView::OnRequestTimeAccelDec));
 }
 
 WorldView::~WorldView()
@@ -341,6 +341,9 @@ WorldView::~WorldView()
 	m_onPlayerChangeTargetCon.disconnect();
 	m_onChangeFlightControlStateCon.disconnect();
 	m_onMouseWheelCon.disconnect();
+	m_onToggleHudModeCon.disconnect();
+	m_onIncTimeAccelCon.disconnect();
+	m_onDecTimeAccelCon.disconnect();
 }
 
 void WorldView::SaveToJson(Json::Value &jsonObj)
@@ -824,8 +827,8 @@ void WorldView::RefreshButtonStateAndVisibility()
 			formatarg("y", dest.sectorY),
 			formatarg("z", dest.sectorZ)));
 
-		m_game->GetCpan()->SetOverlayText(ShipCpanel::OVERLAY_TOP_RIGHT, stringf(Lang::PROBABILITY_OF_ARRIVAL_X_PERCENT,
-			formatarg("probability", m_game->GetHyperspaceArrivalProbability()*100.0, "f3.1")));
+		m_game->GetCpan()->SetOverlayText(ShipCpanel::OVERLAY_TOP_RIGHT, stringf(Lang::JUMP_COMPLETE,
+			formatarg("percent", m_game->GetHyperspaceArrivalProbability()*100.0, "f3.1")));
 	}
 
 	else {
@@ -1014,7 +1017,7 @@ void WorldView::RefreshButtonStateAndVisibility()
 	if (b) {
 		if (b->IsType(Object::SHIP)) {
 			int prop_var = 0;
-			Pi::player->Properties().Get("radar_mapper_level_cap", prop_var);
+			Pi::player->Properties().Get("target_scanner_level_cap", prop_var);
 			if (prop_var > 0) {
 				assert(b->IsType(Object::SHIP));
 				Ship *s = static_cast<Ship*>(b);
@@ -1652,6 +1655,7 @@ void WorldView::UpdateProjectedObjects()
 			continue;
 
 		vector3d pos = b->GetInterpPositionRelTo(cam_frame);
+		if (b->IsType(Object::PLAYER)) pos += vector3d(0.1, 0.1, 0);		// otherwise exactly between four pixels => jitter
 		if ((pos.z < -1.0) && project_to_screen(pos, pos, frustum, guiSize)) {
 
 			// only show labels on large or nearby bodies
@@ -2123,9 +2127,9 @@ void WorldView::DrawTargetSquare(const Indicator &marker, const Color &c)
 		DrawEdgeMarker(marker, c);
 
 	m_targetIcon->Draw(Pi::renderer,
-					   vector2f(marker.pos.x - HUD_CROSSHAIR_SIZE,
+						vector2f(marker.pos.x - HUD_CROSSHAIR_SIZE,
 								marker.pos.y - HUD_CROSSHAIR_SIZE),
-					   vector2f(HUD_CROSSHAIR_SIZE, HUD_CROSSHAIR_SIZE) * 2.0f, c);
+						vector2f(HUD_CROSSHAIR_SIZE, HUD_CROSSHAIR_SIZE) * 2.0f, c);
 }
 
 void WorldView::DrawVelocityIndicator(const Indicator &marker, VelIconType d, const Color &c)
@@ -2327,6 +2331,6 @@ static std::pair<double, double> calculateHeadingPitch(PlaneType pt) {
 	const double heading = wrapAngleToPositive(atan2(hedEast, hedNorth));
 
 	return std::make_pair(
-		std::isnan(heading) ? 0.0 : heading, 
+		std::isnan(heading) ? 0.0 : heading,
 		std::isnan(pitch) ? 0.0 : pitch);
 }

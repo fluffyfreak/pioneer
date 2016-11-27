@@ -295,14 +295,14 @@ void Ship::PostLoadFixup(Space *space)
 	m_controller->PostLoadFixup(space);
 }
 
-Ship::Ship(ShipType::Id shipId): DynamicBody(),
+Ship::Ship(const ShipType::Id &shipId): DynamicBody(),
+	m_flightState(FLYING),
+	m_alertState(ALERT_NONE),
 	m_controller(0),
 	m_thrusterFuel(1.0),
 	m_reserveFuel(0.0),
 	m_landingGearAnimation(nullptr)
 {
-	m_flightState = FLYING;
-	m_alertState = ALERT_NONE;
 	Properties().Set("flightState", EnumStrings::GetString("ShipFlightState", m_flightState));
 	Properties().Set("alertStatus", EnumStrings::GetString("ShipAlertStatus", m_alertState));
 
@@ -341,7 +341,8 @@ Ship::Ship(ShipType::Id shipId): DynamicBody(),
 	m_skin.SetRandomColors(Pi::rng);
 	m_skin.SetDecal(m_type->manufacturer);
 	m_skin.Apply(GetModel());
-	GetModel()->SetPattern(Pi::rng.Int32(0, GetModel()->GetNumPatterns()));
+	if(GetModel()->SupportsPatterns())
+		GetModel()->SetPattern(Pi::rng.Int32(0, GetModel()->GetNumPatterns()-1));
 
 	Init();
 	SetController(new ShipController());
@@ -528,20 +529,25 @@ void Ship::SetThrusterState(const vector3d &levels)
 
 void Ship::SetAngThrusterState(const vector3d &levels)
 {
-	m_angThrusters.x = Clamp(levels.x, -1.0, 1.0);
-	m_angThrusters.y = Clamp(levels.y, -1.0, 1.0);
-	m_angThrusters.z = Clamp(levels.z, -1.0, 1.0);
+	unsigned int thruster_power_cap = 0;
+	Properties().Get("thruster_power_cap", thruster_power_cap);
+	const double power_mul = m_type->thrusterUpgrades[Clamp(thruster_power_cap, 0U, 3U)];
+
+	m_angThrusters.x = Clamp(levels.x, -1.0, 1.0) * power_mul;
+	m_angThrusters.y = Clamp(levels.y, -1.0, 1.0) * power_mul;
+	m_angThrusters.z = Clamp(levels.z, -1.0, 1.0) * power_mul;
 }
 
 vector3d Ship::GetMaxThrust(const vector3d &dir) const
 {
+	unsigned int thruster_power_cap = 0;
+	Properties().Get("thruster_power_cap", thruster_power_cap);
+	const double power_mul = m_type->thrusterUpgrades[Clamp(thruster_power_cap, 0U, 3U)];
+
 	vector3d maxThrust;
-	maxThrust.x = (dir.x > 0) ? m_type->linThrust[ShipType::THRUSTER_RIGHT]
-		: -m_type->linThrust[ShipType::THRUSTER_LEFT];
-	maxThrust.y = (dir.y > 0) ? m_type->linThrust[ShipType::THRUSTER_UP]
-		: -m_type->linThrust[ShipType::THRUSTER_DOWN];
-	maxThrust.z = (dir.z > 0) ? m_type->linThrust[ShipType::THRUSTER_REVERSE]
-		: -m_type->linThrust[ShipType::THRUSTER_FORWARD];
+	maxThrust.x = ((dir.x > 0) ? m_type->linThrust[ShipType::THRUSTER_RIGHT]	: -m_type->linThrust[ShipType::THRUSTER_LEFT]	) * power_mul;
+	maxThrust.y = ((dir.y > 0) ? m_type->linThrust[ShipType::THRUSTER_UP]		: -m_type->linThrust[ShipType::THRUSTER_DOWN]	) * power_mul;
+	maxThrust.z = ((dir.z > 0) ? m_type->linThrust[ShipType::THRUSTER_REVERSE]	: -m_type->linThrust[ShipType::THRUSTER_FORWARD]) * power_mul;
 	return maxThrust;
 }
 
@@ -817,9 +823,7 @@ void Ship::TimeStepUpdate(const float timeStep)
 	// If docked, station is responsible for updating position/orient of ship
 	// but we call this crap anyway and hope it doesn't do anything bad
 
-	vector3d maxThrust = GetMaxThrust(m_thrusters);
-	vector3d thrust = vector3d(maxThrust.x*m_thrusters.x, maxThrust.y*m_thrusters.y,
-		maxThrust.z*m_thrusters.z);
+	const vector3d thrust(m_thrusters * GetMaxThrust(m_thrusters));
 	AddRelForce(thrust);
 	AddRelTorque(GetShipType()->angThrust * m_angThrusters);
 
@@ -958,10 +962,10 @@ void Ship::SetAlertState(AlertState as)
 
 void Ship::UpdateAlertState()
 {
-	// no alerts if no scanner
-	int scanner_cap = 0;
-	Properties().Get("scanner_cap", scanner_cap);
-	if (scanner_cap <= 0) {
+	// no alerts if no radar
+	int radar_cap = 0;
+	Properties().Get("radar_cap", radar_cap);
+	if (radar_cap <= 0) {
 		// clear existing alert state if there was one
 		if (GetAlertState() != ALERT_NONE) {
 			SetAlertState(ALERT_NONE);
@@ -1323,7 +1327,7 @@ void Ship::Render(Graphics::Renderer *renderer, const Camera *camera, const vect
 
 	//strncpy(params.pText[0], GetLabel().c_str(), sizeof(params.pText));
 	RenderModel(renderer, camera, viewCoords, viewTransform);
-
+	m_navLights->Render(renderer);
 	renderer->GetStats().AddToStatCount(Graphics::Stats::STAT_SHIPS, 1);
 
 	if (m_ecmRecharge > 0.0f) {
@@ -1456,6 +1460,11 @@ void Ship::SetSkin(const SceneGraph::ModelSkin &skin)
 {
 	m_skin = skin;
 	m_skin.Apply(GetModel());
+}
+
+void Ship::SetPattern(const unsigned int num)
+{
+	GetModel()->SetPattern(num);
 }
 
 Uint8 Ship::GetRelations(Body *other) const

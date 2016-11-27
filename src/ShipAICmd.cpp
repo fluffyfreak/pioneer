@@ -57,10 +57,8 @@ void AICommand::SaveToJson(Json::Value &jsonObj)
 	jsonObj["common_ai_command"] = commonAiCommandObj; // Add common ai command object to supplied object.
 }
 
-AICommand::AICommand(const Json::Value &jsonObj, CmdName name)
+AICommand::AICommand(const Json::Value &jsonObj, CmdName name) : m_cmdName(name)
 {
-	m_cmdName = name;
-
 	if (!jsonObj.isMember("common_ai_command")) throw SavedGameCorruptException();
 	Json::Value commonAiCommandObj = jsonObj["common_ai_command"];
 
@@ -886,10 +884,9 @@ Output("Autopilot dist = %.1f, speed = %.1f, zthrust = %.2f, state = %i\n",
 }
 
 
-AICmdDock::AICmdDock(Ship *ship, SpaceStation *target) : AICommand(ship, CMD_DOCK)
+AICmdDock::AICmdDock(Ship *ship, SpaceStation *target) : AICommand(ship, CMD_DOCK), 
+	m_target(target), m_state(eDockGetDataStart)
 {
-	m_target = target;
-	m_state = eDockGetDataStart;
 	double grav = GetGravityAtPos(m_target->GetFrame(), m_target->GetPosition());
 	if (m_ship->GetAccelUp() < grav) {
 		m_ship->AIMessage(Ship::AIERROR_GRAV_TOO_HIGH);
@@ -1035,6 +1032,8 @@ bool AICmdHoldPosition::TimeStepUpdate()
 
 void AICmdFlyAround::Setup(Body *obstructor, double alt, double vel, int mode)
 {
+	assert(!std::isnan(alt));
+	assert(!std::isnan(vel));
 	m_obstructor = obstructor; m_alt = alt; m_vel = vel; m_targmode = mode;
 
 	// generate suitable velocity if none provided
@@ -1052,13 +1051,16 @@ void AICmdFlyAround::Setup(Body *obstructor, double alt, double vel, int mode)
 AICmdFlyAround::AICmdFlyAround(Ship *ship, Body *obstructor, double relalt, int mode)
 	: AICommand (ship, CMD_FLYAROUND)
 {
+	assert(!std::isnan(relalt));
 	double alt = relalt*MaxEffectRad(obstructor, ship);
+	assert(!std::isnan(alt));
 	Setup(obstructor, alt, 0.0, mode);
 }
 
 AICmdFlyAround::AICmdFlyAround(Ship *ship, Body *obstructor, double alt, double vel, int mode)
 	: AICommand (ship, CMD_FLYAROUND)
 {
+	assert(!std::isnan(alt));
 	Setup(obstructor, alt, vel, mode);
 }
 

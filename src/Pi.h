@@ -23,6 +23,7 @@ class Intro;
 class LuaConsole;
 class LuaNameGen;
 class ModelCache;
+class PiGui;
 class Player;
 class Ship;
 class SpaceStation;
@@ -86,8 +87,8 @@ public:
 	static SDL_JoystickGUID JoystickGUID(int joystick);
 	static void SetMouseYInvert(bool state) { mouseYInvert = state; }
 	static bool IsMouseYInvert() { return mouseYInvert; }
-	static void SetCompactScanner(bool state) { compactScanner = state; }
-	static bool IsScannerCompact() { return compactScanner; }
+	static void SetCompactRadar(bool state) { compactRadar = state; }
+	static bool IsRadarCompact() { return compactRadar; }
 	static bool IsNavTunnelDisplayed() { return navTunnelDisplayed; }
 	static void SetNavTunnelDisplayed(bool state) { navTunnelDisplayed = state; }
 	static bool AreSpeedLinesDisplayed() { return speedLinesDisplayed; }
@@ -129,11 +130,13 @@ public:
 	static ServerAgent *serverAgent;
 
 	static RefCountedPtr<UI::Context> ui;
+    static RefCountedPtr<PiGui> pigui;
 
 	static Random rng;
 	static int statSceneTris;
 	static int statNumPatches;
 
+	static void DrawPiGui(double delta, std::string handler = "GAME");
 	static void SetView(View *v);
 	static View *GetView() { return currentView; }
 
@@ -203,7 +206,7 @@ private:
 
 	static bool joystickEnabled;
 	static bool mouseYInvert;
-	static bool compactScanner;
+	static bool compactRadar;
 	struct JoystickState {
 		SDL_Joystick *joystick;
 		SDL_JoystickGUID guid;

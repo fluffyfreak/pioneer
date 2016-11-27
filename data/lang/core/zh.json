@@ -279,9 +279,9 @@
       "description" : "",
       "message" : "日长"
    },
-   "DECREASE_SCAN_RANGE" : {
+   "DECREASE_RADAR_RANGE" : {
       "description" : "",
-      "message" : "减小扫描范围"
+      "message" : "Decrease radar range"
    },
    "DECREASE_SET_SPEED" : {
       "description" : "",
@@ -599,9 +599,9 @@
       "description" : "",
       "message" : "皇家条约"
    },
-   "INCREASE_SCAN_RANGE" : {
+   "INCREASE_RADAR_RANGE" : {
       "description" : "",
-      "message" : "增加扫描范围"
+      "message" : "Increase radar range"
    },
    "INCREASE_SET_SPEED" : {
       "description" : "",
@@ -646,6 +646,10 @@
    "JOY_AXIS" : {
       "description" : "Regarding joystick",
       "message" : "%{sign}Joy%joynum %axis 轴"
+   },
+   "JUMP_COMPLETE" : {
+      "description" : "",
+      "message" : "Jump complete: %percent%%"
    },
    "KM_S_RELATIVE_TO" : {
       "description" : "",
@@ -1179,13 +1183,13 @@
       "description" : "",
       "message" : "气压: %pressure{f.2} atm"
    },
-   "PROBABILITY_OF_ARRIVAL_X_PERCENT" : {
-      "description" : "",
-      "message" : "到达可能性: %probability%%"
-   },
    "QUADRUPLE_SYSTEM" : {
       "description" : "",
       "message" : "四星系统"
+   },
+   "RADAR_CONTROL" : {
+      "description" : "",
+      "message" : "Radar control"
    },
    "RADIOACTIVES" : {
       "description" : "",
@@ -1266,10 +1270,6 @@
    "RUBBISH" : {
       "description" : "",
       "message" : "废料"
-   },
-   "SCANNER_CONTROL" : {
-      "description" : "",
-      "message" : "扫描仪控制"
    },
    "SCOOP" : {
       "description" : "Is followed by a number, repersenting scoop mounts/slots available to fit cargo scoop and/or fuel scoop",
@@ -1390,10 +1390,6 @@
    "SIDEREAL_VIEW" : {
       "description" : "camera view setting",
       "message" : "恒星视角"
-   },
-   "SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS" : {
-      "description" : "",
-      "message" : "正在模拟宇宙进化过程: %age{f.1} 十亿年 ;-)"
    },
    "SLAVES" : {
       "description" : "",
@@ -1687,17 +1683,17 @@
       "description" : "",
       "message" : "切换 Lua 控制台"
    },
+   "TOGGLE_RADAR_MODE" : {
+      "description" : "",
+      "message" : "Toggle radar mode"
+   },
+   "TOGGLE_RADAR_VIEW" : {
+      "description" : "Tooltip for the Radar View button",
+      "message" : "Radar View"
+   },
    "TOGGLE_ROTATION_DAMPING" : {
       "description" : "",
       "message" : "切换旋转消除"
-   },
-   "TOGGLE_SCANNER_VIEW" : {
-      "description" : "Tooltip for the Scanner View button",
-      "message" : "Scanner View"
-   },
-   "TOGGLE_SCAN_MODE" : {
-      "description" : "",
-      "message" : "切换扫描仪模式"
    },
    "TOMBSTONE_EPITAPH" : {
       "description" : "shown on tombstone when player dies",

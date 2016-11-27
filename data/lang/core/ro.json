@@ -279,9 +279,9 @@
       "description" : "",
       "message" : "Durata unei zile"
    },
-   "DECREASE_SCAN_RANGE" : {
+   "DECREASE_RADAR_RANGE" : {
       "description" : "",
-      "message" : "Scade amplitudine scaner"
+      "message" : "Decrease radar range"
    },
    "DECREASE_SET_SPEED" : {
       "description" : "",
@@ -599,9 +599,9 @@
       "description" : "",
       "message" : "Conducere Imperială"
    },
-   "INCREASE_SCAN_RANGE" : {
+   "INCREASE_RADAR_RANGE" : {
       "description" : "",
-      "message" : "Crește amplitudine scaner"
+      "message" : "Increase radar range"
    },
    "INCREASE_SET_SPEED" : {
       "description" : "",
@@ -646,6 +646,10 @@
    "JOY_AXIS" : {
       "description" : "Regarding joystick",
       "message" : "%{sign}%joyname Axa %axis"
+   },
+   "JUMP_COMPLETE" : {
+      "description" : "",
+      "message" : "Jump complete: %percent%%"
    },
    "KM_S_RELATIVE_TO" : {
       "description" : "",
@@ -1179,13 +1183,13 @@
       "description" : "",
       "message" : "P: %pressure{f.2} atm"
    },
-   "PROBABILITY_OF_ARRIVAL_X_PERCENT" : {
-      "description" : "",
-      "message" : "Probabilitate de sosire: %probability%%"
-   },
    "QUADRUPLE_SYSTEM" : {
       "description" : "",
       "message" : "Sistem cuadruplu"
+   },
+   "RADAR_CONTROL" : {
+      "description" : "",
+      "message" : "Radar control"
    },
    "RADIOACTIVES" : {
       "description" : "",
@@ -1266,10 +1270,6 @@
    "RUBBISH" : {
       "description" : "",
       "message" : "Gunoi"
-   },
-   "SCANNER_CONTROL" : {
-      "description" : "",
-      "message" : "Control scaner"
    },
    "SCOOP" : {
       "description" : "Is followed by a number, repersenting scoop mounts/slots available to fit cargo scoop and/or fuel scoop",
@@ -1390,10 +1390,6 @@
    "SIDEREAL_VIEW" : {
       "description" : "camera view setting",
       "message" : "Vizionare siderală"
-   },
-   "SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS" : {
-      "description" : "",
-      "message" : "Se simulează evoluția universului: %age{f.1} mii de milioane de ani ;-)"
    },
    "SLAVES" : {
       "description" : "",
@@ -1687,17 +1683,17 @@
       "description" : "",
       "message" : "Comutare consolă LUA"
    },
+   "TOGGLE_RADAR_MODE" : {
+      "description" : "",
+      "message" : "Toggle radar mode"
+   },
+   "TOGGLE_RADAR_VIEW" : {
+      "description" : "Tooltip for the Radar View button",
+      "message" : "Radar View"
+   },
    "TOGGLE_ROTATION_DAMPING" : {
       "description" : "",
       "message" : "Comutare atenuare rotație"
-   },
-   "TOGGLE_SCANNER_VIEW" : {
-      "description" : "Tooltip for the Scanner View button",
-      "message" : "Vezi Scanner"
-   },
-   "TOGGLE_SCAN_MODE" : {
-      "description" : "",
-      "message" : "Comutare mod scaner"
    },
    "TOMBSTONE_EPITAPH" : {
       "description" : "shown on tombstone when player dies",
@@ -1733,11 +1729,11 @@
    },
    "UNIT_DAYS" : {
       "description" : "Duration unit: one 24-hour day",
-      "message" : "d"
+      "message" : "z"
    },
    "UNIT_HOURS" : {
       "description" : "Duration unit: one 60-minute hour",
-      "message" : "h"
+      "message" : "o"
    },
    "UNIT_LY" : {
       "description" : "Distance unit: a light year",
@@ -1753,7 +1749,7 @@
    },
    "UNIT_WEEKS" : {
       "description" : "Duration unit: one 7-day week",
-      "message" : "w"
+      "message" : "să"
    },
    "UNKNOWN" : {
       "description" : "",

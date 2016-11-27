@@ -340,6 +340,10 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 		// ----------------------------------------------------
 		// end of mapping
 		m_vertexBuffer->Unmap();
+		
+		// Don't need this anymore so throw it away
+		normals.reset();
+		colors.reset();
 
 		if( (geosphere->GetMaxDepth() - m_depth) < 12 )
 		{
