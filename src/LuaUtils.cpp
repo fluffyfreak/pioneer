@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaUtils.h"
@@ -295,6 +295,12 @@ static bool _import(lua_State *L, const std::string &importName)
 	return true;
 }
 
+static int l_d_null_userdata(lua_State *L)
+{
+	lua_pushlightuserdata(L, nullptr);
+	return 1;
+}
+
 static int l_base_import(lua_State *L)
 {
 	if (!_import(L, luaL_checkstring(L, 1)))
@@ -443,6 +449,9 @@ void pi_lua_open_standard_base(lua_State *L)
 	// That one should NOT be trampolined, since it is intended to be used all over.
 	lua_pushcfunction(L, l_d_mode_enabled);
 	lua_setfield(L, -2, "dmodeenabled");
+
+	lua_pushcfunction(L, l_d_null_userdata);
+	lua_setfield(L, -2, "makenull");
 
 	lua_pop(L, 1); // pop the debug table
 }

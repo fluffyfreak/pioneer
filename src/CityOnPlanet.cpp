@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -33,7 +33,7 @@ CityOnPlanet::citybuildinglist_t CityOnPlanet::s_buildingList = {
 
 CityOnPlanet::cityflavourdef_t CityOnPlanet::cityflavour[CITYFLAVOURS];
 
-void CityOnPlanet::PutCityBit(Random &rand, const matrix4x4d &rot, vector3d p1, vector3d p2, vector3d p3, vector3d p4)
+void CityOnPlanet::PutCityBit(Random &rand, const matrix4x4d &rot, const vector3d &p1, const vector3d &p2, const vector3d &p3, const vector3d &p4)
 {
 	double rad = (p1-p2).Length()*0.5;
 	Uint32 instIndex(0);
@@ -249,7 +249,8 @@ void CityOnPlanet::SetCityModelPatterns(const SystemPath &path)
 		if (!m->SupportsPatterns()) continue;
 		skin.SetRandomColors(rand);
 		skin.Apply(m);
-		m->SetPattern(rand.Int32(0, m->GetNumPatterns()));
+		if(m->SupportsPatterns())
+			m->SetPattern(rand.Int32(0, m->GetNumPatterns()-1));
 	}
 }
 
@@ -418,7 +419,8 @@ void CityOnPlanet::Render(Graphics::Renderer *r, const Graphics::Frustum &frustu
 	
 	// render the building models using instancing
 	for(Uint32 i=0; i<s_buildingList.numBuildings; i++) {
-		s_buildingList.buildings[i].resolvedModel->Render(transform[i]);
+		if(!transform[i].empty())
+			s_buildingList.buildings[i].resolvedModel->Render(transform[i]);
 	}
 
 	r->GetStats().AddToStatCount(Graphics::Stats::STAT_BUILDINGS, uCount);

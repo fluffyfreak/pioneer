@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "WorldView.h"
@@ -330,9 +330,9 @@ void WorldView::InitObject()
 		Pi::onMouseWheel.connect(sigc::mem_fun(this, &WorldView::MouseWheel));
 
 	Pi::player->GetPlayerController()->SetMouseForRearView(GetCamType() == CAM_INTERNAL && m_internalCameraController->GetMode() == InternalCameraController::MODE_REAR);
-	KeyBindings::toggleHudMode.onPress.connect(sigc::mem_fun(this, &WorldView::OnToggleLabels));
-	KeyBindings::increaseTimeAcceleration.onPress.connect(sigc::mem_fun(this, &WorldView::OnRequestTimeAccelInc));
-	KeyBindings::decreaseTimeAcceleration.onPress.connect(sigc::mem_fun(this, &WorldView::OnRequestTimeAccelDec));
+	m_onToggleHudModeCon = KeyBindings::toggleHudMode.onPress.connect(sigc::mem_fun(this, &WorldView::OnToggleLabels));
+	m_onIncTimeAccelCon = KeyBindings::increaseTimeAcceleration.onPress.connect(sigc::mem_fun(this, &WorldView::OnRequestTimeAccelInc));
+	m_onDecTimeAccelCon = KeyBindings::decreaseTimeAcceleration.onPress.connect(sigc::mem_fun(this, &WorldView::OnRequestTimeAccelDec));
 }
 
 WorldView::~WorldView()
@@ -341,6 +341,9 @@ WorldView::~WorldView()
 	m_onPlayerChangeTargetCon.disconnect();
 	m_onChangeFlightControlStateCon.disconnect();
 	m_onMouseWheelCon.disconnect();
+	m_onToggleHudModeCon.disconnect();
+	m_onIncTimeAccelCon.disconnect();
+	m_onDecTimeAccelCon.disconnect();
 }
 
 void WorldView::SaveToJson(Json::Value &jsonObj)
@@ -1014,7 +1017,7 @@ void WorldView::RefreshButtonStateAndVisibility()
 	if (b) {
 		if (b->IsType(Object::SHIP)) {
 			int prop_var = 0;
-			Pi::player->Properties().Get("radar_mapper_level_cap", prop_var);
+			Pi::player->Properties().Get("target_scanner_level_cap", prop_var);
 			if (prop_var > 0) {
 				assert(b->IsType(Object::SHIP));
 				Ship *s = static_cast<Ship*>(b);
@@ -1652,6 +1655,7 @@ void WorldView::UpdateProjectedObjects()
 			continue;
 
 		vector3d pos = b->GetInterpPositionRelTo(cam_frame);
+		if (b->IsType(Object::PLAYER)) pos += vector3d(0.1, 0.1, 0);		// otherwise exactly between four pixels => jitter
 		if ((pos.z < -1.0) && project_to_screen(pos, pos, frustum, guiSize)) {
 
 			// only show labels on large or nearby bodies

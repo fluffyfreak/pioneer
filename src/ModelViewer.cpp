@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "ModelViewer.h"
@@ -73,7 +73,7 @@ namespace {
 			const std::string &fpath = info.GetPath();
 
 			//check it's the expected type
-			if (info.IsFile() && ends_with_ci(fpath, ".png")) {
+			if (info.IsFile() && ends_with_ci(fpath, ".dds")) {
 				list.push_back(info.GetName().substr(0, info.GetName().size()-4));
 			}
 		}
@@ -519,6 +519,7 @@ void ModelViewer::DrawModel(const matrix4x4f &mv)
 	);
 
 	m_model->Render(mv);
+	m_navLights->Render(m_renderer);
 }
 
 void ModelViewer::MainLoop()
@@ -634,7 +635,7 @@ void ModelViewer::OnDecalChanged(unsigned int index, const std::string &texname)
 {
 	if (!m_model) return;
 
-	m_decalTexture = Graphics::TextureBuilder::Decal(stringf("textures/decals/%0.png", texname)).GetOrCreateTexture(m_renderer, "decal");
+	m_decalTexture = Graphics::TextureBuilder::Decal(stringf("textures/decals/%0.dds", texname)).GetOrCreateTexture(m_renderer, "decal");
 
 	m_model->SetDecalTexture(m_decalTexture, 0);
 	m_model->SetDecalTexture(m_decalTexture, 1);

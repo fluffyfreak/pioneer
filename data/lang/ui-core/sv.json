@@ -151,9 +151,9 @@
       "description" : "",
       "message" : "Råvarumarknad"
    },
-   "COMPACT_SCANNER" : {
+   "COMPACT_RADAR" : {
       "description" : "Game settings option",
-      "message" : "Kompakt skanner"
+      "message" : "Compact radar"
    },
    "COMPETENT" : {
       "description" : "Combat rating",
@@ -1046,6 +1046,10 @@
    "SHIP_VIEWING_WAS_SOLD" : {
       "description" : "",
       "message" : "Skeppet du tittade på har blivit sålt"
+   },
+   "SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS" : {
+      "description" : "",
+      "message" : "Simulerar universums evolution: {age} miljarder år ;-)"
    },
    "SOUND" : {
       "description" : "",

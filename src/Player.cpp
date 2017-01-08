@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Player.h"
@@ -38,7 +38,7 @@ static void registerEquipChangeListener(Player *player) {
 	LUA_DEBUG_END(l, 0);
 }
 
-Player::Player(ShipType::Id shipId): Ship(shipId)
+Player::Player(const ShipType::Id &shipId): Ship(shipId)
 {
 	SetController(new PlayerShipController());
 	InitCockpit();

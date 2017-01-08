@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "RendererGL.h"
@@ -8,6 +8,7 @@
 #include "OS.h"
 #include "StringF.h"
 #include "graphics/Texture.h"
+#include "graphics/TextureBuilder.h"
 #include "TextureGL.h"
 #include "graphics/VertexArray.h"
 #include "GLDebug.h"
@@ -85,6 +86,13 @@ RendererOGL::RendererOGL(WindowSDL *window, const Graphics::Settings &vs)
 			);
 	}
 
+	const char *ver = (const char *)glGetString(GL_VERSION);
+	if (vs.gl3ForwardCompatible && strstr(ver, "9.17.10.4229")) {
+		Warning("Driver needs GL3ForwardCompatible=0 in config.ini to display billboards (stars, navlights etc.)");
+	}
+
+	TextureBuilder::Init();
+
 	m_viewportStack.push(Viewport());
 
 	const bool useDXTnTextures = vs.useTextureCompression;
@@ -104,6 +112,7 @@ RendererOGL::RendererOGL(WindowSDL *window, const Graphics::Settings &vs)
 	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 	glEnable(GL_PROGRAM_POINT_SIZE);
+	if (!vs.gl3ForwardCompatible) glEnable(0x8861);				// GL_POINT_SPRITE hack for compatibility contexts
 
 	glHint(GL_TEXTURE_COMPRESSION_HINT, GL_NICEST);
 	glHint(GL_FRAGMENT_SHADER_DERIVATIVE_HINT, GL_NICEST);
@@ -301,7 +310,7 @@ static std::string glerr_to_string(GLenum err)
 	}
 }
 
-void RendererOGL::CheckErrors(const char *func /*= nullptr*/, const int line /*= nullptr*/)
+void RendererOGL::CheckErrors(const char *func, const int line)
 {
 	PROFILE_SCOPED()
 #ifndef PIONEER_PROFILER
@@ -313,10 +322,9 @@ void RendererOGL::CheckErrors(const char *func /*= nullptr*/, const int line /*=
 		s_prevErr = err;
 		// now build info string
 		std::stringstream ss;
-		if(func) {
-			ss << "In function " << std::string(func) << "\nOn line " << std::to_string(line) << "\n";
-		}
+		assert(func!=nullptr && line>=0);
 		ss << "OpenGL error(s) during frame:\n";
+		ss << "In function " << std::string(func) << "\nOn line " << std::to_string(line) << "\n";
 		while (err != GL_NO_ERROR) {
 			ss << glerr_to_string(err) << '\n';
 			err = glGetError();
@@ -345,27 +353,7 @@ void RendererOGL::CheckErrors(const char *func /*= nullptr*/, const int line /*=
 bool RendererOGL::SwapBuffers()
 {
 	PROFILE_SCOPED()
-#ifndef NDEBUG
-	// Check if an error occurred during the frame. This is not very useful for
-	// determining *where* the error happened. For that purpose, try GDebugger or
-	// the GL_KHR_DEBUG extension
-	GLenum err;
-	err = glGetError();
-	if (err != GL_NO_ERROR) {
-		std::stringstream ss;
-		ss << "OpenGL error(s) during frame:\n";
-		while (err != GL_NO_ERROR) {
-			ss << glerr_to_string(err) << std::endl;
-			err = glGetError();
-			if( err == GL_OUT_OF_MEMORY ) {
-				ss << "Out-of-memory on graphics card." << std::endl
-					<< "Recommend enabling \"Compress Textures\" in game options." << std::endl
-					<< "Also try reducing City and Planet detail settings." << std::endl;
-			}
-		}
-		Error("%s", ss.str().c_str());
-	}
-#endif
+	CheckRenderErrors(__FUNCTION__,__LINE__);
 
 	GetWindow()->SwapBuffers();
 	m_stats.NextFrame();
