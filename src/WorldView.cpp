@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "WorldView.h"
@@ -153,8 +153,11 @@ void WorldView::InitObject()
 
 	m_hyperspaceButton = new Gui::MultiStateImageButton();
 	m_hyperspaceButton->SetShortcut(SDLK_F7, KMOD_NONE);
-	m_hyperspaceButton->AddState(0, "icons/hyperspace_engage_f8.png", Lang::HYPERSPACE_JUMP_ENGAGE);
-	m_hyperspaceButton->AddState(1, "icons/hyperspace_abort_f8.png", Lang::HYPERSPACE_JUMP_ABORT);
+	m_hyperspaceButton->AddState(0, "icons/hyperspace_disabled_f8.png", Lang::HYPERSPACE_JUMP_DISABLED);
+	m_hyperspaceButton->AddState(1, "icons/hyperspace_forbidden_f8.png", Lang::HYPERSPACE_JUMP_FORBIDDEN);
+	m_hyperspaceButton->AddState(2, "icons/hyperspace_forbidden_abort_f8.png", Lang::HYPERSPACE_JUMP_ABORT);
+	m_hyperspaceButton->AddState(3, "icons/hyperspace_engage_f8.png", Lang::HYPERSPACE_JUMP_ENGAGE);
+	m_hyperspaceButton->AddState(4, "icons/hyperspace_abort_f8.png", Lang::HYPERSPACE_JUMP_ABORT);
 	m_hyperspaceButton->onClick.connect(sigc::mem_fun(this, &WorldView::OnClickHyperspace));
 	m_hyperspaceButton->SetRenderDimensions(30.0f, 22.0f);
 	m_rightButtonBar->Add(m_hyperspaceButton, 66, 2);
@@ -327,9 +330,9 @@ void WorldView::InitObject()
 		Pi::onMouseWheel.connect(sigc::mem_fun(this, &WorldView::MouseWheel));
 
 	Pi::player->GetPlayerController()->SetMouseForRearView(GetCamType() == CAM_INTERNAL && m_internalCameraController->GetMode() == InternalCameraController::MODE_REAR);
-	KeyBindings::toggleHudMode.onPress.connect(sigc::mem_fun(this, &WorldView::OnToggleLabels));
-	KeyBindings::increaseTimeAcceleration.onPress.connect(sigc::mem_fun(this, &WorldView::OnRequestTimeAccelInc));
-	KeyBindings::decreaseTimeAcceleration.onPress.connect(sigc::mem_fun(this, &WorldView::OnRequestTimeAccelDec));
+	m_onToggleHudModeCon = KeyBindings::toggleHudMode.onPress.connect(sigc::mem_fun(this, &WorldView::OnToggleLabels));
+	m_onIncTimeAccelCon = KeyBindings::increaseTimeAcceleration.onPress.connect(sigc::mem_fun(this, &WorldView::OnRequestTimeAccelInc));
+	m_onDecTimeAccelCon = KeyBindings::decreaseTimeAcceleration.onPress.connect(sigc::mem_fun(this, &WorldView::OnRequestTimeAccelDec));
 }
 
 WorldView::~WorldView()
@@ -338,6 +341,9 @@ WorldView::~WorldView()
 	m_onPlayerChangeTargetCon.disconnect();
 	m_onChangeFlightControlStateCon.disconnect();
 	m_onMouseWheelCon.disconnect();
+	m_onToggleHudModeCon.disconnect();
+	m_onIncTimeAccelCon.disconnect();
+	m_onDecTimeAccelCon.disconnect();
 }
 
 void WorldView::SaveToJson(Json::Value &jsonObj)
@@ -463,15 +469,21 @@ void WorldView::OnClickBlastoff()
 
 void WorldView::OnClickHyperspace(Gui::MultiStateImageButton *b)
 {
-	// Not the best way, but show the button when docked, but flip it back when pressed
-	if(Pi::player->GetFlightState() == Ship::DOCKED || Pi::player->GetFlightState() == Ship::LANDED)
-		ResetHyperspaceButton();
+	if(Pi::player->GetFlightState() == Ship::DOCKED || Pi::player->GetFlightState() == Ship::LANDED){
+		// Maybe not the best, but flip state back (from disabled to disabled, I assume?)
+		m_hyperspaceButton->StatePrev();
+	}
 
 	if (Pi::player->IsHyperspaceActive()) {
 		// Hyperspace countdown in effect.. abort!
 		Pi::player->AbortHyperjump();
 		m_game->log->Add(Lang::HYPERSPACE_JUMP_ABORTED);
-	} else {
+
+		// State backs once from original state
+		m_hyperspaceButton->StatePrev(); // reset to original state...
+		m_hyperspaceButton->StatePrev(); // ... -1 from original state
+	}
+	else{
 		// Initiate hyperspace drive
 		SystemPath path = m_game->GetSectorView()->GetHyperspaceTarget();
 		LuaObject<Player>::CallMethod(Pi::player, "HyperjumpTo", &path);
@@ -487,13 +499,13 @@ void WorldView::OnRequestTimeAccelInc()
 void WorldView::OnRequestTimeAccelDec()
 {
 	// requests a decrease in time acceleration
-    Pi::game->RequestTimeAccelDec();
+	Pi::game->RequestTimeAccelDec();
 }
 
 void WorldView::ResetHyperspaceButton()
 {
-	if(m_hyperspaceButton->GetState() == 1)
-		m_hyperspaceButton->StatePrev();
+	// After a jump:
+	m_hyperspaceButton->SetActiveState(0);
 }
 
 void WorldView::Draw3D()
@@ -562,10 +574,49 @@ static Color get_color_for_warning_meter_bar(float v) {
 }
 
 void WorldView::RefreshHyperspaceButton() {
+
+	// 0 = "disabled" - if target selected but landed
+	// 1 = "forbidden" - if flying below allowed jump altitude
+	// 2 = "forbidden_abort" - if countdown below allowed jump altitude
+	// 3 = "engage" - above allowed jump distance
+	// 4 = "engage_abort" - abort current countdown, above allowed altitude
+	//
+	// (Note: when pressing a button in state 1..4, state is auto-incremented by one).
+
 	SystemPath target = m_game->GetSectorView()->GetHyperspaceTarget();
-	if (LuaObject<Ship>::CallMethod<bool>(Pi::player, "CanHyperjumpTo", &target))
+	if (LuaObject<Ship>::CallMethod<bool>(Pi::player, "CanHyperjumpTo", &target)){
+//		std::cout << "ONE" << std::endl;
+		if(Pi::player->GetFlightState() == Ship::FLYING || Pi::player->GetFlightState() == Ship::JUMPING)
+		{
+//			std::cout << "TWO" << std::endl;
+			// leave the "disabled" state if not landed:
+			if(m_hyperspaceButton->GetState() == 0)
+				m_hyperspaceButton->StateNext();
+
+			if(!LuaObject<Ship>::CallMethod<bool>(Pi::player, "IsHyperjumpAllowed")){
+				// If crossing boundary from above
+				if(3 <= m_hyperspaceButton->GetState()){
+					m_hyperspaceButton->StatePrev();
+					m_hyperspaceButton->StatePrev();
+				}
+			}
+			else{
+				// If crossing the boundary from below
+				if(2 >= m_hyperspaceButton->GetState()){
+					m_hyperspaceButton->StateNext();
+					m_hyperspaceButton->StateNext();
+				}
+			}
+		}
+		else{
+			//grayed out disabled button, if target set while LANDED/DOCKED/(UN)DOCKING
+			m_hyperspaceButton->SetActiveState(0);
+		}
+
 		m_hyperspaceButton->Show();
+	}
 	else
+		//If no target selected, then no button at all:
 		m_hyperspaceButton->Hide();
 }
 
@@ -776,8 +827,8 @@ void WorldView::RefreshButtonStateAndVisibility()
 			formatarg("y", dest.sectorY),
 			formatarg("z", dest.sectorZ)));
 
-		m_game->GetCpan()->SetOverlayText(ShipCpanel::OVERLAY_TOP_RIGHT, stringf(Lang::PROBABILITY_OF_ARRIVAL_X_PERCENT,
-			formatarg("probability", m_game->GetHyperspaceArrivalProbability()*100.0, "f3.1")));
+		m_game->GetCpan()->SetOverlayText(ShipCpanel::OVERLAY_TOP_RIGHT, stringf(Lang::JUMP_COMPLETE,
+			formatarg("percent", m_game->GetHyperspaceArrivalProbability()*100.0, "f3.1")));
 	}
 
 	else {
@@ -966,7 +1017,7 @@ void WorldView::RefreshButtonStateAndVisibility()
 	if (b) {
 		if (b->IsType(Object::SHIP)) {
 			int prop_var = 0;
-			Pi::player->Properties().Get("radar_mapper_level_cap", prop_var);
+			Pi::player->Properties().Get("target_scanner_level_cap", prop_var);
 			if (prop_var > 0) {
 				assert(b->IsType(Object::SHIP));
 				Ship *s = static_cast<Ship*>(b);
@@ -1604,6 +1655,7 @@ void WorldView::UpdateProjectedObjects()
 			continue;
 
 		vector3d pos = b->GetInterpPositionRelTo(cam_frame);
+		if (b->IsType(Object::PLAYER)) pos += vector3d(0.1, 0.1, 0);		// otherwise exactly between four pixels => jitter
 		if ((pos.z < -1.0) && project_to_screen(pos, pos, frustum, guiSize)) {
 
 			// only show labels on large or nearby bodies
@@ -1962,7 +2014,6 @@ void WorldView::Draw()
 {
 	assert(m_game);
 	assert(Pi::player);
-	assert(!Pi::player->IsDead());
 
 	m_renderer->ClearDepthBuffer();
 
@@ -1994,7 +2045,7 @@ void WorldView::Draw()
 	DrawCombatTargetIndicator(m_combatTargetIndicator, m_targetLeadIndicator, red);
 
 	// glLineWidth(1.0f);
-	m_renderer->CheckRenderErrors();
+	m_renderer->CheckRenderErrors(__FUNCTION__,__LINE__);
 
 	// normal crosshairs
 	if (GetCamType() == CAM_INTERNAL) {
@@ -2076,9 +2127,9 @@ void WorldView::DrawTargetSquare(const Indicator &marker, const Color &c)
 		DrawEdgeMarker(marker, c);
 
 	m_targetIcon->Draw(Pi::renderer,
-					   vector2f(marker.pos.x - HUD_CROSSHAIR_SIZE,
+						vector2f(marker.pos.x - HUD_CROSSHAIR_SIZE,
 								marker.pos.y - HUD_CROSSHAIR_SIZE),
-					   vector2f(HUD_CROSSHAIR_SIZE, HUD_CROSSHAIR_SIZE) * 2.0f, c);
+						vector2f(HUD_CROSSHAIR_SIZE, HUD_CROSSHAIR_SIZE) * 2.0f, c);
 }
 
 void WorldView::DrawVelocityIndicator(const Indicator &marker, VelIconType d, const Color &c)
@@ -2279,5 +2330,7 @@ static std::pair<double, double> calculateHeadingPitch(PlaneType pt) {
 	const double hedEast = groundHed.Dot(east);
 	const double heading = wrapAngleToPositive(atan2(hedEast, hedNorth));
 
-	return std::make_pair(heading, pitch);
+	return std::make_pair(
+		std::isnan(heading) ? 0.0 : heading,
+		std::isnan(pitch) ? 0.0 : pitch);
 }

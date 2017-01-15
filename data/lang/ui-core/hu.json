@@ -151,9 +151,9 @@
       "description" : "",
       "message" : "Árupiac"
    },
-   "COMPACT_SCANNER" : {
+   "COMPACT_RADAR" : {
       "description" : "Game settings option",
-      "message" : "Kompakt szkenner."
+      "message" : "Kompakt radar"
    },
    "COMPETENT" : {
       "description" : "Combat rating",
@@ -293,7 +293,7 @@
    },
    "ENABLE_ANISOTROPIC_FILTERING" : {
       "description" : "Use Anisotropic Filtering",
-      "message" : "Anisotropic Filtering"
+      "message" : "Anisotropic szűrés"
    },
    "ENABLE_AUTOSAVE" : {
       "description" : "Allow the game to autosave when docking",
@@ -466,6 +466,10 @@
    "HYPERSPACE_RANGE" : {
       "description" : "",
       "message" : "Hiperűr hatótáv"
+   },
+   "ILLEGAL_JUMP" : {
+      "description" : "A finable crime",
+      "message" : "Felelőtlen hiperugrást regisztráltunk."
    },
    "IM_TIRED_OF_WORKING_FOR_NOTHING_DONT_YOU_KNOW_WHAT_A_CONTRACT_IS" : {
       "description" : "",
@@ -791,6 +795,10 @@
       "description" : "",
       "message" : "Ok"
    },
+   "OPEN_USER_FOLDER" : {
+      "description" : "",
+      "message" : "Felhasználó könyvtára"
+   },
    "OPTIONS" : {
       "description" : "",
       "message" : "Beállítások"
@@ -881,7 +889,7 @@
    },
    "PUMP_DOWN" : {
       "description" : "Drain the fuel tank",
-      "message" : "Pump down"
+      "message" : "Raktérbe szivatás"
    },
    "QUALIFICATION_SCORES" : {
       "description" : "",
@@ -999,6 +1007,10 @@
       "description" : "",
       "message" : "Érzékelők és védelem"
    },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Cél megjelőlése uticélnak."
+   },
    "SHIP" : {
       "description" : "",
       "message" : "Hajó"
@@ -1034,6 +1046,10 @@
    "SHIP_VIEWING_WAS_SOLD" : {
       "description" : "",
       "message" : "Ez a hajó már elkelt."
+   },
+   "SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS" : {
+      "description" : "",
+      "message" : "Univerzum evolúciójának szimulálása: {age} milliárd év ;-)"
    },
    "SOUND" : {
       "description" : "",
@@ -1094,6 +1110,10 @@
    "TOO_SMALL_FOR_CURRENT_CREW" : {
       "description" : "",
       "message" : "Túl kicsi a hajó a legénységnek."
+   },
+   "TOO_SMALL_TO_TRANSSHIP" : {
+      "description" : "",
+      "message" : "A hajód túl kicsi a rakomány elszállításához."
    },
    "TOTAL" : {
       "description" : "",

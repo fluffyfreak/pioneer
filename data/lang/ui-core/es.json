@@ -151,9 +151,9 @@
       "description" : "",
       "message" : "Mercado de Productos"
    },
-   "COMPACT_SCANNER" : {
+   "COMPACT_RADAR" : {
       "description" : "Game settings option",
-      "message" : "Escáner compacto"
+      "message" : "Radar compacto"
    },
    "COMPETENT" : {
       "description" : "Combat rating",
@@ -466,6 +466,10 @@
    "HYPERSPACE_RANGE" : {
       "description" : "",
       "message" : "Alcance hiperespacial"
+   },
+   "ILLEGAL_JUMP" : {
+      "description" : "A finable crime",
+      "message" : "Hipersalto temerario registrado"
    },
    "IM_TIRED_OF_WORKING_FOR_NOTHING_DONT_YOU_KNOW_WHAT_A_CONTRACT_IS" : {
       "description" : "",
@@ -791,6 +795,10 @@
       "description" : "",
       "message" : "Ok"
    },
+   "OPEN_USER_FOLDER" : {
+      "description" : "",
+      "message" : "Carpeta de usuario"
+   },
    "OPTIONS" : {
       "description" : "",
       "message" : "Opciones"
@@ -999,6 +1007,10 @@
       "description" : "",
       "message" : "Detección y defensa"
    },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Establecer destino como objetivo de navegación."
+   },
    "SHIP" : {
       "description" : "",
       "message" : "Nave"
@@ -1034,6 +1046,10 @@
    "SHIP_VIEWING_WAS_SOLD" : {
       "description" : "",
       "message" : "La nave que estaba viendo se ha vendido"
+   },
+   "SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS" : {
+      "description" : "",
+      "message" : "Simulando la evolución del universo: {age} mil millones de años ;-)"
    },
    "SOUND" : {
       "description" : "",
@@ -1094,6 +1110,10 @@
    "TOO_SMALL_FOR_CURRENT_CREW" : {
       "description" : "",
       "message" : "La nave es demasiado pequeña para la tripulación actual."
+   },
+   "TOO_SMALL_TO_TRANSSHIP" : {
+      "description" : "",
+      "message" : "La nave es demasiado pequeña para transbordar su carga."
    },
    "TOTAL" : {
       "description" : "",

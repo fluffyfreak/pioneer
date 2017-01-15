@@ -279,9 +279,9 @@
       "description" : "",
       "message" : "Długość dnia"
    },
-   "DECREASE_SCAN_RANGE" : {
+   "DECREASE_RADAR_RANGE" : {
       "description" : "",
-      "message" : "Zmniejsza zasięg skanera"
+      "message" : "Zmniejsza zasięg radaru"
    },
    "DECREASE_SET_SPEED" : {
       "description" : "",
@@ -559,9 +559,17 @@
       "description" : "",
       "message" : "Skok w nadprzestrzeń przerwany."
    },
+   "HYPERSPACE_JUMP_DISABLED" : {
+      "description" : "Mouse over text for hyperdrive button on ship control panel",
+      "message" : "Hipernapęd jest wyłączony"
+   },
    "HYPERSPACE_JUMP_ENGAGE" : {
       "description" : "Mouse over text for hyperdrive button on ship control panel",
       "message" : "Uruchomienie hipernapędu"
+   },
+   "HYPERSPACE_JUMP_FORBIDDEN" : {
+      "description" : "Mouse over text for hyperdrive button on ship control panel",
+      "message" : "Strefa zakazu używania hipernapędu"
    },
    "HYPERSPACE_TARGET" : {
       "description" : "",
@@ -591,9 +599,9 @@
       "description" : "",
       "message" : "Rządy Imperium"
    },
-   "INCREASE_SCAN_RANGE" : {
+   "INCREASE_RADAR_RANGE" : {
       "description" : "",
-      "message" : "Zwiększa zasięg skanera"
+      "message" : "Zwiększa zasięg radaru"
    },
    "INCREASE_SET_SPEED" : {
       "description" : "",
@@ -619,10 +627,6 @@
       "description" : "",
       "message" : "Widok wewnętrzny"
    },
-   "INT_LY" : {
-      "description" : "integer number of light years",
-      "message" : "%scale lś"
-   },
    "IN_TRANSIT" : {
       "description" : "",
       "message" : "Przelot"
@@ -642,6 +646,10 @@
    "JOY_AXIS" : {
       "description" : "Regarding joystick",
       "message" : "%joyname oś %{sign}%axis"
+   },
+   "JUMP_COMPLETE" : {
+      "description" : "",
+      "message" : "Skok kompletny w:"
    },
    "KM_S_RELATIVE_TO" : {
       "description" : "",
@@ -1175,13 +1183,13 @@
       "description" : "",
       "message" : "C: %pressure{f.2} atm"
    },
-   "PROBABILITY_OF_ARRIVAL_X_PERCENT" : {
-      "description" : "",
-      "message" : "Prawdopodobieństwo przylotu: %probability%%"
-   },
    "QUADRUPLE_SYSTEM" : {
       "description" : "",
       "message" : "System poczwórny."
+   },
+   "RADAR_CONTROL" : {
+      "description" : "",
+      "message" : "Opcje radaru"
    },
    "RADIOACTIVES" : {
       "description" : "",
@@ -1262,10 +1270,6 @@
    "RUBBISH" : {
       "description" : "",
       "message" : "Odpady"
-   },
-   "SCANNER_CONTROL" : {
-      "description" : "",
-      "message" : "Opcje skanera"
    },
    "SCOOP" : {
       "description" : "Is followed by a number, repersenting scoop mounts/slots available to fit cargo scoop and/or fuel scoop",
@@ -1386,10 +1390,6 @@
    "SIDEREAL_VIEW" : {
       "description" : "camera view setting",
       "message" : "Widok radialny"
-   },
-   "SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS" : {
-      "description" : "",
-      "message" : "Symulacja ewolucji wszechświata: %age{f.1} miliardów lat ;-)"
    },
    "SLAVES" : {
       "description" : "",
@@ -1683,17 +1683,17 @@
       "description" : "",
       "message" : "Aktywacja konsoli"
    },
+   "TOGGLE_RADAR_MODE" : {
+      "description" : "",
+      "message" : "Zmiana trybu radaru"
+   },
+   "TOGGLE_RADAR_VIEW" : {
+      "description" : "Tooltip for the Radar View button",
+      "message" : "Widok radaru"
+   },
    "TOGGLE_ROTATION_DAMPING" : {
       "description" : "",
       "message" : "Tłumienie rotacji"
-   },
-   "TOGGLE_SCANNER_VIEW" : {
-      "description" : "Tooltip for the Scanner View button",
-      "message" : "Widok skanera"
-   },
-   "TOGGLE_SCAN_MODE" : {
-      "description" : "",
-      "message" : "Zmiana trybu skanera"
    },
    "TOMBSTONE_EPITAPH" : {
       "description" : "shown on tombstone when player dies",
@@ -1722,6 +1722,34 @@
    "UNEXPLORED_SYSTEM_STAR_INFO_ONLY" : {
       "description" : "",
       "message" : "System niezbadany. Informacje o gwieździe uzyskano przez teleskop, brak danych o planetach."
+   },
+   "UNIT_AU" : {
+      "description" : "Distance unit: an astronomical unit, radius of Earth's orbit",
+      "message" : "JA"
+   },
+   "UNIT_DAYS" : {
+      "description" : "Duration unit: one 24-hour day",
+      "message" : "d"
+   },
+   "UNIT_HOURS" : {
+      "description" : "Duration unit: one 60-minute hour",
+      "message" : "h"
+   },
+   "UNIT_LY" : {
+      "description" : "Distance unit: a light year",
+      "message" : "lś"
+   },
+   "UNIT_MINUTES" : {
+      "description" : "Duration unit: one 60-second minute",
+      "message" : "m"
+   },
+   "UNIT_SECONDS" : {
+      "description" : "Duration unit: one second",
+      "message" : "s"
+   },
+   "UNIT_WEEKS" : {
+      "description" : "Duration unit: one 7-day week",
+      "message" : "t"
    },
    "UNKNOWN" : {
       "description" : "",

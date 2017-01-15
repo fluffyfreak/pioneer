@@ -149,11 +149,11 @@
    },
    "COMMODITY_MARKET" : {
       "description" : "",
-      "message" : "Margaid bathair-àmh"
+      "message" : "Margadh bathair-àmh"
    },
-   "COMPACT_SCANNER" : {
+   "COMPACT_RADAR" : {
       "description" : "Game settings option",
-      "message" : "Sganair teannta"
+      "message" : "Rèidear teannta"
    },
    "COMPETENT" : {
       "description" : "Combat rating",
@@ -189,7 +189,7 @@
    },
    "CONTROL_OPTIONS" : {
       "description" : "",
-      "message" : "Roghainnean nan uidheaman-smachd"
+      "message" : "Roghainnean an stiùiridh"
    },
    "COULD_NOT_LOAD_GAME" : {
       "description" : "",
@@ -317,7 +317,7 @@
    },
    "EQUIPMENT_MARKET" : {
       "description" : "",
-      "message" : "Margaid uidheamachd"
+      "message" : "Margadh uidheamachd"
    },
    "EQUIPPED" : {
       "description" : "",
@@ -466,6 +466,10 @@
    "HYPERSPACE_RANGE" : {
       "description" : "",
       "message" : "Rainse os-fhànais"
+   },
+   "ILLEGAL_JUMP" : {
+      "description" : "A finable crime",
+      "message" : "Chaidh os-leum cion-umhail a chlàradh"
    },
    "IM_TIRED_OF_WORKING_FOR_NOTHING_DONT_YOU_KNOW_WHAT_A_CONTRACT_IS" : {
       "description" : "",
@@ -773,7 +777,7 @@
    },
    "N_OCCUPIED_PASSENGER_CABINS" : {
       "description" : "",
-      "message" : "{quantity} cèibinnean taistealaich air an còmhnadh"
+      "message" : "{quantity} cèibinn(ean) taistealaich air an còmhnadh"
    },
    "N_SHIELD_GENERATORS" : {
       "description" : "",
@@ -781,7 +785,7 @@
    },
    "N_UNOCCUPIED_PASSENGER_CABINS" : {
       "description" : "",
-      "message" : "{quantity} cèibinnean taistealaich gun chòmhnadh"
+      "message" : "{quantity} cèibinn(ean) taistealaich gun chòmhnadh"
    },
    "OFF" : {
       "description" : "",
@@ -790,6 +794,10 @@
    "OK" : {
       "description" : "",
       "message" : "Ceart ma-thà"
+   },
+   "OPEN_USER_FOLDER" : {
+      "description" : "",
+      "message" : "Pasgan a' chleachdaiche"
    },
    "OPTIONS" : {
       "description" : "",
@@ -805,7 +813,7 @@
    },
    "ORBITAL_ANALYSIS_NOTES" : {
       "description" : "",
-      "message" : "Thèid luaths cearcallach na reul-cuairte a shealltainn mar luaths beantanach. Mu chòir dhan long a bhith a' siubhal le 90° an comhair aiseal na luinge/{name}.\n\nTha an luaths teàrnaidh cho beag 's a ghabhas agus tha e beantanach cuideachd. Bheir luaths as ìsle le ceum as ìsle cùrsa dhut a dh'eadar-ghearras ris an uachdar aig {name}.\n\nBu chòir don luaths teichidh obrachadh air comhair sam bith cho fad 's nach buail an long ri {name} air an t-slighe.\n\t\t"
+      "message" : "Thèid luaths cearcallach na reul-cuairte a shealltainn mar luaths beantanach. Mu chòir dhan t-soitheach a bhith a' siubhal le 90° an comhair aiseal an t-soithich/{name}.\n\nTha an luaths teàrnaidh cho beag 's a ghabhas agus tha e beantanach cuideachd. Bheir luaths as ìsle le ceum as ìsle cùrsa dhut a dh'eadar-ghearras ris an uachdar aig {name}.\n\nBu chòir don luaths teichidh obrachadh air comhair sam bith cho fad 's nach buail an soitheach ri {name} air an t-slighe.\n\t\t"
    },
    "OUTER_ARM" : {
       "description" : "Arm of the Milky Way galaxy",
@@ -999,6 +1007,10 @@
       "description" : "",
       "message" : "Mothaichearan 's dìon"
    },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Suidhich an ceann-uidhe mar cheann-uidhe na seòladaireachd."
+   },
    "SHIP" : {
       "description" : "",
       "message" : "Soitheach"
@@ -1025,7 +1037,7 @@
    },
    "SHIP_MARKET" : {
       "description" : "",
-      "message" : "Margaidh shoithichean"
+      "message" : "Margadh shoithichean"
    },
    "SHIP_REPAIRS" : {
       "description" : "",
@@ -1034,6 +1046,10 @@
    "SHIP_VIEWING_WAS_SOLD" : {
       "description" : "",
       "message" : "Tha an soitheach a bha thu a' coimhead air rèic"
+   },
+   "SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS" : {
+      "description" : "",
+      "message" : "A' cruthachadh gnè an domhain: {age} billean bliadhna ;-)"
    },
    "SOUND" : {
       "description" : "",
@@ -1094,6 +1110,10 @@
    "TOO_SMALL_FOR_CURRENT_CREW" : {
       "description" : "",
       "message" : "Tha an soitheach ro bheag airson an sgioba agad."
+   },
+   "TOO_SMALL_TO_TRANSSHIP" : {
+      "description" : "",
+      "message" : "Tha an soitheach ro bheag airson an carago agad a ghiùlan."
    },
    "TOTAL" : {
       "description" : "",

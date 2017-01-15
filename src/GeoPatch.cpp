@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -227,6 +227,10 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 		// ----------------------------------------------------
 		// end of mapping
 		m_vertexBuffer->Unmap();
+		
+		// Don't need this anymore so throw it away
+		normals.reset();
+		colors.reset();
 
 #ifdef DEBUG_BOUNDING_SPHERES
 		RefCountedPtr<Graphics::Material> mat(Pi::renderer->CreateMaterial(Graphics::MaterialDescriptor()));

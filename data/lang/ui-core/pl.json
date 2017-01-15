@@ -151,9 +151,9 @@
       "description" : "",
       "message" : "Giełda towarów"
    },
-   "COMPACT_SCANNER" : {
+   "COMPACT_RADAR" : {
       "description" : "Game settings option",
-      "message" : "Skaner kompaktowy"
+      "message" : "Radar kompaktowy"
    },
    "COMPETENT" : {
       "description" : "Combat rating",
@@ -466,6 +466,10 @@
    "HYPERSPACE_RANGE" : {
       "description" : "",
       "message" : "Zasięg w nadprzestrzeni"
+   },
+   "ILLEGAL_JUMP" : {
+      "description" : "A finable crime",
+      "message" : "Wykryto nieprzemyślany skok nadprzestrzenny"
    },
    "IM_TIRED_OF_WORKING_FOR_NOTHING_DONT_YOU_KNOW_WHAT_A_CONTRACT_IS" : {
       "description" : "",
@@ -791,6 +795,10 @@
       "description" : "",
       "message" : "Ok"
    },
+   "OPEN_USER_FOLDER" : {
+      "description" : "",
+      "message" : "Folder użytkownika"
+   },
    "OPTIONS" : {
       "description" : "",
       "message" : "Opcje"
@@ -999,6 +1007,10 @@
       "description" : "",
       "message" : "Sensory i obrona"
    },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Ustaw jako cel nawigacyjny."
+   },
    "SHIP" : {
       "description" : "",
       "message" : "Statek"
@@ -1034,6 +1046,10 @@
    "SHIP_VIEWING_WAS_SOLD" : {
       "description" : "",
       "message" : "Statek który oglądasz został sprzedany"
+   },
+   "SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS" : {
+      "description" : "",
+      "message" : "Symulacja ewolucji wszechświata: {age} miliardów lat ;-)"
    },
    "SOUND" : {
       "description" : "",
@@ -1094,6 +1110,10 @@
    "TOO_SMALL_FOR_CURRENT_CREW" : {
       "description" : "",
       "message" : "Statek jest zbyt mały dla obecnej ilości załogi."
+   },
+   "TOO_SMALL_TO_TRANSSHIP" : {
+      "description" : "",
+      "message" : "Statek jest zbyt mały na to by przeładować ładunek."
    },
    "TOTAL" : {
       "description" : "",

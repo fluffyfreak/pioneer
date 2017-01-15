@@ -43,6 +43,7 @@ noinst_HEADERS = \
 	Game.h \
 	GameLog.h \
 	GasGiant.h \
+	GasGiantJobs.h \
 	GeoSphere.h \
 	HudTrail.h \
 	HyperspaceCloud.h \
@@ -73,6 +74,7 @@ noinst_HEADERS = \
 	LuaMusic.h \
 	LuaNameGen.h \
 	LuaObject.h \
+	LuaPiGui.h \
 	LuaPushPull.h \
 	LuaRef.h \
 	LuaSerializer.h \
@@ -96,6 +98,7 @@ noinst_HEADERS = \
 	OS.h \
 	PersistSystemData.h \
 	Pi.h \
+	PiGui.h \
 	Plane.h \
 	Planet.h \
 	Player.h \
@@ -178,6 +181,7 @@ pioneer_SOURCES	= \
 	Game.cpp \
 	GameLog.cpp \
 	GasGiant.cpp \
+	GasGiantJobs.cpp \
 	GeoPatch.cpp \
 	GeoPatchContext.cpp \
 	GeoPatchID.cpp \
@@ -214,6 +218,7 @@ pioneer_SOURCES	= \
 	LuaMusic.cpp \
 	LuaNameGen.cpp \
 	LuaObject.cpp \
+	LuaPiGui.cpp \
 	LuaPlanet.cpp \
 	LuaPlayer.cpp \
 	LuaPropertiedObject.cpp \
@@ -241,6 +246,7 @@ pioneer_SOURCES	= \
 	ObjectViewerView.cpp \
 	Orbit.cpp \
 	Pi.cpp \
+	PiGui.cpp \
 	Plane.cpp \
 	Planet.cpp \
 	Player.cpp \
@@ -299,7 +305,8 @@ pioneer_LDADD = \
 	../contrib/PicoDDS/libpicodds.a \
 	../contrib/jenkins/libjenkins.a \
 	../contrib/json/libjson.a \
-	../contrib/profiler/libprofiler.a
+	../contrib/profiler/libprofiler.a \
+	../contrib/imgui/libimgui.a
 
 pioneer_LDADD += \
 	$(FREETYPE_LIBS) $(GL_LIBS) \
@@ -426,6 +433,7 @@ modelcompiler_SOURCES = \
 	FontCache.cpp \
 	IniConfig.cpp \
 	GameConfig.cpp \
+	JobQueue.cpp \
 	Lang.cpp \
 	ModManager.cpp \
 	NavLights.cpp \

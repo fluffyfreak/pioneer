@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Pi.h"
@@ -24,9 +24,9 @@ SystemInfoView::SystemInfoView(Game* game) : UIView(), m_game(game)
 	SetTransparency(true);
 	m_refresh = REFRESH_NONE;
 	m_unexplored = true;
-	int trade_analyzer = 0;
-	Pi::player->Properties().Get("trade_analyzer_cap", trade_analyzer);
-	m_hasTradeAnalyzer = bool(trade_analyzer);
+	int trade_computer = 0;
+	Pi::player->Properties().Get("trade_computer_cap", trade_computer);
+	m_hasTradeComputer = bool(trade_computer);
 }
 
 void SystemInfoView::OnBodySelected(SystemBody *b)
@@ -155,15 +155,15 @@ void SystemInfoView::UpdateEconomyTab()
 	const RefCountedPtr<StarSystem> hs = m_game->GetSpace()->GetStarSystem();
 
 	// check if trade analyzer is installed
-	int trade_analyzer = 0;
-	Pi::player->Properties().Get("trade_analyzer_cap", trade_analyzer);
+	int trade_computer = 0;
+	Pi::player->Properties().Get("trade_computer_cap", trade_computer);
 
 	// we might be here because we changed equipment, update that as well:
-	m_hasTradeAnalyzer = bool (trade_analyzer);
+	m_hasTradeComputer = bool (trade_computer);
 
 	// If current system is defined and not equal to selected we will compare them
 	const bool compareSelectedWithCurrent =
-		(hs && !m_system->GetPath().IsSameSystem(hs->GetPath()) && trade_analyzer > 0);
+		(hs && !m_system->GetPath().IsSameSystem(hs->GetPath()) && trade_computer > 0);
 
 	const std::string meh       = "#999";
 	const std::string ok        = "#fff";
@@ -508,6 +508,7 @@ void SystemInfoView::Draw3D()
 
 static bool IsShownInInfoView(const SystemBody* sb)
 {
+	if(!sb) return false; // sanity check
 	SystemBody::BodySuperType superType = sb->GetSuperType();
 	return superType == SystemBody::SUPERTYPE_STAR || superType == SystemBody::SUPERTYPE_GAS_GIANT ||
 		superType == SystemBody::SUPERTYPE_ROCKY_PLANET ||
@@ -523,9 +524,9 @@ SystemInfoView::RefreshType SystemInfoView::NeedsRefresh()
 		return REFRESH_ALL;
 
 	// If we changed equipment since last refresh
-	int trade_analyzer = 0;
-	Pi::player->Properties().Get("trade_analyzer_cap", trade_analyzer);
-	if (m_hasTradeAnalyzer != (trade_analyzer!=0))
+	int trade_computer = 0;
+	Pi::player->Properties().Get("trade_computer_cap", trade_computer);
+	if (m_hasTradeComputer != (trade_computer!=0))
 		return REFRESH_ALL;
 
 	if (m_system->GetUnexplored())
@@ -546,7 +547,7 @@ SystemInfoView::RefreshType SystemInfoView::NeedsRefresh()
 		}
 	} else {
 		Body *navTarget = Pi::player->GetNavTarget();
-		if (navTarget && IsShownInInfoView(navTarget->GetSystemBody())) {
+		if (navTarget && (navTarget->GetSystemBody()!=nullptr) && IsShownInInfoView(navTarget->GetSystemBody())) {
 			// Navigation target is something we show in the info view
 			if (navTarget->GetSystemBody()->GetPath() != m_selectedBodyPath)
 				return REFRESH_SELECTED_BODY; // and wasn't selected, yet

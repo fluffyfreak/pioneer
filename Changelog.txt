@@ -1,3 +1,184 @@
+January 2017
+   * Internal Changes
+     * Correct and clarify a misleading comment (#3898)
+     * Use the gas giant textures RAW instead of Billboard (#3897)
+     * MERRY HAPPY 2017 (#3899)
+
+   * Fixes
+     * Never spawn toothless pirates (#3903)
+
+   * Internal Changes
+     * Remove IsPlayerShip from Ship (#3904)
+
+December 2016
+   * Fixes
+     * Set ImgUI shaders to version 140 to work around junk Intel drivers (#3885)
+     * Fix translations (#3890)
+     * Use dynamic vertex buffers for UI labels (#3887)
+     * Provide config flag and warning to work around Intel pointsprite bug (#3895)
+
+   * Internal Changes
+     * Convert more PNG files to DDS (#3883)
+     * Render error check (#3884)
+     * Keep quit confirmation messages modern and stylish (#3896)
+
+November 2016
+   * Fixes
+     * Set delta-t to 1/60 if it is <= 0 (#3854)
+     * fix pattern selection if no pattern present (#3855)
+     * Lobby: Disconnect the property listeners when the docked station changes (#3857)
+     * Docking message should not mention auto refuel (#3863)
+     * Player shouldn't sell fuel they don't have (#3864)
+     * Render the navlights for orbital stations (#3874)
+     * Jitter fix (#3872)
+     * fix navbutton crash without target (#3865)
+     * Fix orphaned connections in WorldView (#3876)
+     * Disable the modelcompiler multithreading (#3879)
+     * Fix undefined renderer bug in SGM LOD loader (#3880)
+
+   * Internal Changes
+     * Freebsd patches (#3851)
+     * Enhance serializer crash output (#3853)
+     * Custom system checking (#3856)
+     * Sprinkle SpaceStation with asserts to find naughty bug (#3861)
+     * isnan is std, MXE build complained (#3867)
+     * Add GL_CFLAGS value to AM_CFLAGS (#3870)
+     * Remove GL buffer init fills, add init checks (#3877)
+     * Optimisation: Reserve VA capacity correctly for Gui::TextLayout (#3878)
+
+October 2016
+   * New Features
+     * Added military drives from 5 to 9 (#3830)
+     * Thruster upgrades (#3831)
+     * Calculate selling price including equipment (#3835)
+     * Remove autorefuel (#3837)
+     * Rename scanner -> radar; radar mapper -> target scanner (#3825)
+
+   * Fixes
+     * Search&Rescue: set ship look and bugfix (#3823)
+     * Fixing the scaled down collision mesh of New Ground station (#3833)
+     * Updating the Bluenose Medium LOD with the correct mesh (#3845)
+     * Avoid crash if player jumps to next system (#3848)
+
+   * Internal Changes
+     * Add "override" to silence warnings in clang (#3828)
+     * Update the .gitignore file for more vs2015 files outputs (#3829)
+     * Fix ARFLAGS to remove warning (#3827)
+     * Attempt to find the nearest matching exact name (#3832)
+     * Terrain gen cleanup (#3834)
+     * Introduce imgui library, make load screen use it (#3826)
+     * Simple reduction in memory usage (#3838)
+     * Put imgui.ini into user config dir (#3843)
+     * Arm asm fix (#3847)
+     * Don't try to instance zero entries (#3849)
+     * Update attrib binding locations (#3850)
+
+September 2016
+   * New Features
+     * Set ship texture patterns from lua (#3811)
+
+   * Fixes
+     * Model pattern range and status checking (#3814)
+     * New seed and new locations of star ports for New Hope in Epsilon Eridani (#3818)
+
+   * Internal Changes
+     * Update GasGiant config, detail and initialisation timing (#3792)
+     * Change SAR mission rewards (#3806)
+     * Made NavLights responsible for their billboard rendering (#3809)
+     * Adding an editorconfig file to define coding style (#3810)
+     * Add annotations to ShipDef (#3812)
+     * Additional mesh optimisation (#3813)
+     * Unused files from JobSwarm experiments 4 years ago! (#3816)
+     * Belt and braces approach to sanity checking for patterns (#3817)
+     * Brighter luminosity for random colours (#3815)
+     * Minor performance cleanup (#3820)
+     * Use a function to access the s_patchFaces to silence a gcc warning (#3822)
+     * Multi-Threading modelcompiler (#3821)
+
+August 2016
+   * New Features
+     * F3 and F4 Toggles between worldview and their thing (#3765)
+     * Navbutton added to mission screens (#3736)
+     * Add a TCP Lua console (#3768)
+     * Low altitude hyperjumps are illegal (#3753)
+     * Add button to Settings menus so user can open their Pioneer folder (#3790)
+     * Navigation button update to allow for dynamicBodies as nav targets (SAR and general) (#3789)
+     * Loads of SAR improvements ! (#3795)
+
+   * Fixes
+     * Fix crash in by Search & Rescue missions (#3770)
+     * NaN in your numbers (#3772)
+     * Fix hyperspace star streaks (#3773)
+     * prefix std:: to isnan so it builds on Linux (#3775)
+     * Use ImageMagick to fix the iCCP profile problem (#3778)
+     * Fix crash when jumping into empty system (#3791)
+     * Fix risk of game crash from SAR when landing on wrong planet (#3797)
+     * Fix potential instability in SAR (#3802)
+
+   * Internal Changes
+     * Add a function for typesetting time intervals (#3764)
+     * Restore Starfield colourisation (#3774)
+     * Animated city buildings, instancing improvement (#3777)
+     * Small code cleanup in SAR (#3798)
+     * Make colour range of stars more narrow (#3793)
+
+July 2016
+   * New Features
+     * Point sprite background stars (#3757)
+
+   * Fixes
+     * SAR: fix fuel transfer (#3755)
+     * SAR: fix wrong distance (#3650)
+     * Fix grammar error in module-cargorun (#3748)
+
+   * Internal Changes
+     * Swap LuaVector for a table (#3747)
+     * Faster float convert (#3751)
+     * Revert my changes to use atoi and atoll (#3754)
+     * XCode now compiles again (#3759)
+
+June 2016
+   * New Features
+     * Improve distance format, by introducing ly and Mm (#3745)
+     * GPU jobs for generating gas giant textures (#3719)
+     * Add some flare for black market, through flavoured slogans (#3744)
+     * Passenger warns when jumping to wrong system with right name (#3746)
+
+   * Fixes
+     * Prevent the galaxy map from crashing if in hyperspace (#3714)
+     * Eclipse r600 (#3721)
+
+   * Internal Changes
+     * Enable using dedicated nVidia GPUs in Windows laptops with Optimus (#3715)
+     * Minor Noise library improvements (#3716)
+     * Add AMD Power Xpress performance flag keyword and value (#3717)
+     * Add EXTRA_CXXFLAGS to CXXFLAGS for assimp's version check (#3718)
+     * Keep cargo if buying a new ship (#3725)
+     * Disable Continue button if no saved game to load (#3731)
+     * Don't hard code strings we already have in translation system (#3728)
+     * Make trade analyzer removable again. Undo #3474, close #3742 (#3743)
+
+May 2016
+   * New Features
+     * Sfx ini configuration file (#3697)
+
+   * Fixes
+     * Textures can be anonymous (#3693)
+     * Fix ship systeminfo crash (#3699)
+     * Make Autopilot purchasable from everywhere (#3701)
+     * Fix CTD for missile target hyperjumps (#3704)
+     * Fix CTD caused by S&R after-mission states (#3648)
+     * Fix crash when player explodes in-dock (#3710)
+     * Clean up the police tables on ship destruction (#3709)
+
+   * Internal Changes
+     * Landing resets time compression (#3696)
+     * Rework SFX rendering to fix giant sprites (#3695)
+     * Internal renderer cleanup (#3702)
+     * Small filename consistency fix (#3707)
+     * Change the Lua AIKill command to check how legit is its target (#3708)
+     * Optimise Eclipse Calculations (#3711)
+
 April 2016
    * New Features
      * First commit of the Bluenose frieghter (#3668)
@@ -7,11 +188,18 @@ April 2016
    * Fixes
      * Fix ModelViewer crash (#3672)
      * Fix editing the gas giants in ObjectViewer editor mode (#3677)
+     * Legal custom cargo (#3692)
 
    * Internal Changes
      * NavLight Billboard Gathering (#3667)
      * Change DrawPointSprites to really use Point Sprites (#3670)
      * Lua debug tools, part one (#3675)
+     * Updated Xcode project to fix "missing vtable" error (#3686)
+     * Saving changes (#3684)
+     * SpawnShipNear velocity matching (#3674)
+     * Pre-convert to DDS more textures (#3687)
+     * Fire once warnings (#3689)
+     * Texture code tidy (#3691)
 
 March 2016
    * New Features

@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef GAMEUI_FACE_H
@@ -38,7 +38,7 @@ private:
 
 	static RefCountedPtr<Graphics::Material> s_material;
 
-	std::unique_ptr<Graphics::Texture> m_texture;
+	RefCountedPtr<Graphics::Texture> m_texture;
 	std::unique_ptr<Graphics::Drawables::TexturedQuad> m_quad;
 };
 

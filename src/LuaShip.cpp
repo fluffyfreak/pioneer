@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaObject.h"
@@ -227,6 +227,25 @@ static int l_ship_explode(lua_State *l)
 	return 0;
 }
 
+/*
+ * Method: GetSkin
+ *
+ * Get the current skin object of the ship.
+ *
+ * > ship:GetSkin()
+ *
+ * Parameters:
+ *
+ *
+ *
+ * Example:
+ *
+ * > ship:GetSkin()
+ *
+ * Status:
+ *
+ *  experimental
+ */
 static int l_ship_get_skin(lua_State *l)
 {
 	Ship *s = LuaObject<Ship>::CheckFromLua(1);
@@ -234,11 +253,64 @@ static int l_ship_get_skin(lua_State *l)
 	return 1;
 }
 
+/*
+ * Method: SetSkin
+ *
+ * Set the skin of the ship.
+ *
+ * > ship:SetSkin(skin)
+ *
+ * Parameters:
+ *
+ *   skin - the skin object of the ship
+ *   this can be created using SceneGraph.ModelSkin.New()
+ *
+ * Example:
+ *
+ * > ship:GetSkin(skin)
+ *
+ * Status:
+ *
+ *  experimental
+ */
 static int l_ship_set_skin(lua_State *l)
 {
 	Ship *s = LuaObject<Ship>::CheckFromLua(1);
 	const SceneGraph::ModelSkin *skin = LuaObject<SceneGraph::ModelSkin>::CheckFromLua(2);
 	s->SetSkin(*skin);
+	return 0;
+}
+
+/*
+ * Method: SetPattern
+ *
+ * Changes the pattern used for texturing the ship.
+ *
+ * > ship:SetPattern(num)
+ *
+ * Parameters:
+ *
+ *   num - the pattern number
+ *
+ * Example:
+ *
+ * > ship:SetPattern(5)
+ *
+ * Status:
+ *
+ *  experimental
+ */
+static int l_ship_set_pattern(lua_State *l)
+{
+	Ship *s = LuaObject<Ship>::CheckFromLua(1);
+	unsigned int num = lua_tointeger(l, 2);
+	SceneGraph::Model *model = s->GetModel();
+	if(model && model->SupportsPatterns()) {
+		if (num > model->GetNumPatterns()-1)
+			return luaL_error(l, "This pattern does not exist for this ship");
+
+		s->SetPattern(num);
+	}
 	return 0;
 }
 
@@ -277,7 +349,7 @@ static int l_ship_set_label(lua_State *l)
 /*
  * Method: SetShipName
  *
- * Changes the ship's name text. 
+ * Changes the ship's name text.
  * This is the name text that appears beside the ship in the HUD.
  *
  * > ship:SetShipName(newShipName)
@@ -520,7 +592,10 @@ static int l_ship_use_ecm(lua_State *l)
 /*
  * Method: InitiateHyperjumpTo
  *
- *   Ready the ship to jump to the given system.
+ *   Ready the ship to jump to the given system. This does not perform
+ *   any check regarding hyperdrive class, range, fuel. Nor does it
+ *   respect minimum legal distance for hyperjump. For those features use
+ *   <Ship.HyperjumpTo> instead.
  *
  * > status = ship:InitiateHyperjumpTo(path, warmup, duration, checks)
  *
@@ -667,6 +742,9 @@ static int l_ship_set_invulnerable(lua_State *l)
  *
  *   target - the <Ship> to destroy
  *
+ * Returns:
+ *   true if the command could be enacted, false otherwise
+ *
  * Availability:
  *
  *  alpha 10
@@ -680,9 +758,14 @@ static int l_ship_ai_kill(lua_State *l)
 	Ship *s = LuaObject<Ship>::CheckFromLua(1);
 	if (s->GetFlightState() == Ship::HYPERSPACE)
 		return luaL_error(l, "Ship:AIKill() cannot be called on a ship in hyperspace");
-	Ship *target = LuaObject<Ship>::CheckFromLua(2);
-	s->AIKill(target);
-	return 0;
+	Ship *target = LuaObject<Ship>::GetFromLua(2);
+	if (target != nullptr) {
+		s->AIKill(target);
+		lua_pushboolean(l, true);
+	} else {
+		lua_pushboolean(l, false);
+	}
+	return 1;
 }
 
 /*
@@ -695,6 +778,9 @@ static int l_ship_ai_kill(lua_State *l)
  * Parameters:
  *
  *   target - the <Ship> to destroy
+ *
+ * Returns:
+ *   true if the command could be enacted, false otherwise
  *
  * Availability:
  *
@@ -710,8 +796,13 @@ static int l_ship_ai_kamikaze(lua_State *l)
 	if (s->GetFlightState() == Ship::HYPERSPACE)
 		return luaL_error(l, "Ship:AIKamikaze() cannot be called on a ship in hyperspace");
 	Ship *target = LuaObject<Ship>::GetFromLua(2);
-	s->AIKamikaze(target);
-	return 0;
+	if (target != nullptr) {
+		s->AIKamikaze(target);
+		lua_pushboolean(l, true);
+	} else {
+		lua_pushboolean(l, false);
+	}
+	return 1;
 }
 
 /*
@@ -937,7 +1028,11 @@ static int l_ship_update_equip_stats(lua_State *l)
 static int l_ship_get_velocity(lua_State *l)
 {
 	Ship *s = LuaObject<Ship>::CheckFromLua(1);
-	LuaVector::PushToLua(l, s->GetVelocity());
+	vector3d v = s->GetVelocity();
+	lua_newtable(l);
+	pi_lua_settable(l, "x", v.x);
+	pi_lua_settable(l, "y", v.y);
+	pi_lua_settable(l, "z", v.z);
 	return 1;
 }
 
@@ -959,7 +1054,11 @@ static int l_ship_get_velocity(lua_State *l)
 static int l_ship_get_position(lua_State *l)
 {
 	Ship *s = LuaObject<Ship>::CheckFromLua(1);
-	LuaVector::PushToLua(l, s->GetPosition());
+	vector3d v = s->GetPosition();
+	lua_newtable(l);
+	pi_lua_settable(l, "x", v.x);
+	pi_lua_settable(l, "y", v.y);
+	pi_lua_settable(l, "z", v.z);
 	return 1;
 }
 
@@ -979,6 +1078,7 @@ template <> void LuaObject<Ship>::RegisterClass()
 
 		{ "GetSkin",    l_ship_get_skin    },
 		{ "SetSkin",    l_ship_set_skin    },
+		{ "SetPattern", l_ship_set_pattern },
 		{ "SetLabel",   l_ship_set_label   },
 		{ "SetShipName",	l_ship_set_ship_name   },
 

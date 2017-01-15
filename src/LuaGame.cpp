@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaGame.h"
@@ -109,6 +109,40 @@ static int l_game_load_game(lua_State *l)
 	}
 
 	return 0;
+}
+
+/*
+ * Function: CanLoadGame
+ *
+ * Does file exist for loading.
+ *
+ * > Game.CanLoadGame(filename)
+ *
+ * Parameters:
+ *
+ *   filename - Filename to find. 
+ *
+ * Return:
+ *
+ *   bool - can the filename be found to load
+ *
+ * Availability:
+ *
+ *   YYYY - MM - DD
+ *   2016 - 06 - 25
+ *
+ * Status:
+ *
+ *   experimental
+ */
+static int l_game_can_load_game(lua_State *l)
+{
+	const std::string filename(luaL_checkstring(l, 1));
+
+	bool success = Game::CanLoadGame(filename);
+	lua_pushboolean(l, success);
+
+	return 1;
 }
 
 /*
@@ -298,10 +332,11 @@ void LuaGame::Register()
 	LUA_DEBUG_START(l);
 
 	static const luaL_Reg l_methods[] = {
-		{ "StartGame", l_game_start_game },
-		{ "LoadGame",  l_game_load_game  },
-		{ "SaveGame",  l_game_save_game  },
-		{ "EndGame",   l_game_end_game   },
+		{ "StartGame",      l_game_start_game       },
+		{ "LoadGame",       l_game_load_game        },
+		{ "CanLoadGame",    l_game_can_load_game    },
+		{ "SaveGame",       l_game_save_game        },
+		{ "EndGame",        l_game_end_game         },
 
 		{ "SwitchView", l_game_switch_view },
 

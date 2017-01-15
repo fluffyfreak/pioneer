@@ -9,7 +9,7 @@
    },
    "AFTER_TRADE_IN" : {
       "description" : "",
-      "message" : "С учетом вашего судна"
+      "message" : "С учётом вашего судна"
    },
    "ALLEGIANCE" : {
       "description" : "",
@@ -33,7 +33,7 @@
    },
    "ATTEMPT_TO_REPAIR_HULL" : {
       "description" : "",
-      "message" : "Попытка отремонтировать корпус"
+      "message" : "Попытаться отремонтировать корпус"
    },
    "AVAILABLE_FOR_PURCHASE" : {
       "description" : "",
@@ -151,9 +151,9 @@
       "description" : "",
       "message" : "Торговый центр"
    },
-   "COMPACT_SCANNER" : {
+   "COMPACT_RADAR" : {
       "description" : "Game settings option",
-      "message" : "Компактный сканер"
+      "message" : "Компактный радар"
    },
    "COMPETENT" : {
       "description" : "Combat rating",
@@ -429,7 +429,7 @@
    },
    "HEAVY_PASSENGER_SHUTTLE" : {
       "description" : "",
-      "message" : "Тяжёлый пассажирский шаттл"
+      "message" : "Тяжёлый пассажирский челнок"
    },
    "HEAVY_PASSENGER_TRANSPORT" : {
       "description" : "",
@@ -466,6 +466,10 @@
    "HYPERSPACE_RANGE" : {
       "description" : "",
       "message" : "Дальность гиперпрыжка"
+   },
+   "ILLEGAL_JUMP" : {
+      "description" : "A finable crime",
+      "message" : "Совершение рискованного гиперпрыжка"
    },
    "IM_TIRED_OF_WORKING_FOR_NOTHING_DONT_YOU_KNOW_WHAT_A_CONTRACT_IS" : {
       "description" : "",
@@ -791,6 +795,10 @@
       "description" : "",
       "message" : "Хорошо"
    },
+   "OPEN_USER_FOLDER" : {
+      "description" : "",
+      "message" : "Папка пользователя"
+   },
    "OPTIONS" : {
       "description" : "",
       "message" : "Настройки"
@@ -909,7 +917,7 @@
    },
    "REFUEL" : {
       "description" : "",
-      "message" : "Заправить"
+      "message" : "Закачать"
    },
    "REFUEL_FULL" : {
       "description" : "",
@@ -999,6 +1007,10 @@
       "description" : "",
       "message" : "Сенсоры и защита"
    },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Установить пункт назначения как цель для навигации."
+   },
    "SHIP" : {
       "description" : "",
       "message" : "Корабль"
@@ -1034,6 +1046,10 @@
    "SHIP_VIEWING_WAS_SOLD" : {
       "description" : "",
       "message" : "Корабль, который вы смотрели, был продан"
+   },
+   "SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS" : {
+      "description" : "",
+      "message" : "Моделируем эволюцию вселенной: {age} млрд. лет ;-)"
    },
    "SOUND" : {
       "description" : "",
@@ -1094,6 +1110,10 @@
    "TOO_SMALL_FOR_CURRENT_CREW" : {
       "description" : "",
       "message" : "Корабль слишком мал для вашей команды."
+   },
+   "TOO_SMALL_TO_TRANSSHIP" : {
+      "description" : "",
+      "message" : "Корабль слишком мал для погрузки вашего груза."
    },
    "TOTAL" : {
       "description" : "",
@@ -1177,7 +1197,7 @@
    },
    "X_CANNOT_BE_TOLERATED_HERE" : {
       "description" : "Message to be sent over comms by police when crime is committed by player",
-      "message" : "Здесь не потерпят {crime}!"
+      "message" : "{crime} нельзя допускать здесь!"
    },
    "YES" : {
       "description" : "Positive answer to a question",

@@ -151,9 +151,9 @@
       "description" : "",
       "message" : "Mercato dei beni di scambio"
    },
-   "COMPACT_SCANNER" : {
+   "COMPACT_RADAR" : {
       "description" : "Game settings option",
-      "message" : "Scanner compatto"
+      "message" : "Radar compatto"
    },
    "COMPETENT" : {
       "description" : "Combat rating",
@@ -466,6 +466,10 @@
    "HYPERSPACE_RANGE" : {
       "description" : "",
       "message" : "Portata iperspaziale"
+   },
+   "ILLEGAL_JUMP" : {
+      "description" : "A finable crime",
+      "message" : "Salto pericoloso illegale registrato"
    },
    "IM_TIRED_OF_WORKING_FOR_NOTHING_DONT_YOU_KNOW_WHAT_A_CONTRACT_IS" : {
       "description" : "",
@@ -791,6 +795,10 @@
       "description" : "",
       "message" : "Ok"
    },
+   "OPEN_USER_FOLDER" : {
+      "description" : "",
+      "message" : "Cartella Utente"
+   },
    "OPTIONS" : {
       "description" : "",
       "message" : "Opzioni"
@@ -999,6 +1007,10 @@
       "description" : "",
       "message" : "Sensori e difesa"
    },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Imposta la destinazione come destinazione di navigazione."
+   },
    "SHIP" : {
       "description" : "",
       "message" : "Astronave"
@@ -1034,6 +1046,10 @@
    "SHIP_VIEWING_WAS_SOLD" : {
       "description" : "",
       "message" : "L'astronave che stavi guardando è stata venduta"
+   },
+   "SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS" : {
+      "description" : "",
+      "message" : "Sto simulando l'evoluzione dell'universo: {age} miliardi di anni ;-)"
    },
    "SOUND" : {
       "description" : "",
@@ -1094,6 +1110,10 @@
    "TOO_SMALL_FOR_CURRENT_CREW" : {
       "description" : "",
       "message" : "L'astronave è troppo piccola per questo equipaggio."
+   },
+   "TOO_SMALL_TO_TRANSSHIP" : {
+      "description" : "",
+      "message" : "L'astronave è troppo piccola per trasbordarvi il carico."
    },
    "TOTAL" : {
       "description" : "",

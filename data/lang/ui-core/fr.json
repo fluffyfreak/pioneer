@@ -151,9 +151,9 @@
       "description" : "",
       "message" : "Bourse d'échange"
    },
-   "COMPACT_SCANNER" : {
+   "COMPACT_RADAR" : {
       "description" : "Game settings option",
-      "message" : "Scanner compact"
+      "message" : "Radar compact"
    },
    "COMPETENT" : {
       "description" : "Combat rating",
@@ -466,6 +466,10 @@
    "HYPERSPACE_RANGE" : {
       "description" : "",
       "message" : "Portée Hyperspaciale"
+   },
+   "ILLEGAL_JUMP" : {
+      "description" : "A finable crime",
+      "message" : "Saut hyper-espace imprudent enregistré"
    },
    "IM_TIRED_OF_WORKING_FOR_NOTHING_DONT_YOU_KNOW_WHAT_A_CONTRACT_IS" : {
       "description" : "",
@@ -791,6 +795,10 @@
       "description" : "",
       "message" : "Ok"
    },
+   "OPEN_USER_FOLDER" : {
+      "description" : "",
+      "message" : "Répertoire utilisateur"
+   },
    "OPTIONS" : {
       "description" : "",
       "message" : "Options"
@@ -999,6 +1007,10 @@
       "description" : "",
       "message" : "Senseurs et défense"
    },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Régler la destination comme cible de navigation."
+   },
    "SHIP" : {
       "description" : "",
       "message" : "Vaisseau"
@@ -1034,6 +1046,10 @@
    "SHIP_VIEWING_WAS_SOLD" : {
       "description" : "",
       "message" : "Le vaisseau que vous observiez a été vendu"
+   },
+   "SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS" : {
+      "description" : "",
+      "message" : "Simulation de l'évolution de l'univers : {age} milliards d'années ;-)"
    },
    "SOUND" : {
       "description" : "",
@@ -1094,6 +1110,10 @@
    "TOO_SMALL_FOR_CURRENT_CREW" : {
       "description" : "",
       "message" : "Ce vaisseau est trop petit pour votre équipage."
+   },
+   "TOO_SMALL_TO_TRANSSHIP" : {
+      "description" : "",
+      "message" : "Le vaisseau est trop petit pour transférer votre cargaison."
    },
    "TOTAL" : {
       "description" : "",

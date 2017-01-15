@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #pragma once
@@ -14,6 +14,14 @@
 namespace Graphics {
 
 	namespace OGL {
+
+		class BillboardProgram : public Program {
+		public:
+			BillboardProgram(const MaterialDescriptor &);
+			Uniform coordDownScale;
+		protected:
+			virtual void InitUniforms() override;
+		};
 
 		class BillboardMaterial : public Material {
 		public:

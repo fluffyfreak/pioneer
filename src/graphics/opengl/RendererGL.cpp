@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "RendererGL.h"
@@ -8,11 +8,13 @@
 #include "OS.h"
 #include "StringF.h"
 #include "graphics/Texture.h"
+#include "graphics/TextureBuilder.h"
 #include "TextureGL.h"
 #include "graphics/VertexArray.h"
 #include "GLDebug.h"
 #include "GasGiantMaterial.h"
 #include "GeoSphereMaterial.h"
+#include "GenGasGiantColourMaterial.h"
 #include "MaterialGL.h"
 #include "RenderStateGL.h"
 #include "RenderTargetGL.h"
@@ -85,6 +87,13 @@ RendererOGL::RendererOGL(WindowSDL *window, const Graphics::Settings &vs)
 			);
 	}
 
+	const char *ver = (const char *)glGetString(GL_VERSION);
+	if (vs.gl3ForwardCompatible && strstr(ver, "9.17.10.4229")) {
+		Warning("Driver needs GL3ForwardCompatible=0 in config.ini to display billboards (stars, navlights etc.)");
+	}
+
+	TextureBuilder::Init();
+
 	m_viewportStack.push(Viewport());
 
 	const bool useDXTnTextures = vs.useTextureCompression;
@@ -98,10 +107,16 @@ RendererOGL::RendererOGL(WindowSDL *window, const Graphics::Settings &vs)
 	glFrontFace(GL_CCW);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+	glDepthRange(0.0,1.0);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 	glEnable(GL_PROGRAM_POINT_SIZE);
+	if (!vs.gl3ForwardCompatible) glEnable(0x8861);				// GL_POINT_SPRITE hack for compatibility contexts
+
+	glHint(GL_TEXTURE_COMPRESSION_HINT, GL_NICEST);
+	glHint(GL_FRAGMENT_SHADER_DERIVATIVE_HINT, GL_NICEST);
 
 	SetMatrixMode(MatrixMode::MODELVIEW);
 
@@ -300,14 +315,21 @@ static std::string glerr_to_string(GLenum err)
 	}
 }
 
-void RendererOGL::CheckErrors()
+void RendererOGL::CheckErrors(const char *func, const int line)
 {
 	PROFILE_SCOPED()
 #ifndef PIONEER_PROFILER
 	GLenum err = glGetError();
 	if( err ) {
+		// static-cache current err that sparked this
+		static GLenum s_prevErr = GL_NO_ERROR;
+		const bool showWarning = (s_prevErr != err);
+		s_prevErr = err;
+		// now build info string
 		std::stringstream ss;
+		assert(func!=nullptr && line>=0);
 		ss << "OpenGL error(s) during frame:\n";
+		ss << "In function " << std::string(func) << "\nOn line " << std::to_string(line) << "\n";
 		while (err != GL_NO_ERROR) {
 			ss << glerr_to_string(err) << '\n';
 			err = glGetError();
@@ -324,7 +346,11 @@ void RendererOGL::CheckErrors()
 			}
 #endif
 		}
-		Warning("%s", ss.str().c_str());
+		// show warning dialog or just log to output
+		if(showWarning)
+			Warning("%s", ss.str().c_str());
+		else
+			Output("%s", ss.str().c_str());
 	}
 #endif
 }
@@ -332,27 +358,7 @@ void RendererOGL::CheckErrors()
 bool RendererOGL::SwapBuffers()
 {
 	PROFILE_SCOPED()
-#ifndef NDEBUG
-	// Check if an error occurred during the frame. This is not very useful for
-	// determining *where* the error happened. For that purpose, try GDebugger or
-	// the GL_KHR_DEBUG extension
-	GLenum err;
-	err = glGetError();
-	if (err != GL_NO_ERROR) {
-		std::stringstream ss;
-		ss << "OpenGL error(s) during frame:\n";
-		while (err != GL_NO_ERROR) {
-			ss << glerr_to_string(err) << std::endl;
-			err = glGetError();
-			if( err == GL_OUT_OF_MEMORY ) {
-				ss << "Out-of-memory on graphics card." << std::endl
-					<< "Recommend enabling \"Compress Textures\" in game options." << std::endl
-					<< "Also try reducing City and Planet detail settings." << std::endl;
-			}
-		}
-		Error("%s", ss.str().c_str());
-	}
-#endif
+	CheckRenderErrors(__FUNCTION__,__LINE__);
 
 	GetWindow()->SwapBuffers();
 	m_stats.NextFrame();
@@ -365,7 +371,7 @@ bool RendererOGL::SetRenderState(RenderState *rs)
 		static_cast<OGL::RenderState*>(rs)->Apply();
 		m_activeRenderState = rs;
 	}
-	CheckRenderErrors();
+	CheckRenderErrors(__FUNCTION__,__LINE__);
 	return true;
 }
 
@@ -378,23 +384,24 @@ bool RendererOGL::SetRenderTarget(RenderTarget *rt)
 		m_activeRenderTarget->Unbind();
 
 	m_activeRenderTarget = static_cast<OGL::RenderTarget*>(rt);
-	CheckRenderErrors();
+	CheckRenderErrors(__FUNCTION__,__LINE__);
 
 	return true;
 }
 
-bool RendererOGL::SetDepthRange(double near, double far)
+bool RendererOGL::SetDepthRange(double znear, double zfar)
 {
-	glDepthRange(near, far);
+	glDepthRange(znear, zfar);
 	return true;
 }
 
 bool RendererOGL::ClearScreen()
 {
 	m_activeRenderState = nullptr;
+	glEnable(GL_DEPTH_TEST);
 	glDepthMask(GL_TRUE);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	CheckRenderErrors();
+	CheckRenderErrors(__FUNCTION__,__LINE__);
 
 	return true;
 }
@@ -402,9 +409,10 @@ bool RendererOGL::ClearScreen()
 bool RendererOGL::ClearDepthBuffer()
 {
 	m_activeRenderState = nullptr;
+	glEnable(GL_DEPTH_TEST);
 	glDepthMask(GL_TRUE);
 	glClear(GL_DEPTH_BUFFER_BIT);
-	CheckRenderErrors();
+	CheckRenderErrors(__FUNCTION__,__LINE__);
 
 	return true;
 }
@@ -543,7 +551,7 @@ void RendererOGL::SetShadowMatrix(const matrix4x4f &shadowMatrix)
 void RendererOGL::SetMaterialShaderTransforms(Material *m)
 {
 	m->SetCommonUniforms(m_modelViewStack.top(), m_projectionStack.top(), m_shadowMatrix);
-	CheckRenderErrors();
+	CheckRenderErrors(__FUNCTION__,__LINE__);
 }
 
 void RendererOGL::SetShadowTexture(Texture *shadowTexture)
@@ -614,7 +622,7 @@ bool RendererOGL::DrawTriangles(const VertexArray *v, RenderState *rs, Material 
 	}
 
 	const bool res = DrawBuffer(drawVB.Get(), rs, m, t);
-	CheckRenderErrors();
+	CheckRenderErrors(__FUNCTION__,__LINE__);
 	
 	m_stats.AddToStatCount(Stats::STAT_DRAWTRIS, 1);
 
@@ -675,7 +683,64 @@ bool RendererOGL::DrawPointSprites(const Uint32 count, const vector3f *positions
 	SetTransform(matrix4x4f::Identity());
 	DrawBuffer(drawVB.Get(), rs, material, Graphics::POINTS);
 	GetStats().AddToStatCount(Graphics::Stats::STAT_DRAWPOINTSPRITES, 1);
-	CheckRenderErrors();
+	CheckRenderErrors(__FUNCTION__,__LINE__);
+
+	return true;
+}
+
+bool RendererOGL::DrawPointSprites(const Uint32 count, const vector3f *positions, const vector2f *offsets, const float *sizes, RenderState *rs, Material *material)
+{
+	PROFILE_SCOPED()
+	if (count == 0 || !material || !material->texture0) 
+		return false;
+
+	#pragma pack(push, 4)
+	struct PosNormVert {
+		vector3f pos;
+		vector3f norm;
+	};
+	#pragma pack(pop)
+	
+	RefCountedPtr<VertexBuffer> drawVB;
+	AttribBufferIter iter = s_AttribBufferMap.find(std::make_pair(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_NORMAL, count));
+	if (iter == s_AttribBufferMap.end()) 
+	{
+		// NB - we're (ab)using the normal type to hold (uv coordinate offset value + point size)
+		Graphics::VertexBufferDesc vbd;
+		vbd.attrib[0].semantic = Graphics::ATTRIB_POSITION;
+		vbd.attrib[0].format   = Graphics::ATTRIB_FORMAT_FLOAT3;
+		vbd.attrib[1].semantic = Graphics::ATTRIB_NORMAL;
+		vbd.attrib[1].format   = Graphics::ATTRIB_FORMAT_FLOAT3;
+		vbd.numVertices = count;
+		vbd.usage = Graphics::BUFFER_USAGE_DYNAMIC;	// we could be updating this per-frame
+
+		// VertexBuffer
+		RefCountedPtr<VertexBuffer> vb;
+		vb.Reset(CreateVertexBuffer(vbd));
+
+		// add to map
+		s_AttribBufferMap[std::make_pair(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_NORMAL, count)] = vb;
+		drawVB = vb;
+	}
+	else
+	{
+		drawVB = iter->second;
+	}
+
+	// got a buffer so use it and fill it with newest data
+	PosNormVert* vtxPtr = drawVB->Map<PosNormVert>(Graphics::BUFFER_MAP_WRITE);
+	assert(drawVB->GetDesc().stride == sizeof(PosNormVert));
+	for(Uint32 i=0 ; i<count ; i++)
+	{
+		vtxPtr[i].pos	= positions[i];
+		vtxPtr[i].norm	= vector3f(offsets[i], Clamp(sizes[i], 0.1f, FLT_MAX));
+	}
+	drawVB->Unmap();
+
+	SetTransform(matrix4x4f::Identity());
+	DrawBuffer(drawVB.Get(), rs, material, Graphics::POINTS);
+	GetStats().AddToStatCount(Graphics::Stats::STAT_DRAWPOINTSPRITES, 1);
+	CheckRenderErrors(__FUNCTION__,__LINE__);
 
 	return true;
 }
@@ -691,7 +756,7 @@ bool RendererOGL::DrawBuffer(VertexBuffer* vb, RenderState* state, Material* mat
 	vb->Bind();
 	glDrawArrays(pt, 0, vb->GetVertexCount());
 	vb->Release();
-	CheckRenderErrors();
+	CheckRenderErrors(__FUNCTION__,__LINE__);
 
 	m_stats.AddToStatCount(Stats::STAT_DRAWCALL, 1);
 
@@ -711,7 +776,7 @@ bool RendererOGL::DrawBufferIndexed(VertexBuffer *vb, IndexBuffer *ib, RenderSta
 	glDrawElements(pt, ib->GetIndexCount(), GL_UNSIGNED_INT, 0);
 	ib->Release();
 	vb->Release();
-	CheckRenderErrors();
+	CheckRenderErrors(__FUNCTION__,__LINE__);
 
 	m_stats.AddToStatCount(Stats::STAT_DRAWCALL, 1);
 
@@ -731,7 +796,7 @@ bool RendererOGL::DrawBufferInstanced(VertexBuffer* vb, RenderState* state, Mate
 	glDrawArraysInstanced(pt, 0, vb->GetVertexCount(), instb->GetInstanceCount());
 	instb->Release();
 	vb->Release();
-	CheckRenderErrors();
+	CheckRenderErrors(__FUNCTION__,__LINE__);
 
 	m_stats.AddToStatCount(Stats::STAT_DRAWCALL, 1);
 
@@ -753,7 +818,7 @@ bool RendererOGL::DrawBufferIndexedInstanced(VertexBuffer *vb, IndexBuffer *ib, 
 	instb->Release();
 	ib->Release();
 	vb->Release();
-	CheckRenderErrors();
+	CheckRenderErrors(__FUNCTION__,__LINE__);
 
 	m_stats.AddToStatCount(Stats::STAT_DRAWCALL, 1);
 
@@ -763,7 +828,6 @@ bool RendererOGL::DrawBufferIndexedInstanced(VertexBuffer *vb, IndexBuffer *ib, 
 Material *RendererOGL::CreateMaterial(const MaterialDescriptor &d)
 {
 	PROFILE_SCOPED()
-	CheckRenderErrors();
 	MaterialDescriptor desc = d;
 
 	OGL::Material *mat = 0;
@@ -814,6 +878,9 @@ Material *RendererOGL::CreateMaterial(const MaterialDescriptor &d)
 	case EFFECT_GASSPHERE_TERRAIN:
 		mat = new OGL::GasGiantSurfaceMaterial();
 		break;
+	case EFFECT_GEN_GASGIANT_TEXTURE:
+		mat = new OGL::GenGasGiantColourMaterial();
+		break;
 	case EFFECT_BILLBOARD_ATLAS:
 	case EFFECT_BILLBOARD:
 		mat = new OGL::BillboardMaterial();
@@ -837,7 +904,7 @@ Material *RendererOGL::CreateMaterial(const MaterialDescriptor &d)
 	p = GetOrCreateProgram(mat); // XXX throws ShaderException on compile/link failure
 
 	mat->SetProgram(p);
-	CheckRenderErrors();
+	CheckRenderErrors(__FUNCTION__,__LINE__);
 	return mat;
 }
 
@@ -855,7 +922,6 @@ bool RendererOGL::ReloadShaders()
 OGL::Program* RendererOGL::GetOrCreateProgram(OGL::Material *mat)
 {
 	PROFILE_SCOPED()
-	CheckRenderErrors();
 	const MaterialDescriptor &desc = mat->GetDescriptor();
 	OGL::Program *p = 0;
 
@@ -872,7 +938,7 @@ OGL::Program* RendererOGL::GetOrCreateProgram(OGL::Material *mat)
 		p = mat->CreateProgram(desc);
 		m_programs.push_back(std::make_pair(desc, p));
 	}
-	CheckRenderErrors();
+	CheckRenderErrors(__FUNCTION__,__LINE__);
 
 	return p;
 }
@@ -880,23 +946,21 @@ OGL::Program* RendererOGL::GetOrCreateProgram(OGL::Material *mat)
 Texture *RendererOGL::CreateTexture(const TextureDescriptor &descriptor)
 {
 	PROFILE_SCOPED()
-	CheckRenderErrors();
 	return new TextureGL(descriptor, m_useCompressedTextures, m_useAnisotropicFiltering);
 }
 
 RenderState *RendererOGL::CreateRenderState(const RenderStateDesc &desc)
 {
 	PROFILE_SCOPED()
-	CheckRenderErrors();
 	const uint32_t hash = lookup3_hashlittle(&desc, sizeof(RenderStateDesc), 0);
 	auto it = m_renderStates.find(hash);
 	if (it != m_renderStates.end()) {
-		CheckRenderErrors();
+		CheckRenderErrors(__FUNCTION__,__LINE__);
 		return it->second;
 	} else {
 		auto *rs = new OGL::RenderState(desc);
 		m_renderStates[hash] = rs;
-		CheckRenderErrors();
+		CheckRenderErrors(__FUNCTION__,__LINE__);
 		return rs;
 	}
 }
@@ -904,8 +968,8 @@ RenderState *RendererOGL::CreateRenderState(const RenderStateDesc &desc)
 RenderTarget *RendererOGL::CreateRenderTarget(const RenderTargetDesc &desc)
 {
 	PROFILE_SCOPED()
-	CheckRenderErrors();
 	OGL::RenderTarget* rt = new OGL::RenderTarget(desc);
+	CheckRenderErrors(__FUNCTION__,__LINE__);
 	rt->Bind();
 	if (desc.colorFormat != TEXTURE_NONE) {
 		Graphics::TextureDescriptor cdesc(
@@ -939,7 +1003,7 @@ RenderTarget *RendererOGL::CreateRenderTarget(const RenderTargetDesc &desc)
 	}
 	rt->CheckStatus();
 	rt->Unbind();
-	CheckRenderErrors();
+	CheckRenderErrors(__FUNCTION__,__LINE__);
 	return rt;
 }
 

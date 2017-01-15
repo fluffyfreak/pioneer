@@ -16,7 +16,7 @@ namespace OGL {
 DepthTextureProgram::DepthTextureProgram(const MaterialDescriptor &desc)
 {
 	m_name = "DepthTexture";
-	RendererOGL::CheckErrors();
+	CHECKERRORS();
 
 	LoadShaders(m_name, m_defines);
 	InitUniforms();
@@ -34,7 +34,7 @@ void DepthTextureMaterial::Apply()
 	DepthTextureProgram *p = static_cast<DepthTextureProgram*>(m_program);
 
 	p->texture0.Set(this->texture0, 0);
-	RendererOGL::CheckErrors();
+	CHECKERRORS();
 }
 
 void DepthTextureMaterial::Unapply()
@@ -50,7 +50,7 @@ void DepthTextureMaterial::Unapply()
 DepthRenderProgram::DepthRenderProgram(const MaterialDescriptor &desc)
 {
 	m_name = "DepthRender";
-	RendererOGL::CheckErrors();
+	CHECKERRORS();
 
 	LoadShaders(m_name, m_defines);
 	InitUniforms();
@@ -65,7 +65,7 @@ void DepthRenderMaterial::Apply()
 {
 	OGL::Material::Apply();
 
-	RendererOGL::CheckErrors();
+	CHECKERRORS();
 }
 
 }

@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _BASESPHERE_H
@@ -40,7 +40,7 @@ public:
 		Graphics::RenderState *rs, RefCountedPtr<Graphics::Material> mat);
 
 	// in sbody radii
-	virtual double GetMaxFeatureHeight() const { return 0.0; }
+	virtual double GetMaxFeatureHeight() const = 0;
 
 	struct MaterialParameters {
 		SystemBody::AtmosphereParameters atmosphere;

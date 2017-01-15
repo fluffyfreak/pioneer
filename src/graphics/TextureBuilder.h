@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _TEXTUREBUILDER_H
@@ -20,6 +20,8 @@ public:
 	TextureBuilder(const std::string &filename, TextureSampleMode sampleMode = LINEAR_CLAMP, bool generateMipmaps = false, bool potExtend = false, bool forceRGBA = true, bool compressTextures = true, bool anisoFiltering = true, TextureType textureType = TEXTURE_2D);
 	~TextureBuilder();
 
+	static void Init();
+
 	// convenience constructors for common texture types
 	static TextureBuilder Model(const std::string &filename) {
 		return TextureBuilder(filename, LINEAR_REPEAT, true, false, false, true, true);
@@ -36,26 +38,25 @@ public:
 	static TextureBuilder Decal(const std::string &filename) {
 		return TextureBuilder(filename, LINEAR_CLAMP, true, true, false, true, true);
 	}
+	static TextureBuilder Raw(const std::string &filename) {
+		return TextureBuilder(filename, NEAREST_REPEAT, false, false, false, false, false);
+	}
 	static TextureBuilder Cube(const std::string &filename) {
 		return TextureBuilder(filename, LINEAR_CLAMP, true, true, false, true, false, TEXTURE_CUBE_MAP);
 	}
 
 	const TextureDescriptor &GetDescriptor() { PrepareSurface(); return m_descriptor; }
-	void UpdateTexture(Texture *texture); // XXX pass src/dest rectangles
 
-	Texture *CreateTexture(Renderer *r) {
-		Texture *t = r->CreateTexture(GetDescriptor());
-		UpdateTexture(t);
-		return t;
-	}
-
-	Texture *GetOrCreateTexture(Renderer *r, const std::string &type, const std::string &name = "") {
-		const std::string &cacheName = name.length() > 0 ? name : m_filename;
-		assert(cacheName.length() > 0);
-		Texture *t = r->GetCachedTexture(type, cacheName);
-		if (t) return t;
+	Texture *GetOrCreateTexture(Renderer *r, const std::string &type) {
+		if(m_filename.empty()) {
+			return CreateTexture(r);
+		}
+		SDL_LockMutex(m_textureLock);
+		Texture *t = r->GetCachedTexture(type, m_filename);
+		if (t) { SDL_UnlockMutex(m_textureLock); return t; }
 		t = CreateTexture(r);
-		r->AddCachedTexture(type, cacheName, t);
+		r->AddCachedTexture(type, m_filename, t);
+		SDL_UnlockMutex(m_textureLock);
 		return t;
 	}
 
@@ -79,12 +80,20 @@ private:
 	TextureType m_textureType;
 
 	TextureDescriptor m_descriptor;
-
+	
+	Texture *CreateTexture(Renderer *r) {
+		Texture *t = r->CreateTexture(GetDescriptor());
+		UpdateTexture(t);
+		return t;
+	}
+	void UpdateTexture(Texture *texture); // XXX pass src/dest rectangles
 	void PrepareSurface();
 	bool m_prepared;
 
 	void LoadSurface();
 	void LoadDDS();
+	
+	static SDL_mutex *m_textureLock;
 };
 
 }

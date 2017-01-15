@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "ModelViewer.h"
@@ -77,7 +77,7 @@ namespace {
 			const std::string &fpath = info.GetPath();
 
 			//check it's the expected type
-			if (info.IsFile() && ends_with_ci(fpath, ".png")) {
+			if (info.IsFile() && ends_with_ci(fpath, ".dds")) {
 				list.push_back(info.GetName().substr(0, info.GetName().size()-4));
 			}
 		}
@@ -287,7 +287,7 @@ bool ModelViewer::OnToggleGuns(UI::CheckBox *w)
 
 bool ModelViewer::OnRandomColor(UI::Widget*)
 {
-	if (!m_model) return false;
+	if (!m_model || !m_model->SupportsPatterns()) return false;
 
 	SceneGraph::ModelSkin skin;
 	skin.SetRandomColors(m_rng);
@@ -299,7 +299,8 @@ bool ModelViewer::OnRandomColor(UI::Widget*)
 	for(unsigned int i=0; i<3; i++) {
 		for(unsigned int j=0; j<3; j++) {
 			// use ToColor4f to get the colours in 0..1 range required
-			colorSliders[(i*3)+j]->SetValue(colors[i].ToColor4f()[j]);
+			if( colorSliders[(i*3)+j] )
+				colorSliders[(i*3)+j]->SetValue(colors[i].ToColor4f()[j]);
 		}
 	}
 	m_settingColourSliders = false;
@@ -523,7 +524,6 @@ void ModelViewer::DrawGrid(const matrix4x4f &trans, float radius)
 }
 
 //Draw lights
-#pragma optimize("",off)
 void ModelViewer::DrawLights(const matrix4x4f &trans)
 {
 	//assert(m_options.showGrid);
@@ -562,6 +562,7 @@ void ModelViewer::DrawModel(const matrix4x4f &mv, const eRenderPasses eRP)
 	{
 		m_model->Render(mv);
 	}
+	m_navLights->Render(m_renderer);
 }
 
 void ModelViewer::MainLoop()
@@ -609,28 +610,27 @@ void ModelViewer::MainLoop()
 		for( int pass = RENDER_SHADOW_MAP; pass<RENDER_PASS_MAX; pass++)
 		{
 			const matrix4x4f &mv = depthModelMatrix;
-			switch(pass) {
-			case RENDER_SHADOW_MAP: 
+			switch ( pass ) 
 			{
+			case RENDER_SHADOW_MAP:
 				// 1. first render to depth map
 				m_renderer->SetViewport(0, 0, s_shadowMapDimensions, s_shadowMapDimensions);
 				m_renderer->SetRenderTarget(m_pShadowRT.get());
-				if(!depthBufferQuad) {
+				if ( !depthBufferQuad ) {
 					Graphics::RenderStateDesc rsd;
-					rsd.depthTest  = false;
+					rsd.depthTest = false;
 					rsd.depthWrite = false;
 					rsd.blendMode = Graphics::BLEND_SOLID;
 					depthBufferQuadRS = m_renderer->CreateRenderState(rsd);
-					depthBufferQuad.reset( new Graphics::Drawables::TexturedQuad(m_renderer, m_pShadowRT->GetDepthTexture(), vector2f(0.0f, 600.0f), vector2f(256.0f, 256.0f), depthBufferQuadRS) );
+					depthBufferQuad.reset(new Graphics::Drawables::TexturedQuad(m_renderer, m_pShadowRT->GetDepthTexture(), vector2f(0.0f, 600.0f), vector2f(256.0f, 256.0f), depthBufferQuadRS));
 				}
 				m_renderer->ClearDepthBuffer();
-					
+
 				// setup rendering
 				m_renderer->SetProjection(depthProjectionMatrix);
 				break;
-			}
-			case RENDER_REGULAR: 
-			{
+			
+			case RENDER_REGULAR:
 				// 2. then render scene as normal with shadow mapping (using depth map)
 				m_renderer->SetViewport(0, 0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
 				m_renderer->SetRenderTarget(nullptr);
@@ -638,18 +638,18 @@ void ModelViewer::MainLoop()
 
 				// render the gradient backdrop
 				DrawBackground();
-					
+
 				// setup rendering
-				m_renderer->SetPerspectiveProjection(85, Graphics::GetScreenWidth()/float(Graphics::GetScreenHeight()), near_plane, far_plane);
-				
+				m_renderer->SetPerspectiveProjection(85, Graphics::GetScreenWidth() / float(Graphics::GetScreenHeight()), near_plane, far_plane);
+
 				m_renderer->SetShadowMatrix(biasDepthMVP);
 				m_renderer->SetShadowTexture(m_pShadowRT->GetDepthTexture());
 				break;
-			} 
 			}
 
 			//update animations, draw model etc.
-			if (m_model) {
+			if (m_model) 
+			{
 				m_navLights->Update(m_frameTime);
 				m_shields->SetEnabled(m_options.showShields || m_shieldIsHit);
 
@@ -660,6 +660,22 @@ void ModelViewer::MainLoop()
 				const float dif = dif2 / (dif1 * 1.0f);
 
 				m_shields->Update(m_options.showShields ? 1.0f : (1.0f - dif), 1.0f);
+			
+				// setup rendering
+				m_renderer->SetPerspectiveProjection(85, Graphics::GetScreenWidth()/float(Graphics::GetScreenHeight()), 0.1f, 100000.f);
+				m_renderer->SetTransform(matrix4x4f::Identity());
+
+				// calc camera info
+				matrix4x4f mv;
+				if (m_options.mouselookEnabled) {
+					mv = m_viewRot.Transpose() * matrix4x4f::Translation(-m_viewPos);
+				} else {
+					m_rotX = Clamp(m_rotX, -90.0f, 90.0f);
+					matrix4x4f rot = matrix4x4f::Identity();
+					rot.RotateX(DEG2RAD(-m_rotX));
+					rot.RotateY(DEG2RAD(-m_rotY));
+					mv = matrix4x4f::Translation(0.0f, 0.0f, -zoom_distance(m_baseDistance, m_zoom)) * rot;
+				}
 
 				// helper rendering
 				if (m_options.showLandingPad) {
@@ -756,7 +772,7 @@ void ModelViewer::OnDecalChanged(unsigned int index, const std::string &texname)
 {
 	if (!m_model) return;
 
-	m_decalTexture = Graphics::TextureBuilder::Decal(stringf("textures/decals/%0.png", texname)).GetOrCreateTexture(m_renderer, "decal");
+	m_decalTexture = Graphics::TextureBuilder::Decal(stringf("textures/decals/%0.dds", texname)).GetOrCreateTexture(m_renderer, "decal");
 
 	m_model->SetDecalTexture(m_decalTexture, 0);
 	m_model->SetDecalTexture(m_decalTexture, 1);

@@ -279,9 +279,9 @@
       "description" : "",
       "message" : "Napok hossza"
    },
-   "DECREASE_SCAN_RANGE" : {
+   "DECREASE_RADAR_RANGE" : {
       "description" : "",
-      "message" : "Szkennertáv csökkentése"
+      "message" : "Csökkent radar hatótáv"
    },
    "DECREASE_SET_SPEED" : {
       "description" : "",
@@ -289,7 +289,7 @@
    },
    "DECREASE_TIME_ACCELERATION" : {
       "description" : "",
-      "message" : "Decrease Time Acceleration"
+      "message" : "Idő lassítása"
    },
    "DEMOGRAPHICS" : {
       "description" : "",
@@ -433,7 +433,7 @@
    },
    "GAME_LOAD_CANNOT_OPEN" : {
       "description" : "",
-      "message" : "Save file '%filename' could not be found (or the game does not have access to open it)."
+      "message" : "A '%filename' nevű mentés nem található (vagy a a játéknak nincs hozzáférése megnyitni)."
    },
    "GAME_LOAD_CORRUPT" : {
       "description" : "",
@@ -559,9 +559,17 @@
       "description" : "",
       "message" : "Hiperűr-ugrás megszakítva."
    },
+   "HYPERSPACE_JUMP_DISABLED" : {
+      "description" : "Mouse over text for hyperdrive button on ship control panel",
+      "message" : "Hiperhajtómű üzemen kívül"
+   },
    "HYPERSPACE_JUMP_ENGAGE" : {
       "description" : "Mouse over text for hyperdrive button on ship control panel",
       "message" : "Hipermotor indítása"
+   },
+   "HYPERSPACE_JUMP_FORBIDDEN" : {
+      "description" : "Mouse over text for hyperdrive button on ship control panel",
+      "message" : "Hiperhajtómű tiltó zóna"
    },
    "HYPERSPACE_TARGET" : {
       "description" : "",
@@ -591,9 +599,9 @@
       "description" : "",
       "message" : "Birodalmi uradalom"
    },
-   "INCREASE_SCAN_RANGE" : {
+   "INCREASE_RADAR_RANGE" : {
       "description" : "",
-      "message" : "Szkennertáv növelése"
+      "message" : "Kiterjesztett radar hatótáv"
    },
    "INCREASE_SET_SPEED" : {
       "description" : "",
@@ -601,7 +609,7 @@
    },
    "INCREASE_TIME_ACCELERATION" : {
       "description" : "",
-      "message" : "Increase Time Acceleration"
+      "message" : "Idő gyorsítása"
    },
    "INDUSTRIAL_COLONY" : {
       "description" : "",
@@ -618,10 +626,6 @@
    "INTERNAL_VIEW" : {
       "description" : "",
       "message" : "Belső nézet"
-   },
-   "INT_LY" : {
-      "description" : "integer number of light years",
-      "message" : "%scale fényév"
    },
    "IN_TRANSIT" : {
       "description" : "",
@@ -643,13 +647,17 @@
       "description" : "Regarding joystick",
       "message" : "%{sign}%joyname %axis tengely"
    },
+   "JUMP_COMPLETE" : {
+      "description" : "",
+      "message" : "Ugrás állapota: %percent%%"
+   },
    "KM_S_RELATIVE_TO" : {
       "description" : "",
       "message" : "Relatív sebesség (%frame): %speed{f.2} km/s"
    },
    "L4L5_DISPLAY_MODE_TOGGLE" : {
       "description" : "Either show L4/L5 points or don't",
-      "message" : "Switch between Lagrange L4/L5 point display modes."
+      "message" : "L4/L5 Lagrange pont megjelenítése."
    },
    "LANDED" : {
       "description" : "",
@@ -673,7 +681,7 @@
    },
    "LATITUDE" : {
       "description" : "Short for latitude",
-      "message" : "Lat:"
+      "message" : "Szél:"
    },
    "LEGAL_CURRENT_SYSTEM" : {
       "description" : "Short (tooltip) description of commodity (singular) status in the system the player is currently in",
@@ -961,7 +969,7 @@
    },
    "NOW" : {
       "description" : "In System Orbit View",
-      "message" : "Now"
+      "message" : "Most"
    },
    "NO_ALERT" : {
       "description" : "",
@@ -1175,13 +1183,13 @@
       "description" : "",
       "message" : "LNy: %pressure{f.2} atm"
    },
-   "PROBABILITY_OF_ARRIVAL_X_PERCENT" : {
-      "description" : "",
-      "message" : "Az érkezés valószínűsége: %probability%%"
-   },
    "QUADRUPLE_SYSTEM" : {
       "description" : "",
       "message" : "Négyes rendszer"
+   },
+   "RADAR_CONTROL" : {
+      "description" : "",
+      "message" : "Radar vezérlés"
    },
    "RADIOACTIVES" : {
       "description" : "",
@@ -1262,10 +1270,6 @@
    "RUBBISH" : {
       "description" : "",
       "message" : "Hulladék"
-   },
-   "SCANNER_CONTROL" : {
-      "description" : "",
-      "message" : "Szkenner irányítás"
    },
    "SCOOP" : {
       "description" : "Is followed by a number, repersenting scoop mounts/slots available to fit cargo scoop and/or fuel scoop",
@@ -1386,10 +1390,6 @@
    "SIDEREAL_VIEW" : {
       "description" : "camera view setting",
       "message" : "Sziderikus nézet"
-   },
-   "SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS" : {
-      "description" : "",
-      "message" : "Az univerzum evolúciószimulálása:  %age{f.1} milliárd év ;-)"
    },
    "SLAVES" : {
       "description" : "",
@@ -1673,7 +1673,7 @@
    },
    "TOGGLE_EQUIPMENT_VIEW" : {
       "description" : "Tooltip for the Equipment View button",
-      "message" : "Equipment View"
+      "message" : "Eszköz nézet"
    },
    "TOGGLE_HUD_MODE" : {
       "description" : "",
@@ -1683,17 +1683,17 @@
       "description" : "",
       "message" : "Lua konzol"
    },
+   "TOGGLE_RADAR_MODE" : {
+      "description" : "",
+      "message" : "Radar mód"
+   },
+   "TOGGLE_RADAR_VIEW" : {
+      "description" : "Tooltip for the Radar View button",
+      "message" : "Radar nézet"
+   },
    "TOGGLE_ROTATION_DAMPING" : {
       "description" : "",
       "message" : "Forgásfékezés ki-be"
-   },
-   "TOGGLE_SCANNER_VIEW" : {
-      "description" : "Tooltip for the Scanner View button",
-      "message" : "Scanner View"
-   },
-   "TOGGLE_SCAN_MODE" : {
-      "description" : "",
-      "message" : "Szkennermód kapcsoló"
    },
    "TOMBSTONE_EPITAPH" : {
       "description" : "shown on tombstone when player dies",
@@ -1722,6 +1722,34 @@
    "UNEXPLORED_SYSTEM_STAR_INFO_ONLY" : {
       "description" : "",
       "message" : "Felfedezetlen rendszer. Csillaginformációkat ugyan gyűjtött a távolsági teleszkóp, de bolygóinformációk nem érhetőek el."
+   },
+   "UNIT_AU" : {
+      "description" : "Distance unit: an astronomical unit, radius of Earth's orbit",
+      "message" : "AU"
+   },
+   "UNIT_DAYS" : {
+      "description" : "Duration unit: one 24-hour day",
+      "message" : "n"
+   },
+   "UNIT_HOURS" : {
+      "description" : "Duration unit: one 60-minute hour",
+      "message" : "ó"
+   },
+   "UNIT_LY" : {
+      "description" : "Distance unit: a light year",
+      "message" : "fé"
+   },
+   "UNIT_MINUTES" : {
+      "description" : "Duration unit: one 60-second minute",
+      "message" : "p"
+   },
+   "UNIT_SECONDS" : {
+      "description" : "Duration unit: one second",
+      "message" : "mp"
+   },
+   "UNIT_WEEKS" : {
+      "description" : "Duration unit: one 7-day week",
+      "message" : "h"
    },
    "UNKNOWN" : {
       "description" : "",
