@@ -590,7 +590,7 @@ void ModelViewer::MainLoop()
 		
 		// Compute the MVP matrix from the light's point of view
 		matrix4x4f depthProjectionMatrix = matrix4x4f::OrthoFrustum(-frustumSize, frustumSize, -frustumSize, frustumSize, near_plane, far_plane);
-		matrix4x4f depthViewMatrix = MathUtil::LookAt(light.GetPosition(), vector3f(0.0f, 0.0f, -zoom_distance(m_baseDistance, m_zoom)), vector3f(0.0f, 1.0f, 0.0f));
+		matrix4x4f depthViewMatrix = MathUtil::LookAt(light.GetPosition() * 10.0f, vector3f(0.0f)/*vector3f(0.0f, 0.0f, -zoom_distance(m_baseDistance, m_zoom))*/, vector3f(0.0f, 1.0f, 0.0f));
 		matrix4x4f depthModelMatrix = matrix4x4f::Identity();
 		// calc camera info
 		if (m_options.mouselookEnabled) {
@@ -661,37 +661,50 @@ void ModelViewer::MainLoop()
 
 				m_shields->Update(m_options.showShields ? 1.0f : (1.0f - dif), 1.0f);
 			
-				// setup rendering
-				m_renderer->SetPerspectiveProjection(85, Graphics::GetScreenWidth()/float(Graphics::GetScreenHeight()), 0.1f, 100000.f);
-				m_renderer->SetTransform(matrix4x4f::Identity());
-
-				// calc camera info
-				matrix4x4f mv;
-				if (m_options.mouselookEnabled) {
-					mv = m_viewRot.Transpose() * matrix4x4f::Translation(-m_viewPos);
-				} else {
-					m_rotX = Clamp(m_rotX, -90.0f, 90.0f);
-					matrix4x4f rot = matrix4x4f::Identity();
-					rot.RotateX(DEG2RAD(-m_rotX));
-					rot.RotateY(DEG2RAD(-m_rotY));
-					mv = matrix4x4f::Translation(0.0f, 0.0f, -zoom_distance(m_baseDistance, m_zoom)) * rot;
-				}
-
-				// helper rendering
-				if (m_options.showLandingPad) {
-					if (!m_scaleModel) CreateTestResources();
-					m_scaleModel->Render(mv * matrix4x4f::Translation(0.f, m_landingMinOffset, 0.f));
-				}
-
-				if (m_options.showGrid) {
-					DrawGrid(mv, m_model->GetDrawClipRadius());
-				}
-
 				if(RENDER_REGULAR==pass)
+				{
+					// setup rendering
+					m_renderer->SetPerspectiveProjection(85, Graphics::GetScreenWidth()/float(Graphics::GetScreenHeight()), 0.1f, 100000.f);
+					m_renderer->SetTransform(matrix4x4f::Identity());
+
+					// calc camera info
+					matrix4x4f mv;
+					if (m_options.mouselookEnabled) {
+						mv = m_viewRot.Transpose() * matrix4x4f::Translation(-m_viewPos);
+					} else {
+						m_rotX = Clamp(m_rotX, -90.0f, 90.0f);
+						matrix4x4f rot = matrix4x4f::Identity();
+						rot.RotateX(DEG2RAD(-m_rotX));
+						rot.RotateY(DEG2RAD(-m_rotY));
+						mv = matrix4x4f::Translation(0.0f, 0.0f, -zoom_distance(m_baseDistance, m_zoom)) * rot;
+					}
+
+					// helper rendering
+					if (m_options.showLandingPad) {
+						if (!m_scaleModel) CreateTestResources();
+						m_scaleModel->Render(mv * matrix4x4f::Translation(0.f, m_landingMinOffset, 0.f));
+					}
+
+					if (m_options.showGrid) {
+						DrawGrid(mv, m_model->GetDrawClipRadius());
+					}
+
 					DrawLights(mv);
 
-				// draw the model itself
-				DrawModel(mv, eRenderPasses(pass));
+					// draw the model itself
+					DrawModel(mv, eRenderPasses(pass));
+				}
+				else 
+				{
+					// helper rendering
+					if (m_options.showLandingPad) {
+						if (!m_scaleModel) CreateTestResources();
+						m_scaleModel->Render(mv * matrix4x4f::Translation(0.f, m_landingMinOffset, 0.f));
+					}
+
+					// draw the model itself
+					DrawModel(depthViewMatrix * depthModelMatrix, eRenderPasses(pass));
+				}
 			}
 
 #if 1 // draw depth map quad
