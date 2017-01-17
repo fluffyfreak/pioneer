@@ -590,7 +590,7 @@ void ModelViewer::MainLoop()
 		
 		// Compute the MVP matrix from the light's point of view
 		matrix4x4f depthProjectionMatrix = matrix4x4f::OrthoFrustum(-frustumSize, frustumSize, -frustumSize, frustumSize, near_plane, far_plane);
-		matrix4x4f depthViewMatrix = MathUtil::LookAt(light.GetPosition() * 10.0f, vector3f(0.0f)/*vector3f(0.0f, 0.0f, -zoom_distance(m_baseDistance, m_zoom))*/, vector3f(0.0f, 1.0f, 0.0f));
+		matrix4x4f depthViewMatrix = MathUtil::LookAt(light.GetPosition() * 100.0f, vector3f(0.0f)/*vector3f(0.0f, 0.0f, -zoom_distance(m_baseDistance, m_zoom))*/, vector3f(0.0f, 1.0f, 0.0f));
 		matrix4x4f depthModelMatrix = matrix4x4f::Identity();
 		// calc camera info
 		if (m_options.mouselookEnabled) {
@@ -602,10 +602,37 @@ void ModelViewer::MainLoop()
 			rot.RotateY(DEG2RAD(-m_rotY));
 			depthModelMatrix = (matrix4x4f::Translation(0.0f, 0.0f, -zoom_distance(m_baseDistance, m_zoom)) * rot);
 		}
+		
+		// calc camera info
+		matrix4x4f mv;
+		if (m_options.mouselookEnabled) {
+			mv = m_viewRot.Transpose() * matrix4x4f::Translation(-m_viewPos);
+		} else {
+			m_rotX = Clamp(m_rotX, -90.0f, 90.0f);
+			matrix4x4f rot = matrix4x4f::Identity();
+			rot.RotateX(DEG2RAD(-m_rotX));
+			rot.RotateY(DEG2RAD(-m_rotY));
+			mv = matrix4x4f::Translation(0.0f, 0.0f, -zoom_distance(m_baseDistance, m_zoom)) * rot;
+		}
 		const matrix4x4f depthMVP = depthProjectionMatrix * depthViewMatrix * depthModelMatrix;
-		static const float biasValues[16] = {0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.5f, 0.0f, 0.5f, 0.5f, 0.5f, 1.0f};
+		static const float biasValues[16] = {
+			0.5f, 0.0f, 0.0f, 0.0f, 
+			0.0f, 0.5f, 0.0f, 0.0f, 
+			0.0f, 0.0f, 0.5f, 0.0f, 
+			0.5f, 0.5f, 0.5f, 1.0f};
 		static const matrix4x4f BiasMatrix(biasValues);
 		const matrix4x4f biasDepthMVP = BiasMatrix * depthMVP;
+
+		m_navLights->Update(m_frameTime);
+		m_shields->SetEnabled(m_options.showShields || m_shieldIsHit);
+
+		//Calculate the impact's radius dependant on time
+		const float dif1 = 0.34 - (-1.48f);
+		const float dif2 = m_shieldHitPan - (-1.48f);
+		//Range from start (0.0) to end (1.0)
+		const float dif = dif2 / (dif1 * 1.0f);
+
+		m_shields->Update(m_options.showShields ? 1.0f : (1.0f - dif), 1.0f);
  
 		for( int pass = RENDER_SHADOW_MAP; pass<RENDER_PASS_MAX; pass++)
 		{
@@ -628,6 +655,7 @@ void ModelViewer::MainLoop()
 
 				// setup rendering
 				m_renderer->SetProjection(depthProjectionMatrix);
+				m_renderer->SetTransform(matrix4x4f::Identity());
 				break;
 			
 			case RENDER_REGULAR:
@@ -650,34 +678,11 @@ void ModelViewer::MainLoop()
 			//update animations, draw model etc.
 			if (m_model) 
 			{
-				m_navLights->Update(m_frameTime);
-				m_shields->SetEnabled(m_options.showShields || m_shieldIsHit);
-
-				//Calculate the impact's radius dependant on time
-				const float dif1 = 0.34 - (-1.48f);
-				const float dif2 = m_shieldHitPan - (-1.48f);
-				//Range from start (0.0) to end (1.0)
-				const float dif = dif2 / (dif1 * 1.0f);
-
-				m_shields->Update(m_options.showShields ? 1.0f : (1.0f - dif), 1.0f);
-			
 				if(RENDER_REGULAR==pass)
 				{
 					// setup rendering
 					m_renderer->SetPerspectiveProjection(85, Graphics::GetScreenWidth()/float(Graphics::GetScreenHeight()), 0.1f, 100000.f);
 					m_renderer->SetTransform(matrix4x4f::Identity());
-
-					// calc camera info
-					matrix4x4f mv;
-					if (m_options.mouselookEnabled) {
-						mv = m_viewRot.Transpose() * matrix4x4f::Translation(-m_viewPos);
-					} else {
-						m_rotX = Clamp(m_rotX, -90.0f, 90.0f);
-						matrix4x4f rot = matrix4x4f::Identity();
-						rot.RotateX(DEG2RAD(-m_rotX));
-						rot.RotateY(DEG2RAD(-m_rotY));
-						mv = matrix4x4f::Translation(0.0f, 0.0f, -zoom_distance(m_baseDistance, m_zoom)) * rot;
-					}
 
 					// helper rendering
 					if (m_options.showLandingPad) {
