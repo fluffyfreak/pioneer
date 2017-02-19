@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "RefCounted.h"
@@ -32,6 +32,7 @@ public:
 	void Init(SDL_Window *window);
 
 	void Uninit() {
+		Cleanup();
 		m_handlers.Unref();
 		m_keys.Unref();
 	}
@@ -46,7 +47,7 @@ public:
 		return ImGui_ImplSdlGL3_ProcessEvent(event);
 	}
 
-	static void *makeTexture(unsigned char *pixels, int width, int height);
+	static void *makeTexture(const std::string &filename, unsigned char *pixels, int width, int height);
 
 	static bool WantCaptureMouse() {
 		return ImGui::GetIO().WantCaptureMouse;
@@ -62,4 +63,6 @@ public:
 private:
 	LuaRef m_handlers;
 	LuaRef m_keys;
+
+	static std::vector<std::pair<std::string,Graphics::Texture*>> m_svg_textures;
 };

@@ -1,4 +1,4 @@
--- Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 
@@ -328,7 +328,7 @@ local getNumberOfFlavours = function (str)
 	-- Returns the number of flavours of the given string (assuming first flavour has suffix '_1').
 	-- Taken from CargoRun.lua.
 	local num = 1
-	while l[str .. "_" .. num] do
+	while l:get(str .. "_" .. num) do
 		num = num + 1
 	end
 	return num - 1
@@ -2119,7 +2119,7 @@ local onClick = function (mission)
 
 	-- navbutton target (system if out-of-system jump, target ship if in system)
 	local navbutton_target
-	if mission.planet_target:IsSameSystem(Game.system.path) then
+	if not Game.system or mission.planet_target:IsSameSystem(Game.system.path) then
 		navbutton_target = mission.target
 	else
 		navbutton_target = mission.planet_target

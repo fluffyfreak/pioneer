@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _SHIPTYPE_H
@@ -9,22 +9,10 @@
 #include <vector>
 #include <map>
 #include <string>
+#include "Propulsion.h"
+#include "FixedGuns.h"
 
 struct ShipType {
-	enum Thruster { // <enum scope='ShipType' name=ShipTypeThruster prefix=THRUSTER_ public>
-		THRUSTER_REVERSE,
-		THRUSTER_FORWARD,
-		THRUSTER_UP,
-		THRUSTER_DOWN,
-		THRUSTER_LEFT,
-		THRUSTER_RIGHT,
-		THRUSTER_MAX // <enum skip>
-	};
-	enum {
-		GUN_FRONT,
-		GUN_REAR,
-		GUNMOUNT_MAX = 2
-	};
 	enum DualLaserOrientation { // <enum scope='ShipType' name='DualLaserOrientation' prefix='DUAL_LASERS_' public>
 		DUAL_LASERS_HORIZONTAL,
 		DUAL_LASERS_VERTICAL

@@ -199,6 +199,10 @@
       "description" : "",
       "message" : "Máximo alcance de escáner excedido:"
    },
+   "PASSENGER_CABIN" : {
+      "description" : "",
+      "message" : "Cabina de pasajeros"
+   },
    "PLANETSCANNER" : {
       "description" : "Scans the nearest body for resources",
       "message" : "Escáner de cuerpo"

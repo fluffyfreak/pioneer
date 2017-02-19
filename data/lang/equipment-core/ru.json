@@ -199,6 +199,10 @@
       "description" : "",
       "message" : "Превышена дальность сканирования:"
    },
+   "PASSENGER_CABIN" : {
+      "description" : "",
+      "message" : "Пассажирская каюта"
+   },
    "PLANETSCANNER" : {
       "description" : "Scans the nearest body for resources",
       "message" : "Сканер небесных тел"
@@ -317,7 +321,7 @@
    },
    "UNOCCUPIED_CABIN" : {
       "description" : "",
-      "message" : "Пассажирская каюта"
+      "message" : "Доп. пассажирская каюта"
    },
    "UNOCCUPIED_CABIN_DESCRIPTION" : {
       "description" : "",

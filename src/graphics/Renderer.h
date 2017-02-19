@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _RENDERER_H
@@ -51,7 +51,7 @@ public:
 
 	virtual void WriteRendererInfo(std::ostream &out) const {}
 
-	virtual void CheckRenderErrors(const char *func = nullptr, const int line = -1) const {}
+	virtual void CheckRenderErrors(const char *func, const int line) const {}
 
 	WindowSDL *GetWindow() const { return m_window.get(); }
 	float GetDisplayAspect() const { return static_cast<float>(m_width) / static_cast<float>(m_height); }
