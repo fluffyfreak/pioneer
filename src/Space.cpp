@@ -565,8 +565,8 @@ static Frame *MakeFrameFor(const double at_time, SystemBody *sbody, Body *b, Fra
 
 	SystemBody::BodySuperType supertype = sbody->GetSuperType();
 
-	if ((supertype == SystemBody::SUPERTYPE_GAS_GIANT) ||
-	    (supertype == SystemBody::SUPERTYPE_ROCKY_PLANET)) {
+	if ((supertype == SystemBody::SUPERTYPE_GAS_GIANT) || (supertype == SystemBody::SUPERTYPE_ROCKY_PLANET)) 
+	{
 		// for planets we want an non-rotating frame for a few radii
 		// and a rotating frame with no radius to contain attached objects
 		double frameRadius = std::max(4.0*sbody->GetRadius(), sbody->GetMaxChildOrbitalDistance()*1.05);
@@ -595,7 +595,8 @@ static Frame *MakeFrameFor(const double at_time, SystemBody *sbody, Body *b, Fra
 		b->SetFrame(rotFrame);
 		return orbFrame;
 	}
-	else if (supertype == SystemBody::SUPERTYPE_STAR) {
+	else if (supertype == SystemBody::SUPERTYPE_STAR)
+	{
 		// stars want a single small non-rotating frame
 		// bigger than it's furtherest orbiting body.
 		// if there are no orbiting bodies use a frame of several radii.
@@ -610,7 +611,8 @@ static Frame *MakeFrameFor(const double at_time, SystemBody *sbody, Body *b, Fra
 		b->SetFrame(orbFrame);
 		return orbFrame;
 	}
-	else if (sbody->GetType() == SystemBody::TYPE_STARPORT_ORBITAL) {
+	else if (sbody->GetType() == SystemBody::TYPE_STARPORT_ORBITAL) 
+	{
 		// space stations want non-rotating frame to some distance
 		Frame *orbFrame = new Frame(f, sbody->GetName().c_str());
 		orbFrame->SetBodies(sbody, b);
@@ -618,8 +620,9 @@ static Frame *MakeFrameFor(const double at_time, SystemBody *sbody, Body *b, Fra
 		orbFrame->SetRadius(20000.0);				// 4x standard parking radius
 		b->SetFrame(orbFrame);
 		return orbFrame;
-
-	} else if (sbody->GetType() == SystemBody::TYPE_STARPORT_SURFACE) {
+	} 
+	else if (sbody->GetType() == SystemBody::TYPE_STARPORT_SURFACE) 
+	{
 		// just put body into rotating frame of planet, not in its own frame
 		// (because collisions only happen between objects in same frame,
 		// and we want collisions on starport and on planet itself)
@@ -637,10 +640,10 @@ static Frame *MakeFrameFor(const double at_time, SystemBody *sbody, Body *b, Fra
 		// accumulate for testing against
 		prevPositions.push_back(pos);
 		return rotFrame;
-	} else {
-		assert(0);
-	}
-	return 0;
+	} 
+
+	assert(false && "Invalid SuperType used in Space::GenBody");
+	return nullptr;
 }
 
 // used to define a cube centred on your current location
@@ -769,15 +772,20 @@ void Space::GenBody(const double at_time, SystemBody *sbody, Frame *f, std::vect
 {
 	Body *b = 0;
 
-	if (sbody->GetType() != SystemBody::TYPE_GRAVPOINT) {
-		if (sbody->GetSuperType() == SystemBody::SUPERTYPE_STAR) {
+	if (sbody->GetType() != SystemBody::TYPE_GRAVPOINT) 
+	{
+		if (sbody->GetSuperType() == SystemBody::SUPERTYPE_STAR) 
+		{
 			Star *star = new Star(sbody);
 			b = star;
-		} else if ((sbody->GetType() == SystemBody::TYPE_STARPORT_ORBITAL) ||
-		           (sbody->GetType() == SystemBody::TYPE_STARPORT_SURFACE)) {
+		} 
+		else if ((sbody->GetType() == SystemBody::TYPE_STARPORT_ORBITAL) || (sbody->GetType() == SystemBody::TYPE_STARPORT_SURFACE)) 
+		{
 			SpaceStation *ss = new SpaceStation(sbody);
 			b = ss;
-		} else {
+		} 
+		else 
+		{
 			Planet *planet = new Planet(sbody);
 			b = planet;
 			// reset this
@@ -789,7 +797,8 @@ void Space::GenBody(const double at_time, SystemBody *sbody, Frame *f, std::vect
 	}
 	f = MakeFrameFor(at_time, sbody, b, f, posAccum);
 
-	for (SystemBody* kid : sbody->GetChildren()) {
+	for (SystemBody* kid : sbody->GetChildren()) 
+	{
 		GenBody(at_time, kid, f, posAccum);
 	}
 }
