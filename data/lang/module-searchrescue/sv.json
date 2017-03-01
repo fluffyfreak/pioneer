@@ -5,7 +5,7 @@
    },
    "BOARDED_PASSENGER" : {
       "description" : "",
-      "message" : "{name} has boarded the ship."
+      "message" : "{name} har bordat skeppet."
    },
    "COMMODITIES" : {
       "description" : "",
@@ -13,7 +13,7 @@
    },
    "COULD_YOU_REPEAT_THE_ORIGINAL_REQUEST" : {
       "description" : "",
-      "message" : "Kan du upprepa den ursprungliga önskan?"
+      "message" : "Kan du upprepa den ursprungliga begäran?"
    },
    "CREW" : {
       "description" : "",
@@ -25,7 +25,7 @@
    },
    "DELIVERED_PASSENGER" : {
       "description" : "",
-      "message" : "{name} has left the ship."
+      "message" : "{name} har lämnat skeppet."
    },
    "DELIVERY" : {
       "description" : "",
@@ -165,7 +165,7 @@
    },
    "FLAVOUR_1_FAILUREMSG" : {
       "description" : "",
-      "message" : "jag kan inte tro att du bara återvänder nu! Vilket slöseri med tid!"
+      "message" : "jag kan inte tro att du återvänder först nu! Vilket slöseri med tid!"
    },
    "FLAVOUR_1_HOWMUCHTIMETEXT" : {
       "description" : "",
@@ -173,7 +173,7 @@
    },
    "FLAVOUR_1_INTROTEXT" : {
       "description" : "",
-      "message" : "{starport} air traffic control needs your IMMEDIATE help responding to a crash landing of a {ship} type starship on {planet}. Status of life support systems is unknown. The ship has been insured by {starport} starport insurance and is covered for {cash} in emergency response reimbursement."
+      "message" : "{starport}s flygledning behöver din OMEDELBARA hjälp att undsätta ett skepp av typ {ship} på {planet}. Status för livsuppehållande system är okänt. Skeppet har varit försäkrat hos {starport} starport försäkring som täcker {cash} i ersättning vid nödsituationer."
    },
    "FLAVOUR_1_LOCATIONTEXT" : {
       "description" : "",
@@ -189,7 +189,7 @@
    },
    "FLAVOUR_1_TYPEOFHELPTEXT" : {
       "description" : "",
-      "message" : "A crew of {crew} and {pass} passengers are reported to be on board the ship. We need someone to locate the ship, pick up any survivors from the site and bring them here immediately."
+      "message" : "En besättning på {crew} och {pass} passagerare uppges befinna sig ombord. Vi behöver någon som kan lokalisera fartyget, plocka upp eventuella överlevande från platsen och föra dem hit omedelbart."
    },
    "FLAVOUR_2_ADTEXT" : {
       "description" : "",
@@ -201,23 +201,23 @@
    },
    "FLAVOUR_2_HOWMUCHTIMETEXT" : {
       "description" : "",
-      "message" : "To receive full payment you are asked to deliver the fuel by {due}."
+      "message" : "För att fullfölja uppdraget måste du leverera drivmedlet före {due}."
    },
    "FLAVOUR_2_INTROTEXT" : {
       "description" : "",
-      "message" : "{starport} air traffic control just received notice that incoming flight {shiplabel} has run out of fuel and had to emergency land. The pilot is willing to pay {cash} for refueling services."
+      "message" : "{starport}s trafikkontroll har just fått meddelande om att inkommande flyg {shiplabel} har slut på bränsle och varit tvunget att landa akut. Piloten är villig att betala {cash} för tankning."
    },
    "FLAVOUR_2_LOCATIONTEXT" : {
       "description" : "",
-      "message" : "The ship is presently waiting at latitude {lat} / longitude {long} on planet {planet}."
+      "message" : "Fartyget väntar för närvarande vid latitud {lat} / longitud {long} på planeten {planet}."
    },
    "FLAVOUR_2_SUCCESSMSG" : {
       "description" : "",
-      "message" : "Thank you so much! I have transferred the full reward."
+      "message" : "Tack så mycket! Jag har fört över hela belöningen."
    },
    "FLAVOUR_2_TRANSFERMSG" : {
       "description" : "",
-      "message" : "{unit} ton of fuel has been transferred."
+      "message" : "{unit} ton bränsle har förflyttats."
    },
    "FLAVOUR_2_TYPEOFHELPTEXT" : {
       "description" : "",
@@ -229,31 +229,31 @@
    },
    "FLAVOUR_3_FAILUREMSG" : {
       "description" : "",
-      "message" : "Unacceptable performance! We will update our records accordingly."
+      "message" : "Uselt fulföljande! Vi uppdaterar våra register."
    },
    "FLAVOUR_3_HOWMUCHTIMETEXT" : {
       "description" : "",
-      "message" : "The substitute pilot will need to reach the ship by {due}."
+      "message" : "Den nya piloten måste vara vid skeppet innan {due}."
    },
    "FLAVOUR_3_INTROTEXT" : {
       "description" : "",
-      "message" : "My name is {name} from {starport} air traffic control. I am requesting help in response to a medical emergency involving the pilot of flight {shiplabel} headed for {starport}."
+      "message" : "Det här är {name} från trafikkontrollen vid {starport}. Jag begär hjälp att svara på en medicinsk nödsituation som gäller piloten av {shiplabel} på väg till {starport}."
    },
    "FLAVOUR_3_LOCATIONTEXT" : {
       "description" : "",
-      "message" : "The ship had to emergency land at the coordinates: {lat} / {long}. "
+      "message" : "Skeppet var tvunget att nödlanda vid koordinaterna: {lat} / {long}. "
    },
    "FLAVOUR_3_SUCCESSMSG" : {
       "description" : "",
-      "message" : "Thank you, commander! Your help has been duly noted."
+      "message" : "Tack kapten! Din hjälp har noterats."
    },
    "FLAVOUR_3_TRANSFERMSG" : {
       "description" : "",
-      "message" : "{unit} has left the ship."
+      "message" : "{unit} har lämnat skeppet."
    },
    "FLAVOUR_3_TYPEOFHELPTEXT" : {
       "description" : "",
-      "message" : "Please transport a substitute pilot from {starport} to the ship so they can fly the ship back to {starport}."
+      "message" : "Vänligen transportera en ny pilot från {starport} till skeppet så de kan flyga det tillbaka till {starport}."
    },
    "FLAVOUR_4_ADTEXT" : {
       "description" : "",
@@ -261,7 +261,7 @@
    },
    "FLAVOUR_4_FAILUREMSG" : {
       "description" : "",
-      "message" : "I will send someone else. Don't bother anymore."
+      "message" : "Jag skickar någon annan. Du behöver inte oroa dig mer."
    },
    "FLAVOUR_4_HOWMUCHTIMETEXT" : {
       "description" : "",
@@ -269,19 +269,19 @@
    },
    "FLAVOUR_4_INTROTEXT" : {
       "description" : "",
-      "message" : "{starport} air traffic control has been contacted by the pilot of flight {shiplabel}. They are stranded with an empty fuel tank and have promised to pay {cash} to anyone that will refuel the ship."
+      "message" : "Flygledningen vid {starport} har kontaktats av piloten för {shiplabel}. De är strandsatta med en tom bränsletank och har lovat att betala {cash} till den som kan hjälpa till att tanka skeppet."
    },
    "FLAVOUR_4_LOCATIONTEXT" : {
       "description" : "",
-      "message" : "The ship is stranded on {planet} at coordinates {lat} / {long}."
+      "message" : "Skeppet är strandsatt på {planet} på koordinaterna {lat} / {long}."
    },
    "FLAVOUR_4_SUCCESSMSG" : {
       "description" : "",
-      "message" : "Very good. We will recommend you for future assignments."
+      "message" : "Väldigt bra. Vi kommer att rekommendera dig för framtida uppdrag."
    },
    "FLAVOUR_4_TRANSFERMSG" : {
       "description" : "",
-      "message" : "{unit} ton of fuel has been transferred."
+      "message" : "{unit} ton bränsle har skickats."
    },
    "FLAVOUR_4_TYPEOFHELPTEXT" : {
       "description" : "",
@@ -313,7 +313,7 @@
    },
    "FLAVOUR_5_TRANSFERMSG" : {
       "description" : "",
-      "message" : "{unit} ton of fuel has been transferred."
+      "message" : "{unit} ton bränsle har skickats."
    },
    "FLAVOUR_5_TYPEOFHELPTEXT" : {
       "description" : "",
@@ -385,7 +385,7 @@
    },
    "FULL_CARGO" : {
       "description" : "",
-      "message" : "Ship full. No more room for additional cargo."
+      "message" : "Skeppet är fullt. Inget utrymme för ytterligare last."
    },
    "FULL_CREW" : {
       "description" : "",
@@ -393,7 +393,7 @@
    },
    "FULL_PASSENGERS" : {
       "description" : "",
-      "message" : "All cabins full. No more space for more passengers."
+      "message" : "Alla hytter fulla. Ytterligare passagerare får inte plats."
    },
    "HOW_FAR" : {
       "description" : "",
@@ -413,7 +413,7 @@
    },
    "IT_MUST_BE_COMPLETED_BY" : {
       "description" : "",
-      "message" : "It must be completed by "
+      "message" : "Måste vara färdigt till"
    },
    "KM" : {
       "description" : "",
@@ -429,7 +429,7 @@
    },
    "LON" : {
       "description" : "",
-      "message" : "Lon:"
+      "message" : "Long:"
    },
    "LY" : {
       "description" : "",
@@ -437,7 +437,7 @@
    },
    "MISSING_COMM" : {
       "description" : "",
-      "message" : "Cannot complete transfer. {cargotype} missing."
+      "message" : "Kan inte slutföra transaktion. {cargotype} saknas."
    },
    "MISSING_CREW" : {
       "description" : "",
@@ -445,11 +445,11 @@
    },
    "MISSING_PASS" : {
       "description" : "",
-      "message" : "Cannot complete transfer. Passengers missing."
+      "message" : "Kan inte slutföra transaktion. Passagerare saknas."
    },
    "MISSING_PASSENGER" : {
       "description" : "",
-      "message" : "Cannot complete transfer. Passenger missing."
+      "message" : "Kan inte slutföra transaktion. Passagerare saknas."
    },
    "OK_AGREED" : {
       "description" : "",
@@ -481,7 +481,7 @@
    },
    "PLEASE_LAND" : {
       "description" : "",
-      "message" : "Please land ship to allow transfer."
+      "message" : "Vänligen landa skeppet för att möjliggöra transaktion."
    },
    "PROBLEM_CREW_1" : {
       "description" : "",
@@ -661,7 +661,7 @@
    },
    "THANK_YOU_ACCEPTANCE_TXT" : {
       "description" : "",
-      "message" : "Tak så hjärtligt. Din hjälp uppskattas."
+      "message" : "Tack så mycket. Din hjälp uppskattas verkligen."
    },
    "TONS_OF_FREE_CARGO_SPACE" : {
       "description" : "",
@@ -669,11 +669,11 @@
    },
    "TRANSFER_ABORTED" : {
       "description" : "",
-      "message" : "Transfer has been aborted!"
+      "message" : "Transaktion har avbrutits!"
    },
    "TRANSFER_COMPLETE" : {
       "description" : "",
-      "message" : "Transfer has been completed!"
+      "message" : "Transaktion har slutförts!"
    },
    "TRANSFER_PARTIAL" : {
       "description" : "",
@@ -681,7 +681,7 @@
    },
    "TRANSFER_TIME" : {
       "description" : "",
-      "message" : "Please allow {minutes} minutes for transfer."
+      "message" : "Vänligen vänta {minutes} för att fullborda transaktionen."
    },
    "TYPE_OF_HELP" : {
       "description" : "",

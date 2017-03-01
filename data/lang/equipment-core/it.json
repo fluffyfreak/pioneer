@@ -1,11 +1,11 @@
 {
-   "ADVANCED_RADAR_MAPPER" : {
-      "description" : "",
-      "message" : "Identificatore Radar Avanzato"
+   "ADVANCED_TARGET_SCANNER" : {
+      "description" : "ship equipment showing target information/stats",
+      "message" : "Scanner bersaglio avanzato"
    },
-   "ADVANCED_RADAR_MAPPER_DESCRIPTION" : {
+   "ADVANCED_TARGET_SCANNER_DESCRIPTION" : {
       "description" : "",
-      "message" : "Identificatore radar a lungo raggio che copre l'intero sistema."
+      "message" : "Scanner bersaglio a lungo raggio con copertura dell'intero sistema."
    },
    "ATMOSPHERIC_SHIELDING" : {
       "description" : "",
@@ -199,6 +199,10 @@
       "description" : "",
       "message" : "Portata massima dell'analizzatore superata:"
    },
+   "PASSENGER_CABIN" : {
+      "description" : "",
+      "message" : "Alloggio passeggeri"
+   },
    "PLANETSCANNER" : {
       "description" : "Scans the nearest body for resources",
       "message" : "Analizzatore Ogg. Celesti"
@@ -235,19 +239,11 @@
       "description" : "",
       "message" : "Laser a impulsi rapidi da 2MW"
    },
-   "RADAR_MAPPER" : {
+   "RADAR" : {
       "description" : "",
-      "message" : "Identificatore Radar"
+      "message" : "Radar"
    },
-   "RADAR_MAPPER_DESCRIPTION" : {
-      "description" : "",
-      "message" : "Fornisce dettagli circa l'equipaggiamento, il carico e lo stato dell'astronave bersaglio."
-   },
-   "SCANNER" : {
-      "description" : "",
-      "message" : "Scanner"
-   },
-   "SCANNER_DESCRIPTION" : {
+   "RADAR_DESCRIPTION" : {
       "description" : "",
       "message" : "Sensore a corto raggio che identifica la posizione in tre dimensioni di astronavi e stazioni spaziali vicine."
    },
@@ -283,35 +279,43 @@
       "description" : "",
       "message" : "Inizio analisi, distanza dal bersaglio"
    },
+   "TARGET_SCANNER" : {
+      "description" : "ship equipment showing target information/stats",
+      "message" : "Scanner bersaglio"
+   },
+   "TARGET_SCANNER_DESCRIPTION" : {
+      "description" : "",
+      "message" : "Fornisce dettagli circa l'equipaggiamento, il carico e lo stato dell'astronave bersaglio."
+   },
    "THRUSTERS_BASIC" : {
       "description" : "",
-      "message" : "Modified Thrusters"
+      "message" : "Propulsori modificati"
    },
    "THRUSTERS_BASIC_DESCRIPTION" : {
       "description" : "",
-      "message" : "A modified type of thrusters approved for your ship."
+      "message" : "Un tipo di propulsori modificati approvati per la tua astronave."
    },
    "THRUSTERS_BEST" : {
       "description" : "",
-      "message" : "Bespoke Thrusters"
+      "message" : "Propulsori su misura"
    },
    "THRUSTERS_BEST_DESCRIPTION" : {
       "description" : "",
-      "message" : "Custom made thrusters that provide the best possible output."
+      "message" : "Propulsori fatti su misura per fornire la miglior spinta possibile."
    },
    "THRUSTERS_MEDIUM" : {
       "description" : "",
-      "message" : "Optimised Thrusters"
+      "message" : "Propulsori ottimizzati"
    },
    "THRUSTERS_MEDIUM_DESCRIPTION" : {
       "description" : "",
-      "message" : "Thrusters that have been optimised to reduce inneficienies and improve power output."
+      "message" : "Propulsori ottimizzati per ridurre le inefficienze e migliorare la potenza di spinta."
    },
-   "TRADE_ANALYZER" : {
+   "TRADE_COMPUTER" : {
       "description" : "Ship equipment computing profitable commodities to trade between two systems",
-      "message" : "Analizzatore commerciale"
+      "message" : "Computer assist. commerciale"
    },
-   "TRADE_ANALYZER_DESCRIPTION" : {
+   "TRADE_COMPUTER_DESCRIPTION" : {
       "description" : "",
       "message" : "Evidenzia gli scambi commerciali redditizi tra il sistema selezionato e quello corrente."
    },

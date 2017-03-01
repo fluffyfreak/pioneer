@@ -1,4 +1,4 @@
-/* Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details */
+/* Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details */
 /* Licensed under the terms of the GPL v3. See licenses/GPL-3.txt        */
 
 /* THIS FILE IS AUTO-GENERATED, CHANGES WILL BE OVERWRITTEN */
@@ -129,12 +129,12 @@ const struct EnumItem ENUM_ShipFuelStatus[] = {
 };
 
 const struct EnumItem ENUM_ShipTypeThruster[] = {
-	{ "REVERSE", int(ShipType::THRUSTER_REVERSE) },
-	{ "FORWARD", int(ShipType::THRUSTER_FORWARD) },
-	{ "UP", int(ShipType::THRUSTER_UP) },
-	{ "DOWN", int(ShipType::THRUSTER_DOWN) },
-	{ "LEFT", int(ShipType::THRUSTER_LEFT) },
-	{ "RIGHT", int(ShipType::THRUSTER_RIGHT) },
+	{ "REVERSE", int(Thruster::THRUSTER_REVERSE) },
+	{ "FORWARD", int(Thruster::THRUSTER_FORWARD) },
+	{ "UP", int(Thruster::THRUSTER_UP) },
+	{ "DOWN", int(Thruster::THRUSTER_DOWN) },
+	{ "LEFT", int(Thruster::THRUSTER_LEFT) },
+	{ "RIGHT", int(Thruster::THRUSTER_RIGHT) },
 	{ 0, 0 },
 };
 

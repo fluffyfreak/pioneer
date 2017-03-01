@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _SHIPCPANEL_H
@@ -61,8 +61,8 @@ private:
 	void OnClickTimeaccel(Game::TimeAccel val);
 	void OnClickComms(Gui::MultiStateImageButton *b);
 	void OnClickRotationDamping(Gui::MultiStateImageButton *b);
-	// Handler for scanner view / equipment view toggle button
-	void OnClickScannerEquip(Gui::MultiStateImageButton *b);
+	// Handler for radar view / equipment view toggle button
+	void OnClickRadarEquip(Gui::MultiStateImageButton *b);
 
 	void OnUserChangeMultiFunctionDisplay(multifuncfunc_t f);
 	void ChangeMultiFunctionDisplay(multifuncfunc_t selected);
@@ -78,10 +78,10 @@ private:
 
 	sigc::connection m_connOnRotationDampingChanged;
 
-	ScannerWidget *m_scanner;
+	RadarWidget *m_radar;
 	UseEquipWidget *m_useEquipWidget;
 	Gui::MultiStateImageButton *m_camButton;
-	Gui::MultiStateImageButton *m_scannerEquipButton;
+	Gui::MultiStateImageButton *m_radarEquipButton;
 	Gui::RadioGroup *m_leftButtonGroup, *m_rightButtonGroup;
 	Gui::ImageRadioButton *m_timeAccelButtons[6];
 	Gui::Widget *m_mapViewButtons[4];

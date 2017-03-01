@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -228,6 +228,7 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 		// end of mapping
 		m_vertexBuffer->Unmap();
 		
+		// Don't need this anymore so throw it away
 		normals.reset();
 		colors.reset();
 
@@ -299,7 +300,7 @@ void GeoPatch::LODUpdate(const vector3d &campos, const Graphics::Frustum &frustu
 		return;
 
 	bool canSplit = true;
-	bool canMerge = bool(kids[0].get()!=nullptr);
+	bool canMerge = bool(kids[0]);
 
 	// always split at first level
 	double centroidDist = DBL_MAX;
@@ -311,10 +312,8 @@ void GeoPatch::LODUpdate(const vector3d &campos, const Graphics::Frustum &frustu
 		}
 	}
 
-	if (canSplit) 
-	{
-		if (!kids[0]) 
-		{
+	if (canSplit) {
+		if (!kids[0]) {
 			// Test if this patch is visible
 			if (!frustum.TestPoint(clipCentroid, clipRadius))
 				return; // nothing below this patch is visible
@@ -345,24 +344,17 @@ void GeoPatch::LODUpdate(const vector3d &campos, const Graphics::Frustum &frustu
 
 			// add to the GeoSphere to be processed at end of all LODUpdate requests
 			geosphere->AddQuadSplitRequest(centroidDist, ssrd, this);
-		} 
-		else 
-		{
+		} else {
 			for (int i=0; i<NUM_KIDS; i++) {
 				kids[i]->LODUpdate(campos, frustum);
 			}
 		}
-	} 
-	else if (canMerge) 
-	{
-		for (int i=0; i<NUM_KIDS; i++) 
-		{
+	} else if (canMerge) {
+		for (int i=0; i<NUM_KIDS; i++) {
 			canMerge &= kids[i]->canBeMerged();
 		}
-		if( canMerge ) 
-		{
-			for (int i=0; i<NUM_KIDS; i++) 
-			{
+		if( canMerge ) {
+			for (int i=0; i<NUM_KIDS; i++) {
 				kids[i].reset();
 			}
 		}

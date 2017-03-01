@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -419,7 +419,8 @@ void CityOnPlanet::Render(Graphics::Renderer *r, const Graphics::Frustum &frustu
 	
 	// render the building models using instancing
 	for(Uint32 i=0; i<s_buildingList.numBuildings; i++) {
-		s_buildingList.buildings[i].resolvedModel->Render(transform[i]);
+		if(!transform[i].empty())
+			s_buildingList.buildings[i].resolvedModel->Render(transform[i]);
 	}
 
 	r->GetStats().AddToStatCount(Graphics::Stats::STAT_BUILDINGS, uCount);

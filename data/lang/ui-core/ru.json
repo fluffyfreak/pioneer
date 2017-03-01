@@ -151,9 +151,9 @@
       "description" : "",
       "message" : "Торговый центр"
    },
-   "COMPACT_SCANNER" : {
+   "COMPACT_RADAR" : {
       "description" : "Game settings option",
-      "message" : "Компактный сканер"
+      "message" : "Компактный радар"
    },
    "COMPETENT" : {
       "description" : "Combat rating",
@@ -1046,6 +1046,10 @@
    "SHIP_VIEWING_WAS_SOLD" : {
       "description" : "",
       "message" : "Корабль, который вы смотрели, был продан"
+   },
+   "SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS" : {
+      "description" : "",
+      "message" : "Моделируем эволюцию вселенной: {age} млрд. лет ;-)"
    },
    "SOUND" : {
       "description" : "",

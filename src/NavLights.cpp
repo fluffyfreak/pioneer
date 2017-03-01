@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "NavLights.h"
@@ -92,7 +92,8 @@ NavLights::NavLights(SceneGraph::Model *model, float period)
 	const std::vector<Node*> &results = lightFinder.GetResults();
 
 	//attach light billboards
-	for (unsigned int i=0; i < results.size(); i++) {
+	for (unsigned int i=0; i < results.size(); i++) 
+	{
 		MatrixTransform *mt = dynamic_cast<MatrixTransform*>(results.at(i));
 		assert(mt);
 		Billboard *bblight = new Billboard(m_billboardTris, renderer, BILLBOARD_SIZE);

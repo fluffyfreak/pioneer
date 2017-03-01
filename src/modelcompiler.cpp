@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -261,6 +261,11 @@ start:
 			}
 
 			SetupRenderer();
+#if 1
+			for (auto &modelName : list_model) {
+				RunCompiler(modelName.first, modelName.second, isInPlace);
+			}
+#else
 			std::deque<Job::Handle> handles;
 			for (auto &modelName : list_model) {
 				handles.push_back( asyncJobQueue->Queue(new CompileJob(modelName.first, modelName.second, isInPlace)) );
@@ -275,6 +280,7 @@ start:
 				if(!hasJobs)
 					break;
 			}
+#endif
 			break;
 		}
 

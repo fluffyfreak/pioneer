@@ -1,11 +1,11 @@
 {
-   "ADVANCED_RADAR_MAPPER" : {
-      "description" : "",
-      "message" : "Verbesserter Radarscanner"
+   "ADVANCED_TARGET_SCANNER" : {
+      "description" : "ship equipment showing target information/stats",
+      "message" : "Fortgeschrittener Zielscanner"
    },
-   "ADVANCED_RADAR_MAPPER_DESCRIPTION" : {
+   "ADVANCED_TARGET_SCANNER_DESCRIPTION" : {
       "description" : "",
-      "message" : "Langstrecken-Radarscanner mit systemweiter Abdeckung"
+      "message" : "Langstrecken-Zielscanner mit systemweiter Abdeckung."
    },
    "ATMOSPHERIC_SHIELDING" : {
       "description" : "",
@@ -199,6 +199,10 @@
       "description" : "",
       "message" : "Max. Scan-Reichweite überschritten:"
    },
+   "PASSENGER_CABIN" : {
+      "description" : "",
+      "message" : "Passagierkabine"
+   },
    "PLANETSCANNER" : {
       "description" : "Scans the nearest body for resources",
       "message" : "Objektscan"
@@ -235,19 +239,11 @@
       "description" : "",
       "message" : "2MW-Doppel-Pulslaser"
    },
-   "RADAR_MAPPER" : {
+   "RADAR" : {
       "description" : "",
-      "message" : "Radar-Kartierer"
+      "message" : "Radar"
    },
-   "RADAR_MAPPER_DESCRIPTION" : {
-      "description" : "",
-      "message" : "Kann aus der Ferne die Ausrüstung, Fracht und den Status anderer Schiffe ermitteln."
-   },
-   "SCANNER" : {
-      "description" : "",
-      "message" : "Scanner"
-   },
-   "SCANNER_DESCRIPTION" : {
+   "RADAR_DESCRIPTION" : {
       "description" : "",
       "message" : "Erstellt eine 3D-Kartenansicht von Schiffen in der Nähe."
    },
@@ -283,35 +279,43 @@
       "description" : "",
       "message" : "Scan starten, Zieldistanz ist"
    },
+   "TARGET_SCANNER" : {
+      "description" : "ship equipment showing target information/stats",
+      "message" : "Zielscanner"
+   },
+   "TARGET_SCANNER_DESCRIPTION" : {
+      "description" : "",
+      "message" : "Kann aus der Ferne die Ausrüstung, Fracht und den Status anderer Schiffe ermitteln."
+   },
    "THRUSTERS_BASIC" : {
       "description" : "",
-      "message" : "Modified Thrusters"
+      "message" : "Modifizierte Schubdüsen"
    },
    "THRUSTERS_BASIC_DESCRIPTION" : {
       "description" : "",
-      "message" : "A modified type of thrusters approved for your ship."
+      "message" : "Ein modifizierter Typ der Standard-Schubdüsen."
    },
    "THRUSTERS_BEST" : {
       "description" : "",
-      "message" : "Bespoke Thrusters"
+      "message" : "Maßgeschneiderte Schubdüsen"
    },
    "THRUSTERS_BEST_DESCRIPTION" : {
       "description" : "",
-      "message" : "Custom made thrusters that provide the best possible output."
+      "message" : "Schubdüsen, die exakt auf das Schiff angepasst wurden um bestmögliche Leistungen zu erbringen."
    },
    "THRUSTERS_MEDIUM" : {
       "description" : "",
-      "message" : "Optimised Thrusters"
+      "message" : "Optimisierte Schubdüsen"
    },
    "THRUSTERS_MEDIUM_DESCRIPTION" : {
       "description" : "",
-      "message" : "Thrusters that have been optimised to reduce inneficienies and improve power output."
+      "message" : "Schubdüsen die in Hinblick auf Effizienz und Schubkraft optimisiert wurden."
    },
-   "TRADE_ANALYZER" : {
+   "TRADE_COMPUTER" : {
       "description" : "Ship equipment computing profitable commodities to trade between two systems",
-      "message" : "Handelsanalyseeinheit"
+      "message" : "Handelscomputer"
    },
-   "TRADE_ANALYZER_DESCRIPTION" : {
+   "TRADE_COMPUTER_DESCRIPTION" : {
       "description" : "",
       "message" : "Zeigt Handelsgüter an, die zwischen dem ausgewählten und dem momentanen System profitabel gehandelt werden können."
    },

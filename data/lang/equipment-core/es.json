@@ -1,11 +1,11 @@
 {
-   "ADVANCED_RADAR_MAPPER" : {
-      "description" : "",
-      "message" : "Radar Trazador Avanzado"
+   "ADVANCED_TARGET_SCANNER" : {
+      "description" : "ship equipment showing target information/stats",
+      "message" : "Escáner de blanco avanzado"
    },
-   "ADVANCED_RADAR_MAPPER_DESCRIPTION" : {
+   "ADVANCED_TARGET_SCANNER_DESCRIPTION" : {
       "description" : "",
-      "message" : "Radar trazador de largo alcance con cobertura completa del sistema."
+      "message" : "Escáner de largo rango con sistema de cobertura amplia."
    },
    "ATMOSPHERIC_SHIELDING" : {
       "description" : "",
@@ -199,6 +199,10 @@
       "description" : "",
       "message" : "Máximo alcance de escáner excedido:"
    },
+   "PASSENGER_CABIN" : {
+      "description" : "",
+      "message" : "Cabina de pasajeros"
+   },
    "PLANETSCANNER" : {
       "description" : "Scans the nearest body for resources",
       "message" : "Escáner de cuerpo"
@@ -235,19 +239,11 @@
       "description" : "",
       "message" : "Cañón rápido de pulsos 2MW"
    },
-   "RADAR_MAPPER" : {
+   "RADAR" : {
       "description" : "",
-      "message" : "Radar Trazador"
+      "message" : "Radar"
    },
-   "RADAR_MAPPER_DESCRIPTION" : {
-      "description" : "",
-      "message" : "Se utiliza para la inspección remota del equipo, carga y estado de otras naves."
-   },
-   "SCANNER" : {
-      "description" : "",
-      "message" : "Escáner"
-   },
-   "SCANNER_DESCRIPTION" : {
+   "RADAR_DESCRIPTION" : {
       "description" : "",
       "message" : "Proporciona una vista 3D de las naves próximas."
    },
@@ -283,35 +279,43 @@
       "description" : "",
       "message" : "Escaneo iniciado, la distancia al objetivo es"
    },
+   "TARGET_SCANNER" : {
+      "description" : "ship equipment showing target information/stats",
+      "message" : "Escáner de objetivo"
+   },
+   "TARGET_SCANNER_DESCRIPTION" : {
+      "description" : "",
+      "message" : "Se utiliza para la inspección remota del equipo, carga y estado de otras naves."
+   },
    "THRUSTERS_BASIC" : {
       "description" : "",
-      "message" : "Modified Thrusters"
+      "message" : "Impulsores modificados"
    },
    "THRUSTERS_BASIC_DESCRIPTION" : {
       "description" : "",
-      "message" : "A modified type of thrusters approved for your ship."
+      "message" : "Un tipo de impulsores modificados aprobados para su nave."
    },
    "THRUSTERS_BEST" : {
       "description" : "",
-      "message" : "Bespoke Thrusters"
+      "message" : "Impulsores a medida"
    },
    "THRUSTERS_BEST_DESCRIPTION" : {
       "description" : "",
-      "message" : "Custom made thrusters that provide the best possible output."
+      "message" : "Impulsores personalizados que ofrecen la mejor salida de potencia posible."
    },
    "THRUSTERS_MEDIUM" : {
       "description" : "",
-      "message" : "Optimised Thrusters"
+      "message" : "Impulsores optimizados"
    },
    "THRUSTERS_MEDIUM_DESCRIPTION" : {
       "description" : "",
-      "message" : "Thrusters that have been optimised to reduce inneficienies and improve power output."
+      "message" : "Impulsores que han sido optimizados a fin de reducir ineficiencias y mejorar la salida de potencia."
    },
-   "TRADE_ANALYZER" : {
+   "TRADE_COMPUTER" : {
       "description" : "Ship equipment computing profitable commodities to trade between two systems",
-      "message" : "Analizador de comercio"
+      "message" : "Ordenador de comercio"
    },
-   "TRADE_ANALYZER_DESCRIPTION" : {
+   "TRADE_COMPUTER_DESCRIPTION" : {
       "description" : "",
       "message" : "Muestra las mercancías rentables con las que comerciar entre el sistema seleccionado y el actual"
    },
