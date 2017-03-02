@@ -16,37 +16,12 @@
 
 #include "vcacheopt/vcacheopt.h"
 
-#pragma pack(4)
-struct VBOVertex
-{
-	vector3f pos;
-	vector3f norm;
-	Color4ub col;
-	vector2f uv;
-};
-#pragma pack()
-
-#define VBO_COUNT_HI_EDGE  (3*(edgeLen-1))
-#define VBO_COUNT_MID_IDX  (4*3*(edgeLen-3) + 2*(edgeLen-3)*(edgeLen-3)*3)
-//                          ^^ serrated teeth bit      ^^^ square inner bit
-
 #define lerp(t, a, b) ( a + t * (b - a) )
 
-// hold the 16 possible terrain edge connections
-typedef struct {
-	std::vector<unsigned short> v;
-} VecShortHolder;
-
 inline void SetColour(Color3ub *r, const vector3d &v) { 
-#if 1
 	r->r=static_cast<unsigned char>(Clamp(v.x*255.0, 0.0, 255.0)); 
 	r->g=static_cast<unsigned char>(Clamp(v.y*255.0, 0.0, 255.0)); 
 	r->b=static_cast<unsigned char>(Clamp(v.z*255.0, 0.0, 255.0));
-#else
-	r->r = 255;
-	r->g = 255;
-	r->b = 255;
-#endif
 }
 
 // ********************************************************************************
@@ -91,7 +66,6 @@ SQuadPlateRequest::SQuadPlateRequest(const double ang0_, const double ang1_, con
 	borderHeights.reset(new double[numBorderedVerts]);
 	borderVertexs.reset(new vector3d[numBorderedVerts]);
 }
-
 
 SSinglePlateRequest::SSinglePlateRequest(const double ang0_, const double ang1_, const double yoffset_, const double halfLen_, const vector3d &vb0_, const vector3d &vb1_,
 	const uint32_t depth_, const SystemPath &sysPath_, const GeoPlateID &patchID_, const int edgeLen_, const double fracStep_,

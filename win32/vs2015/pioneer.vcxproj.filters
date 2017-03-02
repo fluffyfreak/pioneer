@@ -471,6 +471,9 @@
     <ClCompile Include="..\..\src\GeoRingJobs.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\GeoRingPlate.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Aabb.h">
@@ -942,6 +945,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\GeoRingJobs.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\GeoRingPlate.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

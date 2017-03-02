@@ -2,6 +2,7 @@
 #include "GeoPatchContext.h"
 #include "GeoPatchID.h"
 #include "GeoRing.h"
+#include "GeoRingPlate.h"
 #include "GeoRingJobs.h"
 #include "perlin.h"
 #include "Pi.h"
@@ -29,34 +30,11 @@ static const int detail_edgeLen[5] = {
 	7, 15, 25, 35, 55
 };
 
-#pragma pack(4)
-struct VBOVertex
-{
-	vector3f pos;
-	vector3f norm;
-	Color4ub col;
-	vector2f uv;
-};
-#pragma pack()
-
-// hold the 16 possible terrain edge connections
-typedef struct {
-	std::vector<unsigned short> v;
-} VecShortHolder;
-
 inline void SetColour(Color3ub *r, const vector3d &v) { 
-#if 1
 	r->r=static_cast<unsigned char>(Clamp(v.x*255.0, 0.0, 255.0)); 
 	r->g=static_cast<unsigned char>(Clamp(v.y*255.0, 0.0, 255.0)); 
 	r->b=static_cast<unsigned char>(Clamp(v.z*255.0, 0.0, 255.0));
-#else
-	r->r = 255;
-	r->g = 255;
-	r->b = 255;
-#endif
 }
-
-#define NUM_VBE 2
 
 class BaseGeo {
 public:
@@ -194,8 +172,8 @@ public:
 		vbd.usage = Graphics::BUFFER_USAGE_STATIC;
 		m_vertexBuffer.reset(Pi::renderer->CreateVertexBuffer(vbd));
 
-		VBOVertex* VBOVtxPtr = m_vertexBuffer->Map<VBOVertex>(Graphics::BUFFER_MAP_WRITE);
-		assert(m_vertexBuffer->GetDesc().stride == sizeof(VBOVertex));
+		GeoPatchContext::VBOVertex* VBOVtxPtr = m_vertexBuffer->Map<GeoPatchContext::VBOVertex>(Graphics::BUFFER_MAP_WRITE);
+		assert(m_vertexBuffer->GetDesc().stride == sizeof(GeoPatchContext::VBOVertex));
 
 		const vector3d *vtx = vertices.get();
 		const vector3f *pNorm = normals.get();
@@ -206,7 +184,7 @@ public:
 				const double xFrac = double(x) * frac;
 				const double yFrac = double(y) * frac;
 
-				VBOVertex* vtxPtr = &VBOVtxPtr[x + (y*edgeLen)];
+				GeoPatchContext::VBOVertex* vtxPtr = &VBOVtxPtr[x + (y*edgeLen)];
 				vector3d p(*vtx - clipCentroid);
 				vtxPtr->pos = vector3f(p);
 				clipRadius = std::max(clipRadius, p.Length());
@@ -224,8 +202,6 @@ public:
 				// uv coords
 				vtxPtr->uv.x = 1.0f - xFrac;
 				vtxPtr->uv.y = yFrac;
-
-				++vtxPtr; // next vertex
 			}
 		}
 
@@ -389,8 +365,8 @@ public:
 		vbd.usage = Graphics::BUFFER_USAGE_STATIC;
 		m_vertexBuffer.reset(Pi::renderer->CreateVertexBuffer(vbd));
 
-		VBOVertex* VBOVtxPtr = m_vertexBuffer->Map<VBOVertex>(Graphics::BUFFER_MAP_WRITE);
-		assert(m_vertexBuffer->GetDesc().stride == sizeof(VBOVertex));
+		GeoPatchContext::VBOVertex* VBOVtxPtr = m_vertexBuffer->Map<GeoPatchContext::VBOVertex>(Graphics::BUFFER_MAP_WRITE);
+		assert(m_vertexBuffer->GetDesc().stride == sizeof(GeoPatchContext::VBOVertex));
 
 		const vector3d *vtx = vertices.get();
 		const vector3f *pNorm = normals.get();
@@ -401,7 +377,7 @@ public:
 				const double xFrac = double(x) * frac;
 				const double yFrac = double(y) * frac;
 
-				VBOVertex* vtxPtr = &VBOVtxPtr[x + (y*edgeLen)];
+				GeoPatchContext::VBOVertex* vtxPtr = &VBOVtxPtr[x + (y*edgeLen)];
 				vector3d p(*vtx - clipCentroid);
 				vtxPtr->pos = vector3f(p);
 				clipRadius = std::max(clipRadius, p.Length());
@@ -419,8 +395,6 @@ public:
 				// uv coords
 				vtxPtr->uv.x = 1.0f - xFrac;
 				vtxPtr->uv.y = yFrac;
-
-				++vtxPtr; // next vertex
 			}
 		}
 
@@ -596,445 +570,6 @@ public:
 };
 //static 
 RefCountedPtr<Graphics::IndexBuffer> GeoPlateWall::indices;
-
-// ********************************************************************************
-//
-// ********************************************************************************
-class GeoPlate
-{
-public:
-	RefCountedPtr<GeoPatchContext> ctx;
-	double ang[NUM_VBE];
-	double m_halfLen;
-	double m_yoffset;		// offset from the centre i.e. newyoffset = (m_yoffset + m_halfLen);
-	std::unique_ptr<vector3f[]> normals;
-	std::unique_ptr<Color3ub[]> colors;
-	GeoRing *geoRing;
-	std::unique_ptr<Graphics::VertexBuffer> m_vertexBuffer;
-	double m_roughLength;
-	vector3d clipCentroid;
-	double clipRadius;
-	vector3d vbe[NUM_VBE];
-	std::unique_ptr<GeoPlate> kids[4];
-	int m_depth;
-	bool m_needUpdateVBOs;
-	std::unique_ptr<double[]> heights;
-
-	const GeoPlateID mPatchID;
-	Job::Handle m_job;
-	bool mHasJobRequest;
-
-	// params
-	// v0, v1 - define points on the line describing the loop of the ring/orbital.
-	// depth - 0 is the topmost plate with each depth+1 describing it's depth within the tree.
-	GeoPlate(const RefCountedPtr<GeoPatchContext> &ctx_, GeoRing *geoRingPtr, const double halfLength, const vector3d &startVBE, const vector3d &endVBE, 
-		const double startAng, const double endAng, const double yoffset, const int depth, const GeoPlateID ID) 
-		: ctx(ctx_), normals(nullptr), colors(nullptr), geoRing(geoRingPtr), m_needUpdateVBOs(false), mPatchID(ID), mHasJobRequest(false)
-	{
-		ang[0] = startAng; 
-		ang[1] = endAng;
-		m_halfLen = halfLength;
-		m_yoffset = yoffset;
-		clipCentroid = GetSurfacePointCyl(0.5, 0.5, m_halfLen);
-		clipRadius = 0;
-		vector3d vcorners[4] = {
-			GetSurfacePointCyl(0.0, 0.0, m_halfLen),
-			GetSurfacePointCyl(1.0, 0.0, m_halfLen),
-			GetSurfacePointCyl(0.0, 1.0, m_halfLen),
-			GetSurfacePointCyl(1.0, 1.0, m_halfLen)
-		};
-		for (int i=0; i<4; i++) {
-			clipRadius = std::max(clipRadius, (vcorners[i]-clipCentroid).Length());
-		}
-		m_roughLength = GEOPLATE_SUBDIVIDE_AT_CAMDIST / pow(2.0, depth);
-
-		vbe[0] = startVBE;
-		vbe[1] = endVBE;
-		m_depth = depth;
-		m_needUpdateVBOs = false;
-	}
-
-	virtual ~GeoPlate() {
-	}
-
-	bool HasData() const { return heights.get() != nullptr; }
-
-	vector3d GetSurfacePointCyl(const double x, const double y, const double halfLength) const {
-		double theta = lerp( x, ang[1], ang[0] );
-		
-		const vector3d topEndEdge(sin(theta), m_yoffset + (halfLength * 0.5), cos(theta));		// vertices at top edge of circle
-		const vector3d bottomEndEdge(sin(theta), m_yoffset - (halfLength * 0.5), cos(theta));	// vertices at bottom edge of circle
-		
-		const vector3d res = lerp( y, bottomEndEdge, topEndEdge );
-		return res;
-	}
-
-	void NeedToUpdateVBOs() 
-	{
-		m_needUpdateVBOs = true;
-	}
-
-	void _UpdateVBOs() 
-	{
-		if (m_needUpdateVBOs) 
-		{
-			m_needUpdateVBOs = false;
-			//create buffer and upload data
-			Graphics::VertexBufferDesc vbd;
-			vbd.attrib[0].semantic = Graphics::ATTRIB_POSITION;
-			vbd.attrib[0].format   = Graphics::ATTRIB_FORMAT_FLOAT3;
-			vbd.attrib[1].semantic = Graphics::ATTRIB_NORMAL;
-			vbd.attrib[1].format   = Graphics::ATTRIB_FORMAT_FLOAT3;
-			vbd.attrib[2].semantic = Graphics::ATTRIB_DIFFUSE;
-			vbd.attrib[2].format   = Graphics::ATTRIB_FORMAT_UBYTE4;
-			vbd.attrib[3].semantic = Graphics::ATTRIB_UV0;
-			vbd.attrib[3].format   = Graphics::ATTRIB_FORMAT_FLOAT2;
-			vbd.numVertices = ctx->NUMVERTICES();
-			vbd.usage = Graphics::BUFFER_USAGE_STATIC;
-			m_vertexBuffer.reset(Pi::renderer->CreateVertexBuffer(vbd));
-
-			VBOVertex* VBOVtxPtr = m_vertexBuffer->Map<VBOVertex>(Graphics::BUFFER_MAP_WRITE);
-			assert(m_vertexBuffer->GetDesc().stride == sizeof(VBOVertex));
-
-			const Sint32 edgeLen = ctx->GetEdgeLen();
-			const double frac = ctx->GetFrac();
-			const double *hgt = heights.get();
-			const vector3f *pNorm = normals.get();
-			const Color3ub *pColr = colors.get();
-
-			const vector3d topEnd(0.0, m_yoffset + m_halfLen, 0.0);		// vertices at top edge of circle
-			const vector3d btmEnd(0.0, m_yoffset - m_halfLen, 0.0);		// vertices at bottom edge of circle
-
-			const Sint32 innerTop = 1;
-			const Sint32 innerBottom = edgeLen - 2;
-			const Sint32 innerLeft = 1;
-			const Sint32 innerRight = edgeLen - 2;
-
-			const Sint32 outerTop = 0;
-			const Sint32 outerBottom = edgeLen - 1;
-			const Sint32 outerLeft = 0;
-			const Sint32 outerRight = edgeLen - 1;
-
-			double maxh = DBL_MIN;
-
-			// ----------------------------------------------------
-			// inner loops
-			for (Sint32 y = 1; y<edgeLen-1; y++) 
-			{
-				const double yFrac = double(y - 1) * frac;
-				// point along z-axis by zfrac amount
-				const vector3d axisPt = lerp( yFrac, btmEnd, topEnd );
-				for (Sint32 x = 1; x<edgeLen-1; x++) 
-				{
-					const double height = *hgt;
-					maxh = std::max(height, maxh);
-					const double xFrac = double(x - 1) * frac;
-
-					const vector3d pCyl = GetSurfacePointCyl(xFrac, yFrac, m_halfLen);// find point on _surface_ of the cylinder
-					const vector3d cDir = (pCyl - axisPt).Normalized();// vector from axis to point-on-surface
-					vector3f p = vector3f((pCyl + (cDir * height)) - clipCentroid);// vertex is moved in direction of point-in-axis FROM point-on-surface by height.
-					clipRadius = std::max(clipRadius, pCyl.Length());
-
-					VBOVertex* vtxPtr = &VBOVtxPtr[x + (y*edgeLen)];
-					vtxPtr->pos = vector3f(p);
-					++hgt;	// next height
-
-					const vector3f norma(pNorm->Normalized());
-					vtxPtr->norm = norma;
-					++pNorm; // next normal
-
-					vtxPtr->col[0] = pColr->r;
-					vtxPtr->col[1] = pColr->g;
-					vtxPtr->col[2] = pColr->b;
-					vtxPtr->col[3] = 255;
-					++pColr; // next colour
-
-					// uv coords
-					vtxPtr->uv.x = 1.0f - xFrac;
-					vtxPtr->uv.y = yFrac;
-
-					++vtxPtr; // next vertex
-				}
-			}
-			const double maxhScale = (maxh + 1.0) * 1.00001;//0.99999;
-													
-			// ----------------------------------------------------
-			// vertical edges
-			// left-edge
-			for (Sint32 y = 1; y < edgeLen - 1; y++) {
-				const Sint32 x = innerLeft;
-				const double xFrac = double(x - 1) * frac;
-				const double yFrac = double(y - 1) * frac;
-				const vector3d p((GetSurfacePointCyl(xFrac, yFrac, m_halfLen) * maxhScale) - clipCentroid);
-
-				VBOVertex* vtxPtr = &VBOVtxPtr[outerLeft + (y*edgeLen)];
-				VBOVertex* vtxInr = &VBOVtxPtr[innerLeft + (y*edgeLen)];
-				vtxPtr->pos = vector3f(p);
-				vtxPtr->norm = vtxInr->norm;
-				vtxPtr->col = vtxInr->col;
-				vtxPtr->uv = vtxInr->uv;
-			}
-			// right-edge
-			for (Sint32 y = 1; y < edgeLen - 1; y++) {
-				const Sint32 x = innerRight;
-				const double xFrac = double(x - 1) * frac;
-				const double yFrac = double(y - 1) * frac;
-				const vector3d p((GetSurfacePointCyl(xFrac, yFrac, m_halfLen) * maxhScale) - clipCentroid);
-
-				VBOVertex* vtxPtr = &VBOVtxPtr[outerRight + (y*edgeLen)];
-				VBOVertex* vtxInr = &VBOVtxPtr[innerRight + (y*edgeLen)];
-				vtxPtr->pos = vector3f(p);
-				vtxPtr->norm = vtxInr->norm;
-				vtxPtr->col = vtxInr->col;
-				vtxPtr->uv = vtxInr->uv;
-			}
-			// ----------------------------------------------------
-			// horizontal edges
-			// top-edge
-			for (Sint32 x = 1; x < edgeLen - 1; x++) 
-			{
-				const Sint32 y = innerTop;
-				const double xFrac = double(x - 1) * frac;
-				const double yFrac = double(y - 1) * frac;
-				const vector3d p((GetSurfacePointCyl(xFrac, yFrac, m_halfLen) * maxhScale) - clipCentroid);
-
-				VBOVertex* vtxPtr = &VBOVtxPtr[x + (outerTop*edgeLen)];
-				VBOVertex* vtxInr = &VBOVtxPtr[x + (innerTop*edgeLen)];
-				vtxPtr->pos = vector3f(p);
-				vtxPtr->norm = vtxInr->norm;
-				vtxPtr->col = vtxInr->col;
-				vtxPtr->uv = vtxInr->uv;
-			}
-			// bottom-edge
-			for (Sint32 x = 1; x < edgeLen - 1; x++)
-			{
-				const Sint32 y = innerBottom;
-				const double xFrac = double(x - 1) * frac;
-				const double yFrac = double(y - 1) * frac;
-				const vector3d p((GetSurfacePointCyl(xFrac, yFrac, m_halfLen) * maxhScale) - clipCentroid);
-
-				VBOVertex* vtxPtr = &VBOVtxPtr[x + (outerBottom * edgeLen)];
-				VBOVertex* vtxInr = &VBOVtxPtr[x + (innerBottom * edgeLen)];
-				vtxPtr->pos = vector3f(p);
-				vtxPtr->norm = vtxInr->norm;
-				vtxPtr->col = vtxInr->col;
-				vtxPtr->uv = vtxInr->uv;
-			}
-			// ----------------------------------------------------
-			// corners
-			{
-				// top left
-				VBOVertex* tarPtr = &VBOVtxPtr[0];
-				VBOVertex* srcPtr = &VBOVtxPtr[1];
-				(*tarPtr) = (*srcPtr);
-			}
-			{
-				// top right
-				VBOVertex* tarPtr = &VBOVtxPtr[(edgeLen - 1)];
-				VBOVertex* srcPtr = &VBOVtxPtr[(edgeLen - 2)];
-				(*tarPtr) = (*srcPtr);
-			}
-			{
-				// bottom left
-				VBOVertex* tarPtr = &VBOVtxPtr[(edgeLen - 1) * edgeLen];
-				VBOVertex* srcPtr = &VBOVtxPtr[(edgeLen - 2) * edgeLen];
-				(*tarPtr) = (*srcPtr);
-			}
-			{
-				// bottom right
-				VBOVertex* tarPtr = &VBOVtxPtr[(edgeLen - 1) + ((edgeLen - 1) * edgeLen)];
-				VBOVertex* srcPtr = &VBOVtxPtr[(edgeLen - 1) + ((edgeLen - 2) * edgeLen)];
-				(*tarPtr) = (*srcPtr);
-			}
-
-			// ----------------------------------------------------
-			// end of mapping
-			m_vertexBuffer->Unmap();
-
-			normals.reset();
-			//heights.reset();
-			colors.reset();
-		}
-	}
-
-	bool canBeMerged() const {
-		bool merge = true;
-		if (kids[0]) {
-			for (int i=0; i<4; i++) {
-				merge &= kids[i]->canBeMerged();
-			}
-		}
-		merge &= !(mHasJobRequest);
-		return merge;
-	}
-
-	void ReceiveHeightmaps(SQuadPlateResult *psr)
-	{
-		PROFILE_SCOPED()
-		assert(NULL!=psr);
-		if (m_depth<psr->depth()) {
-			// this should work because each depth should have a common history
-			const Uint32 kidIdx = psr->data(0).patchID.GetPatchIdx(m_depth+1);
-			if( kids[kidIdx] ) {
-				kids[kidIdx]->ReceiveHeightmaps(psr);
-			} else {
-				psr->OnCancel();
-			}
-		} else {
-			assert(mHasJobRequest);
-			const int nD = m_depth+1;
-			for (int i=0; i<4; i++)
-			{
-				assert(!kids[i]);
-				const SQuadPlateResult::SSplitResultData& data = psr->data(i);
-				assert(i==data.patchID.GetPatchIdx(nD));
-				assert(0==data.patchID.GetPatchIdx(nD+1));
-				kids[i].reset(new GeoPlate(ctx, geoRing, data.halfLen, data.vbe0, data.vbe1, data.ang0, data.ang1, data.yoffset, nD, data.patchID));
-			}
-
-			for (int i=0; i<4; i++)
-			{
-				const SQuadPlateResult::SSplitResultData& data = psr->data(i);
-				kids[i]->heights.reset(data.heights);
-				kids[i]->normals.reset(data.normals);
-				kids[i]->colors.reset(data.colors);
-			}
-			for (int i=0; i<4; i++) {
-				kids[i]->NeedToUpdateVBOs();
-			}
-			mHasJobRequest = false;
-		}
-	}
-
-	void ReceiveHeightmap(const SSinglePlateResult *psr)
-	{
-		PROFILE_SCOPED()
-		assert(nullptr != psr);
-		assert(mHasJobRequest);
-		{
-			const SSinglePlateResult::SSplitResultData& data = psr->data();
-			heights.reset(data.heights);
-			normals.reset(data.normals);
-			colors.reset(data.colors);
-		}
-		mHasJobRequest = false;
-	}
-
-	void ReceiveJobHandle(Job::Handle job)
-	{
-		assert(!m_job.HasJob());
-		m_job = static_cast<Job::Handle&&>(job);
-	}
-
-	void RequestSinglePatch()
-	{
-		if( !heights ) {
-			assert(!mHasJobRequest);
-			mHasJobRequest = true;
-
-			SSinglePlateRequest *ssrd = new SSinglePlateRequest(ang[0], ang[1], m_yoffset, m_halfLen, vbe[0], vbe[1], 
-				m_depth, geoRing->GetSystemBody()->GetPath(), mPatchID, 
-				ctx->GetEdgeLen(), ctx->GetFrac(), geoRing->GetTerrain());
-			m_job = Pi::GetAsyncJobQueue()->Queue(new SinglePlateJob(ssrd));
-		}
-	}
-	
-	static bool s_bUseWireframe;
-	void Render(Graphics::Renderer *renderer, const vector3d &campos, const matrix4x4d &modelView, const Graphics::Frustum &frustum) 
-	{
-		PROFILE_SCOPED()
-		// must update the VBOs to calculate the clipRadius...
-		_UpdateVBOs();
-
-		// Do frustum culling
-		if (!frustum.TestPoint(clipCentroid, clipRadius))
-			return; // nothing below this patch is visible
-
-		if (kids[0]) 
-		{
-			for (int i=0; i<4; i++) {
-				kids[i]->Render(renderer, campos, modelView, frustum);
-			}
-		} 
-		else if(m_vertexBuffer.get()) 
-		{
-			_UpdateVBOs();
-
-			RefCountedPtr<Graphics::Material> mat = geoRing->GetSurfaceMaterial();
-			Graphics::RenderState *rs = geoRing->GetSurfRenderState();
-
-			const vector3d relpos = clipCentroid - campos;
-			renderer->SetTransform(modelView * matrix4x4d::Translation(relpos));
-
-			Pi::statSceneTris += ctx->GetNumTris();
-			++Pi::statNumPatches;
-
-			// per-patch detail texture scaling value
-			geoRing->GetMaterialParameters().patchDepth = m_depth;
-			renderer->SetWireFrameMode(s_bUseWireframe);
-			renderer->DrawBufferIndexed(m_vertexBuffer.get(), ctx->GetIndexBuffer(), rs, mat.Get());
-			renderer->SetWireFrameMode(false);
-			renderer->GetStats().AddToStatCount(Graphics::Stats::STAT_PLATES, 1);
-		}
-	}
-
-	static bool s_bCanUpdate;
-	void LODUpdate(vector3d &campos) 
-	{
-		// there should be no LOD update when we have active split requests
-		if(mHasJobRequest || !s_bCanUpdate)
-			return;
-
-		bool canSplit = true;
-		bool canMerge = bool(kids[0].get()!=nullptr);
-
-		// always split at first level
-		const double centroidDist = (campos - clipCentroid).Length();
-		const bool errorSplit = (centroidDist < m_roughLength);
-		if( !(canSplit && (m_depth < std::min(GEOPLATE_MAX_DEPTH, geoRing->GetMaxDepth())) && errorSplit) ) {
-			canSplit = false;
-		}
-		
-		if (canSplit) 
-		{
-			if (!kids[0]) 
-			{
-				// we can see this patch so submit the jobs!
-				assert(!mHasJobRequest);
-				mHasJobRequest = true;
-
-				SQuadPlateRequest *ssrd = new SQuadPlateRequest(ang[0], ang[1], m_yoffset, m_halfLen, vbe[0], vbe[1], 
-					m_depth, geoRing->GetSystemBody()->GetPath(), mPatchID, 
-					ctx->GetEdgeLen(), ctx->GetFrac(), geoRing->GetTerrain());
-
-				// add to the GeoSphere to be processed at end of all LODUpdate requests
-				geoRing->AddQuadPlateRequest(centroidDist, ssrd, this);
-			}
-			else 
-			{
-				for (int i=0; i<4; ++i) 
-					kids[i]->LODUpdate(campos);
-			}
-		} 
-		else if (canMerge) 
-		{
-			for (int i=0; i<4; i++) 
-			{
-				canMerge &= kids[i]->canBeMerged();
-			}
-			if (canMerge) 
-			{
-				for (int i=0; i<4; ++i) 
-					kids[i].reset();
-			}
-		}
-	}
-};
-// --------------------------------------
-//static 
-// --------------------------------------
-bool GeoPlate::s_bUseWireframe = false;
-bool GeoPlate::s_bCanUpdate = true;
 
 static std::vector<GeoRing*> s_allGeoRings;
 

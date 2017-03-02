@@ -104,12 +104,14 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 
 		// ----------------------------------------------------
 		// inner loops
-		for (Sint32 y = 1; y<edgeLen-1; y++) {
-			for (Sint32 x = 1; x<edgeLen-1; x++) {
+		for (Sint32 y = 1; y<edgeLen-1; y++) 
+		{
+			const double yFrac = double(y - 1) * frac;
+			for (Sint32 x = 1; x<edgeLen-1; x++) 
+			{
 				const double height = *pHts;
 				minh = std::min(height, minh);
 				const double xFrac = double(x - 1) * frac;
-				const double yFrac = double(y - 1) * frac;
 				const vector3d p((GetSpherePoint(xFrac, yFrac) * (height + 1.0)) - clipCentroid);
 				clipRadius = std::max(clipRadius, p.Length());
 
@@ -130,11 +132,10 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 				// uv coords
 				vtxPtr->uv.x = 1.0f - xFrac;
 				vtxPtr->uv.y = yFrac;
-
-				++vtxPtr; // next vertex
 			}
 		}
 		const double minhScale = (minh + 1.0) * 0.99999;
+
 		// ----------------------------------------------------
 		// vertical edges
 		// left-edge
