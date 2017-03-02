@@ -30,12 +30,6 @@ static const int detail_edgeLen[5] = {
 	7, 15, 25, 35, 55
 };
 
-inline void SetColour(Color3ub *r, const vector3d &v) { 
-	r->r=static_cast<unsigned char>(Clamp(v.x*255.0, 0.0, 255.0)); 
-	r->g=static_cast<unsigned char>(Clamp(v.y*255.0, 0.0, 255.0)); 
-	r->b=static_cast<unsigned char>(Clamp(v.z*255.0, 0.0, 255.0));
-}
-
 class BaseGeo {
 public:
 	BaseGeo(const RefCountedPtr<GeoPatchContext> &ctx_, GeoRing *geoRingPtr, const double halfLength, const double startAng, const double endAng, const double yoffset, const int depth)

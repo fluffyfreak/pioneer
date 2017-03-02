@@ -52,12 +52,6 @@ static const int detail_edgeLen[5] = {
 	7, 15, 25, 35, 55
 };
 
-inline void SetColour(Color3ub *r, const vector3d &v) { 
-	r->r=static_cast<unsigned char>(Clamp(v.x*255.0, 0.0, 255.0)); 
-	r->g=static_cast<unsigned char>(Clamp(v.y*255.0, 0.0, 255.0)); 
-	r->b=static_cast<unsigned char>(Clamp(v.z*255.0, 0.0, 255.0));
-}
-
 // ********************************************************************************
 //
 // ********************************************************************************
@@ -400,6 +394,7 @@ void GeoPlate::LODUpdate(vector3d &campos)
 	if( !(canSplit && (m_depth < std::min(GEOPLATE_MAX_DEPTH, geoRing->GetMaxDepth())) && errorSplit) ) {
 		canSplit = false;
 	}
+
 
 	if (canSplit) 
 	{
