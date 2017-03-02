@@ -559,7 +559,7 @@ static double MaxFeatureRad(Body *body)
 static double MaxEffectRad(Body *body, Propulsion *prop)
 {
 	if(!body) return 0.0;
-	if(!body->IsType(Object::TERRAINBODY)) {
+	if(!body->IsType(Object::TERRAINBODY) && !body->IsType(Object::ORBITAL)) {
 		if (!body->IsType(Object::SPACESTATION)) return body->GetPhysRadius() + 1000.0;
 		return static_cast<SpaceStation*>(body)->GetStationType()->ParkingDistance() + 1000.0;
 	}
