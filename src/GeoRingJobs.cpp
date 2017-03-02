@@ -15,8 +15,9 @@
 #include "profiler/Profiler.h"
 
 #include "vcacheopt/vcacheopt.h"
+#include "MathUtil.h"
 
-#define lerp(t, a, b) ( a + t * (b - a) )
+//#define lerp(t, a, b) ( a + t * (b - a) )
 
 inline void SetColour(Color3ub *r, const vector3d &v) { 
 	r->r=static_cast<unsigned char>(Clamp(v.x*255.0, 0.0, 255.0)); 
@@ -31,12 +32,12 @@ inline void SetColour(Color3ub *r, const vector3d &v) {
 
 inline vector3d GetSurfacePointCyl(const double x, const double y, const double ang0, const double ang1, const double yoffset, const double halfLength) 
 {
-	double theta = lerp( x, ang1, ang0 );
+	double theta = MathUtil::mix( ang1, ang0, x );
 		
 	const vector3d topEndEdge(sin(theta), yoffset + (halfLength * 0.5), cos(theta));		// vertices at top edge of circle
 	const vector3d bottomEndEdge(sin(theta), yoffset - (halfLength * 0.5), cos(theta));	// vertices at bottom edge of circle
 		
-	const vector3d res = lerp( y, bottomEndEdge, topEndEdge );
+	const vector3d res = MathUtil::mix( bottomEndEdge, topEndEdge, y );
 	return res;
 }
 
@@ -106,7 +107,7 @@ void SinglePlateJob::GenerateMesh(double *heights, vector3f *normals, Color3ub *
 	{
 		const double yfrac = double(y) * fracStep;
 		// point along z-axis by zfrac amount
-		const vector3d axisPt = lerp( yfrac, btmEnd, topEnd );
+		const vector3d axisPt = MathUtil::mix( btmEnd, topEnd, yfrac );
 		for (int x=-BORDER_SIZE; x<borderedEdgeLen-BORDER_SIZE; x++) 
 		{
 			const double xfrac = double(x) * fracStep;
@@ -201,7 +202,7 @@ void QuadPlateJob::OnFinish()  // runs in primary thread of the context
 	mpResults = nullptr;
 	BasePlateJob::OnFinish();
 }
-
+//#pragma optimize("",off)
 void QuadPlateJob::OnRun()    // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
 {
 	BasePlateJob::OnRun();
@@ -213,8 +214,8 @@ void QuadPlateJob::OnRun()    // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
 			srd.edgeLen, srd.fracStep, srd.pTerrain.Get());
 
 	
-	const vector3d halfVBE = srd.vbe0 + 0.5 * (srd.vbe1 - srd.vbe0);
-	const double halfAng = srd.ang0 + 0.5 * (srd.ang1 - srd.ang0);
+	const vector3d halfVBE = MathUtil::mix(srd.vbe0, srd.vbe1, 0.5);//srd.vbe0 + 0.5 * (srd.vbe1 - srd.vbe0);
+	const double halfAng = MathUtil::mix(srd.ang0, srd.ang1, 0.5);//srd.ang0 + 0.5 * (srd.ang1 - srd.ang0);
 	const double newLength = (srd.halfLen*0.5);
 	const double yoffset0 = srd.yoffset + (newLength*0.5);
 	const double yoffset1 = srd.yoffset - (newLength*0.5);
@@ -291,7 +292,7 @@ void QuadPlateJob::GenerateBorderedData(
 	{
 		const double yfrac = double(y) * (fracStep*0.5);
 		// point along z-axis by zfrac amount
-		const vector3d axisPt = lerp( yfrac, btmEnd, topEnd );
+		const vector3d axisPt = MathUtil::mix( btmEnd, topEnd, yfrac );
 		for ( int x = -BORDER_SIZE; x < (borderedEdgeLen - BORDER_SIZE); x++ ) 
 		{
 			const double xfrac = double(x) * fracStep;
