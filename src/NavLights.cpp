@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "NavLights.h"
@@ -92,7 +92,8 @@ NavLights::NavLights(SceneGraph::Model *model, float period)
 	const std::vector<Node*> &results = lightFinder.GetResults();
 
 	//attach light billboards
-	for (unsigned int i=0; i < results.size(); i++) {
+	for (unsigned int i=0; i < results.size(); i++)
+	{
 		MatrixTransform *mt = dynamic_cast<MatrixTransform*>(results.at(i));
 		assert(mt);
 		Billboard *bblight = new Billboard(m_billboardTris, renderer, BILLBOARD_SIZE);
@@ -190,7 +191,7 @@ void NavLights::Render(Graphics::Renderer *renderer)
 		matHalos4x4.Reset(renderer->CreateMaterial(desc));
 		texHalos4x4.Reset(Graphics::TextureBuilder::Billboard("textures/halo_4x4.dds").GetOrCreateTexture(renderer, std::string("billboard")));
 		matHalos4x4->texture0 = texHalos4x4.Get();
-	
+
 		Graphics::RenderStateDesc rsd;
 		rsd.blendMode = Graphics::BLEND_ADDITIVE;
 		rsd.depthWrite = false;
@@ -213,7 +214,7 @@ void NavLights::Render(Graphics::Renderer *renderer)
 		vbd.usage = Graphics::BUFFER_USAGE_DYNAMIC;	// we could be updating this per-frame
 		m_billboardVB.Reset( renderer->CreateVertexBuffer(vbd) );
 	}
-	
+
 	if(m_billboardVB.Valid())
 	{
 		if(bHasVerts) {

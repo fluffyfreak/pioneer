@@ -1,17 +1,108 @@
-October 2016
+March 2017
    * New Features
-	 * Added military drives from 5 to 9 (#3830)
-	 * Thruster upgrades (#3831)
-	 
-   * Fixes
-	 * Search&Rescue: set ship look and bugfix (#3823)
-	 * Fixing the scaled down collision mesh of New Ground station (#3833)
+     * Orthographic view in modelviewer #3936
+     * OpenGL 2.1 support (#3934)
 
    * Internal Changes
-	 * Add "override" to silence warnings in clang (#3828)
-	 * Update the .gitignore file for more vs2015 files outputs (#3829)
-	 * Fix ARFLAGS to remove warning (#3827)
-	 * Attempt to find the nearest matching exact name (#3832)
+     * Upgrade of Xcode project for Mac OSX build #3937
+     * Resolve the mismatched attribute numbering (#3938)
+     * Refactor the Vertex, Index, etc buffers (#3941)
+     * Eliminate the evil trailing whitespace (#3942)
+
+February 2017
+   * New Features
+     * Slowly position ship to landing tag when landing on planetary bases (#3901)
+
+   * Internal Changes
+     * Remove the LineMaterial as it is unused (#3929)
+     * Collision with docking surface entirely moved on SpaceStation (#3920)
+     * Choose enemy ships by role, not hull mass (#3906)
+     * Generous Minimum PhysRadius (#3491)
+     * GLEW resurrection, initial code and project changes (#3925)
+
+   * Fixes
+     * Destructor on AICmdKill ensure no gun fire (#3926)
+     * Avoid CTD when trade ship try to decide hyperjump (#3919)
+     * Fix some orbital data in Sol system (#3889)
+     * Avoid jousting when docking on orbitals at high time steps (#3933)
+
+January 2017
+   * New Features
+     * Toggle cursor position when flying (#3909)
+     * Can no longer set speed above lightspeed (#3908)
+
+   * Internal Changes
+     * Correct and clarify a misleading comment (#3898)
+     * Use the gas giant textures RAW instead of Billboard (#3897)
+     * MERRY HAPPY 2017 (#3899)
+     * Remove IsPlayerShip from Ship (#3904)
+     * Handle collision/docking better (#3915), (#3912)
+
+   * Fixes
+     * Never spawn toothless pirates (#3903)
+
+December 2016
+   * Fixes
+     * Set ImgUI shaders to version 140 to work around junk Intel drivers (#3885)
+     * Fix translations (#3890)
+     * Use dynamic vertex buffers for UI labels (#3887)
+     * Provide config flag and warning to work around Intel pointsprite bug (#3895)
+
+   * Internal Changes
+     * Convert more PNG files to DDS (#3883)
+     * Render error check (#3884)
+     * Keep quit confirmation messages modern and stylish (#3896)
+
+November 2016
+   * Fixes
+     * Set delta-t to 1/60 if it is <= 0 (#3854)
+     * fix pattern selection if no pattern present (#3855)
+     * Lobby: Disconnect the property listeners when the docked station changes (#3857)
+     * Docking message should not mention auto refuel (#3863)
+     * Player shouldn't sell fuel they don't have (#3864)
+     * Render the navlights for orbital stations (#3874)
+     * Jitter fix (#3872)
+     * fix navbutton crash without target (#3865)
+     * Fix orphaned connections in WorldView (#3876)
+     * Disable the modelcompiler multithreading (#3879)
+     * Fix undefined renderer bug in SGM LOD loader (#3880)
+
+   * Internal Changes
+     * Freebsd patches (#3851)
+     * Enhance serializer crash output (#3853)
+     * Custom system checking (#3856)
+     * Sprinkle SpaceStation with asserts to find naughty bug (#3861)
+     * isnan is std, MXE build complained (#3867)
+     * Add GL_CFLAGS value to AM_CFLAGS (#3870)
+     * Remove GL buffer init fills, add init checks (#3877)
+     * Optimisation: Reserve VA capacity correctly for Gui::TextLayout (#3878)
+
+October 2016
+   * New Features
+     * Added military drives from 5 to 9 (#3830)
+     * Thruster upgrades (#3831)
+     * Calculate selling price including equipment (#3835)
+     * Remove autorefuel (#3837)
+     * Rename scanner -> radar; radar mapper -> target scanner (#3825)
+
+   * Fixes
+     * Search&Rescue: set ship look and bugfix (#3823)
+     * Fixing the scaled down collision mesh of New Ground station (#3833)
+     * Updating the Bluenose Medium LOD with the correct mesh (#3845)
+     * Avoid crash if player jumps to next system (#3848)
+
+   * Internal Changes
+     * Add "override" to silence warnings in clang (#3828)
+     * Update the .gitignore file for more vs2015 files outputs (#3829)
+     * Fix ARFLAGS to remove warning (#3827)
+     * Attempt to find the nearest matching exact name (#3832)
+     * Terrain gen cleanup (#3834)
+     * Introduce imgui library, make load screen use it (#3826)
+     * Simple reduction in memory usage (#3838)
+     * Put imgui.ini into user config dir (#3843)
+     * Arm asm fix (#3847)
+     * Don't try to instance zero entries (#3849)
+     * Update attrib binding locations (#3850)
 
 September 2016
    * New Features
@@ -33,7 +124,7 @@ September 2016
      * Brighter luminosity for random colours (#3815)
      * Minor performance cleanup (#3820)
      * Use a function to access the s_patchFaces to silence a gcc warning (#3822)
-	 * Multi-Threading modelcompiler (#3821)
+     * Multi-Threading modelcompiler (#3821)
 
 August 2016
    * New Features

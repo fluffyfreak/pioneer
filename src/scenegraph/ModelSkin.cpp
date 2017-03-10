@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "ModelSkin.h"
@@ -25,7 +25,7 @@ void ModelSkin::Apply(Model *model) const
 		if (m_decals[i].empty())
 			model->ClearDecal(i);
 		else
-			model->SetDecalTexture(Graphics::TextureBuilder::Decal(stringf("textures/decals/%0.png", m_decals[i])).GetOrCreateTexture(model->GetRenderer(), "decal"), i);
+			model->SetDecalTexture(Graphics::TextureBuilder::Decal(stringf("textures/decals/%0.dds", m_decals[i])).GetOrCreateTexture(model->GetRenderer(), "decal"), i);
 	}
 	model->SetLabel(m_label);
 }

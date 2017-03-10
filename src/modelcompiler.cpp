@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -94,7 +94,7 @@ void SetupRenderer()
 	Uint32 numThreads = s_config->Int("WorkerThreads");
 	const int numCores = OS::GetNumCores();
 	assert(numCores > 0);
-	if (numThreads == 0) 
+	if (numThreads == 0)
 		numThreads = std::max(Uint32(numCores), 1U); // this is a tool, we can use all of the cores for processing unlike Pioneer
 	asyncJobQueue.reset(new AsyncJobQueue(numThreads));
 	Output("started %d worker threads\n", numThreads);
@@ -189,7 +189,7 @@ int main(int argc, char** argv)
 	}
 
 start:
-	
+
 	// Init here since we'll need it for both batch and RunCompiler modes.
 	FileSystem::Init();
 	FileSystem::userFiles.MakeDirectory(""); // ensure the config directory exists
@@ -261,6 +261,11 @@ start:
 			}
 
 			SetupRenderer();
+#if 1
+			for (auto &modelName : list_model) {
+				RunCompiler(modelName.first, modelName.second, isInPlace);
+			}
+#else
 			std::deque<Job::Handle> handles;
 			for (auto &modelName : list_model) {
 				handles.push_back( asyncJobQueue->Queue(new CompileJob(modelName.first, modelName.second, isInPlace)) );
@@ -269,12 +274,13 @@ start:
 			while(true) {
 				asyncJobQueue->FinishJobs();
 				bool hasJobs = false;
-				for(auto &handle : handles) 
+				for(auto &handle : handles)
 					hasJobs |= handle.HasJob();
 
 				if(!hasJobs)
 					break;
 			}
+#endif
 			break;
 		}
 

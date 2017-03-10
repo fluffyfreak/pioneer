@@ -279,9 +279,9 @@
       "description" : "",
       "message" : "Napok hossza"
    },
-   "DECREASE_SCAN_RANGE" : {
+   "DECREASE_RADAR_RANGE" : {
       "description" : "",
-      "message" : "Szkennertáv csökkentése"
+      "message" : "Csökkent radar hatótáv"
    },
    "DECREASE_SET_SPEED" : {
       "description" : "",
@@ -599,9 +599,9 @@
       "description" : "",
       "message" : "Birodalmi uradalom"
    },
-   "INCREASE_SCAN_RANGE" : {
+   "INCREASE_RADAR_RANGE" : {
       "description" : "",
-      "message" : "Szkennertáv növelése"
+      "message" : "Kiterjesztett radar hatótáv"
    },
    "INCREASE_SET_SPEED" : {
       "description" : "",
@@ -1187,6 +1187,10 @@
       "description" : "",
       "message" : "Négyes rendszer"
    },
+   "RADAR_CONTROL" : {
+      "description" : "",
+      "message" : "Radar vezérlés"
+   },
    "RADIOACTIVES" : {
       "description" : "",
       "message" : "Radioaktív hulladék"
@@ -1266,10 +1270,6 @@
    "RUBBISH" : {
       "description" : "",
       "message" : "Hulladék"
-   },
-   "SCANNER_CONTROL" : {
-      "description" : "",
-      "message" : "Szkenner irányítás"
    },
    "SCOOP" : {
       "description" : "Is followed by a number, repersenting scoop mounts/slots available to fit cargo scoop and/or fuel scoop",
@@ -1390,10 +1390,6 @@
    "SIDEREAL_VIEW" : {
       "description" : "camera view setting",
       "message" : "Sziderikus nézet"
-   },
-   "SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS" : {
-      "description" : "",
-      "message" : "Az univerzum evolúciószimulálása:  %age{f.1} milliárd év ;-)"
    },
    "SLAVES" : {
       "description" : "",
@@ -1687,17 +1683,17 @@
       "description" : "",
       "message" : "Lua konzol"
    },
+   "TOGGLE_RADAR_MODE" : {
+      "description" : "",
+      "message" : "Radar mód"
+   },
+   "TOGGLE_RADAR_VIEW" : {
+      "description" : "Tooltip for the Radar View button",
+      "message" : "Radar nézet"
+   },
    "TOGGLE_ROTATION_DAMPING" : {
       "description" : "",
       "message" : "Forgásfékezés ki-be"
-   },
-   "TOGGLE_SCANNER_VIEW" : {
-      "description" : "Tooltip for the Scanner View button",
-      "message" : "Szkenner nézet"
-   },
-   "TOGGLE_SCAN_MODE" : {
-      "description" : "",
-      "message" : "Szkennermód kapcsoló"
    },
    "TOMBSTONE_EPITAPH" : {
       "description" : "shown on tombstone when player dies",

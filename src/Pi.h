@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _PI_H
@@ -23,6 +23,7 @@ class Intro;
 class LuaConsole;
 class LuaNameGen;
 class ModelCache;
+class PiGui;
 class Player;
 class Ship;
 class SpaceStation;
@@ -86,8 +87,8 @@ public:
 	static SDL_JoystickGUID JoystickGUID(int joystick);
 	static void SetMouseYInvert(bool state) { mouseYInvert = state; }
 	static bool IsMouseYInvert() { return mouseYInvert; }
-	static void SetCompactScanner(bool state) { compactScanner = state; }
-	static bool IsScannerCompact() { return compactScanner; }
+	static void SetCompactRadar(bool state) { compactRadar = state; }
+	static bool IsRadarCompact() { return compactRadar; }
 	static bool IsNavTunnelDisplayed() { return navTunnelDisplayed; }
 	static void SetNavTunnelDisplayed(bool state) { navTunnelDisplayed = state; }
 	static bool AreSpeedLinesDisplayed() { return speedLinesDisplayed; }
@@ -102,6 +103,7 @@ public:
 		memcpy(motion, mouseMotion, sizeof(int)*2);
 	}
 	static void SetMouseGrab(bool on);
+	static bool DoingMouseGrab() { return doingMouseGrab; }
 	static void BoinkNoise();
 	static std::string GetSaveDir();
 	static SceneGraph::Model *FindModel(const std::string&, bool allowPlaceholder = true);
@@ -129,20 +131,22 @@ public:
 	static ServerAgent *serverAgent;
 
 	static RefCountedPtr<UI::Context> ui;
+    static RefCountedPtr<PiGui> pigui;
 
 	static Random rng;
 	static int statSceneTris;
 	static int statNumPatches;
 
+	static void DrawPiGui(double delta, std::string handler = "GAME");
 	static void SetView(View *v);
 	static View *GetView() { return currentView; }
 
 	static void SetAmountBackgroundStars(const float pc) { amountOfBackgroundStarsDisplayed = Clamp(pc, 0.01f, 1.0f); bRefreshBackgroundStars = true; }
 	static float GetAmountBackgroundStars() { return amountOfBackgroundStarsDisplayed; }
-	static bool MustRefreshBackgroundClearFlag() { 
+	static bool MustRefreshBackgroundClearFlag() {
 		const bool bRet = bRefreshBackgroundStars;
 		bRefreshBackgroundStars = false;
-		return bRet; 
+		return bRet;
 	}
 
 #if WITH_DEVKEYS
@@ -203,7 +207,7 @@ private:
 
 	static bool joystickEnabled;
 	static bool mouseYInvert;
-	static bool compactScanner;
+	static bool compactRadar;
 	struct JoystickState {
 		SDL_Joystick *joystick;
 		SDL_JoystickGUID guid;

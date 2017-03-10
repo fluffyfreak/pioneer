@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaObject.h"
@@ -183,7 +183,7 @@ static int l_space_spawn_ship(lua_State *l)
  *
  * > -- spawn a ship 10km from the player
  * > local ship = Ship.SpawnNear("viper_police_craft", Game.player, 10, 10)
- * 
+ *
  * > -- spawn a ship 10km from the player with the players velocity
  * > local ship = Ship.SpawnNear("viper_police_craft", Game.player, 10, 10, nil, Game.player:velocity)
  *

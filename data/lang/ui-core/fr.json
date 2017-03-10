@@ -151,9 +151,9 @@
       "description" : "",
       "message" : "Bourse d'échange"
    },
-   "COMPACT_SCANNER" : {
+   "COMPACT_RADAR" : {
       "description" : "Game settings option",
-      "message" : "Scanner compact"
+      "message" : "Radar compact"
    },
    "COMPETENT" : {
       "description" : "Combat rating",
@@ -1046,6 +1046,10 @@
    "SHIP_VIEWING_WAS_SOLD" : {
       "description" : "",
       "message" : "Le vaisseau que vous observiez a été vendu"
+   },
+   "SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS" : {
+      "description" : "",
+      "message" : "Simulation de l'évolution de l'univers : {age} milliards d'années ;-)"
    },
    "SOUND" : {
       "description" : "",

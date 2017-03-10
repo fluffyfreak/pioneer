@@ -279,9 +279,9 @@
       "description" : "",
       "message" : "Długość dnia"
    },
-   "DECREASE_SCAN_RANGE" : {
+   "DECREASE_RADAR_RANGE" : {
       "description" : "",
-      "message" : "Zmniejsza zasięg skanera"
+      "message" : "Zmniejsza zasięg radaru"
    },
    "DECREASE_SET_SPEED" : {
       "description" : "",
@@ -599,9 +599,9 @@
       "description" : "",
       "message" : "Rządy Imperium"
    },
-   "INCREASE_SCAN_RANGE" : {
+   "INCREASE_RADAR_RANGE" : {
       "description" : "",
-      "message" : "Zwiększa zasięg skanera"
+      "message" : "Zwiększa zasięg radaru"
    },
    "INCREASE_SET_SPEED" : {
       "description" : "",
@@ -1145,19 +1145,19 @@
    },
    "PLANNER_RESET_FACTOR" : {
       "description" : "For system orbit view",
-      "message" : "Rate of increase of delta-v values. Click to reset to default."
+      "message" : "Tempo wzrostu wartości delta-v. Kliknij, aby przywrócić domyślne."
    },
    "PLANNER_RESET_NORMAL" : {
       "description" : "For system orbit view",
-      "message" : "Normal delta-v. Click to reset to zero."
+      "message" : "Delta-v dla pozycji normalnej. Kliknij, aby wyzerować."
    },
    "PLANNER_RESET_PROGRADE" : {
       "description" : "For system orbit view",
-      "message" : "Prograde delta-v. Click to reset to zero."
+      "message" : "Delta-v dla pozycji przodem. Kliknij, aby wyzerować."
    },
    "PLANNER_RESET_RADIAL" : {
       "description" : "For system orbit view",
-      "message" : "Radial delta-v. Click to reset to zero."
+      "message" : "Delta-v dla pozycji radialnej. Kliknij, aby wyzerować."
    },
    "PLANNER_RESET_START" : {
       "description" : "For system orbit view",
@@ -1186,6 +1186,10 @@
    "QUADRUPLE_SYSTEM" : {
       "description" : "",
       "message" : "System poczwórny."
+   },
+   "RADAR_CONTROL" : {
+      "description" : "",
+      "message" : "Opcje radaru"
    },
    "RADIOACTIVES" : {
       "description" : "",
@@ -1266,10 +1270,6 @@
    "RUBBISH" : {
       "description" : "",
       "message" : "Odpady"
-   },
-   "SCANNER_CONTROL" : {
-      "description" : "",
-      "message" : "Opcje skanera"
    },
    "SCOOP" : {
       "description" : "Is followed by a number, repersenting scoop mounts/slots available to fit cargo scoop and/or fuel scoop",
@@ -1390,10 +1390,6 @@
    "SIDEREAL_VIEW" : {
       "description" : "camera view setting",
       "message" : "Widok radialny"
-   },
-   "SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS" : {
-      "description" : "",
-      "message" : "Symulacja ewolucji wszechświata: %age{f.1} miliardów lat ;-)"
    },
    "SLAVES" : {
       "description" : "",
@@ -1687,17 +1683,17 @@
       "description" : "",
       "message" : "Aktywacja konsoli"
    },
+   "TOGGLE_RADAR_MODE" : {
+      "description" : "",
+      "message" : "Zmiana trybu radaru"
+   },
+   "TOGGLE_RADAR_VIEW" : {
+      "description" : "Tooltip for the Radar View button",
+      "message" : "Widok radaru"
+   },
    "TOGGLE_ROTATION_DAMPING" : {
       "description" : "",
       "message" : "Tłumienie rotacji"
-   },
-   "TOGGLE_SCANNER_VIEW" : {
-      "description" : "Tooltip for the Scanner View button",
-      "message" : "Widok skanera"
-   },
-   "TOGGLE_SCAN_MODE" : {
-      "description" : "",
-      "message" : "Zmiana trybu skanera"
    },
    "TOMBSTONE_EPITAPH" : {
       "description" : "shown on tombstone when player dies",

@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "RendererGL.h"
@@ -44,7 +44,7 @@ static Renderer *CreateRenderer(WindowSDL *win, const Settings &vs) {
 
 // static method instantiations
 void RendererOGL::RegisterRenderer() {
-    Graphics::RegisterRenderer(Graphics::RENDERER_OPENGL, CreateRenderer);
+    Graphics::RegisterRenderer(Graphics::RENDERER_OPENGL_3x, CreateRenderer);
 }
 
 // static member instantiations
@@ -70,20 +70,41 @@ RendererOGL::RendererOGL(WindowSDL *window, const Graphics::Settings &vs)
 , m_activeRenderState(nullptr)
 , m_matrixMode(MatrixMode::MODELVIEW)
 {
-	if (!initted) {
-		initted = true;
+	glewExperimental = true;
+	GLenum glew_err;
+	if ((glew_err = glewInit()) != GLEW_OK)
+		Error("GLEW initialisation failed: %s", glewGetErrorString(glew_err));
 
-		if (!ogl_LoadFunctions())
-			Error(
-				"Pioneer can not run on your graphics card as it does not appear to support OpenGL 3.3\n"
-				"Please check to see if your GPU driver vendor has an updated driver - or that drivers are installed correctly."
-			);
+	// pump this once as glewExperimental is necessary but spews a single error
+	GLenum err = glGetError();
 
-		if (ogl_ext_EXT_texture_compression_s3tc == ogl_LOAD_FAILED)
+	if (!glewIsSupported("GL_VERSION_3_1") )
+	{
+		Error(
+			"Pioneer can not run on your graphics card as it does not appear to support OpenGL 3.1\n"
+			"Please check to see if your GPU driver vendor has an updated driver - or that drivers are installed correctly."
+		);
+	}
+
+	if (!glewIsSupported("GL_EXT_texture_compression_s3tc"))
+	{
+		if (glewIsSupported("GL_ARB_texture_compression")) {
+			GLint intv[4];
+			glGetIntegerv(GL_NUM_COMPRESSED_TEXTURE_FORMATS, &intv[0]);
+			if( intv[0] == 0 ) {
+				Error("GL_NUM_COMPRESSED_TEXTURE_FORMATS is zero.\nPioneer can not run on your graphics card as it does not support compressed (DXTn/S3TC) format textures.");
+			}
+		} else {
 			Error(
 				"OpenGL extension GL_EXT_texture_compression_s3tc not supported.\n"
 				"Pioneer can not run on your graphics card as it does not support compressed (DXTn/S3TC) format textures."
 			);
+		}
+	}
+
+	const char *ver = (const char *)glGetString(GL_VERSION);
+	if (vs.gl3ForwardCompatible && strstr(ver, "9.17.10.4229")) {
+		Warning("Driver needs GL3ForwardCompatible=0 in config.ini to display billboards (stars, navlights etc.)");
 	}
 
 	TextureBuilder::Init();
@@ -107,6 +128,7 @@ RendererOGL::RendererOGL(WindowSDL *window, const Graphics::Settings &vs)
 	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 	glEnable(GL_PROGRAM_POINT_SIZE);
+	if (!vs.gl3ForwardCompatible) glEnable(0x8861);				// GL_POINT_SPRITE hack for compatibility contexts
 
 	glHint(GL_TEXTURE_COMPRESSION_HINT, GL_NICEST);
 	glHint(GL_FRAGMENT_SHADER_DERIVATIVE_HINT, GL_NICEST);
@@ -196,6 +218,7 @@ void RendererOGL::WriteRendererInfo(std::ostream &out) const
 	out << " " << glGetString(GL_RENDERER) << "\n";
 
 	out << "Available extensions:" << "\n";
+	if (glewIsSupported("GL_VERSION_3_1"))
 	{
 		out << "Shading language version: " <<  glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n";
 		GLint numext = 0;
@@ -203,6 +226,15 @@ void RendererOGL::WriteRendererInfo(std::ostream &out) const
 		for (int i = 0; i < numext; ++i) {
 			out << "  " << glGetStringi(GL_EXTENSIONS, i) << "\n";
 		}
+	}
+	else
+	{
+		out << "  ";
+		std::istringstream ext(reinterpret_cast<const char *>(glGetString(GL_EXTENSIONS)));
+		std::copy(
+			std::istream_iterator<std::string>(ext),
+			std::istream_iterator<std::string>(),
+			std::ostream_iterator<std::string>(out, "\n  "));
 	}
 
 	out << "\nImplementation Limits:\n";
@@ -304,7 +336,7 @@ static std::string glerr_to_string(GLenum err)
 	}
 }
 
-void RendererOGL::CheckErrors(const char *func /*= nullptr*/, const int line /*= nullptr*/)
+void RendererOGL::CheckErrors(const char *func, const int line)
 {
 	PROFILE_SCOPED()
 #ifndef PIONEER_PROFILER
@@ -316,10 +348,9 @@ void RendererOGL::CheckErrors(const char *func /*= nullptr*/, const int line /*=
 		s_prevErr = err;
 		// now build info string
 		std::stringstream ss;
-		if(func) {
-			ss << "In function " << std::string(func) << "\nOn line " << std::to_string(line) << "\n";
-		}
+		assert(func!=nullptr && line>=0);
 		ss << "OpenGL error(s) during frame:\n";
+		ss << "In function " << std::string(func) << "\nOn line " << std::to_string(line) << "\n";
 		while (err != GL_NO_ERROR) {
 			ss << glerr_to_string(err) << '\n';
 			err = glGetError();
@@ -348,27 +379,7 @@ void RendererOGL::CheckErrors(const char *func /*= nullptr*/, const int line /*=
 bool RendererOGL::SwapBuffers()
 {
 	PROFILE_SCOPED()
-#ifndef NDEBUG
-	// Check if an error occurred during the frame. This is not very useful for
-	// determining *where* the error happened. For that purpose, try GDebugger or
-	// the GL_KHR_DEBUG extension
-	GLenum err;
-	err = glGetError();
-	if (err != GL_NO_ERROR) {
-		std::stringstream ss;
-		ss << "OpenGL error(s) during frame:\n";
-		while (err != GL_NO_ERROR) {
-			ss << glerr_to_string(err) << std::endl;
-			err = glGetError();
-			if( err == GL_OUT_OF_MEMORY ) {
-				ss << "Out-of-memory on graphics card." << std::endl
-					<< "Recommend enabling \"Compress Textures\" in game options." << std::endl
-					<< "Also try reducing City and Planet detail settings." << std::endl;
-			}
-		}
-		Error("%s", ss.str().c_str());
-	}
-#endif
+	CheckRenderErrors(__FUNCTION__,__LINE__);
 
 	GetWindow()->SwapBuffers();
 	m_stats.NextFrame();
@@ -613,7 +624,7 @@ bool RendererOGL::DrawTriangles(const VertexArray *v, RenderState *rs, Material 
 
 	const bool res = DrawBuffer(drawVB.Get(), rs, m, t);
 	CheckRenderErrors(__FUNCTION__,__LINE__);
-	
+
 	m_stats.AddToStatCount(Stats::STAT_DRAWTRIS, 1);
 
 	return res;
@@ -622,7 +633,7 @@ bool RendererOGL::DrawTriangles(const VertexArray *v, RenderState *rs, Material 
 bool RendererOGL::DrawPointSprites(const Uint32 count, const vector3f *positions, RenderState *rs, Material *material, float size)
 {
 	PROFILE_SCOPED()
-	if (count == 0 || !material || !material->texture0) 
+	if (count == 0 || !material || !material->texture0)
 		return false;
 
 	size = Clamp(size, 0.1f, FLT_MAX);
@@ -633,10 +644,10 @@ bool RendererOGL::DrawPointSprites(const Uint32 count, const vector3f *positions
 		vector3f norm;
 	};
 	#pragma pack(pop)
-	
+
 	RefCountedPtr<VertexBuffer> drawVB;
 	AttribBufferIter iter = s_AttribBufferMap.find(std::make_pair(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_NORMAL, count));
-	if (iter == s_AttribBufferMap.end()) 
+	if (iter == s_AttribBufferMap.end())
 	{
 		// NB - we're (ab)using the normal type to hold (uv coordinate offset value + point size)
 		Graphics::VertexBufferDesc vbd;
@@ -681,7 +692,7 @@ bool RendererOGL::DrawPointSprites(const Uint32 count, const vector3f *positions
 bool RendererOGL::DrawPointSprites(const Uint32 count, const vector3f *positions, const vector2f *offsets, const float *sizes, RenderState *rs, Material *material)
 {
 	PROFILE_SCOPED()
-	if (count == 0 || !material || !material->texture0) 
+	if (count == 0 || !material || !material->texture0)
 		return false;
 
 	#pragma pack(push, 4)
@@ -690,10 +701,10 @@ bool RendererOGL::DrawPointSprites(const Uint32 count, const vector3f *positions
 		vector3f norm;
 	};
 	#pragma pack(pop)
-	
+
 	RefCountedPtr<VertexBuffer> drawVB;
 	AttribBufferIter iter = s_AttribBufferMap.find(std::make_pair(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_NORMAL, count));
-	if (iter == s_AttribBufferMap.end()) 
+	if (iter == s_AttribBufferMap.end())
 	{
 		// NB - we're (ab)using the normal type to hold (uv coordinate offset value + point size)
 		Graphics::VertexBufferDesc vbd;
@@ -930,7 +941,7 @@ OGL::Program* RendererOGL::GetOrCreateProgram(OGL::Material *mat)
 Texture *RendererOGL::CreateTexture(const TextureDescriptor &descriptor)
 {
 	PROFILE_SCOPED()
-	return new TextureGL(descriptor, m_useCompressedTextures, m_useAnisotropicFiltering);
+	return new OGL::TextureGL(descriptor, m_useCompressedTextures, m_useAnisotropicFiltering);
 }
 
 RenderState *RendererOGL::CreateRenderState(const RenderStateDesc &desc)
@@ -962,10 +973,10 @@ RenderTarget *RendererOGL::CreateRenderTarget(const RenderTargetDesc &desc)
 			vector2f(desc.width, desc.height),
 			LINEAR_CLAMP,
 			false,
-			false, 
+			false,
 			false,
 			0, Graphics::TEXTURE_2D);
-		TextureGL *colorTex = new TextureGL(cdesc, false, false);
+		OGL::TextureGL *colorTex = new OGL::TextureGL(cdesc, false, false);
 		rt->SetColorTexture(colorTex);
 	}
 	if (desc.depthFormat != TEXTURE_NONE) {
@@ -979,7 +990,7 @@ RenderTarget *RendererOGL::CreateRenderTarget(const RenderTargetDesc &desc)
 				false,
 				false,
 				0, Graphics::TEXTURE_2D);
-			TextureGL *depthTex = new TextureGL(ddesc, false, false);
+			OGL::TextureGL *depthTex = new OGL::TextureGL(ddesc, false, false);
 			rt->SetDepthTexture(depthTex);
 		} else {
 			rt->CreateDepthRenderbuffer();
