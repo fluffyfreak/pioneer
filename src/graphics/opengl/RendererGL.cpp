@@ -44,7 +44,7 @@ static Renderer *CreateRenderer(WindowSDL *win, const Settings &vs) {
 
 // static method instantiations
 void RendererOGL::RegisterRenderer() {
-    Graphics::RegisterRenderer(Graphics::RENDERER_OPENGL, CreateRenderer);
+    Graphics::RegisterRenderer(Graphics::RENDERER_OPENGL_3x, CreateRenderer);
 }
 
 // static member instantiations
@@ -70,20 +70,36 @@ RendererOGL::RendererOGL(WindowSDL *window, const Graphics::Settings &vs)
 , m_activeRenderState(nullptr)
 , m_matrixMode(MatrixMode::MODELVIEW)
 {
-	if (!initted) {
-		initted = true;
+	glewExperimental = true;
+	GLenum glew_err;
+	if ((glew_err = glewInit()) != GLEW_OK)
+		Error("GLEW initialisation failed: %s", glewGetErrorString(glew_err));
 
-		if (!ogl_LoadFunctions())
-			Error(
-				"Pioneer can not run on your graphics card as it does not appear to support OpenGL 3.3\n"
-				"Please check to see if your GPU driver vendor has an updated driver - or that drivers are installed correctly."
-			);
+	// pump this once as glewExperimental is necessary but spews a single error
+	GLenum err = glGetError();
 
-		if (ogl_ext_EXT_texture_compression_s3tc == ogl_LOAD_FAILED)
+	if (!glewIsSupported("GL_VERSION_3_1") )
+	{
+		Error(
+			"Pioneer can not run on your graphics card as it does not appear to support OpenGL 3.1\n"
+			"Please check to see if your GPU driver vendor has an updated driver - or that drivers are installed correctly."
+		);
+	}
+
+	if (!glewIsSupported("GL_EXT_texture_compression_s3tc"))
+	{
+		if (glewIsSupported("GL_ARB_texture_compression")) {
+			GLint intv[4];
+			glGetIntegerv(GL_NUM_COMPRESSED_TEXTURE_FORMATS, &intv[0]);
+			if( intv[0] == 0 ) {
+				Error("GL_NUM_COMPRESSED_TEXTURE_FORMATS is zero.\nPioneer can not run on your graphics card as it does not support compressed (DXTn/S3TC) format textures.");
+			}
+		} else {
 			Error(
 				"OpenGL extension GL_EXT_texture_compression_s3tc not supported.\n"
 				"Pioneer can not run on your graphics card as it does not support compressed (DXTn/S3TC) format textures."
 			);
+		}
 	}
 
 	const char *ver = (const char *)glGetString(GL_VERSION);
@@ -202,6 +218,7 @@ void RendererOGL::WriteRendererInfo(std::ostream &out) const
 	out << " " << glGetString(GL_RENDERER) << "\n";
 
 	out << "Available extensions:" << "\n";
+	if (glewIsSupported("GL_VERSION_3_1"))
 	{
 		out << "Shading language version: " <<  glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n";
 		GLint numext = 0;
@@ -209,6 +226,15 @@ void RendererOGL::WriteRendererInfo(std::ostream &out) const
 		for (int i = 0; i < numext; ++i) {
 			out << "  " << glGetStringi(GL_EXTENSIONS, i) << "\n";
 		}
+	}
+	else
+	{
+		out << "  ";
+		std::istringstream ext(reinterpret_cast<const char *>(glGetString(GL_EXTENSIONS)));
+		std::copy(
+			std::istream_iterator<std::string>(ext),
+			std::istream_iterator<std::string>(),
+			std::ostream_iterator<std::string>(out, "\n  "));
 	}
 
 	out << "\nImplementation Limits:\n";
@@ -598,7 +624,7 @@ bool RendererOGL::DrawTriangles(const VertexArray *v, RenderState *rs, Material 
 
 	const bool res = DrawBuffer(drawVB.Get(), rs, m, t);
 	CheckRenderErrors(__FUNCTION__,__LINE__);
-	
+
 	m_stats.AddToStatCount(Stats::STAT_DRAWTRIS, 1);
 
 	return res;
@@ -607,7 +633,7 @@ bool RendererOGL::DrawTriangles(const VertexArray *v, RenderState *rs, Material 
 bool RendererOGL::DrawPointSprites(const Uint32 count, const vector3f *positions, RenderState *rs, Material *material, float size)
 {
 	PROFILE_SCOPED()
-	if (count == 0 || !material || !material->texture0) 
+	if (count == 0 || !material || !material->texture0)
 		return false;
 
 	size = Clamp(size, 0.1f, FLT_MAX);
@@ -618,10 +644,10 @@ bool RendererOGL::DrawPointSprites(const Uint32 count, const vector3f *positions
 		vector3f norm;
 	};
 	#pragma pack(pop)
-	
+
 	RefCountedPtr<VertexBuffer> drawVB;
 	AttribBufferIter iter = s_AttribBufferMap.find(std::make_pair(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_NORMAL, count));
-	if (iter == s_AttribBufferMap.end()) 
+	if (iter == s_AttribBufferMap.end())
 	{
 		// NB - we're (ab)using the normal type to hold (uv coordinate offset value + point size)
 		Graphics::VertexBufferDesc vbd;
@@ -666,7 +692,7 @@ bool RendererOGL::DrawPointSprites(const Uint32 count, const vector3f *positions
 bool RendererOGL::DrawPointSprites(const Uint32 count, const vector3f *positions, const vector2f *offsets, const float *sizes, RenderState *rs, Material *material)
 {
 	PROFILE_SCOPED()
-	if (count == 0 || !material || !material->texture0) 
+	if (count == 0 || !material || !material->texture0)
 		return false;
 
 	#pragma pack(push, 4)
@@ -675,10 +701,10 @@ bool RendererOGL::DrawPointSprites(const Uint32 count, const vector3f *positions
 		vector3f norm;
 	};
 	#pragma pack(pop)
-	
+
 	RefCountedPtr<VertexBuffer> drawVB;
 	AttribBufferIter iter = s_AttribBufferMap.find(std::make_pair(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_NORMAL, count));
-	if (iter == s_AttribBufferMap.end()) 
+	if (iter == s_AttribBufferMap.end())
 	{
 		// NB - we're (ab)using the normal type to hold (uv coordinate offset value + point size)
 		Graphics::VertexBufferDesc vbd;
@@ -915,7 +941,7 @@ OGL::Program* RendererOGL::GetOrCreateProgram(OGL::Material *mat)
 Texture *RendererOGL::CreateTexture(const TextureDescriptor &descriptor)
 {
 	PROFILE_SCOPED()
-	return new TextureGL(descriptor, m_useCompressedTextures, m_useAnisotropicFiltering);
+	return new OGL::TextureGL(descriptor, m_useCompressedTextures, m_useAnisotropicFiltering);
 }
 
 RenderState *RendererOGL::CreateRenderState(const RenderStateDesc &desc)
@@ -947,10 +973,10 @@ RenderTarget *RendererOGL::CreateRenderTarget(const RenderTargetDesc &desc)
 			vector2f(desc.width, desc.height),
 			LINEAR_CLAMP,
 			false,
-			false, 
+			false,
 			false,
 			0, Graphics::TEXTURE_2D);
-		TextureGL *colorTex = new TextureGL(cdesc, false, false);
+		OGL::TextureGL *colorTex = new OGL::TextureGL(cdesc, false, false);
 		rt->SetColorTexture(colorTex);
 	}
 	if (desc.depthFormat != TEXTURE_NONE) {
@@ -964,7 +990,7 @@ RenderTarget *RendererOGL::CreateRenderTarget(const RenderTargetDesc &desc)
 				false,
 				false,
 				0, Graphics::TEXTURE_2D);
-			TextureGL *depthTex = new TextureGL(ddesc, false, false);
+			OGL::TextureGL *depthTex = new OGL::TextureGL(ddesc, false, false);
 			rt->SetDepthTexture(depthTex);
 		} else {
 			rt->CreateDepthRenderbuffer();

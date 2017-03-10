@@ -403,7 +403,9 @@ bool Ship::OnDamage(Object *attacker, float kgDamage, const CollisionContact& co
 
 bool Ship::OnCollision(Object *b, Uint32 flags, double relVel)
 {
-	// hitting space station docking surfaces shouldn't do damage
+	// Collision with SpaceStation docking surface is
+	// completely handled by SpaceStations, you only
+	// need to return a "true" value for Space.cpp bounce
 	if (b->IsType(Object::SPACESTATION) && (flags & 0x10)) {
 		return true;
 	}
@@ -667,6 +669,12 @@ void Ship::SetFlightState(Ship::FlightState newState)
 		static const double MASS_LOCK_REFERENCE(40000.0); // based purely on experimentation
 		// limit the time to between 2.0 and 20.0 seconds of thrust, the player can override
 		m_launchLockTimeout = std::min(std::max(2.0, 2.0 * (GetMass() / MASS_LOCK_REFERENCE)), 20.0);
+	}
+
+	if (newState == DOCKED) {
+		m_launchLockTimeout = 0.0;
+		ClearLinThrusterState();
+		ClearAngThrusterState();
 	}
 
 	m_flightState = newState;
