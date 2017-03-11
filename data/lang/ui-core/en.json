@@ -51,13 +51,13 @@
       "description" : "",
       "message" : "Bulletin Board"
    },
-   "BUY_SHIP" : {
-      "description" : "",
-      "message" : "Buy Ship"
-   },
    "BUY" : {
       "description" : "Commodities and equipment prices",
       "message" : "Buy"
+   },
+   "BUY_SHIP" : {
+      "description" : "",
+      "message" : "Buy Ship"
    },
    "CABINS" : {
       "description" : "For passengers",
@@ -151,6 +151,10 @@
       "description" : "",
       "message" : "Commodity Market"
    },
+   "COMPACT_RADAR" : {
+      "description" : "Game settings option",
+      "message" : "Compact radar"
+   },
    "COMPETENT" : {
       "description" : "Combat rating",
       "message" : "Competent"
@@ -162,6 +166,14 @@
    "COMPRESS_TEXTURES" : {
       "description" : "graphics option in game settings menu ",
       "message" : "Compress Textures"
+   },
+   "CONFIRM_PURCHASE" : {
+      "description" : "",
+      "message" : "Confirm purchase"
+   },
+   "CONFIRM_SALE" : {
+      "description" : "",
+      "message" : "Confirm sale"
    },
    "CONSTABLE" : {
       "description" : "",
@@ -178,14 +190,6 @@
    "CONTROL_OPTIONS" : {
       "description" : "",
       "message" : "Control Options"
-   },
-   "CONFIRM_PURCHASE" : {
-      "description" : "",
-      "message" : "Confirm purchase"
-   },
-   "CONFIRM_SALE" : {
-      "description" : "",
-      "message" : "Confirm sale"
    },
    "COULD_NOT_LOAD_GAME" : {
       "description" : "",
@@ -286,6 +290,10 @@
    "EMPLOYMENT" : {
       "description" : "",
       "message" : "Employment"
+   },
+   "ENABLE_ANISOTROPIC_FILTERING" : {
+      "description" : "Use Anisotropic Filtering",
+      "message" : "Anisotropic Filtering"
    },
    "ENABLE_AUTOSAVE" : {
       "description" : "Allow the game to autosave when docking",
@@ -459,6 +467,10 @@
       "description" : "",
       "message" : "Hyperspace range"
    },
+   "ILLEGAL_JUMP" : {
+      "description" : "A finable crime",
+      "message" : "Reckless hyperjump registered"
+   },
    "IM_TIRED_OF_WORKING_FOR_NOTHING_DONT_YOU_KNOW_WHAT_A_CONTRACT_IS" : {
       "description" : "",
       "message" : "I'm tired of working for nothing. Don't you know what a contract is?"
@@ -482,10 +494,6 @@
    "INVERT_MOUSE_Y" : {
       "description" : "",
       "message" : "Invert Mouse Y"
-   },
-   "COMPACT_SCANNER" : {
-      "description" : "Game settings option",
-      "message" : "Compact scanner"
    },
    "IN_CARGO_HOLD" : {
       "description" : "",
@@ -570,6 +578,10 @@
    "LOBBY" : {
       "description" : "",
       "message" : "Lobby"
+   },
+   "LOCAL_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Local arm"
    },
    "LOCATED_N_KM_FROM_THE_CENTRE_OF_NAME" : {
       "description" : "",
@@ -711,6 +723,10 @@
       "description" : "",
       "message" : "Navigation:"
    },
+   "NAVIGATOR" : {
+      "description" : "",
+      "message" : "Navigator"
+   },
    "NEGOTIATE" : {
       "description" : "",
       "message" : "Negotiate"
@@ -718,6 +734,10 @@
    "NEXT_PAID" : {
       "description" : "",
       "message" : "Next paid"
+   },
+   "NO" : {
+      "description" : "Negative answer to a question",
+      "message" : "No"
    },
    "NOBODY" : {
       "description" : "For player reputation",
@@ -731,6 +751,10 @@
       "description" : "",
       "message" : "None for sale in this station."
    },
+   "NORMA_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Norma arm"
+   },
    "NOTES" : {
       "description" : "",
       "message" : "Notes:"
@@ -738,10 +762,6 @@
    "NOT_ENOUGH_ALLOY_TO_ATTEMPT_A_REPAIR" : {
       "description" : "",
       "message" : "Not enough {alloy} to attempt a repair"
-   },
-   "NO" : {
-      "description" : "Negative answer to a question",
-      "message" : "No"
    },
    "NOT_SUPPORTED_ON_THIS_SHIP" : {
       "description" : "",
@@ -775,6 +795,10 @@
       "description" : "",
       "message" : "Ok"
    },
+   "OPEN_USER_FOLDER" : {
+      "description" : "",
+      "message" : "User Folder"
+   },
    "OPTIONS" : {
       "description" : "",
       "message" : "Options"
@@ -791,21 +815,33 @@
       "description" : "",
       "message" : "Circular orbit speed is given for a tangential velocity. The ship should be moving in a direction at 90° to the ship/{name} axis.\n\nDescent speed is an absolute minimum, and is also tangential. A slower speed or a lower angle will result in a course which intersects with the surface of {name}.\n\nEscape speed will in theory work in any direction, as long as the ship does not collide with {name} on the way.\n\t\t"
    },
-   "OWED" : {
-      "description" : "Player owing money to crew members",
-      "message" : "Owed"
+   "OUTER_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Outer arm"
    },
    "OUTSTANDING_FINES" : {
       "description" : "Unpaid fines for crimes committed",
       "message" : "Outstanding fines"
    },
+   "OWED" : {
+      "description" : "Player owing money to crew members",
+      "message" : "Owed"
+   },
    "PAY_FINE_OF_N" : {
       "description" : "",
       "message" : "Pay fine of {amount}"
    },
+   "PERSEUS_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Perseus arm"
+   },
    "PERSONAL_INFORMATION" : {
       "description" : "",
       "message" : "Personal Information"
+   },
+   "PILOT" : {
+      "description" : "",
+      "message" : "Pilot"
    },
    "PILOTING" : {
       "description" : "",
@@ -851,6 +887,10 @@
       "description" : "For player reputation",
       "message" : "Professional"
    },
+   "PUMP_DOWN" : {
+      "description" : "Drain the fuel tank",
+      "message" : "Pump down"
+   },
    "QUALIFICATION_SCORES" : {
       "description" : "",
       "message" : "Qualification scores"
@@ -895,13 +935,13 @@
       "description" : "",
       "message" : "Reputation"
    },
-   "RESET" : {
-      "description" : "",
-      "message" : "Reset"
-   },
    "REQUEST_LAUNCH" : {
       "description" : "",
       "message" : "Request Launch"
+   },
+   "RESET" : {
+      "description" : "",
+      "message" : "Reset"
    },
    "RETURN_TO_GAME" : {
       "description" : "",
@@ -923,6 +963,10 @@
       "description" : "",
       "message" : "Reward"
    },
+   "SAGITTARIUS_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Sagittarius arm"
+   },
    "SAVE" : {
       "description" : "",
       "message" : "Save"
@@ -930,6 +974,10 @@
    "SCOOP_MOUNTS" : {
       "description" : "How many slots or mounts exist on the ship for fitting SCOOPS (e.g. cargo scoop, fuel scoop, multi-scoop) ",
       "message" : "Scoop mounts"
+   },
+   "SCUTUM_CENTAURUS_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Scutum-Centaurus arm"
    },
    "SELECT" : {
       "description" : "",
@@ -955,9 +1003,21 @@
       "description" : "",
       "message" : "Sensors:"
    },
+   "SENSORS_AND_DEFENCE" : {
+      "description" : "",
+      "message" : "Sensors and defence"
+   },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Set destination as navigation target."
+   },
    "SHIP" : {
       "description" : "",
       "message" : "Ship"
+   },
+   "SHIPS_ENGINEER" : {
+      "description" : "",
+      "message" : "Ship's Engineer"
    },
    "SHIP_INFORMATION" : {
       "description" : "",
@@ -987,13 +1047,13 @@
       "description" : "",
       "message" : "The ship you were viewing has been sold"
    },
+   "SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS" : {
+      "description" : "",
+      "message" : "Simulating evolution of the universe: {age} billion years ;-)"
+   },
    "SOUND" : {
       "description" : "",
       "message" : "Sound"
-   },
-   "STAR_FIELD_DENSITY" : {
-      "description" : "",
-      "message" : "Density of Star field"
    },
    "START_AT_BARNARDS_STAR" : {
       "description" : "",
@@ -1006,6 +1066,10 @@
    "START_AT_NEW_HOPE" : {
       "description" : "New Hope is an in game location",
       "message" : "Start at New Hope"
+   },
+   "STAR_FIELD_DENSITY" : {
+      "description" : "",
+      "message" : "Density of Star field"
    },
    "STATION_MANAGER" : {
       "description" : "",
@@ -1035,6 +1099,10 @@
       "description" : "",
       "message" : "The ship is under station control, Commander."
    },
+   "THREE_KPC_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "3kpc arm"
+   },
    "TOGGLE_MALE_FEMALE" : {
       "description" : "player gender",
       "message" : "Toggle male/female"
@@ -1042,6 +1110,10 @@
    "TOO_SMALL_FOR_CURRENT_CREW" : {
       "description" : "",
       "message" : "Ship is too small for the current crew."
+   },
+   "TOO_SMALL_TO_TRANSSHIP" : {
+      "description" : "",
+      "message" : "Ship is too small to transship your cargo."
    },
    "TOTAL" : {
       "description" : "",
@@ -1123,6 +1195,10 @@
       "description" : "Said by the police to law abiding player",
       "message" : "We have no business with you at the moment."
    },
+   "X_CANNOT_BE_TOLERATED_HERE" : {
+      "description" : "Message to be sent over comms by police when crime is committed by player",
+      "message" : "{crime} cannot be tolerated here!"
+   },
    "YES" : {
       "description" : "Positive answer to a question",
       "message" : "Yes"
@@ -1163,11 +1239,7 @@
       "description" : "",
       "message" : "You do not have enough money"
    },
-   "X_CANNOT_BE_TOLERATED_HERE" : {
-      "description" : "Message to be sent over comms by police when crime is committed by player",
-      "message" : "{crime} cannot be tolerated here!"
-   },
-   "ZOOM": {
+   "ZOOM" : {
       "description" : "Label for a zoom (magnification) control bar.",
       "message" : "Zoom"
    }

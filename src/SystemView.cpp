@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "SystemView.h"
@@ -56,7 +56,7 @@ vector3d TransferPlanner::GetOffsetVel() const {
 
 void TransferPlanner::AddStartTime(double timeStep) {
 	if(std::fabs(m_startTime) < 1.)
-		m_startTime = Pi::game->GetTime(); 
+		m_startTime = Pi::game->GetTime();
 
 	m_startTime += m_factor * timeStep;
 	double deltaT = m_startTime - Pi::game->GetTime();
@@ -107,7 +107,7 @@ static std::string formatTime(double t)
 		formattedTime << t / 86400. << "d";
 	else
 		formattedTime << t / 31536000. << "y";
-	return formattedTime.str(); 
+	return formattedTime.str();
 }
 
 std::string TransferPlanner::printDeltaTime() {
@@ -117,7 +117,7 @@ std::string TransferPlanner::printDeltaTime() {
 	if(std::fabs(m_startTime) < 1.)
 		out << Lang::NOW;
 	else
-		out << formatTime(deltaT); 
+		out << formatTime(deltaT);
 
 	return out.str();
 }
@@ -492,7 +492,7 @@ void SystemView::PutOrbit(const Orbit *orbit, const vector3d &offset, const Colo
 	std::fill_n(m_orbitColors.get(), num_vertices, fadedColor);
 	const Uint16 trailLength = num_vertices - fadingColors;
 
-	for (Uint16 currentColor = 0; currentColor < trailLength; ++currentColor)	
+	for (Uint16 currentColor = 0; currentColor < trailLength; ++currentColor)
 	{
 		float scalingParameter = fadedColorParameter + static_cast<float>(currentColor) / trailLength * (1.f - fadedColorParameter);
 		m_orbitColors[currentColor + fadingColors] = color * scalingParameter;
@@ -591,15 +591,22 @@ void SystemView::OnClickLagrange(const Orbit *orb, bool isL5)
 	if (!orb)
 		return;
 
+	std::string desc;
+	std::string data;
 	const double tMinust0 = m_time - m_game->GetTime();
 	if (!isL5) {
 		// L4
 		const vector3d posL4 = orb->EvenSpacedPosTrajectory((1.0 / 360.0) * 60.0, tMinust0);
+		desc = "L4";
 	}
 	else {
 		// L5
 		const vector3d posL5 = orb->EvenSpacedPosTrajectory((1.0 / 360.0) * 300.0, tMinust0);
+		desc = "L5";
 	}
+	m_infoLabel->SetText(desc);
+	m_infoText->SetText(data);
+
 }
 
 void SystemView::PutLabel(const SystemBody *b, const vector3d &offset)
@@ -642,10 +649,10 @@ void SystemView::OnClickShip(Ship *s) {
 		text += s->GetLabel();
 		text += "\n";
 
-		// ...if we have adv. radar mapper, show some extra info on selected ship
+		// ...if we have advanced target scanner equipment, show some extra info on selected ship
 		int prop_var = 0;
-		Pi::player->Properties().Get("radar_mapper_level_cap", prop_var);
-		if (prop_var > 1) {  // advanced radar mapper
+		Pi::player->Properties().Get("target_scanner_level_cap", prop_var);
+		if (prop_var > 1) {  // advanced target scanner
 			const shipstats_t &stats = s->GetStats();
 
 			text += s->GetShipType()->name;
@@ -678,12 +685,12 @@ void SystemView::OnClickShip(Ship *s) {
 
 void SystemView::PutBody(const SystemBody *b, const vector3d &offset, const matrix4x4f &trans)
 {
-	if (b->GetType() == SystemBody::TYPE_STARPORT_SURFACE) 
+	if (b->GetType() == SystemBody::TYPE_STARPORT_SURFACE)
 		return;
 
 	if (b->GetType() != SystemBody::TYPE_GRAVPOINT)
 	{
-		if (!m_bodyIcon) 
+		if (!m_bodyIcon)
 		{
 			Graphics::RenderStateDesc rsd;
 			auto solidState = m_renderer->CreateRenderState(rsd);
@@ -708,11 +715,11 @@ void SystemView::PutBody(const SystemBody *b, const vector3d &offset, const matr
 	}
 
 	Frame *frame = Pi::player->GetFrame();
-	if(frame->IsRotFrame()) 
+	if(frame->IsRotFrame())
 		frame = frame->GetNonRotFrame();
 
 	// display the players orbit(?)
-	if(frame->GetSystemBody() == b && frame->GetSystemBody()->GetMass() > 0) 
+	if(frame->GetSystemBody() == b && frame->GetSystemBody()->GetMass() > 0)
 	{
 		const double t0 = m_game->GetTime();
 		Orbit playerOrbit = Pi::player->ComputeOrbit();
@@ -720,7 +727,7 @@ void SystemView::PutBody(const SystemBody *b, const vector3d &offset, const matr
 		PutOrbit(&playerOrbit, offset, Color::RED, b->GetRadius());
 
 		const double plannerStartTime = m_planner->GetStartTime();
-		if(!m_planner->GetPosition().ExactlyEqual(vector3d(0,0,0))) 
+		if(!m_planner->GetPosition().ExactlyEqual(vector3d(0,0,0)))
 		{
 			Orbit plannedOrbit = Orbit::FromBodyState(m_planner->GetPosition(),
 								  m_planner->GetVel(),
@@ -730,18 +737,18 @@ void SystemView::PutBody(const SystemBody *b, const vector3d &offset, const matr
 				PutSelectionBox(offset + plannedOrbit.OrbitalPosAtTime(m_time - plannerStartTime) * static_cast<double>(m_zoom), Color::STEELBLUE);
 			else
 				PutSelectionBox(offset + m_planner->GetPosition() * static_cast<double>(m_zoom), Color::STEELBLUE);
-				
+
 		}
 
 		PutSelectionBox(offset + playerOrbit.OrbitalPosAtTime(m_time - t0)* double(m_zoom), Color::RED);
 	}
 
 	// display all child bodies and their orbits
-	if (b->HasChildren()) 
+	if (b->HasChildren())
 	{
-		for(const SystemBody* kid : b->GetChildren()) 
+		for(const SystemBody* kid : b->GetChildren())
 		{
-			if (is_zero_general(kid->GetOrbit().GetSemiMajorAxis())) 
+			if (is_zero_general(kid->GetOrbit().GetSemiMajorAxis()))
 				continue;
 
 			const double axisZoom = kid->GetOrbit().GetSemiMajorAxis() * m_zoom;
@@ -852,14 +859,15 @@ void SystemView::Draw3D()
 	if (m_system->GetUnexplored())
 		m_infoLabel->SetText(Lang::UNEXPLORED_SYSTEM_NO_SYSTEM_VIEW);
 	else {
-		m_infoLabel->SetText("");
 		if (m_system->GetRootBody()) {
 			PutBody(m_system->GetRootBody().Get(), pos, trans);
 			if (m_game->GetSpace()->GetStarSystem() == m_system) {
 				const Body *navTarget = Pi::player->GetNavTarget();
-				const SystemBody *navTargetSystemBody = navTarget ? navTarget->GetSystemBody() : 0;
+				const SystemBody *navTargetSystemBody = navTarget ? navTarget->GetSystemBody() : nullptr;
 				if (navTargetSystemBody)
 					PutSelectionBox(navTargetSystemBody, pos, Color::GREEN);
+				else
+					m_infoLabel->SetText("");
 			}
 		}
 	}

@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _MATRIX4X4_H
@@ -11,9 +11,9 @@
 
 template <typename T>
 class matrix4x4 {
-	private:
+private:
 	T cell[16];
-	public:
+public:
 	matrix4x4 () {}
 	matrix4x4 (T val) {
 		cell[0] = cell[1] = cell[2] = cell[3] = cell[4] = cell[5] = cell[6] =
@@ -403,12 +403,12 @@ typedef matrix4x4<double> matrix4x4d;
 
 static inline void matrix4x4ftod(const matrix4x4f &in, matrix4x4d &out)
 {
-	for (int i = 0; i < 16; i++) 
+	for (int i = 0; i < 16; i++)
 		out[i] = double(in[i]);
 }
 static inline void matrix4x4dtof(const matrix4x4d &in, matrix4x4f &out)
 {
-	for (int i = 0; i < 16; i++) 
+	for (int i = 0; i < 16; i++)
 		out[i] = float(in[i]);
 }
 

@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -139,7 +139,7 @@ namespace Theme {
 
 	void DrawHollowRect(const float size[2], const Color &color, Graphics::RenderState *state)
 	{
-		const vector3f vertices[] = { 
+		const vector3f vertices[] = {
 	/* 0 */	vector3f(0,0,0),
 	/* 1 */	vector3f(0,size[1],0),
 	/* 2 */	vector3f(size[0],size[1],0),
@@ -149,7 +149,7 @@ namespace Theme {
 	/* 6 */	vector3f(size[0]-BORDER_WIDTH,size[1]-BORDER_WIDTH,0),
 	/* 7 */	vector3f(size[0]-BORDER_WIDTH,BORDER_WIDTH,0)
 		};
-		const Uint16 indices[] = {
+		const Uint32 indices[] = {
 			0,1,5, 0,5,4, 0,4,7, 0,7,3,
 			3,7,6, 3,6,2, 1,2,6, 1,6,5 };
 
@@ -174,20 +174,20 @@ namespace Theme {
 		//create index buffer & copy
 		std::unique_ptr<Graphics::IndexBuffer> ib;
 		ib.reset(Screen::GetRenderer()->CreateIndexBuffer(24, Graphics::BUFFER_USAGE_STATIC));
-		Uint16* idxPtr = ib->Map(Graphics::BUFFER_MAP_WRITE);
+		Uint32* idxPtr = ib->Map(Graphics::BUFFER_MAP_WRITE);
 		for (Uint32 j = 0; j < 24; j++) {
 			idxPtr[j] = indices[j];
 		}
 		ib->Unmap();
-		
+
 		Screen::flatColorMaterial->diffuse = color;
 		Screen::GetRenderer()->DrawBufferIndexed(vb.get(), ib.get(), state, Screen::flatColorMaterial);
 	}
 
-	Graphics::IndexBuffer* CreateIndexBuffer(const Uint16 indices[], const Uint32 IndexStart, const Uint32 IndexEnd, const Uint32 NumIndices)
+	Graphics::IndexBuffer* CreateIndexBuffer(const Uint32 indices[], const Uint32 IndexStart, const Uint32 IndexEnd, const Uint32 NumIndices)
 	{
 		Graphics::IndexBuffer *ib = Screen::GetRenderer()->CreateIndexBuffer(NumIndices, Graphics::BUFFER_USAGE_STATIC);
-		Uint16* idxPtr = ib->Map(Graphics::BUFFER_MAP_WRITE);
+		Uint32* idxPtr = ib->Map(Graphics::BUFFER_MAP_WRITE);
 		for (Uint32 j = 0; j < NumIndices; j++) {
 			idxPtr[j] = indices[j + IndexStart];
 		}
@@ -209,7 +209,7 @@ namespace Theme {
 		// locals
 		RefCountedPtr<Graphics::VertexBuffer> vb;
 		RefCountedPtr<Graphics::IndexBuffer> ib[3];
-		
+
 		// see if we have this size of indent in the cache already
 		const vector2f vsize(size[0], size[1]);
 		MapIndentBuffers::iterator bufIt = s_indentBuffers.find(vsize);
@@ -234,7 +234,7 @@ namespace Theme {
 				/* 6 */	vector3f(size[0] - BORDER_WIDTH, size[1] - BORDER_WIDTH, 0),
 				/* 7 */	vector3f(size[0] - BORDER_WIDTH, BORDER_WIDTH, 0)
 			};
-			const Uint16 indices[] = {
+			const Uint32 indices[] = {
 				0, 1, 5, 0, 5, 4, 0, 4, 7, 0, 7, 3,
 				3, 7, 6, 3, 6, 2, 1, 2, 6, 1, 6, 5,
 				4, 5, 6, 4, 6, 7 };
@@ -329,7 +329,7 @@ namespace Theme {
 				/* 6 */	vector3f(size[0] - BORDER_WIDTH, size[1] - BORDER_WIDTH, 0),
 				/* 7 */	vector3f(size[0] - BORDER_WIDTH, BORDER_WIDTH, 0)
 			};
-			const Uint16 indices[] = {
+			const Uint32 indices[] = {
 				0, 1, 5, 0, 5, 4, 0, 4, 7, 0, 7, 3,
 				3, 7, 6, 3, 6, 2, 1, 2, 6, 1, 6, 5,
 				4, 5, 6, 4, 6, 7 };

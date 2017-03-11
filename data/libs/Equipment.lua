@@ -1,4 +1,4 @@
--- Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local utils = import("utils")
@@ -9,6 +9,11 @@ local ShipDef = import("ShipDef")
 local Timer = import("Timer")
 local Space = import_core("Space")
 local Comms = import("Comms")
+
+local cargo
+local laser
+local hyperspace
+local misc
 
 --
 -- Class: EquipType
@@ -41,7 +46,7 @@ function EquipType.New (specs)
 	end
 	local l = Lang.GetResource(obj.l10n_resource)
 	obj.volatile = {
-		description = l[obj.l10n_key.."_DESCRIPTION"] or "",
+		description = l:get(obj.l10n_key.."_DESCRIPTION") or "",
 		name = l[obj.l10n_key] or ""
 	}
 	setmetatable(obj, EquipType.meta)
@@ -59,6 +64,16 @@ function EquipType:Serialize()
 			ret[k] = v
 		end
 	end
+
+	if debug.dmodeenabled() and self.slots == "cargo" then
+		for _,v in pairs(cargo) do
+			if (v.l10n_key == self.key and v.l10n_resource == self.l10n_resource) then
+				assert(v == self)
+				break
+			end
+		end
+	end
+
 	ret.volatile = nil
 	return ret
 end
@@ -71,7 +86,7 @@ function EquipType.Unserialize(data)
 	end
 	local l = Lang.GetResource(obj.l10n_resource)
 	obj.volatile = {
-		description = l[obj.l10n_key.."_DESCRIPTION"] or "",
+		description = l:get(obj.l10n_key.."_DESCRIPTION") or "",
 		name = l[obj.l10n_key] or ""
 	}
 	return obj
@@ -280,7 +295,8 @@ HyperdriveType.HyperjumpTo = function (self, ship, destination)
 		return "INSUFFICIENT_FUEL"
 	end
 	ship:setprop('nextJumpFuelUse', fuel_use)
-	return ship:InitiateHyperjumpTo(destination, self.capabilities.hyperclass, duration), fuel_use, duration
+	local warmup_time = 5 + self.capabilities.hyperclass*1.5
+	return ship:InitiateHyperjumpTo(destination, warmup_time, duration), fuel_use, duration
 end
 
 HyperdriveType.OnEnterHyperspace = function (self, ship)
@@ -439,8 +455,8 @@ end
 -- laser_rear - rear attachment point for lasers and plasma accelerators
 -- missile - missile
 -- ecm - ecm system
--- scanner - scanner
--- radarmapper - radar mapper
+-- radar - radar
+-- target_scanner - target scanner
 -- hypercloud - hyperspace cloud analyser
 -- hull_autorepair - hull auto-repair system
 -- energy_booster - shield energy booster unit
@@ -451,9 +467,9 @@ end
 -- laser_cooler - laser cooling booster
 -- cargo_life_support - cargo bay life support
 -- autopilot - autopilot
--- trade_analyzer - commodity trade analyzer computer module
+-- trade_computer - commodity trade analyzer computer module
 
-local cargo = {
+cargo = {
 	hydrogen = EquipType.New({
 		l10n_key = 'HYDROGEN', l10n_resource = "core", slots="cargo", price=1,
 		capabilities={mass=1}, economy_type="mining",
@@ -637,7 +653,7 @@ cargo.fertilizer.requirements = { cargo.carbon_ore }
 cargo.medicines.requirements = { cargo.computers, cargo.carbon_ore }
 cargo.consumer_goods.requirements = { cargo.plastics, cargo.textiles }
 
-local misc = {}
+misc = {}
 misc.missile_unguided = EquipType.New({
 	l10n_key="MISSILE_UNGUIDED", slots="missile", price=30,
 	missile_type="missile_unguided", tech_level=1,
@@ -677,9 +693,9 @@ misc.ecm_advanced = EquipType.New({
 	capabilities={mass=2, ecm_power=3, ecm_recharge=5},
 	purchasable=true, tech_level="MILITARY"
 })
-misc.scanner = EquipType.New({
-	l10n_key="SCANNER", slots="scanner", price=680,
-	capabilities={mass=1, scanner=1},
+misc.radar = EquipType.New({
+	l10n_key="RADAR", slots="radar", price=680,
+	capabilities={mass=1, radar=1},
 	purchasable=true, tech_level=3
 })
 misc.cabin = EquipType.New({
@@ -705,15 +721,15 @@ misc.cargo_life_support = EquipType.New({
 })
 misc.autopilot = EquipType.New({
 	l10n_key="AUTOPILOT", slots="autopilot", price=1400,
-	capabilities={mass=1, set_speed=1, autopilot=1}, purchasable=true, tech_level=6
+	capabilities={mass=1, set_speed=1, autopilot=1}, purchasable=true, tech_level=1
 })
-misc.radar_mapper = EquipType.New({
-	l10n_key="RADAR_MAPPER", slots="radar", price=900,
-	capabilities={mass=1, radar_mapper_level=1}, purchasable=true, tech_level=9
+misc.target_scanner = EquipType.New({
+	l10n_key="TARGET_SCANNER", slots="target_scanner", price=900,
+	capabilities={mass=1, target_scanner_level=1}, purchasable=true, tech_level=9
 })
-misc.advanced_radar_mapper = EquipType.New({
-	l10n_key="ADVANCED_RADAR_MAPPER", slots="radar", price=1200,
-	capabilities={mass=1, radar_mapper_level=2}, purchasable=true, tech_level="MILITARY"
+misc.advanced_target_scanner = EquipType.New({
+	l10n_key="ADVANCED_TARGET_SCANNER", slots="target_scanner", price=1200,
+	capabilities={mass=1, target_scanner_level=2}, purchasable=true, tech_level="MILITARY"
 })
 misc.fuel_scoop = EquipType.New({
 	l10n_key="FUEL_SCOOP", slots="scoop", price=3500,
@@ -739,9 +755,27 @@ misc.hull_autorepair = EquipType.New({
 	l10n_key="HULL_AUTOREPAIR", slots="hull_autorepair", price=16000,
 	capabilities={mass=40, hull_autorepair=1}, purchasable=true, tech_level="MILITARY"
 })
-misc.trade_analyzer = EquipType.New({
-	l10n_key="TRADE_ANALYZER", slots="trade_analyzer", price=400,
-	capabilities={mass=0, trade_analyzer=1, software=1}, purchasable=true, tech_level=9
+misc.thrusters_basic = EquipType.New({
+	l10n_key="THRUSTERS_BASIC", slots="thruster", price=3000,
+	tech_level=1,
+	capabilities={mass=0, thruster_power=1}, purchasable=true,
+	icon_name="thrusters_basic"
+})
+misc.thrusters_medium = EquipType.New({
+	l10n_key="THRUSTERS_MEDIUM", slots="thruster", price=6500,
+	tech_level=1,
+	capabilities={mass=0, thruster_power=2}, purchasable=true,
+	icon_name="thrusters_medium"
+})
+misc.thrusters_best = EquipType.New({
+	l10n_key="THRUSTERS_BEST", slots="thruster", price=14000,
+	tech_level=1,
+	capabilities={mass=0, thruster_power=3}, purchasable=true,
+	icon_name="thrusters_best"
+})
+misc.trade_computer = EquipType.New({
+	l10n_key="TRADE_COMPUTER", slots="trade_compunter", price=400,
+	capabilities={mass=0, trade_computer=1}, purchasable=true, tech_level=9
 })
 misc.planetscanner = BodyScannerType.New({
 	l10n_key = 'PLANETSCANNER', slots="sensor", price=15000,
@@ -751,7 +785,7 @@ misc.planetscanner = BodyScannerType.New({
 	bodyscanner_stats={scan_speed=3, scan_tolerance=0.05}
 })
 
-local hyperspace = {}
+hyperspace = {}
 hyperspace.hyperdrive_1 = HyperdriveType.New({
 	l10n_key="DRIVE_CLASS1", fuel=cargo.hydrogen, slots="engine",
 	price=700, capabilities={mass=4, hyperclass=1}, purchasable=true, tech_level=3
@@ -804,8 +838,28 @@ hyperspace.hyperdrive_mil4 = HyperdriveType.New({
 	l10n_key="DRIVE_MIL4", fuel=cargo.military_fuel, byproduct=cargo.radioactives, slots="engine",
 	price=214000, capabilities={mass=30, hyperclass=4}, purchasable=true, tech_level=12
 })
+hyperspace.hyperdrive_mil5 = HyperdriveType.New({
+	l10n_key="DRIVE_MIL5", fuel=cargo.military_fuel, byproduct=cargo.radioactives, slots="engine",
+	price=540000, capabilities={mass=53, hyperclass=5}, purchasable=false, tech_level="MILITARY"
+})
+hyperspace.hyperdrive_mil6 = HyperdriveType.New({
+	l10n_key="DRIVE_MIL6", fuel=cargo.military_fuel, byproduct=cargo.radioactives, slots="engine",
+	price=1350000, capabilities={mass=78, hyperclass=6}, purchasable=false, tech_level="MILITARY"
+})
+hyperspace.hyperdrive_mil7 = HyperdriveType.New({
+	l10n_key="DRIVE_MIL7", fuel=cargo.military_fuel, byproduct=cargo.radioactives, slots="engine",
+	price=3500000, capabilities={mass=128, hyperclass=7}, purchasable=false, tech_level="MILITARY"
+})
+hyperspace.hyperdrive_mil8 = HyperdriveType.New({
+	l10n_key="DRIVE_MIL8", fuel=cargo.military_fuel, byproduct=cargo.radioactives, slots="engine",
+	price=8500000, capabilities={mass=196, hyperclass=8}, purchasable=false, tech_level="MILITARY"
+})
+hyperspace.hyperdrive_mil9 = HyperdriveType.New({
+	l10n_key="DRIVE_MIL9", fuel=cargo.military_fuel, byproduct=cargo.radioactives, slots="engine",
+	price=22000000, capabilities={mass=285, hyperclass=9}, purchasable=false, tech_level="MILITARY"
+})
 
-local laser = {}
+laser = {}
 laser.pulsecannon_1mw = LaserType.New({
 	l10n_key="PULSECANNON_1MW", price=600, capabilities={mass=1},
 	slots = {"laser_front", "laser_rear"}, laser_stats = {

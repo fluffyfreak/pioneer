@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Model.h"
@@ -180,8 +180,6 @@ void Model::Render(const std::vector<matrix4x4f> &trans, const RenderData *rd)
 	//Override renderdata if this model is called from ModelNode
 	RenderData params = (rd != 0) ? (*rd) : m_renderData;
 
-	//m_renderer->SetTransform(trans);
-
 	//using the entire model bounding radius for all nodes at the moment.
 	//BR could also be a property of Node.
 	params.boundingRadius = GetDrawClipRadius();
@@ -266,7 +264,7 @@ void Model::DrawAabb()
 	}
 
 	m_renderer->DrawBuffer( m_aabbVB.Get(), m_state, m_aabbMat.Get(), Graphics::LINE_SINGLE);
-	
+
 }
 
 // Draw collision mesh as a wireframe overlay
@@ -278,7 +276,7 @@ void Model::DrawCollisionMesh()
 	if( !m_collisionMeshVB.Valid() )
 	{
 		const std::vector<vector3f> &vertices = m_collMesh->GetGeomTree()->GetVertices();
-		const Uint16 *indices = m_collMesh->GetGeomTree()->GetIndices();
+		const Uint32 *indices = m_collMesh->GetGeomTree()->GetIndices();
 		const unsigned int *triFlags = m_collMesh->GetGeomTree()->GetTriFlags();
 		const unsigned int numIndices = m_collMesh->GetGeomTree()->GetNumTris() * 3;
 
@@ -331,7 +329,7 @@ RefCountedPtr<Graphics::Material> Model::GetMaterialByName(const std::string &na
 {
 	for (auto it : m_materials)
 	{
-		if (it.first == name) 
+		if (it.first == name)
 			return it.second;
 	}
 	return RefCountedPtr<Graphics::Material>(); //return invalid
@@ -436,8 +434,8 @@ bool Model::SupportsDecals()
 
 bool Model::SupportsPatterns()
 {
-	for (MaterialContainer::const_iterator it = m_materials.begin();
-		it != m_materials.end();
+	for (MaterialContainer::const_iterator it = m_materials.begin(), itEnd = m_materials.end();
+		it != itEnd;
 		++it)
 	{
 		//Set pattern only on a material that supports it

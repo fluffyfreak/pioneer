@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef UI_CONTEXT_H
@@ -72,6 +72,7 @@ namespace UI {
 class Context : public Container {
 public:
 	Context(LuaManager *lua, Graphics::Renderer *renderer, int width, int height);
+	Context(LuaManager *lua, Graphics::Renderer *renderer, int width, int height, float scale);
 
 	// general purpose containers
 	UI::HBox *HBox(float spacing = 0.0f) { return new UI::HBox(this, spacing); }
@@ -127,6 +128,8 @@ public:
 
 	void SetMousePointer(const std::string &filename, const Point &hotspot);
 	void SetMousePointerEnabled(bool enabled) { m_mousePointerEnabled = enabled; }
+	// handler for keydown events
+	void HandleKeyDown(const KeyboardEvent &event);
 
 	// event dispatch delegates
 	bool Dispatch(const Event &event) { return m_eventDispatcher.Dispatch(event); }

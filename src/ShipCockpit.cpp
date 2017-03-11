@@ -37,6 +37,7 @@ ShipCockpit::~ShipCockpit()
 
 void ShipCockpit::Render(Graphics::Renderer *renderer, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform)
 {
+	PROFILE_SCOPED()
 	RenderModel(renderer, camera, viewCoords, viewTransform);
 }
 
@@ -184,6 +185,7 @@ void ShipCockpit::Update(float timeStep)
 
 void ShipCockpit::RenderCockpit(Graphics::Renderer* renderer, const Camera* camera, Frame* frame)
 {
+	PROFILE_SCOPED()
 	renderer->ClearDepthBuffer();
 	SetFrame(frame);
 	Render(renderer, camera, m_translate, m_transform);
@@ -200,7 +202,7 @@ void ShipCockpit::OnActivated()
 	m_shipVel = CalculateSignedForwardVelocity(-m_shipDir, Pi::player->GetVelocity());
 }
 
-float ShipCockpit::CalculateSignedForwardVelocity(vector3d normalized_forward, vector3d velocity) {
+float ShipCockpit::CalculateSignedForwardVelocity(const vector3d &normalized_forward, const vector3d &velocity) {
 	float velz_cos = velocity.Dot(normalized_forward);
 	return (velz_cos * normalized_forward).Length() * (velz_cos < 0.0 ? -1.0 : 1.0);
 }

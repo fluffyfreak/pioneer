@@ -313,7 +313,7 @@
    },
    "PIRATE_TAUNTS_7" : {
       "description" : "",
-      "message" : "That package isn't going to reach its destination today."
+      "message" : "Ez a csomag nem fog ma elérni a célállomásra."
    },
    "PIRATE_TAUNTS_8" : {
       "description" : "",
@@ -322,6 +322,10 @@
    "PIRATE_TAUNTS_9" : {
       "description" : "",
       "message" : "Ezért a csomagért megfizetsz, méghozzá az életeddel."
+   },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Navigációs célnak beállít."
    },
    "SPACEPORT" : {
       "description" : "",

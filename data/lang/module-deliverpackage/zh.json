@@ -313,7 +313,7 @@
    },
    "PIRATE_TAUNTS_7" : {
       "description" : "",
-      "message" : "That package isn't going to reach its destination today."
+      "message" : "那个包裹永远也到不了目的地了."
    },
    "PIRATE_TAUNTS_8" : {
       "description" : "",
@@ -322,6 +322,10 @@
    "PIRATE_TAUNTS_9" : {
       "description" : "",
       "message" : "跟那货物一起去死吧."
+   },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Set as navigation target"
    },
    "SPACEPORT" : {
       "description" : "",

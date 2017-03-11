@@ -151,9 +151,9 @@
       "description" : "",
       "message" : "Bourse d'échange"
    },
-   "COMPACT_SCANNER" : {
+   "COMPACT_RADAR" : {
       "description" : "Game settings option",
-      "message" : "Scanner compact"
+      "message" : "Radar compact"
    },
    "COMPETENT" : {
       "description" : "Combat rating",
@@ -290,6 +290,10 @@
    "EMPLOYMENT" : {
       "description" : "",
       "message" : "Fonction"
+   },
+   "ENABLE_ANISOTROPIC_FILTERING" : {
+      "description" : "Use Anisotropic Filtering",
+      "message" : "Filtrage Anisotropique"
    },
    "ENABLE_AUTOSAVE" : {
       "description" : "Allow the game to autosave when docking",
@@ -463,6 +467,10 @@
       "description" : "",
       "message" : "Portée Hyperspaciale"
    },
+   "ILLEGAL_JUMP" : {
+      "description" : "A finable crime",
+      "message" : "Saut hyper-espace imprudent enregistré"
+   },
    "IM_TIRED_OF_WORKING_FOR_NOTHING_DONT_YOU_KNOW_WHAT_A_CONTRACT_IS" : {
       "description" : "",
       "message" : "Je suis fatigué de bosser pour rien. Vous savez ce que c'est qu'un contrat de travail ? "
@@ -525,7 +533,7 @@
    },
    "LAUNCH_PERMISSION_DENIED_CREW" : {
       "description" : "",
-      "message" : "Permission to launch denied: not enough crew to handle this ship."
+      "message" : "Décollage non autorisé : votre équipage n'est pas au complet."
    },
    "LAUNCH_PERMISSION_DENIED_FINED" : {
       "description" : "",
@@ -570,6 +578,10 @@
    "LOBBY" : {
       "description" : "",
       "message" : "Hall"
+   },
+   "LOCAL_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Bras de la voie lactée local"
    },
    "LOCATED_N_KM_FROM_THE_CENTRE_OF_NAME" : {
       "description" : "",
@@ -711,6 +723,10 @@
       "description" : "",
       "message" : "Navigation:"
    },
+   "NAVIGATOR" : {
+      "description" : "",
+      "message" : "Navigateur"
+   },
    "NEGOTIATE" : {
       "description" : "",
       "message" : "Négocier"
@@ -734,6 +750,10 @@
    "NONE_FOR_SALE_IN_THIS_STATION" : {
       "description" : "",
       "message" : "Aucun à vendre dans cette station"
+   },
+   "NORMA_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Bras de la Règle"
    },
    "NOTES" : {
       "description" : "",
@@ -775,6 +795,10 @@
       "description" : "",
       "message" : "Ok"
    },
+   "OPEN_USER_FOLDER" : {
+      "description" : "",
+      "message" : "Répertoire utilisateur"
+   },
    "OPTIONS" : {
       "description" : "",
       "message" : "Options"
@@ -791,6 +815,10 @@
       "description" : "",
       "message" : "La vitesse orbitale est donnée pour un vecteur tangenciel : La trajectoire doit etre de 90° par rapport a l'axe  vaisseau/{name}.\n\nLa vitesse de descente est un minimum absolu, et c'est aussi la vitesse tangencielle : Une vitesse plus base ou un angle plus bas donneront a coup sur une collision avec {name}.\n\nLa vitesse de libération fonctionne en théorie dans toute les directions, tant que le vaisseau n'entre pas en collision avec {name}."
    },
+   "OUTER_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Bras externe"
+   },
    "OUTSTANDING_FINES" : {
       "description" : "Unpaid fines for crimes committed",
       "message" : "Amendes impayées"
@@ -803,9 +831,17 @@
       "description" : "",
       "message" : "Payer l'amende de {amount}"
    },
+   "PERSEUS_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Bras de Persée"
+   },
    "PERSONAL_INFORMATION" : {
       "description" : "",
       "message" : "Info. Perso."
+   },
+   "PILOT" : {
+      "description" : "",
+      "message" : "Pilote"
    },
    "PILOTING" : {
       "description" : "",
@@ -850,6 +886,10 @@
    "PROFESSIONAL" : {
       "description" : "For player reputation",
       "message" : "Professionel"
+   },
+   "PUMP_DOWN" : {
+      "description" : "Drain the fuel tank",
+      "message" : "Vidange"
    },
    "QUALIFICATION_SCORES" : {
       "description" : "",
@@ -923,6 +963,10 @@
       "description" : "",
       "message" : "Récompense"
    },
+   "SAGITTARIUS_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Bras du Sagittaire"
+   },
    "SAVE" : {
       "description" : "",
       "message" : "Sauvegarder"
@@ -930,6 +974,10 @@
    "SCOOP_MOUNTS" : {
       "description" : "How many slots or mounts exist on the ship for fitting SCOOPS (e.g. cargo scoop, fuel scoop, multi-scoop) ",
       "message" : "Scoop mounts"
+   },
+   "SCUTUM_CENTAURUS_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Bras Écu-Croix"
    },
    "SELECT" : {
       "description" : "",
@@ -955,9 +1003,21 @@
       "description" : "",
       "message" : "Senseurs:"
    },
+   "SENSORS_AND_DEFENCE" : {
+      "description" : "",
+      "message" : "Senseurs et défense"
+   },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Régler la destination comme cible de navigation."
+   },
    "SHIP" : {
       "description" : "",
       "message" : "Vaisseau"
+   },
+   "SHIPS_ENGINEER" : {
+      "description" : "",
+      "message" : "Ingénieur de vaisseau"
    },
    "SHIP_INFORMATION" : {
       "description" : "",
@@ -986,6 +1046,10 @@
    "SHIP_VIEWING_WAS_SOLD" : {
       "description" : "",
       "message" : "Le vaisseau que vous observiez a été vendu"
+   },
+   "SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS" : {
+      "description" : "",
+      "message" : "Simulation de l'évolution de l'univers : {age} milliards d'années ;-)"
    },
    "SOUND" : {
       "description" : "",
@@ -1035,6 +1099,10 @@
       "description" : "",
       "message" : "Le vaisseau est sous le contrôle de la station, Commandant."
    },
+   "THREE_KPC_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Bras de la voie lactée 3kpc"
+   },
    "TOGGLE_MALE_FEMALE" : {
       "description" : "player gender",
       "message" : "basculer mâle/femelle"
@@ -1042,6 +1110,10 @@
    "TOO_SMALL_FOR_CURRENT_CREW" : {
       "description" : "",
       "message" : "Ce vaisseau est trop petit pour votre équipage."
+   },
+   "TOO_SMALL_TO_TRANSSHIP" : {
+      "description" : "",
+      "message" : "Le vaisseau est trop petit pour transférer votre cargaison."
    },
    "TOTAL" : {
       "description" : "",

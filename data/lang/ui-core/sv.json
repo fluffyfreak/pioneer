@@ -151,9 +151,9 @@
       "description" : "",
       "message" : "Råvarumarknad"
    },
-   "COMPACT_SCANNER" : {
+   "COMPACT_RADAR" : {
       "description" : "Game settings option",
-      "message" : "Kompakt skanner"
+      "message" : "Compact radar"
    },
    "COMPETENT" : {
       "description" : "Combat rating",
@@ -290,6 +290,10 @@
    "EMPLOYMENT" : {
       "description" : "",
       "message" : "Anställning"
+   },
+   "ENABLE_ANISOTROPIC_FILTERING" : {
+      "description" : "Use Anisotropic Filtering",
+      "message" : "Anisotropiskt filter"
    },
    "ENABLE_AUTOSAVE" : {
       "description" : "Allow the game to autosave when docking",
@@ -463,6 +467,10 @@
       "description" : "",
       "message" : "Hyperrymdsräckvidd"
    },
+   "ILLEGAL_JUMP" : {
+      "description" : "A finable crime",
+      "message" : "Vårdslös hyperhopp registrerat"
+   },
    "IM_TIRED_OF_WORKING_FOR_NOTHING_DONT_YOU_KNOW_WHAT_A_CONTRACT_IS" : {
       "description" : "",
       "message" : "Jag är trött på att arbeta för ingenting. Vet du inte vad ett kontrakt är?"
@@ -570,6 +578,10 @@
    "LOBBY" : {
       "description" : "",
       "message" : "Lobby"
+   },
+   "LOCAL_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Lokal arm"
    },
    "LOCATED_N_KM_FROM_THE_CENTRE_OF_NAME" : {
       "description" : "",
@@ -711,6 +723,10 @@
       "description" : "",
       "message" : "Navigation:"
    },
+   "NAVIGATOR" : {
+      "description" : "",
+      "message" : "Navigatör"
+   },
    "NEGOTIATE" : {
       "description" : "",
       "message" : "Förhandla"
@@ -734,6 +750,10 @@
    "NONE_FOR_SALE_IN_THIS_STATION" : {
       "description" : "",
       "message" : "Inget tillsalu vid denna station"
+   },
+   "NORMA_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Norma arm"
    },
    "NOTES" : {
       "description" : "",
@@ -775,6 +795,10 @@
       "description" : "",
       "message" : "Ok"
    },
+   "OPEN_USER_FOLDER" : {
+      "description" : "",
+      "message" : "Användarkatalog"
+   },
    "OPTIONS" : {
       "description" : "",
       "message" : "Alternativ"
@@ -791,6 +815,10 @@
       "description" : "",
       "message" : "Cirkulär omloppshastighet är angiven för en tangerande hastighet. Skeppet borde röras i 90° riktning mot skep/{name} axeln.\n\nNedstigningshastighet är ett absolut minimum och är också tangerande. En lägre hastighet eller lägre vinkel kommer att resultera i en kurs som korsar ytan på {name}.\n\nFlykthastighet fungerar i teorin i alla riktningar så länge inte skeppet krockar med {name} på vägen.\n\t\t"
    },
+   "OUTER_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Yttre arm"
+   },
    "OUTSTANDING_FINES" : {
       "description" : "Unpaid fines for crimes committed",
       "message" : "Obetalda böter"
@@ -803,9 +831,17 @@
       "description" : "",
       "message" : "Betala böter på {amount}"
    },
+   "PERSEUS_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Perseus arm"
+   },
    "PERSONAL_INFORMATION" : {
       "description" : "",
       "message" : "Personlig information"
+   },
+   "PILOT" : {
+      "description" : "",
+      "message" : "Pilot"
    },
    "PILOTING" : {
       "description" : "",
@@ -850,6 +886,10 @@
    "PROFESSIONAL" : {
       "description" : "For player reputation",
       "message" : "Professionell"
+   },
+   "PUMP_DOWN" : {
+      "description" : "Drain the fuel tank",
+      "message" : "Pumpa tillbaka"
    },
    "QUALIFICATION_SCORES" : {
       "description" : "",
@@ -923,6 +963,10 @@
       "description" : "",
       "message" : "Belöning"
    },
+   "SAGITTARIUS_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Sagittarius arm"
+   },
    "SAVE" : {
       "description" : "",
       "message" : "Spara"
@@ -930,6 +974,10 @@
    "SCOOP_MOUNTS" : {
       "description" : "How many slots or mounts exist on the ship for fitting SCOOPS (e.g. cargo scoop, fuel scoop, multi-scoop) ",
       "message" : "Skopfästen"
+   },
+   "SCUTUM_CENTAURUS_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Scutum-Centaurus arm"
    },
    "SELECT" : {
       "description" : "",
@@ -955,9 +1003,21 @@
       "description" : "",
       "message" : "Sensorer:"
    },
+   "SENSORS_AND_DEFENCE" : {
+      "description" : "",
+      "message" : "Sensorer och försvar"
+   },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Använd destination som navigationsmål"
+   },
    "SHIP" : {
       "description" : "",
       "message" : "Skepp"
+   },
+   "SHIPS_ENGINEER" : {
+      "description" : "",
+      "message" : "Skeppsingenjör"
    },
    "SHIP_INFORMATION" : {
       "description" : "",
@@ -986,6 +1046,10 @@
    "SHIP_VIEWING_WAS_SOLD" : {
       "description" : "",
       "message" : "Skeppet du tittade på har blivit sålt"
+   },
+   "SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS" : {
+      "description" : "",
+      "message" : "Simulerar universums evolution: {age} miljarder år ;-)"
    },
    "SOUND" : {
       "description" : "",
@@ -1035,6 +1099,10 @@
       "description" : "",
       "message" : "Skeppet är under stationens kontroll kapten."
    },
+   "THREE_KPC_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "3kpc arm"
+   },
    "TOGGLE_MALE_FEMALE" : {
       "description" : "player gender",
       "message" : "Växla mellan manlig/kvinnlig"
@@ -1042,6 +1110,10 @@
    "TOO_SMALL_FOR_CURRENT_CREW" : {
       "description" : "",
       "message" : "Skeppet för litet för nuvarande besättning"
+   },
+   "TOO_SMALL_TO_TRANSSHIP" : {
+      "description" : "",
+      "message" : "Skeppet är förlitet för att rymma din last."
    },
    "TOTAL" : {
       "description" : "",

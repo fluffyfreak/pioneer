@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Drawables.h"
@@ -304,74 +304,54 @@ void Lines::CreateVertexBuffer(Graphics::Renderer *r, const Uint32 size)
 //------------------------------------------------------------
 PointSprites::PointSprites() : m_refreshVertexBuffer(true)
 {
-	PROFILE_SCOPED()
 }
 
-void PointSprites::SetData(const int count, const vector3f *positions, const matrix4x4f &trans, const float size)
+void PointSprites::SetData(const int count, const vector3f *positions, const Color *colours, const float *sizes, Graphics::Material *pMaterial)
 {
 	PROFILE_SCOPED()
-	if (count < 1 ) 
+	if (count < 1 )
 		return;
 
 	assert(positions);
 
-	m_va.reset( new VertexArray(ATTRIB_POSITION | ATTRIB_UV0, count * 6) );
+	m_va.reset( new VertexArray(ATTRIB_POSITION | ATTRIB_NORMAL | ATTRIB_DIFFUSE, count) );
 
-	matrix4x4f rot(trans);
-	rot.ClearToRotOnly();
-	rot = rot.Inverse();
-
-	const float sz = 0.5f * size;
-	const vector3f rotv1 = rot * vector3f(sz, sz, 0.0f);
-	const vector3f rotv2 = rot * vector3f(sz, -sz, 0.0f);
-	const vector3f rotv3 = rot * vector3f(-sz, -sz, 0.0f);
-	const vector3f rotv4 = rot * vector3f(-sz, sz, 0.0f);
-
-	//do two-triangle quads. Could also do indexed surfaces.
-	//PiGL renderer should use actual point sprites
-	//(see history of Render.cpp for point code remnants)
 	for (int i=0; i<count; i++) {
-		const vector3f &pos = positions[i];
-
-		m_va->Add(pos+rotv4, vector2f(0.f, 0.f)); //top left
-		m_va->Add(pos+rotv3, vector2f(0.f, 1.f)); //bottom left
-		m_va->Add(pos+rotv1, vector2f(1.f, 0.f)); //top right
-
-		m_va->Add(pos+rotv1, vector2f(1.f, 0.f)); //top right
-		m_va->Add(pos+rotv3, vector2f(0.f, 1.f)); //bottom left
-		m_va->Add(pos+rotv2, vector2f(1.f, 1.f)); //bottom right
+		vector3f vSize(sizes[i]);
+		m_va->Add(positions[i], colours[i], vSize);
 	}
 
 	m_refreshVertexBuffer = true;
+	m_material.Reset(pMaterial);
 }
 
-void PointSprites::Draw(Renderer *r, RenderState *rs, Material *mat)
+void PointSprites::Draw(Renderer *r, RenderState *rs)
 {
 	PROFILE_SCOPED()
 	if (m_va->GetNumVerts() == 0)
 		return;
 
-	if (!m_vertexBuffer.Valid() || (m_va->GetNumVerts() != m_vertexBuffer->GetVertexCount())) {
-		CreateVertexBuffer(r, mat, m_va->GetNumVerts());
+	if (!m_vertexBuffer.Valid() || !m_material.Valid()) {
+		CreateVertexBuffer(r, m_va->GetNumVerts());
 	}
 	if( m_refreshVertexBuffer ) {
 		m_refreshVertexBuffer = false;
 		m_vertexBuffer->Populate( *m_va );
 	}
-
-	// XXX would be nicer to draw this as a textured triangle strip
-	r->DrawBuffer(m_vertexBuffer.Get(), rs, mat, Graphics::TRIANGLES);
+	r->DrawBuffer(m_vertexBuffer.Get(), rs, m_material.Get(), Graphics::POINTS);
 }
 
-void PointSprites::CreateVertexBuffer(Graphics::Renderer *r, Material *mat, const Uint32 size)
+void PointSprites::CreateVertexBuffer(Graphics::Renderer *r, const Uint32 size)
 {
 	PROFILE_SCOPED()
 	Graphics::VertexBufferDesc vbd;
 	vbd.attrib[0].semantic = Graphics::ATTRIB_POSITION;
 	vbd.attrib[0].format = Graphics::ATTRIB_FORMAT_FLOAT3;
-	vbd.attrib[1].semantic = Graphics::ATTRIB_UV0;
-	vbd.attrib[1].format = Graphics::ATTRIB_FORMAT_FLOAT2;
-	vbd.usage = Graphics::BUFFER_USAGE_DYNAMIC;
+	vbd.attrib[1].semantic = Graphics::ATTRIB_NORMAL;
+	vbd.attrib[1].format = Graphics::ATTRIB_FORMAT_FLOAT3;
+	vbd.attrib[2].semantic = Graphics::ATTRIB_DIFFUSE;
+	vbd.attrib[2].format = Graphics::ATTRIB_FORMAT_UBYTE4;
+	vbd.usage = Graphics::BUFFER_USAGE_STATIC;
 	vbd.numVertices = size;
 	m_vertexBuffer.Reset(r->CreateVertexBuffer(vbd));
 }
@@ -385,7 +365,7 @@ Points::Points() : m_refreshVertexBuffer(true)
 void Points::SetData(Renderer* r, const int count, const vector3f *positions, const matrix4x4f &trans, const Color &color, const float size)
 {
 	PROFILE_SCOPED()
-	if (count < 1 ) 
+	if (count < 1 )
 		return;
 
 	assert(positions);
@@ -429,7 +409,7 @@ void Points::SetData(Renderer* r, const int count, const vector3f *positions, co
 void Points::SetData(Renderer* r, const int count, const vector3f *positions, const Color *color, const matrix4x4f &trans, const float size)
 {
 	PROFILE_SCOPED()
-	if (count < 1 ) 
+	if (count < 1 )
 		return;
 
 	assert(positions);
@@ -521,9 +501,11 @@ static const int icosahedron_faces[20][3] = {
 	{6,1,10}, {9,0,11}, {9,11,2}, {9,2,5}, {7,2,11}
 };
 
-Sphere3D::Sphere3D(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::RenderState *state, int subdivs, float scale)
+Sphere3D::Sphere3D(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::RenderState *state, int subdivs, float scale, const Uint32 attribs)
 {
 	PROFILE_SCOPED()
+	assert(attribs & ATTRIB_POSITION);
+
 	m_material = mat;
 	m_renderState = state;
 
@@ -532,10 +514,9 @@ Sphere3D::Sphere3D(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 	matrix4x4f trans = matrix4x4f::Identity();
 	trans.Scale(scale, scale, scale);
 
-	//m_surface.reset(new Surface(TRIANGLES, new VertexArray(ATTRIB_POSITION | ATTRIB_NORMAL | ATTRIB_UV0), mat));
-	//reserve some data
-	VertexArray vts(ATTRIB_POSITION | ATTRIB_NORMAL | ATTRIB_UV0, 256);
-	std::vector<Uint16> indices;
+	//reserve some data - ATTRIB_POSITION | ATTRIB_NORMAL | ATTRIB_UV0
+	VertexArray vts(attribs, (subdivs * subdivs) * 20 * 3);
+	std::vector<Uint32> indices;
 
 	//initial vertices
 	int vi[12];
@@ -557,19 +538,27 @@ Sphere3D::Sphere3D(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 
 	//Create vtx & index buffers and copy data
 	VertexBufferDesc vbd;
-	vbd.attrib[0].semantic = ATTRIB_POSITION;
-	vbd.attrib[0].format   = ATTRIB_FORMAT_FLOAT3;
-	vbd.attrib[1].semantic = ATTRIB_NORMAL;
-	vbd.attrib[1].format   = ATTRIB_FORMAT_FLOAT3;
-	vbd.attrib[2].semantic = ATTRIB_UV0;
-	vbd.attrib[2].format   = ATTRIB_FORMAT_FLOAT2;
+	Uint32 attIdx = 0;
+	vbd.attrib[attIdx].semantic = ATTRIB_POSITION;
+	vbd.attrib[attIdx].format   = ATTRIB_FORMAT_FLOAT3;
+	++attIdx;
+	if (attribs & ATTRIB_NORMAL) {
+		vbd.attrib[attIdx].semantic = ATTRIB_NORMAL;
+		vbd.attrib[attIdx].format = ATTRIB_FORMAT_FLOAT3;
+		++attIdx;
+	}
+	if (attribs & ATTRIB_UV0) {
+		vbd.attrib[attIdx].semantic = ATTRIB_UV0;
+		vbd.attrib[attIdx].format = ATTRIB_FORMAT_FLOAT2;
+		++attIdx;
+	}
 	vbd.numVertices = vts.GetNumVerts();
 	vbd.usage = BUFFER_USAGE_STATIC;
 	m_vertexBuffer.reset(renderer->CreateVertexBuffer(vbd));
 	m_vertexBuffer->Populate(vts);
 
 	m_indexBuffer.reset(renderer->CreateIndexBuffer(indices.size(), BUFFER_USAGE_STATIC));
-	Uint16 *idxPtr = m_indexBuffer->Map(Graphics::BUFFER_MAP_WRITE);
+	Uint32 *idxPtr = m_indexBuffer->Map(Graphics::BUFFER_MAP_WRITE);
 	for (auto it : indices) {
 		*idxPtr = it;
 		idxPtr++;
@@ -587,13 +576,17 @@ int Sphere3D::AddVertex(VertexArray &vts, const vector3f &v, const vector3f &n)
 {
 	PROFILE_SCOPED()
 	vts.position.push_back(v);
-	vts.normal.push_back(n);
-	//http://www.mvps.org/directx/articles/spheremap.htm
-	vts.uv0.push_back(vector2f(asinf(n.x)/M_PI+0.5f, asinf(n.y)/M_PI+0.5f));
+	if (vts.HasAttrib(ATTRIB_NORMAL)) {
+		vts.normal.push_back(n);
+	}
+	if (vts.HasAttrib(ATTRIB_UV0)) {
+		//http://www.mvps.org/directx/articles/spheremap.htm
+		vts.uv0.push_back(vector2f(asinf(n.x) / M_PI + 0.5f, asinf(n.y) / M_PI + 0.5f));
+	}
 	return vts.GetNumVerts() - 1;
 }
 
-void Sphere3D::AddTriangle(std::vector<Uint16> &indices, int i1, int i2, int i3)
+void Sphere3D::AddTriangle(std::vector<Uint32> &indices, int i1, int i2, int i3)
 {
 	PROFILE_SCOPED()
 	indices.push_back(i1);
@@ -601,7 +594,7 @@ void Sphere3D::AddTriangle(std::vector<Uint16> &indices, int i1, int i2, int i3)
 	indices.push_back(i3);
 }
 
-void Sphere3D::Subdivide(VertexArray &vts, std::vector<Uint16> &indices,
+void Sphere3D::Subdivide(VertexArray &vts, std::vector<Uint32> &indices,
 		const matrix4x4f &trans, const vector3f &v1, const vector3f &v2, const vector3f &v3,
 		const int i1, const int i2, const int i3, int depth)
 {
@@ -642,7 +635,7 @@ TexturedQuad::TexturedQuad(Graphics::Renderer *r, const std::string &filename)
 	desc.textures = 1;
 	desc.lighting = false;
 	desc.vertexColors = false;
-	m_material.reset(r->CreateMaterial(desc));
+	m_material.Reset(r->CreateMaterial(desc));
 	m_material->texture0 = m_texture.Get();
 
 	// these might need to be reversed
@@ -662,7 +655,7 @@ TexturedQuad::TexturedQuad(Graphics::Renderer *r, const std::string &filename)
 	vbd.attrib[1].format   = ATTRIB_FORMAT_FLOAT2;
 	vbd.numVertices = vertices.GetNumVerts();
 	vbd.usage = BUFFER_USAGE_STATIC;
-	m_vertexBuffer.reset(r->CreateVertexBuffer(vbd));
+	m_vertexBuffer.Reset(r->CreateVertexBuffer(vbd));
 	m_vertexBuffer->Populate(vertices);
 }
 
@@ -677,7 +670,7 @@ TexturedQuad::TexturedQuad(Graphics::Renderer *r, Graphics::Texture *texture, co
 	VertexArray vertices(ATTRIB_POSITION | ATTRIB_UV0);
 	Graphics::MaterialDescriptor desc;
 	desc.textures = 1;
-	m_material.reset(r->CreateMaterial(desc));
+	m_material.Reset(r->CreateMaterial(desc));
 	m_material->texture0 = m_texture.Get();
 
 	// these might need to be reversed
@@ -697,29 +690,72 @@ TexturedQuad::TexturedQuad(Graphics::Renderer *r, Graphics::Texture *texture, co
 	vbd.attrib[1].format   = ATTRIB_FORMAT_FLOAT2;
 	vbd.numVertices = vertices.GetNumVerts();
 	vbd.usage = BUFFER_USAGE_STATIC;
-	m_vertexBuffer.reset(r->CreateVertexBuffer(vbd));
+	m_vertexBuffer.Reset(r->CreateVertexBuffer(vbd));
 	m_vertexBuffer->Populate(vertices);
+}
+
+TexturedQuad::TexturedQuad(Graphics::Renderer *r, RefCountedPtr<Graphics::Material> &material, const Graphics::VertexArray &va, RenderState *state)
+	: m_material(material)
+{
+	PROFILE_SCOPED()
+	assert(state);
+	m_renderState = state;
+
+	//Create vtx & index buffers and copy data
+	VertexBufferDesc vbd;
+
+	Uint32 attribIdx = 0;
+	assert(va.HasAttrib(ATTRIB_POSITION));
+	vbd.attrib[attribIdx].semantic = ATTRIB_POSITION;
+	vbd.attrib[attribIdx].format = ATTRIB_FORMAT_FLOAT3;
+	++attribIdx;
+
+	if (va.HasAttrib(ATTRIB_NORMAL)) {
+		vbd.attrib[attribIdx].semantic = ATTRIB_NORMAL;
+		vbd.attrib[attribIdx].format = ATTRIB_FORMAT_FLOAT3;
+		++attribIdx;
+	}
+	if (va.HasAttrib(ATTRIB_DIFFUSE)) {
+		vbd.attrib[attribIdx].semantic = ATTRIB_DIFFUSE;
+		vbd.attrib[attribIdx].format = ATTRIB_FORMAT_UBYTE4;
+		++attribIdx;
+	}
+	if (va.HasAttrib(ATTRIB_UV0)) {
+		vbd.attrib[attribIdx].semantic = ATTRIB_UV0;
+		vbd.attrib[attribIdx].format = ATTRIB_FORMAT_FLOAT2;
+		++attribIdx;
+	}
+	if (va.HasAttrib(ATTRIB_TANGENT)) {
+		vbd.attrib[attribIdx].semantic = ATTRIB_TANGENT;
+		vbd.attrib[attribIdx].format = ATTRIB_FORMAT_FLOAT3;
+		++attribIdx;
+	}
+
+	vbd.numVertices = va.GetNumVerts();
+	vbd.usage = BUFFER_USAGE_STATIC;
+	m_vertexBuffer.Reset(r->CreateVertexBuffer(vbd));
+	m_vertexBuffer->Populate(va);
 }
 
 void TexturedQuad::Draw(Graphics::Renderer *r)
 {
 	PROFILE_SCOPED()
-	m_material->diffuse = Color4ub(255, 255, 255, 255);
-	r->DrawBuffer(m_vertexBuffer.get(), m_renderState, m_material.get(), TRIANGLE_STRIP);
+	m_material->diffuse = Color::WHITE;
+	r->DrawBuffer(m_vertexBuffer.Get(), m_renderState, m_material.Get(), TRIANGLE_STRIP);
 }
 
 void TexturedQuad::Draw(Graphics::Renderer *r, const Color4ub &tint)
 {
 	PROFILE_SCOPED()
 	m_material->diffuse = tint;
-	r->DrawBuffer(m_vertexBuffer.get(), m_renderState, m_material.get(), TRIANGLE_STRIP);
+	r->DrawBuffer(m_vertexBuffer.Get(), m_renderState, m_material.Get(), TRIANGLE_STRIP);
 }
 
 //------------------------------------------------------------
 Rect::Rect(Graphics::Renderer *r, const vector2f &pos, const vector2f &size, const Color &c, RenderState *state, const bool bIsStatic /*= true*/) : m_renderState(state)
 {
 	PROFILE_SCOPED()
-			
+
 	using namespace Graphics;
 	VertexArray bgArr(ATTRIB_POSITION | ATTRIB_DIFFUSE, 4);
 	Graphics::MaterialDescriptor desc;
@@ -738,7 +774,7 @@ Rect::Rect(Graphics::Renderer *r, const vector2f &pos, const vector2f &size, con
 	vbd.attrib[1].format   = ATTRIB_FORMAT_UBYTE4;
 	vbd.numVertices = 4;
 	vbd.usage = bIsStatic ? BUFFER_USAGE_STATIC : BUFFER_USAGE_DYNAMIC;
-	
+
 	// VertexBuffer
 	m_vertexBuffer.Reset( r->CreateVertexBuffer(vbd) );
 	m_vertexBuffer->Populate(bgArr);
@@ -753,7 +789,7 @@ void Rect::Update(const vector2f &pos, const vector2f &size, const Color &c)
 	bgArr.Add(vector3f(size.x,size.y,0), c);
 	bgArr.Add(vector3f(size.x,pos.y,0), c);
 	bgArr.Add(vector3f(pos.x,pos.y,0), c);
-	
+
 	m_vertexBuffer->Populate(bgArr);
 }
 
@@ -762,12 +798,12 @@ void Rect::Draw(Graphics::Renderer *r)
 	PROFILE_SCOPED()
 	r->DrawBuffer(m_vertexBuffer.Get(), m_renderState, m_material.Get(), TRIANGLE_FAN);
 }
-	
+
 //------------------------------------------------------------
 RoundEdgedRect::RoundEdgedRect(Graphics::Renderer *r, const vector2f &size, const float rad, const Color &c, RenderState *state, const bool bIsStatic /*= true*/) : m_renderState(state)
 {
 	PROFILE_SCOPED()
-			
+
 	using namespace Graphics;
 	Graphics::MaterialDescriptor desc;
 	desc.vertexColors = true;
@@ -788,8 +824,8 @@ RoundEdgedRect::RoundEdgedRect(Graphics::Renderer *r, const vector2f &size, cons
 void RoundEdgedRect::Update(const vector2f &size, float rad, const Color &c)
 {
 	Graphics::VertexArray vts(Graphics::ATTRIB_POSITION | ATTRIB_DIFFUSE);
-	
-	if (rad > 0.5f*std::min(size.x, size.y)) 
+
+	if (rad > 0.5f*std::min(size.x, size.y))
 		rad = 0.5f*std::min(size.x, size.y);
 
 	// top left
@@ -823,7 +859,7 @@ void RoundEdgedRect::Draw(Graphics::Renderer *r)
 	PROFILE_SCOPED()
 	r->DrawBuffer(m_vertexBuffer.Get(), m_renderState, m_material.Get(), TRIANGLE_FAN);
 }
-	
+
 //------------------------------------------------------------
 Axes3D::Axes3D(Graphics::Renderer *r, Graphics::RenderState *state)
 {
@@ -839,7 +875,7 @@ Axes3D::Axes3D(Graphics::Renderer *r, Graphics::RenderState *state)
 	Graphics::MaterialDescriptor desc;
 	desc.vertexColors = true;
 	m_material.Reset(r->CreateMaterial(desc));
-	
+
 	//Draw plain XYZ axes using the current transform
 	static const vector3f vtsXYZ[] = {
 		vector3f(0.f, 0.f, 0.f),
@@ -880,7 +916,7 @@ void Axes3D::Draw(Graphics::Renderer *r)
 	r->DrawBuffer(m_vertexBuffer.Get(), m_renderState, m_material.Get(), LINE_SINGLE);
 }
 
-static Axes3D *s_axes = nullptr; 
+static Axes3D *s_axes = nullptr;
 Axes3D* GetAxes3DDrawable(Graphics::Renderer *r) {
 	PROFILE_SCOPED()
 	if( !s_axes ) {

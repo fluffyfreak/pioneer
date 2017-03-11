@@ -151,9 +151,9 @@
       "description" : "",
       "message" : "Árupiac"
    },
-   "COMPACT_SCANNER" : {
+   "COMPACT_RADAR" : {
       "description" : "Game settings option",
-      "message" : "Kompakt szkenner."
+      "message" : "Kompakt radar"
    },
    "COMPETENT" : {
       "description" : "Combat rating",
@@ -290,6 +290,10 @@
    "EMPLOYMENT" : {
       "description" : "",
       "message" : "Alkalmazás"
+   },
+   "ENABLE_ANISOTROPIC_FILTERING" : {
+      "description" : "Use Anisotropic Filtering",
+      "message" : "Anisotropic szűrés"
    },
    "ENABLE_AUTOSAVE" : {
       "description" : "Allow the game to autosave when docking",
@@ -463,6 +467,10 @@
       "description" : "",
       "message" : "Hiperűr hatótáv"
    },
+   "ILLEGAL_JUMP" : {
+      "description" : "A finable crime",
+      "message" : "Felelőtlen hiperugrást regisztráltunk."
+   },
    "IM_TIRED_OF_WORKING_FOR_NOTHING_DONT_YOU_KNOW_WHAT_A_CONTRACT_IS" : {
       "description" : "",
       "message" : "Elegem van abból, hogy a semmiért dolgozom! Tudja egyáltalán, mi az a szerződés?"
@@ -570,6 +578,10 @@
    "LOBBY" : {
       "description" : "",
       "message" : "Előcsarnok"
+   },
+   "LOCAL_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Helyi kar"
    },
    "LOCATED_N_KM_FROM_THE_CENTRE_OF_NAME" : {
       "description" : "",
@@ -711,6 +723,10 @@
       "description" : "",
       "message" : "Navigáció:"
    },
+   "NAVIGATOR" : {
+      "description" : "",
+      "message" : "Navigátor"
+   },
    "NEGOTIATE" : {
       "description" : "",
       "message" : "Alku"
@@ -734,6 +750,10 @@
    "NONE_FOR_SALE_IN_THIS_STATION" : {
       "description" : "",
       "message" : "None for sale in this station."
+   },
+   "NORMA_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Norma kar"
    },
    "NOTES" : {
       "description" : "",
@@ -775,6 +795,10 @@
       "description" : "",
       "message" : "Ok"
    },
+   "OPEN_USER_FOLDER" : {
+      "description" : "",
+      "message" : "Felhasználó könyvtára"
+   },
    "OPTIONS" : {
       "description" : "",
       "message" : "Beállítások"
@@ -791,6 +815,10 @@
       "description" : "",
       "message" : "A körpályához megadott sebesség párhuzamos a bolygó felszínével. A hajónak 90°-os szögben kell haladnia a ship/{name} tengelyhez képest.\n\nAz ereszkedési sebesség a lehető legalacsonyabb, és szintén párhuzamos a felszínnel. Lassabb sebesség vagy nagyobb ereszkedési szög ütközőpályát eredményez.\n\nA szökési sebesség elméletben bármely irányba működik, ütközőpályákat kivéve."
    },
+   "OUTER_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Külső kar"
+   },
    "OUTSTANDING_FINES" : {
       "description" : "Unpaid fines for crimes committed",
       "message" : "Kiszabott bírságok"
@@ -803,9 +831,17 @@
       "description" : "",
       "message" : "{amount} büntetés befizetése"
    },
+   "PERSEUS_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Perseus kar"
+   },
    "PERSONAL_INFORMATION" : {
       "description" : "",
       "message" : "Személyi adatok"
+   },
+   "PILOT" : {
+      "description" : "",
+      "message" : "Pilóta"
    },
    "PILOTING" : {
       "description" : "",
@@ -850,6 +886,10 @@
    "PROFESSIONAL" : {
       "description" : "For player reputation",
       "message" : "Szakértő"
+   },
+   "PUMP_DOWN" : {
+      "description" : "Drain the fuel tank",
+      "message" : "Raktérbe szivatás"
    },
    "QUALIFICATION_SCORES" : {
       "description" : "",
@@ -923,6 +963,10 @@
       "description" : "",
       "message" : "Jutalom"
    },
+   "SAGITTARIUS_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Sagittarius kar"
+   },
    "SAVE" : {
       "description" : "",
       "message" : "Ment"
@@ -930,6 +974,10 @@
    "SCOOP_MOUNTS" : {
       "description" : "How many slots or mounts exist on the ship for fitting SCOOPS (e.g. cargo scoop, fuel scoop, multi-scoop) ",
       "message" : "Szívó felfüggesztés"
+   },
+   "SCUTUM_CENTAURUS_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Scutum-Centaurus kar"
    },
    "SELECT" : {
       "description" : "",
@@ -955,9 +1003,21 @@
       "description" : "",
       "message" : "Érzékelők:"
    },
+   "SENSORS_AND_DEFENCE" : {
+      "description" : "",
+      "message" : "Érzékelők és védelem"
+   },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Cél megjelőlése uticélnak."
+   },
    "SHIP" : {
       "description" : "",
       "message" : "Hajó"
+   },
+   "SHIPS_ENGINEER" : {
+      "description" : "",
+      "message" : "Hajógépész"
    },
    "SHIP_INFORMATION" : {
       "description" : "",
@@ -986,6 +1046,10 @@
    "SHIP_VIEWING_WAS_SOLD" : {
       "description" : "",
       "message" : "Ez a hajó már elkelt."
+   },
+   "SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS" : {
+      "description" : "",
+      "message" : "Univerzum evolúciójának szimulálása: {age} milliárd év ;-)"
    },
    "SOUND" : {
       "description" : "",
@@ -1035,6 +1099,10 @@
       "description" : "",
       "message" : "Vezérlést átvette az állomás, parancsnok."
    },
+   "THREE_KPC_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "3kpsz kar"
+   },
    "TOGGLE_MALE_FEMALE" : {
       "description" : "player gender",
       "message" : "Férfi/Nő"
@@ -1042,6 +1110,10 @@
    "TOO_SMALL_FOR_CURRENT_CREW" : {
       "description" : "",
       "message" : "Túl kicsi a hajó a legénységnek."
+   },
+   "TOO_SMALL_TO_TRANSSHIP" : {
+      "description" : "",
+      "message" : "A hajód túl kicsi a rakomány elszállításához."
    },
    "TOTAL" : {
       "description" : "",

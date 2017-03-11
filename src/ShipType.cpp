@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #define ALLOW_LUA_SHIP_DEF 0
@@ -46,7 +46,7 @@ static bool ShipIsUnbuyable(const std::string &id)
 	return is_zero_exact(t.baseprice);
 }
 
-ShipType::ShipType(const Id &_id, const std::string &path) 
+ShipType::ShipType(const Id &_id, const std::string &path)
 {
 	Json::Reader reader;
 	Json::Value data;
@@ -103,11 +103,23 @@ ShipType::ShipType(const Id &_id, const std::string &path)
 		slots[slotname] = data["slots"].get(slotname, 0).asInt();
 	}
 
+	for( Json::Value::iterator role = data["roles"].begin(); role != data["roles"].end(); ++role ) {
+		const std::string rolename = role.key().asString();
+		roles[rolename] = data["roles"].get(rolename, 0).asBool();
+	}
+
+	for(int it=0;it<4;it++) thrusterUpgrades[it] = 1.0 + (double(it)/10.0);
+	for( Json::Value::iterator slot = data["thrust_upgrades"].begin() ; slot != data["thrust_upgrades"].end() ; ++slot ) {
+		const std::string slotname = slot.key().asString();
+		const int index = Clamp(atoi(&slotname.c_str()[9]), 1, 3);
+		thrusterUpgrades[index] = data["thrust_upgrades"].get(slotname, 0).asDouble();
+	}
+
 	{
 		const auto it = slots.find("engine");
-		if (it != slots.end()) 
-		{ 
-			it->second = Clamp(it->second, 0, 1); 
+		if (it != slots.end())
+		{
+			it->second = Clamp(it->second, 0, 1);
 		}
 	}
 
@@ -119,13 +131,13 @@ ShipType::ShipType(const Id &_id, const std::string &path)
 		effectiveExhaustVelocity = 55000000;
 	} else if(effectiveExhaustVelocity < 0 && thruster_fuel_use >= 0) {
 		// v_c undefined and thruster fuel use defined -- use it!
-		effectiveExhaustVelocity = GetEffectiveExhaustVelocity(fuelTankMass, thruster_fuel_use, linThrust[ShipType::THRUSTER_FORWARD]);
+		effectiveExhaustVelocity = GetEffectiveExhaustVelocity(fuelTankMass, thruster_fuel_use, linThrust[Thruster::THRUSTER_FORWARD]);
 	} else {
 		if(thruster_fuel_use >= 0) {
 			Output("Warning: Both thruster_fuel_use and effective_exhaust_velocity defined for %s, using effective_exhaust_velocity.\n", modelName.c_str());
 		}
 	}
-	
+
 	baseprice = data.get("price", 0.0).asDouble();
 	minCrew = data.get("min_crew", 1).asInt();
 	maxCrew = data.get("max_crew", 1).asInt();
@@ -231,7 +243,7 @@ int _define_ship(lua_State *L, ShipType::Tag tag, std::vector<ShipType::Id> *lis
 	s.maxCrew = t.Get("max_crew", 1);
 
 	s.hyperdriveClass = t.Get("hyperdrive_class", 1);
-	
+
 	data["price"] = s.baseprice;
 	data["min_crew"] = s.minCrew;
 	data["max_crew"] = s.maxCrew;
@@ -294,7 +306,7 @@ int define_missile(lua_State *L)
 void ShipType::Init()
 {
 	static bool isInitted = false;
-	if (isInitted) 
+	if (isInitted)
 		return;
 	isInitted = true;
 

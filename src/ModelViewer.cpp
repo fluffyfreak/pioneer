@@ -1,8 +1,9 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "ModelViewer.h"
 #include "FileSystem.h"
+#include "graphics/gl2/GL2Renderer.h"
 #include "graphics/opengl/RendererGL.h"
 #include "graphics/Graphics.h"
 #include "graphics/Light.h"
@@ -12,6 +13,7 @@
 #include "scenegraph/DumpVisitor.h"
 #include "scenegraph/FindNodeVisitor.h"
 #include "scenegraph/BinaryConverter.h"
+#include "scenegraph/ModelSkin.h"
 #include "OS.h"
 #include "Pi.h"
 #include "StringF.h"
@@ -33,6 +35,7 @@ ModelViewer::Options::Options()
 , mouselookEnabled(false)
 , gridInterval(10.f)
 , lightPreset(0)
+, orthoView(false)
 {
 }
 
@@ -72,7 +75,7 @@ namespace {
 			const std::string &fpath = info.GetPath();
 
 			//check it's the expected type
-			if (info.IsFile() && ends_with_ci(fpath, ".png")) {
+			if (info.IsFile() && ends_with_ci(fpath, ".dds")) {
 				list.push_back(info.GetName().substr(0, info.GetName().size()-4));
 			}
 		}
@@ -88,6 +91,7 @@ ModelViewer::ModelViewer(Graphics::Renderer *r, LuaManager *lm)
 : m_done(false)
 , m_screenshotQueued(false)
 , m_shieldIsHit(false)
+, m_settingColourSliders(false)
 , m_shieldHitPan(-1.48f)
 , m_frameTime(0.0)
 , m_renderer(r)
@@ -99,12 +103,13 @@ ModelViewer::ModelViewer(Graphics::Renderer *r, LuaManager *lm)
 , m_model(0)
 , m_modelName("")
 {
+	OS::RedirectStdio();
 	m_ui.Reset(new UI::Context(lm, r, Graphics::GetScreenWidth(), Graphics::GetScreenHeight()));
 	m_ui->SetMousePointer("icons/cursors/mouse_cursor_2.png", UI::Point(15, 8));
 
 	m_log = m_ui->MultiLineText("");
 	m_log->SetFont(UI::Widget::FONT_SMALLEST);
-	
+
 	m_logScroller.Reset(m_ui->Scroller());
 	m_logScroller->SetInnerWidget(m_ui->ColorBackground(Color(0x0,0x0,0x0,0x40))->SetInnerWidget(m_log));
 
@@ -142,11 +147,24 @@ void ModelViewer::Run(const std::string &modelName)
 
 	ModManager::Init();
 
+	Graphics::RendererGL2::RegisterRenderer();
 	Graphics::RendererOGL::RegisterRenderer();
+
+	// determine what renderer we should use, default to Opengl 3.x
+	const std::string rendererName = config->String("RendererName", Graphics::RendererNameFromType(Graphics::RENDERER_OPENGL_3x));
+	Graphics::RendererType rType = Graphics::RENDERER_OPENGL_3x;
+	if(rendererName == Graphics::RendererNameFromType(Graphics::RENDERER_OPENGL_21))
+	{
+		rType = Graphics::RENDERER_OPENGL_21;
+	}
+	else if(rendererName == Graphics::RendererNameFromType(Graphics::RENDERER_OPENGL_3x))
+	{
+		rType = Graphics::RENDERER_OPENGL_3x;
+	}
 
 	//video
 	Graphics::Settings videoSettings = {};
-	videoSettings.rendererType = Graphics::RENDERER_OPENGL;
+	videoSettings.rendererType = rType;
 	videoSettings.width = config->Int("ScrWidth");
 	videoSettings.height = config->Int("ScrHeight");
 	videoSettings.fullscreen = (config->Int("StartFullscreen") != 0);
@@ -154,6 +172,7 @@ void ModelViewer::Run(const std::string &modelName)
 	videoSettings.requestedSamples = config->Int("AntiAliasingMode");
 	videoSettings.vsync = (config->Int("VSync") != 0);
 	videoSettings.useTextureCompression = (config->Int("UseTextureCompression") != 0);
+	videoSettings.useAnisotropicFiltering = (config->Int("UseAnisotropicFiltering") != 0);
 	videoSettings.iconFile = OS::GetIconFilename();
 	videoSettings.title = "Model viewer";
 	Graphics::Renderer *renderer = Graphics::Init(videoSettings);
@@ -180,8 +199,7 @@ void ModelViewer::Run(const std::string &modelName)
 
 bool ModelViewer::OnPickModel(UI::List *list)
 {
-	SetModel(list->GetSelectedOption());
-	ResetCamera();
+	m_requestedModelName = list->GetSelectedOption();
 	return true;
 }
 
@@ -244,20 +262,45 @@ bool ModelViewer::OnToggleGuns(UI::CheckBox *w)
 	}
 
 	m_options.attachGuns = !m_options.attachGuns;
-	SceneGraph::Group *tagL = m_model->FindTagByName("tag_gun_left");
-	SceneGraph::Group *tagR = m_model->FindTagByName("tag_gun_right");
-	if (!tagL || !tagR) {
-		AddLog("Missing tags gun_left and gun_right in model");
+	SceneGraph::Model::TVecMT tags;
+	m_model->FindTagsByStartOfName("tag_gun_", tags);
+	if (tags.empty()) {
+		AddLog("Missing tags \"tag_gun_XXX\" in model");
 		return false;
 	}
 	if (m_options.attachGuns) {
-		tagL->AddChild(new SceneGraph::ModelNode(m_gunModel.get()));
-		tagR->AddChild(new SceneGraph::ModelNode(m_gunModel.get()));
+		for (auto tag : tags) {
+			tag->AddChild(new SceneGraph::ModelNode(m_gunModel.get()));
+		}
 	} else { //detach
 		//we know there's nothing else
-		tagL->RemoveChildAt(0);
-		tagR->RemoveChildAt(0);
+		for (auto tag : tags) {
+			tag->RemoveChildAt(0);
+		}
 	}
+	return true;
+}
+
+bool ModelViewer::OnRandomColor(UI::Widget*)
+{
+	if (!m_model || !m_model->SupportsPatterns()) return false;
+
+	SceneGraph::ModelSkin skin;
+	skin.SetRandomColors(m_rng);
+	skin.Apply(m_model);
+
+	// We need this flag setting so that we don't override what we're changing in OnModelColorsChanged
+	m_settingColourSliders = true;
+	const std::vector<Color> &colors = skin.GetColors();
+	for(unsigned int i=0; i<3; i++) {
+		for(unsigned int j=0; j<3; j++) {
+			// use ToColor4f to get the colours in 0..1 range required
+			if( colorSliders[(i*3)+j] )
+				colorSliders[(i*3)+j]->SetValue(colors[i].ToColor4f()[j]);
+		}
+	}
+	m_settingColourSliders = false;
+
 	return true;
 }
 
@@ -429,12 +472,12 @@ void ModelViewer::DrawBackground()
 		vbd.attrib[1].format	= Graphics::ATTRIB_FORMAT_UBYTE4;
 		vbd.numVertices = 6;
 		vbd.usage = Graphics::BUFFER_USAGE_STATIC;
-	
+
 		// VertexBuffer
 		m_bgBuffer.Reset( m_renderer->CreateVertexBuffer(vbd) );
 		m_bgBuffer->Populate(bgArr);
 	}
-	
+
 	m_renderer->DrawBuffer(m_bgBuffer.Get(), m_bgState, Graphics::vtxColorMaterial, Graphics::TRIANGLES);
 }
 
@@ -491,6 +534,7 @@ void ModelViewer::DrawModel(const matrix4x4f &mv)
 	);
 
 	m_model->Render(mv);
+	m_navLights->Render(m_renderer);
 }
 
 void ModelViewer::MainLoop()
@@ -525,13 +569,28 @@ void ModelViewer::MainLoop()
 			const float dif = dif2 / (dif1 * 1.0f);
 
 			m_shields->Update(m_options.showShields ? 1.0f : (1.0f - dif), 1.0f);
-			
+
 			// setup rendering
-			m_renderer->SetPerspectiveProjection(85, Graphics::GetScreenWidth()/float(Graphics::GetScreenHeight()), 0.1f, 100000.f);
+			if (!m_options.orthoView) {
+                m_renderer->SetPerspectiveProjection(85, Graphics::GetScreenWidth()/float(Graphics::GetScreenHeight()), 0.1f, 100000.f);
+			} else {
+                /* TODO: Zoom in ortho mode seems don't work as in perspective mode,
+                 / I change "screen dimensions" to avoid the problem.
+                 / However the zoom needs more care
+                */
+                if (m_zoom<=0.0) m_zoom = 0.01;
+                float screenW = Graphics::GetScreenWidth()*m_zoom/10;
+                float screenH = Graphics::GetScreenHeight()*m_zoom/10;
+                matrix4x4f orthoMat = matrix4x4f::OrthoFrustum(-screenW,screenW, -screenH, screenH, 0.1f, 100000.0f);
+                orthoMat.ClearToRotOnly();
+                m_renderer->SetProjection(orthoMat);
+			}
+
 			m_renderer->SetTransform(matrix4x4f::Identity());
 
 			// calc camera info
 			matrix4x4f mv;
+			float zd=0;
 			if (m_options.mouselookEnabled) {
 				mv = m_viewRot.Transpose() * matrix4x4f::Translation(-m_viewPos);
 			} else {
@@ -539,7 +598,9 @@ void ModelViewer::MainLoop()
 				matrix4x4f rot = matrix4x4f::Identity();
 				rot.RotateX(DEG2RAD(-m_rotX));
 				rot.RotateY(DEG2RAD(-m_rotY));
-				mv = matrix4x4f::Translation(0.0f, 0.0f, -zoom_distance(m_baseDistance, m_zoom)) * rot;
+				if (m_options.orthoView) zd = -m_baseDistance;
+				else zd = -zoom_distance(m_baseDistance, m_zoom);
+				mv = matrix4x4f::Translation(0.0f, 0.0f, zd) * rot;
 			}
 
 			// draw the model itself
@@ -567,6 +628,13 @@ void ModelViewer::MainLoop()
 
 		// end scene
 		m_renderer->SwapBuffers();
+
+		// if we've requested a different model then switch too it
+		if(!m_requestedModelName.empty()) {
+			SetModel(m_requestedModelName);
+			m_requestedModelName.clear();
+			ResetCamera();
+		}
 	}
 }
 
@@ -599,7 +667,7 @@ void ModelViewer::OnDecalChanged(unsigned int index, const std::string &texname)
 {
 	if (!m_model) return;
 
-	m_decalTexture = Graphics::TextureBuilder::Decal(stringf("textures/decals/%0.png", texname)).GetOrCreateTexture(m_renderer, "decal");
+	m_decalTexture = Graphics::TextureBuilder::Decal(stringf("textures/decals/%0.dds", texname)).GetOrCreateTexture(m_renderer, "decal");
 
 	m_model->SetDecalTexture(m_decalTexture, 0);
 	m_model->SetDecalTexture(m_decalTexture, 1);
@@ -614,7 +682,8 @@ void ModelViewer::OnLightPresetChanged(unsigned int index, const std::string&)
 
 void ModelViewer::OnModelColorsChanged(float)
 {
-	if (!m_model) return;
+	if (!m_model || m_settingColourSliders) return;
+
 	//don't care about the float. Fetch values from all sliders.
 	std::vector<Color> colors;
 	colors.push_back(get_slider_color(colorSliders[0], colorSliders[1], colorSliders[2]));
@@ -659,6 +728,7 @@ void ModelViewer::PollEvents()
 	 * printscr - screenshots
 	 * tab - toggle ui (always invisible on screenshots)
 	 * g - grid
+	 * o - switch orthographic<->perspective
 	 *
 	 */
 	m_mouseMotion[0] = m_mouseMotion[1] = 0;
@@ -717,6 +787,9 @@ void ModelViewer::PollEvents()
 			case SDLK_g:
 				OnToggleGrid(0);
 				break;
+            case SDLK_o:
+                m_options.orthoView = !m_options.orthoView;
+                break;
 			case SDLK_z:
 				m_options.wireframe = !m_options.wireframe;
 				break;
@@ -875,6 +948,7 @@ void ModelViewer::SetModel(const std::string &filename)
 				it != loader.GetLogMessages().end(); ++it)
 			{
 				AddLog(*it);
+				Output("%s\n", (*it).c_str());
 			}
 		}
 
@@ -883,6 +957,7 @@ void ModelViewer::SetModel(const std::string &filename)
 		//set decal textures, max 4 supported.
 		//Identical texture at the moment
 		OnDecalChanged(0, "pioneer");
+		Output("\n\n");
 
 		SceneGraph::DumpVisitor d(m_model);
 		m_model->GetRoot()->Accept(d);
@@ -968,6 +1043,7 @@ void ModelViewer::SetupUI()
 	UI::SmallButton *reloadButton = nullptr;
 	UI::SmallButton *toggleGridButton = nullptr;
 	UI::SmallButton *hitItButton = nullptr;
+	UI::SmallButton *randomColours = nullptr;
 	UI::CheckBox *collMeshCheck = nullptr;
 	UI::CheckBox *showShieldsCheck = nullptr;
 	UI::CheckBox *gunsCheck = nullptr;
@@ -1009,6 +1085,11 @@ void ModelViewer::SetupUI()
 		add_pair(c, mainBox, hitItButton = c->SmallButton(), "Hit it!");
 		hitItButton->onClick.connect(sigc::bind(sigc::mem_fun(*this, &ModelViewer::OnHitIt), hitItButton));
 	}
+
+
+	add_pair(c, mainBox, randomColours = c->SmallButton(), "Random Colours");
+	randomColours->onClick.connect(sigc::bind(sigc::mem_fun(*this, &ModelViewer::OnRandomColor), randomColours));
+
 
 	//pattern selector
 	if (m_model->SupportsPatterns()) {

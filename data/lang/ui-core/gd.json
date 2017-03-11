@@ -149,11 +149,11 @@
    },
    "COMMODITY_MARKET" : {
       "description" : "",
-      "message" : "Margaid bathair-àmh"
+      "message" : "Margadh bathair-àmh"
    },
-   "COMPACT_SCANNER" : {
+   "COMPACT_RADAR" : {
       "description" : "Game settings option",
-      "message" : "Sganair teannta"
+      "message" : "Rèidear teannta"
    },
    "COMPETENT" : {
       "description" : "Combat rating",
@@ -189,7 +189,7 @@
    },
    "CONTROL_OPTIONS" : {
       "description" : "",
-      "message" : "Roghainnean nan uidheaman-smachd"
+      "message" : "Roghainnean an stiùiridh"
    },
    "COULD_NOT_LOAD_GAME" : {
       "description" : "",
@@ -291,6 +291,10 @@
       "description" : "",
       "message" : "Obair"
    },
+   "ENABLE_ANISOTROPIC_FILTERING" : {
+      "description" : "Use Anisotropic Filtering",
+      "message" : "Criathradh an-iosa-tropach"
+   },
    "ENABLE_AUTOSAVE" : {
       "description" : "Allow the game to autosave when docking",
       "message" : "Cuir fèin-sàbhaladh an comas"
@@ -313,7 +317,7 @@
    },
    "EQUIPMENT_MARKET" : {
       "description" : "",
-      "message" : "Margaid uidheamachd"
+      "message" : "Margadh uidheamachd"
    },
    "EQUIPPED" : {
       "description" : "",
@@ -463,6 +467,10 @@
       "description" : "",
       "message" : "Rainse os-fhànais"
    },
+   "ILLEGAL_JUMP" : {
+      "description" : "A finable crime",
+      "message" : "Chaidh os-leum cion-umhail a chlàradh"
+   },
    "IM_TIRED_OF_WORKING_FOR_NOTHING_DONT_YOU_KNOW_WHAT_A_CONTRACT_IS" : {
       "description" : "",
       "message" : "Tha mi sgìth dhen a bhith 'g obair gun phàigheadh. Nach eil fhios agaibh dè th' ann an cùmhnant?"
@@ -570,6 +578,10 @@
    "LOBBY" : {
       "description" : "",
       "message" : "Lobaidh"
+   },
+   "LOCAL_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Gobhal ionadail"
    },
    "LOCATED_N_KM_FROM_THE_CENTRE_OF_NAME" : {
       "description" : "",
@@ -711,6 +723,10 @@
       "description" : "",
       "message" : "Seòladaireachd:"
    },
+   "NAVIGATOR" : {
+      "description" : "",
+      "message" : "Seòladair"
+   },
    "NEGOTIATE" : {
       "description" : "",
       "message" : "Rèitich"
@@ -735,6 +751,10 @@
       "description" : "",
       "message" : "Chan eil gin 'ga reic san stèisean seo."
    },
+   "NORMA_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Gobhal na Riaghailte"
+   },
    "NOTES" : {
       "description" : "",
       "message" : "Nòtaichean:"
@@ -757,7 +777,7 @@
    },
    "N_OCCUPIED_PASSENGER_CABINS" : {
       "description" : "",
-      "message" : "{quantity} cèibinnean taistealaich air an còmhnadh"
+      "message" : "{quantity} cèibinn(ean) taistealaich air an còmhnadh"
    },
    "N_SHIELD_GENERATORS" : {
       "description" : "",
@@ -765,7 +785,7 @@
    },
    "N_UNOCCUPIED_PASSENGER_CABINS" : {
       "description" : "",
-      "message" : "{quantity} cèibinnean taistealaich gun chòmhnadh"
+      "message" : "{quantity} cèibinn(ean) taistealaich gun chòmhnadh"
    },
    "OFF" : {
       "description" : "",
@@ -774,6 +794,10 @@
    "OK" : {
       "description" : "",
       "message" : "Ceart ma-thà"
+   },
+   "OPEN_USER_FOLDER" : {
+      "description" : "",
+      "message" : "Pasgan a' chleachdaiche"
    },
    "OPTIONS" : {
       "description" : "",
@@ -789,7 +813,11 @@
    },
    "ORBITAL_ANALYSIS_NOTES" : {
       "description" : "",
-      "message" : "Thèid luaths cearcallach na reul-cuairte a shealltainn mar luaths beantanach. Mu chòir dhan long a bhith a' siubhal le 90° an comhair aiseal na luinge/{name}.\n\nTha an luaths teàrnaidh cho beag 's a ghabhas agus tha e beantanach cuideachd. Bheir luaths as ìsle le ceum as ìsle cùrsa dhut a dh'eadar-ghearras ris an uachdar aig {name}.\n\nBu chòir don luaths teichidh obrachadh air comhair sam bith cho fad 's nach buail an long ri {name} air an t-slighe.\n\t\t"
+      "message" : "Thèid luaths cearcallach na reul-cuairte a shealltainn mar luaths beantanach. Mu chòir dhan t-soitheach a bhith a' siubhal le 90° an comhair aiseal an t-soithich/{name}.\n\nTha an luaths teàrnaidh cho beag 's a ghabhas agus tha e beantanach cuideachd. Bheir luaths as ìsle le ceum as ìsle cùrsa dhut a dh'eadar-ghearras ris an uachdar aig {name}.\n\nBu chòir don luaths teichidh obrachadh air comhair sam bith cho fad 's nach buail an soitheach ri {name} air an t-slighe.\n\t\t"
+   },
+   "OUTER_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Gobhal a-muigh"
    },
    "OUTSTANDING_FINES" : {
       "description" : "Unpaid fines for crimes committed",
@@ -803,9 +831,17 @@
       "description" : "",
       "message" : "Pàigh càin de {amount}"
    },
+   "PERSEUS_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Gobhal Pherseus"
+   },
    "PERSONAL_INFORMATION" : {
       "description" : "",
       "message" : "Fiosrachadh pearsanta"
+   },
+   "PILOT" : {
+      "description" : "",
+      "message" : "Paidhleat"
    },
    "PILOTING" : {
       "description" : "",
@@ -850,6 +886,10 @@
    "PROFESSIONAL" : {
       "description" : "For player reputation",
       "message" : "Ceàirdeach"
+   },
+   "PUMP_DOWN" : {
+      "description" : "Drain the fuel tank",
+      "message" : "Pump sìos"
    },
    "QUALIFICATION_SCORES" : {
       "description" : "",
@@ -923,6 +963,10 @@
       "description" : "",
       "message" : "Duais"
    },
+   "SAGITTARIUS_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Gobhal a' Bhoghadair"
+   },
    "SAVE" : {
       "description" : "",
       "message" : "Sàbhail"
@@ -930,6 +974,10 @@
    "SCOOP_MOUNTS" : {
       "description" : "How many slots or mounts exist on the ship for fitting SCOOPS (e.g. cargo scoop, fuel scoop, multi-scoop) ",
       "message" : "Tàthaidhean sgioba"
+   },
+   "SCUTUM_CENTAURUS_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Gobhal Scutum-Centaurus"
    },
    "SELECT" : {
       "description" : "",
@@ -955,9 +1003,21 @@
       "description" : "",
       "message" : "Mothaichearan:"
    },
+   "SENSORS_AND_DEFENCE" : {
+      "description" : "",
+      "message" : "Mothaichearan 's dìon"
+   },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Suidhich an ceann-uidhe mar cheann-uidhe na seòladaireachd."
+   },
    "SHIP" : {
       "description" : "",
       "message" : "Soitheach"
+   },
+   "SHIPS_ENGINEER" : {
+      "description" : "",
+      "message" : "Innleadair luinge"
    },
    "SHIP_INFORMATION" : {
       "description" : "",
@@ -977,7 +1037,7 @@
    },
    "SHIP_MARKET" : {
       "description" : "",
-      "message" : "Margaidh shoithichean"
+      "message" : "Margadh shoithichean"
    },
    "SHIP_REPAIRS" : {
       "description" : "",
@@ -986,6 +1046,10 @@
    "SHIP_VIEWING_WAS_SOLD" : {
       "description" : "",
       "message" : "Tha an soitheach a bha thu a' coimhead air rèic"
+   },
+   "SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS" : {
+      "description" : "",
+      "message" : "A' cruthachadh gnè an domhain: {age} billean bliadhna ;-)"
    },
    "SOUND" : {
       "description" : "",
@@ -1035,6 +1099,10 @@
       "description" : "",
       "message" : "Tha an soitheach fo smachd an stèisein, a Chomandair."
    },
+   "THREE_KPC_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Gobhal 3kpc"
+   },
    "TOGGLE_MALE_FEMALE" : {
       "description" : "player gender",
       "message" : "Toglaich fireann/boireann"
@@ -1042,6 +1110,10 @@
    "TOO_SMALL_FOR_CURRENT_CREW" : {
       "description" : "",
       "message" : "Tha an soitheach ro bheag airson an sgioba agad."
+   },
+   "TOO_SMALL_TO_TRANSSHIP" : {
+      "description" : "",
+      "message" : "Tha an soitheach ro bheag airson an carago agad a ghiùlan."
    },
    "TOTAL" : {
       "description" : "",

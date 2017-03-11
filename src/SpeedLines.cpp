@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "SpeedLines.h"
@@ -76,7 +76,7 @@ void SpeedLines::Update(float time)
 	if (d > MAX_VEL)
 		vel = m_dir * MAX_VEL;
 
-	for (Uint16 i = 0; i < m_points.size(); i++) {
+	for (size_t i = 0; i < m_points.size(); i++) {
 
 		vector3f &pt = m_points[i];
 
@@ -109,7 +109,7 @@ void SpeedLines::Render(Graphics::Renderer *r)
 	//distance fade
 	Color col(Color::GRAY);
 	for (auto it = m_points.begin(); it != m_points.end(); ++it) {
-		col.a = Clamp((1.f - it->Length() / BOUNDS),0.f,1.f) * 255;	
+		col.a = Clamp((1.f - it->Length() / BOUNDS),0.f,1.f) * 255;
 
 		m_varray->Set(vtx, *it - dir, col);
 		m_varray->Set(vtx+1,*it + dir, col);

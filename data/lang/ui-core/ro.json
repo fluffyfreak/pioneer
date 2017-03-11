@@ -151,9 +151,9 @@
       "description" : "",
       "message" : "Piață de Produse"
    },
-   "COMPACT_SCANNER" : {
+   "COMPACT_RADAR" : {
       "description" : "Game settings option",
-      "message" : "Scaner compact"
+      "message" : "Compact radar"
    },
    "COMPETENT" : {
       "description" : "Combat rating",
@@ -290,6 +290,10 @@
    "EMPLOYMENT" : {
       "description" : "",
       "message" : "Ocupație"
+   },
+   "ENABLE_ANISOTROPIC_FILTERING" : {
+      "description" : "Use Anisotropic Filtering",
+      "message" : "Filtrare Anizotropă"
    },
    "ENABLE_AUTOSAVE" : {
       "description" : "Allow the game to autosave when docking",
@@ -463,6 +467,10 @@
       "description" : "",
       "message" : "Rază de acțiune salt hiperspațiu"
    },
+   "ILLEGAL_JUMP" : {
+      "description" : "A finable crime",
+      "message" : "Reckless hyperjump registered"
+   },
    "IM_TIRED_OF_WORKING_FOR_NOTHING_DONT_YOU_KNOW_WHAT_A_CONTRACT_IS" : {
       "description" : "",
       "message" : "M-am săturat să muncesc pe degeaba. Nu știți ce înseamnă un contract?"
@@ -570,6 +578,10 @@
    "LOBBY" : {
       "description" : "",
       "message" : "Antreu"
+   },
+   "LOCAL_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Braț local"
    },
    "LOCATED_N_KM_FROM_THE_CENTRE_OF_NAME" : {
       "description" : "",
@@ -711,6 +723,10 @@
       "description" : "",
       "message" : "Navigație:"
    },
+   "NAVIGATOR" : {
+      "description" : "",
+      "message" : "Navigator"
+   },
    "NEGOTIATE" : {
       "description" : "",
       "message" : "Negociază"
@@ -734,6 +750,10 @@
    "NONE_FOR_SALE_IN_THIS_STATION" : {
       "description" : "",
       "message" : "None for sale in this station."
+   },
+   "NORMA_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Brațul Norma"
    },
    "NOTES" : {
       "description" : "",
@@ -775,6 +795,10 @@
       "description" : "",
       "message" : "Ok"
    },
+   "OPEN_USER_FOLDER" : {
+      "description" : "",
+      "message" : "User Folder"
+   },
    "OPTIONS" : {
       "description" : "",
       "message" : "Opțiuni"
@@ -791,6 +815,10 @@
       "description" : "",
       "message" : "Viteza pentru orbita circulară este dată pentru o viteză tangențială. Nava ar trebui să se miște întro direcție la 90° față de axa navei/corpului ceresc {name}.\n\nViteza de coborâre este un minim absolut, și este de asemenea tangențială. O viteză mai mica sau un unghi mai mic va rezulta intr-un curs care se intersectează cu suprafața corpului ceresc {name}.\n\nViteza de ieșire din atmosferă va merge în teorie în orice direcție, atâta timp cât nava nu intră în {name} în drum.\n⇥⇥"
    },
+   "OUTER_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Brațul exterior"
+   },
    "OUTSTANDING_FINES" : {
       "description" : "Unpaid fines for crimes committed",
       "message" : "Amenzi neplătite"
@@ -803,9 +831,17 @@
       "description" : "",
       "message" : "Plătește amenda de {amount}"
    },
+   "PERSEUS_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Brațul Perseus"
+   },
    "PERSONAL_INFORMATION" : {
       "description" : "",
       "message" : "Informații Personale"
+   },
+   "PILOT" : {
+      "description" : "",
+      "message" : "Pilot"
    },
    "PILOTING" : {
       "description" : "",
@@ -850,6 +886,10 @@
    "PROFESSIONAL" : {
       "description" : "For player reputation",
       "message" : "Profesionist"
+   },
+   "PUMP_DOWN" : {
+      "description" : "Drain the fuel tank",
+      "message" : "Golește rezervorul"
    },
    "QUALIFICATION_SCORES" : {
       "description" : "",
@@ -923,6 +963,10 @@
       "description" : "",
       "message" : "Recompensă"
    },
+   "SAGITTARIUS_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Brațul Sagittarius"
+   },
    "SAVE" : {
       "description" : "",
       "message" : "Salvează"
@@ -930,6 +974,10 @@
    "SCOOP_MOUNTS" : {
       "description" : "How many slots or mounts exist on the ship for fitting SCOOPS (e.g. cargo scoop, fuel scoop, multi-scoop) ",
       "message" : "Monturi colectoare"
+   },
+   "SCUTUM_CENTAURUS_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Brațul Scutum-Centaurus"
    },
    "SELECT" : {
       "description" : "",
@@ -955,9 +1003,21 @@
       "description" : "",
       "message" : "Detectoare:"
    },
+   "SENSORS_AND_DEFENCE" : {
+      "description" : "",
+      "message" : "Senzori și apărare"
+   },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Set destination as navigation target."
+   },
    "SHIP" : {
       "description" : "",
       "message" : "Nava"
+   },
+   "SHIPS_ENGINEER" : {
+      "description" : "",
+      "message" : "Inginer de Navă"
    },
    "SHIP_INFORMATION" : {
       "description" : "",
@@ -986,6 +1046,10 @@
    "SHIP_VIEWING_WAS_SOLD" : {
       "description" : "",
       "message" : "Nava pe care o vizionați a fost vândută"
+   },
+   "SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS" : {
+      "description" : "",
+      "message" : "Simulating evolution of the universe: {age} billion years ;-)"
    },
    "SOUND" : {
       "description" : "",
@@ -1035,6 +1099,10 @@
       "description" : "",
       "message" : "Nava este sub controlul stației, Comandante."
    },
+   "THREE_KPC_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "braț de 3kpc"
+   },
    "TOGGLE_MALE_FEMALE" : {
       "description" : "player gender",
       "message" : "Comutare sex masculin/feminin"
@@ -1042,6 +1110,10 @@
    "TOO_SMALL_FOR_CURRENT_CREW" : {
       "description" : "",
       "message" : "Nava e prea mică pentru echipajul curent."
+   },
+   "TOO_SMALL_TO_TRANSSHIP" : {
+      "description" : "",
+      "message" : "Nava e prea mică pentru a transporta marfa dvs."
    },
    "TOTAL" : {
       "description" : "",
