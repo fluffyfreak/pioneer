@@ -39,6 +39,7 @@ Game::Game(const SystemPath &path, double time) :
 	m_time(time),
 	m_state(STATE_NORMAL),
 	m_wantHyperspace(false),
+	m_wantInSystemJump(false),
 	m_timeAccel(TIMEACCEL_1X),
 	m_requestedTimeAccel(TIMEACCEL_1X),
 	m_forceTimeAccel(false)
@@ -254,8 +255,13 @@ void Game::TimeStep(float step)
 
 	if (m_state == STATE_HYPERSPACE) {
 		if (Pi::game->GetTime() >= m_hyperspaceEndTime) {
-			SwitchToNormalSpace();
-			m_player->EnterSystem();
+			if(m_player->IsInSystemJump()) {
+				InSystemJumpToNormalSpace();
+				m_player->EnterSystem();
+			} else {
+				SwitchToNormalSpace();
+				m_player->EnterSystem();
+			}
 			RequestTimeAccel(TIMEACCEL_1X);
 		}
 		else
@@ -266,6 +272,12 @@ void Game::TimeStep(float step)
 	if (m_wantHyperspace) {
 		assert(m_state == STATE_NORMAL);
 		SwitchToHyperspace();
+		return;
+	}
+
+	if (m_wantInSystemJump) {
+		assert(m_state == STATE_NORMAL);
+		NormalSpaceToInSystemJump();
 		return;
 	}
 }
@@ -362,6 +374,12 @@ void Game::WantHyperspace()
 	m_wantHyperspace = true;
 }
 
+void Game::WantInSystemJump()
+{
+	assert(m_state == STATE_NORMAL);
+	m_wantInSystemJump = true;
+}
+
 double Game::GetHyperspaceArrivalProbability() const
 {
 	double progress = m_hyperspaceProgress / m_hyperspaceDuration;
@@ -446,6 +464,7 @@ void Game::SwitchToHyperspace()
 
 	m_state = STATE_HYPERSPACE;
 	m_wantHyperspace = false;
+	m_wantInSystemJump = false;
 
 	Output("Started hyperspacing...\n");
 }
@@ -564,6 +583,63 @@ void Game::SwitchToNormalSpace()
 		}
 	}
 	m_hyperspaceClouds.clear();
+
+	m_space->GetBackground()->SetDrawFlags( Background::Container::DRAW_SKYBOX | Background::Container::DRAW_STARS );
+
+	m_state = STATE_NORMAL;
+}
+
+void Game::NormalSpaceToInSystemJump()
+{
+	PROFILE_SCOPED()
+	// remember where we came from so we can properly place the player on exit
+	m_hyperspaceSource = m_space->GetStarSystem()->GetPath();
+	m_hyperspaceDest =  m_space->GetStarSystem()->GetPath();
+
+	// find all the departure clouds, convert them to arrival clouds and store
+	// them for the next system
+	m_hyperspaceClouds.clear();
+
+	m_space->GetBackground()->SetDrawFlags( Background::Container::DRAW_STARS );
+
+	// Reset planner
+	Pi::planner->ResetStartTime();
+	Pi::planner->ResetDv();
+
+	// put player at the origin. kind of unnecessary since it won't be moving
+	// but at least it gives some consistency
+	//m_player->SetPosition(vector3d(0,0,0));
+	//m_player->SetVelocity(vector3d(0,0,0));
+	//m_player->SetOrient(matrix3x3d::Identity());
+	m_player->SetPosition(m_player->GetInSystemJumpDest());
+
+	// animation and end time counters
+	m_hyperspaceProgress = 0;
+	m_hyperspaceDuration = m_player->GetHyperspaceDuration();
+	m_hyperspaceEndTime = Pi::game->GetTime() + m_hyperspaceDuration;
+
+	m_state = STATE_HYPERSPACE;
+	m_wantHyperspace = false;
+	m_wantInSystemJump = false;
+
+	Output("Started in-system-jumping...\n");
+}
+
+void Game::InSystemJumpToNormalSpace()
+{
+	PROFILE_SCOPED()
+
+	// place it
+	//m_player->SetPosition(m_space->GetHyperspaceExitPoint(m_hyperspaceSource, m_hyperspaceDest));
+	m_player->SetVelocity(vector3d(0,0,-100.0));
+	m_player->SetOrient(matrix3x3d::Identity());
+	m_player->AIClearInstructions();
+
+	// place the exit cloud
+	HyperspaceCloud *cloud = new HyperspaceCloud(0, Pi::game->GetTime(), true);
+	cloud->SetFrame(m_space->GetRootFrame());
+	cloud->SetPosition(m_player->GetPosition());
+	m_space->AddBody(cloud);
 
 	m_space->GetBackground()->SetDrawFlags( Background::Container::DRAW_SKYBOX | Background::Container::DRAW_STARS );
 

@@ -466,7 +466,7 @@ void WorldView::OnClickBlastoff()
 		Pi::player->Blastoff();
 	}
 }
-
+#pragma optimize("",off)
 void WorldView::OnClickHyperspace(Gui::MultiStateImageButton *b)
 {
 	if(Pi::player->GetFlightState() == Ship::DOCKED || Pi::player->GetFlightState() == Ship::LANDED){
@@ -474,19 +474,41 @@ void WorldView::OnClickHyperspace(Gui::MultiStateImageButton *b)
 		m_hyperspaceButton->StatePrev();
 	}
 
-	if (Pi::player->IsHyperspaceActive()) {
-		// Hyperspace countdown in effect.. abort!
-		Pi::player->AbortHyperjump();
-		m_game->log->Add(Lang::HYPERSPACE_JUMP_ABORTED);
+	if (!Pi::player->IsInSystemJump())
+	{
+		if (Pi::player->IsHyperspaceActive()) {
+			// Hyperspace countdown in effect.. abort!
+			Pi::player->AbortHyperjump();
+			m_game->log->Add(Lang::HYPERSPACE_JUMP_ABORTED);
 
-		// State backs once from original state
-		m_hyperspaceButton->StatePrev(); // reset to original state...
-		m_hyperspaceButton->StatePrev(); // ... -1 from original state
+			// State backs once from original state
+			m_hyperspaceButton->StatePrev(); // reset to original state...
+			m_hyperspaceButton->StatePrev(); // ... -1 from original state
+		}
+		else{
+			// Initiate hyperspace drive
+			SystemPath path = m_game->GetSectorView()->GetHyperspaceTarget();
+			LuaObject<Player>::CallMethod(Pi::player, "HyperjumpTo", &path);
+		}
 	}
-	else{
-		// Initiate hyperspace drive
-		SystemPath path = m_game->GetSectorView()->GetHyperspaceTarget();
-		LuaObject<Player>::CallMethod(Pi::player, "HyperjumpTo", &path);
+	else
+	{
+		// in-system jump
+		if (Pi::player->IsHyperspaceActive()) {
+			// Hyperspace countdown in effect.. abort!
+			Pi::player->AbortHyperjump();
+			m_game->log->Add(Lang::HYPERSPACE_JUMP_ABORTED);
+
+			// State backs once from original state
+			m_hyperspaceButton->StatePrev(); // reset to original state...
+			m_hyperspaceButton->StatePrev(); // ... -1 from original state
+		}
+		else{
+			// Initiate hyperspace drive
+			//SystemPath path = m_game->GetSectorView()->GetHyperspaceTarget();
+			//LuaObject<Player>::CallMethod(Pi::player, "HyperjumpTo", &path);
+			Pi::player->InitiateHyperjumpTo(Pi::player->GetOrbitTarget(), 5, 10, LuaRef());
+		}
 	}
 }
 
@@ -572,7 +594,7 @@ static Color get_color_for_warning_meter_bar(float v) {
 		c = Color(255,255,0,HUD_ALPHA);
 	return c;
 }
-
+#pragma optimize("",off)
 void WorldView::RefreshHyperspaceButton() {
 
 	// 0 = "disabled" - if target selected but landed
@@ -616,8 +638,18 @@ void WorldView::RefreshHyperspaceButton() {
 		m_hyperspaceButton->Show();
 	}
 	else
-		//If no target selected, then no button at all:
-		m_hyperspaceButton->Hide();
+	{
+		if(Pi::player->IsInSystemJump())
+		{
+			m_hyperspaceButton->SetActiveState(3);
+			m_hyperspaceButton->Show();
+		}
+		else
+		{
+			//If no target selected, then no button at all:
+			m_hyperspaceButton->Hide();
+		}
+	}
 }
 
 static std::pair<double, double> calculateHeadingPitch(enum PlaneType);
@@ -818,20 +850,22 @@ void WorldView::RefreshButtonStateAndVisibility()
 	}
 #endif
 	if (Pi::player->GetFlightState() == Ship::HYPERSPACE) {
-		const SystemPath dest = Pi::player->GetHyperspaceDest();
-		RefCountedPtr<StarSystem> s = m_game->GetGalaxy()->GetStarSystem(dest);
+		if(!Pi::player->IsInSystemJump()) {
+			const SystemPath dest = Pi::player->GetHyperspaceDest();
+			RefCountedPtr<StarSystem> s = m_game->GetGalaxy()->GetStarSystem(dest);
 
-		m_game->GetCpan()->SetOverlayText(ShipCpanel::OVERLAY_TOP_LEFT, stringf(Lang::IN_TRANSIT_TO_N_X_X_X,
-			formatarg("system", dest.IsBodyPath() ? s->GetBodyByPath(dest)->GetName() : s->GetName()),
-			formatarg("x", dest.sectorX),
-			formatarg("y", dest.sectorY),
-			formatarg("z", dest.sectorZ)));
+			m_game->GetCpan()->SetOverlayText(ShipCpanel::OVERLAY_TOP_LEFT, stringf(Lang::IN_TRANSIT_TO_N_X_X_X,
+				formatarg("system", dest.IsBodyPath() ? s->GetBodyByPath(dest)->GetName() : s->GetName()),
+				formatarg("x", dest.sectorX),
+				formatarg("y", dest.sectorY),
+				formatarg("z", dest.sectorZ)));
 
-		m_game->GetCpan()->SetOverlayText(ShipCpanel::OVERLAY_TOP_RIGHT, stringf(Lang::JUMP_COMPLETE,
-			formatarg("percent", m_game->GetHyperspaceArrivalProbability()*100.0, "f3.1")));
+			m_game->GetCpan()->SetOverlayText(ShipCpanel::OVERLAY_TOP_RIGHT, stringf(Lang::JUMP_COMPLETE,
+				formatarg("percent", m_game->GetHyperspaceArrivalProbability()*100.0, "f3.1")));
+		}
 	}
-
-	else {
+	else
+	{
 		{
 			std::string str;
 			double _vel = 0;

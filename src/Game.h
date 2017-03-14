@@ -76,6 +76,7 @@ public:
 
 	// request switch to hyperspace
 	void WantHyperspace();
+	void WantInSystemJump();
 
 	// hyperspace parameters. only meaningful when IsHyperspace() is true
 	float GetHyperspaceProgress() const { return m_hyperspaceProgress; }
@@ -165,6 +166,9 @@ private:
 	void SwitchToHyperspace();
 	void SwitchToNormalSpace();
 
+	void NormalSpaceToInSystemJump();
+	void InSystemJumpToNormalSpace();
+
 	RefCountedPtr<Galaxy> m_galaxy;
 	std::unique_ptr<Views> m_gameViews;
 	std::unique_ptr<Space> m_space;
@@ -179,6 +183,7 @@ private:
 	State m_state;
 
 	bool m_wantHyperspace;
+	bool m_wantInSystemJump;
 
 	std::list<HyperspaceCloud*> m_hyperspaceClouds;
 	SystemPath m_hyperspaceSource;

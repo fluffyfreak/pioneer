@@ -573,8 +573,7 @@ void SystemView::OnClickObject(const SystemBody *b)
 		Body* body = m_game->GetSpace()->FindBodyForPath(&path);
 		if (body != 0) {
 			if(Pi::player->GetNavTarget() == body) {
-				Pi::player->SetNavTarget(body);
-				Pi::player->SetNavTarget(0);
+				Pi::player->SetNavTarget(nullptr);
 				m_game->log->Add(Lang::UNSET_NAVTARGET);
 			}
 			else {
@@ -594,19 +593,28 @@ void SystemView::OnClickLagrange(const Orbit *orb, bool isL5)
 	std::string desc;
 	std::string data;
 	const double tMinust0 = m_time - m_game->GetTime();
+	vector3d posTarget;
 	if (!isL5) {
 		// L4
-		const vector3d posL4 = orb->EvenSpacedPosTrajectory((1.0 / 360.0) * 60.0, tMinust0);
+		posTarget = orb->EvenSpacedPosTrajectory((1.0 / 360.0) * 60.0, tMinust0);
 		desc = "L4";
 	}
 	else {
 		// L5
-		const vector3d posL5 = orb->EvenSpacedPosTrajectory((1.0 / 360.0) * 300.0, tMinust0);
+		posTarget = orb->EvenSpacedPosTrajectory((1.0 / 360.0) * 300.0, tMinust0);
 		desc = "L5";
 	}
 	m_infoLabel->SetText(desc);
 	m_infoText->SetText(data);
 
+	// click on object (in same system) sets/unsets it as nav target
+	if(Pi::player->GetOrbitTarget() == posTarget) {
+		Pi::player->SetOrbitTarget(vector3d(0.0));
+		m_game->log->Add(Lang::UNSET_NAVTARGET);
+	} else {
+		Pi::player->SetOrbitTarget(posTarget);
+		m_game->log->Add(Lang::UNSET_NAVTARGET);
+	}
 }
 
 void SystemView::PutLabel(const SystemBody *b, const vector3d &offset)

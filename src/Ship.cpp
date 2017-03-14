@@ -575,7 +575,7 @@ Ship::HyperjumpStatus Ship::CheckHyperjumpCapability() const {
 	return HYPERJUMP_OK;
 }
 
-Ship::HyperjumpStatus Ship::InitiateHyperjumpTo(const SystemPath &dest, int warmup_time, double duration, LuaRef checks) 
+Ship::HyperjumpStatus Ship::InitiateHyperjumpTo(const SystemPath &dest, int warmup_time, double duration, LuaRef checks)
 {
 	if (!dest.HasValidSystem() || GetFlightState() != FLYING || warmup_time < 1)
 		return HYPERJUMP_SAFETY_LOCKOUT;
@@ -593,13 +593,13 @@ Ship::HyperjumpStatus Ship::InitiateHyperjumpTo(const SystemPath &dest, int warm
 	return Ship::HYPERJUMP_OK;
 }
 
-Ship::HyperjumpStatus Ship::InitiateHyperjumpTo(const Orbit &dest, const bool isL5, int warmup_time, double duration, LuaRef checks)
+Ship::HyperjumpStatus Ship::InitiateHyperjumpTo(const vector3d &dest, int warmup_time, double duration, LuaRef checks)
 {
 	if (GetFlightState() != FLYING || warmup_time < 1)
 		return HYPERJUMP_SAFETY_LOCKOUT;
 
 	m_hyperspace.isInSystem = true;
-	m_hyperspace.inSys = std::make_pair(dest, isL5);
+	m_hyperspace.inSys = dest;
 	m_hyperspace.countdown = warmup_time;
 	m_hyperspace.now = false;
 	m_hyperspace.duration = duration;
@@ -609,7 +609,7 @@ Ship::HyperjumpStatus Ship::InitiateHyperjumpTo(const Orbit &dest, const bool is
 
 }
 
-void Ship::AbortHyperjump() 
+void Ship::AbortHyperjump()
 {
 	m_hyperspace.isInSystem = false;
 	m_hyperspace.countdown = 0;
@@ -1314,7 +1314,7 @@ void Ship::EnterSystem() {
 }
 
 void Ship::OnEnterSystem() {
-	m_hyperspaceCloud = 0;
+	m_hyperspaceCloud = nullptr;
 }
 
 void Ship::SetShipId(const ShipType::Id &shipId)

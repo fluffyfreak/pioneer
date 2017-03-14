@@ -33,10 +33,14 @@ public:
 	Body *GetCombatTarget() const;
 	Body *GetNavTarget() const;
 	Body *GetSetSpeedTarget() const;
+	const vector3d& GetOrbitTarget() const;
+	bool IsInSystemJump() const;
 	void SetCombatTarget(Body* const target, bool setSpeedTo = false);
 	void SetNavTarget(Body* const target, bool setSpeedTo = false);
+	void SetOrbitTarget(const vector3d& target);
 
 	virtual Ship::HyperjumpStatus InitiateHyperjumpTo(const SystemPath &dest, int warmup_time, double duration, LuaRef checks) override;
+	virtual Ship::HyperjumpStatus InitiateHyperjumpTo(const vector3d &dest, int warmup_time, double duration, LuaRef checks) override;
 	virtual void AbortHyperjump() override;
 
 	// XXX cockpit is here for now because it has a physics component

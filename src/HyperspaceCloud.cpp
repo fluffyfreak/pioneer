@@ -142,7 +142,7 @@ void HyperspaceCloud::TimeStepUpdate(const float timeStep)
 
 		m_ship->EnterSystem();
 
-		m_ship = 0;
+		m_ship = nullptr;
 	}
 
 	// cloud expiration

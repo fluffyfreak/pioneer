@@ -174,13 +174,17 @@ void Player::NotifyRemoved(const Body* const removedBody)
 void Player::OnEnterHyperspace()
 {
 	s_soundHyperdrive.Play("Hyperdrive_Jump");
-	SetNavTarget(0);
-	SetCombatTarget(0);
+	SetNavTarget(nullptr);
+	SetCombatTarget(nullptr);
 
 	Pi::game->GetWorldView()->HideTargetActions(); // hide the comms menu
 	m_controller->SetFlightControlState(CONTROL_MANUAL); //could set CONTROL_HYPERDRIVE
 	ClearThrusterState();
-	Pi::game->WantHyperspace();
+	if(IsInSystemJump()) {
+		Pi::game->WantInSystemJump();
+	} else {
+		Pi::game->WantHyperspace();
+	}
 }
 
 void Player::OnEnterSystem()
@@ -212,6 +216,16 @@ Body *Player::GetSetSpeedTarget() const
 	return static_cast<PlayerShipController*>(m_controller)->GetSetSpeedTarget();
 }
 
+const vector3d& Player::GetOrbitTarget() const
+{
+	return static_cast<PlayerShipController*>(m_controller)->GetOrbitTarget();
+}
+
+bool Player::IsInSystemJump() const
+{
+	return static_cast<PlayerShipController*>(m_controller)->isInSystemJump();
+}
+
 void Player::SetCombatTarget(Body* const target, bool setSpeedTo)
 {
 	static_cast<PlayerShipController*>(m_controller)->SetCombatTarget(target, setSpeedTo);
@@ -223,9 +237,25 @@ void Player::SetNavTarget(Body* const target, bool setSpeedTo)
 	static_cast<PlayerShipController*>(m_controller)->SetNavTarget(target, setSpeedTo);
 	Pi::onPlayerChangeTarget.emit();
 }
+
+void Player::SetOrbitTarget(const vector3d& target)
+{
+	static_cast<PlayerShipController*>(m_controller)->SetNavTarget(nullptr, false);
+	static_cast<PlayerShipController*>(m_controller)->SetOrbitTarget(target);
+	Pi::onPlayerChangeTarget.emit();
+}
 //temporary targeting stuff ends
 
 Ship::HyperjumpStatus Player::InitiateHyperjumpTo(const SystemPath &dest, int warmup_time, double duration, LuaRef checks) {
+	HyperjumpStatus status = Ship::InitiateHyperjumpTo(dest, warmup_time, duration, checks);
+
+	if (status == HYPERJUMP_OK)
+		s_soundHyperdrive.Play("Hyperdrive_Charge");
+
+	return status;
+}
+
+Ship::HyperjumpStatus Player::InitiateHyperjumpTo(const vector3d &dest, int warmup_time, double duration, LuaRef checks) {
 	HyperjumpStatus status = Ship::InitiateHyperjumpTo(dest, warmup_time, duration, checks);
 
 	if (status == HYPERJUMP_OK)

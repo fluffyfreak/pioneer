@@ -311,7 +311,11 @@ local onEnterSystem = function (player)
 	-- don't allow too many news at the same time:
 	local maxNumberNews = 3
 
-	timeInHyperspace = Game.time - timeInHyperspace
+	if(timeInHyperspace==nil) then
+		timeInHyperspace = Game.time
+	else
+		timeInHyperspace = Game.time - timeInHyperspace
+	end
 
 	-- create a news event with low probability
 	if Engine.rand:Number(0,1) < eventProbability and

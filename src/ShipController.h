@@ -81,8 +81,11 @@ public:
 	Body *GetCombatTarget() const;
 	Body *GetNavTarget() const;
 	Body *GetSetSpeedTarget() const;
+	const vector3d& GetOrbitTarget() const { return m_orbitTarget; }
+	bool isInSystemJump() const { return m_inSystemJump; }
 	void SetCombatTarget(Body* const target, bool setSpeedTo = false);
 	void SetNavTarget(Body* const target, bool setSpeedTo = false);
+	void SetOrbitTarget(const vector3d& target) { m_orbitTarget = target; m_inSystemJump = (target.LengthSqr() != 0.0); }
 
 	sigc::signal<void> onRotationDampingChanged;
 
@@ -94,6 +97,8 @@ private:
 	Body* m_combatTarget;
 	Body* m_navTarget;
 	Body* m_setSpeedTarget;
+	vector3d m_orbitTarget;
+	bool m_inSystemJump;
 	bool m_controlsLocked;
 	bool m_invertMouse; // used for rear view, *not* for invert Y-axis option (which is Pi::IsMouseYInvert)
 	bool m_mouseActive;

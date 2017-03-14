@@ -122,6 +122,7 @@ public:
 
 	void SetHyperspaceDest(const SystemPath &dest) { m_hyperspace.dest = dest; }
 	const SystemPath &GetHyperspaceDest() const { return m_hyperspace.dest; }
+	const vector3d &GetInSystemJumpDest() const { return m_hyperspace.inSys; }
 	double GetHyperspaceDuration() const { return m_hyperspace.duration; }
 	double GetECMRechargeRemain() const { return m_ecmRecharge; }
 
@@ -138,7 +139,7 @@ public:
 
 	Ship::HyperjumpStatus CheckHyperjumpCapability() const;
 	virtual Ship::HyperjumpStatus InitiateHyperjumpTo(const SystemPath &dest, int warmup_time, double duration, LuaRef checks);
-	virtual Ship::HyperjumpStatus InitiateHyperjumpTo(const Orbit &dest, const bool isL5, int warmup_time, double duration, LuaRef checks);
+	virtual Ship::HyperjumpStatus InitiateHyperjumpTo(const vector3d &dest, int warmup_time, double duration, LuaRef checks);
 	virtual void AbortHyperjump();
 	float GetHyperspaceCountdown() const { return m_hyperspace.countdown; }
 	bool IsHyperspaceActive() const { return (m_hyperspace.countdown > 0.0); }
@@ -276,7 +277,7 @@ private:
 		HyperspacingOut() : isInSystem(false), countdown(0.0), now(false), duration(0.0), checks(LuaRef()) {}
 		bool isInSystem;
 		SystemPath dest;
-		std::pair<Orbit, bool> inSys;
+		vector3d inSys;
 		// > 0 means active
 		float countdown;
 		bool now;
