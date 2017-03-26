@@ -5,11 +5,19 @@
 #include "logz.glsl"
 #include "lib.glsl"
 
-out vec2 uv;
+#ifdef USE_SPRITE_ATLAS
+out vec2 uv0;
+out vec2 uv1;
+out float tBlend;
+#endif
 
 void main(void)
 {
 	gl_Position = logarithmicTransform();
 	gl_PointSize = a_normal.z;
-	uv = a_normal.xy;
+#ifdef USE_SPRITE_ATLAS
+	uv0 = a_uv0.xy;
+	uv1 = a_normal.xy;
+	tBlend = a_uv0.z;
+#endif
 }

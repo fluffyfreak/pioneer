@@ -627,7 +627,7 @@ bool RendererGL2::DrawPointSprites(const Uint32 count, const vector3f *positions
 	return true;
 }
 
-bool RendererGL2::DrawPointSprites(const Uint32 count, const vector3f *positions, const vector2f *offsets, const float *sizes, RenderState *rs, Material *material)
+bool RendererGL2::DrawPointSprites(const Uint32 count, const vector3f *positions, const vector2f *prevOffsets, const vector2f *currOffsets, const float *blends, const float *sizes, RenderState *rs, Material *material)
 {
 	PROFILE_SCOPED()
 	if (count == 0 || !material || !material->texture0)
@@ -672,7 +672,7 @@ bool RendererGL2::DrawPointSprites(const Uint32 count, const vector3f *positions
 	for(Uint32 i=0 ; i<count ; i++)
 	{
 		vtxPtr[i].pos	= positions[i];
-		vtxPtr[i].norm	= vector3f(offsets[i], Clamp(sizes[i], 0.1f, FLT_MAX));
+		vtxPtr[i].norm	= vector3f(currOffsets[i], Clamp(sizes[i], 0.1f, FLT_MAX));
 	}
 	drawVB->Unmap();
 

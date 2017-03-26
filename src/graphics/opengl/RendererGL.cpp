@@ -689,21 +689,22 @@ bool RendererOGL::DrawPointSprites(const Uint32 count, const vector3f *positions
 	return true;
 }
 
-bool RendererOGL::DrawPointSprites(const Uint32 count, const vector3f *positions, const vector2f *offsets, const float *sizes, RenderState *rs, Material *material)
+bool RendererOGL::DrawPointSprites(const Uint32 count, const vector3f *positions, const vector2f *prevOffsets, const vector2f *currOffsets, const float *blends, const float *sizes, RenderState *rs, Material *material)
 {
 	PROFILE_SCOPED()
 	if (count == 0 || !material || !material->texture0)
 		return false;
 
 	#pragma pack(push, 4)
-	struct PosNormVert {
+	struct PosNormVertUV3 {
 		vector3f pos;
 		vector3f norm;
+		vector3f uv;
 	};
 	#pragma pack(pop)
 
 	RefCountedPtr<VertexBuffer> drawVB;
-	AttribBufferIter iter = s_AttribBufferMap.find(std::make_pair(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_NORMAL, count));
+	AttribBufferIter iter = s_AttribBufferMap.find(std::make_pair(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_NORMAL | Graphics::ATTRIB_UV0, count));
 	if (iter == s_AttribBufferMap.end())
 	{
 		// NB - we're (ab)using the normal type to hold (uv coordinate offset value + point size)
@@ -712,6 +713,8 @@ bool RendererOGL::DrawPointSprites(const Uint32 count, const vector3f *positions
 		vbd.attrib[0].format   = Graphics::ATTRIB_FORMAT_FLOAT3;
 		vbd.attrib[1].semantic = Graphics::ATTRIB_NORMAL;
 		vbd.attrib[1].format   = Graphics::ATTRIB_FORMAT_FLOAT3;
+		vbd.attrib[2].semantic = Graphics::ATTRIB_UV0;
+		vbd.attrib[2].format   = Graphics::ATTRIB_FORMAT_FLOAT3;
 		vbd.numVertices = count;
 		vbd.usage = Graphics::BUFFER_USAGE_DYNAMIC;	// we could be updating this per-frame
 
@@ -720,7 +723,7 @@ bool RendererOGL::DrawPointSprites(const Uint32 count, const vector3f *positions
 		vb.Reset(CreateVertexBuffer(vbd));
 
 		// add to map
-		s_AttribBufferMap[std::make_pair(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_NORMAL, count)] = vb;
+		s_AttribBufferMap[std::make_pair(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_NORMAL | Graphics::ATTRIB_UV0, count)] = vb;
 		drawVB = vb;
 	}
 	else
@@ -729,12 +732,13 @@ bool RendererOGL::DrawPointSprites(const Uint32 count, const vector3f *positions
 	}
 
 	// got a buffer so use it and fill it with newest data
-	PosNormVert* vtxPtr = drawVB->Map<PosNormVert>(Graphics::BUFFER_MAP_WRITE);
-	assert(drawVB->GetDesc().stride == sizeof(PosNormVert));
+	PosNormVertUV3* vtxPtr = drawVB->Map<PosNormVertUV3>(Graphics::BUFFER_MAP_WRITE);
+	assert(drawVB->GetDesc().stride == sizeof(PosNormVertUV3));
 	for(Uint32 i=0 ; i<count ; i++)
 	{
 		vtxPtr[i].pos	= positions[i];
-		vtxPtr[i].norm	= vector3f(offsets[i], Clamp(sizes[i], 0.1f, FLT_MAX));
+		vtxPtr[i].norm	= vector3f(prevOffsets[i], Clamp(sizes[i], 0.1f, FLT_MAX));
+		vtxPtr[i].uv	= vector3f(currOffsets[i], Clamp(blends[i], 0.0f, 1.0f));
 	}
 	drawVB->Unmap();
 

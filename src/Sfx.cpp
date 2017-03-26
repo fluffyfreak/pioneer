@@ -99,17 +99,6 @@ void Sfx::TimeStepUpdate(const float timeStep)
 	}
 }
 
-float Sfx::AgeBlend() const
-{
-	switch (m_type) {
-		case TYPE_EXPLOSION:	return (3.2 - m_age) / 3.2;
-		case TYPE_DAMAGE:		return (2.0 - m_age) / 2.0;
-		case TYPE_SMOKE:		return (8.0 - m_age) / 8.0;
-		case TYPE_NONE:			return 0.0f;
-	}
-	return 0.0f;
-}
-
 SfxManager::SfxManager()
 {
 	for(size_t t=0; t<TYPE_NONE; t++)
@@ -236,7 +225,7 @@ void SfxManager::Cleanup()
 		}
 	}
 }
-
+#pragma optimize("",off)
 void SfxManager::RenderAll(Renderer *renderer, Frame *f, const Frame *camFrame)
 {
 	PROFILE_SCOPED()
@@ -253,11 +242,14 @@ void SfxManager::RenderAll(Renderer *renderer, Frame *f, const Frame *camFrame)
 			Graphics::RenderState *rs = nullptr;
 			Graphics::Material *material = nullptr;
 			std::vector<vector3f> positions; positions.reserve(numInstances);
-			std::vector<vector2f> offsets; offsets.reserve(numInstances);
+			std::vector<vector2f> prevOffsets; prevOffsets.reserve(numInstances);
+			std::vector<vector2f> currOffsets; currOffsets.reserve(numInstances);
+			std::vector<float> blends; blends.reserve(numInstances);
 			std::vector<float> sizes; sizes.reserve(numInstances);
 			for (size_t i = 0; i < numInstances; i++)
 			{
-				Sfx &inst(f->m_sfx->GetInstanceByIndex(SFX_TYPE(t), i));
+				SFX_TYPE type = SFX_TYPE(t);
+				Sfx &inst(f->m_sfx->GetInstanceByIndex(type, i));
 
 				assert(inst.m_type == t);
 				const vector3d dpos = ftran * inst.m_pos;
@@ -265,7 +257,7 @@ void SfxManager::RenderAll(Renderer *renderer, Frame *f, const Frame *camFrame)
 				positions.push_back(pos);
 
 				float speed = 0.0f;
-				const vector2f offset(CalculateOffset(SFX_TYPE(t), inst));
+				float typeStep = 0.0f;
 				switch (t)
 				{
 					case TYPE_NONE: assert(false); break;
@@ -273,24 +265,35 @@ void SfxManager::RenderAll(Renderer *renderer, Frame *f, const Frame *camFrame)
 						speed = SizeToPixels(pos, inst.m_speed);
 						rs = SfxManager::alphaState;
 						material = explosionParticle.get();
+						typeStep = 1.0 / 3.2;
 						break;
 					}
 					case TYPE_DAMAGE:
 						speed = SizeToPixels(pos, 20.f);
 						rs = SfxManager::additiveAlphaState;
 						material = damageParticle.get();
+						typeStep = 1.0 / 2.0;
 						break;
 					case TYPE_SMOKE:
 						speed = Clamp(SizeToPixels(pos, (inst.m_speed*inst.m_age)), 0.1f, 50.0f);
 						rs = SfxManager::alphaState;
 						material = smokeParticle.get();
+						typeStep = 1.0 / 8.0;
 						break;
 				}
 				sizes.push_back(speed);
-				offsets.push_back(offset);
+
+				// calculate the prevOffset and the currOffset, then the blend stage between then.
+				const vector2f prevOffset(CalculateOffset(type, NormalisedAge(type, inst.Age()-typeStep)));
+				prevOffsets.push_back(prevOffset);
+				const vector2f currOffset(CalculateOffset(type, NormalisedAge(type, inst.Age())));
+				currOffsets.push_back(currOffset);
+				float blend = 1.0f-(inst.Age()-Uint32(inst.Age()-typeStep));
+				blends.push_back(blend);
+				//m_materialData[type].num_textures;
 			}
 
-			renderer->DrawPointSprites(numInstances, &positions[0], &offsets[0], &sizes[0], rs, material);
+			renderer->DrawPointSprites(numInstances, &positions[0], &prevOffsets[0], &currOffsets[0], &blends[0], &sizes[0], rs, material);
 		}
 	}
 
@@ -299,10 +302,10 @@ void SfxManager::RenderAll(Renderer *renderer, Frame *f, const Frame *camFrame)
 	}
 }
 
-vector2f SfxManager::CalculateOffset(const enum SFX_TYPE type, const Sfx &inst)
+vector2f SfxManager::CalculateOffset(const enum SFX_TYPE type, const float normalisedAge)
 {
 	if(m_materialData[type].effect == Graphics::EFFECT_BILLBOARD_ATLAS) {
-		const int spriteframe = inst.AgeBlend() * (m_materialData[type].num_textures-1);
+		const int spriteframe = Clamp(Uint32(normalisedAge * (m_materialData[type].num_textures-1)), 0U, m_materialData[type].num_textures);
 		const Sint32 numImgsWide = m_materialData[type].num_imgs_wide;
 		const int u = (spriteframe % numImgsWide);    // % is the "modulo operator", the remainder of i / width;
 		const int v = (spriteframe / numImgsWide);    // where "/" is an integer division
@@ -311,6 +314,17 @@ vector2f SfxManager::CalculateOffset(const enum SFX_TYPE type, const Sfx &inst)
 			float(v) / float(numImgsWide));
 	}
 	return vector2f(0.0f);
+}
+
+float SfxManager::NormalisedAge(const enum SFX_TYPE type, const float age)
+{
+	switch (type) {
+		case TYPE_EXPLOSION:	return (3.2 - age) / 3.2;
+		case TYPE_DAMAGE:		return (2.0 - age) / 2.0;
+		case TYPE_SMOKE:		return (8.0 - age) / 8.0;
+		case TYPE_NONE:			return 0.0f;
+	}
+	return 0.0f;
 }
 
 bool SfxManager::SplitMaterialData(const std::string &spec, MaterialData &output)

@@ -25,8 +25,7 @@ public:
 	Sfx(const Sfx&);
 	void SetPosition(const vector3d &p);
 	const vector3d& GetPosition() const { return m_pos; }
-
-	float AgeBlend() const;
+	const float Age() const { return m_age; }
 
 private:
 	void TimeStepUpdate(const float timeStep);
@@ -83,8 +82,9 @@ private:
 
 	// methods
 	static SfxManager *AllocSfxInFrame(Frame *f);
-	static vector2f CalculateOffset(const enum SFX_TYPE, const Sfx&);
+	static vector2f CalculateOffset(const enum SFX_TYPE, const float);
 	static bool SplitMaterialData(const std::string &spec, MaterialData &output);
+	static float NormalisedAge(const enum SFX_TYPE, const float);
 
 	// static members
 	static MaterialData m_materialData[TYPE_NONE];
