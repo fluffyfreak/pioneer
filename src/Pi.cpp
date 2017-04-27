@@ -1538,16 +1538,16 @@ void Pi::MainLoop()
 			Pi::BeginRenderTarget();
 			//Pi::renderer->BeginFrame();
 
-			matrix3x3f orientation = matrix3x3f::Identity();
+			matrix4x4f transform = matrix4x4f::Identity();
 			const bool bInternalCam = !Pi::game->GetWorldView()->GetCameraController()->IsExternal();
 			if(bInternalCam) {
 				InternalCameraController* icc = static_cast<InternalCameraController*>(Pi::game->GetWorldView()->GetCameraController());
 				double rotX;
 				double rotY;
 				icc->getRots(rotX, rotY);
-				orientation = orientation.RotateX(rotX) * orientation.RotateY(rotY);
+				transform.RotateX(rotX);
+				transform.RotateY(rotY);
 			}
-			matrix4x4f transform(matrix4x4f::Identity());
 			transform.Translate( 0, 0, -halfW );
 
 			const Uint32 halfScreenW = Uint32(Graphics::GetScreenWidth())>>1;
@@ -1556,7 +1556,7 @@ void Pi::MainLoop()
 			{
 				Pi::renderer->SetViewport(0, 0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
 				Pi::renderer->SetPerspectiveProjection(85, Pi::renderer->GetDisplayAspect(), 0.1f, 100000.f);
-				Pi::renderer->SetTransform(orientation * transform);
+				Pi::renderer->SetTransform(transform);
 				Quad->Draw(Pi::renderer);
 			}
 
