@@ -1347,8 +1347,15 @@ void Pi::MainLoop()
 	rsd.cullMode = Graphics::CULL_NONE;
 	rsd.blendMode = Graphics::BLEND_ALPHA;
 	quadRenderState.reset(Pi::renderer->CreateRenderState(rsd));
+#if 0
 	std::unique_ptr<Graphics::Drawables::TexturedQuad> Quad(
 		new Graphics::Drawables::TexturedQuad(Pi::renderer, UItex.Get(), vector2f(-400.0f,-300.0f), vector2f(800.0f, 600.0f), quadRenderState.get(), true));
+#else
+	const int halfW = Graphics::GetScreenWidth() / 2;
+	const int halfH = Graphics::GetScreenHeight() / 2;
+	std::unique_ptr<Graphics::Drawables::TexturedQuad> Quad(
+		new Graphics::Drawables::TexturedQuad(Pi::renderer, UItex.Get(), vector2f(-halfW,-halfH), vector2f(Graphics::GetScreenWidth(), Graphics::GetScreenHeight()), quadRenderState.get(), true));
+#endif
 	// xxx - endof
 
 	int MAX_PHYSICS_TICKS = Pi::config->Int("MaxPhysicsCyclesPerRender");
@@ -1509,6 +1516,17 @@ void Pi::MainLoop()
 		}
 #endif
 
+		if(Pi::game && !Pi::player->IsDead()) {
+			if(Pi::GetView() == Pi::game->GetWorldView()) {
+				Pi::game->GetWorldView()->BeginCameraFrame();
+			}
+			PiGui::NewFrame(Pi::renderer->GetWindow()->GetSDLWindow());
+			DrawPiGui(Pi::frameTime);
+			if(Pi::GetView() == Pi::game->GetWorldView()) {
+				Pi::game->GetWorldView()->EndCameraFrame();
+			}
+		}
+
 		{
 			// end of 1st pass
 			Pi::renderer->EndFrame();
@@ -1527,14 +1545,13 @@ void Pi::MainLoop()
 				double rotX;
 				double rotY;
 				icc->getRots(rotX, rotY);
-				orientation.RotateX(rotX);
-				orientation.RotateY(rotY);
+				orientation = orientation.RotateX(rotX) * orientation.RotateY(rotY);
 			}
 			matrix4x4f transform(matrix4x4f::Identity());
-			transform.Translate( 0, 0, -400.0f );
-		
+			transform.Translate( 0, 0, -halfW );
+
 			const Uint32 halfScreenW = Uint32(Graphics::GetScreenWidth())>>1;
-		
+
 			// render quad
 			{
 				Pi::renderer->SetViewport(0, 0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
@@ -1547,17 +1564,6 @@ void Pi::MainLoop()
 			Pi::EndRenderTarget();
 		}
 		Pi::DrawRenderTarget();
-
-		if(Pi::game && !Pi::player->IsDead()) {
-			if(Pi::GetView() == Pi::game->GetWorldView()) {
-				Pi::game->GetWorldView()->BeginCameraFrame();
-			}
-			PiGui::NewFrame(Pi::renderer->GetWindow()->GetSDLWindow());
-			DrawPiGui(Pi::frameTime);
-			if(Pi::GetView() == Pi::game->GetWorldView()) {
-				Pi::game->GetWorldView()->EndCameraFrame();
-			}
-		}
 
 		Pi::renderer->SwapBuffers();
 
