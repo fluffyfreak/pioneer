@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef GRAPHICS_WINDOW_SDL_H
@@ -10,7 +10,7 @@ namespace Graphics {
 
 class WindowSDL {
 public:
-	WindowSDL(const Graphics::Settings &settings, const std::string &name);
+	WindowSDL(Graphics::Settings &settings, const std::string &name);
 	~WindowSDL();
 
 	int GetWidth() const;
@@ -20,8 +20,9 @@ public:
 
 	void SwapBuffers();
 
+    SDL_Window *GetSDLWindow() const { return m_window; }
 private:
-	bool CreateWindowAndContext(const char *name, int w, int h, bool fullscreen, bool hidden, int samples, int depth_bits);
+	bool CreateWindowAndContext(const char *name, const Graphics::Settings &settings, int samples, int depth_bits);
 
 	SDL_Window *m_window;
 	SDL_GLContext m_glContext;

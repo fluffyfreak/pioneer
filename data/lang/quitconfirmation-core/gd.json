@@ -35,6 +35,14 @@
       "description" : "WIMP could mean Weakly Interacting Massive Particle, good luck translating that! Just go with the other meaning of the word, or make something else up, e.g.\"Magellan didn't quit\".",
       "message" : "Chan fhàg ach gealtairean!"
    },
+   "MSG_18" : {
+      "description" : "Catch phrase of 2016?",
+      "message" : "Nach tusa an laoch! Cha ghèill ach gealtairean, a bheil thu cinnteach gu bheil thu airson fàgail?"
+   },
+   "MSG_19" : {
+      "description" : "Alluding to / inviting the player to contribute content to the game",
+      "message" : "Deiseil ieis an deuchainn, a bheil thu airson tilleadh dhan mhodh tabhartais?"
+   },
    "MSG_2" : {
       "description" : "",
       "message" : "Na falbh an-dràsta, tha spùinneadair a' feitheamh ort sa phrògram eile."

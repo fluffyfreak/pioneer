@@ -113,7 +113,7 @@
    },
    "ENTITY_GENERAL_9" : {
       "description" : "",
-      "message" : "Seirbheisean Tìodhlacaidh {locality} corpaichte"
+      "message" : "Seirbheisean Tìodhlacaidh {locality} Corp"
    },
    "ENTITY_RESEARCH_1" : {
       "description" : "",
@@ -201,7 +201,7 @@
    },
    "FLAVOUR_2_HOWMUCHTIMETEXT" : {
       "description" : "",
-      "message" : "Bu chòir dhut an connadh a lìbhrigeadh gu ruige {due} ach am faigh thu pàigheadh slàn."
+      "message" : "Feumaidh tu an connadh a lìbhrigeadh ro {due} ach am faigh thu pàigheadh slàn."
    },
    "FLAVOUR_2_INTROTEXT" : {
       "description" : "",
@@ -213,7 +213,7 @@
    },
    "FLAVOUR_2_SUCCESSMSG" : {
       "description" : "",
-      "message" : "Mòran mòran taing! Thug mi an duais shlàn dhut."
+      "message" : "Tha sinn fada 'nad chomain! Chuir sinn pàigheadh slàn thugad."
    },
    "FLAVOUR_2_TRANSFERMSG" : {
       "description" : "",
@@ -221,7 +221,7 @@
    },
    "FLAVOUR_2_TYPEOFHELPTEXT" : {
       "description" : "",
-      "message" : "Dh'iarr am paidhleat 1 tunna dhe chonnadh hàidhdreaidein."
+      "message" : "Tha am paidhleat ag iarraidh {unit} tunna(ichean) dhe {cargo}."
    },
    "FLAVOUR_3_ADTEXT" : {
       "description" : "",
@@ -285,7 +285,7 @@
    },
    "FLAVOUR_4_TYPEOFHELPTEXT" : {
       "description" : "",
-      "message" : "Tha am paidhleat ag iarraidh 1 tunna dhe chonnadh hàidhdreaidein."
+      "message" : "Dh'fhaighnich am paidhleat am faigh e {unit} tunna(ichean) dhe {cargo}."
    },
    "FLAVOUR_5_ADTEXT" : {
       "description" : "",
@@ -317,7 +317,7 @@
    },
    "FLAVOUR_5_TYPEOFHELPTEXT" : {
       "description" : "",
-      "message" : "Tha sinn ag iarraidh gun dèid 1 tunna dhe chonnadh hàidhdreaidein a lìbhrigeadh dhan t-soitheach."
+      "message" : "An lìbhrig sibh {unit} tunna(ichean) dhe {cargo} dhan t-soitheach?"
    },
    "FLAVOUR_6_ADTEXT" : {
       "description" : "",
@@ -365,7 +365,7 @@
    },
    "FLAVOUR_7_INTROTEXT" : {
       "description" : "",
-      "message" : "Is mise {name} aig {entity}. Tha an aon soitheach againn, {ship} {shiplabel} air iomadan às dèidh {problem} agus chan eil ach aonar air bhòrd a-nis. Bidh mi deònach {cash} a phàigheadh dhut ma chuidicheas tu sa bhad."
+      "message" : "Is mise {name} aig {entity}. Chaill an t-aon soitheach againn, {ship} {shiplabel}, an comas stiùiridh ri linn {problem} agus criutha dhe {crew} air. Phàighinn {cash} nam faigheadh iad cobhair sa bhad."
    },
    "FLAVOUR_7_LOCATIONTEXT" : {
       "description" : "",
@@ -377,7 +377,7 @@
    },
    "FLAVOUR_7_TRANSFERMSG" : {
       "description" : "",
-      "message" : "Chaidh {unit} aiseag dhan t-soitheach-amais."
+      "message" : "Chaidh {unit} air bòrd an t-soithich-amais."
    },
    "FLAVOUR_7_TYPEOFHELPTEXT" : {
       "description" : "",
@@ -429,7 +429,7 @@
    },
    "LON" : {
       "description" : "",
-      "message" : "Lon:"
+      "message" : "D-fhad:"
    },
    "LY" : {
       "description" : "",

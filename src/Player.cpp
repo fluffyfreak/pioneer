@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Player.h"
@@ -14,6 +14,7 @@
 #include "SpaceStation.h"
 #include "WorldView.h"
 #include "StringF.h"
+#include "SystemView.h" // for the transfer planner
 
 //Some player specific sounds
 static Sound::Event s_soundUndercarriage;
@@ -38,7 +39,7 @@ static void registerEquipChangeListener(Player *player) {
 	LUA_DEBUG_END(l, 0);
 }
 
-Player::Player(ShipType::Id shipId): Ship(shipId)
+Player::Player(const ShipType::Id &shipId): Ship(shipId)
 {
 	SetController(new PlayerShipController());
 	InitCockpit();
@@ -160,7 +161,7 @@ void Player::NotifyRemoved(const Body* const removedBody)
 	if (GetNavTarget() == removedBody)
 		SetNavTarget(0);
 
-	else if (GetCombatTarget() == removedBody) {
+	if (GetCombatTarget() == removedBody) {
 		SetCombatTarget(0);
 
 		if (!GetNavTarget() && removedBody->IsType(Object::SHIP))
@@ -254,4 +255,31 @@ void Player::StaticUpdate(const float timeStep)
 	// anyway so this will do for now
 	if (m_cockpit)
 		m_cockpit->Update(timeStep);
+}
+
+int Player::GetManeuverTime() const {
+	if(Pi::planner->GetOffsetVel().ExactlyEqual(vector3d(0,0,0))) {
+		return 0;
+	}
+	return Pi::planner->GetStartTime();
+}
+
+vector3d Player::GetManeuverVelocity() const {
+	const Frame* frame = GetFrame();
+	if(frame->IsRotFrame())
+		frame = frame->GetNonRotFrame();
+	const SystemBody* systemBody = frame->GetSystemBody();
+
+	if(Pi::planner->GetOffsetVel().ExactlyEqual(vector3d(0,0,0))) {
+		return vector3d(0,0,0);
+	} else if(systemBody) {
+		Orbit playerOrbit = ComputeOrbit();
+		if(!is_zero_exact(playerOrbit.GetSemiMajorAxis())) {
+			double mass = systemBody->GetMass();
+			// XXX The best solution would be to store the mass(es) on Orbit
+			const vector3d velocity = (Pi::planner->GetVel() - playerOrbit.OrbitalVelocityAtTime(mass, playerOrbit.OrbitalTimeAtPos(Pi::planner->GetPosition(), mass)));
+			return velocity;
+		}
+	}
+	return vector3d(0,0,0);
 }

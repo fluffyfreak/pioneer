@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _SHIPCPANEL_H
@@ -33,7 +33,6 @@ public:
 		OVERLAY_TOP_LEFT,
 		OVERLAY_TOP_RIGHT,
 		OVERLAY_BOTTOM_LEFT,
-		OVERLAY_BOTTOM_RIGHT,
 		OVERLAY_OVER_PANEL_RIGHT_1,
 		OVERLAY_OVER_PANEL_RIGHT_2,
 		OVERLAY_OVER_PANEL_RIGHT_3,
@@ -48,6 +47,8 @@ public:
 	// @param int idx the 0-based button index within the specified group
 	void SelectGroupButton(int gid, int idx);
 
+	void SetRadarVisible(bool visible) { if(visible) m_radar->Show(); else m_radar->Hide(); }
+
 private:
 	void InitObject();
 	void OnRotationDampingChanged();
@@ -61,8 +62,8 @@ private:
 	void OnClickTimeaccel(Game::TimeAccel val);
 	void OnClickComms(Gui::MultiStateImageButton *b);
 	void OnClickRotationDamping(Gui::MultiStateImageButton *b);
-	// Handler for scanner view / equipment view toggle button
-	void OnClickScannerEquip(Gui::MultiStateImageButton *b);
+	// Handler for radar view / equipment view toggle button
+	void OnClickRadarEquip(Gui::MultiStateImageButton *b);
 
 	void OnUserChangeMultiFunctionDisplay(multifuncfunc_t f);
 	void ChangeMultiFunctionDisplay(multifuncfunc_t selected);
@@ -78,10 +79,10 @@ private:
 
 	sigc::connection m_connOnRotationDampingChanged;
 
-	ScannerWidget *m_scanner;
+	RadarWidget *m_radar;
 	UseEquipWidget *m_useEquipWidget;
 	Gui::MultiStateImageButton *m_camButton;
-	Gui::MultiStateImageButton *m_scannerEquipButton;
+	Gui::MultiStateImageButton *m_radarEquipButton;
 	Gui::RadioGroup *m_leftButtonGroup, *m_rightButtonGroup;
 	Gui::ImageRadioButton *m_timeAccelButtons[6];
 	Gui::Widget *m_mapViewButtons[4];

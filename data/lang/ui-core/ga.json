@@ -1,0 +1,1326 @@
+{
+   "ABOVE_AVERAGE" : {
+      "description" : "",
+      "message" : "Thar an meán"
+   },
+   "ACTIVE" : {
+      "description" : "",
+      "message" : "Gníomhach"
+   },
+   "AFTER_TRADE_IN" : {
+      "description" : "",
+      "message" : "After trade-in"
+   },
+   "ALLEGIANCE" : {
+      "description" : "",
+      "message" : "Dílseacht:"
+   },
+   "ALL_UP_WEIGHT" : {
+      "description" : "",
+      "message" : "All-up weight"
+   },
+   "AMOUNT" : {
+      "description" : "",
+      "message" : "Méid"
+   },
+   "AN_ERROR_HAS_OCCURRED" : {
+      "description" : "",
+      "message" : "Tharla earráid"
+   },
+   "ATMOSPHERIC_SHIELDING" : {
+      "description" : "Used in ShipInfo view, followed by a yes/no depending on if the ship can carry atmospheric shields",
+      "message" : "Atmospheric shielding"
+   },
+   "ATTEMPT_TO_REPAIR_HULL" : {
+      "description" : "",
+      "message" : "Attempt to repair hull"
+   },
+   "AVAILABLE_FOR_PURCHASE" : {
+      "description" : "",
+      "message" : "Ar díol"
+   },
+   "AVERAGE" : {
+      "description" : "",
+      "message" : "Meán"
+   },
+   "BACKWARD_ACCEL" : {
+      "description" : "",
+      "message" : "Backward acceleration"
+   },
+   "BULLETIN_BOARD" : {
+      "description" : "",
+      "message" : "Clár Fógraí"
+   },
+   "BUY" : {
+      "description" : "Commodities and equipment prices",
+      "message" : "Ceannaigh"
+   },
+   "BUY_SHIP" : {
+      "description" : "",
+      "message" : "Ceannaigh Spáslong"
+   },
+   "CABINS" : {
+      "description" : "For passengers",
+      "message" : "Cábáin"
+   },
+   "CABIN_FREE" : {
+      "description" : "Free capacity for passengers",
+      "message" : "{amount} free"
+   },
+   "CABIN_USED" : {
+      "description" : "Passengers using cabins",
+      "message" : "{amount} used"
+   },
+   "CANCEL" : {
+      "description" : "",
+      "message" : "Cealaigh"
+   },
+   "CAPACITY" : {
+      "description" : "Capacity of ship to fit more equipment",
+      "message" : "Toilleadh"
+   },
+   "CAPACITY_USED" : {
+      "description" : "",
+      "message" : "Capacity used"
+   },
+   "CARGO" : {
+      "description" : "",
+      "message" : "Lasta"
+   },
+   "CARGO_SPACE" : {
+      "description" : "",
+      "message" : "Cargo space"
+   },
+   "CARGO_SPACE_USED" : {
+      "description" : "",
+      "message" : "Cargo space used"
+   },
+   "CARGO_T_FREE" : {
+      "description" : "t for tonne",
+      "message" : "{amount}t free"
+   },
+   "CARGO_T_USED" : {
+      "description" : "t for tonne",
+      "message" : "{amount}t used"
+   },
+   "CASH" : {
+      "description" : "",
+      "message" : "Airgead tirim"
+   },
+   "CASH_N" : {
+      "description" : "",
+      "message" : "Airgead tirim: {money}"
+   },
+   "CHANGE_BINDING" : {
+      "description" : "Key binding option",
+      "message" : "Athraigh Eochracha"
+   },
+   "CHIEF_MECHANIC" : {
+      "description" : "",
+      "message" : "Príomh-mheicneoir"
+   },
+   "CIRCULAR_ORBIT_SPEED" : {
+      "description" : "",
+      "message" : "Circular orbit speed"
+   },
+   "CITY_DETAIL_LEVEL" : {
+      "description" : "Game graphics option",
+      "message" : "Leibhéal mionsonraithe na cathrach"
+   },
+   "CLEAN" : {
+      "description" : "Legal status of player",
+      "message" : "Glan"
+   },
+   "CLEAR" : {
+      "description" : "Clear an option in game settings/options menu",
+      "message" : "Glan"
+   },
+   "CLIENT" : {
+      "description" : "",
+      "message" : "Cliant"
+   },
+   "COMBAT" : {
+      "description" : "Headline for kills and combat rating",
+      "message" : "Comhrac"
+   },
+   "COMMANDER" : {
+      "description" : "",
+      "message" : "Ceannasaí"
+   },
+   "COMMODITY_MARKET" : {
+      "description" : "",
+      "message" : "Margadh Tráchtearraí"
+   },
+   "COMPACT_RADAR" : {
+      "description" : "Game settings option",
+      "message" : "Radar dlúth"
+   },
+   "COMPETENT" : {
+      "description" : "Combat rating",
+      "message" : "Cumasach"
+   },
+   "COMPLETED" : {
+      "description" : "",
+      "message" : "Completed"
+   },
+   "COMPRESS_TEXTURES" : {
+      "description" : "graphics option in game settings menu ",
+      "message" : "Compress Textures"
+   },
+   "CONFIRM_PURCHASE" : {
+      "description" : "",
+      "message" : "Confirm purchase"
+   },
+   "CONFIRM_SALE" : {
+      "description" : "",
+      "message" : "Confirm sale"
+   },
+   "CONSTABLE" : {
+      "description" : "",
+      "message" : "Constábla"
+   },
+   "CONTINUE_GAME" : {
+      "description" : "",
+      "message" : "Continue game"
+   },
+   "CONTROLS" : {
+      "description" : "",
+      "message" : "Rialtáin"
+   },
+   "CONTROL_OPTIONS" : {
+      "description" : "",
+      "message" : "Roghanna Stiúrtha"
+   },
+   "COULD_NOT_LOAD_GAME" : {
+      "description" : "",
+      "message" : "Níorbh fhéidir an cluiche a lódáil:"
+   },
+   "CREDIBLE" : {
+      "description" : "For player reputation",
+      "message" : "Inchreidte"
+   },
+   "CREW_CABINS" : {
+      "description" : "",
+      "message" : "Cábáin na foirne"
+   },
+   "CREW_ROSTER" : {
+      "description" : "",
+      "message" : "Liosta Foirne"
+   },
+   "CRIMINAL_RECORD" : {
+      "description" : "Past crimes / crime history of character",
+      "message" : "Taifead coiriúil"
+   },
+   "DANGEROUS" : {
+      "description" : "Player combat rating",
+      "message" : "Contúirteach"
+   },
+   "DEADLY" : {
+      "description" : "Player combat rating",
+      "message" : "Marfach"
+   },
+   "DELTA_V" : {
+      "description" : "",
+      "message" : "Deilt-v"
+   },
+   "DELTA_V_EMPTY" : {
+      "description" : "Delta-v capacity of a ship with no cargo or upgrades",
+      "message" : "Deilt-v (folamh)"
+   },
+   "DELTA_V_FULL" : {
+      "description" : "Delta-v capacity of a ship with maximum cargo",
+      "message" : "Deilt-v (lán)"
+   },
+   "DELTA_V_MAX" : {
+      "description" : "Delta-v capacity of a ship with cargo bay fully loaded with propellant",
+      "message" : "Delta-v (max)"
+   },
+   "DESCENT_TO_GROUND_SPEED" : {
+      "description" : "",
+      "message" : "Luas tuirlingt-go-talamh:"
+   },
+   "DESTROY_ENEMY_SHIP" : {
+      "description" : "",
+      "message" : "Scrios long an namhad"
+   },
+   "DISMISS" : {
+      "description" : "Terminate crew memeber's contract",
+      "message" : "Ruaig"
+   },
+   "DISPLAY_HUD_TRAILS" : {
+      "description" : "",
+      "message" : "Display HUD trails"
+   },
+   "DISPLAY_NAV_TUNNELS" : {
+      "description" : "Settings option: hyperspace tunnel effect",
+      "message" : "Taispeáin tolláin loingseoireachta"
+   },
+   "DISPLAY_SPEED_LINES" : {
+      "description" : "Settings option: effect when travelling in space",
+      "message" : "Display speed lines"
+   },
+   "DOCK_AT_CURRENT_TARGET" : {
+      "description" : "",
+      "message" : "Dock at current target"
+   },
+   "DUE" : {
+      "description" : "mission deadline date",
+      "message" : "Spriocdháta"
+   },
+   "DUMPING" : {
+      "description" : "The illegal act of dumping waste",
+      "message" : "Dumpáil"
+   },
+   "D_DAYS_LEFT" : {
+      "description" : "",
+      "message" : "Laethanta fágtha: %d"
+   },
+   "ECONOMY_TRADE" : {
+      "description" : "",
+      "message" : "Geilleagar agus Trádáil"
+   },
+   "EFFECTS" : {
+      "description" : "",
+      "message" : "Éifeachtaí:"
+   },
+   "ELITE" : {
+      "description" : "Player combat rating",
+      "message" : "DEN SCOTH"
+   },
+   "EMPLOYMENT" : {
+      "description" : "",
+      "message" : "Fostaíocht"
+   },
+   "ENABLE_ANISOTROPIC_FILTERING" : {
+      "description" : "Use Anisotropic Filtering",
+      "message" : "Anisotropic Filtering"
+   },
+   "ENABLE_AUTOSAVE" : {
+      "description" : "Allow the game to autosave when docking",
+      "message" : "Enable Autosave"
+   },
+   "ENABLE_COCKPIT" : {
+      "description" : "Game settings option: to use a cockpit 3D model",
+      "message" : "Enable cockpit (EXPERIMENTAL)"
+   },
+   "ENABLE_JOYSTICK" : {
+      "description" : "",
+      "message" : "Cumasaigh an luamhán stiúrtha"
+   },
+   "ENGINEERING" : {
+      "description" : "Engineering skills of crew",
+      "message" : "Innealtóireacht:"
+   },
+   "EQUIPMENT" : {
+      "description" : "",
+      "message" : "Trealamh"
+   },
+   "EQUIPMENT_MARKET" : {
+      "description" : "",
+      "message" : "Margadh Trealaimh"
+   },
+   "EQUIPPED" : {
+      "description" : "",
+      "message" : "Feistithe"
+   },
+   "ERROR" : {
+      "description" : "",
+      "message" : "Earráid"
+   },
+   "ESCAPE_SPEED" : {
+      "description" : "",
+      "message" : "Luas éalaithe:"
+   },
+   "EXIT_THIS_GAME" : {
+      "description" : "",
+      "message" : "Scoir den chluiche seo"
+   },
+   "EXPERIENCED" : {
+      "description" : "For player reputation",
+      "message" : "Seanchleachta"
+   },
+   "EXPERT" : {
+      "description" : "For player reputation",
+      "message" : "Saineolaí"
+   },
+   "FAILED" : {
+      "description" : "When failed mission",
+      "message" : "Teipthe"
+   },
+   "FEMALE" : {
+      "description" : "",
+      "message" : "Baineannach"
+   },
+   "FORWARD_ACCEL" : {
+      "description" : "",
+      "message" : "Forward acceleration"
+   },
+   "FORWARD_ACCEL_EMPTY" : {
+      "description" : "",
+      "message" : "Forward accel (empty)"
+   },
+   "FORWARD_ACCEL_FULL" : {
+      "description" : "",
+      "message" : "Forward accel (full)"
+   },
+   "FRACTAL_DETAIL" : {
+      "description" : "",
+      "message" : "Mionsonraí na bhfrachtal"
+   },
+   "FREE" : {
+      "description" : "Used in Ship Information view as in Capacity: 10t (5t free)",
+      "message" : "ar fáil"
+   },
+   "FRONT_WEAPON" : {
+      "description" : "",
+      "message" : "Arm tosaigh"
+   },
+   "FUEL" : {
+      "description" : "",
+      "message" : "Breosla"
+   },
+   "FUEL_TANK_FULL" : {
+      "description" : "",
+      "message" : "Tá an t-umar breosla lán."
+   },
+   "FUEL_WEIGHT" : {
+      "description" : "",
+      "message" : "Meáchan an bhreosla"
+   },
+   "FULL_SCREEN" : {
+      "description" : "",
+      "message" : "Lánscáileán"
+   },
+   "GENERAL_CREW" : {
+      "description" : "",
+      "message" : "Foireann ghinearálta"
+   },
+   "GIVE_ORDERS_TO_CREW" : {
+      "description" : "",
+      "message" : "Give orders to crew"
+   },
+   "GOOD_RIDDANCE_TO_YOU_TOO" : {
+      "description" : "",
+      "message" : "Bliain mhaith i do dhiaidhse!"
+   },
+   "HANG_UP" : {
+      "description" : "",
+      "message" : "Hang up."
+   },
+   "HARMLESS" : {
+      "description" : "Player combat rating",
+      "message" : "Gan dochar"
+   },
+   "HEAVY_CARGO_SHUTTLE" : {
+      "description" : "",
+      "message" : "Heavy cargo shuttle"
+   },
+   "HEAVY_COURIER" : {
+      "description" : "",
+      "message" : "Heavy courier"
+   },
+   "HEAVY_FIGHTER" : {
+      "description" : "",
+      "message" : "Heavy fighter"
+   },
+   "HEAVY_FREIGHTER" : {
+      "description" : "",
+      "message" : "Heavy freighter"
+   },
+   "HEAVY_PASSENGER_SHUTTLE" : {
+      "description" : "",
+      "message" : "Heavy passenger shuttle"
+   },
+   "HEAVY_PASSENGER_TRANSPORT" : {
+      "description" : "",
+      "message" : "Heavy passenger transport"
+   },
+   "HIGH" : {
+      "description" : "Game settings option: for graphics resolution",
+      "message" : "Ard"
+   },
+   "HUD_2D_RADAR" : {
+      "description" : "Popup text: the name of the azimuthal equidistant projection radar",
+      "message" : "2D azimuthal equidistant projection"
+   },
+   "HUD_3D_RADAR" : {
+      "description" : "Popup text: the name of the planar projection radar (traditional frontier-style)",
+      "message" : "3D planar projection"
+   },
+   "HUD_BRAKE_DISTANCE_MAIN_THRUSTERS" : {
+      "description" : "Tooltip: The braking distance using the main thrusters.",
+      "message" : "The braking distance using the main thrusters"
+   },
+   "HUD_CURRENT_COMBAT_TARGET" : {
+      "description" : "Tooltip: The current combat target.",
+      "message" : "The current combat target"
+   },
+   "HUD_CURRENT_FRAME" : {
+      "description" : "Tooltip: The current frame of reference.",
+      "message" : "The current frame of reference"
+   },
+   "HUD_CURRENT_HEADING" : {
+      "description" : "Tooltip: the current heading.",
+      "message" : "The current heading"
+   },
+   "HUD_CURRENT_NAV_TARGET" : {
+      "description" : "Tooltip: The current navigational target.",
+      "message" : "The current navigational target"
+   },
+   "HUD_CURRENT_PITCH" : {
+      "description" : "Tooltip: the current pitch.",
+      "message" : "The current pitch"
+   },
+   "HUD_CURRENT_ROLL" : {
+      "description" : "Tooltip: the current roll.",
+      "message" : "The current roll"
+   },
+   "HUD_DELTA_V_OF_MANEUVER_BURN" : {
+      "description" : "Tooltip: The Δv for the maneuver burn.",
+      "message" : "The Δv for the maneuver burn"
+   },
+   "HUD_DISTANCE_TO_SURFACE_OF_FRAME" : {
+      "description" : "Tooltip: Distance to the surface of the frame of reference.",
+      "message" : "Distance to the surface of the frame of reference"
+   },
+   "HUD_DISTANCE_TO_SURFACE_OF_TARGET" : {
+      "description" : "Tooltip: Distance to the surface of the target.",
+      "message" : "Distance to the surface of the target"
+   },
+   "HUD_DURATION_OF_MANEUVER_BURN" : {
+      "description" : "Tooltip: The approximate duration of the maneuver burn with main thrusters.",
+      "message" : "The approximate duration of the maneuver burn with main thrusters"
+   },
+   "HUD_DURATION_UNTIL_MANEUVER_BURN" : {
+      "description" : "Tooltip: The duration until the middle of the maneuver burn.",
+      "message" : "The duration until the middle of the maneuver burn"
+   },
+   "HUD_SHOW_COMBAT_TARGET" : {
+      "description" : "Tooltip: Show the current combat target.",
+      "message" : "Show the current combat target"
+   },
+   "HUD_SHOW_FRAME" : {
+      "description" : "Tooltip: Show the current frame of reference.",
+      "message" : "Show the current frame of reference"
+   },
+   "HUD_SHOW_NAV_TARGET" : {
+      "description" : "Tooltip: Show current navigational target.",
+      "message" : "Show the current navigational target"
+   },
+   "HUD_SPEED_OF_APPROACH_TO_FRAME" : {
+      "description" : "Tooltip: The speed of approach towards the frame of reference.",
+      "message" : "The speed of approach towards the frame of reference"
+   },
+   "HUD_SPEED_OF_APPROACH_TO_TARGET" : {
+      "description" : "Tooltip: The speed of approach towards the target.",
+      "message" : "The speed of approach towards the target"
+   },
+   "HUD_SPEED_RELATIVE_TO_TARGET" : {
+      "description" : "Tooltip: The speed relative to the target.",
+      "message" : "The speed relative to the target"
+   },
+   "HULL_DOES_NOT_REQUIRE_REPAIR" : {
+      "description" : "",
+      "message" : "Ní gá duit an chabhail a dheisiú."
+   },
+   "HULL_INTEGRITY" : {
+      "description" : "",
+      "message" : "Hull integrity"
+   },
+   "HULL_REPAIRED_BY_NAME_NOW_AT_N_PERCENT" : {
+      "description" : "",
+      "message" : "Hull repaired by {name}, now at {repairPercent}%"
+   },
+   "HULL_REPAIR_ATTEMPT_FAILED_HULL_SUFFERED_MINOR_DAMAGE" : {
+      "description" : "",
+      "message" : "Theip ar an iarracht an chabhail a dheisiú. Rinneadh beagán damáiste don chabhail."
+   },
+   "HYPERDRIVE" : {
+      "description" : "",
+      "message" : "Hipirthiomáint"
+   },
+   "HYPERDRIVE_FITTED" : {
+      "description" : "",
+      "message" : "Hyperdrive fitted:"
+   },
+   "HYPERSPACE_RANGE" : {
+      "description" : "",
+      "message" : "Raon hipearspáis"
+   },
+   "ILLEGAL_JUMP" : {
+      "description" : "A finable crime",
+      "message" : "Reckless hyperjump registered"
+   },
+   "IM_TIRED_OF_WORKING_FOR_NOTHING_DONT_YOU_KNOW_WHAT_A_CONTRACT_IS" : {
+      "description" : "",
+      "message" : "I'm tired of working for nothing. Don't you know what a contract is?"
+   },
+   "INACTIVE" : {
+      "description" : "",
+      "message" : "Neamhghníomhach"
+   },
+   "INCOMPETENT" : {
+      "description" : "For player reputation",
+      "message" : "Neamhchumasach"
+   },
+   "INEXPERIENCED" : {
+      "description" : "For player reputation",
+      "message" : "Neamhchleachta"
+   },
+   "INSUFFICIENT_FUNDS" : {
+      "description" : "",
+      "message" : "Insufficient funds."
+   },
+   "INVERT_MOUSE_Y" : {
+      "description" : "",
+      "message" : "Inbhéartaigh ais-Y na luiche"
+   },
+   "IN_CARGO_HOLD" : {
+      "description" : "",
+      "message" : "In cargo hold"
+   },
+   "IN_STOCK" : {
+      "description" : "",
+      "message" : "Sa stoc"
+   },
+   "ITEM_IS_OUT_OF_STOCK" : {
+      "description" : "",
+      "message" : "Tá sé as stoc."
+   },
+   "ITS_BEEN_GREAT_WORKING_FOR_YOU_IF_YOU_NEED_ME_AGAIN_ILL_BE_HERE_A_WHILE" : {
+      "description" : "",
+      "message" : "It's been great working for you. If you need me again, I'll be here a while."
+   },
+   "JETTISON" : {
+      "description" : "",
+      "message" : "Jettison"
+   },
+   "KILLS" : {
+      "description" : "",
+      "message" : "Maraithe:"
+   },
+   "LANGUAGE" : {
+      "description" : "",
+      "message" : "Teanga"
+   },
+   "LANGUAGE_RESTART_GAME_TO_APPLY" : {
+      "description" : "",
+      "message" : "Teanga (atosaigh an cluiche le cur i bhfeidhm)"
+   },
+   "LAUNCH_PERMISSION_DENIED_BUSY" : {
+      "description" : "",
+      "message" : "Permission to launch denied: docking bay busy."
+   },
+   "LAUNCH_PERMISSION_DENIED_CREW" : {
+      "description" : "",
+      "message" : "Permission to launch denied: not enough crew to handle this ship."
+   },
+   "LAUNCH_PERMISSION_DENIED_FINED" : {
+      "description" : "",
+      "message" : "Permission to launch denied: you have outstanding fines."
+   },
+   "LEGAL_STATUS" : {
+      "description" : "",
+      "message" : "Stádas dlíthiúil"
+   },
+   "LIGHT_CARGO_SHUTTLE" : {
+      "description" : "",
+      "message" : "Light cargo shuttle"
+   },
+   "LIGHT_COURIER" : {
+      "description" : "",
+      "message" : "Light courier"
+   },
+   "LIGHT_FIGHTER" : {
+      "description" : "",
+      "message" : "Light fighter"
+   },
+   "LIGHT_FREIGHTER" : {
+      "description" : "",
+      "message" : "Light freighter"
+   },
+   "LIGHT_PASSENGER_SHUTTLE" : {
+      "description" : "",
+      "message" : "Light passenger shuttle"
+   },
+   "LIGHT_PASSENGER_TRANSPORT" : {
+      "description" : "",
+      "message" : "Light passenger transport"
+   },
+   "LOAD" : {
+      "description" : "",
+      "message" : "Lódáil"
+   },
+   "LOAD_GAME" : {
+      "description" : "",
+      "message" : "Lódáil cluiche"
+   },
+   "LOBBY" : {
+      "description" : "",
+      "message" : "Lobby"
+   },
+   "LOCAL_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Local arm"
+   },
+   "LOCATED_N_KM_FROM_THE_CENTRE_OF_NAME" : {
+      "description" : "",
+      "message" : "Lonnaithe {distance}km ó lár {name}:"
+   },
+   "LOCATION" : {
+      "description" : "",
+      "message" : "Suíomh"
+   },
+   "LOW" : {
+      "description" : "",
+      "message" : "Íseal"
+   },
+   "LY" : {
+      "description" : "Light year",
+      "message" : "sbh"
+   },
+   "MAKE_NEW_FACE" : {
+      "description" : "",
+      "message" : "Cruthaigh aghaidh nua"
+   },
+   "MALE" : {
+      "description" : "",
+      "message" : "Fireannach"
+   },
+   "MARKET_BUYLINE" : {
+      "description" : "",
+      "message" : "Buy {amount} units for {price}"
+   },
+   "MARKET_SELLINE" : {
+      "description" : "",
+      "message" : "Sell {amount} units for {price}"
+   },
+   "MASS" : {
+      "description" : "",
+      "message" : "Mais"
+   },
+   "MASTER" : {
+      "description" : "For player reputation",
+      "message" : "Máistir"
+   },
+   "MASTER_VOL" : {
+      "description" : "Master sound in settings option",
+      "message" : "Máistir:"
+   },
+   "MAX" : {
+      "description" : "",
+      "message" : "uas"
+   },
+   "MAXIMUM_CREW" : {
+      "description" : "",
+      "message" : "Maximum crew"
+   },
+   "MEDIUM" : {
+      "description" : "Game settings option: graphics resolution",
+      "message" : "Measartha"
+   },
+   "MEDIUM_CARGO_SHUTTLE" : {
+      "description" : "",
+      "message" : "Medium cargo shuttle"
+   },
+   "MEDIUM_COURIER" : {
+      "description" : "",
+      "message" : "Medium courier"
+   },
+   "MEDIUM_FIGHTER" : {
+      "description" : "",
+      "message" : "Medium fighter"
+   },
+   "MEDIUM_FREIGHTER" : {
+      "description" : "",
+      "message" : "Medium freighter"
+   },
+   "MEDIUM_PASSENGER_SHUTTLE" : {
+      "description" : "",
+      "message" : "Medium passenger shuttle"
+   },
+   "MEDIUM_PASSENGER_TRANSPORT" : {
+      "description" : "",
+      "message" : "Medium passenger transport"
+   },
+   "METAL_ALLOYS" : {
+      "description" : "",
+      "message" : "Coímhiotail"
+   },
+   "MILITARY" : {
+      "description" : "",
+      "message" : "Míleata"
+   },
+   "MINIMUM_CREW" : {
+      "description" : "",
+      "message" : "Minimum crew"
+   },
+   "MISSILE_MOUNTS" : {
+      "description" : "",
+      "message" : "Missile mounts"
+   },
+   "MISSIONS" : {
+      "description" : "",
+      "message" : "Misin"
+   },
+   "MISSION_DETAILS" : {
+      "description" : "",
+      "message" : "Mionsonraí an Mhisin"
+   },
+   "MORE_INFO" : {
+      "description" : "",
+      "message" : "Tuilleadh eolais..."
+   },
+   "MOSTLY_HARMLESS" : {
+      "description" : "",
+      "message" : "Gan dochar den chuid is mó"
+   },
+   "MULTISAMPLING" : {
+      "description" : "",
+      "message" : "Ilsampláil"
+   },
+   "MURDER" : {
+      "description" : "",
+      "message" : "Dúnmharú"
+   },
+   "MUSIC" : {
+      "description" : "",
+      "message" : "Ceol:"
+   },
+   "MUTE" : {
+      "description" : "",
+      "message" : "Balbhaigh"
+   },
+   "NAME_OBJECT" : {
+      "description" : "For an item or object",
+      "message" : "Ainm"
+   },
+   "NAME_PERSON" : {
+      "description" : "For a person",
+      "message" : "Ainm"
+   },
+   "NAVIGATION" : {
+      "description" : "",
+      "message" : "Navigation:"
+   },
+   "NAVIGATOR" : {
+      "description" : "",
+      "message" : "Navigator"
+   },
+   "NEGOTIATE" : {
+      "description" : "",
+      "message" : "Negotiate"
+   },
+   "NEXT_PAID" : {
+      "description" : "",
+      "message" : "An chéad phá eile"
+   },
+   "NO" : {
+      "description" : "Negative answer to a question",
+      "message" : "Níl"
+   },
+   "NOBODY" : {
+      "description" : "For player reputation",
+      "message" : "Duine ar bith"
+   },
+   "NONE" : {
+      "description" : "",
+      "message" : "None"
+   },
+   "NONE_FOR_SALE_IN_THIS_STATION" : {
+      "description" : "",
+      "message" : "None for sale in this station."
+   },
+   "NORMA_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Norma arm"
+   },
+   "NOTES" : {
+      "description" : "",
+      "message" : "Nótaí:"
+   },
+   "NOT_ENOUGH_ALLOY_TO_ATTEMPT_A_REPAIR" : {
+      "description" : "",
+      "message" : "Níl go leor {alloy} agat le cromadh ar an deisiú"
+   },
+   "NOT_SUPPORTED_ON_THIS_SHIP" : {
+      "description" : "",
+      "message" : "{equipment} is not supported on this ship model"
+   },
+   "NO_MISSIONS" : {
+      "description" : "",
+      "message" : "No missions."
+   },
+   "N_LIGHT_YEARS_N_MAX" : {
+      "description" : "",
+      "message" : "{range} solasbhliain ({maxRange} uasmhéid)"
+   },
+   "N_OCCUPIED_PASSENGER_CABINS" : {
+      "description" : "",
+      "message" : "{quantity} Cábán Paisinéara Gafa"
+   },
+   "N_SHIELD_GENERATORS" : {
+      "description" : "",
+      "message" : "{quantity} Gineadóir Scéithe"
+   },
+   "N_UNOCCUPIED_PASSENGER_CABINS" : {
+      "description" : "",
+      "message" : "{quantity} Unoccupied Passenger Cabins"
+   },
+   "OFF" : {
+      "description" : "",
+      "message" : "As"
+   },
+   "OK" : {
+      "description" : "",
+      "message" : "OK"
+   },
+   "OPEN_USER_FOLDER" : {
+      "description" : "",
+      "message" : "Fillteán an Úsáideora"
+   },
+   "OPTIONS" : {
+      "description" : "",
+      "message" : "Roghanna"
+   },
+   "ORBIT" : {
+      "description" : "",
+      "message" : "Fithis"
+   },
+   "ORBITAL_ANALYSIS" : {
+      "description" : "",
+      "message" : "Anailís ar Fhithis"
+   },
+   "ORBITAL_ANALYSIS_NOTES" : {
+      "description" : "",
+      "message" : "Circular orbit speed is given for a tangential velocity. The ship should be moving in a direction at 90° to the ship/{name} axis.\n\nDescent speed is an absolute minimum, and is also tangential. A slower speed or a lower angle will result in a course which intersects with the surface of {name}.\n\nEscape speed will in theory work in any direction, as long as the ship does not collide with {name} on the way.\n\t\t"
+   },
+   "OUTER_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Outer arm"
+   },
+   "OUTSTANDING_FINES" : {
+      "description" : "Unpaid fines for crimes committed",
+      "message" : "Outstanding fines"
+   },
+   "OWED" : {
+      "description" : "Player owing money to crew members",
+      "message" : "Owed"
+   },
+   "PAY_FINE_OF_N" : {
+      "description" : "",
+      "message" : "Pay fine of {amount}"
+   },
+   "PERSEUS_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Perseus arm"
+   },
+   "PERSONAL_INFORMATION" : {
+      "description" : "",
+      "message" : "Faisnéis Phearsanta"
+   },
+   "PILOT" : {
+      "description" : "",
+      "message" : "Píolóta"
+   },
+   "PILOTING" : {
+      "description" : "",
+      "message" : "Stiúradh:"
+   },
+   "PILOT_SEAT_IS_NOW_OCCUPIED_BY_NAME" : {
+      "description" : "",
+      "message" : "Pilot seat is now occupied by {name}"
+   },
+   "PIRACY" : {
+      "description" : "",
+      "message" : "Foghail"
+   },
+   "PLANET_DETAIL_DISTANCE" : {
+      "description" : "",
+      "message" : "Planet detail distance"
+   },
+   "PLANET_TEXTURES" : {
+      "description" : "",
+      "message" : "Uigeachtaí pláinéid"
+   },
+   "POLICE" : {
+      "description" : "",
+      "message" : "Gardaí"
+   },
+   "POOR" : {
+      "description" : "Player combat rating",
+      "message" : "Bocht"
+   },
+   "POSITION" : {
+      "description" : "The job title/position of crew memeber",
+      "message" : "Ionad"
+   },
+   "PRESS_A_KEY_OR_CONTROLLER_BUTTON" : {
+      "description" : "",
+      "message" : "Press a key or controller button"
+   },
+   "PRICE" : {
+      "description" : "",
+      "message" : "Praghas"
+   },
+   "PROFESSIONAL" : {
+      "description" : "For player reputation",
+      "message" : "Proifisiúnta"
+   },
+   "PUMP_DOWN" : {
+      "description" : "Drain the fuel tank",
+      "message" : "Pump down"
+   },
+   "QUALIFICATION_SCORES" : {
+      "description" : "",
+      "message" : "Scóir cháilíochta"
+   },
+   "QUIT" : {
+      "description" : "",
+      "message" : "Scoir"
+   },
+   "QUIT_CONFIRMATION" : {
+      "description" : "For the checkbox in settings window",
+      "message" : "Quit confirmation"
+   },
+   "RANK" : {
+      "description" : "",
+      "message" : "Céim:"
+   },
+   "RATING" : {
+      "description" : "",
+      "message" : "Rátáil:"
+   },
+   "REAR_WEAPON" : {
+      "description" : "",
+      "message" : "Rear weapon"
+   },
+   "REFUEL" : {
+      "description" : "",
+      "message" : "Athbhreoslaigh"
+   },
+   "REFUEL_FULL" : {
+      "description" : "",
+      "message" : "Refuel full"
+   },
+   "RELIABLE" : {
+      "description" : "For player reputation",
+      "message" : "Iontaofa"
+   },
+   "REPAIR_X_HULL_DAMAGE_FOR_X" : {
+      "description" : "",
+      "message" : "Repair {damage}% hull damage for {price}"
+   },
+   "REPUTATION" : {
+      "description" : "",
+      "message" : "Clú"
+   },
+   "REQUEST_LAUNCH" : {
+      "description" : "",
+      "message" : "Request Launch"
+   },
+   "RESET" : {
+      "description" : "",
+      "message" : "Athshocraigh"
+   },
+   "RETURN_TO_GAME" : {
+      "description" : "",
+      "message" : "Fill ar an gcluiche"
+   },
+   "RETURN_TO_MENU" : {
+      "description" : "",
+      "message" : "Fill ar an roghchlár"
+   },
+   "REVERSE_ACCEL_EMPTY" : {
+      "description" : "",
+      "message" : "Reverse accel (empty)"
+   },
+   "REVERSE_ACCEL_FULL" : {
+      "description" : "",
+      "message" : "Reverse accel (full)"
+   },
+   "REWARD" : {
+      "description" : "",
+      "message" : "Duais"
+   },
+   "SAGITTARIUS_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Sagittarius arm"
+   },
+   "SAVE" : {
+      "description" : "",
+      "message" : "Sábháil"
+   },
+   "SCOOP_MOUNTS" : {
+      "description" : "How many slots or mounts exist on the ship for fitting SCOOPS (e.g. cargo scoop, fuel scoop, multi-scoop) ",
+      "message" : "Scoop mounts"
+   },
+   "SCUTUM_CENTAURUS_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "Scutum-Centaurus arm"
+   },
+   "SELECT" : {
+      "description" : "",
+      "message" : "Roghnaigh"
+   },
+   "SELECT_A_FILE_TO_SAVE_TO_OR_ENTER_A_NEW_FILENAME" : {
+      "description" : "",
+      "message" : "Select a file to save to or enter a new filename"
+   },
+   "SELECT_FILE" : {
+      "description" : "",
+      "message" : "Roghnaigh comhad.."
+   },
+   "SELECT_GAME_TO_LOAD" : {
+      "description" : "",
+      "message" : "Roghnaigh cluiche le lódáil..."
+   },
+   "SELL" : {
+      "description" : "Commodities and equipment prices",
+      "message" : "Díol"
+   },
+   "SENSORS" : {
+      "description" : "",
+      "message" : "Braiteoirí:"
+   },
+   "SENSORS_AND_DEFENCE" : {
+      "description" : "",
+      "message" : "Braiteoirí agus cosaint"
+   },
+   "SET_AS_TARGET" : {
+      "description" : "",
+      "message" : "Set destination as navigation target."
+   },
+   "SHIP" : {
+      "description" : "",
+      "message" : "Spáslong"
+   },
+   "SHIPS_ENGINEER" : {
+      "description" : "",
+      "message" : "Ship's Engineer"
+   },
+   "SHIP_INFORMATION" : {
+      "description" : "",
+      "message" : "Eolas faoin Spáslong"
+   },
+   "SHIP_IS_ALREADY_FULLY_REPAIRED" : {
+      "description" : "",
+      "message" : "Your ship is in perfect working condition."
+   },
+   "SHIP_IS_FULLY_EQUIPPED" : {
+      "description" : "",
+      "message" : "Your ship is fully equipped."
+   },
+   "SHIP_IS_FULLY_LADEN" : {
+      "description" : "",
+      "message" : "Your ship is fully laden."
+   },
+   "SHIP_MARKET" : {
+      "description" : "",
+      "message" : "Ship Market"
+   },
+   "SHIP_REPAIRS" : {
+      "description" : "",
+      "message" : "Ship Repairs"
+   },
+   "SHIP_VIEWING_WAS_SOLD" : {
+      "description" : "",
+      "message" : "The ship you were viewing has been sold"
+   },
+   "SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS" : {
+      "description" : "",
+      "message" : "Simulating evolution of the universe: {age} billion years ;-)"
+   },
+   "SOUND" : {
+      "description" : "",
+      "message" : "Fuaim"
+   },
+   "START_AT_BARNARDS_STAR" : {
+      "description" : "",
+      "message" : "Start at Barnard's Star"
+   },
+   "START_AT_EARTH" : {
+      "description" : "",
+      "message" : "Start at Earth"
+   },
+   "START_AT_NEW_HOPE" : {
+      "description" : "New Hope is an in game location",
+      "message" : "Tosaigh ag Dóchas Nua"
+   },
+   "STAR_FIELD_DENSITY" : {
+      "description" : "",
+      "message" : "Density of Star field"
+   },
+   "STATION_MANAGER" : {
+      "description" : "",
+      "message" : "Station manager"
+   },
+   "STATUS" : {
+      "description" : "",
+      "message" : "Stádas"
+   },
+   "TECH_CERTIFIED" : {
+      "description" : "Lobby screen shows the tech level (an integer number) of the station",
+      "message" : "This station holds a level {tech_level} technology certificate."
+   },
+   "TECH_CERTIFIED_MILITARY" : {
+      "description" : "Lobby screen shows the tech level of the station",
+      "message" : "This installation holds a military technology clearance."
+   },
+   "THANKS_AND_REMEMBER_TO_BUY_FUEL" : {
+      "description" : "",
+      "message" : "Thank you for your purchase. Remember to fit equipment and buy fuel before you depart."
+   },
+   "THERE_IS_NOBODY_ELSE_ON_BOARD_ABLE_TO_FLY_THIS_SHIP" : {
+      "description" : "",
+      "message" : "Níl éinne eile ar bord atá in ann an long seo a eitilt."
+   },
+   "THE_SHIP_IS_UNDER_STATION_CONTROL_COMMANDER" : {
+      "description" : "",
+      "message" : "Tá an long faoi stiúir an stáisiúin, a Cheannasaí."
+   },
+   "THREE_KPC_ARM" : {
+      "description" : "Arm of the Milky Way galaxy",
+      "message" : "3kpc arm"
+   },
+   "TOGGLE_MALE_FEMALE" : {
+      "description" : "player gender",
+      "message" : "Athraigh fireannach/baineannach"
+   },
+   "TOO_SMALL_FOR_CURRENT_CREW" : {
+      "description" : "",
+      "message" : "Ship is too small for the current crew."
+   },
+   "TOO_SMALL_TO_TRANSSHIP" : {
+      "description" : "",
+      "message" : "Ship is too small to transship your cargo."
+   },
+   "TOTAL" : {
+      "description" : "",
+      "message" : "Iomlán:"
+   },
+   "TOTAL_MASS" : {
+      "description" : "",
+      "message" : "Mais iomlán"
+   },
+   "TRADING_ILLEGAL_GOODS" : {
+      "description" : "",
+      "message" : "Trading illegal goods"
+   },
+   "TRUSTWORTHY" : {
+      "description" : "For player reputation",
+      "message" : "Muiníneach"
+   },
+   "TYPE" : {
+      "description" : "",
+      "message" : "Cineál"
+   },
+   "UNLAWFUL_WEAPONS_DISCHARGE" : {
+      "description" : "",
+      "message" : "Unlawful weapons discharge"
+   },
+   "UNRELIABLE" : {
+      "description" : "",
+      "message" : "Neamhiontaofa"
+   },
+   "UP_ACCEL" : {
+      "description" : "",
+      "message" : "Up acceleration"
+   },
+   "USED" : {
+      "description" : "",
+      "message" : "Úsáidte"
+   },
+   "VERY_HIGH" : {
+      "description" : "Game settings option: graphic resolution",
+      "message" : "An-ard"
+   },
+   "VERY_LOW" : {
+      "description" : "Game settings option: graphic resolution",
+      "message" : "An-íseal"
+   },
+   "VIDEO" : {
+      "description" : "",
+      "message" : "Fís"
+   },
+   "VIDEO_CONFIGURATION_RESTART_GAME_TO_APPLY" : {
+      "description" : "",
+      "message" : "Sainroghanna físe (atosaigh an cluiche le cur i bhfeidhm)"
+   },
+   "VIDEO_RESOLUTION" : {
+      "description" : "",
+      "message" : "Taifeach físe"
+   },
+   "VSYNC" : {
+      "description" : "For the checkbox in settings window",
+      "message" : "VSync"
+   },
+   "WAGE" : {
+      "description" : "Salary of crew shown in crew roster",
+      "message" : "Tuarastal"
+   },
+   "WEIGHT_EMPTY" : {
+      "description" : "",
+      "message" : "Meáchan folamh"
+   },
+   "WEIGHT_FULLY_LOADED" : {
+      "description" : "",
+      "message" : "Weight fully loaded"
+   },
+   "WE_ARE_IN_HYPERSPACE_COMMANDER" : {
+      "description" : "",
+      "message" : "We are in hyperspace, Commander."
+   },
+   "WE_HAVE_NO_BUSINESS_WITH_YOU" : {
+      "description" : "Said by the police to law abiding player",
+      "message" : "We have no business with you at the moment."
+   },
+   "X_CANNOT_BE_TOLERATED_HERE" : {
+      "description" : "Message to be sent over comms by police when crime is committed by player",
+      "message" : "{crime} cannot be tolerated here!"
+   },
+   "YES" : {
+      "description" : "Positive answer to a question",
+      "message" : "Tá"
+   },
+   "YOURE_GOING_TO_REGRET_SACKING_ME" : {
+      "description" : "",
+      "message" : "Beidh aithreachas ort as an bóthar a thabhairt dom!"
+   },
+   "YOUR_HULL_IS_AT_X_INTEGRITY" : {
+      "description" : "",
+      "message" : "Your hull is at {value}% integrity."
+   },
+   "YOU_DONT_HAVE_ENOUGH_MONEY_FOR_THAT_OPTION" : {
+      "description" : "",
+      "message" : "You don't have enough money for that option."
+   },
+   "YOU_HAVE_X_UNITS_IN_YOUR_CARGOHOLD" : {
+      "description" : "",
+      "message" : "Tá {units} aonad sa mbolg lasta"
+   },
+   "YOU_MUST_FIRST_SELECT_A_COMBAT_TARGET_COMMANDER" : {
+      "description" : "",
+      "message" : "You must first select a combat target, Commander."
+   },
+   "YOU_MUST_FIRST_SELECT_A_SUITABLE_NAVIGATION_TARGET_COMMANDER" : {
+      "description" : "",
+      "message" : "You must first select a suitable navigation target, Commander."
+   },
+   "YOU_MUST_LAUNCH_FIRST_COMMANDER" : {
+      "description" : "",
+      "message" : "You must launch first, Commander."
+   },
+   "YOU_MUST_REQUEST_LAUNCH_CLEARANCE_FIRST_COMMANDER" : {
+      "description" : "",
+      "message" : "You must request launch clearance first, Commander."
+   },
+   "YOU_NOT_ENOUGH_MONEY" : {
+      "description" : "",
+      "message" : "You do not have enough money"
+   },
+   "ZOOM" : {
+      "description" : "Label for a zoom (magnification) control bar.",
+      "message" : "Zoom"
+   }
+}

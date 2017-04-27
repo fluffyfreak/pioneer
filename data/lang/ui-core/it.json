@@ -151,9 +151,9 @@
       "description" : "",
       "message" : "Mercato dei beni di scambio"
    },
-   "COMPACT_SCANNER" : {
+   "COMPACT_RADAR" : {
       "description" : "Game settings option",
-      "message" : "Scanner compatto"
+      "message" : "Radar compatto"
    },
    "COMPETENT" : {
       "description" : "Combat rating",
@@ -261,7 +261,7 @@
    },
    "DOCK_AT_CURRENT_TARGET" : {
       "description" : "",
-      "message" : "Attracca alla destinazione selezionata"
+      "message" : "Attracca all'obiettivo selezionato"
    },
    "DUE" : {
       "description" : "mission deadline date",
@@ -439,6 +439,86 @@
       "description" : "Game settings option: for graphics resolution",
       "message" : "Alto"
    },
+   "HUD_2D_RADAR" : {
+      "description" : "Popup text: the name of the azimuthal equidistant projection radar",
+      "message" : "2D azimuthal equidistant projection"
+   },
+   "HUD_3D_RADAR" : {
+      "description" : "Popup text: the name of the planar projection radar (traditional frontier-style)",
+      "message" : "3D planar projection"
+   },
+   "HUD_BRAKE_DISTANCE_MAIN_THRUSTERS" : {
+      "description" : "Tooltip: The braking distance using the main thrusters.",
+      "message" : "La distanza di frenata utilizzando i propulsori principali"
+   },
+   "HUD_CURRENT_COMBAT_TARGET" : {
+      "description" : "Tooltip: The current combat target.",
+      "message" : "L'attuale obiettivo per il combattimento"
+   },
+   "HUD_CURRENT_FRAME" : {
+      "description" : "Tooltip: The current frame of reference.",
+      "message" : "L'attuale sistema di riferimento"
+   },
+   "HUD_CURRENT_HEADING" : {
+      "description" : "Tooltip: the current heading.",
+      "message" : "La direzione attuale"
+   },
+   "HUD_CURRENT_NAV_TARGET" : {
+      "description" : "Tooltip: The current navigational target.",
+      "message" : "L'attuale obiettivo di navigazione"
+   },
+   "HUD_CURRENT_PITCH" : {
+      "description" : "Tooltip: the current pitch.",
+      "message" : "L'attuale beccheggio"
+   },
+   "HUD_CURRENT_ROLL" : {
+      "description" : "Tooltip: the current roll.",
+      "message" : "L'attuale rollio"
+   },
+   "HUD_DELTA_V_OF_MANEUVER_BURN" : {
+      "description" : "Tooltip: The Δv for the maneuver burn.",
+      "message" : "Il Δv per la manovra orbitale"
+   },
+   "HUD_DISTANCE_TO_SURFACE_OF_FRAME" : {
+      "description" : "Tooltip: Distance to the surface of the frame of reference.",
+      "message" : "Distanza alla superficie del sistema di riferimento"
+   },
+   "HUD_DISTANCE_TO_SURFACE_OF_TARGET" : {
+      "description" : "Tooltip: Distance to the surface of the target.",
+      "message" : "Distanza dalla superficie dell'obiettivo"
+   },
+   "HUD_DURATION_OF_MANEUVER_BURN" : {
+      "description" : "Tooltip: The approximate duration of the maneuver burn with main thrusters.",
+      "message" : "La durata approssimativa della manovra orbitale usando i propulsori principali"
+   },
+   "HUD_DURATION_UNTIL_MANEUVER_BURN" : {
+      "description" : "Tooltip: The duration until the middle of the maneuver burn.",
+      "message" : "La durata fino a metà della manovra orbitale"
+   },
+   "HUD_SHOW_COMBAT_TARGET" : {
+      "description" : "Tooltip: Show the current combat target.",
+      "message" : "Mostra l'attuale obiettivo per il combattimento"
+   },
+   "HUD_SHOW_FRAME" : {
+      "description" : "Tooltip: Show the current frame of reference.",
+      "message" : "Mostra l'attuale sistema di riferimento"
+   },
+   "HUD_SHOW_NAV_TARGET" : {
+      "description" : "Tooltip: Show current navigational target.",
+      "message" : "Mostra l'attuale obiettivo di navigazione"
+   },
+   "HUD_SPEED_OF_APPROACH_TO_FRAME" : {
+      "description" : "Tooltip: The speed of approach towards the frame of reference.",
+      "message" : "La velocità di approccio al sistema di riferimento"
+   },
+   "HUD_SPEED_OF_APPROACH_TO_TARGET" : {
+      "description" : "Tooltip: The speed of approach towards the target.",
+      "message" : "La velocità d'approccio verso l'obiettivo"
+   },
+   "HUD_SPEED_RELATIVE_TO_TARGET" : {
+      "description" : "Tooltip: The speed relative to the target.",
+      "message" : "La velocità relativa all'obiettivo"
+   },
    "HULL_DOES_NOT_REQUIRE_REPAIR" : {
       "description" : "",
       "message" : "Lo scafo non necessità di riparazione."
@@ -466,6 +546,10 @@
    "HYPERSPACE_RANGE" : {
       "description" : "",
       "message" : "Portata iperspaziale"
+   },
+   "ILLEGAL_JUMP" : {
+      "description" : "A finable crime",
+      "message" : "Salto pericoloso illegale registrato"
    },
    "IM_TIRED_OF_WORKING_FOR_NOTHING_DONT_YOU_KNOW_WHAT_A_CONTRACT_IS" : {
       "description" : "",
@@ -791,6 +875,10 @@
       "description" : "",
       "message" : "Ok"
    },
+   "OPEN_USER_FOLDER" : {
+      "description" : "",
+      "message" : "Cartella Utente"
+   },
    "OPTIONS" : {
       "description" : "",
       "message" : "Opzioni"
@@ -1001,7 +1089,7 @@
    },
    "SET_AS_TARGET" : {
       "description" : "",
-      "message" : "Imposta la destinazione come destinazione di navigazione."
+      "message" : "Imposta la destinazione come obiettivo di navigazione."
    },
    "SHIP" : {
       "description" : "",
@@ -1038,6 +1126,10 @@
    "SHIP_VIEWING_WAS_SOLD" : {
       "description" : "",
       "message" : "L'astronave che stavi guardando è stata venduta"
+   },
+   "SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS" : {
+      "description" : "",
+      "message" : "Sto simulando l'evoluzione dell'universo: {age} miliardi di anni ;-)"
    },
    "SOUND" : {
       "description" : "",
@@ -1209,11 +1301,11 @@
    },
    "YOU_MUST_FIRST_SELECT_A_COMBAT_TARGET_COMMANDER" : {
       "description" : "",
-      "message" : "Deve prima selezionare un bersaglio per il combattimento, Comandante."
+      "message" : "Deve prima selezionare un obiettivo per il combattimento, Comandante."
    },
    "YOU_MUST_FIRST_SELECT_A_SUITABLE_NAVIGATION_TARGET_COMMANDER" : {
       "description" : "",
-      "message" : "Deve prima selezionare una destinazione di navigazione adatta, Comandante."
+      "message" : "Deve prima selezionare un obiettivo di navigazione adatto, Comandante."
    },
    "YOU_MUST_LAUNCH_FIRST_COMMANDER" : {
       "description" : "",
