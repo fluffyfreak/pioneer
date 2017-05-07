@@ -171,7 +171,7 @@ void SpaceStation::PostLoadFixup(Space *space)
 	}
 }
 
-SpaceStation::SpaceStation(const SystemBody *sbody): ModelBody()
+SpaceStation::SpaceStation(const SystemBody *sbody): ModelBody(), m_type(nullptr)
 {
 	m_sbody = sbody;
 
@@ -188,7 +188,14 @@ void SpaceStation::InitStation()
 	for(int i=0; i<NUM_STATIC_SLOTS; i++) m_staticSlot[i] = false;
 	Random rand(m_sbody->GetSeed());
 	const bool ground = m_sbody->GetType() == SystemBody::TYPE_STARPORT_ORBITAL ? false : true;
-	m_type = SpaceStationType::RandomStationType(rand, ground);
+	const std::string &space_station_type = m_sbody->GetSpaceStationType();
+	if(space_station_type != "") {
+		m_type = SpaceStationType::FindByName(space_station_type);
+		if(m_type == nullptr)
+			Output("WARNING: SpaceStation::InitStation wants to initialize a custom station of type %s, but no station type with that id has been found.\n", space_station_type.c_str());
+	}
+	if(m_type == nullptr)
+		m_type = SpaceStationType::RandomStationType(rand, ground);
 
 	if(m_shipDocking.empty()) {
 		m_shipDocking.reserve(m_type->NumDockingPorts());
@@ -378,14 +385,14 @@ bool SpaceStation::OnCollision(Object *b, Uint32 flags, double relVel)
 			if (m_shipDocking[i].ship == s) { port = i; break; }
 		}
 		if (port == -1) {
-			if (IsGroundStation())
+			if (IsGroundStation()) {
 				return DoShipDamage(s, flags, relVel);					// no permission
-			else return false;
+			} else return false;
 		}
 		if (IsPortLocked(port)) {
 			return DoShipDamage(s, flags, relVel);
 		}
-		if (m_shipDocking[port].stage != 1) return false;	// already docking?
+		if (m_shipDocking[port].stage != 1) return DoShipDamage(s, flags, relVel);	// already docking?
 
 		SpaceStationType::positionOrient_t dport;
 
@@ -401,7 +408,7 @@ bool SpaceStation::OnCollision(Object *b, Uint32 flags, double relVel)
 			float dist = (s->GetPosition() - GetPosition() - GetOrient()*dport.pos).LengthSqr();
 			// docking allowed only if inside a circle 70% greater than pad itself (*1.7)
 			float maxDist = static_cast<float>(m_type->FindPortByBay(port)->maxShipSize/2)*1.7;
-			if (dist > (maxDist*maxDist)) return false;
+			if (dist > (maxDist*maxDist)) return DoShipDamage(s, flags, relVel);
 		}
 
 		// why stage 2? Because stage 1 is permission to dock
@@ -426,6 +433,8 @@ bool SpaceStation::OnCollision(Object *b, Uint32 flags, double relVel)
 			s->SetDockedWith(this, port);				// bounces back to SS::SetDocked()
 			LuaEvent::Queue("onShipDocked", s, this);
 		}
+		// If this is reached, then you have permission
+		// to dock and a collision with docking surface
 		return false;
 	} else {
 		return true;
@@ -775,7 +784,7 @@ vector3d SpaceStation::GetTargetIndicatorPosition(const Frame *relTo) const
 	// and the docking point's position once the docking anim starts
 	for (Uint32 i=0; i<m_shipDocking.size(); i++) {
 		if (i >= m_type->NumDockingPorts()) break;
-		if ((m_shipDocking[i].ship == Pi::player) && (m_shipDocking[i].stage > 0)) {
+		if ((m_shipDocking[i].ship == Pi::player) && (m_shipDocking[i].stage > 0) && (m_shipDocking[i].stage != m_type->NumDockingStages() + 1)) { // last part is "not currently docked"
 
 			SpaceStationType::positionOrient_t dport;
 			if (!m_type->GetShipApproachWaypoints(i, m_shipDocking[i].stage+1, dport))

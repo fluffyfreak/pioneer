@@ -26,9 +26,10 @@ public:
 	virtual void Accept(NodeVisitor &v) override;
 	virtual const char *GetTypeName() const override { return "Thruster"; }
 	virtual void Render(const matrix4x4f &trans, const RenderData *rd) override;
-
 	virtual void Save(NodeDatabase&) override;
 	static Thruster *Load(NodeDatabase&);
+	void SetColor(const Color c) { currentColor = c; }
+	const vector3f &GetDirection() { return dir; }
 
 private:
 	static Graphics::VertexBuffer* CreateThrusterGeometry(Graphics::Renderer*, Graphics::Material*);
@@ -38,9 +39,10 @@ private:
 	RefCountedPtr<Graphics::VertexBuffer> m_tBuffer;
 	RefCountedPtr<Graphics::VertexBuffer> m_glowBuffer;
 	Graphics::RenderState *m_renderState;
-	bool m_linearOnly;
-	vector3f m_dir;
-	vector3f m_pos;
+	bool linearOnly;
+	vector3f dir;
+	vector3f pos;
+	Color currentColor;
 };
 
 }

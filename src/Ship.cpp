@@ -59,7 +59,7 @@ void Ship::SaveToJson(Json::Value &jsonObj, Space *space)
 	shipObj["hyperspace_destination"] = hyperspaceDestObj; // Add hyperspace destination object to ship object.
 	shipObj["hyperspace_countdown"] = FloatToStr(m_hyperspace.countdown);
 
-	FixedGuns::SaveToJson( shipObj );
+	FixedGuns::SaveToJson( shipObj, space );
 
 	shipObj["ecm_recharge"] = FloatToStr(m_ecmRecharge);
 	shipObj["ship_type_id"] = m_type->id;
@@ -141,7 +141,7 @@ void Ship::LoadFromJson(const Json::Value &jsonObj, Space *space)
 	m_hyperspace.countdown = StrToFloat(shipObj["hyperspace_countdown"].asString());
 	m_hyperspace.duration = 0;
 
-	FixedGuns::LoadFromJson( shipObj );
+	FixedGuns::LoadFromJson( shipObj, space );
 
 	m_ecmRecharge = StrToFloat(shipObj["ecm_recharge"].asString());
 	SetShipId(shipObj["ship_type_id"].asString()); // XXX handle missing thirdparty ship
@@ -274,9 +274,9 @@ void Ship::PostLoadFixup(Space *space)
 }
 
 Ship::Ship(const ShipType::Id &shipId): DynamicBody(),
-	m_flightState(FLYING),
-	m_alertState(ALERT_NONE),
 	m_controller(0),
+  m_flightState(FLYING),
+  m_alertState(ALERT_NONE),
 	m_landingGearAnimation(nullptr)
 {
 	Properties().Set("flightState", EnumStrings::GetString("ShipFlightState", m_flightState));
@@ -311,6 +311,21 @@ Ship::Ship(const ShipType::Id &shipId): DynamicBody(),
 	m_decelerating = false;
 
 	SetModel(m_type->modelName.c_str());
+	// Setting thrusters colors
+	if (m_type->isGlobalColorDefined) GetModel()->SetThrusterColor(m_type->globalThrusterColor);
+	for (int i=0; i<THRUSTER_MAX; i++) {
+		if (!m_type->isDirectionColorDefined[i]) continue;
+		vector3f dir;
+		switch (i) {
+			case THRUSTER_FORWARD: dir = vector3f(0.0, 0.0, 1.0); break;
+			case THRUSTER_REVERSE: dir = vector3f(0.0, 0.0, -1.0); break;
+			case THRUSTER_LEFT: dir = vector3f(1.0, 0.0, 0.0); break;
+			case THRUSTER_RIGHT: dir = vector3f(-1.0, 0.0, 0.0); break;
+			case THRUSTER_UP: dir = vector3f(1.0, 0.0, 0.0); break;
+			case THRUSTER_DOWN: dir = vector3f(-1.0, 0.0, 0.0); break;
+		}
+		GetModel()->SetThrusterColor(dir, m_type->directionThrusterColor[i]);
+	}
 	SetLabel("UNLABELED_SHIP");
 	m_skin.SetRandomColors(Pi::rng);
 	m_skin.SetDecal(m_type->manufacturer);
@@ -1376,3 +1391,4 @@ void Ship::SetRelations(Body *other, Uint8 percent)
 	m_relationsMap[other] = percent;
 	if (m_sensors.get()) m_sensors->UpdateIFF(other);
 }
+

@@ -10,10 +10,17 @@
 #include "TextSupport.h"
 #include "utils.h"
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wold-style-cast"
+#endif
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_STROKER_H
 #include FT_GLYPH_H
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 
 #undef FT_FILE // defined by FreeType, conflicts with a symbol name from FileSystem
 
@@ -624,6 +631,13 @@ TextureFont::TextureFont(const FontConfig &config, Graphics::Renderer *renderer,
 	m_mat.reset(m_renderer->CreateMaterial(desc));
 	Graphics::TextureDescriptor textureDescriptor(m_texFormat, vector2f(ATLAS_SIZE), Graphics::NEAREST_CLAMP, false, false, false, 0, Graphics::TEXTURE_2D);
 	m_texture.Reset(m_renderer->CreateTexture(textureDescriptor));
+	{
+		const size_t sz = m_bpp * ATLAS_SIZE * ATLAS_SIZE;
+		char *buf = static_cast<char*>(malloc(sz));
+		memset(buf, 0, sz);
+		m_texture->Update(buf, vector2f(0.0f, 0.0f), vector2f(ATLAS_SIZE, ATLAS_SIZE), m_texFormat);
+		free(buf);
+	}
 	m_mat->texture0 = m_texture.Get();
 
 	// font-wide metrics. we assume that these match for all faces

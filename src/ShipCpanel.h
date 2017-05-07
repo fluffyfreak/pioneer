@@ -33,7 +33,6 @@ public:
 		OVERLAY_TOP_LEFT,
 		OVERLAY_TOP_RIGHT,
 		OVERLAY_BOTTOM_LEFT,
-		OVERLAY_BOTTOM_RIGHT,
 		OVERLAY_OVER_PANEL_RIGHT_1,
 		OVERLAY_OVER_PANEL_RIGHT_2,
 		OVERLAY_OVER_PANEL_RIGHT_3,
@@ -47,6 +46,8 @@ public:
 	// @param int gid the buttons group (0 = left, 1 = right)
 	// @param int idx the 0-based button index within the specified group
 	void SelectGroupButton(int gid, int idx);
+
+	void SetRadarVisible(bool visible) { if(visible) m_radar->Show(); else m_radar->Hide(); }
 
 private:
 	void InitObject();

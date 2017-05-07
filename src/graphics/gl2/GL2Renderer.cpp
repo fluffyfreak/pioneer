@@ -134,7 +134,7 @@ RendererGL2::RendererGL2(WindowSDL *window, const Graphics::Settings &vs)
 		Error("GLEW initialisation failed: %s", glewGetErrorString(glew_err));
 
 	// pump this once as glewExperimental is necessary but spews a single error
-	GLenum err = glGetError();
+	glGetError();
 
 	if (!glewIsSupported("GL_VERSION_2_1") )
 	{
@@ -1158,6 +1158,45 @@ void RendererGL2::Scale( const float x, const float y, const float z )
 			m_modelViewStack.top().Scale(x,y,z);
 			break;
 	}
+}
+
+bool RendererGL2::Screendump(ScreendumpState &sd)
+{
+	sd.width = GetWindow()->GetWidth();
+	sd.height = GetWindow()->GetHeight();
+	sd.bpp = 3; // XXX get from window
+
+	// pad rows to 4 bytes, which is the default row alignment for OpenGL
+	sd.stride = (3 * sd.width + 3) & ~3;
+
+	sd.pixels.reset(new Uint8[sd.stride * sd.height]);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glPixelStorei(GL_PACK_ALIGNMENT, 4); // never trust defaults
+	glReadBuffer(GL_FRONT);
+	glReadPixels(0, 0, sd.width, sd.height, GL_RGB, GL_UNSIGNED_BYTE, sd.pixels.get());
+	glFinish();
+
+	return true;
+}
+
+bool RendererGL2::FrameGrab(ScreendumpState &sd)
+{
+	sd.width = GetWindow()->GetWidth();
+	sd.height = GetWindow()->GetHeight();
+	sd.bpp = 4; // XXX get from window
+
+	sd.stride = (4 * sd.width);
+
+	sd.pixels.reset(new Uint8[sd.stride * sd.height]);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glPixelStorei(GL_PACK_ALIGNMENT, 4); // never trust defaults
+	glReadBuffer(GL_FRONT);
+	glReadPixels(0, 0, sd.width, sd.height, GL_RGBA, GL_UNSIGNED_BYTE, sd.pixels.get());
+	glFinish();
+
+	return true;
 }
 
 }

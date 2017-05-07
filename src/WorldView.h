@@ -71,6 +71,19 @@ public:
 
 	sigc::signal<void> onChangeCamType;
 
+	std::tuple<double, double, double> CalculateHeadingPitchRoll(enum PlaneType);
+
+	vector3d WorldSpaceToScreenSpace(Body *body) const;
+	vector3d WorldSpaceToScreenSpace(vector3d position) const;
+	vector3d ShipSpaceToScreenSpace(vector3d position) const;
+	vector3d GetTargetIndicatorScreenPosition(Body *body) const;
+	vector3d GetMouseDirection() const;
+	vector3d CameraSpaceToScreenSpace(vector3d pos) const;
+
+	void BeginCameraFrame() { m_cameraContext->BeginFrame(); };
+	void EndCameraFrame() { m_cameraContext->EndFrame(); };
+
+	bool ShouldShowLabels() { return m_labelsOn; }
 protected:
 	virtual void BuildUI(UI::Single *container);
 	virtual void OnSwitchTo();
@@ -110,8 +123,6 @@ private:
 	void OnToggleLabels();
 
 	void DrawCombatTargetIndicator(const Indicator &target, const Indicator &lead, const Color &c);
-	void DrawTargetSquare(const Indicator &marker, const Color &c);
-	void DrawVelocityIndicator(const Indicator &marker, VelIconType d, const Color &c);
 	void DrawImageIndicator(const Indicator &marker, Gui::TexturedQuad *quad, const Color &c);
 	void DrawEdgeMarker(const Indicator &marker, const Color &c);
 
@@ -137,14 +148,10 @@ private:
 	/// Handler for "requestTimeAccelerationDec" event
 	void OnRequestTimeAccelDec();
 	void SelectBody(Body *, bool reselectIsDeselect);
-	Body* PickBody(const double screenX, const double screenY) const;
 	void MouseWheel(bool up);
-	bool OnClickHeadingLabel(void);
-	void RefreshHeadingPitch(void);
 
 	Game* m_game;
 
-	PlaneType m_curPlane;
 	NavTunnelWidget *m_navTunnel;
 	std::unique_ptr<SpeedLines> m_speedLines;
 
@@ -171,19 +178,12 @@ private:
 
 	// useful docking locations for new-ui widgets in the HUD
 	RefCountedPtr<UI::Widget> m_hudRoot;
-	RefCountedPtr<UI::Single> m_hudDockTop;
-	RefCountedPtr<UI::Single> m_hudDockLeft;
-	RefCountedPtr<UI::Single> m_hudDockRight;
-	RefCountedPtr<UI::Single> m_hudDockBottom;
-	RefCountedPtr<UI::Single> m_hudDockCentre;
 	// new-ui HUD components
-	RefCountedPtr<UI::Label> m_headingInfo, m_pitchInfo;
 
 	Gui::Label *m_hudVelocity, *m_hudTargetDist, *m_hudAltitude, *m_hudPressure,
 		   *m_hudHyperspaceInfo, *m_hudTargetInfo;
 	Gui::MeterBar *m_hudHullTemp, *m_hudWeaponTemp, *m_hudHullIntegrity, *m_hudShieldIntegrity;
 	Gui::MeterBar *m_hudTargetHullIntegrity, *m_hudTargetShieldIntegrity;
-	Gui::MeterBar *m_hudFuelGauge;
 	Gui::VBox *m_hudSensorGaugeStack;
 
 	sigc::connection m_onHyperspaceTargetChangedCon;
@@ -194,9 +194,6 @@ private:
 	sigc::connection m_onIncTimeAccelCon;
 	sigc::connection m_onDecTimeAccelCon;
 
-	Gui::LabelSet *m_bodyLabels;
-	std::map<Body*,vector3d> m_projectedPos;
-
 	RefCountedPtr<CameraContext> m_cameraContext;
 	std::unique_ptr<Camera> m_camera;
 	std::unique_ptr<InternalCameraController> m_internalCameraController;
@@ -204,23 +201,8 @@ private:
 	std::unique_ptr<SiderealCameraController> m_siderealCameraController;
 	CameraController *m_activeCameraController; //one of the above
 
-	Indicator m_velIndicator;
-	Indicator m_navVelIndicator;
-	Indicator m_burnIndicator;
-	Indicator m_retroVelIndicator;
-	Indicator m_navTargetIndicator;
 	Indicator m_combatTargetIndicator;
 	Indicator m_targetLeadIndicator;
-	Indicator m_mouseDirIndicator;
-
-	std::unique_ptr<Gui::TexturedQuad> m_indicatorMousedir;
-	std::unique_ptr<Gui::TexturedQuad> m_frontCrosshair;
-	std::unique_ptr<Gui::TexturedQuad> m_rearCrosshair;
-	std::unique_ptr<Gui::TexturedQuad> m_progradeIcon;
-	std::unique_ptr<Gui::TexturedQuad> m_retrogradeIcon;
-	std::unique_ptr<Gui::TexturedQuad> m_burnIcon;
-	std::unique_ptr<Gui::TexturedQuad> m_targetIcon;
-	vector2f m_indicatorMousedirSize;
 
 	Graphics::RenderState *m_blendState;
 

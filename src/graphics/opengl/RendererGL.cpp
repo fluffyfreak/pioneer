@@ -76,7 +76,7 @@ RendererOGL::RendererOGL(WindowSDL *window, const Graphics::Settings &vs)
 		Error("GLEW initialisation failed: %s", glewGetErrorString(glew_err));
 
 	// pump this once as glewExperimental is necessary but spews a single error
-	GLenum err = glGetError();
+	glGetError();
 
 	if (!glewIsSupported("GL_VERSION_3_1") )
 	{
@@ -102,7 +102,7 @@ RendererOGL::RendererOGL(WindowSDL *window, const Graphics::Settings &vs)
 		}
 	}
 
-	const char *ver = (const char *)glGetString(GL_VERSION);
+	const char *ver = reinterpret_cast<const char *>(glGetString(GL_VERSION));
 	if (vs.gl3ForwardCompatible && strstr(ver, "9.17.10.4229")) {
 		Warning("Driver needs GL3ForwardCompatible=0 in config.ini to display billboards (stars, navlights etc.)");
 	}
@@ -1141,6 +1141,25 @@ bool RendererOGL::Screendump(ScreendumpState &sd)
 	glPixelStorei(GL_PACK_ALIGNMENT, 4); // never trust defaults
 	glReadBuffer(GL_FRONT);
 	glReadPixels(0, 0, sd.width, sd.height, GL_RGB, GL_UNSIGNED_BYTE, sd.pixels.get());
+	glFinish();
+
+	return true;
+}
+
+bool RendererOGL::FrameGrab(ScreendumpState &sd)
+{
+	sd.width = GetWindow()->GetWidth();
+	sd.height = GetWindow()->GetHeight();
+	sd.bpp = 4; // XXX get from window
+
+	sd.stride = (4 * sd.width);
+
+	sd.pixels.reset(new Uint8[sd.stride * sd.height]);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glPixelStorei(GL_PACK_ALIGNMENT, 4); // never trust defaults
+	glReadBuffer(GL_FRONT);
+	glReadPixels(0, 0, sd.width, sd.height, GL_RGBA, GL_UNSIGNED_BYTE, sd.pixels.get());
 	glFinish();
 
 	return true;
