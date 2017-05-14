@@ -131,8 +131,8 @@ void SpaceStationType::OnSetupComplete()
 
 		// find the port and setup the rest of it's information
 		bool bFoundPort = false;
-		matrix4x4f approach1;
-		matrix4x4f approach2;
+		matrix4x4f approach1(0.0);
+		matrix4x4f approach2(0.0);
 		for(auto &rPort : m_ports) {
 			if(rPort.portId == portId) {
 				rPort.minShipSize = std::min(minSize,rPort.minShipSize);
@@ -425,4 +425,15 @@ const SpaceStationType* SpaceStationType::RandomStationType(Random &random, cons
 	}
 
 	return &orbitalTypes[ random.Int32(SpaceStationType::orbitalTypes.size()) ];
+}
+
+/*static*/
+const SpaceStationType *SpaceStationType::FindByName(const std::string &name) {
+	for(auto &sst : surfaceTypes)
+		if(sst.id == name)
+			return &sst;
+	for(auto &sst : orbitalTypes)
+		if(sst.id == name)
+			return &sst;
+	return nullptr;
 }

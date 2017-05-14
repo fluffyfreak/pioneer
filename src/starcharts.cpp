@@ -38,29 +38,9 @@ static const std::string s_dummyPath("");
 void RunCompiler(const std::string &modelName, const std::string &filepath, const bool bInPlace);
 
 // ********************************************************************************
-// Overloaded PureJob class to handle compiling each model
-// ********************************************************************************
-class CompileJob : public Job
-{
-public:
-	CompileJob() {};
-	CompileJob(const std::string &name, const std::string &path, const bool inPlace)
-		: m_name(name), m_path(path), m_inPlace(inPlace) {}
-
-	virtual void OnRun() override final { RunCompiler(m_name, m_path, m_inPlace); }    // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
-	virtual void OnFinish() override final {}
-	virtual void OnCancel() override final {}
-
-protected:
-	std::string	m_name;
-	std::string	m_path;
-	bool		m_inPlace;
-};
-
-// ********************************************************************************
 // functions
 // ********************************************************************************
-void SetupRenderer()
+void Setup()
 {
 	PROFILE_SCOPED()
 	s_config.reset(new GameConfig);
@@ -69,40 +49,13 @@ void SetupRenderer()
 
 	//init components
 	FileSystem::userFiles.MakeDirectory(""); // ensure the config directory exists
-	if (SDL_Init(SDL_INIT_VIDEO) < 0)
-		Error("SDL initialization failed: %s\n", SDL_GetError());
 
 	ModManager::Init();
-
-	Graphics::RendererDummy::RegisterRenderer();
-
-	//video
-	Graphics::Settings videoSettings = {};
-	videoSettings.rendererType = Graphics::RENDERER_DUMMY;
-	videoSettings.width = s_config->Int("ScrWidth");
-	videoSettings.height = s_config->Int("ScrHeight");
-	videoSettings.fullscreen = false;
-	videoSettings.hidden = true;
-	videoSettings.requestedSamples = s_config->Int("AntiAliasingMode");
-	videoSettings.vsync = false;
-	videoSettings.useTextureCompression = true;
-	videoSettings.useAnisotropicFiltering = true;
-	videoSettings.iconFile = OS::GetIconFilename();
-	videoSettings.title = "Model Compiler";
-	s_renderer.reset(Graphics::Init(videoSettings));
-
-	// get threads up
-	Uint32 numThreads = s_config->Int("WorkerThreads");
-	const int numCores = OS::GetNumCores();
-	assert(numCores > 0);
-	if (numThreads == 0)
-		numThreads = std::max(Uint32(numCores), 1U); // this is a tool, we can use all of the cores for processing unlike Pioneer
-	asyncJobQueue.reset(new AsyncJobQueue(numThreads));
-	Output("started %d worker threads\n", numThreads);
 }
 
 struct HYGField
 {
+	HYGField() { memset(this, 0, sizeof(HYGField)); }
 	int id ; // : The database primary key.
 	int hip ; // : The star's ID in the Hipparcos catalog, if known.
 	int hd ; // : The star's ID in the Henry Draper catalog, if known.
@@ -129,6 +82,43 @@ struct HYGField
 	std::string var ; // : Star's standard variable star designation, when known.
 	float var_min, var_max ; // : Star's approximate magnitude range, for variables. This value is based on the Hp magnitudes for the range in the original Hipparcos catalog, adjusted to the V magnitude scale to match the "mag" field.
 };
+#pragma optimize("",off)
+std::string ReplaceAll(std::string str, const std::string& from, const std::string& to) {
+	size_t start_pos = 0;
+	while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+		str.replace(start_pos, from.length(), to);
+		start_pos += to.length()-1; // Handles case where 'to' is a substring of 'from'
+	}
+	return str;
+}
+
+static inline size_t SplitSpec(const std::string &spec, std::vector<std::string> &output)
+{
+	static const std::string delim(",");
+
+	std::string specClone(ReplaceAll(spec, ",,", ",null,"));
+	specClone = ReplaceAll(specClone, ",\n", ",null\n");
+	if (specClone.back() == ',')
+		specClone += "null";
+
+	size_t i = 0, start = 0, end = 0;
+	while (end != std::string::npos) {
+		// get to the first non-delim char
+		start = specClone.find_first_not_of(delim, end);
+
+		// read the end, no more to do
+		if (start == std::string::npos)
+			break;
+
+		// find the end - next delim or end of string
+		end = specClone.find_first_of(delim, start);
+
+		// extract the fragment and remember it
+		output[i++] = (specClone.substr(start, (end == std::string::npos) ? std::string::npos : end - start).c_str());
+	}
+
+	return i;
+}
 
 void RunCompiler(const std::string &modelName, const std::string &filepath)
 {
@@ -140,13 +130,16 @@ void RunCompiler(const std::string &modelName, const std::string &filepath)
 	std::vector<HYGField> HYGFields;
 	HYGFields.reserve(120000);
 
-	//load the current model in a pristine state (no navlights, shields...)
-	//and then save it into binary
-	RefCountedPtr<FileSystem::FileData> data = FileSystem::userFiles.ReadFile(filepath);
-	if (data)
+	FileSystem::userFiles.MakeDirectory("starcharts");
+
+	try
 	{
+		auto file = FileSystem::userFiles.ReadFile("starcharts/" + filepath);
+		if (!file)
+			throw CouldNotOpenFileException();
+
 		// parse csv line by line
-		StringRange buffer = data->AsStringRange();
+		StringRange buffer = file->AsStringRange();
 		buffer = buffer.StripUTF8BOM();
 
 		while (!buffer.Empty())
@@ -158,36 +151,33 @@ void RunCompiler(const std::string &modelName, const std::string &filepath)
 				continue;
 
 			//
-			const char *comma = strchr(line.begin, ',');
+			std::vector<std::string> split(37);
+			size_t numFound = SplitSpec(line.ToString(), split);
+			printf("%zu\n", numFound);
+
+			//id,hip,hd,hr,gl,bf,proper,ra,dec,dist,pmra,pmdec,rv,mag,absmag,spect,ci,x,y,z,vx,vy,vz,rarad,decrad,pmrarad,pmdecrad,bayer,flam,con,comp,comp_primary,base,lum,var,var_min,var_max
+
+			HYGField hf;
+			hf.id = atoi(split[0].c_str());
+			hf.x = atoi(split[17].c_str());
+			hf.y = atoi(split[18].c_str());
+			hf.z = atoi(split[19].c_str());
+			HYGFields.push_back(hf);
 		}
 	}
-
-	/*try {
-		SceneGraph::Loader ld(s_renderer.get(), true, false);
-		model.reset(ld.LoadModel(modelName));
-		//dump warnings
-		for (std::vector<std::string>::const_iterator it = ld.GetLogMessages().begin();
-			it != ld.GetLogMessages().end(); ++it)
-		{
-			Output("%s\n", (*it).c_str());
-		}
-	} catch (...) {
-		//minimal error handling, this is not expected to happen since we got this far.
-		return;
-	}*/
-
-	try {
-		//const std::string DataPath = FileSystem::NormalisePath(filepath.substr(0, filepath.size()-6));
-		//SceneGraph::BinaryConverter bc(s_renderer.get());
-		//bc.Save(modelName, DataPath, model.get(), false);
-	} catch (const CouldNotOpenFileException&) {
-	} catch (const CouldNotWriteToFileException&) {
+	catch (const CouldNotOpenFileException&)
+	{
+		// error
+	}
+	catch (const CouldNotWriteToFileException&)
+	{
+		// error
 	}
 
 	timer.Stop();
 	Output("Compiling \"%s\" took: %lf\n", modelName.c_str(), timer.millicycles());
 }
-
+#pragma optimize("",on)
 
 // ********************************************************************************
 // functions
@@ -216,7 +206,7 @@ int main(int argc, char** argv)
 
 		const std::string modeopt(std::string(argv[1]).substr(1));
 
-		if (modeopt == "compile" || modeopt == "c") {
+		if (modeopt == "filename" || modeopt == "f") {
 			mode = MODE_CHARTCOMPILER;
 			goto start;
 		}
@@ -252,7 +242,7 @@ start:
 			if (argc > 2) {
 				filePath = modelName = argv[2];
 				// determine if we're meant to be writing these in the source directory
-				SetupRenderer();
+				Setup();
 				RunCompiler(modelName, filePath);
 			}
 			break;

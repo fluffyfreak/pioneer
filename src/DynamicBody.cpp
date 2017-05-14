@@ -9,11 +9,16 @@
 #include "Planet.h"
 #include "Pi.h"
 #include "json/JsonUtils.h"
+#include "Propulsion.h"
+#include "FixedGuns.h"
 
 static const float KINETIC_ENERGY_MULT = 0.00001f;
 const double DynamicBody::DEFAULT_DRAG_COEFF = 0.1; // 'smooth sphere'
 
-DynamicBody::DynamicBody(): ModelBody()
+DynamicBody::DynamicBody()
+	: ModelBody()
+	, m_propulsion(nullptr)
+	, m_fixedGuns(nullptr)
 {
 	m_dragCoeff = DEFAULT_DRAG_COEFF;
 	m_flags = Body::FLAG_CAN_MOVE_FRAME;
@@ -35,6 +40,15 @@ DynamicBody::DynamicBody(): ModelBody()
 	m_aiMessage = AIError::AIERROR_NONE;
 	m_decelerating = false;
 	for ( int i=0; i < Feature::MAX_FEATURE; i++ ) m_features[i] = false;
+}
+
+void DynamicBody::AddFeature( Feature f ) {
+	m_features[f] = true;
+	if(f == Feature::PROPULSION && m_propulsion == nullptr) {
+		m_propulsion = new Propulsion();
+	} else if(f == Feature::FIXED_GUNS && m_fixedGuns == nullptr) {
+		m_fixedGuns = new FixedGuns();
+	}
 }
 
 void DynamicBody::SetForce(const vector3d &f)
@@ -115,6 +129,26 @@ void DynamicBody::PostLoadFixup(Space *space)
 	Body::PostLoadFixup(space);
 	m_oldPos = GetPosition();
 //	CalcExternalForce();		// too dangerous
+}
+
+const Propulsion *DynamicBody::GetPropulsion() const {
+	assert(m_propulsion != nullptr);
+	return m_propulsion;
+}
+
+Propulsion *DynamicBody::GetPropulsion() {
+	assert(m_propulsion != nullptr);
+	return m_propulsion;
+}
+
+const FixedGuns *DynamicBody::GetFixedGuns() const {
+	assert(m_fixedGuns != nullptr);
+	return m_fixedGuns;
+}
+
+FixedGuns *DynamicBody::GetFixedGuns() {
+	assert(m_fixedGuns != nullptr);
+	return m_fixedGuns;
 }
 
 void DynamicBody::SetTorque(const vector3d &t)
@@ -256,6 +290,10 @@ vector3d DynamicBody::GetAngularMomentum() const
 
 DynamicBody::~DynamicBody()
 {
+	if(m_propulsion != nullptr)
+		delete m_propulsion;
+	if(m_fixedGuns != nullptr)
+		delete m_fixedGuns;
 }
 
 vector3d DynamicBody::GetVelocity() const
