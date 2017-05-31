@@ -192,7 +192,7 @@ void Pi::CreateRenderTarget(const Uint16 width, const Uint16 height) {
 	Graphics::TextureDescriptor texDesc(
 		Graphics::TEXTURE_RGBA_8888,
 		vector2f(width, height),
-		Graphics::LINEAR_CLAMP, false, false, 0);
+		Graphics::LINEAR_CLAMP, false, false, false, 0, Graphics::TextureType::TEXTURE_2D);
 	Pi::renderTexture.Reset(Pi::renderer->CreateTexture(texDesc));
 	Pi::renderQuad.reset(new Graphics::Drawables::TexturedQuad(
 		Pi::renderer, Pi::renderTexture.Get(),
@@ -1528,8 +1528,6 @@ void Pi::MainLoop()
 		}
 #endif
 
-		Pi::EndRenderTarget();
-		Pi::DrawRenderTarget();
 		bool endCameraFrame = false;
 		if(Pi::game && !Pi::player->IsDead()) {
 			if(Pi::GetView() == Pi::game->GetWorldView()) {
@@ -1542,6 +1540,9 @@ void Pi::MainLoop()
 				Pi::game->GetWorldView()->EndCameraFrame();
 			}
 		}
+
+		Pi::EndRenderTarget();
+		Pi::DrawRenderTarget();
 
 		Pi::renderer->SwapBuffers();
 
