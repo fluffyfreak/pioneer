@@ -102,6 +102,9 @@ public:
 	const SystemPath& GetPath() const { return m_path; }
 	SystemBody* GetParent() const { return m_parent; }
 
+	bool IsPlanet() const;
+	bool IsMoon() const { return GetSuperType() == SUPERTYPE_ROCKY_PLANET && !IsPlanet(); }
+
 	bool HasChildren() const { return !m_children.empty(); }
 	unsigned GetNumChildren() const { return m_children.size(); }
 	IterationProxy<std::vector<SystemBody*> > GetChildren() { return MakeIterationProxy(m_children); }
@@ -224,6 +227,8 @@ public:
 
 	StarSystem* GetStarSystem() const { return m_system; }
 
+	const std::string &GetSpaceStationType() const { return m_space_station_type; }
+
 private:
 	friend class StarSystem;
 	friend class ObjectViewerView;
@@ -280,6 +285,8 @@ private:
 	double m_atmosDensity;
 
 	StarSystem *m_system;
+
+	std::string m_space_station_type;
 };
 
 class StarSystem : public RefCounted {

@@ -12,7 +12,7 @@
 #include "scenegraph/Model.h"
 #include "DynamicBody.h"
 
-enum Thruster { // <enum scope='ShipType' name=ShipTypeThruster prefix=THRUSTER_ public>
+enum Thruster { // <enum scope='Thruster' name=ShipTypeThruster prefix=THRUSTER_ public>
 	THRUSTER_REVERSE,
 	THRUSTER_FORWARD,
 	THRUSTER_UP,
@@ -44,6 +44,7 @@ class Propulsion
 		inline double GetAccelRev() const { return GetThrustRev() / m_dBody->GetMass(); }
 		inline double GetAccelUp() const { return GetThrustUp() / m_dBody->GetMass(); }
 		inline double GetAccelMin() const { return GetThrustMin() / m_dBody->GetMass(); };
+		inline double GetAccel(Thruster thruster) const { return fabs(m_linThrust[thruster] * m_power_mul / m_dBody->GetMass()); }
 
 		inline void SetThrusterState(int axis, double level) {
 			if (m_thrusterFuel <= 0.f) level = 0.0;
@@ -61,7 +62,7 @@ class Propulsion
 		inline vector3d GetActualAngThrust() const { return m_angThrust * m_angThrusters * m_power_mul; }
 
 		// Fuel
-		enum FuelState { // <enum scope='Ship' name=ShipFuelStatus prefix=FUEL_ public>
+		enum FuelState { // <enum scope='Propulsion' name=PropulsionFuelStatus prefix=FUEL_ public>
 			FUEL_OK,
 			FUEL_WARNING,
 			FUEL_EMPTY,
@@ -100,7 +101,7 @@ class Propulsion
 		double AIFaceDirection(const vector3d &dir, double av=0);
 		vector3d AIGetLeadDir(const Body *target, const vector3d& targaccel, double projspeed);
 
-	protected:
+  public: // was protected:
 		virtual void SaveToJson(Json::Value &jsonObj, Space *space);
 		virtual void LoadFromJson(const Json::Value &jsonObj, Space *space);
 	private:

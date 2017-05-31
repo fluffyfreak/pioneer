@@ -85,11 +85,20 @@
 #include <algorithm>
 #include <sstream>
 
+#ifdef PROFILE_LUA_TIME
+#include <time.h>
+#endif
+
 #if defined(_MSC_VER) || defined(__MINGW32__)
 	// RegisterClassA and RegisterClassW are defined as macros in WinUser.h
 	#ifdef RegisterClass
 	#undef RegisterClass
 	#endif
+#endif
+
+#if !defined(_MSC_VER) && !defined(__MINGW32__)
+	#define _popen popen
+	#define _pclose pclose
 #endif
 
 float Pi::gameTickAlpha;
@@ -103,14 +112,14 @@ sigc::signal<void> Pi::onPlayerChangeFlightControlState;
 LuaSerializer *Pi::luaSerializer;
 LuaTimer *Pi::luaTimer;
 LuaNameGen *Pi::luaNameGen;
+#ifdef ENABLE_SERVER_AGENT
 ServerAgent *Pi::serverAgent;
+#endif
 int Pi::keyModState;
 std::map<SDL_Keycode,bool> Pi::keyState; // XXX SDL2 SDLK_LAST
 char Pi::mouseButton[6];
 int Pi::mouseMotion[2];
 bool Pi::doingMouseGrab = false;
-bool Pi::warpAfterMouseGrab = false;
-int Pi::mouseGrabWarpPos[2];
 Player *Pi::player;
 View *Pi::currentView;
 TransferPlanner *Pi::planner;
@@ -152,6 +161,8 @@ RefCountedPtr<Graphics::Texture> Pi::renderTexture;
 std::unique_ptr<Graphics::Drawables::TexturedQuad> Pi::renderQuad;
 Graphics::RenderState *Pi::quadRenderState = nullptr;
 bool Pi::bRequestEndGame = false;
+bool Pi::isRecordingVideo = false;
+FILE *Pi::ffmpegFile = nullptr;
 
 Sound::MusicPlayer Pi::musicPlayer;
 std::unique_ptr<AsyncJobQueue> Pi::asyncJobQueue;
@@ -285,7 +296,9 @@ static void LuaInit()
 	LuaLang::Register();
 	LuaEngine::Register();
 	LuaFileSystem::Register();
+#ifdef ENABLE_SERVER_AGENT
 	LuaServerAgent::Register();
+#endif
 	LuaGame::Register();
 	LuaComms::Register();
 	LuaFormat::Register();
@@ -306,7 +319,10 @@ static void LuaInit()
 	lua_State *l = Lua::manager->GetLuaState();
 	pi_lua_dofile(l, "libs/autoload.lua");
 	pi_lua_dofile_recursive(l, "ui");
-	pi_lua_dofile_recursive(l, "pigui");
+	pi_lua_dofile(l, "pigui/pigui.lua");
+	pi_lua_dofile(l, "pigui/game.lua");
+	pi_lua_dofile(l, "pigui/init.lua");
+	pi_lua_dofile_recursive(l, "pigui/modules");
 	pi_lua_dofile_recursive(l, "modules");
 
 	Pi::luaNameGen = new LuaNameGen(Lua::manager);
@@ -544,6 +560,7 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 		Graphics::GetScreenHeight(),
 		ui_scale));
 
+#ifdef ENABLE_SERVER_AGENT
 	Pi::serverAgent = 0;
 	if (config->Int("EnableServerAgent")) {
 		const std::string endpoint(config->String("ServerEndpoint"));
@@ -556,12 +573,15 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 		Output("Server agent disabled\n");
 		Pi::serverAgent = new NullServerAgent();
 	}
+#endif
 
 	LuaInit();
 
 	Gui::Init(renderer, Graphics::GetScreenWidth(), Graphics::GetScreenHeight(), 800, 600);
 
-	draw_progress(0.0f);
+	// twice, to initialize the font correctly
+	draw_progress(0.01f);
+	draw_progress(0.01f);
 
 	Output("GalaxyGenerator::Init()\n");
 	if (config->HasEntry("GalaxyGenerator"))
@@ -624,7 +644,7 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 	draw_progress(0.9f);
 
 	OS::NotifyLoadEnd();
-	draw_progress(1.0f);
+	draw_progress(0.95f);
 
 #if 0
 	// frame test code
@@ -740,6 +760,8 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 
 	planner = new TransferPlanner();
 
+	draw_progress(1.0f);
+
 	timer.Stop();
 #ifdef PIONEER_PROFILER
 	Profiler::dumphtml(profilerPath.c_str());
@@ -754,6 +776,9 @@ bool Pi::IsConsoleActive()
 
 void Pi::Quit()
 {
+	if (Pi::ffmpegFile != nullptr) {
+		_pclose(Pi::ffmpegFile);
+	}
 	Projectile::FreeModel();
 	delete Pi::intro;
 	delete Pi::luaConsole;
@@ -897,6 +922,38 @@ void Pi::HandleEvents()
 							write_screenshot(sd, buf);
 							break;
 						}
+
+						case SDLK_SCROLLLOCK: // toggle video recording
+							Pi::isRecordingVideo = !Pi::isRecordingVideo;
+							if (Pi::isRecordingVideo) {
+								char videoName[256];
+								const time_t t = time(0);
+								struct tm *_tm = localtime(&t);
+								strftime(videoName, sizeof(videoName), "pioneer-%Y%m%d-%H%M%S", _tm);
+								const std::string dir = "videos";
+								FileSystem::userFiles.MakeDirectory(dir);
+								const std::string fname = FileSystem::JoinPathBelow(FileSystem::userFiles.GetRoot() + "/" + dir, videoName);
+								Output("Video Recording started to %s.\n", fname.c_str());
+								// start ffmpeg telling it to expect raw rgba 720p-60hz frames
+								// -i - tells it to read frames from stdin
+								// if given no frame rate (-r 60), it will just use vfr
+								char cmd[256] = { 0 };
+								snprintf(cmd, sizeof(cmd), "ffmpeg -f rawvideo -pix_fmt rgba -s %dx%d -i - -threads 0 -preset fast -y -pix_fmt yuv420p -crf 21 -vf vflip %s.mp4", config->Int("ScrWidth"), config->Int("ScrHeight"), fname.c_str());
+
+								// open pipe to ffmpeg's stdin in binary write mode
+#if defined(_MSC_VER) || defined(__MINGW32__)
+								Pi::ffmpegFile = _popen(cmd, "wb");
+#else
+								Pi::ffmpegFile = _popen(cmd, "w");
+#endif
+							} else {
+								Output("Video Recording ended.\n");
+								if (Pi::ffmpegFile != nullptr) {
+									_pclose(Pi::ffmpegFile);
+									Pi::ffmpegFile = nullptr;
+								}
+							}
+							break;
 #if WITH_DEVKEYS
 						case SDLK_i: // Toggle Debug info
 							Pi::showDebugInfo = !Pi::showDebugInfo;
@@ -1073,11 +1130,9 @@ void Pi::HandleEscKey() {
 			}
 		}
 		else if (currentView == Pi::game->GetSectorView()) {
-			Pi::game->GetCpan()->SelectGroupButton(0, 0);
 			SetView(Pi::game->GetWorldView());
 		}
 		else if ((currentView == Pi::game->GetSystemView()) || (currentView == Pi::game->GetSystemInfoView())) {
-			Pi::game->GetCpan()->SelectGroupButton(1, 0);
 			SetView(Pi::game->GetSectorView());
 		}
 		else if (currentView == Pi::game->GetSettingsView()){
@@ -1093,11 +1148,9 @@ void Pi::HandleEscKey() {
 				const char* tname = view->GetTemplateName();
 				if(tname) {
 					if (!strcmp(tname, "GalacticView")) {
-						Pi::game->GetCpan()->SelectGroupButton(1, 0);
 						SetView(Pi::game->GetSectorView());
 					}
 					else if (!strcmp(tname, "InfoView") || !strcmp(tname, "StationView")) {
-						Pi::game->GetCpan()->SelectGroupButton(0, 0);
 						SetView(Pi::game->GetWorldView());
 					}
 				}
@@ -1260,7 +1313,9 @@ void Pi::Start()
 		_time += Pi::frameTime;
 		last_time = SDL_GetTicks();
 
+#ifdef ENABLE_SERVER_AGENT
 		Pi::serverAgent->ProcessResponses();
+#endif
 	}
 
 	ui->DropAllLayers();
@@ -1337,7 +1392,9 @@ void Pi::MainLoop()
 	while (Pi::game) {
 		PROFILE_SCOPED()
 
+#ifdef ENABLE_SERVER_AGENT
 		Pi::serverAgent->ProcessResponses();
+#endif
 
 		const Uint32 newTicks = SDL_GetTicks();
 		double newTime = 0.001 * double(newTicks);
@@ -1407,6 +1464,10 @@ void Pi::MainLoop()
 
 		currentView->Update();
 		currentView->Draw3D();
+
+		// hide cursor for ship control. Do this before imgui runs, to prevent the mouse pointer from jumping
+		SetMouseGrab(Pi::MouseButtonState(SDL_BUTTON_RIGHT) | Pi::MouseButtonState(SDL_BUTTON_MIDDLE));
+
 		// XXX HandleEvents at the moment must be after view->Draw3D and before
 		// Gui::Draw so that labels drawn to screen can have mouse events correctly
 		// detected. Gui::Draw wipes memory of label positions.
@@ -1419,9 +1480,6 @@ void Pi::MainLoop()
 		if( Pi::bRequestEndGame ) {
 			Pi::EndGame();
 		}
-		// hide cursor for ship control.
-
-		SetMouseGrab(Pi::MouseButtonState(SDL_BUTTON_RIGHT | Pi::MouseButtonState(SDL_BUTTON_MIDDLE)));
 
 		Pi::renderer->EndFrame();
 
@@ -1472,10 +1530,17 @@ void Pi::MainLoop()
 
 		Pi::EndRenderTarget();
 		Pi::DrawRenderTarget();
-
+		bool endCameraFrame = false;
 		if(Pi::game && !Pi::player->IsDead()) {
+			if(Pi::GetView() == Pi::game->GetWorldView()) {
+				Pi::game->GetWorldView()->BeginCameraFrame();
+				endCameraFrame = true;
+			}
 			PiGui::NewFrame(Pi::renderer->GetWindow()->GetSDLWindow());
-			DrawPiGui(Pi::frameTime);
+			DrawPiGui(Pi::frameTime, "GAME");
+			if(endCameraFrame) {
+				Pi::game->GetWorldView()->EndCameraFrame();
+			}
 		}
 
 		Pi::renderer->SwapBuffers();
@@ -1563,6 +1628,12 @@ void Pi::MainLoop()
 			Screendump(fname.c_str(), Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
 		}
 #endif /* MAKING_VIDEO */
+
+		if (isRecordingVideo && (Pi::ffmpegFile!=nullptr)) {
+			Graphics::ScreendumpState sd;
+			Pi::renderer->FrameGrab(sd);
+			fwrite(sd.pixels.get(), sizeof(uint32_t) * Pi::renderer->GetWindow()->GetWidth() * Pi::renderer->GetWindow()->GetHeight(), 1, Pi::ffmpegFile);
+		}
 
 #ifdef PIONEER_PROFILER
 		Profiler::reset();
@@ -1684,6 +1755,14 @@ float Pi::GetMoveSpeedShiftModifier() {
 }
 
 void Pi::DrawPiGui(double delta, std::string handler) {
+	//  #define PROFILE_LUA_TIME 1
+	#ifdef PROFILE_LUA_TIME
+	auto before = clock();
+	#endif
 	Pi::pigui->Render(delta, handler);
+	#ifdef PROFILE_LUA_TIME
+	auto after = clock();
+  Output("Lua PiGUI took %f\n", double(after - before) / CLOCKS_PER_SEC);
+	#endif
 	PiGui::RenderImGui();
 }

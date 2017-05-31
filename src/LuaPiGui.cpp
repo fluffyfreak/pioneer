@@ -10,6 +10,9 @@
 #include "Game.h"
 #include "graphics/Graphics.h"
 #include "Player.h"
+#include "EnumStrings.h"
+#include "SystemInfoView.h"
+#include "Sound.h"
 
 // Windows defines RegisterClass as a macro, but we don't need that here.
 // undef it, to avoid including yet another header that undefs it
@@ -42,7 +45,7 @@ void *pi_lua_checklightuserdata(lua_State *l, int index) {
 	if(lua_islightuserdata(l, index))
 		return lua_touserdata(l, index);
 	else
-		Error("Expected light user data at %d", index);
+		Error("Expected light user data at index %d, but got %s", index, lua_typename(l, index));
 	return nullptr;
 }
 
@@ -66,6 +69,23 @@ void pi_lua_generic_pull(lua_State *l, int index, ImColor &color) {
 	color.Value.y = c.Get<int>("g") * sc;
 	color.Value.z = c.Get<int>("b") * sc;
 	color.Value.w = c.Get<int>("a", 255) * sc;
+}
+
+int pushOnScreenPositionDirection(lua_State *l, vector3d position)
+{
+	const int width = Graphics::GetScreenWidth();
+	const int height = Graphics::GetScreenHeight();
+	vector3d direction = (position - vector3d(width / 2, height / 2, 0)).Normalized();
+	if(vector3d(0,0,0) == position || position.x < 0 || position.y < 0 || position.x > width || position.y > height || position.z > 0) {
+		LuaPush<bool>(l, false);
+		LuaPush<vector3d>(l, vector3d(0, 0, 0));
+		LuaPush<vector3d>(l, direction * (position.z > 0 ? -1 : 1)); // reverse direction if behind camera
+	} else {
+		LuaPush<bool>(l, true);
+		LuaPush<vector3d>(l, vector3d(position.x, position.y, 0));
+		LuaPush<vector3d>(l, direction);
+	}
+	return 3;
 }
 
 static std::map<std::string, ImGuiSelectableFlags_> imguiSelectableFlagsTable
@@ -105,8 +125,8 @@ void pi_lua_generic_pull(lua_State *l, int index, ImGuiInputTextFlags_ &theflags
 
 static std::map<std::string, ImGuiSetCond_> imguiSetCondTable
 = {
-    { "Always", ImGuiSetCond_Always },
-    { "Once", ImGuiSetCond_Once },
+	{ "Always", ImGuiSetCond_Always },
+	{ "Once", ImGuiSetCond_Once },
 	{ "FirstUseEver", ImGuiSetCond_FirstUseEver },
 	{ "Appearing", ImGuiSetCond_Appearing }
 };
@@ -212,6 +232,7 @@ void pi_lua_generic_pull(lua_State *l, int index, ImGuiWindowFlags_ &theflags) {
 }
 
 static void pi_lua_pushVector(lua_State *l, double x, double y, double z) {
+	const int n = lua_gettop(l);
 	lua_getfield(l, LUA_REGISTRYINDEX, "Imports");
 	lua_getfield(l, -1, "libs/Vector.lua"); // is there a better way to get at the lua Vector than this?
 	LuaPush<double>(l, x);
@@ -220,13 +241,36 @@ static void pi_lua_pushVector(lua_State *l, double x, double y, double z) {
 	if(lua_pcall(l, 3, 1, 0) != 0) {
 		Error("error running Vector\n");
 	}
+	lua_remove(l, -2);
+	assert(lua_gettop(l) == n + 1);
 }
 
 static void pi_lua_generic_push(lua_State *l, const ImVec2 &v) {
 	pi_lua_pushVector(l, v.x, v.y, 0);
 }
 
+void pi_lua_generic_push(lua_State *l, const vector3d &v) {
+	pi_lua_pushVector(l, v.x, v.y, v.z);
+}
+
+/*
+ * Interface: PiGui
+ *
+ * Various functions for the imgui UI. Do *not* use these directly, use the interface that import('pigui') provides.
+ */
+
 /* ****************************** Lua imgui functions ****************************** */
+/*
+ * Function: Begin
+ *
+ * Availability:
+ *
+ *   2017-04
+ *
+ * Status:
+ *
+ *   stable
+ */
 static int l_pigui_begin(lua_State *l) {
 	const std::string name = LuaPull<std::string>(l, 1);
 	ImGuiWindowFlags theflags = LuaPull<ImGuiWindowFlags_>(l, 2);
@@ -551,21 +595,21 @@ static int l_pigui_add_image(lua_State *l) {
 	return 0;
 }
 
-// static int l_pigui_add_image_quad(lua_State *l) {
-// 	ImDrawList* draw_list = ImGui::GetWindowDrawList();
-// 	ImTextureID id = (ImTextureID)LuaPull<int>(l, 1);
-// 	ImVec2 a = LuaPull<ImVec2>(l, 2);
-// 	ImVec2 b = LuaPull<ImVec2>(l, 3);
-// 	ImVec2 c = LuaPull<ImVec2>(l, 4);
-// 	ImVec2 d = LuaPull<ImVec2>(l, 5);
-// 	ImVec2 uva = LuaPull<ImVec2>(l, 6);
-// 	ImVec2 uvb = LuaPull<ImVec2>(l, 7);
-// 	ImVec2 uvc = LuaPull<ImVec2>(l, 8);
-// 	ImVec2 uvd = LuaPull<ImVec2>(l, 9);
-// 	ImColor col = LuaPull<ImColor>(l, 10);
-// 	draw_list->AddImageQuad(id, a, b, c, d, uva, uvb, uvc, uvd, col);
-// 	return 0;
-// }
+static int l_pigui_add_image_quad(lua_State *l) {
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+	ImTextureID id = pi_lua_checklightuserdata(l, 1);
+	ImVec2 a = LuaPull<ImVec2>(l, 2);
+	ImVec2 b = LuaPull<ImVec2>(l, 3);
+	ImVec2 c = LuaPull<ImVec2>(l, 4);
+	ImVec2 d = LuaPull<ImVec2>(l, 5);
+	ImVec2 uva = LuaPull<ImVec2>(l, 6);
+	ImVec2 uvb = LuaPull<ImVec2>(l, 7);
+	ImVec2 uvc = LuaPull<ImVec2>(l, 8);
+	ImVec2 uvd = LuaPull<ImVec2>(l, 9);
+	ImColor col = LuaPull<ImColor>(l, 10);
+	draw_list->AddImageQuad(id, a, b, c, d, uva, uvb, uvc, uvd, col);
+	return 0;
+}
 
 static int l_pigui_add_rect_filled(lua_State *l) {
 	ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -660,58 +704,40 @@ static int l_pigui_end_child(lua_State *l) {
 }
 
 static int l_pigui_is_item_hovered(lua_State *l) {
-	LuaPush<bool>(l, ImGui::IsItemHovered());
+	LuaPush(l, ImGui::IsItemHovered());
 	return 1;
 }
 
 static int l_pigui_is_item_clicked(lua_State *l) {
 	int button = LuaPull<int>(l, 1);
-	LuaPush<bool>(l, ImGui::IsItemClicked(button));
+	LuaPush(l, ImGui::IsItemClicked(button));
 	return 1;
 }
 
 static int l_pigui_is_mouse_released(lua_State *l) {
 	int button = LuaPull<int>(l, 1);
-	LuaPush<bool>(l, ImGui::IsMouseReleased(button));
+	LuaPush(l, ImGui::IsMouseReleased(button));
 	return 1;
 }
 
 static int l_pigui_is_mouse_clicked(lua_State *l) {
 	int button = LuaPull<int>(l, 1);
-	LuaPush<bool>(l, ImGui::IsMouseClicked(button));
+	LuaPush(l, ImGui::IsMouseClicked(button));
 	return 1;
 }
 
-static ImFont *get_font(std::string fontname, int size) {
-	ImFont *font;
-	if(!fontname.compare("pionillium")) {
-		switch(size) {
-		case 12: font = PiGui::pionillium12; break;
-		case 15: font = PiGui::pionillium15; break;
-		case 18: font = PiGui::pionillium18; break;
-		case 30: font = PiGui::pionillium30; break;
-		case 36: font = PiGui::pionillium36; break;
-		default:
-			Error("Pionillium at size %d not found.\n", size);
-		}
-	} else if(!fontname.compare("orbiteer")) {
-		switch(size) {
-		case 18: font = PiGui::orbiteer18; break;
-		case 30: font = PiGui::orbiteer30; break;
-		default:
-			Error("Orbiteer at size %d not found.\n", size);
-		}
-	} else
-		Error("Unknown font %s\n", fontname.c_str());
-	return font;
-}
-
 static int l_pigui_push_font(lua_State *l) {
-	std::string fontname = LuaPull<std::string>(l, 1);
-	int size = LuaPull<int>(l, 2);
-	ImFont *font = get_font(fontname, size);
-	ImGui::PushFont(font);
-	return 0;
+	PiGui *pigui = LuaObject<PiGui>::CheckFromLua(1);
+	std::string fontname = LuaPull<std::string>(l, 2);
+	int size = LuaPull<int>(l, 3);
+	ImFont *font = pigui->GetFont(fontname, size);
+	if(!font) {
+		LuaPush(l, false);
+	} else {
+		LuaPush(l, true);
+		ImGui::PushFont(font);
+	}
+	return 1;
 }
 
 static int l_pigui_pop_font(lua_State *l) {
@@ -729,6 +755,12 @@ static int l_pigui_calc_text_size(lua_State *l) {
 static int l_pigui_get_mouse_pos(lua_State *l) {
 	ImVec2 pos = ImGui::GetMousePos();
 	pi_lua_generic_push(l, pos);
+	return 1;
+}
+
+static int l_pigui_get_mouse_wheel(lua_State *l) {
+	float wheel = ImGui::GetIO().MouseWheel;
+	LuaPush(l, wheel);
 	return 1;
 }
 
@@ -811,6 +843,87 @@ static int l_pigui_get_mouse_clicked_pos(lua_State *l) {
 	return 1;
 }
 
+std::tuple<bool, vector3d, vector3d> lua_world_space_to_screen_space(vector3d pos) {
+	WorldView *wv = Pi::game->GetWorldView();
+	vector3d p = wv->WorldSpaceToScreenSpace(pos);
+	const int width = Graphics::GetScreenWidth();
+	const int height = Graphics::GetScreenHeight();
+	vector3d direction = (p - vector3d(width / 2, height / 2, 0)).Normalized();
+	if(vector3d(0,0,0) == p || p.x < 0 || p.y < 0 || p.x > width || p.y > height || p.z > 0) {
+		return std::make_tuple(false, vector3d(0, 0, 0), direction * (p.z > 0 ? -1 : 1));
+	} else {
+		return std::make_tuple(true, vector3d(p.x, p.y, 0), direction);
+	}
+}
+
+static int l_pigui_get_projected_bodies(lua_State *l) {
+	LuaTable result(l);
+	for (Body* body : Pi::game->GetSpace()->GetBodies()) {
+		if(body == Pi::game->GetPlayer()) continue;
+		if (body->GetType() == Object::PROJECTILE) continue;
+
+		LuaTable object(l);
+
+		object.Set("type", EnumStrings::GetString("PhysicsObjectType", body->GetType()));
+
+		std::tuple<bool, vector3d, vector3d> res = lua_world_space_to_screen_space(body->GetInterpPositionRelTo(Pi::game->GetPlayer())); // defined in LuaPiGui.cpp		
+		object.Set("onscreen", std::get<0>(res));
+		object.Set("screenCoordinates", std::get<1>(res));
+		object.Set("direction", std::get<2>(res));
+		object.Set("body", body);
+
+		result.Set(body->GetLabel(), object);
+		lua_pop(l, 1);
+	}
+	LuaPush(l, result);
+	return 1;
+}
+
+static int l_pigui_get_targets_nearby(lua_State *l) {
+	int range_max = LuaPull<double>(l, 1);
+	LuaTable result(l);
+	Space::BodyNearList nearby;
+	Pi::game->GetSpace()->GetBodiesMaybeNear(Pi::player, range_max, nearby);
+	int index = 1;
+	for (Space::BodyNearIterator i = nearby.begin(); i != nearby.end(); ++i) {
+		if ((*i) == Pi::player) continue;
+		if ((*i)->GetType() == Object::PROJECTILE) continue;
+		vector3d position = (*i)->GetPositionRelTo(Pi::player);
+		float distance = float(position.Length());
+		vector3d shipSpacePosition = position * Pi::player->GetOrient();
+		// convert to polar https://en.wikipedia.org/wiki/Spherical_coordinate_system
+		vector3d polarPosition(// don't calculate X, it is not used
+													 // sqrt(shipSpacePosition.x*shipSpacePosition.x
+													 // 			+ shipSpacePosition.y*shipSpacePosition.y
+													 // 			+ shipSpacePosition.z*shipSpacePosition.z)
+													 0
+													 ,
+													 atan2(shipSpacePosition.x, shipSpacePosition.y),
+													 atan2(-shipSpacePosition.z,
+																 sqrt(shipSpacePosition.x*shipSpacePosition.x
+																			+ shipSpacePosition.y*shipSpacePosition.y))
+													 );
+		// convert to AEP https://en.wikipedia.org/wiki/Azimuthal_equidistant_projection
+		double rho = M_PI / 2 - polarPosition.z;
+		double theta = polarPosition.y;
+		vector3d aep(rho * sin(theta) / (2 * M_PI), -rho * cos(theta) / (2 * M_PI), 0);
+		LuaTable object(l);
+		object.Set("distance", distance);
+		object.Set("label", (*i)->GetLabel());
+
+		//		object.Set("type", EnumStrings::GetString("PhysicsObjectType", (*i)->GetType()));
+		//		object.Set("position", position);
+		//		object.Set("oriented_position", shipSpacePosition);
+		//		object.Set("polar_position", polarPosition);
+
+		object.Set("aep", aep);
+		object.Set("body", (*i));
+		result.Set(std::to_string(index++), object);
+		lua_pop(l, 1);
+	}
+  LuaPush(l, result);
+	return 1;
+}
 // static int l_pigui_disable_mouse_facing(lua_State *l) {
 // 	bool b = LuaPull<bool>(l, 1);
 // 	auto *p = Pi::player->GetPlayerController();
@@ -824,6 +937,13 @@ static int l_pigui_get_mouse_clicked_pos(lua_State *l) {
 // 	Pi::SetMouseButtonState(button, state);
 // 	return 0;
 // }
+
+static int l_pigui_should_show_labels(lua_State *l)
+{
+	bool show_labels = Pi::game->GetWorldView()->ShouldShowLabels();
+	LuaPush(l, show_labels);
+	return 1;
+}
 
 static int l_attr_handlers(lua_State *l) {
 	PiGui *pigui = LuaObject<PiGui>::CheckFromLua(1);
@@ -899,6 +1019,11 @@ static int l_pigui_radial_menu(lua_State *l) {
 	return 1;
 }
 
+static int l_pigui_should_draw_ui(lua_State *l) {
+	LuaPush(l, Pi::DrawGUI);
+	return 1;
+}
+
 static int l_pigui_is_mouse_hovering_rect(lua_State *l) {
 	ImVec2 r_min = LuaPull<ImVec2>(l, 1);
 	ImVec2 r_max = LuaPull<ImVec2>(l, 2);
@@ -922,6 +1047,11 @@ static int l_pigui_is_mouse_hovering_any_window(lua_State *l) {
 	return 1;
 }
 
+static int l_pigui_system_info_view_next_page(lua_State *l) {
+	Pi::game->GetSystemInfoView()->NextPage();
+	return 0;
+}
+
 static int l_pigui_input_text(lua_State *l) {
 	std::string label = LuaPull<std::string>(l, 1);
 	std::string text = LuaPull<std::string>(l, 2);
@@ -935,6 +1065,14 @@ static int l_pigui_input_text(lua_State *l) {
 	LuaPush<const char*>(l, buffer);
 	LuaPush<bool>(l, result);
 	return 2;
+}
+
+static int l_pigui_play_sfx(lua_State *l) {
+	std::string name = LuaPull<std::string>(l, 1);
+	double left = LuaPull<float>(l, 2);
+	double right = LuaPull<float>(l, 3);
+	Sound::PlaySfx(name.c_str(), left, right, false);
+	return 0;
 }
 
 static int l_pigui_circular_slider(lua_State *l) {
@@ -1025,14 +1163,14 @@ template <> void LuaObject<PiGui>::RegisterClass()
 		{ "AddRect",                l_pigui_add_rect },
 		{ "AddRectFilled",          l_pigui_add_rect_filled },
 		{ "AddImage",               l_pigui_add_image },
-		//		{ "AddImageQuad",           l_pigui_add_image_quad },
+		{ "AddImageQuad",           l_pigui_add_image_quad },
 		{ "AddBezierCurve",         l_pigui_add_bezier_curve },
 		{ "SetNextWindowPos",       l_pigui_set_next_window_pos },
 		{ "SetNextWindowSize",      l_pigui_set_next_window_size },
 		{ "SetNextWindowFocus",     l_pigui_set_next_window_focus },
 		{ "SetWindowFocus",         l_pigui_set_window_focus },
 		//		{ "GetHUDMarker",           l_pigui_get_hud_marker },
-		//		{ "GetVelocity",            l_pigui_get_velocity },
+		//    { "GetVelocity",            l_pigui_get_velocity },
 		{ "PushStyleColor",         l_pigui_push_style_color },
 		{ "PopStyleColor",          l_pigui_pop_style_color },
 		{ "PushStyleVar",           l_pigui_push_style_var },
@@ -1059,6 +1197,7 @@ template <> void LuaObject<PiGui>::RegisterClass()
 		{ "SetTooltip",             l_pigui_set_tooltip },
 		{ "Checkbox",               l_pigui_checkbox },
 		{ "GetMousePos",            l_pigui_get_mouse_pos },
+		{ "GetMouseWheel",          l_pigui_get_mouse_wheel },
 		{ "PathArcTo",              l_pigui_path_arc_to },
 		{ "PathStroke",             l_pigui_path_stroke },
 		{ "PushItemWidth",          l_pigui_push_item_width },
@@ -1086,6 +1225,12 @@ template <> void LuaObject<PiGui>::RegisterClass()
 		{ "ProgressBar",            l_pigui_progress_bar },
 		{ "LoadTextureFromSVG",     l_pigui_load_texture_from_svg },
 		{ "DataDirPath",            l_pigui_data_dir_path },
+		{ "ShouldDrawUI",           l_pigui_should_draw_ui },
+		{ "GetTargetsNearby",       l_pigui_get_targets_nearby },
+		{ "GetProjectedBodies",     l_pigui_get_projected_bodies },
+		{ "ShouldShowLabels",       l_pigui_should_show_labels },
+		{ "SystemInfoViewNextPage", l_pigui_system_info_view_next_page }, // deprecated
+		{ "PlaySfx",                l_pigui_play_sfx },
 		// { "DisableMouseFacing",     l_pigui_disable_mouse_facing },
 		// { "SetMouseButtonState",    l_pigui_set_mouse_button_state },
 		{ 0, 0 }

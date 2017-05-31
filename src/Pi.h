@@ -32,7 +32,9 @@ class TransferPlanner;
 class UIView;
 class View;
 class SDLGraphics;
+#if ENABLE_SERVER_AGENT
 class ServerAgent;
+#endif
 namespace Graphics { class Renderer; }
 namespace SceneGraph { class Model; }
 namespace Sound { class MusicPlayer; }
@@ -128,7 +130,9 @@ public:
 
 	static LuaNameGen *luaNameGen;
 
+#if ENABLE_SERVER_AGENT
 	static ServerAgent *serverAgent;
+#endif
 
 	static RefCountedPtr<UI::Context> ui;
     static RefCountedPtr<PiGui> pigui;
@@ -137,7 +141,7 @@ public:
 	static int statSceneTris;
 	static int statNumPatches;
 
-	static void DrawPiGui(double delta, std::string handler = "GAME");
+	static void DrawPiGui(double delta, std::string handler);
 	static void SetView(View *v);
 	static View *GetView() { return currentView; }
 
@@ -202,8 +206,6 @@ private:
 	static char mouseButton[6];
 	static int mouseMotion[2];
 	static bool doingMouseGrab;
-	static bool warpAfterMouseGrab;
-	static int mouseGrabWarpPos[2];
 
 	static bool joystickEnabled;
 	static bool mouseYInvert;
@@ -232,6 +234,9 @@ private:
 	static Graphics::RenderState *quadRenderState;
 
 	static bool bRequestEndGame;
+
+	static bool isRecordingVideo;
+	static FILE *ffmpegFile;
 };
 
 #endif /* _PI_H */

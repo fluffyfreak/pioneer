@@ -107,7 +107,7 @@ WindowSDL::WindowSDL(Graphics::Settings &vs, const std::string &name) {
 
 	if (!ok && vs.rendererType != Graphics::RENDERER_OPENGL_21)
 	{
-		Output("Retrying all previous modes using an OpenGL 2.1 context\n", SDL_GetError());
+		Output("Retrying all previous modes using an OpenGL 2.1 context: %s\n", SDL_GetError());
 		vs.rendererType = Graphics::RENDERER_OPENGL_21;
 
 		// attempt sequence is:
@@ -173,7 +173,15 @@ int WindowSDL::GetHeight() const
 void WindowSDL::SetGrab(bool grabbed)
 {
 	SDL_SetWindowGrab(m_window, SDL_bool(grabbed));
-	SDL_SetRelativeMouseMode(SDL_bool(grabbed));
+	if(SDL_SetRelativeMouseMode(SDL_bool(grabbed)) != 0) {
+		Output("WARNING: could not set relative mouse mode\n");
+	}
+	if(grabbed) {
+		SDL_GetMouseState(&m_mouseGrabWarpPos[0], &m_mouseGrabWarpPos[1]);
+	} else {
+		SDL_WarpMouseInWindow(m_window, m_mouseGrabWarpPos[0], m_mouseGrabWarpPos[1]);
+		m_mouseGrabWarpPos[0] = m_mouseGrabWarpPos[1] = 0;
+	}
 }
 
 void WindowSDL::SwapBuffers()

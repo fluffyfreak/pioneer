@@ -100,6 +100,48 @@ static int l_ship_set_type(lua_State *l)
 	return 0;
 }
 
+/* Method: GetShipType
+ *
+ * Returns a string describing the ship type
+ *
+ * > local shiptype = ship:GetShipType()
+ *
+ * Availability:
+ *
+ *   2017-04
+ *
+ * Status:
+ *
+ *   stable
+ */
+static int l_ship_get_ship_type(lua_State *l)
+{
+	Ship *s = LuaObject<Ship>::CheckFromLua(1);
+	LuaPush(l, s->GetShipType()->name.c_str());
+	return 1;
+}
+
+/* Method: GetShipClass
+ *
+ * Returns a string describing the ship class
+ *
+ * > local shipclass = ship:GetShipClass()
+ *
+ * Availability:
+ *
+ *   2017-04
+ *
+ * Status:
+ *
+ *   stable
+ */
+static int l_ship_get_ship_class(lua_State *l)
+{
+	Ship *s = LuaObject<Ship>::CheckFromLua(1);
+	LuaPush(l, s->GetShipType()->shipClass.c_str());
+	return 1;
+}
+
 /*
  * Method: SetHullPercent
  *
@@ -489,6 +531,15 @@ static int l_ship_undock(lua_State *l)
 	return 1;
 }
 
+static int l_ship_blast_off(lua_State *l)
+{
+	Ship *s = LuaObject<Ship>::CheckFromLua(1);
+	if(!s->IsLanded())
+		luaL_error(l, "Can't blast off if not already landed");
+	s->Blastoff();
+	return 0;
+}
+
 /* Method: SpawnMissile
  *
  * Spawn a missile near the ship.
@@ -708,6 +759,18 @@ static int l_ship_set_invulnerable(lua_State *l)
 	Ship *s = LuaObject<Ship>::CheckFromLua(1);
 	luaL_checkany(l, 2);
 	s->SetInvulnerable(lua_toboolean(l, 2));
+	return 0;
+}
+
+static int l_ship_get_wheel_state(lua_State *l) {
+	Ship *s = LuaObject<Ship>::CheckFromLua(1);
+	lua_pushnumber(l, s->GetWheelState());
+	return 1;
+}
+
+static int l_ship_toggle_wheel_state(lua_State *l) {
+	Ship *s = LuaObject<Ship>::CheckFromLua(1);
+	s->SetWheelState(s->GetWheelState() == 0.0);
 	return 0;
 }
 
@@ -956,6 +1019,35 @@ static int l_ship_ai_enter_high_orbit(lua_State *l)
 	return 0;
 }
 
+static int l_ship_get_flight_state(lua_State *l) {
+	Ship *s = LuaObject<Ship>::CheckFromLua(1);
+	LuaPush(l, EnumStrings::GetString("ShipFlightState", s->GetFlightState()));
+	return 1;
+}
+
+static int l_ship_get_flight_control_state(lua_State *l) {
+	Ship *s = LuaObject<Ship>::CheckFromLua(1);
+	LuaPush(l, EnumStrings::GetString("ShipControllerFlightControlState", s->GetController()->GetFlightControlState()));
+	return 1;
+}
+
+static int l_ship_get_set_speed(lua_State *l) {
+	Ship *s = LuaObject<Ship>::CheckFromLua(1);
+	LuaPush(l, s->GetController()->GetSetSpeed());
+	return 1;
+}
+
+static int l_ship_get_current_ai_command(lua_State *l) {
+	Ship *s = LuaObject<Ship>::CheckFromLua(1);
+	const AICommand *cmd = s->GetAICommand();
+	if(cmd != nullptr) {
+		LuaPush(l, EnumStrings::GetString("ShipAICmdName", cmd->GetType()));
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
 /*
  * Method: CancelAI
  *
@@ -1062,6 +1154,31 @@ static int l_ship_get_position(lua_State *l)
 	return 1;
 }
 
+static int l_ship_is_docked(lua_State *l) {
+	Ship *s = LuaObject<Ship>::CheckFromLua(1);
+	lua_pushboolean(l, s->IsDocked());
+	return 1;
+}
+
+static int l_ship_is_landed(lua_State *l) {
+	Ship *s = LuaObject<Ship>::CheckFromLua(1);
+	lua_pushboolean(l, s->IsLanded());
+	return 1;
+}
+
+static int l_ship_get_hyperspace_countdown(lua_State *l)
+{
+	Ship *s = LuaObject<Ship>::CheckFromLua(1);
+	LuaPush(l, s->GetHyperspaceCountdown());
+	return 1;
+}
+
+static int l_ship_is_hyperspace_active(lua_State *l)
+{
+	Ship *s = LuaObject<Ship>::CheckFromLua(1);
+	LuaPush<bool>(l, s->IsHyperspaceActive());
+	return 1;
+}
 
 template <> const char *LuaObject<Ship>::s_type = "Ship";
 
@@ -1072,6 +1189,8 @@ template <> void LuaObject<Ship>::RegisterClass()
 	static const luaL_Reg l_methods[] = {
 		{ "IsPlayer", l_ship_is_player },
 
+		{ "GetShipClass", l_ship_get_ship_class },
+		{ "GetShipType", l_ship_get_ship_type },
 		{ "SetShipType", l_ship_set_type },
 		{ "SetHullPercent", l_ship_set_hull_percent },
 		{ "SetFuelPercent", l_ship_set_fuel_percent },
@@ -1090,6 +1209,7 @@ template <> void LuaObject<Ship>::RegisterClass()
 
 		{ "GetDockedWith", l_ship_get_docked_with },
 		{ "Undock",        l_ship_undock          },
+		{ "BlastOff",      l_ship_blast_off       },
 
 		{ "Explode", l_ship_explode },
 
@@ -1112,6 +1232,20 @@ template <> void LuaObject<Ship>::RegisterClass()
 
 		{ "GetVelocity", l_ship_get_velocity },
  		{ "GetPosition", l_ship_get_position },
+
+		{ "IsDocked",    l_ship_is_docked },
+		{ "IsLanded",    l_ship_is_landed },
+
+		{ "GetWheelState", l_ship_get_wheel_state },
+		{ "ToggleWheelState", l_ship_toggle_wheel_state },
+		{ "GetFlightState", l_ship_get_flight_state },
+		{ "GetSetSpeed", l_ship_get_set_speed },
+
+		{ "GetHyperspaceCountdown", l_ship_get_hyperspace_countdown },
+		{ "IsHyperspaceActive",     l_ship_is_hyperspace_active },
+
+		{ "GetFlightControlState",  l_ship_get_flight_control_state },
+		{ "GetCurrentAICommand",    l_ship_get_current_ai_command },
 
 		{ 0, 0 }
 	};

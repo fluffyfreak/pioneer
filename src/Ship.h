@@ -50,7 +50,7 @@ struct shipstats_t {
 	float fuel_tank_mass_left;
 };
 
-class Ship: public DynamicBody, public Propulsion, public FixedGuns {
+class Ship: public DynamicBody {
 	friend class ShipController; //only controllers need access to AITimeStep
 	friend class PlayerShipController;
 public:
@@ -68,6 +68,8 @@ public:
 	/** Use GetDockedWith() to determine if docked */
 	SpaceStation *GetDockedWith() const { return m_dockedWith; }
 	int GetDockingPort() const { return m_dockedWithPort; }
+	bool IsDocked() const { return GetFlightState() == Ship::DOCKED; }
+	bool IsLanded() const { return GetFlightState() == Ship::LANDED; }
 
 	virtual void SetLandedOn(Planet *p, float latitude, float longitude);
 
@@ -84,6 +86,7 @@ public:
 	const shipstats_t &GetStats() const { return m_stats; }
 
 	void Explode();
+	virtual bool DoCrushDamage(float kgDamage); // can be overloaded in Player to add "crush" audio
 	void SetGunState(int idx, int state);
 	void UpdateMass();
 	virtual bool SetWheelState(bool down); // returns success of state change, NOT state itself
@@ -164,19 +167,21 @@ public:
 	};
 	AlertState GetAlertState() { return m_alertState; }
 
-	void AIClearInstructions();
+	void AIClearInstructions(); // Note: defined in Ship-AI.cpp
 	bool AIIsActive() { return m_curAICmd ? true : false; }
-	void AIGetStatusText(char *str);
+	void AIGetStatusText(char *str); // Note: defined in Ship-AI.cpp
 
-	void AIKamikaze(Body *target);
-	void AIKill(Ship *target);
+	void AIKamikaze(Body *target); // Note: defined in Ship-AI.cpp
+	void AIKill(Ship *target); // Note: defined in Ship-AI.cpp
 	//void AIJourney(SystemBodyPath &dest);
-	void AIDock(SpaceStation *target);
-	void AIFlyTo(Body *target);
-	void AIOrbit(Body *target, double alt);
-	void AIHoldPosition();
+	void AIDock(SpaceStation *target); // Note: defined in Ship-AI.cpp
+	void AIFlyTo(Body *target); // Note: defined in Ship-AI.cpp
+	void AIOrbit(Body *target, double alt); // Note: defined in Ship-AI.cpp
+	void AIHoldPosition(); // Note: defined in Ship-AI.cpp
 
-	void AIBodyDeleted(const Body* const body) {};		// todo: signals
+	void AIBodyDeleted(const Body* const body) {}; // Note: defined in Ship-AI.cpp // todo: signals
+
+	const AICommand *GetAICommand() const { return m_curAICmd; }
 
 	virtual void PostLoadFixup(Space *space) override;
 
@@ -295,6 +300,21 @@ private:
 	std::unordered_map<Body*, Uint8> m_relationsMap;
 
 	std::string m_shipName;
+public:
+	void ClearAngThrusterState() { GetPropulsion()->ClearAngThrusterState(); }
+	void ClearLinThrusterState() { GetPropulsion()->ClearLinThrusterState(); }
+	double GetAccelFwd() { return GetPropulsion()->GetAccelFwd(); }
+	void SetAngThrusterState(const vector3d &levels) { GetPropulsion()->SetAngThrusterState(levels); }
+	double GetFuel() const { return GetPropulsion()->GetFuel(); }
+	double GetAccel(Thruster thruster) const { return GetPropulsion()->GetAccel(thruster); }
+	void SetFuel(const double f) { GetPropulsion()->SetFuel(f); }
+	void SetFuelReserve(const double f) { GetPropulsion()->SetFuelReserve(f); }
+
+	bool AIMatchVel(const vector3d &vel) { return GetPropulsion()->AIMatchVel(vel); }
+	double AIFaceDirection(const vector3d &dir, double av=0) { return GetPropulsion()->AIFaceDirection(dir, av); }
+	void AIMatchAngVelObjSpace(const vector3d &angvel) { return GetPropulsion()->AIMatchAngVelObjSpace(angvel); }
+	void SetThrusterState(int axis, double level) { return GetPropulsion()->SetThrusterState(axis, level); }
+	void AIModelCoordsMatchAngVel(const vector3d &desiredAngVel, double softness) { return GetPropulsion()->AIModelCoordsMatchAngVel(desiredAngVel, softness); }
 };
 
 
