@@ -66,7 +66,7 @@ void Thruster::Accept(NodeVisitor &nv)
 
 void Thruster::Render(const matrix4x4f &trans, const RenderData *rd)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	float power = -dir.Dot(vector3f(rd->linthrust));
 
 	if (!linearOnly) {

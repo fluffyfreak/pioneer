@@ -37,7 +37,9 @@ ShipCockpit::~ShipCockpit()
 
 void ShipCockpit::Render(Graphics::Renderer *renderer, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
+	rmt_ScopedCPUSample(ShipCockpit_Render, 0);
+	rmt_ScopedOpenGLSample(ShipCockpit_Render);
 	RenderModel(renderer, camera, viewCoords, viewTransform);
 }
 
@@ -185,7 +187,9 @@ void ShipCockpit::Update(float timeStep)
 
 void ShipCockpit::RenderCockpit(Graphics::Renderer* renderer, const Camera* camera, Frame* frame)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
+	rmt_ScopedCPUSample(ShipCockpit_RenderCockpit, 0);
+	rmt_ScopedOpenGLSample(ShipCockpit_RenderCockpit);
 	renderer->ClearDepthBuffer();
 	SetFrame(frame);
 	Render(renderer, camera, m_translate, m_transform);

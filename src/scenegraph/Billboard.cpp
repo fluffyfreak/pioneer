@@ -40,7 +40,7 @@ void Billboard::Accept(NodeVisitor &nv)
 
 void Billboard::Render(const matrix4x4f &trans, const RenderData *rd)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 
 	//some hand-tweaked scaling, to make the lights seem larger from distance (final size is in pixels)
 	const float pixrad = Clamp(Graphics::GetScreenHeight() / trans.GetTranslate().Length(), 1.0f, 15.0f);

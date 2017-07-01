@@ -93,7 +93,7 @@ Camera::Camera(RefCountedPtr<CameraContext> context, Graphics::Renderer *rendere
 
 static void position_system_lights(Frame *camFrame, Frame *frame, std::vector<Camera::LightSource> &lights)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if (lights.size() > 3) return;
 
 	SystemBody *body = frame->GetSystemBody();
@@ -186,7 +186,9 @@ void Camera::Update()
 
 void Camera::Draw(const Body *excludeBody, ShipCockpit* cockpit)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
+	rmt_ScopedCPUSample(Camera_Draw, 0);
+	rmt_ScopedOpenGLSample(Camera_Draw);
 
 	Frame *camFrame = m_context->GetCamFrame();
 
@@ -250,6 +252,8 @@ void Camera::Draw(const Body *excludeBody, ShipCockpit* cockpit)
 	}
 
 	for (std::list<BodyAttrs>::iterator i = m_sortedBodies.begin(); i != m_sortedBodies.end(); ++i) {
+		rmt_ScopedCPUSample(Render_Sorted_Bodies, 0);
+		rmt_ScopedOpenGLSample(Render_Sorted_Bodies);
 		BodyAttrs *attrs = &(*i);
 
 		// explicitly exclude a single body if specified (eg player)

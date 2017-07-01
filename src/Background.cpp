@@ -417,7 +417,9 @@ void Container::Refresh(Random &rand)
 
 void Container::Draw(const matrix4x4d &transform)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
+	rmt_ScopedCPUSample(Background_Draw, 0);
+	rmt_ScopedOpenGLSample(Background_Draw);
 	m_renderer->SetTransform(transform);
 	if( DRAW_SKYBOX & m_drawFlags ) {
 		m_universeBox.Draw(m_renderState);
@@ -435,7 +437,7 @@ void Container::Draw(const matrix4x4d &transform)
 
 void Container::SetIntensity(float intensity)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	intensity = Clamp(intensity, 0.0f, 1.0f);
 	m_universeBox.SetIntensity(intensity);
 	m_starField.SetIntensity(intensity);

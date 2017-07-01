@@ -356,7 +356,7 @@ void LuaSerializer::UninitTableRefs() {
 
 void LuaSerializer::ToJson(Json::Value &jsonObj)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	lua_State *l = Lua::manager->GetLuaState();
 
 	LUA_DEBUG_START(l);

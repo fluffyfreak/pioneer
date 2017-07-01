@@ -10,7 +10,7 @@ namespace Graphics {
 namespace Drawables {
 
 Circle::Circle(Renderer *renderer, const float radius, const Color &c, RenderState *state) : m_color(c) {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	m_renderState = state;
 	VertexArray vertices (ATTRIB_POSITION);
 	for (float theta=0; theta < 2*float(M_PI); theta += 0.05f*float(M_PI)) {
@@ -19,7 +19,7 @@ Circle::Circle(Renderer *renderer, const float radius, const Color &c, RenderSta
 	SetupVertexBuffer(vertices, renderer);
 }
 Circle::Circle(Renderer *renderer, const float radius, const float x, const float y, const float z, const Color &c, RenderState *state) : m_color(c) {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	m_renderState = state;
 	VertexArray vertices (ATTRIB_POSITION);
 	for (float theta=0; theta < 2*float(M_PI); theta += 0.05f*float(M_PI)) {
@@ -28,7 +28,7 @@ Circle::Circle(Renderer *renderer, const float radius, const float x, const floa
 	SetupVertexBuffer(vertices, renderer);
 }
 Circle::Circle(Renderer *renderer, const float radius, const vector3f &center, const Color &c, RenderState *state) : m_color(c) {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	m_renderState = state;
 	VertexArray vertices (ATTRIB_POSITION);
 	for (float theta=0; theta < 2*float(M_PI); theta += 0.05f*float(M_PI)) {
@@ -38,14 +38,14 @@ Circle::Circle(Renderer *renderer, const float radius, const vector3f &center, c
 }
 
 void Circle::Draw(Renderer *renderer) {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	m_material->diffuse = m_color;
 	renderer->DrawBuffer(m_vertexBuffer.Get(), m_renderState, m_material.Get(), PrimitiveType::LINE_LOOP);
 }
 
 void Circle::SetupVertexBuffer(const Graphics::VertexArray& vertices, Graphics::Renderer *r)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	MaterialDescriptor desc;
 	m_material.Reset(r->CreateMaterial(desc));
 
@@ -62,7 +62,7 @@ void Circle::SetupVertexBuffer(const Graphics::VertexArray& vertices, Graphics::
 
 Disk::Disk(Graphics::Renderer *r, Graphics::RenderState *state, const Color &c, float rad)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	m_renderState = state;
 
 	VertexArray vertices (ATTRIB_POSITION);
@@ -83,7 +83,7 @@ Disk::Disk(Graphics::Renderer *r, Graphics::RenderState *state, const Color &c, 
 Disk::Disk(Graphics::Renderer *r, RefCountedPtr<Material> material, Graphics::RenderState *state, const int edges, const float rad)
 	: m_material(material)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	m_renderState = state;
 
 	VertexArray vertices (ATTRIB_POSITION);
@@ -102,7 +102,7 @@ Disk::Disk(Graphics::Renderer *r, RefCountedPtr<Material> material, Graphics::Re
 
 void Disk::Draw(Renderer *r)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	r->DrawBuffer(m_vertexBuffer.get(), m_renderState, m_material.Get(), TRIANGLE_FAN);
 }
 
@@ -113,7 +113,7 @@ void Disk::SetColor(const Color &c)
 
 void Disk::SetupVertexBuffer(const Graphics::VertexArray& vertices, Graphics::Renderer *r)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	//Create vtx & index buffers and copy data
 	VertexBufferDesc vbd;
 	vbd.attrib[0].semantic = ATTRIB_POSITION;
@@ -127,7 +127,7 @@ void Disk::SetupVertexBuffer(const Graphics::VertexArray& vertices, Graphics::Re
 
 Line3D::Line3D() : m_refreshVertexBuffer(true), m_width(2.0f), m_va( new Graphics::VertexArray(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_DIFFUSE, 2) )
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(m_va.get());
 	// XXX bug in Radeon drivers will cause crash in glLineWidth if width >= 3
 	m_va->Add(vector3f(0.f), Color::BLANK);
@@ -136,7 +136,7 @@ Line3D::Line3D() : m_refreshVertexBuffer(true), m_width(2.0f), m_va( new Graphic
 
 Line3D::Line3D(const Line3D& b) : Line3D()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	m_refreshVertexBuffer = (b.m_refreshVertexBuffer);
 	m_width = (b.m_width);
 	m_material = (b.m_material);
@@ -146,7 +146,7 @@ Line3D::Line3D(const Line3D& b) : Line3D()
 
 void Line3D::SetStart(const vector3f &s)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if(!m_va->position[0].ExactlyEqual(s)) {
 		m_va->Set(0, s);
 		Dirty();
@@ -155,7 +155,7 @@ void Line3D::SetStart(const vector3f &s)
 
 void Line3D::SetEnd(const vector3f &e)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if(!m_va->position[1].ExactlyEqual(e)) {
 		m_va->Set(1, e);
 		Dirty();
@@ -164,7 +164,7 @@ void Line3D::SetEnd(const vector3f &e)
 
 void Line3D::SetColor(const Color &c)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if( !(m_va->diffuse[0]==c) ) {
 		m_va->Set(0, m_va->position[0], c);
 		m_va->Set(1, m_va->position[1], c * 0.5);
@@ -174,7 +174,7 @@ void Line3D::SetColor(const Color &c)
 
 void Line3D::Draw(Renderer *r, RenderState *rs)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if (m_va->GetNumVerts() == 0)
 		return;
 
@@ -195,7 +195,7 @@ void Line3D::Draw(Renderer *r, RenderState *rs)
 
 void Line3D::CreateVertexBuffer(Graphics::Renderer *r, const Uint32 size)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	Graphics::MaterialDescriptor desc;
 	desc.vertexColors = true;
 	m_material.Reset(r->CreateMaterial(desc));
@@ -218,13 +218,13 @@ void Line3D::Dirty() {
 
 Lines::Lines() : m_refreshVertexBuffer(true), m_va(new VertexArray(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_DIFFUSE))
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	// XXX bug in Radeon drivers will cause crash in glLineWidth if width >= 3
 }
 
 void Lines::SetData(const Uint32 vertCount, const vector3f *vertices, const Color &color)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert( vertices );
 
 	// somethings changed so even if the number of verts is constant the data must be uploaded
@@ -245,7 +245,7 @@ void Lines::SetData(const Uint32 vertCount, const vector3f *vertices, const Colo
 
 void Lines::SetData(const Uint32 vertCount, const vector3f *vertices, const Color *colors)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert( vertices );
 
 	// somethings changed so even if the number of verts is constant the data must be uploaded
@@ -266,7 +266,7 @@ void Lines::SetData(const Uint32 vertCount, const vector3f *vertices, const Colo
 
 void Lines::Draw(Renderer *r, RenderState *rs, const PrimitiveType pt)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if (m_va->GetNumVerts() == 0)
 		return;
 
@@ -286,7 +286,7 @@ void Lines::Draw(Renderer *r, RenderState *rs, const PrimitiveType pt)
 
 void Lines::CreateVertexBuffer(Graphics::Renderer *r, const Uint32 size)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	Graphics::MaterialDescriptor desc;
 	desc.vertexColors = true;
 	m_material.Reset(r->CreateMaterial(desc));
@@ -308,7 +308,7 @@ PointSprites::PointSprites() : m_refreshVertexBuffer(true)
 
 void PointSprites::SetData(const int count, const vector3f *positions, const Color *colours, const float *sizes, Graphics::Material *pMaterial)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if (count < 1 )
 		return;
 
@@ -327,7 +327,7 @@ void PointSprites::SetData(const int count, const vector3f *positions, const Col
 
 void PointSprites::Draw(Renderer *r, RenderState *rs)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if (m_va->GetNumVerts() == 0)
 		return;
 
@@ -343,7 +343,7 @@ void PointSprites::Draw(Renderer *r, RenderState *rs)
 
 void PointSprites::CreateVertexBuffer(Graphics::Renderer *r, const Uint32 size)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	Graphics::VertexBufferDesc vbd;
 	vbd.attrib[0].semantic = Graphics::ATTRIB_POSITION;
 	vbd.attrib[0].format = Graphics::ATTRIB_FORMAT_FLOAT3;
@@ -359,12 +359,12 @@ void PointSprites::CreateVertexBuffer(Graphics::Renderer *r, const Uint32 size)
 //------------------------------------------------------------
 Points::Points() : m_refreshVertexBuffer(true)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 }
 
 void Points::SetData(Renderer* r, const int count, const vector3f *positions, const matrix4x4f &trans, const Color &color, const float size)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if (count < 1 )
 		return;
 
@@ -408,7 +408,7 @@ void Points::SetData(Renderer* r, const int count, const vector3f *positions, co
 
 void Points::SetData(Renderer* r, const int count, const vector3f *positions, const Color *color, const matrix4x4f &trans, const float size)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if (count < 1 )
 		return;
 
@@ -452,7 +452,7 @@ void Points::SetData(Renderer* r, const int count, const vector3f *positions, co
 
 void Points::Draw(Renderer *r, RenderState *rs)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if (m_va->GetNumVerts() == 0)
 		return;
 
@@ -469,7 +469,7 @@ void Points::Draw(Renderer *r, RenderState *rs)
 
 void Points::CreateVertexBuffer(Graphics::Renderer *r, const Uint32 size)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	Graphics::MaterialDescriptor desc;
 	desc.vertexColors = true;
 	m_material.Reset(r->CreateMaterial(desc));
@@ -503,7 +503,7 @@ static const int icosahedron_faces[20][3] = {
 
 Sphere3D::Sphere3D(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::RenderState *state, int subdivs, float scale, const Uint32 attribs)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(attribs & ATTRIB_POSITION);
 
 	m_material = mat;
@@ -568,13 +568,13 @@ Sphere3D::Sphere3D(Renderer *renderer, RefCountedPtr<Material> mat, Graphics::Re
 
 void Sphere3D::Draw(Renderer *r)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	r->DrawBufferIndexed(m_vertexBuffer.get(), m_indexBuffer.get(), m_renderState, m_material.Get());
 }
 
 int Sphere3D::AddVertex(VertexArray &vts, const vector3f &v, const vector3f &n)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	vts.position.push_back(v);
 	if (vts.HasAttrib(ATTRIB_NORMAL)) {
 		vts.normal.push_back(n);
@@ -588,7 +588,7 @@ int Sphere3D::AddVertex(VertexArray &vts, const vector3f &v, const vector3f &n)
 
 void Sphere3D::AddTriangle(std::vector<Uint32> &indices, int i1, int i2, int i3)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	indices.push_back(i1);
 	indices.push_back(i2);
 	indices.push_back(i3);
@@ -598,7 +598,7 @@ void Sphere3D::Subdivide(VertexArray &vts, std::vector<Uint32> &indices,
 		const matrix4x4f &trans, const vector3f &v1, const vector3f &v2, const vector3f &v3,
 		const int i1, const int i2, const int i3, int depth)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if (depth == 0) {
 		AddTriangle(indices, i1, i3, i2);
 		return;
@@ -619,7 +619,7 @@ void Sphere3D::Subdivide(VertexArray &vts, std::vector<Uint32> &indices,
 
 TexturedQuad::TexturedQuad(Graphics::Renderer *r, const std::string &filename)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 
 	Graphics::TextureBuilder texbuilder = Graphics::TextureBuilder::UI(filename);
 	m_texture.Reset(texbuilder.GetOrCreateTexture(r, "ui"));
@@ -663,7 +663,7 @@ TexturedQuad::TexturedQuad(Graphics::Renderer *r, const std::string &filename)
 TexturedQuad::TexturedQuad(Graphics::Renderer *r, Graphics::Texture *texture, const vector2f &pos, const vector2f &size, RenderState *state)
 	: m_texture(RefCountedPtr<Graphics::Texture>(texture))
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(state);
 	m_renderState = state;
 
@@ -697,7 +697,7 @@ TexturedQuad::TexturedQuad(Graphics::Renderer *r, Graphics::Texture *texture, co
 TexturedQuad::TexturedQuad(Graphics::Renderer *r, RefCountedPtr<Graphics::Material> &material, const Graphics::VertexArray &va, RenderState *state)
 	: m_material(material)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(state);
 	m_renderState = state;
 
@@ -739,14 +739,14 @@ TexturedQuad::TexturedQuad(Graphics::Renderer *r, RefCountedPtr<Graphics::Materi
 
 void TexturedQuad::Draw(Graphics::Renderer *r)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	m_material->diffuse = Color::WHITE;
 	r->DrawBuffer(m_vertexBuffer.Get(), m_renderState, m_material.Get(), TRIANGLE_STRIP);
 }
 
 void TexturedQuad::Draw(Graphics::Renderer *r, const Color4ub &tint)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	m_material->diffuse = tint;
 	r->DrawBuffer(m_vertexBuffer.Get(), m_renderState, m_material.Get(), TRIANGLE_STRIP);
 }
@@ -754,7 +754,7 @@ void TexturedQuad::Draw(Graphics::Renderer *r, const Color4ub &tint)
 //------------------------------------------------------------
 Rect::Rect(Graphics::Renderer *r, const vector2f &pos, const vector2f &size, const Color &c, RenderState *state, const bool bIsStatic /*= true*/) : m_renderState(state)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 
 	using namespace Graphics;
 	VertexArray bgArr(ATTRIB_POSITION | ATTRIB_DIFFUSE, 4);
@@ -795,14 +795,14 @@ void Rect::Update(const vector2f &pos, const vector2f &size, const Color &c)
 
 void Rect::Draw(Graphics::Renderer *r)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	r->DrawBuffer(m_vertexBuffer.Get(), m_renderState, m_material.Get(), TRIANGLE_FAN);
 }
 
 //------------------------------------------------------------
 RoundEdgedRect::RoundEdgedRect(Graphics::Renderer *r, const vector2f &size, const float rad, const Color &c, RenderState *state, const bool bIsStatic /*= true*/) : m_renderState(state)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 
 	using namespace Graphics;
 	Graphics::MaterialDescriptor desc;
@@ -856,14 +856,14 @@ void RoundEdgedRect::Update(const vector2f &size, float rad, const Color &c)
 
 void RoundEdgedRect::Draw(Graphics::Renderer *r)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	r->DrawBuffer(m_vertexBuffer.Get(), m_renderState, m_material.Get(), TRIANGLE_FAN);
 }
 
 //------------------------------------------------------------
 Axes3D::Axes3D(Graphics::Renderer *r, Graphics::RenderState *state)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if( state ) {
 		m_renderState = state;
 	} else {
@@ -912,13 +912,13 @@ Axes3D::Axes3D(Graphics::Renderer *r, Graphics::RenderState *state)
 
 void Axes3D::Draw(Graphics::Renderer *r)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	r->DrawBuffer(m_vertexBuffer.Get(), m_renderState, m_material.Get(), LINE_SINGLE);
 }
 
 static Axes3D *s_axes = nullptr;
 Axes3D* GetAxes3DDrawable(Graphics::Renderer *r) {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if( !s_axes ) {
 		s_axes = new Axes3D(r);
 	}

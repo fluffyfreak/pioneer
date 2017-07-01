@@ -41,7 +41,7 @@ void ImageButton::GetSizeRequested(float size[2])
 
 void ImageButton::Draw()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	float size[2];
 	GetSize(size);
 	Gui::Image *img;

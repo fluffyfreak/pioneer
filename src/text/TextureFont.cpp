@@ -196,7 +196,7 @@ void TextureFont::RenderBuffer(Graphics::VertexBuffer *vb, const Color &color)
 
 void TextureFont::PopulateString(Graphics::VertexArray &va, const std::string &str, const float x, const float y, const Color &color)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 
 	if(str.empty()) return;
 
@@ -244,7 +244,7 @@ void TextureFont::PopulateString(Graphics::VertexArray &va, const std::string &s
 
 Color TextureFont::PopulateMarkup(Graphics::VertexArray &va, const std::string &str, const float x, const float y, const Color &color)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 
 	if(str.empty()) return Color::BLACK;
 

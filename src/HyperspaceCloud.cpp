@@ -179,6 +179,8 @@ void HyperspaceCloud::UpdateInterpTransform(double alpha)
 
 void HyperspaceCloud::Render(Renderer *renderer, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform)
 {
+	rmt_ScopedCPUSample(HyperspaceCloud_Render, 0);
+	rmt_ScopedOpenGLSample(HyperspaceCloud_Render);
 	if( m_isBeingKilled )
 		return;
 

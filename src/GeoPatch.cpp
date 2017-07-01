@@ -62,8 +62,10 @@ GeoPatch::~GeoPatch() {
 
 void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if (m_needUpdateVBOs) {
+		rmt_ScopedCPUSample(GeoPatch_UpdateVBOs, 0);
+		rmt_ScopedOpenGLSample(GeoPatch_UpdateVBOs);
 		assert(renderer);
 		m_needUpdateVBOs = false;
 
@@ -243,7 +245,9 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 static const SSphere s_sph;
 void GeoPatch::Render(Graphics::Renderer *renderer, const vector3d &campos, const matrix4x4d &modelView, const Graphics::Frustum &frustum)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
+	rmt_ScopedCPUSample(GeoPatch_Render, 0);
+	rmt_ScopedOpenGLSample(GeoPatch_Render);
 	// must update the VBOs to calculate the clipRadius...
 	UpdateVBOs(renderer);
 	// ...before doing the furstum culling that relies on it.
@@ -374,7 +378,7 @@ void GeoPatch::RequestSinglePatch()
 
 void GeoPatch::ReceiveHeightmaps(SQuadSplitResult *psr)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(NULL!=psr);
 	if (m_depth<psr->depth()) {
 		// this should work because each depth should have a common history
@@ -415,7 +419,7 @@ void GeoPatch::ReceiveHeightmaps(SQuadSplitResult *psr)
 
 void GeoPatch::ReceiveHeightmap(const SSingleSplitResult *psr)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(nullptr == parent);
 	assert(nullptr != psr);
 	assert(mHasJobRequest);

@@ -81,7 +81,7 @@ void Label::SetText(const std::string &text)
 
 void Label::Draw()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if (!m_layout || m_needsUpdate)
 		UpdateLayout();
 

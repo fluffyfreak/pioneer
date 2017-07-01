@@ -196,7 +196,7 @@ void AsyncJobQueue::Finish(Job *job, const uint8_t threadIdx)
 // call OnFinish methods for completed jobs, and clean up
 Uint32 AsyncJobQueue::FinishJobs()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	Uint32 finished = 0;
 
 	const uint32_t numRunners = m_runners.size();
@@ -381,7 +381,7 @@ Job::Handle SyncJobQueue::Queue(Job *job, JobClient *client)
 // call OnFinish methods for completed jobs, and clean up
 Uint32 SyncJobQueue::FinishJobs()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	Uint32 finished = 0;
 
 	while (!m_finished.empty()) {

@@ -58,7 +58,7 @@ void LabelSet::Clear()
 
 void LabelSet::Draw()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if (!m_labelsVisible) return;
 	for (std::vector<LabelSetItem>::iterator i = m_items.begin(); i != m_items.end(); ++i) {
 		Gui::Screen::RenderStringBuffer((*i).m_vb, (*i).text, (*i).screenx, (*i).screeny - Gui::Screen::GetFontHeight()*0.5f, (*i).hasOwnColor ? (*i).color : m_labelColor, m_font.Get());

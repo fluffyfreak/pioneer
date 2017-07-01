@@ -42,7 +42,7 @@ public:
 
 		void Save(Serializer::Writer &wr) const
 		{
-			PROFILE_SCOPED()
+			PROFILE_SCOPED();
 			wr.Int32(v1i);
 			wr.Int32(v2i);
 			wr.Float(len);
@@ -51,7 +51,7 @@ public:
 		}
 		void Load(Serializer::Reader &rd)
 		{
-			PROFILE_SCOPED()
+			PROFILE_SCOPED();
 			v1i = rd.Int32();
 			v2i = rd.Int32();
 			len = rd.Float();

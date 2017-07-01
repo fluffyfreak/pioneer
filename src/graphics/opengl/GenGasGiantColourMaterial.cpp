@@ -87,7 +87,7 @@ Program *GenGasGiantColourMaterial::CreateProgram(const MaterialDescriptor &desc
 
 void GenGasGiantColourMaterial::Apply()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	OGL::Material::Apply();
 
 	GenGasGiantColourProgram *p = static_cast<GenGasGiantColourProgram*>(m_program);
@@ -126,7 +126,7 @@ void GenGasGiantColourMaterial::Apply()
 
 void GenGasGiantColourMaterial::Unapply()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	// Might not be necessary to unbind textures, but let's not old graphics code (eg, old-UI)
 	if (texture4) {
 		static_cast<TextureGL*>(texture4)->Unbind();

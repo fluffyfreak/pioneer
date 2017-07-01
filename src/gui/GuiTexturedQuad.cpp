@@ -13,7 +13,7 @@ namespace Gui {
 
 void TexturedQuad::Draw(Graphics::Renderer *renderer, const vector2f &pos, const vector2f &size, const vector2f &texPos, const vector2f &texSize, const Color &tint)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 
 	// Create material on first use. Bit of a hack.
 	if (!m_material) {

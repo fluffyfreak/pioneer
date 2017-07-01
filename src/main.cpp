@@ -26,6 +26,11 @@ int main(int argc, char** argv)
 	Profiler::detect( argc, argv );
 #endif
 
+	// Create the main instance of Remotery.
+	// You need only do this once per program.
+	rmt_CreateGlobalInstance(&rmt);
+	rmt_SetCurrentThreadName("Pioneer");
+
 	RunMode mode = MODE_GAME;
 
 	if (argc > 1) {
@@ -175,6 +180,11 @@ start:
 			);
 			break;
 	}
+
+	// Destroy the main instance of Remotery.
+	if(rmt)
+		rmt_DestroyGlobalInstance(rmt);
+	rmt = nullptr;
 
 	return 0;
 }

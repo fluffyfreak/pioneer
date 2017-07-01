@@ -43,7 +43,7 @@ void StaticGeometry::Accept(NodeVisitor &nv)
 
 void StaticGeometry::Render(const matrix4x4f &trans, const RenderData *rd)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	SDL_assert(m_renderState);
 	Graphics::Renderer *r = GetRenderer();
 	r->SetTransform(trans);
@@ -55,7 +55,7 @@ void StaticGeometry::Render(const matrix4x4f &trans, const RenderData *rd)
 
 void StaticGeometry::Render(const std::vector<matrix4x4f> &trans, const RenderData *rd)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	SDL_assert(m_renderState);
 	Graphics::Renderer *r = GetRenderer();
 

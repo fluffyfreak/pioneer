@@ -71,6 +71,8 @@ void TerrainBody::LoadFromJson(const Json::Value &jsonObj, Space *space)
 
 void TerrainBody::Render(Graphics::Renderer *renderer, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform)
 {
+	rmt_ScopedCPUSample(TerrainBody_Render, 0);
+	rmt_ScopedOpenGLSample(TerrainBody_Render);
 	matrix4x4d ftran = viewTransform;
 	vector3d fpos = viewCoords;
 	double rad = m_sbody->GetRadius();

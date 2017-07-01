@@ -39,7 +39,7 @@ namespace {
 
 void VectorToJson(Json::Value &jsonObj, const vector3f &vec, const std::string &name)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(!name.empty()); // Can't do anything if no name supplied.
 #ifdef USE_STRING_VERSIONS
 	char str[128];
@@ -56,7 +56,7 @@ void VectorToJson(Json::Value &jsonObj, const vector3f &vec, const std::string &
 
 void VectorToJson(Json::Value &jsonObj, const vector3d &vec, const std::string &name)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(!name.empty()); // Can't do anything if no name supplied.
 #ifdef USE_STRING_VERSIONS
 	char str[128];
@@ -73,7 +73,7 @@ void VectorToJson(Json::Value &jsonObj, const vector3d &vec, const std::string &
 
 void QuaternionToJson(Json::Value &jsonObj, const Quaternionf &quat, const std::string &name)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(!name.empty()); // Can't do anything if no name supplied.
 
 	Json::Value quatArray(Json::arrayValue); // Create JSON array to contain quaternion data.
@@ -86,7 +86,7 @@ void QuaternionToJson(Json::Value &jsonObj, const Quaternionf &quat, const std::
 
 void QuaternionToJson(Json::Value &jsonObj, const Quaterniond &quat, const std::string &name)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(!name.empty()); // Can't do anything if no name supplied.
 
 	Json::Value quatArray(Json::arrayValue); // Create JSON array to contain quaternion data.
@@ -99,7 +99,7 @@ void QuaternionToJson(Json::Value &jsonObj, const Quaterniond &quat, const std::
 
 void MatrixToJson(Json::Value &jsonObj, const matrix3x3f &mat, const std::string &name)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(!name.empty()); // Can't do anything if no name supplied.
 #ifdef USE_STRING_VERSIONS
 	char str[512];
@@ -122,7 +122,7 @@ void MatrixToJson(Json::Value &jsonObj, const matrix3x3f &mat, const std::string
 
 void MatrixToJson(Json::Value &jsonObj, const matrix3x3d &mat, const std::string &name)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(!name.empty()); // Can't do anything if no name supplied.
 #ifdef USE_STRING_VERSIONS
 	char str[512];
@@ -145,7 +145,7 @@ void MatrixToJson(Json::Value &jsonObj, const matrix3x3d &mat, const std::string
 
 void MatrixToJson(Json::Value &jsonObj, const matrix4x4f &mat, const std::string &name)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(!name.empty()); // Can't do anything if no name supplied.
 #ifdef USE_STRING_VERSIONS
 	char str[512];
@@ -175,7 +175,7 @@ void MatrixToJson(Json::Value &jsonObj, const matrix4x4f &mat, const std::string
 
 void MatrixToJson(Json::Value &jsonObj, const matrix4x4d &mat, const std::string &name)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(!name.empty()); // Can't do anything if no name supplied.
 #ifdef USE_STRING_VERSIONS
 	char str[512];
@@ -205,7 +205,7 @@ void MatrixToJson(Json::Value &jsonObj, const matrix4x4d &mat, const std::string
 
 void ColorToJson(Json::Value &jsonObj, const Color3ub &col, const std::string &name)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(!name.empty()); // Can't do anything if no name supplied.
 
 	Json::Value colArray(Json::arrayValue); // Create JSON array to contain color data.
@@ -217,7 +217,7 @@ void ColorToJson(Json::Value &jsonObj, const Color3ub &col, const std::string &n
 
 void ColorToJson(Json::Value &jsonObj, const Color4ub &col, const std::string &name)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(!name.empty()); // Can't do anything if no name supplied.
 
 	Json::Value colArray(Json::arrayValue); // Create JSON array to contain color data.
@@ -230,7 +230,7 @@ void ColorToJson(Json::Value &jsonObj, const Color4ub &col, const std::string &n
 
 void BinStrToJson(Json::Value &jsonObj, const std::string &binStr, const std::string &name)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(!name.empty()); // Can't do anything if no name supplied.
 
 	// compress in memory, write to open file 
@@ -253,7 +253,7 @@ void BinStrToJson(Json::Value &jsonObj, const std::string &binStr, const std::st
 
 void JsonToVector(vector3f *pVec, const Json::Value &jsonObj, const std::string &name)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(!name.empty()); // Can't do anything if no name supplied.
 #ifdef USE_STRING_VERSIONS
 	if (!jsonObj.isMember(name.c_str())) throw SavedGameCorruptException();
@@ -275,7 +275,7 @@ void JsonToVector(vector3f *pVec, const Json::Value &jsonObj, const std::string 
 
 void JsonToVector(vector3d *pVec, const Json::Value &jsonObj, const std::string &name)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(!name.empty()); // Can't do anything if no name supplied.
 #ifdef USE_STRING_VERSIONS
 	if (!jsonObj.isMember(name.c_str())) throw SavedGameCorruptException();
@@ -297,7 +297,7 @@ void JsonToVector(vector3d *pVec, const Json::Value &jsonObj, const std::string 
 
 void JsonToQuaternion(Quaternionf *pQuat, const Json::Value &jsonObj, const std::string &name)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(!name.empty()); // Can't do anything if no name supplied.
 
 	if (!jsonObj.isMember(name.c_str())) throw SavedGameCorruptException();
@@ -313,7 +313,7 @@ void JsonToQuaternion(Quaternionf *pQuat, const Json::Value &jsonObj, const std:
 
 void JsonToQuaternion(Quaterniond *pQuat, const Json::Value &jsonObj, const std::string &name)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(!name.empty()); // Can't do anything if no name supplied.
 
 	if (!jsonObj.isMember(name.c_str())) throw SavedGameCorruptException();
@@ -329,7 +329,7 @@ void JsonToQuaternion(Quaterniond *pQuat, const Json::Value &jsonObj, const std:
 
 void JsonToMatrix(matrix3x3f *pMat, const Json::Value &jsonObj, const std::string &name)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(!name.empty()); // Can't do anything if no name supplied.
 #ifdef USE_STRING_VERSIONS
 	if (!jsonObj.isMember(name.c_str())) throw SavedGameCorruptException();
@@ -356,7 +356,7 @@ void JsonToMatrix(matrix3x3f *pMat, const Json::Value &jsonObj, const std::strin
 
 void JsonToMatrix(matrix3x3d *pMat, const Json::Value &jsonObj, const std::string &name)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(!name.empty()); // Can't do anything if no name supplied.
 #ifdef USE_STRING_VERSIONS
 	if (!jsonObj.isMember(name.c_str())) throw SavedGameCorruptException();
@@ -383,7 +383,7 @@ void JsonToMatrix(matrix3x3d *pMat, const Json::Value &jsonObj, const std::strin
 
 void JsonToMatrix(matrix4x4f *pMat, const Json::Value &jsonObj, const std::string &name)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(!name.empty()); // Can't do anything if no name supplied.
 #ifdef USE_STRING_VERSIONS
 	if (!jsonObj.isMember(name.c_str())) throw SavedGameCorruptException();
@@ -417,7 +417,7 @@ void JsonToMatrix(matrix4x4f *pMat, const Json::Value &jsonObj, const std::strin
 
 void JsonToMatrix(matrix4x4d *pMat, const Json::Value &jsonObj, const std::string &name)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(!name.empty()); // Can't do anything if no name supplied.
 #ifdef USE_STRING_VERSIONS
 	if (!jsonObj.isMember(name.c_str())) throw SavedGameCorruptException();
@@ -451,7 +451,7 @@ void JsonToMatrix(matrix4x4d *pMat, const Json::Value &jsonObj, const std::strin
 
 void JsonToColor(Color3ub *pCol, const Json::Value &jsonObj, const std::string &name)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(!name.empty()); // Can't do anything if no name supplied.
 
 	if (!jsonObj.isMember(name.c_str())) throw SavedGameCorruptException();
@@ -466,7 +466,7 @@ void JsonToColor(Color3ub *pCol, const Json::Value &jsonObj, const std::string &
 
 void JsonToColor(Color4ub *pCol, const Json::Value &jsonObj, const std::string &name)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(!name.empty()); // Can't do anything if no name supplied.
 
 	if (!jsonObj.isMember(name.c_str())) throw SavedGameCorruptException();
@@ -482,7 +482,7 @@ void JsonToColor(Color4ub *pCol, const Json::Value &jsonObj, const std::string &
 
 std::string JsonToBinStr(const Json::Value &jsonObj, const std::string &name)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(!name.empty()); // Can't do anything if no name supplied.
 
 	if (!jsonObj.isMember(name.c_str())) throw SavedGameCorruptException();

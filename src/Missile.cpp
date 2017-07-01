@@ -216,6 +216,8 @@ void Missile::Disarm()
 
 void Missile::Render(Graphics::Renderer *renderer, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform)
 {
+	rmt_ScopedCPUSample(Missile_Render, 0);
+	rmt_ScopedOpenGLSample(Missile_Render);
 	if (IsDead()) return;
 
 	GetPropulsion()->Render( renderer, camera, viewCoords, viewTransform );

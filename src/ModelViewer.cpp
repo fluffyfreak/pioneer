@@ -448,6 +448,8 @@ void ModelViewer::CreateTestResources()
 
 void ModelViewer::DrawBackground()
 {
+	rmt_ScopedCPUSample(DrawBackground, 0);
+	rmt_ScopedOpenGLSample(DrawBackground);
 	m_renderer->SetOrthographicProjection(0.f, 1.f, 0.f, 1.f, -1.f, 1.f);
 	m_renderer->SetTransform(matrix4x4f::Identity());
 
@@ -484,6 +486,8 @@ void ModelViewer::DrawBackground()
 //Draw grid and axes
 void ModelViewer::DrawGrid(const matrix4x4f &trans, float radius)
 {
+	rmt_ScopedCPUSample(DrawGrid, 0);
+	rmt_ScopedOpenGLSample(DrawGrid);
 	assert(m_options.showGrid);
 
 	const float dist = zoom_distance(m_baseDistance, m_zoom);
@@ -521,6 +525,8 @@ void ModelViewer::DrawGrid(const matrix4x4f &trans, float radius)
 
 void ModelViewer::DrawModel(const matrix4x4f &mv)
 {
+	rmt_ScopedCPUSample(DrawModel, 0);
+	rmt_ScopedOpenGLSample(DrawModel);
 	assert(m_model);
 
 	m_model->UpdateAnimations();
@@ -542,6 +548,8 @@ void ModelViewer::MainLoop()
 	double lastTime = SDL_GetTicks() * 0.001;
 	while (!m_done)
 	{
+		rmt_ScopedCPUSample(MainLoop, 0);
+		rmt_ScopedOpenGLSample(MainLoop);
 		const double ticks = SDL_GetTicks() * 0.001;
 		m_frameTime = (ticks - lastTime);
 		lastTime = ticks;

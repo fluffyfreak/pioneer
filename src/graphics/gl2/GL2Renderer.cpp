@@ -163,7 +163,7 @@ static std::string glerr_to_string(GLenum err)
 
 void RendererGL2::CheckErrors(const char *func /*= nullptr*/, const int line /*= nullptr*/)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 #ifndef PIONEER_PROFILER
 	GLenum err = glGetError();
 	if( err ) {
@@ -399,7 +399,7 @@ bool RendererGL2::GetNearFarRange(float &near_, float &far_) const
 
 bool RendererGL2::BeginFrame()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	glClearColor(0,0,0,0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	return true;
@@ -412,7 +412,7 @@ bool RendererGL2::EndFrame()
 
 bool RendererGL2::SwapBuffers()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	CheckRenderErrors(__FUNCTION__,__LINE__);
 
 	SDL_GL_SwapWindow(m_window);
@@ -431,7 +431,7 @@ bool RendererGL2::SetRenderState(RenderState *rs)
 
 bool RendererGL2::SetRenderTarget(RenderTarget *rt)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if (rt)
 		static_cast<GL2::RenderTarget*>(rt)->Bind();
 	else if (m_activeRenderTarget)
@@ -486,7 +486,7 @@ bool RendererGL2::SetViewport(int x, int y, int width, int height)
 
 bool RendererGL2::SetTransform(const matrix4x4d &m)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	matrix4x4f mf;
 	matrix4x4dtof(m, mf);
 	return SetTransform(mf);
@@ -494,7 +494,7 @@ bool RendererGL2::SetTransform(const matrix4x4d &m)
 
 bool RendererGL2::SetTransform(const matrix4x4f &m)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	//same as above
 	m_modelViewStack.top() = m;
 	SetMatrixMode(MatrixMode::MODELVIEW);
@@ -504,7 +504,7 @@ bool RendererGL2::SetTransform(const matrix4x4f &m)
 
 bool RendererGL2::SetPerspectiveProjection(float fov, float aspect, float znear, float zfar)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 
 	// update values for log-z hack
 	m_invLogZfarPlus1 = 1.0f / (log(zfar+1.0f)/log(2.0f));
@@ -523,7 +523,7 @@ bool RendererGL2::SetPerspectiveProjection(float fov, float aspect, float znear,
 
 bool RendererGL2::SetOrthographicProjection(float xmin, float xmax, float ymin, float ymax, float zmin, float zmax)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	const matrix4x4f orthoMat = matrix4x4f::OrthoFrustum(xmin, xmax, ymin, ymax, zmin, zmax);
 	SetProjection(orthoMat);
 	return true;
@@ -531,7 +531,7 @@ bool RendererGL2::SetOrthographicProjection(float xmin, float xmax, float ymin, 
 
 bool RendererGL2::SetProjection(const matrix4x4f &m)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	//same as above
 	m_projectionStack.top() = m;
 	SetMatrixMode(MatrixMode::PROJECTION);
@@ -597,7 +597,7 @@ void RendererGL2::SetMaterialShaderTransforms(Material *m)
 
 bool RendererGL2::DrawTriangles(const VertexArray *v, RenderState *rs, Material *m, PrimitiveType t)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if (!v || v->position.size() < 3) return false;
 
 	const AttributeSet attribs = v->GetAttributeSet();
@@ -662,7 +662,7 @@ bool RendererGL2::DrawTriangles(const VertexArray *v, RenderState *rs, Material 
 
 bool RendererGL2::DrawPointSprites(const Uint32 count, const vector3f *positions, RenderState *rs, Material *material, float size)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if (count == 0 || !material || !material->texture0)
 		return false;
 
@@ -721,7 +721,7 @@ bool RendererGL2::DrawPointSprites(const Uint32 count, const vector3f *positions
 
 bool RendererGL2::DrawPointSprites(const Uint32 count, const vector3f *positions, const vector2f *offsets, const float *sizes, RenderState *rs, Material *material)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if (count == 0 || !material || !material->texture0)
 		return false;
 
@@ -778,7 +778,7 @@ bool RendererGL2::DrawPointSprites(const Uint32 count, const vector3f *positions
 
 bool RendererGL2::DrawBuffer(VertexBuffer* vb, RenderState* state, Material* mat, PrimitiveType pt)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	SetRenderState(state);
 	mat->Apply();
 
@@ -802,7 +802,7 @@ bool RendererGL2::DrawBuffer(VertexBuffer* vb, RenderState* state, Material* mat
 
 bool RendererGL2::DrawBufferIndexed(VertexBuffer *vb, IndexBuffer *ib, RenderState *state, Material *mat, PrimitiveType pt)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	SetRenderState(state);
 	mat->Apply();
 
@@ -829,7 +829,7 @@ bool RendererGL2::DrawBufferIndexed(VertexBuffer *vb, IndexBuffer *ib, RenderSta
 
 bool RendererGL2::DrawBufferInstanced(VertexBuffer* vb, RenderState* state, Material* mat, InstanceBuffer* instb, PrimitiveType pt)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	SetRenderState(state);
 	mat->Apply();
 
@@ -849,7 +849,7 @@ bool RendererGL2::DrawBufferInstanced(VertexBuffer* vb, RenderState* state, Mate
 
 bool RendererGL2::DrawBufferIndexedInstanced(VertexBuffer *vb, IndexBuffer *ib, RenderState *state, Material *mat, InstanceBuffer* instb, PrimitiveType pt)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	SetRenderState(state);
 	mat->Apply();
 
@@ -871,7 +871,7 @@ bool RendererGL2::DrawBufferIndexedInstanced(VertexBuffer *vb, IndexBuffer *ib, 
 
 void RendererGL2::EnableVertexAttributes(const VertexBuffer* gvb)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	const auto &desc = gvb->GetDesc();
 	// Enable the Vertex attributes
 	for (Uint8 i = 0; i < MAX_ATTRIBS; i++) {
@@ -890,7 +890,7 @@ void RendererGL2::EnableVertexAttributes(const VertexBuffer* gvb)
 
 void RendererGL2::DisableVertexAttributes(const VertexBuffer* gvb)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	const auto &desc = gvb->GetDesc();
 	// Enable the Vertex attributes
 	for (Uint8 i = 0; i < MAX_ATTRIBS; i++) {
@@ -952,7 +952,7 @@ void RendererGL2::DisableVertexAttributes()
 
 Material *RendererGL2::CreateMaterial(const MaterialDescriptor &d)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	MaterialDescriptor desc = d;
 
 	GL2::Material *mat = 0;
@@ -1151,7 +1151,7 @@ void RendererGL2::PopState()
 
 void RendererGL2::SetMatrixMode(MatrixMode mm)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if( mm != m_matrixMode ) {
 		switch (mm) {
 			case MatrixMode::MODELVIEW:
@@ -1167,7 +1167,7 @@ void RendererGL2::SetMatrixMode(MatrixMode mm)
 
 void RendererGL2::PushMatrix()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 
 	glPushMatrix();
 	switch(m_matrixMode) {
@@ -1182,7 +1182,7 @@ void RendererGL2::PushMatrix()
 
 void RendererGL2::PopMatrix()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	glPopMatrix();
 	switch(m_matrixMode) {
 		case MatrixMode::MODELVIEW:
@@ -1198,7 +1198,7 @@ void RendererGL2::PopMatrix()
 
 void RendererGL2::LoadIdentity()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	glLoadIdentity();
 	switch(m_matrixMode) {
 		case MatrixMode::MODELVIEW:
@@ -1212,7 +1212,7 @@ void RendererGL2::LoadIdentity()
 
 void RendererGL2::LoadMatrix(const matrix4x4f &m)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	glLoadMatrixf(&m[0]);
 	switch(m_matrixMode) {
 		case MatrixMode::MODELVIEW:
@@ -1226,7 +1226,7 @@ void RendererGL2::LoadMatrix(const matrix4x4f &m)
 
 void RendererGL2::Translate( const float x, const float y, const float z )
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	glTranslatef(x,y,z);
 	switch(m_matrixMode) {
 		case MatrixMode::MODELVIEW:
@@ -1240,7 +1240,7 @@ void RendererGL2::Translate( const float x, const float y, const float z )
 
 void RendererGL2::Scale( const float x, const float y, const float z )
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	glScalef(x,y,z);
 	switch(m_matrixMode) {
 		case MatrixMode::MODELVIEW:

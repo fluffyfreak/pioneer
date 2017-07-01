@@ -64,6 +64,8 @@
 #include "RefCounted.h"
 
 #include "profiler/Profiler.h"
+#include "Remotery/lib/Remotery.h"
+static Remotery* rmt = nullptr;
 
 #ifdef NDEBUG
 #define	PiVerify(x) ((void)(x))

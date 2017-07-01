@@ -474,7 +474,7 @@ void RadarWidget::DrawRingsAndSpokes(bool blend)
 
 void RadarWidget::TimeStepUpdate(float step)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if (m_targetRange < m_currentRange)
 		m_currentRange = Clamp(m_currentRange - (m_currentRange*step), m_targetRange, RADAR_RANGE_MAX);
 	else if (m_targetRange > m_currentRange)

@@ -188,7 +188,7 @@ const float StarSystem::starScale[] = {  // Used in sector view
 
 SystemBody::BodySuperType SystemBody::GetSuperType() const
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	switch (m_type) {
 		case TYPE_BROWN_DWARF:
 		case TYPE_WHITE_DWARF:
@@ -245,7 +245,7 @@ SystemBody::BodySuperType SystemBody::GetSuperType() const
 
 std::string SystemBody::GetAstroDescription() const
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	switch (m_type) {
 	case TYPE_BROWN_DWARF: return Lang::BROWN_DWARF;
 	case TYPE_WHITE_DWARF: return Lang::WHITE_DWARF;
@@ -381,7 +381,7 @@ std::string SystemBody::GetAstroDescription() const
 
 const char *SystemBody::GetIcon() const
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	switch (m_type) {
 	case TYPE_BROWN_DWARF: return "icons/object_brown_dwarf.png";
 	case TYPE_WHITE_DWARF: return "icons/object_white_dwarf.png";
@@ -521,7 +521,7 @@ bool SystemBody::IsPlanet() const {
 
 double SystemBody::GetMaxChildOrbitalDistance() const
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	double max = 0;
 	for (unsigned int i=0; i<m_children.size(); i++) {
 		if (m_children[i]->m_orbMax.ToDouble() > max) {
@@ -549,7 +549,7 @@ bool SystemBody::IsCoOrbital() const
 
 double SystemBody::CalcSurfaceGravity() const
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	double r = GetRadius();
 	if (r > 0.0) {
 		return G * GetMass() / pow(r, 2);
@@ -560,7 +560,7 @@ double SystemBody::CalcSurfaceGravity() const
 
 SystemBody *StarSystem::GetBodyByPath(const SystemPath &path) const
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(m_path.IsSameSystem(path));
 	assert(path.IsBodyPath());
 	assert(path.bodyIndex < m_bodies.size());
@@ -581,20 +581,20 @@ SystemBody::SystemBody(const SystemPath& path, StarSystem *system) : m_parent(nu
 
 bool SystemBody::HasAtmosphere() const
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	return (m_volatileGas > fixed(1,100));
 }
 
 bool SystemBody::IsScoopable() const
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	return (GetSuperType() == SUPERTYPE_GAS_GIANT);
 }
 
 // Calculate parameters used in the atmospheric model for shaders
 SystemBody::AtmosphereParameters SystemBody::CalcAtmosphereParams() const
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	AtmosphereParameters params;
 
 	double atmosDensity;
@@ -663,7 +663,7 @@ StarSystem::StarSystem(const SystemPath &path, RefCountedPtr<Galaxy> galaxy, Sta
 	  m_faction(nullptr), m_explored(eEXPLORED_AT_START), m_exploredTime(0.0), m_econType(GalacticEconomy::ECON_MINING), m_seed(0),
 	  m_commodityLegal(unsigned(GalacticEconomy::Commodity::COMMODITY_COUNT), true), m_cache(cache)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	memset(m_tradeLevel, 0, sizeof(m_tradeLevel));
 }
 
@@ -730,7 +730,7 @@ void StarSystem::Dump()
 
 void StarSystem::MakeShortDescription()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if (GetExplored() == StarSystem::eUNEXPLORED)
 		SetShortDesc(Lang::UNEXPLORED_SYSTEM_NO_DATA);
 
@@ -825,7 +825,7 @@ void SystemBody::Dump(FILE* file, const char* indent) const
 
 void SystemBody::ClearParentAndChildPointers()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	for (std::vector<SystemBody*>::iterator i = m_children.begin(); i != m_children.end(); ++i)
 		(*i)->ClearParentAndChildPointers();
 	m_parent = 0;
@@ -834,7 +834,7 @@ void SystemBody::ClearParentAndChildPointers()
 
 StarSystem::~StarSystem()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	// clear parent and children pointers. someone (Lua) might still have a
 	// reference to things that are about to be deleted
 	m_rootBody->ClearParentAndChildPointers();

@@ -431,6 +431,8 @@ void ModelBody::ResetLighting(Graphics::Renderer *r, const std::vector<Graphics:
 
 void ModelBody::RenderModel(Graphics::Renderer *r, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform, const bool setLighting)
 {
+	rmt_ScopedCPUSample(ModelBody_RenderModel, 0);
+	rmt_ScopedOpenGLSample(ModelBody_RenderModel);
 	std::vector<Graphics::Light> oldLights;
 	Color oldAmbient;
 	if (setLighting)

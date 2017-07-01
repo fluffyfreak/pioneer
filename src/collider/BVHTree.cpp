@@ -10,7 +10,7 @@ const int MAX_SPLITPOS_RETRIES = 15;
 
 BVHTree::BVHTree(int numObjs, const objPtr_t *objPtrs, const Aabb *objAabbs)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	Profiler::Timer timer;
 	timer.Start();
 

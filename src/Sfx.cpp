@@ -87,7 +87,7 @@ void Sfx::SetPosition(const vector3d &p)
 
 void Sfx::TimeStepUpdate(const float timeStep)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	m_age += timeStep;
 	m_pos += m_vel * double(timeStep);
 
@@ -200,7 +200,7 @@ void SfxManager::AddThrustSmoke(const Body *b, const float speed, const vector3d
 
 void SfxManager::TimeStepAll(const float timeStep, Frame *f)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if (f->m_sfx) {
 		for(size_t t=TYPE_EXPLOSION; t<TYPE_NONE; t++)
 		{
@@ -239,7 +239,9 @@ void SfxManager::Cleanup()
 
 void SfxManager::RenderAll(Renderer *renderer, Frame *f, const Frame *camFrame)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
+	rmt_ScopedCPUSample(SfxManager_RenderAll, 0);
+	rmt_ScopedOpenGLSample(SfxManager_RenderAll);
 	if (f->m_sfx) {
 		matrix4x4d ftran;
 		Frame::GetFrameTransform(f, camFrame, ftran);

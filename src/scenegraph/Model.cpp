@@ -95,7 +95,7 @@ Model *Model::MakeInstance() const
 
 void Model::Render(const matrix4x4f &trans, const RenderData *rd)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	//update color parameters (materials are shared by model instances)
 	if (m_curPattern) {
 		for (MaterialContainer::const_iterator it = m_materials.begin(); it != m_materials.end(); ++it) {
@@ -202,7 +202,7 @@ void Model::Render(const std::vector<matrix4x4f> &trans, const RenderData *rd)
 
 void Model::CreateAabbVB()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if (!m_collMesh) return;
 
 	const Aabb aabb = m_collMesh->GetAabb();
@@ -272,7 +272,7 @@ void Model::DrawAabb()
 // Draw collision mesh as a wireframe overlay
 void Model::DrawCollisionMesh()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if (!m_collMesh) return;
 
 	if( !m_collisionMeshVB.Valid() )

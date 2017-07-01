@@ -66,7 +66,7 @@ static void print_info(const SystemBody *sbody, const Terrain *terrain)
 // static
 void GeoSphere::UpdateAllGeoSpheres()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	for(std::vector<GeoSphere*>::iterator i = s_allGeospheres.begin(); i != s_allGeospheres.end(); ++i)
 	{
 		(*i)->Update();
@@ -385,7 +385,9 @@ void GeoSphere::ProcessQuadSplitRequests()
 
 void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView, vector3d campos, const float radius, const std::vector<Camera::Shadow> &shadows)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
+	rmt_ScopedCPUSample(GeoSphere_Render, 0);
+	rmt_ScopedOpenGLSample(GeoSphere_Render);
 	// store this for later usage in the update method.
 	m_tempCampos = campos;
 	m_hasTempCampos = true;

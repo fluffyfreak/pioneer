@@ -83,7 +83,7 @@ namespace GasGiantJobs
 		STextureFaceResult(const int32_t face_) : mFace(face_) {}
 
 		void addResult(Color *c_, Sint32 uvDims_) {
-			PROFILE_SCOPED()
+			PROFILE_SCOPED();
 			mData = STextureFaceData(c_, uvDims_);
 		}
 

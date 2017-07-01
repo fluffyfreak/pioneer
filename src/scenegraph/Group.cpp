@@ -116,13 +116,13 @@ void Group::Traverse(NodeVisitor &nv)
 
 void Group::Render(const matrix4x4f &trans, const RenderData *rd)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	RenderChildren(trans, rd);
 }
 
 void Group::RenderChildren(const matrix4x4f &trans, const RenderData *rd)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	for(std::vector<Node*>::iterator itr = m_children.begin(), itEnd = m_children.end(); itr != itEnd; ++itr)
 	{
 		if((*itr)->GetNodeMask() & rd->nodemask)
@@ -132,13 +132,13 @@ void Group::RenderChildren(const matrix4x4f &trans, const RenderData *rd)
 
 void Group::Render(const std::vector<matrix4x4f> &trans, const RenderData *rd)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	RenderChildren(trans, rd);
 }
 
 void Group::RenderChildren(const std::vector<matrix4x4f> &trans, const RenderData *rd)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	for (std::vector<Node*>::iterator itr = m_children.begin(), itEnd = m_children.end(); itr != itEnd; ++itr)
 	{
 		if ((*itr)->GetNodeMask() & rd->nodemask)

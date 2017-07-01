@@ -40,7 +40,7 @@ void GalaxyObjectCache<T,CompareT>::AddToCache(std::vector<RefCountedPtr<T> >& o
 template <typename T, typename CompareT>
 RefCountedPtr<T> GalaxyObjectCache<T,CompareT>::GetIfCached(const SystemPath& path)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 
 	RefCountedPtr<T> s;
 	typename AtticMap::iterator i = m_attic.find(path);
@@ -54,7 +54,7 @@ RefCountedPtr<T> GalaxyObjectCache<T,CompareT>::GetIfCached(const SystemPath& pa
 template <typename T, typename CompareT>
 RefCountedPtr<T> GalaxyObjectCache<T,CompareT>::GetCached(const SystemPath& path)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 
 	RefCountedPtr<T> s = this->GetIfCached(path);
 	if (!s) {
@@ -70,7 +70,7 @@ RefCountedPtr<T> GalaxyObjectCache<T,CompareT>::GetCached(const SystemPath& path
 template <typename T, typename CompareT>
 bool GalaxyObjectCache<T,CompareT>::HasCached(const SystemPath& path) const
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 
 	return (m_attic.find(path) != m_attic.end());
 }
@@ -118,7 +118,7 @@ void GalaxyObjectCache<T,CompareT>::Slave::MasterDeleted()
 template <typename T, typename CompareT>
 RefCountedPtr<T> GalaxyObjectCache<T,CompareT>::Slave::GetIfCached(const SystemPath& path)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 
 	typename CacheMap::iterator i = m_cache.find(path);
 	if (i != m_cache.end())
@@ -129,7 +129,7 @@ RefCountedPtr<T> GalaxyObjectCache<T,CompareT>::Slave::GetIfCached(const SystemP
 template <typename T, typename CompareT>
 RefCountedPtr<T> GalaxyObjectCache<T,CompareT>::Slave::GetCached(const SystemPath& path)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 
 	typename CacheMap::iterator i = m_cache.find(path);
 	if (i != m_cache.end()) {

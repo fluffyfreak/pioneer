@@ -129,6 +129,8 @@ static Renderer *CreateRenderer(const Settings &vs)
 
 	SDL_GL_SetSwapInterval((vs.vsync!=0) ? 1 : 0);
 
+	rmt_BindOpenGL();
+
     return new RendererOGL(window, vs);
 }
 
@@ -246,6 +248,8 @@ RendererOGL::RendererOGL(SDL_Window *window, const Graphics::Settings &vs)
 
 RendererOGL::~RendererOGL()
 {
+	rmt_UnbindOpenGL();
+
 	// HACK ANDYC - this crashes when shutting down? They'll be released anyway right?
 	//while (!m_programs.empty()) delete m_programs.back().second, m_programs.pop_back();
 	for (auto state : m_renderStates)
@@ -400,7 +404,7 @@ bool RendererOGL::GetNearFarRange(float &near_, float &far_) const
 
 bool RendererOGL::BeginFrame()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	glClearColor(0,0,0,0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	return true;
@@ -430,7 +434,7 @@ static std::string glerr_to_string(GLenum err)
 
 void RendererOGL::CheckErrors(const char *func, const int line)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 #ifndef PIONEER_PROFILER
 	GLenum err = glGetError();
 	if( err ) {
@@ -470,7 +474,9 @@ void RendererOGL::CheckErrors(const char *func, const int line)
 
 bool RendererOGL::SwapBuffers()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
+	rmt_ScopedCPUSample(RendererOGL_SwapBuffers, 0);
+	rmt_ScopedOpenGLSample(RendererOGL_SwapBuffers);
 	CheckRenderErrors(__FUNCTION__,__LINE__);
 
 	SDL_GL_SwapWindow(m_window);
@@ -490,7 +496,7 @@ bool RendererOGL::SetRenderState(RenderState *rs)
 
 bool RendererOGL::SetRenderTarget(RenderTarget *rt)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if (rt)
 		static_cast<OGL::RenderTarget*>(rt)->Bind();
 	else if (m_activeRenderTarget)
@@ -510,6 +516,8 @@ bool RendererOGL::SetDepthRange(double znear, double zfar)
 
 bool RendererOGL::ClearScreen()
 {
+	rmt_ScopedCPUSample(RendererOGL_ClearScreen, 0);
+	rmt_ScopedOpenGLSample(RendererOGL_ClearScreen);
 	m_activeRenderState = nullptr;
 	glEnable(GL_DEPTH_TEST);
 	glDepthMask(GL_TRUE);
@@ -521,6 +529,8 @@ bool RendererOGL::ClearScreen()
 
 bool RendererOGL::ClearDepthBuffer()
 {
+	rmt_ScopedCPUSample(RendererOGL_ClearScreen, 0);
+	rmt_ScopedOpenGLSample(RendererOGL_ClearScreen);
 	m_activeRenderState = nullptr;
 	glEnable(GL_DEPTH_TEST);
 	glDepthMask(GL_TRUE);
@@ -550,7 +560,7 @@ bool RendererOGL::SetViewport(int x, int y, int width, int height)
 
 bool RendererOGL::SetTransform(const matrix4x4d &m)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	matrix4x4f mf;
 	matrix4x4dtof(m, mf);
 	return SetTransform(mf);
@@ -558,7 +568,7 @@ bool RendererOGL::SetTransform(const matrix4x4d &m)
 
 bool RendererOGL::SetTransform(const matrix4x4f &m)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	//same as above
 	SetMatrixMode(MatrixMode::MODELVIEW);
 	LoadMatrix(m);
@@ -567,7 +577,7 @@ bool RendererOGL::SetTransform(const matrix4x4f &m)
 
 bool RendererOGL::SetPerspectiveProjection(float fov, float aspect, float near_, float far_)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 
 	// update values for log-z hack
 	m_invLogZfarPlus1 = 1.0f / (log1p(far_)/log(2.0f));
@@ -586,7 +596,7 @@ bool RendererOGL::SetPerspectiveProjection(float fov, float aspect, float near_,
 
 bool RendererOGL::SetOrthographicProjection(float xmin, float xmax, float ymin, float ymax, float zmin, float zmax)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	const matrix4x4f orthoMat = matrix4x4f::OrthoFrustum(xmin, xmax, ymin, ymax, zmin, zmax);
 	SetProjection(orthoMat);
 	return true;
@@ -594,7 +604,7 @@ bool RendererOGL::SetOrthographicProjection(float xmin, float xmax, float ymin, 
 
 bool RendererOGL::SetProjection(const matrix4x4f &m)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	//same as above
 	SetMatrixMode(MatrixMode::PROJECTION);
 	LoadMatrix(m);
@@ -659,7 +669,8 @@ void RendererOGL::SetMaterialShaderTransforms(Material *m)
 
 bool RendererOGL::DrawTriangles(const VertexArray *v, RenderState *rs, Material *m, PrimitiveType t)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
+	rmt_ScopedCPUSample(DrawTriangles, 0);
 	if (!v || v->position.size() < 3) return false;
 
 	const AttributeSet attribs = v->GetAttributeSet();
@@ -724,7 +735,8 @@ bool RendererOGL::DrawTriangles(const VertexArray *v, RenderState *rs, Material 
 
 bool RendererOGL::DrawPointSprites(const Uint32 count, const vector3f *positions, RenderState *rs, Material *material, float size)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
+	rmt_ScopedCPUSample(DrawPointSprites, 0);
 	if (count == 0 || !material || !material->texture0)
 		return false;
 
@@ -783,7 +795,8 @@ bool RendererOGL::DrawPointSprites(const Uint32 count, const vector3f *positions
 
 bool RendererOGL::DrawPointSprites(const Uint32 count, const vector3f *positions, const vector2f *offsets, const float *sizes, RenderState *rs, Material *material)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
+	rmt_ScopedCPUSample(DrawPointSprites, 0);
 	if (count == 0 || !material || !material->texture0)
 		return false;
 
@@ -840,7 +853,9 @@ bool RendererOGL::DrawPointSprites(const Uint32 count, const vector3f *positions
 
 bool RendererOGL::DrawBuffer(VertexBuffer* vb, RenderState* state, Material* mat, PrimitiveType pt)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
+	rmt_ScopedCPUSample(DrawBuffer, 0);
+	rmt_ScopedOpenGLSample(DrawBuffer);
 	SetRenderState(state);
 	mat->Apply();
 
@@ -858,7 +873,9 @@ bool RendererOGL::DrawBuffer(VertexBuffer* vb, RenderState* state, Material* mat
 
 bool RendererOGL::DrawBufferIndexed(VertexBuffer *vb, IndexBuffer *ib, RenderState *state, Material *mat, PrimitiveType pt)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
+	rmt_ScopedCPUSample(DrawBufferIndexed, 0);
+	rmt_ScopedOpenGLSample(DrawBufferIndexed);
 	SetRenderState(state);
 	mat->Apply();
 
@@ -878,7 +895,9 @@ bool RendererOGL::DrawBufferIndexed(VertexBuffer *vb, IndexBuffer *ib, RenderSta
 
 bool RendererOGL::DrawBufferInstanced(VertexBuffer* vb, RenderState* state, Material* mat, InstanceBuffer* instb, PrimitiveType pt)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
+	rmt_ScopedCPUSample(DrawBufferInstanced, 0);
+	rmt_ScopedOpenGLSample(DrawBufferInstanced);
 	SetRenderState(state);
 	mat->Apply();
 
@@ -898,7 +917,9 @@ bool RendererOGL::DrawBufferInstanced(VertexBuffer* vb, RenderState* state, Mate
 
 bool RendererOGL::DrawBufferIndexedInstanced(VertexBuffer *vb, IndexBuffer *ib, RenderState *state, Material *mat, InstanceBuffer* instb, PrimitiveType pt)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
+	rmt_ScopedCPUSample(DrawBufferIndexedInstanced, 0);
+	rmt_ScopedOpenGLSample(DrawBufferIndexedInstanced);
 	SetRenderState(state);
 	mat->Apply();
 
@@ -920,7 +941,8 @@ bool RendererOGL::DrawBufferIndexedInstanced(VertexBuffer *vb, IndexBuffer *ib, 
 
 Material *RendererOGL::CreateMaterial(const MaterialDescriptor &d)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
+	rmt_ScopedCPUSample(CreateMaterial, 0);
 	MaterialDescriptor desc = d;
 
 	OGL::Material *mat = 0;
@@ -1008,7 +1030,8 @@ bool RendererOGL::ReloadShaders()
 
 OGL::Program* RendererOGL::GetOrCreateProgram(OGL::Material *mat)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
+	rmt_ScopedCPUSample(GetOrCreateProgram, 0);
 	const MaterialDescriptor &desc = mat->GetDescriptor();
 	OGL::Program *p = 0;
 
@@ -1032,13 +1055,15 @@ OGL::Program* RendererOGL::GetOrCreateProgram(OGL::Material *mat)
 
 Texture *RendererOGL::CreateTexture(const TextureDescriptor &descriptor)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
+	rmt_ScopedCPUSample(CreateTexture, 0);
 	return new OGL::TextureGL(descriptor, m_useCompressedTextures, m_useAnisotropicFiltering);
 }
 
 RenderState *RendererOGL::CreateRenderState(const RenderStateDesc &desc)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
+	rmt_ScopedCPUSample(CreateRenderState, 0);
 	const uint32_t hash = lookup3_hashlittle(&desc, sizeof(RenderStateDesc), 0);
 	auto it = m_renderStates.find(hash);
 	if (it != m_renderStates.end()) {
@@ -1054,7 +1079,8 @@ RenderState *RendererOGL::CreateRenderState(const RenderStateDesc &desc)
 
 RenderTarget *RendererOGL::CreateRenderTarget(const RenderTargetDesc &desc)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
+	rmt_ScopedCPUSample(CreateRenderTarget, 0);
 	OGL::RenderTarget* rt = new OGL::RenderTarget(desc);
 	CheckRenderErrors(__FUNCTION__,__LINE__);
 	rt->Bind();

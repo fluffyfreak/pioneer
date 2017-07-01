@@ -61,7 +61,7 @@ protected:
 // ********************************************************************************
 void SetupRenderer()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	s_config.reset(new GameConfig);
 
 	OS::RedirectStdio();
@@ -102,7 +102,7 @@ void SetupRenderer()
 
 void RunCompiler(const std::string &modelName, const std::string &filepath, const bool bInPlace)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	Profiler::Timer timer;
 	timer.Start();
 	Output("\n---\nStarting compiler for (%s)\n", modelName.c_str());

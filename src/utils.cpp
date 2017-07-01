@@ -279,7 +279,7 @@ union fu64 {
 
 std::string FloatToStr(float val)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 #ifdef USE_HEX_FLOATS
 	char hex[32]; // Probably don't need such a large char array.
 	std::sprintf(hex, "%a", val);
@@ -296,7 +296,7 @@ std::string FloatToStr(float val)
 
 std::string DoubleToStr(double val)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 #ifdef USE_HEX_FLOATS
 	char hex[64]; // Probably don't need such a large char array.
 	std::sprintf(hex, "%la", val);
@@ -313,7 +313,7 @@ std::string DoubleToStr(double val)
 
 void Vector3fToStr(const vector3f &val, char *out, size_t size)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	static_assert(sizeof(vector3f) == 12, "vector3f isn't 12 bytes");
 #ifdef USE_HEX_FLOATS
 	const int amt = std::sprintf(out, "%a,%a,%a", val.x, val.y, val.z);
@@ -329,7 +329,7 @@ void Vector3fToStr(const vector3f &val, char *out, size_t size)
 
 void Vector3dToStr(const vector3d &val, char *out, size_t size)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	static_assert(sizeof(vector3d) == 24, "vector3d isn't 24 bytes");
 #ifdef USE_HEX_FLOATS
 	const int amt = std::sprintf(out, "%la,%la,%la", val.x, val.y, val.z);
@@ -345,7 +345,7 @@ void Vector3dToStr(const vector3d &val, char *out, size_t size)
 
 void Matrix3x3fToStr(const matrix3x3f &val, char *out, size_t size)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	static_assert(sizeof(matrix3x3f) == 36, "matrix3x3f isn't 36 bytes");
 #ifdef USE_HEX_FLOATS
 	const int amt = std::sprintf(out, "%a,%a,%a,%a,%a,%a,%a,%a,%a", val[0], val[1], val[2], val[3], val[4], val[5], val[6], val[7], val[8]);
@@ -367,7 +367,7 @@ void Matrix3x3fToStr(const matrix3x3f &val, char *out, size_t size)
 
 void Matrix3x3dToStr(const matrix3x3d &val, char *out, size_t size)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	static_assert(sizeof(matrix3x3d) == 72, "matrix3x3d isn't 72 bytes");
 #ifdef USE_HEX_FLOATS
 	const int amt = std::sprintf(out, "%a,%a,%a,%a,%a,%a,%a,%a,%a", val[0], val[1], val[2], val[3], val[4], val[5], val[6], val[7], val[8]);
@@ -389,7 +389,7 @@ void Matrix3x3dToStr(const matrix3x3d &val, char *out, size_t size)
 
 void Matrix4x4fToStr(const matrix4x4f &val, char *out, size_t size)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	static_assert(sizeof(matrix4x4f) == 64, "matrix4x4f isn't 64 bytes");
 #ifdef USE_HEX_FLOATS
 	const int amt = std::sprintf(out, "%a,%a,%a,%a,%a,%a,%a,%a,%a,%a,%a,%a,%a,%a,%a,%a", val[0], val[1], val[2], val[3], val[4], val[5], val[6], val[7], val[8], val[9], val[10], val[11], val[12], val[13], val[14], val[15]);
@@ -413,7 +413,7 @@ void Matrix4x4fToStr(const matrix4x4f &val, char *out, size_t size)
 
 void Matrix4x4dToStr(const matrix4x4d &val, char *out, size_t size)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	static_assert(sizeof(matrix4x4d) == 128, "matrix4x4d isn't 128 bytes");
 #ifdef USE_HEX_FLOATS
 	const int amt = std::sprintf(out, "%a,%a,%a,%a,%a,%a,%a,%a,%a,%a,%a,%a,%a,%a,%a,%a", val[0], val[1], val[2], val[3], val[4], val[5], val[6], val[7], val[8], val[9], val[10], val[11], val[12], val[13], val[14], val[15]);
@@ -475,7 +475,7 @@ Uint64 StrToUInt64(const std::string &str)
 
 float StrToFloat(const std::string &str)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 #ifdef USE_HEX_FLOATS
 	float val;
 	std::sscanf(str.c_str(), "%a", &val);
@@ -492,7 +492,7 @@ float StrToFloat(const std::string &str)
 
 double StrToDouble(const std::string &str)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 #ifdef USE_HEX_FLOATS
 	double val;
 	std::sscanf(str.c_str(), "%la", &val);
@@ -530,7 +530,7 @@ void StrToAuto(double *pVal, const std::string &str)
 
 void StrToVector3f(const char *str, vector3f &val)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 #ifdef USE_HEX_FLOATS
 	const int amt = std::sscanf(str, "%a,%a,%a", &val.x, &val.y, &val.z);
 	assert(amt==3);
@@ -546,7 +546,7 @@ void StrToVector3f(const char *str, vector3f &val)
 
 void StrToVector3d(const char *str, vector3d &val)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 #ifdef USE_HEX_FLOATS
 	const int amt = std::sscanf(str, "%la,%la,%la", &val.x, &val.y, &val.z);
 	assert(amt==3);
@@ -562,7 +562,7 @@ void StrToVector3d(const char *str, vector3d &val)
 
 void StrToMatrix3x3f(const char *str, matrix3x3f &val)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 #ifdef USE_HEX_FLOATS
 	const int amt = std::sscanf(str, "%a,%a,%a,%a,%a,%a,%a,%a,%a", &val[0], &val[1], &val[2], &val[3], &val[4], &val[5], &val[6], &val[7], &val[8]);
 	assert(amt==9);
@@ -580,7 +580,7 @@ void StrToMatrix3x3f(const char *str, matrix3x3f &val)
 
 void StrToMatrix3x3d(const char *str, matrix3x3d &val)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 #ifdef USE_HEX_FLOATS
 	const int amt = std::sscanf(str, "%la,%la,%la,%la,%la,%la,%la,%la,%la", &val[0], &val[1], &val[2], &val[3], &val[4], &val[5], &val[6], &val[7], &val[8]);
 	assert(amt==9);
@@ -598,7 +598,7 @@ void StrToMatrix3x3d(const char *str, matrix3x3d &val)
 
 void StrToMatrix4x4f(const char *str, matrix4x4f &val)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 #ifdef USE_HEX_FLOATS
 	const int amt = std::sscanf(str, "%a,%a,%a,%a,%a,%a,%a,%a,%a,%a,%a,%a,%a,%a,%a,%a", &val[0], &val[1], &val[2], &val[3], &val[4], &val[5], &val[6], &val[7], &val[8], &val[9], &val[10], &val[11], &val[12], &val[13], &val[14], &val[15]);
 	assert(amt==16);
@@ -617,7 +617,7 @@ void StrToMatrix4x4f(const char *str, matrix4x4f &val)
 
 void StrToMatrix4x4d(const char *str, matrix4x4d &val)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 #ifdef USE_HEX_FLOATS
 	const int amt = std::sscanf(str, "%la,%la,%la,%la,%la,%la,%la,%la,%la,%la,%la,%la,%la,%la,%la,%la", &val[0], &val[1], &val[2], &val[3], &val[4], &val[5], &val[6], &val[7], &val[8], &val[9], &val[10], &val[11], &val[12], &val[13], &val[14], &val[15]);
 	assert(amt==16);

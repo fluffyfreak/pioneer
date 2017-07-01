@@ -73,7 +73,7 @@ void Label3D::SetText(const std::string &text)
 
 void Label3D::Render(const matrix4x4f &trans, const RenderData *rd)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if( m_vbuffer.get() )
 	{
 		Graphics::Renderer *r = GetRenderer();

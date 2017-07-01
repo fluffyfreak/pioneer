@@ -7,7 +7,7 @@ namespace Graphics {
 
 VertexArray::VertexArray(AttributeSet attribs, int size)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	m_attribs = attribs;
 
 	if (size > 0) {

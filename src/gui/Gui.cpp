@@ -23,7 +23,7 @@ namespace RawEvents {
 static Sint32 lastMouseX, lastMouseY;
 void HandleSDLEvent(SDL_Event *event)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	switch (event->type) {
 		case SDL_MOUSEBUTTONDOWN:
 			lastMouseX = event->button.x;
@@ -95,7 +95,7 @@ sigc::connection AddTimer(Uint32 ms, sigc::slot<void> slot)
 
 void Draw()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	Uint32 t = SDL_GetTicks();
 	// also abused like an update() function...
 	for (std::list<TimerSignal*>::iterator i = g_timeSignals.begin(); i != g_timeSignals.end();) {
@@ -204,7 +204,7 @@ namespace Theme {
 	static MapIndentBuffers s_indentBuffers;
 	void DrawIndent(const float size[2], Graphics::RenderState *state)
 	{
-		PROFILE_SCOPED()
+		PROFILE_SCOPED();
 
 		// locals
 		RefCountedPtr<Graphics::VertexBuffer> vb;
@@ -299,7 +299,7 @@ namespace Theme {
 	static MapOutdentBuffers s_outdentBuffers;
 	void DrawOutdent(const float size[2], Graphics::RenderState *state)
 	{
-		PROFILE_SCOPED()
+		PROFILE_SCOPED();
 
 		// locals
 		RefCountedPtr<Graphics::VertexBuffer> vb;

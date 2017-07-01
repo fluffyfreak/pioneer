@@ -73,7 +73,7 @@ void TextLayout::MeasureSize(const float width, float outSize[2]) const
 
 void TextLayout::Render(const float width, const Color &color) const
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if(words.empty())
 		return;
 
@@ -97,7 +97,7 @@ void TextLayout::Render(const float width, const Color &color) const
 
 void TextLayout::Update(const float width, const Color &color)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if(words.empty()) {
 		m_vbuffer.Reset();
 		return;

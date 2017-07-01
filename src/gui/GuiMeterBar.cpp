@@ -21,7 +21,7 @@ MeterBar::MeterBar(float width, const char *label, const ::Color &graphCol)
 
 void MeterBar::Draw()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	float fsize[2];
 	GetSize(fsize);
 	vector2f size(fsize[0], fsize[1]);

@@ -156,6 +156,8 @@ void Context::Update()
 
 void Context::Draw()
 {
+	rmt_ScopedCPUSample(Context_Draw, 0);
+	rmt_ScopedOpenGLSample(Context_Draw);
 	Graphics::Renderer *r = GetRenderer();
 	r->ClearDepthBuffer();
 
@@ -195,6 +197,8 @@ Widget *Context::CallTemplate(const char *name)
 
 void Context::DrawWidget(Widget *w)
 {
+	rmt_ScopedCPUSample(Context_DrawWidget, 0);
+	rmt_ScopedOpenGLSample(Context_DrawWidget);
 	const Point &pos = w->GetPosition();
 	const Point &drawOffset = w->GetDrawOffset();
 	const Point &size = w->GetSize();

@@ -242,7 +242,7 @@ void Program::Unuse()
 //load, compile and link
 void Program::LoadShaders(const std::string &name, const std::string &defines)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	const std::string filename = std::string("shaders/opengl/") + name;
 
 	//load, create and compile shaders
@@ -280,7 +280,7 @@ void Program::LoadShaders(const std::string &name, const std::string &defines)
 
 void Program::InitUniforms()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	//Init generic uniforms, like matrices
 	uProjectionMatrix.Init("uProjectionMatrix", m_program);
 	uViewMatrix.Init("uViewMatrix", m_program);

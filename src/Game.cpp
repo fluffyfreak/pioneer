@@ -188,7 +188,7 @@ m_forceTimeAccel(false)
 
 void Game::ToJson(Json::Value &jsonObj)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	// preparing the lua serializer
 	Pi::luaSerializer->InitTableRefs();
 
@@ -240,7 +240,7 @@ void Game::ToJson(Json::Value &jsonObj)
 
 void Game::TimeStep(float step)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	m_time += step;			// otherwise planets lag time accel changes by a frame
 	if (m_state == STATE_HYPERSPACE && Pi::game->GetTime() >= m_hyperspaceEndTime)
 		m_time = m_hyperspaceEndTime;
@@ -272,7 +272,7 @@ void Game::TimeStep(float step)
 
 bool Game::UpdateTimeAccel()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	// don't modify the timeaccel if the game is paused
 	if (m_requestedTimeAccel == Game::TIMEACCEL_PAUSED) {
 		SetTimeAccel(Game::TIMEACCEL_PAUSED);
@@ -377,7 +377,7 @@ void Game::RemoveHyperspaceCloud(HyperspaceCloud* cloud)
 
 void Game::SwitchToHyperspace()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	// remember where we came from so we can properly place the player on exit
 	m_hyperspaceSource = m_space->GetStarSystem()->GetPath();
 	m_hyperspaceDest =  m_player->GetHyperspaceDest();
@@ -452,7 +452,7 @@ void Game::SwitchToHyperspace()
 
 void Game::SwitchToNormalSpace()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	// remove the player from hyperspace
 	m_space->RemoveBody(m_player.get());
 
@@ -859,7 +859,7 @@ bool Game::CanLoadGame(const std::string &filename)
 
 void Game::SaveGame(const std::string &filename, Game *game)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(game);
 
 	if (game->IsHyperspace())

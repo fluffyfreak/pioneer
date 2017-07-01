@@ -27,7 +27,7 @@ Parser::Parser(FileSystem::FileSource &fs, const std::string &filename, const st
 
 void Parser::Parse(ModelDefinition *m)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	StringRange buffer = m_file->AsStringRange();
 	buffer = buffer.StripUTF8BOM();
 
@@ -109,7 +109,7 @@ bool Parser::checkColor(std::stringstream &ss, Color &color)
 
 bool Parser::parseLine(const std::string &line)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	using std::stringstream;
 	using std::string;
 	stringstream ss(stringstream::in | stringstream::out);

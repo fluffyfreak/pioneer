@@ -70,7 +70,7 @@ void ScrollBar::OnRawMouseMotion(MouseMotionEvent *e)
 
 void ScrollBar::Draw()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	float size[2]; GetSize(size);
 	Theme::DrawIndent(size, Screen::alphaBlendState);
 	float pos = m_adjustment->GetValue();

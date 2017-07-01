@@ -46,7 +46,7 @@ namespace GasGiantJobs
 	// Use only data local to this object
 	void STextureFaceRequest::OnRun()
 	{
-		PROFILE_SCOPED()
+		PROFILE_SCOPED();
 		//MsgTimer timey;
 
 		assert( corners != nullptr );
@@ -79,7 +79,7 @@ namespace GasGiantJobs
 	// ********************************************************************************
 	SingleTextureFaceJob::~SingleTextureFaceJob()
 	{
-		PROFILE_SCOPED()
+		PROFILE_SCOPED();
 		if(mpResults) {
 			mpResults->OnCancel();
 			delete mpResults;
@@ -89,7 +89,7 @@ namespace GasGiantJobs
 
 	void SingleTextureFaceJob::OnRun() // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
 	{
-		PROFILE_SCOPED()
+		PROFILE_SCOPED();
 		mData->OnRun();
 
 		// add this patches data
@@ -102,7 +102,7 @@ namespace GasGiantJobs
 
 	void SingleTextureFaceJob::OnFinish() // runs in primary thread of the context
 	{
-		PROFILE_SCOPED()
+		PROFILE_SCOPED();
 		GasGiant::OnAddTextureFaceResult( mData->SysPath(), mpResults );
 		mpResults = nullptr;
 	}
@@ -110,7 +110,7 @@ namespace GasGiantJobs
 	// ********************************************************************************
 	GenFaceQuad::GenFaceQuad(Graphics::Renderer *r, const vector2f &size, Graphics::RenderState *state, const Uint32 GGQuality)
 	{
-		PROFILE_SCOPED()
+		PROFILE_SCOPED();
 		assert(state);
 		m_renderState = state;
 
@@ -169,7 +169,7 @@ namespace GasGiantJobs
 	}
 
 	void GenFaceQuad::Draw(Graphics::Renderer *r) {
-		PROFILE_SCOPED()
+		PROFILE_SCOPED();
 		r->DrawBuffer(m_vertexBuffer.get(), m_renderState, m_material.get(), Graphics::TRIANGLE_STRIP);
 	}
 
@@ -177,13 +177,13 @@ namespace GasGiantJobs
 	SGPUGenRequest::SGPUGenRequest(const SystemPath &sysPath_, const Sint32 uvDIMs_, Terrain *pTerrain_, const float planetRadius_, const float hueAdjust_, GenFaceQuad* pQuad_, Graphics::Texture *pTex_) :
 		m_texture(pTex_), sysPath(sysPath_), uvDIMs(uvDIMs_), pTerrain(pTerrain_), planetRadius(planetRadius_), hueAdjust(hueAdjust_), pQuad(pQuad_)
 	{
-		PROFILE_SCOPED()
+		PROFILE_SCOPED();
 		assert(m_texture.Valid());
 	}
 
 	void SGPUGenRequest::SetupMaterialParams(const int face)
 	{
-		PROFILE_SCOPED()
+		PROFILE_SCOPED();
 		m_specialParams.v = &GetPatchFaces(face,0);
 		m_specialParams.fracStep = 1.0f / float(uvDIMs);
 		m_specialParams.planetRadius = planetRadius;
@@ -200,7 +200,7 @@ namespace GasGiantJobs
 
 	// ********************************************************************************
 	void SGPUGenResult::addResult(Graphics::Texture *t_, Sint32 uvDims_) {
-		PROFILE_SCOPED()
+		PROFILE_SCOPED();
 		mData = SGPUGenData(t_, uvDims_);
 	}
 
@@ -222,7 +222,7 @@ namespace GasGiantJobs
 	SingleGPUGenJob::SingleGPUGenJob(SGPUGenRequest *data) : mData(data), mpResults(nullptr) { /* empty */ }
 	SingleGPUGenJob::~SingleGPUGenJob()
 	{
-		PROFILE_SCOPED()
+		PROFILE_SCOPED();
 		if(mpResults) {
 			mpResults->OnCancel();
 			delete mpResults;
@@ -232,7 +232,7 @@ namespace GasGiantJobs
 
 	void SingleGPUGenJob::OnRun() // Runs in the main thread, may trash the GPU state
 	{
-		PROFILE_SCOPED()
+		PROFILE_SCOPED();
 		//MsgTimer timey;
 
 		Pi::renderer->SetViewport(0, 0, mData->UVDims(), mData->UVDims());
@@ -284,7 +284,7 @@ namespace GasGiantJobs
 
 	void SingleGPUGenJob::OnFinish() // runs in primary thread of the context
 	{
-		PROFILE_SCOPED()
+		PROFILE_SCOPED();
 		GasGiant::OnAddGPUGenResult( mData->SysPath(), mpResults );
 		mpResults = nullptr;
 	}

@@ -49,7 +49,7 @@ void Image::SetRenderDimensions(const float wide, const float high)
 
 void Image::Draw()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	float allocSize[2];
 	GetSize(allocSize);
 

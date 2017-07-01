@@ -432,7 +432,7 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 	FileSystem::userFiles.MakeDirectory("profiler");
 	profilerPath = FileSystem::JoinPathBelow(FileSystem::userFiles.GetRoot(), "profiler");
 #endif
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 
 	Pi::config = new GameConfig(options);
 
@@ -776,6 +776,7 @@ bool Pi::IsConsoleActive()
 
 void Pi::Quit()
 {
+
 	if (Pi::ffmpegFile != nullptr) {
 		_pclose(Pi::ffmpegFile);
 	}
@@ -804,6 +805,11 @@ void Pi::Quit()
 	FileSystem::Uninit();
 	asyncJobQueue.reset();
 	syncJobQueue.reset();
+	// Destroy the main instance of Remotery.
+	if(rmt) {
+		rmt_DestroyGlobalInstance(rmt);
+	}
+	rmt = nullptr;
 	exit(0);
 }
 
@@ -826,7 +832,8 @@ void Pi::OnChangeDetailLevel()
 
 void Pi::HandleEvents()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
+	rmt_ScopedCPUSample(HandleEvents, 0);
 	SDL_Event event;
 
 	// XXX for most keypresses SDL will generate KEYUP/KEYDOWN and TEXTINPUT
@@ -1165,6 +1172,8 @@ void Pi::TombStoneLoop()
 	Uint32 last_time = SDL_GetTicks();
 	float _time = 0;
 	do {
+		rmt_ScopedCPUSample(TombStoneLoop, 0);
+
 		Pi::HandleEvents();
 		Pi::renderer->SetGrab(false);
 
@@ -1254,6 +1263,7 @@ void Pi::Start()
 	float _time = 0;
 
 	while (!Pi::game) {
+		rmt_ScopedCPUSample(StartScreenLoop, 0);
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
 			if (event.type == SDL_QUIT)
@@ -1390,7 +1400,8 @@ void Pi::MainLoop()
 #endif
 
 	while (Pi::game) {
-		PROFILE_SCOPED()
+		PROFILE_SCOPED();
+		rmt_ScopedCPUSample(MainLoop, 0);
 
 #ifdef ENABLE_SERVER_AGENT
 		Pi::serverAgent->ProcessResponses();
@@ -1755,6 +1766,7 @@ float Pi::GetMoveSpeedShiftModifier() {
 }
 
 void Pi::DrawPiGui(double delta, std::string handler) {
+	rmt_ScopedCPUSample(DrawPiGui, 0);
 	//  #define PROFILE_LUA_TIME 1
 	#ifdef PROFILE_LUA_TIME
 	auto before = clock();

@@ -39,7 +39,7 @@ GLenum get_component_type(VertexAttribFormat fmt)
 VertexBuffer::VertexBuffer(const VertexBufferDesc &desc) :
 	Graphics::VertexBuffer(desc)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	//update offsets in desc
 	for (Uint32 i = 0; i < MAX_ATTRIBS; i++) {
 		if (m_desc.attrib[i].offset == 0)
@@ -130,7 +130,7 @@ VertexBuffer::~VertexBuffer()
 
 Uint8 *VertexBuffer::MapInternal(BufferMapMode mode)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(mode != BUFFER_MAP_NONE); //makes no sense
 	assert(m_mapMode == BUFFER_MAP_NONE); //must not be currently mapped
 	m_mapMode = mode;
@@ -148,7 +148,7 @@ Uint8 *VertexBuffer::MapInternal(BufferMapMode mode)
 
 void VertexBuffer::Unmap()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(m_mapMode != BUFFER_MAP_NONE); //not currently mapped
 
 	if (GetDesc().usage == BUFFER_USAGE_STATIC) {
@@ -297,7 +297,7 @@ static inline void CopyPosNormCol(Graphics::VertexBuffer *vb, const Graphics::Ve
 // copies the contents of the VertexArray into the buffer
 bool VertexBuffer::Populate(const VertexArray &va)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(va.GetNumVerts()>0);
 	assert(va.GetNumVerts()==m_numVertices);
 	bool result = false;
@@ -316,7 +316,7 @@ bool VertexBuffer::Populate(const VertexArray &va)
 
 void VertexBuffer::BufferData(const size_t size, void *data)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(m_mapMode == BUFFER_MAP_NONE); //must not be currently mapped
 	if (GetDesc().usage == BUFFER_USAGE_DYNAMIC) {
 		glBindVertexArray(m_vao);
@@ -427,7 +427,7 @@ void IndexBuffer::Unmap()
 
 void IndexBuffer::BufferData(const size_t size, void *data)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(m_mapMode == BUFFER_MAP_NONE); //must not be currently mapped
 	if (GetUsage() == BUFFER_USAGE_DYNAMIC) {
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_buffer);

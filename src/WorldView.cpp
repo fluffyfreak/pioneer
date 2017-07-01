@@ -327,8 +327,9 @@ void WorldView::OnRequestTimeAccelDec()
 
 void WorldView::Draw3D()
 {
-	PROFILE_SCOPED()
-		assert(m_game);
+	PROFILE_SCOPED();
+	rmt_ScopedCPUSample(WorldView_Draw3D, 0);
+	assert(m_game);
 	assert(Pi::player);
 	assert(!Pi::player->IsDead());
 
@@ -739,7 +740,7 @@ void WorldView::RefreshButtonStateAndVisibility()
 
 void WorldView::Update()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(m_game);
 	assert(Pi::player);
 	assert(!Pi::player->IsDead());

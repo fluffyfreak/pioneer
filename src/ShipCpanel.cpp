@@ -127,7 +127,7 @@ void ShipCpanel::OnMultiFuncUngrabFocus(multifuncfunc_t f)
 
 void ShipCpanel::Update()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	m_radar->Update();
 	m_useEquipWidget->Update();
 
@@ -191,7 +191,7 @@ void ShipCpanel::SetAlertState(Ship::AlertState as)
 
 void ShipCpanel::TimeStepUpdate(float step)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	m_radar->TimeStepUpdate(step);
 }
 

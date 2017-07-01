@@ -16,7 +16,7 @@ static const char *sys_names[SYS_NAME_FRAGS] =
 
 bool SectorCustomSystemsGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> galaxy, RefCountedPtr<Sector> sector, GalaxyGenerator::SectorConfig* config)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 
 	const int sx = sector->sx;
 	const int sy = sector->sy;
@@ -66,7 +66,7 @@ bool SectorCustomSystemsGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> gala
 
 const std::string SectorRandomSystemsGenerator::GenName(RefCountedPtr<Galaxy> galaxy, const Sector& sec, Sector::System &sys, int si, Random &rng)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	std::string name;
 	const int sx = sec.sx;
 	const int sy = sec.sy;

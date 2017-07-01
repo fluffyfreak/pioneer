@@ -720,6 +720,8 @@ static const double SQRMAXCITYDIST = 1e5 * 1e5;
 
 void SpaceStation::Render(Graphics::Renderer *r, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform)
 {
+	rmt_ScopedCPUSample(SpaceStation_Render, 0);
+	rmt_ScopedOpenGLSample(SpaceStation_Render);
 	Body *b = GetFrame()->GetBody();
 	assert(b);
 

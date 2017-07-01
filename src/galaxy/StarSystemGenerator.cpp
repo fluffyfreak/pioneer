@@ -281,7 +281,7 @@ const StarSystemLegacyGeneratorBase::StarTypeInfo StarSystemLegacyGeneratorBase:
 
 bool StarSystemFromSectorGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> galaxy, RefCountedPtr<StarSystem::GeneratorAPI> system, GalaxyGenerator::StarSystemConfig* config)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	RefCountedPtr<const Sector> sec = galaxy->GetSector(system->GetPath());
 	assert(system->GetPath().systemIndex >= 0 && system->GetPath().systemIndex < sec->m_systems.size());
 	const Sector::System& secSys = sec->m_systems[system->GetPath().systemIndex];
@@ -296,7 +296,7 @@ bool StarSystemFromSectorGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> gal
 
 void StarSystemLegacyGeneratorBase::PickAtmosphere(SystemBody* sbody)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	/* Alpha value isn't real alpha. in the shader fog depth is determined
 	 * by density*alpha, so that we can have very dense atmospheres
 	 * without having them a big stinking solid color obscuring everything
@@ -390,7 +390,7 @@ static const unsigned char RANDOM_RING_COLORS[][4] = {
 
 void StarSystemLegacyGeneratorBase::PickRings(SystemBody* sbody, bool forceRings)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	sbody->m_rings.minRadius = fixed();
 	sbody->m_rings.maxRadius = fixed();
 	sbody->m_rings.baseColor = Color(255,255,255,255);
@@ -439,7 +439,7 @@ void StarSystemLegacyGeneratorBase::PickRings(SystemBody* sbody, bool forceRings
  */
 fixed StarSystemLegacyGeneratorBase::CalcHillRadius(SystemBody* sbody) const
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if (sbody->GetSuperType() <= SystemBody::SUPERTYPE_STAR) {
 		return fixed();
 	} else {
@@ -463,7 +463,7 @@ fixed StarSystemLegacyGeneratorBase::CalcHillRadius(SystemBody* sbody) const
 void StarSystemCustomGenerator::CustomGetKidsOf(RefCountedPtr<StarSystem::GeneratorAPI> system, SystemBody *parent,
 	const std::vector<CustomSystemBody*> &children, int *outHumanInfestedness, Random &rand)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	// replaces gravpoint mass by sum of masses of its children
 	// the code goes here to cover also planetary gravpoints (gravpoints that are not rootBody)
 	if (parent->GetType() == SystemBody::TYPE_GRAVPOINT) {
@@ -583,7 +583,7 @@ void StarSystemCustomGenerator::CustomGetKidsOf(RefCountedPtr<StarSystem::Genera
 
 bool StarSystemCustomGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> galaxy, RefCountedPtr<StarSystem::GeneratorAPI> system, GalaxyGenerator::StarSystemConfig* config)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	RefCountedPtr<const Sector> sec = galaxy->GetSector(system->GetPath());
 	system->SetCustom(false, false);
 	if (const CustomSystem *customSys = sec->m_systems[system->GetPath().systemIndex].GetCustomSystem()) {
@@ -661,7 +661,7 @@ static double CalcSurfaceTemp(double star_radius, double star_temp, double objec
  */
 static fixed calcEnergyPerUnitAreaAtDist(fixed star_radius, int star_temp, fixed object_dist)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	fixed temp = star_temp * fixed(1,5778);	//normalize to Sun's temperature
 	const fixed total_solar_emission =
 		temp*temp*temp*temp*star_radius*star_radius;
@@ -681,7 +681,7 @@ static void getPathToRoot(const SystemBody* body, std::vector<const SystemBody*>
 
 int StarSystemRandomGenerator::CalcSurfaceTemp(const SystemBody *primary, fixed distToPrimary, fixed albedo, fixed greenhouse)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 
 	// accumulator seeded with current primary
 	fixed energy_per_meter2 = calcEnergyPerUnitAreaAtDist(primary->m_radius, primary->m_averageTemp, distToPrimary);
@@ -748,7 +748,7 @@ int StarSystemRandomGenerator::CalcSurfaceTemp(const SystemBody *primary, fixed 
  */
 const SystemBody* StarSystemRandomGenerator::FindStarAndTrueOrbitalRange(const SystemBody *planet, fixed &orbMin_, fixed &orbMax_) const
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	const SystemBody *star = planet->GetParent();
 
 	assert(star);
@@ -766,7 +766,7 @@ const SystemBody* StarSystemRandomGenerator::FindStarAndTrueOrbitalRange(const S
 
 void StarSystemRandomGenerator::PickPlanetType(SystemBody *sbody, Random &rand)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	fixed albedo;
 	fixed greenhouse;
 
@@ -945,7 +945,7 @@ void StarSystemRandomGenerator::PickPlanetType(SystemBody *sbody, Random &rand)
 
 static fixed mass_from_disk_area(fixed a, fixed b, fixed max)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	// so, density of the disk with distance from star goes like so: 1 - x/discMax
 	//
 	// ---
@@ -971,7 +971,7 @@ static fixed mass_from_disk_area(fixed a, fixed b, fixed max)
 
 static fixed get_disc_density(SystemBody *primary, fixed discMin, fixed discMax, fixed percentOfPrimaryMass)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	discMax = std::max(discMax, discMin);
 	fixed total = mass_from_disk_area(discMin, discMax, discMax);
 	return primary->GetMassInEarths() * percentOfPrimaryMass / total;
@@ -979,7 +979,7 @@ static fixed get_disc_density(SystemBody *primary, fixed discMin, fixed discMax,
 
 void StarSystemRandomGenerator::MakePlanetsAround(RefCountedPtr<StarSystem::GeneratorAPI> system, SystemBody *primary, Random &rand)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	fixed discMin = fixed();
 	fixed discMax = fixed(5000,1);
 	fixed discDensity;
@@ -1114,7 +1114,7 @@ void StarSystemRandomGenerator::MakePlanetsAround(RefCountedPtr<StarSystem::Gene
 
 void StarSystemRandomGenerator::MakeStarOfType(SystemBody *sbody, SystemBody::BodyType type, Random &rand)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	sbody->m_type = type;
 	sbody->m_seed = rand.Int32();
 	sbody->m_radius = fixed(rand.Int32(starTypeInfo[type].radius[0], starTypeInfo[type].radius[1]), 100);
@@ -1163,14 +1163,14 @@ void StarSystemRandomGenerator::MakeStarOfType(SystemBody *sbody, SystemBody::Bo
 
 void StarSystemRandomGenerator::MakeRandomStar(SystemBody *sbody, Random &rand)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	SystemBody::BodyType type = SystemBody::BodyType(rand.Int32(SystemBody::TYPE_STAR_MIN, SystemBody::TYPE_STAR_MAX));
 	MakeStarOfType(sbody, type, rand);
 }
 
 void StarSystemRandomGenerator::MakeStarOfTypeLighterThan(SystemBody *sbody, SystemBody::BodyType type, fixed maxMass, Random &rand)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	int tries = 16;
 	do {
 		MakeStarOfType(sbody, type, rand);
@@ -1179,7 +1179,7 @@ void StarSystemRandomGenerator::MakeStarOfTypeLighterThan(SystemBody *sbody, Sys
 
 void StarSystemRandomGenerator::MakeBinaryPair(SystemBody *a, SystemBody *b, fixed minDist, Random &rand)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	fixed m = a->GetMassAsFixed() + b->GetMassAsFixed();
 	fixed a0 = b->GetMassAsFixed() / m;
 	fixed a1 = a->GetMassAsFixed() / m;
@@ -1226,7 +1226,7 @@ void StarSystemRandomGenerator::MakeBinaryPair(SystemBody *a, SystemBody *b, fix
 
 bool StarSystemRandomGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> galaxy, RefCountedPtr<StarSystem::GeneratorAPI> system, GalaxyGenerator::StarSystemConfig* config)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	RefCountedPtr<const Sector> sec = galaxy->GetSector(system->GetPath());
 	const Sector::System& secSys = sec->m_systems[system->GetPath().systemIndex];
 
@@ -1365,7 +1365,7 @@ try_that_again_guvnah:
  */
 void PopulateStarSystemGenerator::PositionSettlementOnPlanet(SystemBody* sbody)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	Random r(sbody->GetSeed());
 	// used for orientation on planet surface
 	double r2 = r.Double(); 	// function parameter evaluation order is implementation-dependent
@@ -1384,7 +1384,7 @@ void PopulateStarSystemGenerator::PositionSettlementOnPlanet(SystemBody* sbody)
  */
 void PopulateStarSystemGenerator::PopulateStage1(SystemBody* sbody, StarSystem::GeneratorAPI *system, fixed &outTotalPop)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	for (auto child : sbody->GetChildren()) {
 		PopulateStage1(child, system, outTotalPop);
 	}
@@ -1515,7 +1515,7 @@ void PopulateStarSystemGenerator::PopulateStage1(SystemBody* sbody, StarSystem::
 }
 
 static bool check_unique_station_name(const std::string & name, const StarSystem * system) {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	bool ret = true;
 	for (const SystemBody *station : system->GetSpaceStations())
 		if (station->GetName() == name) {
@@ -1526,7 +1526,7 @@ static bool check_unique_station_name(const std::string & name, const StarSystem
 }
 
 static std::string gen_unique_station_name(SystemBody *sp, const StarSystem *system, RefCountedPtr<Random> &namerand) {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	std::string name;
 	do {
 		name = Pi::luaNameGen->BodyName(sp, namerand);
@@ -1536,7 +1536,7 @@ static std::string gen_unique_station_name(SystemBody *sp, const StarSystem *sys
 
 void PopulateStarSystemGenerator::PopulateAddStations(SystemBody* sbody, StarSystem::GeneratorAPI *system)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	for (auto child : sbody->GetChildren())
 		PopulateAddStations(child, system);
 
@@ -1759,7 +1759,7 @@ static const int MAX_COMMODITY_BASE_PRICE_ADJUSTMENT = 25;
 bool PopulateStarSystemGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> galaxy, RefCountedPtr<StarSystem::GeneratorAPI> system,
 		GalaxyGenerator::StarSystemConfig* config)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	const bool addSpaceStations = !config->isCustomOnly;
 	Uint32 _init[5] = { system->GetPath().systemIndex, Uint32(system->GetPath().sectorX), Uint32(system->GetPath().sectorY), Uint32(system->GetPath().sectorZ), UNIVERSE_SEED };
 	Random rand;

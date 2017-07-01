@@ -45,6 +45,8 @@ void Star::InitStar()
 
 void Star::Render(Graphics::Renderer *renderer, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform)
 {
+	rmt_ScopedCPUSample(Star_Render, 0);
+	rmt_ScopedOpenGLSample(Star_Render);
 	double radius = GetClipRadius();
 
 	double rad = radius;

@@ -81,7 +81,7 @@ void TransparentButton::GetSizeRequested(float size[2])
 
 void SolidButton::Draw()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	float size[2];
 	GetSize(size);
 	if (IsPressed()) {
@@ -92,7 +92,7 @@ void SolidButton::Draw()
 }
 void TransparentButton::Draw()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	float size[2];
 	GetSize(size);
 	Theme::DrawHollowRect(size, Color::WHITE, Screen::alphaBlendState);
@@ -116,7 +116,7 @@ void LabelButton::GetSizeRequested(float size[2])
 
 void LabelButton::Draw()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	float size[2];
 	GetSize(size);
 

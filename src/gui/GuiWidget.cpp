@@ -21,7 +21,7 @@ Widget::Widget()
 
 bool Widget::IsVisible() const
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if (!m_visible || !m_parent)
 		return false;
 

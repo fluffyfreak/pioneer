@@ -58,7 +58,7 @@
  */
 static int l_starsystem_get_station_paths(lua_State *l)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	LUA_DEBUG_START(l);
 
 	StarSystem *s = LuaObject<StarSystem>::CheckFromLua(1);
@@ -98,7 +98,7 @@ static int l_starsystem_get_station_paths(lua_State *l)
  */
 static int l_starsystem_get_body_paths(lua_State *l)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	LUA_DEBUG_START(l);
 
 	StarSystem *s = LuaObject<StarSystem>::CheckFromLua(1);
@@ -144,7 +144,7 @@ static int l_starsystem_get_body_paths(lua_State *l)
  */
 static int l_starsystem_get_commodity_base_price_alterations(lua_State *l)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	LUA_DEBUG_START(l);
 
 	StarSystem *s = LuaObject<StarSystem>::CheckFromLua(1);
@@ -197,7 +197,7 @@ static int l_starsystem_get_commodity_base_price_alterations(lua_State *l)
  */
 static int l_starsystem_is_commodity_legal(lua_State *l)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	StarSystem *s = LuaObject<StarSystem>::CheckFromLua(1);
 	// XXX: Don't use the l10n_key hack, this is just UGLY!!
 	luaL_checktype(l, 2, LUA_TTABLE);
@@ -244,7 +244,7 @@ static int l_starsystem_is_commodity_legal(lua_State *l)
  */
 static int l_starsystem_get_nearby_systems(lua_State *l)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	LUA_DEBUG_START(l);
 
 	const StarSystem *s = LuaObject<StarSystem>::CheckFromLua(1);
@@ -330,7 +330,7 @@ static int l_starsystem_get_nearby_systems(lua_State *l)
  */
 static int l_starsystem_distance_to(lua_State *l)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	LUA_DEBUG_START(l);
 
 	StarSystem *s = LuaObject<StarSystem>::CheckFromLua(1);
@@ -368,7 +368,7 @@ static int l_starsystem_distance_to(lua_State *l)
  */
 static int l_starsystem_export_to_lua(lua_State *l)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	LUA_DEBUG_START(l);
 
 	StarSystem *s = LuaObject<StarSystem>::CheckFromLua(1);
@@ -445,7 +445,7 @@ static int l_starsystem_explore(lua_State *l)
  */
 static int l_starsystem_attr_name(lua_State *l)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	StarSystem *s = LuaObject<StarSystem>::CheckFromLua(1);
 	lua_pushstring(l, s->GetName().c_str());
 	return 1;
@@ -466,7 +466,7 @@ static int l_starsystem_attr_name(lua_State *l)
  */
 static int l_starsystem_attr_path(lua_State *l)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	StarSystem *s = LuaObject<StarSystem>::CheckFromLua(1);
 	SystemPath path = s->GetPath();
 	LuaObject<SystemPath>::PushToLua(&path);
@@ -489,7 +489,7 @@ static int l_starsystem_attr_path(lua_State *l)
  */
 static int l_starsystem_attr_lawlessness(lua_State *l)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	StarSystem *s = LuaObject<StarSystem>::CheckFromLua(1);
 	lua_pushnumber(l, s->GetSysPolit().lawlessness.ToDouble());
 	return 1;
@@ -510,7 +510,7 @@ static int l_starsystem_attr_lawlessness(lua_State *l)
  */
 static int l_starsystem_attr_population(lua_State *l)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	StarSystem *s = LuaObject<StarSystem>::CheckFromLua(1);
 	lua_pushnumber(l, s->GetTotalPop().ToDouble());
 	return 1;
@@ -531,7 +531,7 @@ static int l_starsystem_attr_population(lua_State *l)
  */
 static int l_starsystem_attr_faction(lua_State *l)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	StarSystem *s = LuaObject<StarSystem>::CheckFromLua(1);
 	if (s->GetFaction()->IsValid()) {
 		LuaObject<Faction>::PushToLua(const_cast<Faction*>(s->GetFaction())); // XXX const-correctness violation
@@ -557,7 +557,7 @@ static int l_starsystem_attr_faction(lua_State *l)
 
 static int l_starsystem_attr_explored(lua_State *l)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	StarSystem *s = LuaObject<StarSystem>::CheckFromLua(1);
 	lua_pushboolean(l, !s->GetUnexplored());
 	return 1;

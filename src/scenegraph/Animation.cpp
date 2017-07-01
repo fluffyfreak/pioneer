@@ -39,7 +39,7 @@ void Animation::UpdateChannelTargets(Node *root)
 
 void Animation::Interpolate()
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	const double mtime = m_time;
 
 	//go through channels and calculate transforms

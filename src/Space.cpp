@@ -169,7 +169,7 @@ void Space::RefreshBackground()
 
 void Space::ToJson(Json::Value &jsonObj)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	RebuildFrameIndex();
 	RebuildBodyIndex();
 	RebuildSystemBodyIndex();
@@ -665,7 +665,7 @@ private:
 
 void Space::GenSectorCache(RefCountedPtr<Galaxy> galaxy, const SystemPath* here)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 
 	// current location
 	if (!here) {
@@ -696,7 +696,7 @@ void Space::GenSectorCache(RefCountedPtr<Galaxy> galaxy, const SystemPath* here)
 }
 
 static bool WithinBox(const SystemPath &here, const int Xmin, const int Xmax, const int Ymin, const int Ymax, const int Zmin, const int Zmax) {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if(here.sectorX >= Xmin && here.sectorX <= Xmax) {
 		if(here.sectorY >= Ymin && here.sectorY <= Ymax) {
 			if(here.sectorZ >= Zmin && here.sectorZ <= Zmax) {
@@ -709,7 +709,7 @@ static bool WithinBox(const SystemPath &here, const int Xmin, const int Xmax, co
 
 void Space::UpdateStarSystemCache(const SystemPath* here)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 
 	// current location
 	if (!here) {
@@ -934,7 +934,7 @@ void Space::CollideFrame(Frame *f)
 
 void Space::TimeStep(float step)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 
 	if( Pi::MustRefreshBackgroundClearFlag() )
 		RefreshBackground();

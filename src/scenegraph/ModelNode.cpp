@@ -25,7 +25,7 @@ Node* ModelNode::Clone(NodeCopyCache *cache)
 
 void ModelNode::Render(const matrix4x4f &trans, const RenderData *rd)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	//slight hack here
 	RenderData newrd = *rd;
 	newrd.nodemask |= MASK_IGNORE;
@@ -34,7 +34,7 @@ void ModelNode::Render(const matrix4x4f &trans, const RenderData *rd)
 
 void ModelNode::Render(const std::vector<matrix4x4f> &trans, const RenderData *rd)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	//slight hack here
 	RenderData newrd = *rd;
 	newrd.nodemask |= MASK_IGNORE;

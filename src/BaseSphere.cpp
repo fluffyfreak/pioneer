@@ -29,6 +29,8 @@ void BaseSphere::Uninit()
 //static
 void BaseSphere::UpdateAllBaseSphereDerivatives()
 {
+	PROFILE_SCOPED();
+	rmt_ScopedCPUSample(UpdateAllBaseSphereDerivatives, 0);
 	GeoSphere::UpdateAllGeoSpheres();
 	GasGiant::UpdateAllGasGiants();
 }
@@ -43,7 +45,9 @@ void BaseSphere::DrawAtmosphereSurface(Graphics::Renderer *renderer,
 	const matrix4x4d &modelView, const vector3d &campos, float rad,
 	Graphics::RenderState *rs, RefCountedPtr<Graphics::Material> mat)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
+	rmt_ScopedCPUSample(DrawAtmosphereSurface, 0);
+	rmt_ScopedOpenGLSample(DrawAtmosphereSurface);
 	using namespace Graphics;
 	const vector3d yaxis = campos.Normalized();
 	const vector3d zaxis = vector3d(1.0, 0.0, 0.0).Cross(yaxis).Normalized();

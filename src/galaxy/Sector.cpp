@@ -26,14 +26,14 @@ Sector::~Sector()
 
 float Sector::DistanceBetween(RefCountedPtr<const Sector> a, int sysIdxA, RefCountedPtr<const Sector> b, int sysIdxB)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	vector3f dv = a->m_systems[sysIdxA].GetPosition() - b->m_systems[sysIdxB].GetPosition();
 	dv += Sector::SIZE*vector3f(float(a->sx - b->sx), float(a->sy - b->sy), float(a->sz - b->sz));
 	return dv.Length();
 }
 
 bool Sector::WithinBox(const int Xmin, const int Xmax, const int Ymin, const int Ymax, const int Zmin, const int Zmax) const {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if(sx >= Xmin && sx <= Xmax) {
 		if(sy >= Ymin && sy <= Ymax) {
 			if(sz >= Zmin && sz <= Zmax) {
@@ -48,7 +48,7 @@ bool Sector::WithinBox(const int Xmin, const int Xmax, const int Ymin, const int
 */
 bool Sector::Contains(const SystemPath &sysPath) const
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	if (sx != sysPath.sectorX) return false;
 	if (sy != sysPath.sectorY) return false;
 	if (sz != sysPath.sectorZ) return false;
@@ -100,7 +100,7 @@ void Sector::Dump(FILE* file, const char* indent) const
 
 float Sector::System::DistanceBetween(const System* a, const System* b)
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	vector3f dv = a->GetPosition() - b->GetPosition();
 	dv += Sector::SIZE*vector3f(float(a->sx - b->sx), float(a->sy - b->sy), float(a->sz - b->sz));
 	return dv.Length();

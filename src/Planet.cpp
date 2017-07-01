@@ -104,7 +104,7 @@ void Planet::InitParams(const SystemBody *sbody)
  */
 void Planet::GetAtmosphericState(double dist, double *outPressure, double *outDensity) const
 {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 #if 0
 	static bool atmosphereTableShown = false;
 	if (!atmosphereTableShown) {

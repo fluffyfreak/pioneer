@@ -1266,6 +1266,8 @@ bool Ship::SetWheelState(bool down)
 
 void Ship::Render(Graphics::Renderer *renderer, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform)
 {
+	rmt_ScopedCPUSample(Ship_Render, 0);
+	rmt_ScopedOpenGLSample(Ship_Render);
 	if (IsDead()) return;
 
 	GetPropulsion()->Render( renderer, camera, viewCoords, viewTransform );
@@ -1359,7 +1361,7 @@ void Ship::OnEnterHyperspace() {
 }
 
 void Ship::EnterSystem() {
-	PROFILE_SCOPED()
+	PROFILE_SCOPED();
 	assert(GetFlightState() == Ship::HYPERSPACE);
 
 	// virtual call, do class-specific things

@@ -124,6 +124,8 @@ bool CargoBody::OnCollision(Object *b, Uint32 flags, double relVel)
 
 void CargoBody::Render(Graphics::Renderer *r, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform)
 {
+	rmt_ScopedCPUSample(CargoBody_Render, 0);
+	rmt_ScopedOpenGLSample(CargoBody_Render);
 	RenderModel(r, camera, viewCoords, viewTransform);
 }
 
