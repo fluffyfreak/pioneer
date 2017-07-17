@@ -296,6 +296,13 @@ void SectorView::InitObject()
 	m_selectedSystemLabels.shortDesc = (new Gui::Label(""))->Color(255, 0, 255);
 	systemBox->PackEnd(m_selectedSystemLabels.starType);
 	systemBox->PackEnd(m_selectedSystemLabels.shortDesc);
+	hbox = new Gui::HBox();
+	hbox->SetSpacing(5.0f);
+	b = new Gui::SolidButton();
+	b->onClick.connect(sigc::mem_fun(this, &SectorView::SwapSelectedHyperspaceTarget));
+	hbox->PackEnd(b);
+	hbox->PackEnd((new Gui::Label(Lang::SWAP_SELECTED_HYPERSPACE_TARGET))->Color(255, 255, 255));
+	systemBox->PackEnd(hbox);
 	locationsBox->PackEnd(systemBox);
 	m_infoBox->PackEnd(locationsBox);
 
@@ -390,7 +397,7 @@ void SectorView::SaveToJson(Json::Value &jsonObj)
 
 	sectorViewObj["match_target_to_selection"] = m_matchTargetToSelection;
 	sectorViewObj["automatic_system_selection"] = m_automaticSystemSelection;
-	sectorViewObj["detail_box_visible"] = m_detailBoxVisible;
+	sectorViewObj["detail_box_visible"] = Json::Value::Int(m_detailBoxVisible);
 
 	jsonObj["sector_view"] = sectorViewObj; // Add sector view object to supplied object.
 }
@@ -643,6 +650,18 @@ void SectorView::SetSelected(const SystemPath &path)
 
 	UpdateDistanceLabelAndLine(m_secondDistance, m_selected, m_hyperspaceTarget);
 	UpdateSystemLabels(m_selectedSystemLabels, m_selected);
+}
+
+void SectorView::SwapSelectedHyperspaceTarget()
+{
+	SystemPath tmpTarget = GetHyperspaceTarget();
+	SetHyperspaceTarget(GetSelected());
+	if (m_automaticSystemSelection) {
+		GotoSystem(tmpTarget);
+	} else {
+		RefCountedPtr<StarSystem> system = m_galaxy->GetStarSystem(tmpTarget);
+		SetSelected(system->GetStars()[0]->GetPath());
+	}
 }
 
 void SectorView::OnClickSystem(const SystemPath &path)

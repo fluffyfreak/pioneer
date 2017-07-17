@@ -273,7 +273,7 @@
    },
    "LY" : {
       "description" : "",
-      "message" : "ly"
+      "message" : "ıy"
    },
    "NOT_ANY_MORE_THAN_USUAL" : {
       "description" : "",
@@ -325,7 +325,7 @@
    },
    "SET_AS_TARGET" : {
       "description" : "",
-      "message" : "Set as navigation target"
+      "message" : "Navigasyon hedefi olarak seç"
    },
    "SPACEPORT" : {
       "description" : "",

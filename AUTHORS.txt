@@ -10,10 +10,12 @@ The Pioneer Developers are:
 * Alan Briggs
 * Alan 'joonicks' Londa
 * Alessandro Giachi
+* Alexander Noack
 * Andrew Cook
 * Andrew Copland
 * Anton Korzun
 * Antti Salonen
+* Arda GÜLER
 * Armin Kretschmer
 * Asier Basagoiti
 * Benamucki
@@ -26,6 +28,7 @@ The Pioneer Developers are:
 * Chris Dennett
 * Christian Koch
 * Claudius Mueller
+* Clinton Mead
 * Connor Findlay
 * Craig Thomson
 * Dan Bennett
@@ -63,6 +66,7 @@ The Pioneer Developers are:
 * Marcel Tulloh
 * Marcus de Roos
 * Michele Botticelli
+* Michele Fanti
 * Miha Vitorovič
 * Nathan Jones
 * Nic
@@ -121,7 +125,7 @@ Pioneer includes the following third-party software:
   Lua 5.2.1 by R. Ierusalimschy, L. H. de Figueiredo & W. Celes,
   Copyright (C) 1994-2012 Lua.org, PUC-Rio
   Licensed under the MIT licence (see contrib/lua/lua.h)
-  
+
   GLEW: The OpenGL Extension Wrangler
   Copyright (C) 2002-2008, Milan Ikits <milan ikits[]ieee org>
   Copyright (C) 2002-2008, Marcelo E. Magallon <mmagallo[]debian org>
