@@ -68,8 +68,9 @@ private:
 	struct citybuildinglist_t {
 		const char *modelTagName;
 		double minRadius, maxRadius;
-		unsigned int numBuildings;
-		citybuilding_t *buildings;
+		Uint32 numBuildings;
+		Uint32 numWindmills;
+		std::vector<citybuilding_t> buildings;
 	};
 
 	struct cityflavourdef_t {
@@ -80,10 +81,12 @@ private:
 	static bool s_cityBuildingsInitted;
 
 	static citybuildinglist_t s_buildingList;
+	static citybuildinglist_t s_windmillList;
 	static cityflavourdef_t cityflavour[CITYFLAVOURS];
 
-	static void EnumerateNewBuildings(std::set<std::string> &filenames);
-	static void LookupBuildingListModels(citybuildinglist_t *list);
+	static void EnumerateNewBuildings(std::set<std::string> &filenames, const std::string &subfolder);
+	static void LookupBuildingListModels(citybuildinglist_t *list, const std::string &subfolder);
+	static void LookupWindmillListModels(citybuildinglist_t *list, const std::string &subfolder);
 };
 
 #endif /* _CITYONPLANET_H */
