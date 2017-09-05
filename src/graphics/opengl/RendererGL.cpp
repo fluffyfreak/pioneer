@@ -129,7 +129,7 @@ static Renderer *CreateRenderer(const Settings &vs)
 
 	SDL_GL_SetSwapInterval((vs.vsync!=0) ? 1 : 0);
 
-    return new RendererOGL(window, vs);
+    return new RendererOGL(window, vs, glContext);
 }
 
 // static method instantiations
@@ -145,20 +145,21 @@ RendererOGL::AttribBufferMap RendererOGL::s_AttribBufferMap;
 typedef std::vector<std::pair<MaterialDescriptor, OGL::Program*> >::const_iterator ProgramIterator;
 
 // ----------------------------------------------------------------------------
-RendererOGL::RendererOGL(SDL_Window *window, const Graphics::Settings &vs)
+RendererOGL::RendererOGL(SDL_Window *window, const Graphics::Settings &vs, SDL_GLContext &glContext)
 : Renderer(window, vs.width, vs.height)
 , m_numLights(0)
 , m_numDirLights(0)
 //the range is very large due to a "logarithmic z-buffer" trick used
 //http://outerra.blogspot.com/2009/08/logarithmic-z-buffer.html
 //http://www.gamedev.net/blog/73/entry-2006307-tip-of-the-day-logarithmic-zbuffer-artifacts-fix/
-, m_minZNear(0.0001f)
-, m_maxZFar(10000000.0f)
+, m_minZNear(0.001f)
+, m_maxZFar(100000000.0f)
 , m_useCompressedTextures(false)
 , m_invLogZfarPlus1(0.f)
 , m_activeRenderTarget(0)
 , m_activeRenderState(nullptr)
 , m_matrixMode(MatrixMode::MODELVIEW)
+, m_glContext(glContext)
 {
 	glewExperimental = true;
 	GLenum glew_err;
@@ -218,7 +219,7 @@ RendererOGL::RendererOGL(SDL_Window *window, const Graphics::Settings &vs)
 	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 	glEnable(GL_PROGRAM_POINT_SIZE);
-	if (!vs.gl3ForwardCompatible) glEnable(0x8861);				// GL_POINT_SPRITE hack for compatibility contexts
+	if (!vs.gl3ForwardCompatible) glEnable(GL_POINT_SPRITE);				// GL_POINT_SPRITE hack for compatibility contexts
 
 	glHint(GL_TEXTURE_COMPRESSION_HINT, GL_NICEST);
 	glHint(GL_FRAGMENT_SHADER_DERIVATIVE_HINT, GL_NICEST);

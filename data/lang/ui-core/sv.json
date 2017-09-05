@@ -327,6 +327,10 @@
       "description" : "",
       "message" : "Fel"
    },
+   "ERROR_LANDING_GEAR_DOWN" : {
+      "description" : "",
+      "message" : "Kan inte påbörja hopp; landningsställ är inte uppfällt!"
+   },
    "ESCAPE_SPEED" : {
       "description" : "",
       "message" : "Flykthastighet:"
@@ -447,9 +451,157 @@
       "description" : "Popup text: the name of the planar projection radar (traditional frontier-style)",
       "message" : "3D planprojektion"
    },
+   "HUD_ATMOSPHERIC_PRESSURE" : {
+      "description" : "Tooltip: Atmospheric Pressure.",
+      "message" : "Atmosfäriskt tryck"
+   },
+   "HUD_BACKWARD_GUN_TEMPERATURE" : {
+      "description" : "Tooltip: Backward Gun Temperature.",
+      "message" : "Bakre kanon-temperatur"
+   },
    "HUD_BRAKE_DISTANCE_MAIN_THRUSTERS" : {
       "description" : "Tooltip: The braking distance using the main thrusters.",
       "message" : "Stoppsträcka för huvudmotorerna"
+   },
+   "HUD_BUTTON_AUTOPILOT_DOCKING" : {
+      "description" : "Tooltip: Autopilot docking",
+      "message" : "Autopilot dockar"
+   },
+   "HUD_BUTTON_AUTOPILOT_ENTERING_ORBIT" : {
+      "description" : "Tooltip: Autopilot entering orbit",
+      "message" : "Autopilot går in i omlopp"
+   },
+   "HUD_BUTTON_AUTOPILOT_FLYING_TO_TARGET" : {
+      "description" : "Tooltip: Autopilot flying to target",
+      "message" : "Autopilot flyger till mål"
+   },
+   "HUD_BUTTON_BLASTOFF" : {
+      "description" : "Tooltip: Blastoff",
+      "message" : "Blastoff"
+   },
+   "HUD_BUTTON_EQUIPMENT" : {
+      "description" : "Tooltip: Equipment",
+      "message" : "Utrustning"
+   },
+   "HUD_BUTTON_EXTERNAL_VIEW" : {
+      "description" : "Tooltip: External camera view",
+      "message" : "Extern vy"
+   },
+   "HUD_BUTTON_FIX_ANTINORMAL" : {
+      "description" : "Tooltip: fix heading antinormal",
+      "message" : "Fix heading antinormal"
+   },
+   "HUD_BUTTON_FIX_NORMAL" : {
+      "description" : "Tooltip: fix heading normal",
+      "message" : "Fix heading normal"
+   },
+   "HUD_BUTTON_FIX_PROGRADE" : {
+      "description" : "Tooltip: fix heading prograde",
+      "message" : "Fix heading prograde"
+   },
+   "HUD_BUTTON_FIX_RADIAL_IN" : {
+      "description" : "Tooltip: fix heading radially inward",
+      "message" : "Fix heading radially inward"
+   },
+   "HUD_BUTTON_FIX_RADIAL_OUT" : {
+      "description" : "Tooltip: fix heading radially outward",
+      "message" : "Fix heading radially outward"
+   },
+   "HUD_BUTTON_FIX_RETROGRADE" : {
+      "description" : "Tooltip: fix heading retrograde",
+      "message" : "Fix heading retrograde"
+   },
+   "HUD_BUTTON_HYPERDRIVE_DISABLED" : {
+      "description" : "Tooltip: Hyperdrive disabled (docked or landed)",
+      "message" : "Hypermotor inaktiverad"
+   },
+   "HUD_BUTTON_INITIATE_HYPERJUMP" : {
+      "description" : "Tooltip: Initiate legal hyperjump",
+      "message" : "Påbörja hopp"
+   },
+   "HUD_BUTTON_INITIATE_ILLEGAL_HYPERJUMP" : {
+      "description" : "Tooltip: Initiate illegal hyperjump",
+      "message" : "Påbörja olagligt hopp"
+   },
+   "HUD_BUTTON_INTERNAL_VIEW" : {
+      "description" : "Tooltip: Internal camera view",
+      "message" : "Intern vy"
+   },
+   "HUD_BUTTON_KILL_ROTATION" : {
+      "description" : "Tooltip: kill rotation",
+      "message" : "Avbryt rotation"
+   },
+   "HUD_BUTTON_LANDING_GEAR_IS_DOWN" : {
+      "description" : "Tooltip: Landing gear is down",
+      "message" : "Landningsställ är nerfällt"
+   },
+   "HUD_BUTTON_LANDING_GEAR_IS_MOVING" : {
+      "description" : "Tooltip: Landing gear is moving",
+      "message" : "Landningsställ i rörelse"
+   },
+   "HUD_BUTTON_LANDING_GEAR_IS_UP" : {
+      "description" : "Tooltip: Landing gear is up",
+      "message" : "Landningsställ är uppfällt"
+   },
+   "HUD_BUTTON_MANUAL_CONTROL" : {
+      "description" : "Tooltip: Manual control",
+      "message" : "Manuell kontroll"
+   },
+   "HUD_BUTTON_ROTATION_DAMPING_IS_OFF" : {
+      "description" : "Tooltip: Rotation damping is off",
+      "message" : "Rotationsdämpning är av"
+   },
+   "HUD_BUTTON_ROTATION_DAMPING_IS_ON" : {
+      "description" : "Tooltip: Rotation damping is on",
+      "message" : "Rotationsdämpare är på"
+   },
+   "HUD_BUTTON_SCANNER" : {
+      "description" : "Tooltip: Scanner",
+      "message" : "Scanner"
+   },
+   "HUD_BUTTON_SET_SPEED" : {
+      "description" : "Tooltip: set speed",
+      "message" : "Sätt hastighet"
+   },
+   "HUD_BUTTON_SHOW_COMMS" : {
+      "description" : "Tooltip: Show comms",
+      "message" : "Visa kommunikationslog"
+   },
+   "HUD_BUTTON_SHOW_PERSONAL_INFO" : {
+      "description" : "Tooltip: Show personal info",
+      "message" : "Visa person-information"
+   },
+   "HUD_BUTTON_SIDEREAL_VIEW" : {
+      "description" : "Tooltip: Sidereal camera view",
+      "message" : "Sidovy"
+   },
+   "HUD_BUTTON_SWITCH_TO_GALAXY_MAP" : {
+      "description" : "Tooltip: Switch to galaxy map",
+      "message" : "Byt till galax-karta"
+   },
+   "HUD_BUTTON_SWITCH_TO_SECTOR_MAP" : {
+      "description" : "Tooltip: Switch to sector map",
+      "message" : "Byt till sektor-karta"
+   },
+   "HUD_BUTTON_SWITCH_TO_SYSTEM_MAP" : {
+      "description" : "Tooltip: Switch to system map",
+      "message" : "Byt till system-karta"
+   },
+   "HUD_BUTTON_SWITCH_TO_SYSTEM_OVERVIEW" : {
+      "description" : "Tooltip: Switch to system overview",
+      "message" : "Byt till system-översikt"
+   },
+   "HUD_BUTTON_SWITCH_TO_WORLD_VIEW" : {
+      "description" : "Tooltip: Switch to world view",
+      "message" : "Byt till världsvy"
+   },
+   "HUD_BUTTON_UNDOCK" : {
+      "description" : "Tooltip: Undock",
+      "message" : "Lämna dockan"
+   },
+   "HUD_CARGO_MASS" : {
+      "description" : "Cargo Mass",
+      "message" : "Lastmassa"
    },
    "HUD_CURRENT_COMBAT_TARGET" : {
       "description" : "Tooltip: The current combat target.",
@@ -503,6 +655,22 @@
       "description" : "Tooltip: The duration until the middle of the maneuver burn.",
       "message" : "Hälften av tiden till manövrering"
    },
+   "HUD_FORWARD_GUN_TEMPERATURE" : {
+      "description" : "Tooltip: Forward Gun Temperature.",
+      "message" : "Främre kanon-temperatur"
+   },
+   "HUD_HULL_STRENGTH" : {
+      "description" : "Tooltip: Hull Strength.",
+      "message" : "Skrovstyrka"
+   },
+   "HUD_HULL_TEMPERATURE" : {
+      "description" : "Tooltip: Hull Temperature.",
+      "message" : "Skrovtemperatur"
+   },
+   "HUD_HYPERSPACING_TO_N_IN_N_SECONDS" : {
+      "description" : "",
+      "message" : "Hopp till {destination} om {countdown} sekunder "
+   },
    "HUD_INDICATOR_AWAY_FROM_FRAME" : {
       "description" : "Indicator: Away from the current frame.",
       "message" : "Från nuvarande referenssystem"
@@ -535,6 +703,18 @@
       "description" : "Indicator: Retrograde direction relative to the current navigational target.",
       "message" : "Retrograde relative to current navigational target"
    },
+   "HUD_IN_TRANSIT_TO_N_X_X_X" : {
+      "description" : "",
+      "message" : "På väg mot {system} [{x},{y},{z}]"
+   },
+   "HUD_JUMP_COMPLETE" : {
+      "description" : "",
+      "message" : "Hopp färdigt: {percent}%"
+   },
+   "HUD_MASS" : {
+      "description" : "Mass",
+      "message" : "Massa"
+   },
    "HUD_RADAR_DISTANCE" : {
       "description" : "Tooltip: Current distance of the radar.",
       "message" : "Aktiv radaravstånd"
@@ -542,6 +722,10 @@
    "HUD_REQUEST_TIME_ACCEL" : {
       "description" : "Tooltip: Request time acceleration {time}",
       "message" : "Request time acceleration: {time}"
+   },
+   "HUD_SHIELD_STRENGTH" : {
+      "description" : "Tooltip: Shield Strength.",
+      "message" : "Sköld-styrka"
    },
    "HUD_SHOW_COMBAT_TARGET" : {
       "description" : "Tooltip: Show the current combat target.",
@@ -566,6 +750,10 @@
    "HUD_SPEED_RELATIVE_TO_TARGET" : {
       "description" : "Tooltip: The speed relative to the target.",
       "message" : "Hastighet relativt målet"
+   },
+   "HUD_THRUST_INDICATOR" : {
+      "description" : "Tooltip: describe what the thrust/velocity indicator shows",
+      "message" : "Visa nuvarande hastighet för varje riktning (tunna linjer) och motorer (tjock bakgrund)"
    },
    "HULL_DOES_NOT_REQUIRE_REPAIR" : {
       "description" : "",
@@ -1202,6 +1390,10 @@
    "STATION_MANAGER" : {
       "description" : "",
       "message" : "Stationschef"
+   },
+   "STATION_ORBIT" : {
+      "description" : "Information shown in the station loby",
+      "message" : "Vi är i en {orbit_period} dags period runt {parent_body}."
    },
    "STATUS" : {
       "description" : "",

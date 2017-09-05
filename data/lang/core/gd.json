@@ -421,7 +421,7 @@
    },
    "FIRE_LASER" : {
       "description" : "",
-      "message" : "Loisg an leusair"
+      "message" : "Loisg arm"
    },
    "FIRE_MISSILE" : {
       "description" : "",
@@ -595,10 +595,6 @@
       "description" : "",
       "message" : "Amas os-fhànais"
    },
-   "HYPERSPACING_IN_N_SECONDS" : {
-      "description" : "",
-      "message" : "Os-fhànais an ceann %countdown{f.0} diog"
-   },
    "H_ATMOSPHERE" : {
       "description" : "",
       "message" : "\" àile hàidhdreaidein\""
@@ -647,14 +643,6 @@
       "description" : "",
       "message" : "Sealladh taobh a-staigh"
    },
-   "IN_TRANSIT" : {
-      "description" : "",
-      "message" : "A' siubhal"
-   },
-   "IN_TRANSIT_TO_N_X_X_X" : {
-      "description" : "",
-      "message" : "A' siubhal gu %system [%x,%y,%z]"
-   },
    "JOY" : {
       "description" : "Short for Joystick",
       "message" : "Joy"
@@ -666,10 +654,6 @@
    "JOY_AXIS" : {
       "description" : "Regarding joystick",
       "message" : "%{sign}%joyname aiseal %axis"
-   },
-   "JUMP_COMPLETE" : {
-      "description" : "",
-      "message" : "Tha %percent%% dhen leum coileanta"
    },
    "L4L5_DISPLAY_MODE_TOGGLE" : {
       "description" : "Either show L4/L5 points or don't",
@@ -693,11 +677,19 @@
    },
    "LASER_FIRE_DETECTED" : {
       "description" : "",
-      "message" : "Mhothaich sinn air losgadh leusair."
+      "message" : "Mhothaich sinn dha losgadh airm."
    },
    "LATITUDE" : {
       "description" : "Short for latitude",
       "message" : "D-leud:"
+   },
+   "LATITUDE_NORTH_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'north'",
+      "message" : "T"
+   },
+   "LATITUDE_SOUTH_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'south'",
+      "message" : "D"
    },
    "LEGAL_CURRENT_SYSTEM" : {
       "description" : "Short (tooltip) description of commodity (singular) status in the system the player is currently in",
@@ -730,6 +722,14 @@
    "LONGITUDE" : {
       "description" : "Short for longitude",
       "message" : "D-fhad:"
+   },
+   "LONGITUDE_EAST_ABBREV" : {
+      "description" : "Abbreviation letter for longitude 'east'",
+      "message" : "E"
+   },
+   "LONGITUDE_WEST_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'west'",
+      "message" : "D"
    },
    "MAJOR_EXPORTS" : {
       "description" : "",
@@ -1778,6 +1778,10 @@
    "UNIT_SECONDS" : {
       "description" : "Duration unit: one second",
       "message" : "d"
+   },
+   "UNIT_TONNES" : {
+      "description" : "Mass unit: one tonne (t)",
+      "message" : "t"
    },
    "UNIT_WEEKS" : {
       "description" : "Duration unit: one 7-day week",

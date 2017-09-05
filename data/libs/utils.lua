@@ -243,11 +243,32 @@ end
 
 -- Count the number of entries in a table
 utils.count = function(t)
-   local i = 0
-   for _,v in pairs(t) do
-	  i = i + 1
-   end
-   return i
+	local i = 0
+	for _,v in pairs(t) do
+		i = i + 1
+	end
+	return i
 end
 
+utils.take = function(t, n)
+	local res = {}
+	local i = 0
+	for _,v in pairs(t) do
+		if i == n then
+			return res
+		else
+			table.insert(res, v)
+			i = i + 1
+		end
+	end
+	return res
+end
+
+utils.reverse = function(t)
+	local res = {}
+	for _,v in pairs(t) do
+		table.insert(res, 1, v)
+	end
+	return res
+end
 return utils

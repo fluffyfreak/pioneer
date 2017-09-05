@@ -19,6 +19,18 @@
       "description" : "",
       "message" : "Nessun cargo illegale rilevato. Potete procedere."
    },
+   "OUTLAW_DETECTED_1" : {
+      "description" : "",
+      "message" : "{ship_label} è pilotata da un noto fuorilegge. Attaccare e distruggere!"
+   },
+   "OUTLAW_DETECTED_2" : {
+      "description" : "",
+      "message" : "Bandito, i tuoi giorni sono contati!"
+   },
+   "OUTLAW_DETECTED_3" : {
+      "description" : "",
+      "message" : "Hah, preso! Non uscirai vivo da questo sistema!"
+   },
    "POLICE_TAUNT_1" : {
       "description" : "",
       "message" : "Ragazzo, questa è stata una brutta idea!"

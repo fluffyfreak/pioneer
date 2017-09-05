@@ -421,7 +421,7 @@
    },
    "FIRE_LASER" : {
       "description" : "",
-      "message" : "发射激光"
+      "message" : "Fire weapon"
    },
    "FIRE_MISSILE" : {
       "description" : "",
@@ -595,10 +595,6 @@
       "description" : "",
       "message" : "超空间跳跃目标"
    },
-   "HYPERSPACING_IN_N_SECONDS" : {
-      "description" : "",
-      "message" : "%countdown{f.0} 秒后进入超空间"
-   },
    "H_ATMOSPHERE" : {
       "description" : "",
       "message" : "\"氢气大气\""
@@ -647,14 +643,6 @@
       "description" : "",
       "message" : "内部视角"
    },
-   "IN_TRANSIT" : {
-      "description" : "",
-      "message" : "正在中转"
-   },
-   "IN_TRANSIT_TO_N_X_X_X" : {
-      "description" : "",
-      "message" : "正在中转到 %system [%x,%y,%z]"
-   },
    "JOY" : {
       "description" : "Short for Joystick",
       "message" : "摇杆"
@@ -666,10 +654,6 @@
    "JOY_AXIS" : {
       "description" : "Regarding joystick",
       "message" : "%{sign}Joy%joynum %axis 轴"
-   },
-   "JUMP_COMPLETE" : {
-      "description" : "",
-      "message" : "跳跃已完成: %percent%%"
    },
    "L4L5_DISPLAY_MODE_TOGGLE" : {
       "description" : "Either show L4/L5 points or don't",
@@ -693,11 +677,19 @@
    },
    "LASER_FIRE_DETECTED" : {
       "description" : "",
-      "message" : "侦测到激光发射."
+      "message" : "Weapons fire detected."
    },
    "LATITUDE" : {
       "description" : "Short for latitude",
       "message" : "纬度:"
+   },
+   "LATITUDE_NORTH_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'north'",
+      "message" : "北"
+   },
+   "LATITUDE_SOUTH_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'south'",
+      "message" : "南"
    },
    "LEGAL_CURRENT_SYSTEM" : {
       "description" : "Short (tooltip) description of commodity (singular) status in the system the player is currently in",
@@ -730,6 +722,14 @@
    "LONGITUDE" : {
       "description" : "Short for longitude",
       "message" : "经度:"
+   },
+   "LONGITUDE_EAST_ABBREV" : {
+      "description" : "Abbreviation letter for longitude 'east'",
+      "message" : "东"
+   },
+   "LONGITUDE_WEST_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'west'",
+      "message" : "西"
    },
    "MAJOR_EXPORTS" : {
       "description" : "",
@@ -1778,6 +1778,10 @@
    "UNIT_SECONDS" : {
       "description" : "Duration unit: one second",
       "message" : "秒"
+   },
+   "UNIT_TONNES" : {
+      "description" : "Mass unit: one tonne (t)",
+      "message" : "t"
    },
    "UNIT_WEEKS" : {
       "description" : "Duration unit: one 7-day week",

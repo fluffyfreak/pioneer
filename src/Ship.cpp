@@ -556,7 +556,7 @@ void Ship::UpdateEquipStats()
 	unsigned int thruster_power_cap = 0;
 	Properties().Get("thruster_power_cap", thruster_power_cap);
 	const double power_mul = m_type->thrusterUpgrades[Clamp(thruster_power_cap, 0U, 3U)];
-	GetPropulsion()->SetThrustPowerMult( power_mul );
+	GetPropulsion()->SetThrustPowerMult(power_mul, m_type->linThrust, m_type->angThrust);
 
 	m_stats.hyperspace_range = m_stats.hyperspace_range_max = 0;
 	p.Set("hyperspaceRange", m_stats.hyperspace_range);
@@ -1206,7 +1206,7 @@ void Ship::StaticUpdate(const float timeStep)
 			AbortHyperjump();
 		} else {
 			m_hyperspace.countdown = m_hyperspace.countdown - timeStep;
-			if (!abort && m_hyperspace.countdown <= 0.0f) {
+			if (!abort && m_hyperspace.countdown <= 0.0f && (is_equal_exact(m_wheelState, 0.0f))) {
 				m_hyperspace.countdown = 0;
 				m_hyperspace.now = true;
 				SetFlightState(JUMPING);
@@ -1215,6 +1215,9 @@ void Ship::StaticUpdate(const float timeStep)
 				// after the whole physics update, which means the flight state on next
 				// step would be HYPERSPACE, thus breaking quite a few things.
 				LuaEvent::Queue("onLeaveSystem", this);
+			} else if (!(is_equal_exact(m_wheelState, 0.0f)) && this->IsType(Object::PLAYER)) {
+				AbortHyperjump();
+				Sound::BodyMakeNoise(this, "Missile_Inbound", 1.0f);
 			}
 		}
 	}
@@ -1437,4 +1440,3 @@ void Ship::SetRelations(Body *other, Uint8 percent)
 	m_relationsMap[other] = percent;
 	if (m_sensors.get()) m_sensors->UpdateIFF(other);
 }
-

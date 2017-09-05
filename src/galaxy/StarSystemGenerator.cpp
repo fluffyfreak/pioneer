@@ -495,7 +495,8 @@ void StarSystemCustomGenerator::CustomGetKidsOf(RefCountedPtr<StarSystem::Genera
 		kid->m_isCustomBody = true;
 
 		kid->m_mass = csbody->mass;
-		if (kid->GetType() == SystemBody::TYPE_PLANET_ASTEROID) kid->m_mass /= 100000;
+		// obsolete adjustment, probably existed because of denominator precision problems, see LuaFixed.cpp
+//		if (kid->GetType() == SystemBody::TYPE_PLANET_ASTEROID) kid->m_mass /= 100000;
 
 		kid->m_metallicity    = csbody->metallicity;
 		//multiple of Earth's surface density
@@ -1363,20 +1364,35 @@ try_that_again_guvnah:
  * Position a surface starport anywhere. Space.cpp::MakeFrameFor() ensures it
  * is on dry land (discarding this position if necessary)
  */
-void PopulateStarSystemGenerator::PositionSettlementOnPlanet(SystemBody* sbody)
+void PopulateStarSystemGenerator::PositionSettlementOnPlanet(SystemBody* sbody, std::vector<double> &prevOrbits)
 {
 	PROFILE_SCOPED()
 	Random r(sbody->GetSeed());
 	// used for orientation on planet surface
 	double r2 = r.Double(); 	// function parameter evaluation order is implementation-dependent
 	double r1 = r.Double();		// can't put two rands in the same expression
+
+	// try to ensure that stations are far enough apart
+	for (size_t i=0; i<prevOrbits.size(); i++)
+	{
+		const double &orev = prevOrbits[i];
+		const double len = abs(r1 - orev);
+		if(len < 0.05)
+		{
+			r2 = r.Double();
+			r1 = r.Double();
+			i = 0; // reset to start the checking from beginning as we're generating new values.
+		}
+	}
+	prevOrbits.push_back(r1);
+
+	// pset the orbit
 	sbody->m_orbit.SetPlane(matrix3x3d::RotateZ(2*M_PI*r1) * matrix3x3d::RotateY(2*M_PI*r2));
 
 	// store latitude and longitude to equivalent orbital parameters to
 	// be accessible easier
 	sbody->m_inclination = fixed(r1*10000,10000) + FIXED_PI/2;	// latitide
 	sbody->m_orbitalOffset = FIXED_PI/2;						// longitude
-
 }
 
 /*
@@ -1541,7 +1557,7 @@ void PopulateStarSystemGenerator::PopulateAddStations(SystemBody* sbody, StarSys
 		PopulateAddStations(child, system);
 
 	Uint32 _init[6] = { system->GetPath().systemIndex, Uint32(system->GetPath().sectorX),
-			Uint32(system->GetPath().sectorY), Uint32(system->GetPath().sectorZ), sbody->GetSeed(), UNIVERSE_SEED };
+	Uint32(system->GetPath().sectorY), Uint32(system->GetPath().sectorZ), sbody->GetSeed(), UNIVERSE_SEED };
 
 	Random rand;
 	rand.seed(_init, 6);
@@ -1577,14 +1593,14 @@ void PopulateStarSystemGenerator::PopulateAddStations(SystemBody* sbody, StarSys
 
 			// Try to limit the inner orbit to at least three hours.
 			{
-                                const double minHours = 3.0;
+				const double minHours = 3.0;
 				const double seconds = Orbit::OrbitalPeriod(innerOrbit.ToDouble() * AU, centralMass);
 				const double hours = seconds / (60.0*60.0);
 				if (hours < minHours)
 				{
-                                        //knowing that T=2*pi*R/sqrt(G*M/R) find R for set T=4 hours:
-                                        fixed orbitFromPeriod = fixed().FromDouble((std::pow(G*centralMass, 1.0/3.0)*std::pow(minHours*60.0*60.0, 2.0/3.0))/(std::pow(2.0*M_PI, 2.0/3.0)*AU));
-                                        // We can't go higher than our maximum so set it to that.
+					//knowing that T=2*pi*R/sqrt(G*M/R) find R for set T=4 hours:
+					fixed orbitFromPeriod = fixed().FromDouble((std::pow(G*centralMass, 1.0/3.0)*std::pow(minHours*60.0*60.0, 2.0/3.0))/(std::pow(2.0*M_PI, 2.0/3.0)*AU));
+					// We can't go higher than our maximum so set it to that.
 					innerOrbit = std::min(orbMaxS, orbitFromPeriod);
 				}
 			}
@@ -1603,13 +1619,19 @@ void PopulateStarSystemGenerator::PopulateAddStations(SystemBody* sbody, StarSys
 				shells[0] = shells[1] = shells[2] = innerOrbit;
 			}
 			Uint32 orbitIdx = 0;
+			double orbitSlt = 0.0;
+			const double orbitSeparation = (NumToMake > 1) ? ((M_PI * 2.0) / double(NumToMake-1)) : M_PI;
 
 			for( Uint32 i=0; i<NumToMake; i++ )
 			{
 				// Pick the orbit we've currently placing a station into.
 				const fixed currOrbit = shells[orbitIdx];
 				++orbitIdx;
-				orbitIdx = orbitIdx % MAX_ORBIT_SHELLS; // wrap it
+				if (orbitIdx >= MAX_ORBIT_SHELLS) // wrap it
+				{
+					orbitIdx = 0;
+					orbitSlt += 1.0;
+				}
 
 				// Begin creation of the new station
 				SystemBody *sp = system->NewBody();
@@ -1625,14 +1647,15 @@ void PopulateStarSystemGenerator::PopulateAddStations(SystemBody* sbody, StarSys
 				sp->m_eccentricity = fixed();
 				sp->m_axialTilt = fixed();
 
-				sp->m_orbit.SetShapeAroundPrimary(sp->GetSemiMajorAxisAsFixed().ToDouble()*AU, centralMass, 0.0);
-				if (NumToMake > 1) {
-					// The rotations around X & Y perturb the orbits just a little bit so that not all stations are exactly within the same plane
-					// The Z rotation is what gives them the separation in their orbit around the parent body as a whole.
-					sp->m_orbit.SetPlane(matrix3x3d::RotateX(rand.Double(M_PI * 0.03125)) * matrix3x3d::RotateY(rand.Double(M_PI * 0.03125)) * matrix3x3d::RotateZ(double(i) * ((M_PI * 2.0) / double(NumToMake-1))));
-				} else {
-					sp->m_orbit.SetPlane(matrix3x3d::Identity());
-				}
+				sp->m_orbit.SetShapeAroundPrimary(sp->GetSemiMajorAxis()*AU, centralMass, 0.0);
+
+				// The rotations around X & Y perturb the orbits just a little bit so that not all stations are exactly within the same plane
+				// The Z rotation is what gives them the separation in their orbit around the parent body as a whole.
+				sp->m_orbit.SetPlane(
+					matrix3x3d::RotateX(rand.Double(M_PI * 0.03125)) * 
+					matrix3x3d::RotateY(rand.Double(M_PI * 0.03125)) * 
+					matrix3x3d::RotateZ(orbitSlt * orbitSeparation)
+				);
 
 				sp->m_inclination = fixed();
 				sbody->m_children.insert(sbody->m_children.begin(), sp);
@@ -1647,6 +1670,8 @@ void PopulateStarSystemGenerator::PopulateAddStations(SystemBody* sbody, StarSys
 	// starports - surface
 	// give it a fighting chance of having a decent number of starports (*3)
 	pop = sbody->GetPopulationAsFixed() + (rand.Fixed() * 3);
+	std::vector<double> previousOrbits;
+	previousOrbits.reserve(8);
 	int max = 6;
 	while (max-- > 0) {
 		pop -= rand.Fixed();
@@ -1660,7 +1685,7 @@ void PopulateStarSystemGenerator::PopulateAddStations(SystemBody* sbody, StarSys
 		sp->m_mass = 0;
 		sp->m_name = gen_unique_station_name(sp, system, namerand);
 		memset(&sp->m_orbit, 0, sizeof(Orbit));
-		PositionSettlementOnPlanet(sp);
+		PositionSettlementOnPlanet(sp, previousOrbits);
 		sbody->m_children.insert(sbody->m_children.begin(), sp);
 		system->AddSpaceStation(sp);
 	}
@@ -1676,7 +1701,7 @@ void PopulateStarSystemGenerator::PopulateAddStations(SystemBody* sbody, StarSys
 		sp->m_mass = 0;
 		sp->m_name = gen_unique_station_name(sp, system, namerand);
 		memset(&sp->m_orbit, 0, sizeof(Orbit));
-		PositionSettlementOnPlanet(sp);
+		PositionSettlementOnPlanet(sp, previousOrbits);
 		sbody->m_children.insert(sbody->m_children.begin(), sp);
 		system->AddSpaceStation(sp);
 	}

@@ -28,10 +28,34 @@ theme.colors = {
 	maneuverDark = Color(160, 50, 160),
 	mouseMovementDirection = Color(160, 160, 50),
 	lightBlueBackground = Color(0, 0, 200, 20),
-	lightBlackBackground = Color(0, 0, 0, 50),
+	commsWindowBackground = Color(20, 20, 80, 200),
+	lightBlackBackground = Color(0, 0, 0, 100),
 	buttonBlue = Color(150, 150, 200, 255),
 	white = Color(255,255,255,255),
 	grey = Color(120,120,120,255),
+	lightGrey = Color(200,200,200,255),
+	gaugeBackground = Color(40, 40, 70),
+	gaugePressure = Color(76,76,158),
+	gaugeTemperature = Color(200,0,0),
+	gaugeShield = Color(150,150,230),
+	gaugeHull = Color(230,230,230),
+	gaugeWeapon = Color(255,165, 0),
+	alertYellow = Color(212,182,34),
+	alertRed = Color(165,40,40),
+	black = Color(0,0,0),
+	hyperspaceInfo = Color(80, 200, 80),
+	gaugeVelocityLight = Color(230,230,230),
+	gaugeVelocityDark = Color(30,30,30),
+	gaugeThrustLight = Color(123,123,123),
+	gaugeThrustDark = Color(19, 19, 31),
+	radarCombatTarget = Color(255, 0, 0),
+	radarShip = Color(243, 237, 29),
+	radarPlayerMissile = Color(243, 237, 29),
+	radarMissile = Color(240, 38, 50),
+	radarCargo = Color(166, 166, 166),
+	radarNavTarget = Color(0, 255, 0),
+	radarStation = Color(255, 255, 255),
+	radarCloud = Color(128, 128, 255)
 }
 
 theme.icons = {
@@ -160,6 +184,9 @@ theme.icons = {
    display_frame = 119,
    display_combattarget = 120,
    display_navtarget = 121,
+   alert1 = 122,
+   alert2 = 123,
+	 ecm_advanced = 124,
    -- ninth row
    view_internal = 128,
    view_external = 129,
@@ -207,7 +234,12 @@ theme.icons = {
    star = 170,
    -- TODO: manual / autopilot
 	 -- dummy, until actually defined correctly
-	 mouse_move_direction = 14
+	 mouse_move_direction = 14,
+	 -- fourteenth row, wide icons
+	 missile_unguided = 208,
+	 missile_guided = 210,
+	 missile_smart = 212,
+	 missile_naval = 214,
 }
 
 return theme

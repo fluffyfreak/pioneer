@@ -19,6 +19,18 @@
       "description" : "",
       "message" : "Nem találtunk illegális rakományt. Távozhat."
    },
+   "OUTLAW_DETECTED_1" : {
+      "description" : "",
+      "message" : "{ship_label} ismert bűnöző. Támadás!"
+   },
+   "OUTLAW_DETECTED_2" : {
+      "description" : "",
+      "message" : "A napjaid meg vannak számlálva!"
+   },
+   "OUTLAW_DETECTED_3" : {
+      "description" : "",
+      "message" : "Elkaptunk! Nem hagyod el élve a rendszert!"
+   },
    "POLICE_TAUNT_1" : {
       "description" : "",
       "message" : "Haver, ez rossz ötlet volt."

@@ -149,7 +149,7 @@
    },
    "CARBON_ORE_DESCRIPTION" : {
       "description" : "",
-      "message" : "Los minerales de carbono (carbón y petróleo) se requieren para la síntesis de muchos y muy útiles productos químicos, incluyendo plásticos, productos alimenticios sintéticos, medicamentos y textiles."
+      "message" : "Los minerales de carbono (carbón y petróleo) se requieren para la síntesis de muchos productos químicos útiles, incluyendo plásticos, alimentos sintéticos, medicamentos y textiles."
    },
    "CARGO" : {
       "description" : "",
@@ -595,10 +595,6 @@
       "description" : "",
       "message" : "Objetivo hiperespacial"
    },
-   "HYPERSPACING_IN_N_SECONDS" : {
-      "description" : "",
-      "message" : "Salto hiperespacial en %countdown{f.0} segundos"
-   },
    "H_ATMOSPHERE" : {
       "description" : "",
       "message" : "\" Atmósfera de hidrógeno\""
@@ -647,14 +643,6 @@
       "description" : "",
       "message" : "Vista Interna"
    },
-   "IN_TRANSIT" : {
-      "description" : "",
-      "message" : "En tránsito"
-   },
-   "IN_TRANSIT_TO_N_X_X_X" : {
-      "description" : "",
-      "message" : "En tránsito a %system [%x,%y,%z]"
-   },
    "JOY" : {
       "description" : "Short for Joystick",
       "message" : "Joy"
@@ -666,10 +654,6 @@
    "JOY_AXIS" : {
       "description" : "Regarding joystick",
       "message" : "Eje %{sign}%joyname %axis"
-   },
-   "JUMP_COMPLETE" : {
-      "description" : "",
-      "message" : "Salto completado: %percent%%"
    },
    "L4L5_DISPLAY_MODE_TOGGLE" : {
       "description" : "Either show L4/L5 points or don't",
@@ -698,6 +682,14 @@
    "LATITUDE" : {
       "description" : "Short for latitude",
       "message" : "Lat:"
+   },
+   "LATITUDE_NORTH_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'north'",
+      "message" : "N"
+   },
+   "LATITUDE_SOUTH_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'south'",
+      "message" : "S"
    },
    "LEGAL_CURRENT_SYSTEM" : {
       "description" : "Short (tooltip) description of commodity (singular) status in the system the player is currently in",
@@ -730,6 +722,14 @@
    "LONGITUDE" : {
       "description" : "Short for longitude",
       "message" : "Long:"
+   },
+   "LONGITUDE_EAST_ABBREV" : {
+      "description" : "Abbreviation letter for longitude 'east'",
+      "message" : "E"
+   },
+   "LONGITUDE_WEST_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'west'",
+      "message" : "O"
    },
    "MAJOR_EXPORTS" : {
       "description" : "",
@@ -1778,6 +1778,10 @@
    "UNIT_SECONDS" : {
       "description" : "Duration unit: one second",
       "message" : "s"
+   },
+   "UNIT_TONNES" : {
+      "description" : "Mass unit: one tonne (t)",
+      "message" : "t"
    },
    "UNIT_WEEKS" : {
       "description" : "Duration unit: one 7-day week",

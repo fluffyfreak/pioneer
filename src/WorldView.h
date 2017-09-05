@@ -173,10 +173,6 @@ private:
 	RefCountedPtr<UI::Widget> m_hudRoot;
 	// new-ui HUD components
 
-	Gui::Label *m_hudVelocity, *m_hudTargetDist, *m_hudAltitude, *m_hudPressure,
-		   *m_hudHyperspaceInfo, *m_hudTargetInfo;
-	Gui::MeterBar *m_hudHullTemp, *m_hudWeaponTemp, *m_hudHullIntegrity, *m_hudShieldIntegrity;
-	Gui::MeterBar *m_hudTargetHullIntegrity, *m_hudTargetShieldIntegrity;
 	Gui::VBox *m_hudSensorGaugeStack;
 
 	sigc::connection m_onHyperspaceTargetChangedCon;

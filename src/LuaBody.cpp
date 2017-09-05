@@ -156,6 +156,13 @@ static int l_body_is_missile(lua_State *l)
 		return 1;
 }
 
+static int l_body_is_station(lua_State *l)
+{
+		Body *body = LuaObject<Body>::CheckFromLua(1);
+		LuaPush<bool>(l, body->GetType() == Object::Type::SPACESTATION);
+		return 1;
+}
+
 static int l_body_is_cargo_container(lua_State *l)
 {
 		Body *body = LuaObject<Body>::CheckFromLua(1);
@@ -206,8 +213,16 @@ static int l_body_is_more_important_than(lua_State *l)
 	Body *body = LuaObject<Body>::CheckFromLua(1);
 	Body *other = LuaObject<Body>::CheckFromLua(2);
 
+	// compare body and other
+	// push true if body is "more important" than other
+	// the most important body is shown on the hud and
+	// bodies are sorted by importance in menus
+
 	if(body == other)
-		return false;
+	{
+		LuaPush<bool>(l, false);
+		return 1;
+	}
 
 	Object::Type a = body->GetType();
 	const SystemBody *sb_a = body->GetSystemBody();
@@ -223,25 +238,46 @@ static int l_body_is_more_important_than(lua_State *l)
 
 	bool result = false;
 
+	// if type is the same, just sort alphabetically
+	// planets are different, because moons are
+	// less important (but don't have their own type)
 	if(a == b && a != Object::Type::PLANET) result = body->GetLabel() < other->GetLabel();
-	else if(b == Object::Type::STAR) result = false;
+	// a star is larger than any other object
 	else if(a == Object::Type::STAR) result = true;
+	// any (non-star) object is smaller than a star
+	else if(b == Object::Type::STAR) result = false;
+	// a gas giant is larger than anything but a star,
+	// but remember to keep total order in mind: if both are
+	// gas giants, order alphabetically
+	else if(a_gas_giant) result = !b_gas_giant || body->GetLabel() < other->GetLabel();
+	// any (non-star, non-gas giant) object is smaller than a gas giant
 	else if(b_gas_giant) result = false;
-	else if(a_gas_giant) result = true;
-	else if(a == Object::Type::HYPERSPACECLOUD) result = false;
-	else if(b == Object::Type::HYPERSPACECLOUD) result = true;
-	else if(a == Object::Type::MISSILE) result = false;
-	else if(b == Object::Type::MISSILE) result = true;
-	else if(a == Object::Type::PROJECTILE) result = false;
-	else if(b == Object::Type::PROJECTILE) result = true;
-	else if(a == Object::Type::SHIP) result = false;
-	else if(b == Object::Type::SHIP) result = true;
-	else if(a == Object::Type::SPACESTATION) result = false;
-	else if(b == Object::Type::SPACESTATION) result = true;
+	// between two planets or moons, alphabetic
 	else if(a_planet && b_planet) result = body->GetLabel() < other->GetLabel();
 	else if(a_moon && b_moon) result = body->GetLabel() < other->GetLabel();
-	else if(sb_b && sb_b->IsPlanet()) result = false;
-	else if(sb_a && sb_a->IsPlanet()) result = true;
+	// a planet is larger than any non-planet
+	else if(a_planet) result = true;
+	// a non-planet is smaller than any planet
+	else if(b_planet) result = false;
+	// a moon is larger than any non-moon
+	else if(a_moon) result = true;
+	// a non-moon is smaller than any moon
+	else if(b_moon) result = false;
+	// spacestation > city > ship > hyperspace cloud > cargo body > missile > projectile
+	else if(a == Object::Type::SPACESTATION) result = true;
+	else if(b == Object::Type::SPACESTATION) result = false;
+    else if(a == Object::Type::CITYONPLANET) result = true;
+    else if(b == Object::Type::CITYONPLANET) result = false;
+	else if(a == Object::Type::SHIP) result = true;
+	else if(b == Object::Type::SHIP) result = false;
+	else if(a == Object::Type::HYPERSPACECLOUD) result = true;
+	else if(b == Object::Type::HYPERSPACECLOUD) result = false;
+	else if(a == Object::Type::CARGOBODY) result = true;
+	else if(b == Object::Type::CARGOBODY) result = false;
+	else if(a == Object::Type::MISSILE) result = true;
+	else if(b == Object::Type::MISSILE) result = false;
+	else if(a == Object::Type::PROJECTILE) result = true;
+	else if(b == Object::Type::PROJECTILE) result = false;
 	else Error("don't know how to compare %i and %i\n", a, b);
 
 	LuaPush<bool>(l, result);
@@ -655,6 +691,29 @@ static int l_body_get_projected_screen_position(lua_State *l)
 	return pushOnScreenPositionDirection(l, p);
 }
 
+static int l_body_get_atmospheric_state(lua_State *l) {
+	Body *b = LuaObject<Body>::CheckFromLua(1);
+	//	const SystemBody *sb = b->GetSystemBody();
+	vector3d pos = Pi::player->GetPosition();
+	double center_dist = pos.Length();
+	if (b->IsType(Object::PLANET)) {
+		double pressure, density;
+		static_cast<Planet*>(b)->GetAtmosphericState(center_dist, &pressure, &density);
+		lua_pushnumber(l, pressure);
+		lua_pushnumber(l, density);
+		return 2;
+	} else {
+		return 0;
+	}
+}
+
+static int l_body_get_label(lua_State *l)
+{
+	Body *b = LuaObject<Body>::CheckFromLua(1);
+	LuaPush(l, b->GetLabel());
+	return 1;
+}
+
 static int l_body_get_target_indicator_screen_position(lua_State *l)
 {
 	Body *b = LuaObject<Body>::CheckFromLua(1);
@@ -707,6 +766,9 @@ static bool _body_deserializer(const char *pos, const char **next)
 	case Object::MISSILE:
 		LuaObject<Missile>::PushToLua(dynamic_cast<Missile*>(body));
 		break;
+	case Object::HYPERSPACECLOUD:
+		LuaObject<HyperspaceCloud>::PushToLua(dynamic_cast<HyperspaceCloud*>(body));
+		break;
 	default:
 		return false;
 	}
@@ -731,12 +793,15 @@ template <> void LuaObject<Body>::RegisterClass()
 		{ "GetProjectedScreenPosition", l_body_get_projected_screen_position },
 		{ "GetTargetIndicatorScreenPosition", l_body_get_target_indicator_screen_position },
 		{ "GetPhysicalRadius",   l_body_get_phys_radius },
+		{ "GetAtmosphericState", l_body_get_atmospheric_state },
+		{ "GetLabel",            l_body_get_label },
 		{ "IsMoreImportantThan", l_body_is_more_important_than },
 		{ "IsMoon",              l_body_is_moon },
 		{ "IsPlanet",            l_body_is_planet },
 		{ "IsShip",              l_body_is_ship },
 		{ "IsHyperspaceCloud",   l_body_is_hyperspace_cloud },
 		{ "IsMissile",           l_body_is_missile },
+		{ "IsStation",           l_body_is_station },
 		{ "IsCargoContainer",    l_body_is_cargo_container },
 		{ "GetSystemBody",       l_body_get_system_body },
 		{ 0, 0 }
@@ -765,4 +830,5 @@ template <> void LuaObject<Body>::RegisterClass()
 	LuaObjectBase::RegisterSerializer("Star",         SerializerPair(_body_serializer, _body_deserializer));
 	LuaObjectBase::RegisterSerializer("CargoBody",    SerializerPair(_body_serializer, _body_deserializer));
 	LuaObjectBase::RegisterSerializer("Missile",      SerializerPair(_body_serializer, _body_deserializer));
+	LuaObjectBase::RegisterSerializer("HyperspaceCloud",      SerializerPair(_body_serializer, _body_deserializer));
 }

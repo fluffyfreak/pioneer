@@ -421,7 +421,7 @@
    },
    "FIRE_LASER" : {
       "description" : "",
-      "message" : "Feuer"
+      "message" : "Waffe abfeuern"
    },
    "FIRE_MISSILE" : {
       "description" : "",
@@ -595,10 +595,6 @@
       "description" : "",
       "message" : "Hyperraumsprungsziel"
    },
-   "HYPERSPACING_IN_N_SECONDS" : {
-      "description" : "",
-      "message" : "Hyperraumsprung in %countdown{f.0} Sekunde(n)"
-   },
    "H_ATMOSPHERE" : {
       "description" : "",
       "message" : "\" Wasserstoffatmosphäre\""
@@ -647,14 +643,6 @@
       "description" : "",
       "message" : "Innenansicht"
    },
-   "IN_TRANSIT" : {
-      "description" : "",
-      "message" : "Auf dem Weg"
-   },
-   "IN_TRANSIT_TO_N_X_X_X" : {
-      "description" : "",
-      "message" : "Auf dem Weg nach %system [%x,%y,%z]"
-   },
    "JOY" : {
       "description" : "Short for Joystick",
       "message" : "Joy"
@@ -666,10 +654,6 @@
    "JOY_AXIS" : {
       "description" : "Regarding joystick",
       "message" : "%{sign}%joyname %axis Achse"
-   },
-   "JUMP_COMPLETE" : {
-      "description" : "",
-      "message" : "Sprungfortschritt: %percent%%"
    },
    "L4L5_DISPLAY_MODE_TOGGLE" : {
       "description" : "Either show L4/L5 points or don't",
@@ -698,6 +682,14 @@
    "LATITUDE" : {
       "description" : "Short for latitude",
       "message" : "B.:"
+   },
+   "LATITUDE_NORTH_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'north'",
+      "message" : "N"
+   },
+   "LATITUDE_SOUTH_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'south'",
+      "message" : "S"
    },
    "LEGAL_CURRENT_SYSTEM" : {
       "description" : "Short (tooltip) description of commodity (singular) status in the system the player is currently in",
@@ -730,6 +722,14 @@
    "LONGITUDE" : {
       "description" : "Short for longitude",
       "message" : "Länge:"
+   },
+   "LONGITUDE_EAST_ABBREV" : {
+      "description" : "Abbreviation letter for longitude 'east'",
+      "message" : "O"
+   },
+   "LONGITUDE_WEST_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'west'",
+      "message" : "W"
    },
    "MAJOR_EXPORTS" : {
       "description" : "",
@@ -1589,7 +1589,7 @@
    },
    "SWAP_SELECTED_HYPERSPACE_TARGET" : {
       "description" : "",
-      "message" : "Swap selected and hyperjump target"
+      "message" : "Vertausche Auswahl und Hyperraumsprungziel"
    },
    "SWITCHED_TO_PARENT" : {
       "description" : "Show ship's heading, coordinates are on the celestial sphere (defined by the ecliptic).",
@@ -1778,6 +1778,10 @@
    "UNIT_SECONDS" : {
       "description" : "Duration unit: one second",
       "message" : "s"
+   },
+   "UNIT_TONNES" : {
+      "description" : "Mass unit: one tonne (t)",
+      "message" : "t"
    },
    "UNIT_WEEKS" : {
       "description" : "Duration unit: one 7-day week",

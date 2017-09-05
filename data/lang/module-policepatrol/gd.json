@@ -19,6 +19,18 @@
       "description" : "",
       "message" : "Cha do mhothaich sinn dha charago mì-laghail. Faodaidh sibh dol air adhart."
    },
+   "OUTLAW_DETECTED_1" : {
+      "description" : "",
+      "message" : "Tha fògrach as aithne dhuinn a’ stiùireadh {ship_label}. Gabhamaid air gus a mhilleadh!"
+   },
+   "OUTLAW_DETECTED_2" : {
+      "description" : "",
+      "message" : "Cuiridh sinn crìoch ort, a shlaighteir!"
+   },
+   "OUTLAW_DETECTED_3" : {
+      "description" : "",
+      "message" : "Haoth, fhuair sinn greim ort! Chan fhaigh thusa beò as an t-siostam seo!"
+   },
    "POLICE_TAUNT_1" : {
       "description" : "",
       "message" : "Dragh a' choin!"

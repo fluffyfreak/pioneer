@@ -20,6 +20,26 @@ local MIN_RADAR_SIZE = 1000
 local shouldDisplay2DRadar = false
 local current_radar_size = 10000
 
+local function getColorFor(item)
+	local body = item.body
+	if body == player:GetNavTarget() then
+		return colors.radarNavTarget
+	elseif body == player:GetCombatTarget() then
+		return colors.radarCombatTarget
+	elseif body:IsShip() then
+		return colors.radarShip
+	elseif body:IsHyperspaceCloud() then
+		return colors.radarCloud
+	elseif body:IsMissile() then
+		return colors.radarMissile
+	elseif body:IsStation() then
+		return colors.radarStation
+	elseif body:IsCargoContainer() then
+		return colors.radarCargo
+	end
+	return colors.grey
+end
+
 -- display the 2D radar
 local function display2DRadar(cntr, size)
 	local targets = ui.getTargetsNearby(current_radar_size)
@@ -59,7 +79,7 @@ local function display2DRadar(cntr, size)
 				local color = Color(colors.combatTarget.r, colors.combatTarget.g, colors.combatTarget.b, alpha)
 				ui.addIcon(position, icons.square, color, 12, ui.anchor.center, ui.anchor.center)
 			else
-				local color = Color(colors.reticuleCircle.r, colors.reticuleCircle.g, colors.reticuleCircle.b, alpha)
+				local color = getColorFor(v)
 				ui.addCircleFilled(position, 2, color, 4, 1)
 			end
 			local mouse_position = ui.getMousePos()
@@ -73,10 +93,11 @@ local function display2DRadar(cntr, size)
 	end
 	local d, d_u = ui.Format.Distance(current_radar_size)
 	local distance = d .. ' ' .. d_u
-	local textcenter = cntr + Vector(0, size + 2)
-	local textsize = ui.addStyledText(textcenter, ui.anchor.center, ui.anchor.top, distance, colors.frame, pionillium.small, lui.HUD_RADAR_DISTANCE, colors.lightBlackBackground)
+	local textcenter = cntr + Vector((halfsize + twothirdsize) * 0.5, size)
+	local textsize = ui.addStyledText(textcenter, ui.anchor.left, ui.anchor.bottom, distance, colors.frame, pionillium.small, lui.HUD_RADAR_DISTANCE, colors.lightBlackBackground)
 end
 
+local click_on_radar = false
 -- display either the 3D or the 2D radar, show a popup on right click to select
 local function displayRadar()
 	player = Game.player
@@ -84,12 +105,18 @@ local function displayRadar()
 	-- only display if there actually *is* a radar installed
 	if #radar > 0 then
 
-		local cntr = Vector(ui.screenWidth / 2, ui.screenHeight - ui.reticuleCircleRadius - 15)
-		local size = ui.reticuleCircleRadius
+		local size = ui.reticuleCircleRadius * 0.66
+		local cntr = Vector(ui.screenWidth / 2, ui.screenHeight - size - 15)
 
 		local mp = ui.getMousePos()
+		if (Vector(mp.x,mp.y) - cntr):magnitude() > size then
+			click_on_radar = false
+		end
 		if (Vector(mp.x,mp.y) - cntr):magnitude() < size then
-			if ui.isMouseReleased(1) then
+			if ui.isMouseClicked(1) then
+				click_on_radar = true
+			end
+			if click_on_radar and ui.isMouseReleased(1) then
 				ui.openPopup("radarselector")
 			end
 			local wheel = ui.getMouseWheel()
@@ -101,12 +128,10 @@ local function displayRadar()
 		end
 		ui.popup("radarselector", function()
 							 if ui.selectable(lui.HUD_2D_RADAR, shouldDisplay2DRadar, {}) then
-								 shouldDisplay2DRadar = true
-								 Game.SetRadarVisible(false)
+								 Event.Queue('changeMFD', 'radar')
 							 end
 							 if ui.selectable(lui.HUD_3D_RADAR, not shouldDisplay2DRadar, {}) then
-								 shouldDisplay2DRadar = false
-								 Game.SetRadarVisible(true)
+								 Event.Queue('changeMFD', 'scanner')
 							 end
 		end)
 		if shouldDisplay2DRadar then
@@ -114,6 +139,21 @@ local function displayRadar()
 		end
 	end
 end
+
+Event.Register('changeMFD', function(selected)
+								 Event.Queue('onChangeMFD', selected)
+end)
+
+Event.Register('onChangeMFD', function(selected)
+								 if selected == "radar" then
+									 shouldDisplay2DRadar = true;
+									 Game.SetRadarVisible(false)
+								 elseif selected == "scanner" then
+									 Game.SetRadarVisible(true)
+									 shouldDisplay2DRadar = false;
+								 end
+end)
+
 
 ui.registerModule("game", displayRadar)
 

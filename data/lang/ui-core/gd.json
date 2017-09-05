@@ -327,6 +327,10 @@
       "description" : "",
       "message" : "Mearachd"
    },
+   "ERROR_LANDING_GEAR_DOWN" : {
+      "description" : "",
+      "message" : "Cha ghabh leum os-fhànais a thòiseachadh; cha deach an uidheamachd landaidh a chur suas"
+   },
    "ESCAPE_SPEED" : {
       "description" : "",
       "message" : "Luaths teichidh:"
@@ -447,9 +451,157 @@
       "description" : "Popup text: the name of the planar projection radar (traditional frontier-style)",
       "message" : "Tilg-shealladh plèanach 3D"
    },
+   "HUD_ATMOSPHERIC_PRESSURE" : {
+      "description" : "Tooltip: Atmospheric Pressure.",
+      "message" : "Brùthadh an àile"
+   },
+   "HUD_BACKWARD_GUN_TEMPERATURE" : {
+      "description" : "Tooltip: Backward Gun Temperature.",
+      "message" : "Teothachd a’ ghunna-cùil"
+   },
    "HUD_BRAKE_DISTANCE_MAIN_THRUSTERS" : {
       "description" : "Tooltip: The braking distance using the main thrusters.",
       "message" : "Astar brèigidh a' cleachdadh nam prìomh-phutairean"
+   },
+   "HUD_BUTTON_AUTOPILOT_DOCKING" : {
+      "description" : "Tooltip: Autopilot docking",
+      "message" : "Docadh fèin-stiùiridh"
+   },
+   "HUD_BUTTON_AUTOPILOT_ENTERING_ORBIT" : {
+      "description" : "Tooltip: Autopilot entering orbit",
+      "message" : "Tha am fèin-stiùireadh a’ tòiseachadh air reul-chuairt"
+   },
+   "HUD_BUTTON_AUTOPILOT_FLYING_TO_TARGET" : {
+      "description" : "Tooltip: Autopilot flying to target",
+      "message" : "Tha am fèin-stiùireadh a’ sgiathadh dhan amas"
+   },
+   "HUD_BUTTON_BLASTOFF" : {
+      "description" : "Tooltip: Blastoff",
+      "message" : "Losgadh"
+   },
+   "HUD_BUTTON_EQUIPMENT" : {
+      "description" : "Tooltip: Equipment",
+      "message" : "Uidheamachd"
+   },
+   "HUD_BUTTON_EXTERNAL_VIEW" : {
+      "description" : "Tooltip: External camera view",
+      "message" : "Sealladh taobh a-muigh"
+   },
+   "HUD_BUTTON_FIX_ANTINORMAL" : {
+      "description" : "Tooltip: fix heading antinormal",
+      "message" : "Ceartaich an-àbhaisteach na comhair"
+   },
+   "HUD_BUTTON_FIX_NORMAL" : {
+      "description" : "Tooltip: fix heading normal",
+      "message" : "Ceartaich àbhaisteach na comhair"
+   },
+   "HUD_BUTTON_FIX_PROGRADE" : {
+      "description" : "Tooltip: fix heading prograde",
+      "message" : "Ceartaich ceum air adhart na comhair"
+   },
+   "HUD_BUTTON_FIX_RADIAL_IN" : {
+      "description" : "Tooltip: fix heading radially inward",
+      "message" : "Ceartaich rèideal a-steach na comhair"
+   },
+   "HUD_BUTTON_FIX_RADIAL_OUT" : {
+      "description" : "Tooltip: fix heading radially outward",
+      "message" : "Ceartaich rèideal a-mach na comhair"
+   },
+   "HUD_BUTTON_FIX_RETROGRADE" : {
+      "description" : "Tooltip: fix heading retrograde",
+      "message" : "Ceartaich ceum air ais na comhair"
+   },
+   "HUD_BUTTON_HYPERDRIVE_DISABLED" : {
+      "description" : "Tooltip: Hyperdrive disabled (docked or landed)",
+      "message" : "Os-dhraibh à comas"
+   },
+   "HUD_BUTTON_INITIATE_HYPERJUMP" : {
+      "description" : "Tooltip: Initiate legal hyperjump",
+      "message" : "Tòisich air leum os-fhànais"
+   },
+   "HUD_BUTTON_INITIATE_ILLEGAL_HYPERJUMP" : {
+      "description" : "Tooltip: Initiate illegal hyperjump",
+      "message" : "Tòisich air leum os-fhànais mì-laghail"
+   },
+   "HUD_BUTTON_INTERNAL_VIEW" : {
+      "description" : "Tooltip: Internal camera view",
+      "message" : "Sealladh taobh a-staigh"
+   },
+   "HUD_BUTTON_KILL_ROTATION" : {
+      "description" : "Tooltip: kill rotation",
+      "message" : "Stad an cuairteachadh"
+   },
+   "HUD_BUTTON_LANDING_GEAR_IS_DOWN" : {
+      "description" : "Tooltip: Landing gear is down",
+      "message" : "Tha an uidheamachd landaidh shìos"
+   },
+   "HUD_BUTTON_LANDING_GEAR_IS_MOVING" : {
+      "description" : "Tooltip: Landing gear is moving",
+      "message" : "Tha an uidheamachd landaidh a’ gluasad"
+   },
+   "HUD_BUTTON_LANDING_GEAR_IS_UP" : {
+      "description" : "Tooltip: Landing gear is up",
+      "message" : "Tha an uidheamachd landaidh shuas"
+   },
+   "HUD_BUTTON_MANUAL_CONTROL" : {
+      "description" : "Tooltip: Manual control",
+      "message" : "Stiùireadh a làimh"
+   },
+   "HUD_BUTTON_ROTATION_DAMPING_IS_OFF" : {
+      "description" : "Tooltip: Rotation damping is off",
+      "message" : "Tha lasachadh a' chuairteachaidh dheth"
+   },
+   "HUD_BUTTON_ROTATION_DAMPING_IS_ON" : {
+      "description" : "Tooltip: Rotation damping is on",
+      "message" : "Tha lasachadh a' chuairteachaidh air"
+   },
+   "HUD_BUTTON_SCANNER" : {
+      "description" : "Tooltip: Scanner",
+      "message" : "Sganair"
+   },
+   "HUD_BUTTON_SET_SPEED" : {
+      "description" : "Tooltip: set speed",
+      "message" : "Suidhich an luaths"
+   },
+   "HUD_BUTTON_SHOW_COMMS" : {
+      "description" : "Tooltip: Show comms",
+      "message" : "Seall an conaltradh"
+   },
+   "HUD_BUTTON_SHOW_PERSONAL_INFO" : {
+      "description" : "Tooltip: Show personal info",
+      "message" : "Seall am fiosrachadh pearsanta"
+   },
+   "HUD_BUTTON_SIDEREAL_VIEW" : {
+      "description" : "Tooltip: Sidereal camera view",
+      "message" : "Sealladh ùine nan reul"
+   },
+   "HUD_BUTTON_SWITCH_TO_GALAXY_MAP" : {
+      "description" : "Tooltip: Switch to galaxy map",
+      "message" : "Atharraich gu mapa a’ reul-chriosa"
+   },
+   "HUD_BUTTON_SWITCH_TO_SECTOR_MAP" : {
+      "description" : "Tooltip: Switch to sector map",
+      "message" : "Atharraich gu mapa na h-earrainn"
+   },
+   "HUD_BUTTON_SWITCH_TO_SYSTEM_MAP" : {
+      "description" : "Tooltip: Switch to system map",
+      "message" : "Atharraich gu mapa an t-siostaim"
+   },
+   "HUD_BUTTON_SWITCH_TO_SYSTEM_OVERVIEW" : {
+      "description" : "Tooltip: Switch to system overview",
+      "message" : "Atharraich gu foir-shealladh an t-siostaim"
+   },
+   "HUD_BUTTON_SWITCH_TO_WORLD_VIEW" : {
+      "description" : "Tooltip: Switch to world view",
+      "message" : "Atharraich gu sealladh na cruinne"
+   },
+   "HUD_BUTTON_UNDOCK" : {
+      "description" : "Tooltip: Undock",
+      "message" : "Dì-dhocaich"
+   },
+   "HUD_CARGO_MASS" : {
+      "description" : "Cargo Mass",
+      "message" : "Tomad a’ charago"
    },
    "HUD_CURRENT_COMBAT_TARGET" : {
       "description" : "Tooltip: The current combat target.",
@@ -503,6 +655,22 @@
       "description" : "Tooltip: The duration until the middle of the maneuver burn.",
       "message" : "An ùine gu meadhan an losgaidh-obrachaidh"
    },
+   "HUD_FORWARD_GUN_TEMPERATURE" : {
+      "description" : "Tooltip: Forward Gun Temperature.",
+      "message" : "Teothachd a’ ghunna-bheòil"
+   },
+   "HUD_HULL_STRENGTH" : {
+      "description" : "Tooltip: Hull Strength.",
+      "message" : "Neart na slige"
+   },
+   "HUD_HULL_TEMPERATURE" : {
+      "description" : "Tooltip: Hull Temperature.",
+      "message" : "Teothachd na slige"
+   },
+   "HUD_HYPERSPACING_TO_N_IN_N_SECONDS" : {
+      "description" : "",
+      "message" : "Gu bhith dol dhan os-fhànais gu {destination} an ceann {countdown} diog(an)"
+   },
    "HUD_INDICATOR_AWAY_FROM_FRAME" : {
       "description" : "Indicator: Away from the current frame.",
       "message" : "Air falbh on fhrèam làithreach"
@@ -535,6 +703,18 @@
       "description" : "Indicator: Retrograde direction relative to the current navigational target.",
       "message" : "Gabh ceum air ais gu dàimheil ri amas làithreach na seòladaireachd"
    },
+   "HUD_IN_TRANSIT_TO_N_X_X_X" : {
+      "description" : "",
+      "message" : "A’ siubhal gu {system} [{x},{y},{z}]"
+   },
+   "HUD_JUMP_COMPLETE" : {
+      "description" : "",
+      "message" : "Adhartas an leuma: {percent}%"
+   },
+   "HUD_MASS" : {
+      "description" : "Mass",
+      "message" : "Tomad"
+   },
    "HUD_RADAR_DISTANCE" : {
       "description" : "Tooltip: Current distance of the radar.",
       "message" : "Rainse ghnìomhach an rèideir"
@@ -542,6 +722,10 @@
    "HUD_REQUEST_TIME_ACCEL" : {
       "description" : "Tooltip: Request time acceleration {time}",
       "message" : "Iarr luathachadh an ama: {time}"
+   },
+   "HUD_SHIELD_STRENGTH" : {
+      "description" : "Tooltip: Shield Strength.",
+      "message" : "Neart na sgèithe"
    },
    "HUD_SHOW_COMBAT_TARGET" : {
       "description" : "Tooltip: Show the current combat target.",
@@ -566,6 +750,10 @@
    "HUD_SPEED_RELATIVE_TO_TARGET" : {
       "description" : "Tooltip: The speed relative to the target.",
       "message" : "An luaths dàimheil ris an amas"
+   },
+   "HUD_THRUST_INDICATOR" : {
+      "description" : "Tooltip: describe what the thrust/velocity indicator shows",
+      "message" : "Seall an luaths làithreach air gach comhair (loidhnichean tana) ’s am putadh (cùlaibh tiugh)"
    },
    "HULL_DOES_NOT_REQUIRE_REPAIR" : {
       "description" : "",
@@ -1202,6 +1390,10 @@
    "STATION_MANAGER" : {
       "description" : "",
       "message" : "Stiùiriche an stèisein"
+   },
+   "STATION_ORBIT" : {
+      "description" : "Information shown in the station loby",
+      "message" : "Tha sinn a’ reul-chuairteachadh {parent_body} gach {orbit_period} là(ithean)."
    },
    "STATUS" : {
       "description" : "",

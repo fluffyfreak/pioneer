@@ -1,6 +1,60 @@
+September 2017
+   * New Features
+     * Attack outlaws immediately (#4089)
+
+   * Internal Changes
+     * Ignore all Pioneer x64 Visual Studio files (#4125)
+     * VS2015, Fix 64-bit SSE2 flag warning #4114
+
+   * Fixes
+     * Fix orbital stations sharing an orbit (#4129)
+     * Make orbit radius relative to GetPhysRadius, clamp to frame radius (#4131)
+     * Avoid division by zero doing AABB ray test (#4135)
+     * Fix cities overlapping (#4137)
+
+August 2017
+   * New Features
+     * Moved remaining cpanel UI to imgui/lua (#4093)
+     * Hide mouse pointer when GUI is not drawn (#4066)
+     * Make all main menu button tooltips translatable (#4072)
+     * Setspeed indicator, larger hud size, more frame info (#4065)
+     * Show alerts near the reticule with imgui (#4079)
+     * Add Eros and Phoebe (#4084)
+     * Adding TRAPPIST-1 (#4085)
+     * Make Ctrl-clicking select the set-speed target (#4086)
+     * Orbit stations lobby shows orbit info (#4091)
+     * Add Earth g comparison in system info view (#4101)
+     * Add search field to BBS adverts (#4109)
+     * Orbit and ground station use different welcome messages (#4116)
+
+   * Internal Changes
+     * Change laser to weapon in some core en.json (#4069)
+     * Removing unused cpanel icons (#4076)
+     * Putting back the lagrange icons (#4087)
+     * Silence GCC warning (#4090)
+     * Move Brasilia a little bit (#4102)
+     * Move game start location for Earth back to London (#4092)
+     * Add SystemPath to the ObjectViewerView (#4107)
+
+   * Fixes
+     * Additional sort order fix (#4062)
+     * Fix occasional nil dereference (#4073)
+     * Add missing flight state in crew rooster (#4082)
+     * Fix Star/planet/gas giants popping into view (#4083)
+     * Show a warning message if trying to hyperjump with wheels down. (#4074)
+     * Fix player not being fined for murder and piracy (#4096)
+     * Adding gun and light tags to Mola Ramsayi (#4097)
+     * Fix AI ships not hyper-jumping (#4098)
+     * Workaround for issue 4098 (#4103)
+     * Fix zero mass asteroids in custom systems (#4108)
+     * Fix autopilot being confused by bespoke thrusters (#4113)
+
 July 2017
    * New Features
      * Added Swap button for sector map (#4039)
+     * New default keybindings (#4050)
+     * Fail hyperdrive when wheels are down (#4049)
+     * New music for ship-destroyed (#4038)
 
    * Internal Changes
      * Install package for OS X (July 2017) (#4047)
@@ -9,6 +63,11 @@ July 2017
 
    * Fixes
      * Adding some missing letters to Orbiteer for Turkish translation (#4043)
+     * Fix comparison for "most important" object (#4053)
+     * Handle assimp major versions greater than 3 (#4055)
+     * Removing collision mesh for those little fin things top and bottom (#4044)
+     * Fix segfault when exiting Pioneer (#4057)
+     * Avoid crash on ESCaping a UI Dropdown (#4060)
 
 June 2017
    * New Features
