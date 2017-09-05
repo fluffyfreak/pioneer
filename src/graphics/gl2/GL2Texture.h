@@ -13,8 +13,9 @@ namespace GL2 {
 
 class GL2Texture : public Texture {
 public:
-	virtual void Update(const void *data, const vector2f &pos, const vector2f &dataSize, TextureFormat format, const unsigned int numMips) override final;
-	virtual void Update(const TextureCubeData &data, const vector2f &dataSize, TextureFormat format, const unsigned int numMips) override final;
+	virtual void Update(const void *data, const vector2f &pos, const vector3f &dataSize, TextureFormat format, const unsigned int numMips) override final;
+	virtual void Update(const TextureCubeData &data, const vector3f &dataSize, TextureFormat format, const unsigned int numMips) override final;
+	virtual void Update(const vecDataPtr &data, const vector3f &dataSize, const TextureFormat format, const unsigned int numMips) override final;
 
 	GL2Texture(const TextureDescriptor &descriptor, const bool useCompressed);
 	virtual ~GL2Texture();

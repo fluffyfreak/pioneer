@@ -20,12 +20,84 @@
 #include <deque>
 #include <algorithm>
 
+#define DUMP_TO_TEXTURE 0
+#if DUMP_TO_TEXTURE
+static std::unique_ptr<Color[]> bufbuf;
+
+#if DUMP_TO_TEXTURE
+#include "FileSystem.h"
+#include "PngWriter.h"
+#include "graphics/opengl/TextureGL.h"
+static const Uint32 kTextureDims = 1024;
+void textureDump(const char* destFile)
+{
+	const std::string dir = "generated_textures";
+	FileSystem::userFiles.MakeDirectory(dir);
+	const std::string fname = FileSystem::JoinPathBelow(dir, destFile);
+
+	// pad rows to 4 bytes, which is the default row alignment for OpenGL
+	//const int stride = (3*width + 3) & ~3;
+	const int stride = kTextureDims * 4;
+
+	write_png(FileSystem::userFiles, fname, &bufbuf[0].r, kTextureDims, kTextureDims, stride, 4);
+
+	printf("texture %s saved\n", fname.c_str());
+}
+#endif
+#endif
+
 RefCountedPtr<GeoPatchContext> GeoSphere::s_patchContext;
 
-// must be odd numbers
-static const int detail_edgeLen[5] = {
-	7, 15, 25, 35, 55
-};
+namespace {
+
+	const vector3d g_samplePoints[] = {
+		{ vector3d( -0.160622,	-0.160622,	-0.160622)		},
+		{ vector3d( -0.16246,	-0.16246,	-0.16246)		},
+		{ vector3d( -0.259892,	-0.259892,	-0.259892)		},
+		{ vector3d( -0.262866,	-0.262866,	-0.262866)		},
+		{ vector3d( -0.273266,	-0.273266,	-0.273266)		},
+		{ vector3d( -0.309017,	-0.309017,	-0.309017)		},
+		{ vector3d( -0.425325,	-0.425325,	-0.425325)		},
+		{ vector3d( -0.433889,	-0.433889,	-0.433889)		},
+		{ vector3d( -0.525731,	-0.525731,	-0.525731)		},
+		{ vector3d( -0.587785,	-0.587785,	-0.587785)		},
+		{ vector3d( -0.5,		-0.5,		-0.5)			},
+		{ vector3d( -0.688191,	-0.688191,	-0.688191)		},
+		{ vector3d( -0.69378,	-0.69378,	-0.69378)		},
+		{ vector3d( -0.702046,	-0.702046,	-0.702046)		},
+		{ vector3d( -0.809017,	-0.809017,	-0.809017)		},
+		{ vector3d( -0.850651,	-0.850651,	-0.850651)		},
+		{ vector3d( -0.862669,	-0.862669,	-0.862669)		},
+		{ vector3d( -0.951057,	-0.951057,	-0.951057)		},
+		{ vector3d( -0.961938,	-0.961938,	-0.961938)		},
+		{ vector3d( -1.,		-1.,		-1.)			},
+		{ vector3d( 0.160622,	0.160622,	0.160622)		},
+		{ vector3d( 0.16246,	0.16246,	0.16246)		},
+		{ vector3d( 0.259892,	0.259892,	0.259892)		},
+		{ vector3d( 0.262866,	0.262866,	0.262866)		},
+		{ vector3d( 0.273266,	0.273266,	0.273266)		},
+		{ vector3d( 0.309017,	0.309017,	0.309017)		},
+		{ vector3d( 0.425325,	0.425325,	0.425325)		},
+		{ vector3d( 0.433889,	0.433889,	0.433889)		},
+		{ vector3d( 0.525731,	0.525731,	0.525731)		},
+		{ vector3d( 0.587785,	0.587785,	0.587785)		},
+		{ vector3d( 0.5,		0.5,		0.5)			},
+		{ vector3d( 0.688191,	0.688191,	0.688191)		},
+		{ vector3d( 0.69378,	0.69378,	0.69378)		},
+		{ vector3d( 0.702046,	0.702046,	0.702046)		},
+		{ vector3d( 0.809017,	0.809017,	0.809017)		},
+		{ vector3d( 0.850651,	0.850651,	0.850651)		},
+		{ vector3d( 0.862669,	0.862669,	0.862669)		},
+		{ vector3d( 0.951057,	0.951057,	0.951057)		},
+		{ vector3d( 0.961938,	0.961938,	0.961938)		},
+		{ vector3d( 0.,			0.,			0.)				},
+		{ vector3d( 1.,			1.,			1.)				},
+	};
+
+	// must be odd numbers
+	static const int detail_edgeLen[5] = {
+		7, 15, 25, 35, 55
+	};
 
 static const double gs_targetPatchTriLength(100.0);
 
@@ -41,6 +113,7 @@ static const double gs_targetPatchTriLength(100.0);
 // };
 
 static std::vector<GeoSphere*> s_allGeospheres;
+};
 
 void GeoSphere::Init()
 {
@@ -471,6 +544,15 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView
 	renderer->SetAmbientColor(oldAmbient);
 
 	renderer->GetStats().AddToStatCount(Graphics::Stats::STAT_PLANETS, 1);
+#if DUMP_TO_TEXTURE
+	static Uint32 kDumpToTexture = 0;
+	if(kDumpToTexture > 0) {
+		--kDumpToTexture;
+		char filename[1024];
+		snprintf(filename, 1024, "%s.png", GetSystemBody()->GetName().c_str());
+		textureDump(filename);
+	}
+#endif
 }
 
 void GeoSphere::SetUpMaterials()
@@ -518,25 +600,76 @@ void GeoSphere::SetUpMaterials()
 		}
 	}
 
-	surfDesc.quality |= Graphics::HAS_ECLIPSES;
-	const bool bEnableDetailMaps = (Pi::config->Int("DisableDetailMaps") == 0);
-	if (bEnableDetailMaps) {
-		surfDesc.quality |= Graphics::HAS_DETAIL_MAPS;
-	}
+	const bool bEnableEclipse = (Pi::config->Int("DisableEclipse") == 0);
+ 	if (bEnableEclipse) {
+ 		surfDesc.quality |= Graphics::HAS_ECLIPSES;
+ 	}
+	surfDesc.textures = 4;
 	m_surfaceMaterial.Reset(Pi::renderer->CreateMaterial(surfDesc));
 
 	m_texHi.Reset( Graphics::TextureBuilder::Model("textures/high.dds").GetOrCreateTexture(Pi::renderer, "model") );
 	m_texLo.Reset( Graphics::TextureBuilder::Model("textures/low.dds").GetOrCreateTexture(Pi::renderer, "model") );
+	m_surfaceLUT.Reset(	Graphics::TextureBuilder::LookUpTable("textures/terrain/terrainLUT.png").GetOrCreateTexture(Pi::renderer, "lut") );
+	m_surfaceAtlas.Reset( Graphics::TextureBuilder::Array("textures/terrain/atlas.dds", 16).GetOrCreateTexture(Pi::renderer, "array") );
+
 	m_surfaceMaterial->texture0 = m_texHi.Get();
 	m_surfaceMaterial->texture1 = m_texLo.Get();
+	m_surfaceMaterial->texture2 = m_surfaceLUT.Get();
+	m_surfaceMaterial->texture3 = m_surfaceAtlas.Get();
 
 	{
 		Graphics::MaterialDescriptor skyDesc;
 		skyDesc.effect = Graphics::EFFECT_GEOSPHERE_SKY;
 		skyDesc.lighting = true;
-		skyDesc.quality |= Graphics::HAS_ECLIPSES;
+		if (bEnableEclipse) {
+			skyDesc.quality |= Graphics::HAS_ECLIPSES;
+		}
 		m_atmosphereMaterial.Reset(Pi::renderer->CreateMaterial(skyDesc));
 		m_atmosphereMaterial->texture0 = nullptr;
 		m_atmosphereMaterial->texture1 = nullptr;
 	}
+
+	const size_t numSamplePts = sizeof(g_samplePoints) / sizeof(vector3d);
+	double minh = DBL_MAX, maxh = DBL_MIN;
+	for( int sp=0; sp<numSamplePts; sp++)
+	{
+		const double h = m_terrain->GetHeight(g_samplePoints[sp]);
+		minh = std::min(minh, h);
+		maxh = std::max(maxh, h);
+	}
+	//Output("min (%.3lf), max (%.3lf), inverse max (%.3lf)\n", minh, maxh, 1.0 / maxh);
+	m_heightNormaliserMin = minh;
+	m_heightNormaliserMax = 1.0 / maxh;
+}
+
+
+// HACK
+static Uint32 sNumSamples = 0;
+void GeoSphere::SetSlopeHeightHack(const vector2f &uv)
+{
+#if DUMP_TO_TEXTURE
+	if(!bufbuf) {
+		bufbuf.reset( new Color[kTextureDims*kTextureDims] );
+		for(int i=0; i<10; i++) {
+			for(int j=0; j<10; j++) {
+				bufbuf[(j * kTextureDims) + i] = Color::RED;
+			}
+		}
+	}
+	if(GetSystemBody()->GetName() == "Earth")
+	{
+		++sNumSamples;
+		const Uint32 x = Clamp(uv.x * float(kTextureDims-1), 0.0f, float(kTextureDims-1));
+		const Uint32 y = Clamp(uv.y * float(kTextureDims-1), 0.0f, float(kTextureDims-1));
+		const Color curr = bufbuf[(y * kTextureDims) + x];
+		if( curr.r < 254) {
+			bufbuf[(y * kTextureDims) + x] = curr + Color(1);
+		}
+
+		if(sNumSamples >= 5000000) {
+			textureDump("Earth.png");
+			sNumSamples = 0;
+		}
+	}
+#endif
 }

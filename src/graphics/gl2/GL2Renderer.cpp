@@ -1078,7 +1078,7 @@ RenderTarget *RendererGL2::CreateRenderTarget(const RenderTargetDesc &desc)
 	if (desc.colorFormat != TEXTURE_NONE) {
 		Graphics::TextureDescriptor cdesc(
 			desc.colorFormat,
-			vector2f(desc.width, desc.height),
+			vector3f(desc.width, desc.height, 0.0f),
 			vector2f(desc.width, desc.height),
 			LINEAR_CLAMP,
 			false,
@@ -1092,7 +1092,7 @@ RenderTarget *RendererGL2::CreateRenderTarget(const RenderTargetDesc &desc)
 		if (desc.allowDepthTexture) {
 			Graphics::TextureDescriptor ddesc(
 				TEXTURE_DEPTH,
-				vector2f(desc.width, desc.height),
+				vector3f(desc.width, desc.height, 0.0f),
 				vector2f(desc.width, desc.height),
 				LINEAR_CLAMP,
 				false,

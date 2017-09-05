@@ -24,8 +24,8 @@ inline vector3d GetSpherePoint(const vector3d &v0, const vector3d &v1, const vec
 // Overloaded PureJob class to handle generating the mesh for each patch
 // ********************************************************************************
 
-// Generates full-detail vertices, and also non-edge normals and colors
-void SinglePatchJob::GenerateMesh(double *heights, vector3f *normals, Color3ub *colors,
+// Generates full-detail vertices, and also non-edge normals and UVs 
+void SinglePatchJob::GenerateMesh(double *heights, vector3f *normals, vector2f *UVs, 
 								double *borderHeights, vector3d *borderVertexs,
 								const vector3d &v0,
 								const vector3d &v1,
@@ -55,7 +55,6 @@ void SinglePatchJob::GenerateMesh(double *heights, vector3f *normals, Color3ub *
 	assert(bhts==&borderHeights[numBorderedVerts]);
 
 	// Generate normals & colors for non-edge vertices since they never change
-	Color3ub *col = colors;
 	vector3f *nrm = normals;
 	double *hts = heights;
 	vrts = borderVertexs;
@@ -74,17 +73,10 @@ void SinglePatchJob::GenerateMesh(double *heights, vector3f *normals, Color3ub *
 			const vector3d n = ((x2-x1).Cross(y2-y1)).Normalized();
 			assert(nrm!=&normals[edgeLen*edgeLen]);
 			*(nrm++) = vector3f(n);
-
-			// color
-			const vector3d p = GetSpherePoint(v0, v1, v2, v3, (x-BORDER_SIZE)*fracStep, (y-BORDER_SIZE)*fracStep);
-			setColour(*col, pTerrain->GetColor(p, height, n));
-			assert(col!=&colors[edgeLen*edgeLen]);
-			++col;
 		}
 	}
 	assert(hts==&heights[edgeLen*edgeLen]);
 	assert(nrm==&normals[edgeLen*edgeLen]);
-	assert(col==&colors[edgeLen*edgeLen]);
 }
 
 // ********************************************************************************
@@ -104,13 +96,13 @@ void SinglePatchJob::OnRun()    // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
 	const SSingleSplitRequest &srd = *mData;
 
 	// fill out the data
-	GenerateMesh(srd.heights, srd.normals, srd.colors, srd.borderHeights.get(), srd.borderVertexs.get(),
-		srd.v0, srd.v1, srd.v2, srd.v3,
+	GenerateMesh(srd.heights, srd.normals, srd.UVs, srd.borderHeights.get(), srd.borderVertexs.get(),
+		srd.v0, srd.v1, srd.v2, srd.v3, 
 		srd.edgeLen, srd.fracStep, srd.pTerrain.Get());
 	// add this patches data
 	SSingleSplitResult *sr = new SSingleSplitResult(srd.patchID.GetPatchFaceIdx(), srd.depth);
-	sr->addResult(srd.heights, srd.normals, srd.colors,
-		srd.v0, srd.v1, srd.v2, srd.v3,
+	sr->addResult(srd.heights, srd.normals, srd.UVs, 
+		srd.v0, srd.v1, srd.v2, srd.v3, 
 		srd.patchID.NextPatchID(srd.depth+1, 0));
 	// store the result
 	mpResults = sr;
@@ -169,14 +161,14 @@ void QuadPatchJob::OnRun()    // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
 	for (int i=0; i<4; i++)
 	{
 		// fill out the data
-		GenerateSubPatchData(srd.heights[i], srd.normals[i], srd.colors[i], srd.borderHeights.get(), srd.borderVertexs.get(),
-			vecs[i][0], vecs[i][1], vecs[i][2], vecs[i][3],
-			srd.edgeLen, offxy[i][0], offxy[i][1],
+		GenerateSubPatchData(srd.heights[i], srd.normals[i], srd.UVs[i], srd.borderHeights.get(), srd.borderVertexs.get(),
+			vecs[i][0], vecs[i][1], vecs[i][2], vecs[i][3], 
+			srd.edgeLen, offxy[i][0], offxy[i][1], 
 			borderedEdgeLen, srd.fracStep, srd.pTerrain.Get());
 
 		// add this patches data
-		sr->addResult(i, srd.heights[i], srd.normals[i], srd.colors[i],
-			vecs[i][0], vecs[i][1], vecs[i][2], vecs[i][3],
+		sr->addResult(i, srd.heights[i], srd.normals[i], srd.UVs[i], 
+			vecs[i][0], vecs[i][1], vecs[i][2], vecs[i][3], 
 			srd.patchID.NextPatchID(srd.depth+1, i));
 	}
 	mpResults = sr;
@@ -223,7 +215,7 @@ void QuadPatchJob::GenerateBorderedData(
 }
 
 void QuadPatchJob::GenerateSubPatchData(
-	double *heights, vector3f *normals, Color3ub *colors,
+	double *heights, vector3f *normals, vector2f *UVs, 
 	double *borderHeights, vector3d *borderVertexs,
 	const vector3d &v0,
 	const vector3d &v1,
@@ -238,7 +230,6 @@ void QuadPatchJob::GenerateSubPatchData(
 {
 	// Generate normals & colors for vertices
 	vector3d *vrts = borderVertexs;
-	Color3ub *col = colors;
 	vector3f *nrm = normals;
 	double *hts = heights;
 
@@ -261,15 +252,8 @@ void QuadPatchJob::GenerateSubPatchData(
 			const vector3d n = ((x2 - x1).Cross(y2 - y1)).Normalized();
 			assert(nrm != &normals[edgeLen * edgeLen]);
 			*(nrm++) = vector3f(n);
-
-			// color
-			const vector3d p = GetSpherePoint(v0, v1, v2, v3, x * fracStep, y * fracStep);
-			setColour(*col, pTerrain->GetColor(p, height, n));
-			assert(col != &colors[edgeLen * edgeLen]);
-			++col;
 		}
 	}
 	assert(hts == &heights[edgeLen*edgeLen]);
 	assert(nrm == &normals[edgeLen*edgeLen]);
-	assert(col == &colors[edgeLen*edgeLen]);
 }
