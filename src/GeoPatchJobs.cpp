@@ -9,6 +9,8 @@
 #include "Pi.h"
 #include "RefCounted.h"
 
+#include "CachedBicubicInterpolator.h"
+
 inline void setColour(Color3ub &r, const vector3d &v) {
 	r.r=static_cast<unsigned char>(Clamp(v.x*255.0, 0.0, 255.0));
 	r.g=static_cast<unsigned char>(Clamp(v.y*255.0, 0.0, 255.0));
