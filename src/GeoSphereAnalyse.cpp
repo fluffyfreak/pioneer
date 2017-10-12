@@ -14,22 +14,32 @@
 #include "perlin.h"
 #include "Cellular.h"
 #include "Color.h"
+#include "utils.h"
+
+namespace
+{
+	// resolution of the maps we'll generate
+	static const Uint32 hmWide = 2048;//1024;//64;
+	static const Uint32 hmHigh = hmWide>>1;
+	static const double invdWide = 1.0 / hmWide;
+	static const double invdHigh = 1.0 / hmHigh;
+}
+
+//static
+std::vector<vector2d> AnalyseJob::s_poisson;
 
 void AnalyseJob::OnRun()
 {
 	PROFILE_SCOPED_DESC("GeoSphere-AnalyseJob");
-	Output("AnalyseJob::OnRun\n");
 	Analyse();
 }
 
 void AnalyseJob::OnFinish()
 {
-	Output("AnalyseJob::OnFinish\n");
 }
 
 void AnalyseJob::OnCancel()
 {
-	Output("AnalyseJob::OnCancel\n");
 }
 
 static double fbm(const vector3d &position, const int octaves, float frequency, const float persistence) 
@@ -101,50 +111,48 @@ static void ReadVector2dValues(std::vector<vector2d> &out, FileSystem::FileSourc
 	}
 }
 
+Cellular* AnalyseJob::GenerateCellularData()
+{
+	// generate sampling points
+	std::vector<double> heights;
+	if(s_poisson.empty()) {
+		s_poisson.reserve(6254);
+		ReadVector2dValues(s_poisson, FileSystem::gameDataFiles, "Poisson.txt", hmWide-1, hmHigh-1);
+	}
+	const size_t poissonSize = s_poisson.size();
+	heights.resize(	poissonSize );
+	double minH=DBL_MAX;
+	double maxH=DBL_MIN;
+	for (size_t k = 0; k < poissonSize; k++ ) 
+	{
+		PROFILE_SCOPED_DESC("poisson heights")
+		const double wx = ((s_poisson[k].x * invdWide) * 2.0) - 1.0;
+		const double wy = ((s_poisson[k].y * invdHigh) * 2.0) - 1.0;
+		// 2D to polar
+		const double lat = asin(wy);
+		const double lon = -(wx * M_PI);
+		// polar to 3D cartesian (normalised, no radius required/used)
+		const double x = cos(lat) * cos(lon);
+		const double z = cos(lat) * sin(lon);
+		const double y = sin(lat);
+		const double height = m_geoSphere->GetHeight(vector3d(x,y,z).Normalized());
+		minH = std::min(minH, height);
+		maxH = std::max(maxH, height);
+		heights[k] = height;
+	}
+	const double invMaxH = (is_equal_exact(maxH, 0.0)) ? 1.0 : (1.0 / maxH);
+	for (size_t k = 0; k < poissonSize; k++ ) 
+	{
+		heights[k] *= invMaxH;
+	}
+	return new Cellular(16, hmWide, hmHigh, s_poisson, heights);
+}
+
 void AnalyseJob::Analyse()
 {
 	PROFILE_SCOPED()
 
-	// resolution of the maps we'll generate
-	const Uint32 hmWide = 2048;//1024;//64;
-	const Uint32 hmHigh = hmWide>>1;
-	const double dWide = hmWide;
-	const double dHigh = hmHigh;
-
-	// generate sampling points
-	std::unique_ptr<Cellular> vor;
-	{
-		std::vector<double> heights;
-		std::vector<vector2d> poisson;
-		poisson.reserve(6254);
-		ReadVector2dValues(poisson, FileSystem::gameDataFiles, "Poisson.txt", hmWide-1, hmHigh-1);
-		heights.resize(	poisson.size() );
-		double minH=DBL_MAX;
-		double maxH=DBL_MIN;
-		for (size_t k = 0; k < poisson.size(); k++ ) 
-		{
-			PROFILE_SCOPED_DESC("poisson heights")
-			const double wx = ((poisson[k].x / dWide) * 2.0) - 1.0;
-			const double wy = ((poisson[k].y / dHigh) * 2.0) - 1.0;
-			// 2D to polar
-			const double lat = asin(wy);
-			const double lon = -(wx * M_PI);
-			// polar to 3D cartesian (normalised, no radius required/used)
-			const double x = cos(lat) * cos(lon);
-			const double z = cos(lat) * sin(lon);
-			const double y = sin(lat);
-			const double height = m_geoSphere->GetHeight(vector3d(x,y,z).Normalized());
-			minH = std::min(minH, height);
-			maxH = std::max(maxH, height);
-			heights[k] = height;
-		}
-		const double invMaxH = (is_equal_exact(maxH, 0.0)) ? 1.0 : (1.0 / maxH);
-		for (size_t k = 0; k < heights.size(); k++ ) 
-		{
-			heights[k] *= invMaxH;
-		}
-		vor.reset(new Cellular(16, hmWide, hmHigh, poisson, heights));
-	}
+	std::unique_ptr<Cellular> vor(GenerateCellularData());
 
 	// calculate storage for the maps
 	const Uint32 bpp = 4; // channels of info... one byte per thing?
@@ -161,7 +169,7 @@ void AnalyseJob::Analyse()
 	{
 		PROFILE_SCOPED_DESC("Surface properties Y")
 		// normalised 2D coordinates (-1..1)
-		const double wy = ((double(h) / dHigh) * 2.0) - 1.0;
+		const double wy = ((double(h) * invdHigh) * 2.0) - 1.0;
 		// 2D to polar
 		const double lat = asin(wy);
 		// cache sin & cos latitude values
@@ -174,7 +182,7 @@ void AnalyseJob::Analyse()
 		{
 			PROFILE_SCOPED_DESC("Surface properties X")
 			// normalised 2D coordinates (-1..1)
-			const double wx = ((double(w) / dWide) * 2.0) - 1.0;
+			const double wx = ((double(w) * invdWide) * 2.0) - 1.0;
 			// 2D to polar
 			const double lon = -(wx * M_PI);
 			// polar to 3D cartesian (normalised, no radius required/used)

@@ -5,9 +5,9 @@
 #define _GEOSPHEREANALYSE_H
 
 #include "JobQueue.h"
-#include "utils.h"
 
 class GeoSphere;
+class Cellular;
 
 // ********************************************************************************
 // Overloaded PureJob class to handle analysing each GeoSphere
@@ -28,6 +28,9 @@ protected:
 
 private:
 	void Analyse();
+	Cellular* GenerateCellularData();
+	
+	static std::vector<vector2d> s_poisson;
 };
 
 #endif /* _GEOSPHEREANALYSE_H */

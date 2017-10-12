@@ -25,7 +25,7 @@ Cellular::Cellular(const int cellSize, const int dimx, const int dimy, const std
 		const Uint32 index = (yi * cellsX) + xi;
 		cells[index].AddEntry(s[c],c);
 	}
-#if 1//def _DEBUG
+#ifdef _DEBUG
 	Uint32 maxPoint=0;
 	Uint32 minPoint=1000;
 	Uint32 ptCount[CELL_ENTRIES] = {0,0,0,0};
@@ -36,8 +36,7 @@ Cellular::Cellular(const int cellSize, const int dimx, const int dimy, const std
 	}
 	Output("Cellular :: Max Count in Cell %u, and Min %u\n", maxPoint, minPoint);
 	for( int i=0; i<CELL_ENTRIES; i++ ) {
-		
-	Output("Cellular :: Point count %d, instances %u\n", i, ptCount[i]);
+		Output("Cellular :: Point count %d, instances %u\n", i, ptCount[i]);
 	}
 #endif // _DEBUG
 	Output("Cellular :: CellsX %u, CellsY %u\n", cellsX, cellsY);

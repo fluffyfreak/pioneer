@@ -312,7 +312,6 @@ void GeoSphere::BuildFirstPatches()
 	const std::string name( GetSystemBody()->GetName() );
 	if(name == "New Hope" || name == "Earth")
 	{
-		Output("\nWTF!!!\n");
 		m_job = Pi::GetAsyncJobQueue()->Queue(new AnalyseJob(this));
 	}
 
