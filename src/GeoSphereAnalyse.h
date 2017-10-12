@@ -5,10 +5,9 @@
 #define _GEOSPHEREANALYSE_H
 
 #include "JobQueue.h"
+#include "utils.h"
 
 class GeoSphere;
-
-
 
 // ********************************************************************************
 // Overloaded PureJob class to handle analysing each GeoSphere
@@ -20,9 +19,9 @@ public:
 	AnalyseJob(GeoSphere *geoSphere)
 		: m_geoSphere(geoSphere) {}
 
-	virtual void OnRun() override final { PROFILE_SCOPED_DESC("GeoSphere-AnalyseJob"); Analyse(); }    // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
-	virtual void OnFinish() override final {}
-	virtual void OnCancel() override final {}
+	virtual void OnRun() override final;    // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
+	virtual void OnFinish() override final;
+	virtual void OnCancel() override final;
 
 protected:
 	GeoSphere	*m_geoSphere;

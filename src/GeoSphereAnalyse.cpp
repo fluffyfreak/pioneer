@@ -15,6 +15,23 @@
 #include "Cellular.h"
 #include "Color.h"
 
+void AnalyseJob::OnRun()
+{
+	PROFILE_SCOPED_DESC("GeoSphere-AnalyseJob");
+	Output("AnalyseJob::OnRun\n");
+	Analyse();
+}
+
+void AnalyseJob::OnFinish()
+{
+	Output("AnalyseJob::OnFinish\n");
+}
+
+void AnalyseJob::OnCancel()
+{
+	Output("AnalyseJob::OnCancel\n");
+}
+
 static double fbm(const vector3d &position, const int octaves, float frequency, const float persistence) 
 {
 	PROFILE_SCOPED()
@@ -83,7 +100,7 @@ static void ReadVector2dValues(std::vector<vector2d> &out, FileSystem::FileSourc
 		out.push_back(vector2d(x*scaleX,y*scaleY));
 	}
 }
-#pragma optimize("",off)
+
 void AnalyseJob::Analyse()
 {
 	PROFILE_SCOPED()

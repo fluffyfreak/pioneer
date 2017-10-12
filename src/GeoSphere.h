@@ -112,6 +112,7 @@ private:
 	EGSInitialisationStage m_initStage;
 
 	Sint32 m_maxDepth;
+	Job::Handle m_job;
 };
 
 #endif /* _GEOSPHERE_H */
