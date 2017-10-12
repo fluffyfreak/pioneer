@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright Â© 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _VERTEXARRAY_H
@@ -24,7 +24,7 @@ public:
 
 	//check presence of an attribute
 	__inline bool HasAttrib(const VertexAttrib v) const	{ return (m_attribs & v) != 0; }
-	__inline size_t GetNumVerts() const { return position.size(); }
+	__inline Uint32 GetNumVerts() const { return static_cast<Uint32>(position.size()); }
 	__inline AttributeSet GetAttributeSet() const { return m_attribs; }
 
 	__inline bool IsEmpty() const { return position.empty(); }

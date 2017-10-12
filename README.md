@@ -33,7 +33,7 @@ Pioneer wiki
   http://pioneerwiki.com/wiki/Pioneer_Wiki
 
 Join the player's forum:
-  http://spacesimcentral.com/ssc/forum/23-pioneer/
+  http://spacesimcentral.com/forum/categories/pioneer
 
 Join the development forum:
   http://pioneerspacesim.net/forum
@@ -68,7 +68,13 @@ If you are hungry to contribute, more information can be found here:
 If you have a contribution you want to share, and want to learn how to make a
 pull request, see:
   http://pioneerwiki.com/wiki/Using_git_and_GitHub
+  
+## Localization
 
+Localization for Pioneer is handled trough Transifex, and pulled to the source from there automatically. Because of this please don't make pull requests for translations. [You can find the localization project here.](https://www.transifex.com/pioneer/pioneer/dashboard/)
+You need to register at transifex to be able to access the translations.
+
+If you want a new language introduced, [please request it on the Freenode IRC channel of Pioneer](https://webchat.freenode.net/?channels=pioneer), or here by making an issue for it.
 
 ## Getting Pioneer
 

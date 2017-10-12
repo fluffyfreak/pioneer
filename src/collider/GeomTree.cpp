@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "../libs.h"
@@ -257,7 +257,10 @@ void GeomTree::TraceRay(const BVHNode *currnode, const vector3f &a_origin, const
 	PROFILE_SCOPED()
 	BVHNode *stack[32];
 	int stackpos = -1;
-	vector3f invDir(1.0f/a_dir.x, 1.0f/a_dir.y, 1.0f/a_dir.z);
+	const vector3f invDir( // avoid division by zero please
+		is_zero_exact(a_dir.x) ? 0.0f : (1.0f / a_dir.x),
+		is_zero_exact(a_dir.y) ? 0.0f : (1.0f / a_dir.y),
+		is_zero_exact(a_dir.z) ? 0.0f : (1.0f / a_dir.z));
 
 	for (;;) {
 		while (!currnode->IsLeaf()) {

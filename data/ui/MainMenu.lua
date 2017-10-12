@@ -1,4 +1,4 @@
--- Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local Engine = import("Engine")
@@ -25,7 +25,7 @@ local setupPlayerSol = function ()
 	Game.player:AddEquip(laser.pulsecannon_1mw)
 	Game.player:AddEquip(misc.atmospheric_shielding)
 	Game.player:AddEquip(misc.autopilot)
-	Game.player:AddEquip(misc.scanner)
+	Game.player:AddEquip(misc.radar)
 	Game.player:AddEquip(cargo.hydrogen, 2)
 	Game.player:SetMoney(100)
 end
@@ -37,7 +37,7 @@ local setupPlayerEridani = function ()
 	Game.player:AddEquip(laser.pulsecannon_1mw)
 	Game.player:AddEquip(misc.atmospheric_shielding)
 	Game.player:AddEquip(misc.autopilot)
-	Game.player:AddEquip(misc.scanner)
+	Game.player:AddEquip(misc.radar)
 	Game.player:AddEquip(cargo.hydrogen, 2)
 	Game.player:SetMoney(100)
 end
@@ -48,7 +48,7 @@ local setupPlayerBarnard = function ()
 	--Game.player:AddEquip(equipment.laser.pulsecannon_1mw)
 	Game.player:AddEquip(misc.atmospheric_shielding)
 	Game.player:AddEquip(misc.autopilot)
-	Game.player:AddEquip(misc.scanner)
+	Game.player:AddEquip(misc.radar)
 	Game.player:AddEquip(cargo.hydrogen, 2)
 	Game.player:SetMoney(100)
 end
@@ -99,7 +99,7 @@ end
 
 local buttonDefs = {
 	{ l.CONTINUE_GAME,          function () loadGame("_exit") end },
-	{ l.START_AT_EARTH,         function () Game.StartGame(SystemPath.New(0,0,0,0,9),48600)   setupPlayerSol() end },
+	{ l.START_AT_EARTH,         function () Game.StartGame(SystemPath.New(0,0,0,0,6),48600)   setupPlayerSol() end },
 	{ l.START_AT_NEW_HOPE,      function () Game.StartGame(SystemPath.New(1,-1,-1,0,4)) setupPlayerEridani() end },
 	{ l.START_AT_BARNARDS_STAR, function () Game.StartGame(SystemPath.New(-1,0,0,0,16))  setupPlayerBarnard() end },
 	{ l.LOAD_GAME,              doLoadDialog },

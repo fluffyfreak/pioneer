@@ -169,7 +169,7 @@
    },
    "HOW_SOON_MUST_IT_BE_DONE" : {
       "description" : "",
-      "message" : "En yakın ne zaman yapılması gerekiyor?"
+      "message" : "Ne zaman yapılması gerekiyor?"
    },
    "HOW_WILL_I_BE_PAID" : {
       "description" : "",
@@ -181,7 +181,7 @@
    },
    "LY" : {
       "description" : "",
-      "message" : "ly"
+      "message" : "ıy"
    },
    "OK_AGREED" : {
       "description" : "",
@@ -193,11 +193,11 @@
    },
    "SET_AS_TARGET" : {
       "description" : "",
-      "message" : "Set as navigation target"
+      "message" : "Navigasyon hedefi olarak seç"
    },
    "SET_RETURN_ROUTE" : {
       "description" : "",
-      "message" : "Set return route"
+      "message" : "Dönüş yolunu seç"
    },
    "SHIP" : {
       "description" : "",

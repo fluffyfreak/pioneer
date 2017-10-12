@@ -15,7 +15,7 @@
 #include "Cellular.h"
 #include "Color.h"
 
-double fbm(const vector3d &position, const int octaves, float frequency, const float persistence) 
+static double fbm(const vector3d &position, const int octaves, float frequency, const float persistence) 
 {
 	PROFILE_SCOPED()
 	double total = 0.0;
@@ -50,7 +50,7 @@ static const vector2d latWinds[NUM_LAT_WINDS] = {
 	vector2d(NONE,NORT).Normalized()
 };
 
-void ReadVector2dValues(std::vector<vector2d> &out, FileSystem::FileSource &fs, const std::string &path, const Uint32 scaleX, const Uint32 scaleY)
+static void ReadVector2dValues(std::vector<vector2d> &out, FileSystem::FileSource &fs, const std::string &path, const Uint32 scaleX, const Uint32 scaleY)
 {
 	PROFILE_SCOPED()
 	RefCountedPtr<FileSystem::FileData> data = fs.ReadFile(path);
@@ -83,8 +83,8 @@ void ReadVector2dValues(std::vector<vector2d> &out, FileSystem::FileSource &fs, 
 		out.push_back(vector2d(x*scaleX,y*scaleY));
 	}
 }
-
-void Analyse(GeoSphere *geo)
+#pragma optimize("",off)
+void AnalyseJob::Analyse()
 {
 	PROFILE_SCOPED()
 
@@ -95,36 +95,39 @@ void Analyse(GeoSphere *geo)
 	const double dHigh = hmHigh;
 
 	// generate sampling points
-	std::vector<double> heights;
-	std::vector<vector2d> poisson;
-	poisson.reserve(6254);
-	ReadVector2dValues(poisson, FileSystem::gameDataFiles, "Poisson.txt", hmWide-1, hmHigh-1);
-	heights.resize(	poisson.size() );
-	double minH=DBL_MAX;
-	double maxH=DBL_MIN;
-	for (size_t k = 0; k < poisson.size(); k++ ) 
+	std::unique_ptr<Cellular> vor;
 	{
-		PROFILE_SCOPED_DESC("poisson heights")
-		const double wx = ((poisson[k].x / dWide) * 2.0) - 1.0;
-		const double wy = ((poisson[k].y / dHigh) * 2.0) - 1.0;
-		// 2D to polar
-		const double lat = asin(wy);
-		const double lon = -(wx * M_PI);
-		// polar to 3D cartesian (normalised, no radius required/used)
-		const double x = cos(lat) * cos(lon);
-		const double z = cos(lat) * sin(lon);
-		const double y = sin(lat);
-		const double height = geo->GetHeight(vector3d(x,y,z).Normalized());
-		minH = std::min(minH, height);
-		maxH = std::max(maxH, height);
-		heights[k] = height;
+		std::vector<double> heights;
+		std::vector<vector2d> poisson;
+		poisson.reserve(6254);
+		ReadVector2dValues(poisson, FileSystem::gameDataFiles, "Poisson.txt", hmWide-1, hmHigh-1);
+		heights.resize(	poisson.size() );
+		double minH=DBL_MAX;
+		double maxH=DBL_MIN;
+		for (size_t k = 0; k < poisson.size(); k++ ) 
+		{
+			PROFILE_SCOPED_DESC("poisson heights")
+			const double wx = ((poisson[k].x / dWide) * 2.0) - 1.0;
+			const double wy = ((poisson[k].y / dHigh) * 2.0) - 1.0;
+			// 2D to polar
+			const double lat = asin(wy);
+			const double lon = -(wx * M_PI);
+			// polar to 3D cartesian (normalised, no radius required/used)
+			const double x = cos(lat) * cos(lon);
+			const double z = cos(lat) * sin(lon);
+			const double y = sin(lat);
+			const double height = m_geoSphere->GetHeight(vector3d(x,y,z).Normalized());
+			minH = std::min(minH, height);
+			maxH = std::max(maxH, height);
+			heights[k] = height;
+		}
+		const double invMaxH = (is_equal_exact(maxH, 0.0)) ? 1.0 : (1.0 / maxH);
+		for (size_t k = 0; k < heights.size(); k++ ) 
+		{
+			heights[k] *= invMaxH;
+		}
+		vor.reset(new Cellular(16, hmWide, hmHigh, poisson, heights));
 	}
-	const double invMaxH = (is_equal_exact(maxH, 0.0)) ? 1.0 : (1.0 / maxH);
-	for (size_t k = 0; k < heights.size(); k++ ) 
-	{
-		heights[k] *= invMaxH;
-	}
-	Cellular vor(16, hmWide, hmHigh, poisson, heights);
 
 	// calculate storage for the maps
 	const Uint32 bpp = 4; // channels of info... one byte per thing?
@@ -133,10 +136,10 @@ void Analyse(GeoSphere *geo)
 	std::unique_ptr<Uint8[]> pospixels(new Uint8[stride * hmHigh]);
 	std::unique_ptr<vector2d[]> winds(new vector2d[hmWide * hmHigh]);
 	std::unique_ptr<Uint8[]> windpixels(new Uint8[stride * hmHigh]);
-	const double* heightmap = vor.CellularMap();
+	const double* heightmap = vor->CellularMap();
 
 	// Calculate surface property maps
-	Random rng(geo->GetSystemBody()->GetSeed()+4609837U);
+	Random rng(m_geoSphere->GetSystemBody()->GetSeed()+4609837U);
 	for(Uint32 h = 0; h<hmHigh; h++)
 	{
 		PROFILE_SCOPED_DESC("Surface properties Y")
@@ -220,7 +223,7 @@ void Analyse(GeoSphere *geo)
 		char res[256];
 		sprintf(res, "_%ux%u", hmWide, hmHigh);
 		
-		const std::string name( geo->GetSystemBody()->GetName() );
+		const std::string name( m_geoSphere->GetSystemBody()->GetName() );
 		{
 			std::string destFile( name + std::string(res) + std::string(".png") );
 			const std::string fname = FileSystem::JoinPathBelow(dir, destFile.c_str());
@@ -237,7 +240,7 @@ void Analyse(GeoSphere *geo)
 			write_png(FileSystem::userFiles, fname, windpixels.get(), hmWide, hmHigh, stride, bpp);
 		}
 		std::unique_ptr<Uint8[]> voronoi(new Uint8[stride * hmHigh]);
-		const double* buf = vor.CellularMap();
+		const double* buf = vor->CellularMap();
 		for(int y=0; y<hmHigh; y++) 
 		{
 			for(int x=0; x<hmWide; x++) 

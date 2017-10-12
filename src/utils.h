@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _UTILS_H
@@ -35,6 +35,14 @@ void Error(const char *format, ...) __attribute((format(printf,1,2))) __attribut
 void Warning(const char *format, ...)  __attribute((format(printf,1,2)));
 void Output(const char *format, ...)  __attribute((format(printf,1,2)));
 void OpenGLDebugMsg(const char *format, ...)  __attribute((format(printf,1,2)));
+
+/**
+* Works like Output, but adds indent before message.
+* Call IndentIncrease and IndentDecrease to control indent level.
+*/
+void IndentedOutput(const char *format, ...) __attribute((format(printf,1,2)));
+void IndentIncrease();
+void IndentDecrease();
 
 // Helper for timing functions with multiple stages
 // Used on a branch to help time loading.

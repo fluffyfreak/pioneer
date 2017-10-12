@@ -1,10 +1,14 @@
 {
    "THIS_IS_STATION_YOU_DO_NOT_HAVE_ENOUGH" : {
       "description" : "",
-      "message" : "Esta é {estação}. Você não tem o bastante para a sua taxa de atracação {taxa}. A taxa do seu combustível foi retida na fonte."
+      "message" : "Esta é a estação {station}. Você não tem saldo suficiente para a taxa de atracação de {fee}."
    },
    "WELCOME_ABOARD_STATION_FEE_DEDUCTED" : {
-      "description" : "",
-      "message" : "Benvindo a bordo {estação}. Sua taxa de atracação e abastecimento foi {taxa} foi deduzida."
+      "description" : "Station welcome message, docking in orbit",
+      "message" : "Bem vindo a bordo da estação {station}. Sua taxa de atracação de {fee} foi debitada."
+   },
+   "WELCOME_TO_STATION_FEE_DEDUCTED" : {
+      "description" : "Station welcome message, ground station landing",
+      "message" : "Bem-vindo a {station}. Sua taxa de aterrissagem de {fee} foi deduzida."
    }
 }

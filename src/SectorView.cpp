@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -296,6 +296,13 @@ void SectorView::InitObject()
 	m_selectedSystemLabels.shortDesc = (new Gui::Label(""))->Color(255, 0, 255);
 	systemBox->PackEnd(m_selectedSystemLabels.starType);
 	systemBox->PackEnd(m_selectedSystemLabels.shortDesc);
+	hbox = new Gui::HBox();
+	hbox->SetSpacing(5.0f);
+	b = new Gui::SolidButton();
+	b->onClick.connect(sigc::mem_fun(this, &SectorView::SwapSelectedHyperspaceTarget));
+	hbox->PackEnd(b);
+	hbox->PackEnd((new Gui::Label(Lang::SWAP_SELECTED_HYPERSPACE_TARGET))->Color(255, 255, 255));
+	systemBox->PackEnd(hbox);
 	locationsBox->PackEnd(systemBox);
 	m_infoBox->PackEnd(locationsBox);
 
@@ -390,7 +397,7 @@ void SectorView::SaveToJson(Json::Value &jsonObj)
 
 	sectorViewObj["match_target_to_selection"] = m_matchTargetToSelection;
 	sectorViewObj["automatic_system_selection"] = m_automaticSystemSelection;
-	sectorViewObj["detail_box_visible"] = m_detailBoxVisible;
+	sectorViewObj["detail_box_visible"] = Json::Value::Int(m_detailBoxVisible);
 
 	jsonObj["sector_view"] = sectorViewObj; // Add sector view object to supplied object.
 }
@@ -401,7 +408,7 @@ void SectorView::OnSearchBoxKeyPress(const SDL_Keysym *keysym)
 	if (m_searchBox->GetText().empty() && keysym->sym == SDLK_UP && !m_previousSearch.empty())
 		m_searchBox->SetText(m_previousSearch);
 
-	if (keysym->sym != SDLK_KP_ENTER && keysym->sym != SDLK_RETURN)
+	if (keysym->sym != SDLK_KP_ENTER && keysym->sym != SDLK_RETURN && (keysym->sym != SDLK_j || !(keysym->mod & KMOD_CTRL))) // enter, return or C-j
 		return;
 
 	std::string search = m_searchBox->GetText();
@@ -417,32 +424,34 @@ void SectorView::OnSearchBoxKeyPress(const SDL_Keysym *keysym)
 		return;
 	} catch (SystemPath::ParseFailure) {}
 
-	bool gotMatch = false, gotStartMatch = false;
+	bool gotMatch = false, gotStartMatch = false, gotExactMatch = false;
 	SystemPath bestMatch;
+	std::vector<std::pair<SystemPath,std::string>> exactMatches;
 	const std::string *bestMatchName = 0;
 
 	for (auto i = m_sectorCache->Begin(); i != m_sectorCache->End(); ++i)
-
-		for (unsigned int systemIndex = 0; systemIndex < (*i).second->m_systems.size(); systemIndex++) {
+	{
+		for (unsigned int systemIndex = 0; systemIndex < (*i).second->m_systems.size(); systemIndex++)
+		{
 			const Sector::System *ss = &((*i).second->m_systems[systemIndex]);
 
 			// compare with the start of the current system
-			if (strncasecmp(search.c_str(), ss->GetName().c_str(), search.size()) == 0) {
-
+			if (strncasecmp(search.c_str(), ss->GetName().c_str(), search.size()) == 0)
+			{
 				// matched, see if they're the same size
-				if (search.size() == ss->GetName().size()) {
-
+				if (search.size() == ss->GetName().size())
+				{
 					// exact match, take it and go
 					SystemPath path = (*i).first;
 					path.systemIndex = systemIndex;
-					m_statusLabel->SetText(stringf(Lang::EXACT_MATCH_X, formatarg("system", ss->GetName())));
-					GotoSystem(path);
-					return;
+					exactMatches.push_back(std::make_pair(path,ss->GetName()));
+					gotExactMatch = true;
+					continue;
 				}
 
 				// partial match at start of name
-				if (!gotMatch || !gotStartMatch || bestMatchName->size() > ss->GetName().size()) {
-
+				if (!gotMatch || !gotStartMatch || bestMatchName->size() > ss->GetName().size())
+				{
 					// don't already have one or its shorter than the previous
 					// one, take it
 					bestMatch = (*i).first;
@@ -455,11 +464,11 @@ void SectorView::OnSearchBoxKeyPress(const SDL_Keysym *keysym)
 			}
 
 			// look for the search term somewhere within the current system
-			if (pi_strcasestr(ss->GetName().c_str(), search.c_str())) {
-
+			if (pi_strcasestr(ss->GetName().c_str(), search.c_str()))
+			{
 				// found it
-				if (!gotMatch || !gotStartMatch || bestMatchName->size() > ss->GetName().size()) {
-
+				if (!gotMatch || !gotStartMatch || bestMatchName->size() > ss->GetName().size())
+				{
 					// best we've found so far, take it
 					bestMatch = (*i).first;
 					bestMatch.systemIndex = systemIndex;
@@ -468,14 +477,35 @@ void SectorView::OnSearchBoxKeyPress(const SDL_Keysym *keysym)
 				}
 			}
 		}
-
-	if (gotMatch) {
-		m_statusLabel->SetText(stringf(Lang::NOT_FOUND_BEST_MATCH_X, formatarg("system", *bestMatchName)));
-		GotoSystem(bestMatch);
 	}
 
+	if(gotExactMatch)
+	{
+		// We have some exact matches, sort them by distance and choose the closest to the players current system
+		const SystemPath currentSector = m_current.SectorOnly();
+		double nearest = DBL_MAX;
+		for(auto eM : exactMatches)
+		{
+			const double dist = SystemPath::SectorDistanceSqr(currentSector, eM.first);
+			if(dist<nearest)
+			{
+				// this one's closer, store it's details
+				bestMatch = eM.first;
+				bestMatchName = &(eM.second);
+				gotMatch = true;
+			}
+		}
+	}
+
+	if (gotMatch)
+	{
+		m_statusLabel->SetText(stringf(gotExactMatch ? Lang::EXACT_MATCH_X : Lang::NOT_FOUND_BEST_MATCH_X, formatarg("system", *bestMatchName)));
+		GotoSystem(bestMatch);
+	}
 	else
+	{
 		m_statusLabel->SetText(Lang::NOT_FOUND);
+	}
 }
 
 #define FFRAC(_x)	((_x)-floor(_x))
@@ -622,6 +652,18 @@ void SectorView::SetSelected(const SystemPath &path)
 	UpdateSystemLabels(m_selectedSystemLabels, m_selected);
 }
 
+void SectorView::SwapSelectedHyperspaceTarget()
+{
+	SystemPath tmpTarget = GetHyperspaceTarget();
+	SetHyperspaceTarget(GetSelected());
+	if (m_automaticSystemSelection) {
+		GotoSystem(tmpTarget);
+	} else {
+		RefCountedPtr<StarSystem> system = m_galaxy->GetStarSystem(tmpTarget);
+		SetSelected(system->GetStars()[0]->GetPath());
+	}
+}
+
 void SectorView::OnClickSystem(const SystemPath &path)
 {
 	if (path.IsSameSystem(m_selected)) {
@@ -722,7 +764,7 @@ void SectorView::PutFactionLabels(const vector3f &origin)
 
 				Gui::Screen::MeasureString(labelText, labelWidth, labelHeight);
 
-				
+
 				{
 					Graphics::VertexArray va(Graphics::ATTRIB_POSITION);
 					va.Add(vector3f(pos.x - 5.f,              pos.y - 5.f,               0));

@@ -1,4 +1,4 @@
--- Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local Engine = import("Engine")
@@ -358,7 +358,11 @@ local onShipDocked = function (ship, station)
 			Event.Queue("onReputationChanged", oldReputation, Character.persistent.player.killcount,
 				Character.persistent.player.reputation, Character.persistent.player.killcount)
 		else
-			if mission.ship == ship then
+			-- Fail occurs when mission ship either lands or jumps,
+			-- after taking off at said mission time point. Spawned
+			-- docked ship will trigger an onShipDocked event, thus
+			-- check mission.due
+			if mission.ship == ship and mission.due < Game.time then
 				mission.status = 'FAILED'
 			end
 		end

@@ -1,11 +1,11 @@
 {
-   "ADVANCED_RADAR_MAPPER" : {
-      "description" : "",
-      "message" : "Cartograf Radar Avansat"
+   "ADVANCED_TARGET_SCANNER" : {
+      "description" : "ship equipment showing target information/stats",
+      "message" : "Scaner de ținte avansat"
    },
-   "ADVANCED_RADAR_MAPPER_DESCRIPTION" : {
+   "ADVANCED_TARGET_SCANNER_DESCRIPTION" : {
       "description" : "",
-      "message" : "Cartograf radar cu rază mare de acțiune, cu acoperire la nivel de sistem."
+      "message" : "Scaner de ținte cu rază mare de acțiune cu acoperire la nivel de sistem solar."
    },
    "ATMOSPHERIC_SHIELDING" : {
       "description" : "",
@@ -90,6 +90,26 @@
    "DRIVE_MIL4" : {
       "description" : "",
       "message" : "Motor Militar Clasa 4"
+   },
+   "DRIVE_MIL5" : {
+      "description" : "",
+      "message" : "Motor Militar Clasa 5"
+   },
+   "DRIVE_MIL6" : {
+      "description" : "",
+      "message" : "Motor Militar Clasa 6"
+   },
+   "DRIVE_MIL7" : {
+      "description" : "",
+      "message" : "Motor Militar Clasa 7"
+   },
+   "DRIVE_MIL8" : {
+      "description" : "",
+      "message" : "Motor Militar Clasa 8"
+   },
+   "DRIVE_MIL9" : {
+      "description" : "",
+      "message" : "Motor Militar Clasa 9"
    },
    "ECM_ADVANCED" : {
       "description" : "",
@@ -179,6 +199,10 @@
       "description" : "",
       "message" : "Raza maximă de acțiune a scanării a fost depășită:"
    },
+   "PASSENGER_CABIN" : {
+      "description" : "",
+      "message" : "Cabină Pasager"
+   },
    "PLANETSCANNER" : {
       "description" : "Scans the nearest body for resources",
       "message" : "Scanare corp ceresc"
@@ -215,19 +239,11 @@
       "description" : "",
       "message" : "Tun intermitent cu foc rapid 2MW"
    },
-   "RADAR_MAPPER" : {
+   "RADAR" : {
       "description" : "",
-      "message" : "Cartograf Radar"
+      "message" : "Radar"
    },
-   "RADAR_MAPPER_DESCRIPTION" : {
-      "description" : "",
-      "message" : "Folosit pentru a inspecta de la distanță echipamentul, încărcătura și starea altor nave."
-   },
-   "SCANNER" : {
-      "description" : "",
-      "message" : "Scaner"
-   },
-   "SCANNER_DESCRIPTION" : {
+   "RADAR_DESCRIPTION" : {
       "description" : "",
       "message" : "Oferă o hartă 3D a navelor apropiate."
    },
@@ -263,11 +279,43 @@
       "description" : "",
       "message" : "Incepe scanarea, distanta la tinta e"
    },
-   "TRADE_ANALYZER" : {
-      "description" : "Ship equipment computing profitable commodities to trade between two systems",
-      "message" : "Analizator comercial"
+   "TARGET_SCANNER" : {
+      "description" : "ship equipment showing target information/stats",
+      "message" : "Scaner de ținte"
    },
-   "TRADE_ANALYZER_DESCRIPTION" : {
+   "TARGET_SCANNER_DESCRIPTION" : {
+      "description" : "",
+      "message" : "Folosit pentru a inspecta de la distanță echipamentul, încărcătura și starea altor nave."
+   },
+   "THRUSTERS_BASIC" : {
+      "description" : "",
+      "message" : "Propulsoare Modificate"
+   },
+   "THRUSTERS_BASIC_DESCRIPTION" : {
+      "description" : "",
+      "message" : "Un tip modificat de propulsoare aprobate pentru nava dvs."
+   },
+   "THRUSTERS_BEST" : {
+      "description" : "",
+      "message" : "Propulsoare Comandate"
+   },
+   "THRUSTERS_BEST_DESCRIPTION" : {
+      "description" : "",
+      "message" : "Propulsoare făcute la comandă care dau cel mai bun randament posibil."
+   },
+   "THRUSTERS_MEDIUM" : {
+      "description" : "",
+      "message" : "Propulsoare Optimizate"
+   },
+   "THRUSTERS_MEDIUM_DESCRIPTION" : {
+      "description" : "",
+      "message" : "Propulsoare care au fost optimizate pentru a reduce ineficiențele și a îmbunatați randamentul."
+   },
+   "TRADE_COMPUTER" : {
+      "description" : "Ship equipment computing profitable commodities to trade between two systems",
+      "message" : "Calculator Comerț"
+   },
+   "TRADE_COMPUTER_DESCRIPTION" : {
       "description" : "",
       "message" : "Indică mărfurile profitabile de comercializat între sistemul selectat și cel curent"
    },

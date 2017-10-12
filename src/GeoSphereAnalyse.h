@@ -8,7 +8,7 @@
 
 class GeoSphere;
 
-void Analyse(GeoSphere *geo);
+
 
 // ********************************************************************************
 // Overloaded PureJob class to handle analysing each GeoSphere
@@ -16,16 +16,19 @@ void Analyse(GeoSphere *geo);
 class AnalyseJob : public Job
 {
 public:
-	AnalyseJob() {};
+	//AnalyseJob() {};
 	AnalyseJob(GeoSphere *geoSphere)
 		: m_geoSphere(geoSphere) {}
 
-	virtual void OnRun() override final { PROFILE_SCOPED_DESC("GeoSphere-AnalyseJob"); Analyse(m_geoSphere); }    // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
+	virtual void OnRun() override final { PROFILE_SCOPED_DESC("GeoSphere-AnalyseJob"); Analyse(); }    // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
 	virtual void OnFinish() override final {}
 	virtual void OnCancel() override final {}
 
 protected:
 	GeoSphere	*m_geoSphere;
+
+private:
+	void Analyse();
 };
 
 #endif /* _GEOSPHEREANALYSE_H */

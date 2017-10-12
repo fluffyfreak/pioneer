@@ -1,11 +1,11 @@
 {
-   "ADVANCED_RADAR_MAPPER" : {
-      "description" : "",
-      "message" : "Gelişmiş Radar Eşleyici"
+   "ADVANCED_TARGET_SCANNER" : {
+      "description" : "ship equipment showing target information/stats",
+      "message" : "Gelişmiş hedef tarayıcısı"
    },
-   "ADVANCED_RADAR_MAPPER_DESCRIPTION" : {
+   "ADVANCED_TARGET_SCANNER_DESCRIPTION" : {
       "description" : "",
-      "message" : "Sistem geneli kapsamaya sahip uzun mesafe radar eşleyici."
+      "message" : "Bütün sistemi kapsayan uzun menzilli tarayıcı."
    },
    "ATMOSPHERIC_SHIELDING" : {
       "description" : "",
@@ -90,6 +90,26 @@
    "DRIVE_MIL4" : {
       "description" : "",
       "message" : "Sınıf 4 Askeri Sürücü"
+   },
+   "DRIVE_MIL5" : {
+      "description" : "",
+      "message" : "5. Sınıf Askeri Sürücü"
+   },
+   "DRIVE_MIL6" : {
+      "description" : "",
+      "message" : "6. Sınıf Askeri Sürücü"
+   },
+   "DRIVE_MIL7" : {
+      "description" : "",
+      "message" : "7. Sınıf Askeri Sürücü"
+   },
+   "DRIVE_MIL8" : {
+      "description" : "",
+      "message" : "8. Sınıf Askeri Sürücü"
+   },
+   "DRIVE_MIL9" : {
+      "description" : "",
+      "message" : "9. Sınıf Askeri Sürücü"
    },
    "ECM_ADVANCED" : {
       "description" : "",
@@ -177,15 +197,19 @@
    },
    "OUT_OF_SCANRANGE" : {
       "description" : "",
-      "message" : "Max scan range exceeded:"
+      "message" : "Maksimum tarama menzili aşıldı:"
+   },
+   "PASSENGER_CABIN" : {
+      "description" : "",
+      "message" : "Yolcu kabini"
    },
    "PLANETSCANNER" : {
       "description" : "Scans the nearest body for resources",
-      "message" : "Body scan"
+      "message" : "Gökcismi taraması"
    },
    "PLANETSCANNER_DESCRIPTION" : {
       "description" : "",
-      "message" : "Scan nearest body for resources."
+      "message" : "En yakın cismi kaynaklar için tara"
    },
    "PULSECANNON_10MW" : {
       "description" : "",
@@ -215,29 +239,21 @@
       "description" : "",
       "message" : "2MW hızlı-atış titreşim topu"
    },
-   "RADAR_MAPPER" : {
+   "RADAR" : {
       "description" : "",
-      "message" : "Radar Eşleyici"
+      "message" : "Radar"
    },
-   "RADAR_MAPPER_DESCRIPTION" : {
-      "description" : "",
-      "message" : "Uzaktan diğer gemilerin ekipmanı, kargosu ve durumunu incelemek için kullanılır."
-   },
-   "SCANNER" : {
-      "description" : "",
-      "message" : "Tarayıcı"
-   },
-   "SCANNER_DESCRIPTION" : {
+   "RADAR_DESCRIPTION" : {
       "description" : "",
       "message" : "Yakında bulunan gemilerin 3B haritasını sağlar."
    },
    "SCAN_COMPLETED" : {
       "description" : "",
-      "message" : "Scanning completed"
+      "message" : "Tarama tamamlandı"
    },
    "SCAN_RESUMED" : {
       "description" : "",
-      "message" : "Scanning resumed"
+      "message" : "Taramaya devam ediliyor"
    },
    "SHIELD_ENERGY_BOOSTER" : {
       "description" : "",
@@ -261,13 +277,45 @@
    },
    "STARTING_SCAN" : {
       "description" : "",
-      "message" : "Starting scan, target distance is"
+      "message" : "Tarama başlatılıyor, hedef:"
    },
-   "TRADE_ANALYZER" : {
+   "TARGET_SCANNER" : {
+      "description" : "ship equipment showing target information/stats",
+      "message" : "Hedef Tarayıcısı"
+   },
+   "TARGET_SCANNER_DESCRIPTION" : {
+      "description" : "",
+      "message" : "Uzaktan diğer gemilerin ekipmanı, kargosu ve durumunu incelemek için kullanılır."
+   },
+   "THRUSTERS_BASIC" : {
+      "description" : "",
+      "message" : "Modifiyeli İticiler"
+   },
+   "THRUSTERS_BASIC_DESCRIPTION" : {
+      "description" : "",
+      "message" : "Geminizle uyumlu modifikasyonlar yapılmış iticiler."
+   },
+   "THRUSTERS_BEST" : {
+      "description" : "",
+      "message" : "Özel Üretim İticiler"
+   },
+   "THRUSTERS_BEST_DESCRIPTION" : {
+      "description" : "",
+      "message" : "En iyi itiş gücü için özel olarak üretilmiş iticiler."
+   },
+   "THRUSTERS_MEDIUM" : {
+      "description" : "",
+      "message" : "Optimize İticiler"
+   },
+   "THRUSTERS_MEDIUM_DESCRIPTION" : {
+      "description" : "",
+      "message" : "Verimsizliği azaltmak ve güç çıkışını arttırmak için optimize edilmiş iticiler."
+   },
+   "TRADE_COMPUTER" : {
       "description" : "Ship equipment computing profitable commodities to trade between two systems",
-      "message" : "Ticaret inceleyici"
+      "message" : "Ticari Bilgisayar"
    },
-   "TRADE_ANALYZER_DESCRIPTION" : {
+   "TRADE_COMPUTER_DESCRIPTION" : {
       "description" : "",
       "message" : "Seçilen ve mevcut sistem arasında alım satımı karlı olan malları gösterir"
    },

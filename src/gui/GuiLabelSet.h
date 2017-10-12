@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef GUILABELSET_H
@@ -20,7 +20,7 @@ public:
 			text(text_), hasOwnColor(false), onClick(onClick_), screenx(screenx_), screeny(screeny_)
 		{
 		}
-		LabelSetItem(std::string text_, sigc::slot<void> onClick_, float screenx_, float screeny_, const Color &c) : 
+		LabelSetItem(std::string text_, sigc::slot<void> onClick_, float screenx_, float screeny_, const Color &c) :
 			text(text_), color(c), hasOwnColor(true), onClick(onClick_), screenx(screenx_), screeny(screeny_)
 		{
 		}

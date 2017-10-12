@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaObject.h"
@@ -276,6 +276,28 @@ static int l_sbody_attr_apoapsis(lua_State *l)
 	return 1;
 }
 
+
+/*
+ * Attribute: orbitPeriod
+ *
+ * The orbit of the body, around its parent, in days, as a float
+ *
+ * Availability:
+ *
+ *   201708
+ *
+ * Status:
+ *
+ *   experimental
+ */
+static int l_sbody_attr_orbital_period(lua_State *l)
+{
+	SystemBody *sbody = LuaObject<SystemBody>::CheckFromLua(1);
+	lua_pushnumber(l, sbody->GetOrbit().Period() / float(60*60*24));
+	return 1;
+}
+
+
 /*
  * Attribute: rotationPeriod
  *
@@ -435,6 +457,7 @@ template <> void LuaObject<SystemBody>::RegisterClass()
 		{ "gravity",        l_sbody_attr_gravity         },
 		{ "periapsis",      l_sbody_attr_periapsis       },
 		{ "apoapsis",       l_sbody_attr_apoapsis        },
+		{ "orbitPeriod",    l_sbody_attr_orbital_period  },
 		{ "rotationPeriod", l_sbody_attr_rotation_period },
 		{ "semiMajorAxis",  l_sbody_attr_semi_major_axis },
 		{ "eccentricity",   l_sbody_attr_eccentricty     },

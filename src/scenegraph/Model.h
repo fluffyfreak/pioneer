@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _SCENEGRAPH_MODEL_H
@@ -73,8 +73,8 @@
 #include "json/json.h"
 #include <stdexcept>
 
-namespace Graphics { 
-	class Renderer; 
+namespace Graphics {
+	class Renderer;
 	class VertexBuffer;
 }
 
@@ -108,7 +108,7 @@ public:
 
 	float GetDrawClipRadius() const { return m_boundingRadius; }
 	void SetDrawClipRadius(float clipRadius) { m_boundingRadius = clipRadius; }
-	
+
 	void Render(const matrix4x4f &trans, const RenderData *rd = 0); //ModelNode can override RD
 	void Render(const std::vector<matrix4x4f> &trans, const RenderData *rd = 0); //ModelNode can override RD
 
@@ -121,9 +121,9 @@ public:
 	//materials used in the nodes should be accessible from here for convenience
 	RefCountedPtr<Graphics::Material> GetMaterialByName(const std::string &name) const;
 	RefCountedPtr<Graphics::Material> GetMaterialByIndex(const int) const;
-	unsigned int GetNumMaterials() const { return m_materials.size(); }
+	unsigned int GetNumMaterials() const { return static_cast<Uint32>(m_materials.size()); }
 
-	unsigned int GetNumTags() const { return m_tags.size(); }
+	unsigned int GetNumTags() const { return static_cast<Uint32>(m_tags.size()); }
 	MatrixTransform *const GetTagByIndex(unsigned int index) const;
 	MatrixTransform *const FindTagByName(const std::string &name) const;
 	typedef std::vector<MatrixTransform *> TVecMT;
@@ -131,7 +131,7 @@ public:
 	void AddTag(const std::string &name, MatrixTransform *node);
 
 	const PatternContainer &GetPatterns() const { return m_patterns; }
-	unsigned int GetNumPatterns() const { return m_patterns.size(); }
+	unsigned int GetNumPatterns() const { return static_cast<Uint32>(m_patterns.size()); }
 	void SetPattern(unsigned int index);
 	unsigned int GetPattern() const { return m_curPatternIndex; }
 	void SetColors(const std::vector<Color> &colors);
@@ -152,6 +152,10 @@ public:
 
 	//special for ship model use
 	void SetThrust(const vector3f &linear, const vector3f &angular);
+
+	void SetThrusterColor(const vector3f &dir, const Color &color);
+	void SetThrusterColor(const std::string &name, const Color &color);
+	void SetThrusterColor(const Color &color);
 
 	void SaveToJson(Json::Value &jsonObj) const;
 	void LoadFromJson(const Json::Value &jsonObj);

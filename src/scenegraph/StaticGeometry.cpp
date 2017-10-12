@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "StaticGeometry.h"
@@ -78,7 +78,7 @@ void StaticGeometry::Render(const std::vector<matrix4x4f> &trans, const RenderDa
 		ib->Unmap();
 		ib->SetInstanceCount(numTrans);
 	}
-	
+
 	// we'll set the transformation within the vertex shader so identity the global one
 	r->SetTransform(matrix4x4f::Identity());
 
@@ -137,7 +137,7 @@ void StaticGeometry::Save(NodeDatabase &db)
 		Uint32 attribCombo = 0;
 		for (Uint32 i = 0; i < Graphics::MAX_ATTRIBS; i++)
 			attribCombo |= vbDesc.attrib[i].semantic;
-		
+
 		db.wr->Int32(attribCombo);
 
 		const bool hasTangents = (attribCombo & Graphics::ATTRIB_TANGENT);
