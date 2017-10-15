@@ -131,6 +131,19 @@ void PiGui::Init(SDL_Window *window) {
 	case Graphics::RENDERER_OPENGL_3x:
 		ImGui_ImplSdlGL3_Init(window);
 		break;
+	case Graphics::RENDERER_VULKAN:
+		{
+			ImGui_ImplSdlVulkan_Init_Data init_data = {};
+			//init_data.allocator = g_Allocator;
+			//init_data.gpu = g_Gpu;
+			//init_data.device = g_Device;
+			//init_data.render_pass = g_RenderPass;
+			//init_data.pipeline_cache = g_PipelineCache;
+			//init_data.descriptor_pool = g_DescriptorPool;
+			//init_data.check_vk_result = check_vk_result;
+			ImGui_ImplSdlVulkan_Init(window, nullptr, &init_data);
+			break;
+		}
 	}
 
 	ImGuiIO &io = ImGui::GetIO();
@@ -261,6 +274,9 @@ bool PiGui::ProcessEvent(SDL_Event *event)
 	case Graphics::RENDERER_OPENGL_3x:
 		ImGui_ImplSdlGL3_ProcessEvent(event);
 		break;
+	case Graphics::RENDERER_VULKAN:
+		ImGui_ImplSdlVulkan_ProcessEvent(event);
+		break;
 	}
 	return false;
 }
@@ -302,6 +318,9 @@ void PiGui::NewFrame(SDL_Window *window) {
 		break;
 	case Graphics::RENDERER_OPENGL_3x:
 		ImGui_ImplSdlGL3_NewFrame(window);
+		break;
+	case Graphics::RENDERER_VULKAN:
+		ImGui_ImplSdlVulkan_NewFrame();
 		break;
 	}
 	Pi::renderer->CheckRenderErrors(__FUNCTION__, __LINE__);

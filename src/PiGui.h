@@ -10,6 +10,7 @@
 #include "imgui/imgui.h"
 #include "imgui/examples/sdl_opengl3_example/imgui_impl_sdl_gl3.h"
 #include "imgui/examples/sdl_opengl2_example/imgui_impl_sdl.h"
+#include "imgui/examples/sdl_vulkan_example/imgui_impl_sdl_vulkan.h"
 
 /* Class to wrap ImGui. */
 class PiGui : public RefCounted {

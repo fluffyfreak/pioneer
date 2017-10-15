@@ -161,6 +161,10 @@ void ModelViewer::Run(const std::string &modelName)
 	{
 		rType = Graphics::RENDERER_OPENGL_3x;
 	}
+	else if(rendererName == Graphics::RendererNameFromType(Graphics::RENDERER_VULKAN))
+	{
+		rType = Graphics::RENDERER_VULKAN;
+	}
 
 	//video
 	Graphics::Settings videoSettings = {};
@@ -402,7 +406,7 @@ void ModelViewer::ChangeCameraPreset(SDL_Keycode key, SDL_Keymod mod)
 void ModelViewer::ToggleViewControlMode()
 {
 	m_options.mouselookEnabled = !m_options.mouselookEnabled;
-	m_renderer->GetWindow()->SetGrab(m_options.mouselookEnabled);
+	m_renderer->SetGrab(m_options.mouselookEnabled);
 
 	if (m_options.mouselookEnabled) {
 		m_viewRot = matrix3x3f::RotateY(DEG2RAD(m_rotY)) * matrix3x3f::RotateX(DEG2RAD(Clamp(m_rotX, -90.0f, 90.0f)));
@@ -425,7 +429,7 @@ void ModelViewer::ClearModel()
 	m_scaleModel.reset();
 
 	m_options.mouselookEnabled = false;
-	m_renderer->GetWindow()->SetGrab(false);
+	m_renderer->SetGrab(false);
 	m_viewPos = vector3f(0.0f, 0.0f, 10.0f);
 	ResetCamera();
 }

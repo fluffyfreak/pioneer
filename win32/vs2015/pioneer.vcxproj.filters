@@ -462,6 +462,12 @@
     <ClCompile Include="..\..\contrib\imgui\examples\sdl_opengl2_example\imgui_impl_sdl.cpp">
       <Filter>src\imgui</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\contrib\imgui\examples\sdl_vulkan_example\imgui_impl_sdl_vulkan.cpp">
+      <Filter>src\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\contrib\imgui\examples\sdl_vulkan_example\SDL_vulkan.cpp">
+      <Filter>src\imgui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Aabb.h">
@@ -927,6 +933,12 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\contrib\imgui\examples\sdl_opengl2_example\imgui_impl_sdl.h">
+      <Filter>src\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\contrib\imgui\examples\sdl_vulkan_example\imgui_impl_sdl_vulkan.h">
+      <Filter>src\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\contrib\imgui\examples\sdl_vulkan_example\SDL_vulkan.h">
       <Filter>src\imgui</Filter>
     </ClInclude>
   </ItemGroup>

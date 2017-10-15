@@ -17,6 +17,7 @@ namespace Graphics {
 		RENDERER_DUMMY,
 		RENDERER_OPENGL_21,
 		RENDERER_OPENGL_3x,
+		RENDERER_VULKAN,
 		MAX_RENDERER_TYPE
 	};
 
@@ -40,9 +41,8 @@ namespace Graphics {
 	};
 
 	class Renderer;
-	class WindowSDL;
 
-	typedef Renderer* (*RendererCreateFunc)(WindowSDL *window, const Settings &vs);
+	typedef Renderer* (*RendererCreateFunc)(const Settings &vs);
 	void RegisterRenderer(RendererType type, RendererCreateFunc fn);
 
 	//for querying available modes

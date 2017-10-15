@@ -250,7 +250,7 @@ static void draw_progress(float progress)
 {
 
 	Pi::renderer->ClearScreen();
-	PiGui::NewFrame(Pi::renderer->GetWindow()->GetSDLWindow());
+	PiGui::NewFrame(Pi::renderer->GetSDLWindow());
 	Pi::DrawPiGui(progress, "INIT");
 	Pi::renderer->SwapBuffers();
 }
@@ -470,6 +470,10 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 	{
 		rType = Graphics::RENDERER_OPENGL_3x;
 	}
+	else if(rendererName == Graphics::RendererNameFromType(Graphics::RENDERER_VULKAN))
+	{
+		rType = Graphics::RENDERER_VULKAN;
+	}
 
 	// Do rest of SDL video initialization and create Renderer
 	Graphics::Settings videoSettings = {};
@@ -530,7 +534,7 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 	Lua::Init();
 
 	Pi::pigui.Reset(new PiGui);
-	Pi::pigui->Init(Pi::renderer->GetWindow()->GetSDLWindow());
+	Pi::pigui->Init(Pi::renderer->GetSDLWindow());
 
 	float ui_scale = config->Float("UIScaleFactor", 1.0f);
 	if (Graphics::GetScreenHeight() < 768) {
@@ -1113,7 +1117,7 @@ void Pi::TombStoneLoop()
 	float _time = 0;
 	do {
 		Pi::HandleEvents();
-		Pi::renderer->GetWindow()->SetGrab(false);
+		Pi::renderer->SetGrab(false);
 
 		// render the scene
 		Pi::BeginRenderTarget();
@@ -1247,7 +1251,7 @@ void Pi::Start()
 		ui->Update();
 		ui->Draw();
 
-		PiGui::NewFrame(Pi::renderer->GetWindow()->GetSDLWindow());
+		PiGui::NewFrame(Pi::renderer->GetSDLWindow());
 		DrawPiGui(Pi::frameTime, "MAINMENU");
 
 		Pi::EndRenderTarget();
@@ -1474,7 +1478,7 @@ void Pi::MainLoop()
 		Pi::DrawRenderTarget();
 
 		if(Pi::game && !Pi::player->IsDead()) {
-			PiGui::NewFrame(Pi::renderer->GetWindow()->GetSDLWindow());
+			PiGui::NewFrame(Pi::renderer->GetSDLWindow());
 			DrawPiGui(Pi::frameTime);
 		}
 
@@ -1665,12 +1669,12 @@ float Pi::JoystickAxisState(int joystick, int axis) {
 void Pi::SetMouseGrab(bool on)
 {
 	if (!doingMouseGrab && on) {
-		Pi::renderer->GetWindow()->SetGrab(true);
+		Pi::renderer->SetGrab(true);
 		Pi::ui->SetMousePointerEnabled(false);
 		doingMouseGrab = true;
 	}
 	else if(doingMouseGrab && !on) {
-		Pi::renderer->GetWindow()->SetGrab(false);
+		Pi::renderer->SetGrab(false);
 		Pi::ui->SetMousePointerEnabled(true);
 		doingMouseGrab = false;
 	}
