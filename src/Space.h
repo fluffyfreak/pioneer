@@ -7,7 +7,6 @@
 #include <list>
 #include "Object.h"
 #include "vector3.h"
-#include "Serializer.h"
 #include "RefCounted.h"
 #include "galaxy/GalaxyCache.h"
 #include "galaxy/StarSystem.h"
@@ -63,7 +62,7 @@ public:
 	Body *FindNearestTo(const Body *b, Object::Type t) const;
 	Body *FindBodyForPath(const SystemPath *path) const;
 
-	unsigned GetNumBodies() const { return m_bodies.size(); }
+	Uint32 GetNumBodies() const { return static_cast<Uint32>(m_bodies.size()); }
 	IterationProxy<std::list<Body*> > GetBodies() { return MakeIterationProxy(m_bodies); }
 	const IterationProxy<const std::list<Body*> > GetBodies() const { return MakeIterationProxy(m_bodies); }
 

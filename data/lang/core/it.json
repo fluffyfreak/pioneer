@@ -5,7 +5,7 @@
    },
    "ALERT_CANCELLED" : {
       "description" : "",
-      "message" : "Allarme rientrato."
+      "message" : "Allarme disabilitato."
    },
    "ALLEGIANCE" : {
       "description" : "",
@@ -14,14 +14,6 @@
    "ALT" : {
       "description" : "Alt key on keyboard",
       "message" : "Alt"
-   },
-   "ALT_IN_KM" : {
-      "description" : "",
-      "message" : "Alt: %altitude{f.0}km (%vspeed{f.1}km/s)"
-   },
-   "ALT_IN_METRES" : {
-      "description" : "",
-      "message" : "Alt: %altitude{f.0}m (%vspeed{f.1}m/s)"
    },
    "AND_HIGHLY_COMPLEX_ECOSYSTEM" : {
       "description" : "",
@@ -223,6 +215,38 @@
       "description" : "",
       "message" : "Comunismo"
    },
+   "COMPASS_E" : {
+      "description" : "Abbreviation for compass direction: East",
+      "message" : "E"
+   },
+   "COMPASS_N" : {
+      "description" : "Abbreviation for compass direction: North",
+      "message" : "N"
+   },
+   "COMPASS_NE" : {
+      "description" : "Abbreviation for compass direction: North East",
+      "message" : "NE"
+   },
+   "COMPASS_NW" : {
+      "description" : "Abbreviation for compass direction: North West",
+      "message" : "NO"
+   },
+   "COMPASS_S" : {
+      "description" : "Abbreviation for compass direction: South",
+      "message" : "S"
+   },
+   "COMPASS_SE" : {
+      "description" : "Abbreviation for compass direction: South East",
+      "message" : "SE"
+   },
+   "COMPASS_SW" : {
+      "description" : "Abbreviation for compass direction: South West",
+      "message" : "SO"
+   },
+   "COMPASS_W" : {
+      "description" : "Abbreviation for compass direction: West",
+      "message" : "O"
+   },
    "COMPUTERS" : {
       "description" : "",
       "message" : "Elettronica e ICT"
@@ -257,7 +281,7 @@
    },
    "COUNT_STARPORTS" : {
       "description" : "",
-      "message" : "astroporti"
+      "message" : "Astroporti"
    },
    "CO_ATMOSPHERE" : {
       "description" : "",
@@ -303,10 +327,6 @@
       "description" : "Direction",
       "message" : "\" Dir \""
    },
-   "DISTANCE_FROM_SHIP_TO_NAV_TARGET" : {
-      "description" : "",
-      "message" : "Distanza dalla destinazione selezionata"
-   },
    "DISTANCE_LY" : {
       "description" : "",
       "message" : "Distanza: %distance{f.2} AL"
@@ -341,7 +361,7 @@
    },
    "EARTH" : {
       "description" : "",
-      "message" : "terrestre"
+      "message" : "Terrestre"
    },
    "EARTH_FEDERATION_COLONIAL_RULE" : {
       "description" : "",
@@ -393,15 +413,15 @@
    },
    "FINE_PAID_N" : {
       "description" : "",
-      "message" : "Ha pagato la sanzione di %fine."
+      "message" : "Hai pagato la sanzione di %fine."
    },
    "FINE_PAID_N_BUT_N_REMAINING" : {
       "description" : "",
-      "message" : "Ha pagato %paid, ma ha ancora in pendenza sanzioni per %fine."
+      "message" : "Hai pagato %paid, ma hai ancora in pendenza sanzioni per %fine."
    },
    "FIRE_LASER" : {
       "description" : "",
-      "message" : "Fuoco laser"
+      "message" : "Usa arma"
    },
    "FIRE_MISSILE" : {
       "description" : "",
@@ -557,7 +577,7 @@
    },
    "HYPERSPACE_JUMP_ABORTED" : {
       "description" : "",
-      "message" : "Balzo annullato."
+      "message" : "Ipersalto annullato."
    },
    "HYPERSPACE_JUMP_DISABLED" : {
       "description" : "Mouse over text for hyperdrive button on ship control panel",
@@ -574,10 +594,6 @@
    "HYPERSPACE_TARGET" : {
       "description" : "",
       "message" : "Destinazione Iperspaziale"
-   },
-   "HYPERSPACING_IN_N_SECONDS" : {
-      "description" : "",
-      "message" : "Balzo in %countdown{f.0} secondi"
    },
    "H_ATMOSPHERE" : {
       "description" : "",
@@ -627,14 +643,6 @@
       "description" : "",
       "message" : "Vista interna"
    },
-   "IN_TRANSIT" : {
-      "description" : "",
-      "message" : "In transito"
-   },
-   "IN_TRANSIT_TO_N_X_X_X" : {
-      "description" : "",
-      "message" : "In transito verso %system [%x,%y,%z]"
-   },
    "JOY" : {
       "description" : "Short for Joystick",
       "message" : "Joy"
@@ -646,14 +654,6 @@
    "JOY_AXIS" : {
       "description" : "Regarding joystick",
       "message" : "%{sign}%joyname Asse %axis"
-   },
-   "JUMP_COMPLETE" : {
-      "description" : "",
-      "message" : "Completamento salto: %percent%%"
-   },
-   "KM_S_RELATIVE_TO" : {
-      "description" : "",
-      "message" : "%speed{f.2} km/s relativa a %frame"
    },
    "L4L5_DISPLAY_MODE_TOGGLE" : {
       "description" : "Either show L4/L5 points or don't",
@@ -677,11 +677,19 @@
    },
    "LASER_FIRE_DETECTED" : {
       "description" : "",
-      "message" : "Rilevata attività ostile."
+      "message" : "Rilevato uso d'armi."
    },
    "LATITUDE" : {
       "description" : "Short for latitude",
       "message" : "Lat:"
+   },
+   "LATITUDE_NORTH_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'north'",
+      "message" : "N"
+   },
+   "LATITUDE_SOUTH_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'south'",
+      "message" : "S"
    },
    "LEGAL_CURRENT_SYSTEM" : {
       "description" : "Short (tooltip) description of commodity (singular) status in the system the player is currently in",
@@ -714,6 +722,14 @@
    "LONGITUDE" : {
       "description" : "Short for longitude",
       "message" : "Lon:"
+   },
+   "LONGITUDE_EAST_ABBREV" : {
+      "description" : "Abbreviation letter for longitude 'east'",
+      "message" : "E"
+   },
+   "LONGITUDE_WEST_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'west'",
+      "message" : "O"
    },
    "MAJOR_EXPORTS" : {
       "description" : "",
@@ -931,10 +947,6 @@
       "description" : "",
       "message" : "Set"
    },
-   "M_S_RELATIVE_TO" : {
-      "description" : "",
-      "message" : "%speed{f.0} m/s relativa a %frame"
-   },
    "NAME_OBJECT" : {
       "description" : "For an item or object",
       "message" : "Nome"
@@ -1047,10 +1059,6 @@
       "description" : "",
       "message" : "%angle{f.1} gradi"
    },
-   "N_DISTANCE_TO_TARGET" : {
-      "description" : "",
-      "message" : "%distance all'obiettivo"
-   },
    "N_EARTH_DAYS" : {
       "description" : "",
       "message" : "%days{f.1} giorni terrestri"
@@ -1161,7 +1169,7 @@
    },
    "PLANNER_RESET_START" : {
       "description" : "For system orbit view",
-      "message" : "Inizio manovra. Click per reimpostare al predefinito."
+      "message" : "Inizio manovra. Click per reimpostare ai valori predefiniti."
    },
    "PLASTICS" : {
       "description" : "",
@@ -1358,10 +1366,6 @@
    "SHIPS_DISPLAY_MODE_TOGGLE" : {
       "description" : "Either show no ships, show ships, or show ships + their orbits",
       "message" : "Commuta fra i modi di visualizzazione delle astronavi."
-   },
-   "SHIP_ALTITUDE_ABOVE_TERRAIN" : {
-      "description" : "",
-      "message" : "Altezza dal terreno"
    },
    "SHIP_DETECTED_NEARBY" : {
       "description" : "",
@@ -1583,6 +1587,10 @@
       "description" : "",
       "message" : "Temperatura alla superficie"
    },
+   "SWAP_SELECTED_HYPERSPACE_TARGET" : {
+      "description" : "",
+      "message" : "Commuta tra selezione e bersaglio ipersalto"
+   },
    "SWITCHED_TO_PARENT" : {
       "description" : "Show ship's heading, coordinates are on the celestial sphere (defined by the ecliptic).",
       "message" : "Orientamento commutato sulle coordinate di sistema."
@@ -1621,7 +1629,7 @@
    },
    "TENUOUS" : {
       "description" : "atmosphere thickness",
-      "message" : "tenue"
+      "message" : "Tenue"
    },
    "TEXTILES" : {
       "description" : "",
@@ -1649,7 +1657,7 @@
    },
    "THRUSTER_PORT" : {
       "description" : "",
-      "message" : "Spinta a manca"
+      "message" : "Spinta a sinistra"
    },
    "THRUSTER_RETRO" : {
       "description" : "",
@@ -1735,9 +1743,33 @@
       "description" : "Duration unit: one 60-minute hour",
       "message" : "o"
    },
+   "UNIT_KILOMETERS" : {
+      "description" : "Distance unit: one kilometer",
+      "message" : "km"
+   },
+   "UNIT_KILOMETERS_PER_SECOND" : {
+      "description" : "Speed unit: one kilometer per second",
+      "message" : "km/s"
+   },
    "UNIT_LY" : {
       "description" : "Distance unit: a light year",
       "message" : "AL"
+   },
+   "UNIT_METERS" : {
+      "description" : "Distance unit: one meter",
+      "message" : "m"
+   },
+   "UNIT_METERS_PER_SECOND" : {
+      "description" : "Speed unit: one meter per second",
+      "message" : "m/s"
+   },
+   "UNIT_MILLION_METERS" : {
+      "description" : "Distance unit: one million meters",
+      "message" : "Mm"
+   },
+   "UNIT_MILLION_METERS_PER_SECOND" : {
+      "description" : "Speed unit: one million meters per second",
+      "message" : "Mm/s"
    },
    "UNIT_MINUTES" : {
       "description" : "Duration unit: one 60-second minute",
@@ -1746,6 +1778,10 @@
    "UNIT_SECONDS" : {
       "description" : "Duration unit: one second",
       "message" : "s"
+   },
+   "UNIT_TONNES" : {
+      "description" : "Mass unit: one tonne (t)",
+      "message" : "t"
    },
    "UNIT_WEEKS" : {
       "description" : "Duration unit: one 7-day week",
@@ -1841,7 +1877,7 @@
    },
    "YOU_NO_MONEY" : {
       "description" : "",
-      "message" : "Non ha più crediti."
+      "message" : "Non hai più crediti."
    },
    "Z" : {
       "description" : "keybinding: z axis",

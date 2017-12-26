@@ -7,6 +7,8 @@
 #include "scenegraph/SceneGraph.h"
 #include "IniConfig.h"
 #include "FileSystem.h"
+#include "GameSaveError.h"
+#include "utils.h"
 
 const float BILLBOARD_SIZE = 2.5f;
 
@@ -92,7 +94,7 @@ NavLights::NavLights(SceneGraph::Model *model, float period)
 	const std::vector<Node*> &results = lightFinder.GetResults();
 
 	//attach light billboards
-	for (unsigned int i=0; i < results.size(); i++) 
+	for (unsigned int i=0; i < results.size(); i++)
 	{
 		MatrixTransform *mt = dynamic_cast<MatrixTransform*>(results.at(i));
 		assert(mt);
@@ -191,17 +193,17 @@ void NavLights::Render(Graphics::Renderer *renderer)
 		matHalos4x4.Reset(renderer->CreateMaterial(desc));
 		texHalos4x4.Reset(Graphics::TextureBuilder::Billboard("textures/halo_4x4.dds").GetOrCreateTexture(renderer, std::string("billboard")));
 		matHalos4x4->texture0 = texHalos4x4.Get();
-	
+
 		Graphics::RenderStateDesc rsd;
 		rsd.blendMode = Graphics::BLEND_ADDITIVE;
 		rsd.depthWrite = false;
 		m_billboardRS = renderer->CreateRenderState(rsd);
 	}
 
-	const bool bVBValid = m_billboardVB.Valid();
-	const bool bHasVerts = !m_billboardTris.IsEmpty();
-	const bool bVertCountEqual = bVBValid && (m_billboardVB->GetVertexCount() == m_billboardTris.GetNumVerts());
-	if( bHasVerts && (!bVBValid || !bVertCountEqual) )
+	const bool isVBValid = m_billboardVB.Valid();
+	const bool hasVerts = !m_billboardTris.IsEmpty();
+	const bool isVertCountEnough = isVBValid && (m_billboardTris.GetNumVerts() <= m_billboardVB->GetCapacity());
+	if( hasVerts && (!isVBValid || !isVertCountEnough) )
 	{
 		//create buffer
 		// NB - we're (ab)using the normal type to hold (uv coordinate offset value + point size)
@@ -214,10 +216,10 @@ void NavLights::Render(Graphics::Renderer *renderer)
 		vbd.usage = Graphics::BUFFER_USAGE_DYNAMIC;	// we could be updating this per-frame
 		m_billboardVB.Reset( renderer->CreateVertexBuffer(vbd) );
 	}
-	
+
 	if(m_billboardVB.Valid())
 	{
-		if(bHasVerts) {
+		if(hasVerts) {
 			m_billboardVB->Populate(m_billboardTris);
 			renderer->SetTransform(matrix4x4f::Identity());
 			renderer->DrawBuffer(m_billboardVB.Get(), m_billboardRS, matHalos4x4.Get(), Graphics::POINTS);

@@ -8,7 +8,6 @@
 #include "matrix4x4.h"
 #include "Object.h"
 #include "Frame.h"
-#include "Serializer.h"
 #include "PropertiedObject.h"
 #include <string>
 
@@ -39,7 +38,7 @@ public:
 	void SetClipRadius(double r) { m_clipRadius = r; }
 	double GetClipRadius() const { return m_clipRadius; }
 	virtual double GetMass() const { assert(0); return 0; }
-	
+
 	// return true if to do collision response and apply damage
 	virtual bool OnCollision(Object *o, Uint32 flags, double relVel) { return false; }
 	// Attacker may be null

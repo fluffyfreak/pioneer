@@ -3,6 +3,7 @@
 
 #include "ModelViewer.h"
 #include "FileSystem.h"
+#include "graphics/gl2/GL2Renderer.h"
 #include "graphics/opengl/RendererGL.h"
 #include "graphics/Graphics.h"
 #include "graphics/Light.h"
@@ -17,6 +18,7 @@
 #include "Pi.h"
 #include "StringF.h"
 #include "ModManager.h"
+#include "GameSaveError.h"
 #include "MathUtil.h"
 #include <sstream>
 
@@ -35,6 +37,7 @@ ModelViewer::Options::Options()
 , mouselookEnabled(false)
 , gridInterval(10.f)
 , lightPreset(0)
+, orthoView(false)
 {
 }
 
@@ -110,7 +113,7 @@ ModelViewer::ModelViewer(Graphics::Renderer *r, LuaManager *lm)
 
 	m_log = m_ui->MultiLineText("");
 	m_log->SetFont(UI::Widget::FONT_SMALLEST);
-	
+
 	m_logScroller.Reset(m_ui->Scroller());
 	m_logScroller->SetInnerWidget(m_ui->ColorBackground(Color(0x0,0x0,0x0,0x40))->SetInnerWidget(m_log));
 
@@ -164,11 +167,24 @@ void ModelViewer::Run(const std::string &modelName)
 
 	ModManager::Init();
 
+	Graphics::RendererGL2::RegisterRenderer();
 	Graphics::RendererOGL::RegisterRenderer();
+
+	// determine what renderer we should use, default to Opengl 3.x
+	const std::string rendererName = config->String("RendererName", Graphics::RendererNameFromType(Graphics::RENDERER_OPENGL_3x));
+	Graphics::RendererType rType = Graphics::RENDERER_OPENGL_3x;
+	if(rendererName == Graphics::RendererNameFromType(Graphics::RENDERER_OPENGL_21))
+	{
+		rType = Graphics::RENDERER_OPENGL_21;
+	}
+	else if(rendererName == Graphics::RendererNameFromType(Graphics::RENDERER_OPENGL_3x))
+	{
+		rType = Graphics::RENDERER_OPENGL_3x;
+	}
 
 	//video
 	Graphics::Settings videoSettings = {};
-	videoSettings.rendererType = Graphics::RENDERER_OPENGL;
+	videoSettings.rendererType = rType;
 	videoSettings.width = config->Int("ScrWidth");
 	videoSettings.height = config->Int("ScrHeight");
 	videoSettings.fullscreen = (config->Int("StartFullscreen") != 0);
@@ -337,7 +353,7 @@ void ModelViewer::HitImpl()
 			// Please don't do this in game, no speed guarantee
 			const Uint32 posOffs = mesh.vertexBuffer->GetDesc().GetOffset(Graphics::ATTRIB_POSITION);
 			const Uint32 stride  = mesh.vertexBuffer->GetDesc().stride;
-			const Uint32 vtxIdx = m_rng.Int32() % mesh.vertexBuffer->GetVertexCount();
+			const Uint32 vtxIdx = m_rng.Int32() % mesh.vertexBuffer->GetSize();
 
 			const Uint8 *vtxPtr = mesh.vertexBuffer->Map<Uint8>(Graphics::BUFFER_MAP_READ);
 			const vector3f pos = *reinterpret_cast<const vector3f*>(vtxPtr + vtxIdx * stride + posOffs);
@@ -406,7 +422,7 @@ void ModelViewer::ChangeCameraPreset(SDL_Keycode key, SDL_Keymod mod)
 void ModelViewer::ToggleViewControlMode()
 {
 	m_options.mouselookEnabled = !m_options.mouselookEnabled;
-	m_renderer->GetWindow()->SetGrab(m_options.mouselookEnabled);
+	m_renderer->SetGrab(m_options.mouselookEnabled);
 
 	if (m_options.mouselookEnabled) {
 		m_viewRot = matrix3x3f::RotateY(DEG2RAD(m_rotY)) * matrix3x3f::RotateX(DEG2RAD(Clamp(m_rotX, -90.0f, 90.0f)));
@@ -429,7 +445,7 @@ void ModelViewer::ClearModel()
 	m_scaleModel.reset();
 
 	m_options.mouselookEnabled = false;
-	m_renderer->GetWindow()->SetGrab(false);
+	m_renderer->SetGrab(false);
 	m_viewPos = vector3f(0.0f, 0.0f, 10.0f);
 	ResetCamera();
 }
@@ -476,12 +492,12 @@ void ModelViewer::DrawBackground()
 		vbd.attrib[1].format	= Graphics::ATTRIB_FORMAT_UBYTE4;
 		vbd.numVertices = 6;
 		vbd.usage = Graphics::BUFFER_USAGE_STATIC;
-	
+
 		// VertexBuffer
 		m_bgBuffer.Reset( m_renderer->CreateVertexBuffer(vbd) );
 		m_bgBuffer->Populate(bgArr);
 	}
-	
+
 	m_renderer->DrawBuffer(m_bgBuffer.Get(), m_bgState, Graphics::vtxColorMaterial, Graphics::TRIANGLES);
 }
 
@@ -531,7 +547,7 @@ void ModelViewer::DrawLights(const matrix4x4f &trans)
 	for(Uint32 li=0; li<numLights; li++) {
 		const Graphics::Light &light = m_renderer->GetLight(li);
 		const matrix4x4f mv = trans * matrix4x4f::Translation(light.GetPosition()*20) * matrix4x4f::ScaleMatrix(5);
-		
+
 		m_renderer->SetTransform(mv);
 		Graphics::Drawables::GetAxes3DDrawable(m_renderer)->Draw(m_renderer);
 	}
@@ -587,38 +603,34 @@ void ModelViewer::MainLoop()
 		static GLfloat near_plane = 0.1f, far_plane = 100000.f;
 		static GLfloat frustumSize = 50.0f;
 		const Graphics::Light &light = m_renderer->GetLight(0);
-		
+
 		// Compute the MVP matrix from the light's point of view
 		matrix4x4f depthProjectionMatrix = matrix4x4f::OrthoFrustum(-frustumSize, frustumSize, -frustumSize, frustumSize, near_plane, far_plane);
 		matrix4x4f depthViewMatrix = MathUtil::LookAt(light.GetPosition() * 100.0f, vector3f(0.0f)/*vector3f(0.0f, 0.0f, -zoom_distance(m_baseDistance, m_zoom))*/, vector3f(0.0f, 1.0f, 0.0f));
 		matrix4x4f depthModelMatrix = matrix4x4f::Identity();
+
 		// calc camera info
+		matrix4x4f mv;
+		float zd=0;
 		if (m_options.mouselookEnabled) {
+			mv = m_viewRot.Transpose() * matrix4x4f::Translation(-m_viewPos);
 			depthModelMatrix = (m_viewRot.Transpose() * matrix4x4f::Translation(-m_viewPos));
 		} else {
 			m_rotX = Clamp(m_rotX, -90.0f, 90.0f);
 			matrix4x4f rot = matrix4x4f::Identity();
 			rot.RotateX(DEG2RAD(-m_rotX));
 			rot.RotateY(DEG2RAD(-m_rotY));
-			depthModelMatrix = (matrix4x4f::Translation(0.0f, 0.0f, -zoom_distance(m_baseDistance, m_zoom)) * rot);
+			if (m_options.orthoView) zd = -m_baseDistance;
+			else zd = -zoom_distance(m_baseDistance, m_zoom);
+			mv = matrix4x4f::Translation(0.0f, 0.0f, zd) * rot;
+			depthModelMatrix = matrix4x4f::Translation(0.0f, 0.0f, zd) * rot;
 		}
-		
-		// calc camera info
-		matrix4x4f mv;
-		if (m_options.mouselookEnabled) {
-			mv = m_viewRot.Transpose() * matrix4x4f::Translation(-m_viewPos);
-		} else {
-			m_rotX = Clamp(m_rotX, -90.0f, 90.0f);
-			matrix4x4f rot = matrix4x4f::Identity();
-			rot.RotateX(DEG2RAD(-m_rotX));
-			rot.RotateY(DEG2RAD(-m_rotY));
-			mv = matrix4x4f::Translation(0.0f, 0.0f, -zoom_distance(m_baseDistance, m_zoom)) * rot;
-		}
+
 		const matrix4x4f depthMVP = depthProjectionMatrix * depthViewMatrix * depthModelMatrix;
 		static const float biasValues[16] = {
-			0.5f, 0.0f, 0.0f, 0.0f, 
-			0.0f, 0.5f, 0.0f, 0.0f, 
-			0.0f, 0.0f, 0.5f, 0.0f, 
+			0.5f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.5f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.5f, 0.0f,
 			0.5f, 0.5f, 0.5f, 1.0f};
 		static const matrix4x4f BiasMatrix(biasValues);
 		const matrix4x4f biasDepthMVP = BiasMatrix * depthMVP;
@@ -633,11 +645,11 @@ void ModelViewer::MainLoop()
 		const float dif = dif2 / (dif1 * 1.0f);
 
 		m_shields->Update(m_options.showShields ? 1.0f : (1.0f - dif), 1.0f);
- 
+
 		for( int pass = RENDER_SHADOW_MAP; pass<RENDER_PASS_MAX; pass++)
 		{
 			const matrix4x4f &mv = depthModelMatrix;
-			switch ( pass ) 
+			switch ( pass )
 			{
 			case RENDER_SHADOW_MAP:
 				// 1. first render to depth map
@@ -657,7 +669,7 @@ void ModelViewer::MainLoop()
 				m_renderer->SetProjection(depthProjectionMatrix);
 				m_renderer->SetTransform(matrix4x4f::Identity());
 				break;
-			
+
 			case RENDER_REGULAR:
 				// 2. then render scene as normal with shadow mapping (using depth map)
 				m_renderer->SetViewport(0, 0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
@@ -668,7 +680,7 @@ void ModelViewer::MainLoop()
 				DrawBackground();
 
 				// setup rendering
-				m_renderer->SetPerspectiveProjection(85, Graphics::GetScreenWidth() / float(Graphics::GetScreenHeight()), near_plane, far_plane);
+				//m_renderer->SetPerspectiveProjection(85, Graphics::GetScreenWidth() / float(Graphics::GetScreenHeight()), near_plane, far_plane);
 
 				m_renderer->SetShadowMatrix(biasDepthMVP);
 				m_renderer->SetShadowTexture(m_pShadowRT->GetDepthTexture());
@@ -676,12 +688,26 @@ void ModelViewer::MainLoop()
 			}
 
 			//update animations, draw model etc.
-			if (m_model) 
+			if (m_model)
 			{
 				if(RENDER_REGULAR==pass)
 				{
 					// setup rendering
-					m_renderer->SetPerspectiveProjection(85, Graphics::GetScreenWidth()/float(Graphics::GetScreenHeight()), 0.1f, 100000.f);
+					if (!m_options.orthoView) {
+						m_renderer->SetPerspectiveProjection(85, Graphics::GetScreenWidth()/float(Graphics::GetScreenHeight()), 0.1f, 100000.f);
+					} else {
+						/* TODO: Zoom in ortho mode seems don't work as in perspective mode,
+						/ I change "screen dimensions" to avoid the problem.
+						/ However the zoom needs more care
+						*/
+						if (m_zoom<=0.0) m_zoom = 0.01;
+						float screenW = Graphics::GetScreenWidth()*m_zoom/10;
+						float screenH = Graphics::GetScreenHeight()*m_zoom/10;
+						matrix4x4f orthoMat = matrix4x4f::OrthoFrustum(-screenW,screenW, -screenH, screenH, 0.1f, 100000.0f);
+						orthoMat.ClearToRotOnly();
+						m_renderer->SetProjection(orthoMat);
+					}
+					//m_renderer->SetPerspectiveProjection(85, Graphics::GetScreenWidth()/float(Graphics::GetScreenHeight()), 0.1f, 100000.f);
 					m_renderer->SetTransform(matrix4x4f::Identity());
 
 					// helper rendering
@@ -699,7 +725,7 @@ void ModelViewer::MainLoop()
 					// draw the model itself
 					DrawModel(mv, eRenderPasses(pass));
 				}
-				else 
+				else
 				{
 					// helper rendering
 					if (m_options.showLandingPad) {
@@ -715,7 +741,7 @@ void ModelViewer::MainLoop()
 #if 1 // draw depth map quad
 			if( pass != RENDER_SHADOW_MAP )
 			{
-				m_renderer->SetViewport(0, 0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());	
+				m_renderer->SetViewport(0, 0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
 				m_renderer->SetTransform(matrix4x4f::Identity());
 
 				{
@@ -726,7 +752,7 @@ void ModelViewer::MainLoop()
 					m_renderer->PushMatrix();
 					m_renderer->LoadIdentity();
 				}
-	
+
 				depthBufferQuad->Draw(m_renderer);
 
 				{
@@ -851,6 +877,7 @@ void ModelViewer::PollEvents()
 	 * printscr - screenshots
 	 * tab - toggle ui (always invisible on screenshots)
 	 * g - grid
+	 * o - switch orthographic<->perspective
 	 *
 	 */
 	m_mouseMotion[0] = m_mouseMotion[1] = 0;
@@ -909,6 +936,9 @@ void ModelViewer::PollEvents()
 			case SDLK_g:
 				OnToggleGrid(0);
 				break;
+            case SDLK_o:
+                m_options.orthoView = !m_options.orthoView;
+                break;
 			case SDLK_z:
 				m_options.wireframe = !m_options.wireframe;
 				break;
@@ -1205,10 +1235,10 @@ void ModelViewer::SetupUI()
 		hitItButton->onClick.connect(sigc::bind(sigc::mem_fun(*this, &ModelViewer::OnHitIt), hitItButton));
 	}
 
-	
+
 	add_pair(c, mainBox, randomColours = c->SmallButton(), "Random Colours");
 	randomColours->onClick.connect(sigc::bind(sigc::mem_fun(*this, &ModelViewer::OnRandomColor), randomColours));
-	
+
 
 	//pattern selector
 	if (m_model->SupportsPatterns()) {

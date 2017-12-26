@@ -8,12 +8,12 @@
 #include "Lang.h"
 #include "Pi.h"
 #include "SectorView.h"
-#include "Serializer.h"
 #include "ShipCpanel.h"
 #include "Sound.h"
 #include "SpaceStation.h"
 #include "WorldView.h"
 #include "StringF.h"
+#include "SystemView.h" // for the transfer planner
 
 //Some player specific sounds
 static Sound::Event s_soundUndercarriage;
@@ -90,6 +90,24 @@ void Player::InitCockpit()
 		m_cockpit.reset(new ShipCockpit(cockpitModelName));
 }
 
+bool Player::DoCrushDamage(float kgDamage)
+{
+	bool r = Ship::DoCrushDamage(kgDamage);
+	// Don't fire audio on EVERY iteration (aka every 16ms, or 60fps), only when exceeds a value randomly
+	const float dam = kgDamage*0.01f;
+	if (Pi::rng.Double() < dam)
+	{
+		if (!IsDead() && (GetPercentHull() < 25.0f)) {
+			Sound::BodyMakeNoise(this, "warning", .5f);
+		}
+		if (dam < (0.01 * float(GetShipType()->hullMass)))
+			Sound::BodyMakeNoise(this, "Hull_hit_Small", 1.0f);
+		else
+			Sound::BodyMakeNoise(this, "Hull_Hit_Medium", 1.0f);
+	}
+	return r;
+}
+
 //XXX perhaps remove this, the sound is very annoying
 bool Player::OnDamage(Object *attacker, float kgDamage, const CollisionContact& contactData)
 {
@@ -150,8 +168,6 @@ void Player::SetAlertState(Ship::AlertState as)
 			break;
 	}
 
-	Pi::game->GetCpan()->SetAlertState(as);
-
 	Ship::SetAlertState(as);
 }
 
@@ -173,7 +189,7 @@ void Player::NotifyRemoved(const Body* const removedBody)
 //XXX ui stuff
 void Player::OnEnterHyperspace()
 {
-	s_soundHyperdrive.Play("Hyperdrive_Jump");
+	s_soundHyperdrive.Play(m_hyperspace.sounds.jump_sound.c_str());
 	SetNavTarget(0);
 	SetCombatTarget(0);
 
@@ -188,7 +204,6 @@ void Player::OnEnterSystem()
 	m_controller->SetFlightControlState(CONTROL_MANUAL);
 	//XXX don't call sectorview from here, use signals instead
 	Pi::game->GetSectorView()->ResetHyperspaceTarget();
-	Pi::game->GetWorldView()->ResetHyperspaceButton();
 }
 
 //temporary targeting stuff
@@ -223,20 +238,27 @@ void Player::SetNavTarget(Body* const target, bool setSpeedTo)
 	static_cast<PlayerShipController*>(m_controller)->SetNavTarget(target, setSpeedTo);
 	Pi::onPlayerChangeTarget.emit();
 }
+
+void Player::SetSetSpeedTarget(Body* const target)
+{
+	static_cast<PlayerShipController*>(m_controller)->SetSetSpeedTarget(target);
+	// TODO: not sure, do we actually need this? we are only changing the set speed target
+	Pi::onPlayerChangeTarget.emit();
+}
 //temporary targeting stuff ends
 
-Ship::HyperjumpStatus Player::InitiateHyperjumpTo(const SystemPath &dest, int warmup_time, double duration, LuaRef checks) {
-	HyperjumpStatus status = Ship::InitiateHyperjumpTo(dest, warmup_time, duration, checks);
+Ship::HyperjumpStatus Player::InitiateHyperjumpTo(const SystemPath &dest, int warmup_time, double duration, const HyperdriveSoundsTable &sounds, LuaRef checks) {
+	HyperjumpStatus status = Ship::InitiateHyperjumpTo(dest, warmup_time, duration, sounds, checks);
 
 	if (status == HYPERJUMP_OK)
-		s_soundHyperdrive.Play("Hyperdrive_Charge");
+		s_soundHyperdrive.Play(m_hyperspace.sounds.warmup_sound.c_str());
 
 	return status;
 }
 
 void Player::AbortHyperjump()
 {
-	s_soundHyperdrive.Play("Hyperdrive_Abort");
+	s_soundHyperdrive.Play(m_hyperspace.sounds.abort_sound.c_str());
 	Ship::AbortHyperjump();
 }
 
@@ -254,4 +276,31 @@ void Player::StaticUpdate(const float timeStep)
 	// anyway so this will do for now
 	if (m_cockpit)
 		m_cockpit->Update(timeStep);
+}
+
+int Player::GetManeuverTime() const {
+	if(Pi::planner->GetOffsetVel().ExactlyEqual(vector3d(0,0,0))) {
+		return 0;
+	}
+	return Pi::planner->GetStartTime();
+}
+
+vector3d Player::GetManeuverVelocity() const {
+	const Frame* frame = GetFrame();
+	if(frame->IsRotFrame())
+		frame = frame->GetNonRotFrame();
+	const SystemBody* systemBody = frame->GetSystemBody();
+
+	if(Pi::planner->GetOffsetVel().ExactlyEqual(vector3d(0,0,0))) {
+		return vector3d(0,0,0);
+	} else if(systemBody) {
+		Orbit playerOrbit = ComputeOrbit();
+		if(!is_zero_exact(playerOrbit.GetSemiMajorAxis())) {
+			double mass = systemBody->GetMass();
+			// XXX The best solution would be to store the mass(es) on Orbit
+			const vector3d velocity = (Pi::planner->GetVel() - playerOrbit.OrbitalVelocityAtTime(mass, playerOrbit.OrbitalTimeAtPos(Pi::planner->GetPosition(), mass)));
+			return velocity;
+		}
+	}
+	return vector3d(0,0,0);
 }

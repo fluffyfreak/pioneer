@@ -22,15 +22,13 @@
 #include "LuaRef.h"
 #include "ObjectViewerView.h"
 #include "FileSystem.h"
+#include "GZipFormat.h"
 #include "graphics/Renderer.h"
 #include "ui/Context.h"
 #include "galaxy/GalaxyGenerator.h"
+#include "GameSaveError.h"
 
-extern "C" {
-#include "miniz/miniz.h"
-}
-
-static const int  s_saveVersion   = 83;
+static const int  s_saveVersion   = 84;
 static const char s_saveStart[]   = "PIONEER";
 static const char s_saveEnd[]     = "END";
 
@@ -250,7 +248,6 @@ void Game::TimeStep(float step)
 	// XXX ui updates, not sure if they belong here
 	m_gameViews->m_cpan->TimeStepUpdate(step);
 	SfxManager::TimeStepAll(step, m_space->GetRootFrame());
-	log->Update(m_timeAccel == Game::TIMEACCEL_PAUSED);
 
 	if (m_state == STATE_HYPERSPACE) {
 		if (Pi::game->GetTime() >= m_hyperspaceEndTime) {
@@ -506,7 +503,8 @@ void Game::SwitchToNormalSpace()
 				Body *target_body = m_space->FindBodyForPath(&sdest);
 				double dist_to_target = cloud->GetPositionRelTo(target_body).Length();
 				double half_dist_to_target = dist_to_target / 2.0;
-				double accel = -(ship->GetShipType()->linThrust[ShipType::THRUSTER_FORWARD] / ship->GetMass());
+				//double accel = -(ship->GetShipType()->linThrust[ShipType::THRUSTER_FORWARD] / ship->GetMass());
+				double accel = -ship->GetAccelFwd();
 				double travel_time = Pi::game->GetTime() - cloud->GetDueDate();
 
 				// I can't help but feel some actual math would do better here
@@ -778,10 +776,7 @@ void Game::CreateViews()
 	m_gameViews.reset(new Views);
 	m_gameViews->Init(this);
 
-	UI::Point scrSize = Pi::ui->GetContext()->GetSize();
-	log = new GameLog(
-		Pi::ui->GetContext()->GetFont(UI::Widget::FONT_NORMAL),
-		vector2f(scrSize.x, scrSize.y));
+	log = new GameLog();
 }
 
 // XXX mostly a copy of CreateViews
@@ -796,10 +791,7 @@ void Game::LoadViewsFromJson(const Json::Value &jsonObj)
 	m_gameViews.reset(new Views);
 	m_gameViews->LoadFromJson(jsonObj, this);
 
-	UI::Point scrSize = Pi::ui->GetContext()->GetSize();
-	log = new GameLog(
-		Pi::ui->GetContext()->GetFont(UI::Widget::FONT_NORMAL),
-		vector2f(scrSize.x, scrSize.y));
+	log = new GameLog();
 }
 
 void Game::DestroyViews()
@@ -829,27 +821,25 @@ Game *Game::LoadGame(const std::string &filename)
 	Output("Game::LoadGame('%s')\n", filename.c_str());
 	auto file = FileSystem::userFiles.ReadFile(FileSystem::JoinPathBelow(Pi::SAVE_DIR_NAME, filename));
 	if (!file) throw CouldNotOpenFileException();
-	Json::Value rootNode; // Create the root JSON value for receiving the game data.
-	Json::Reader jsonReader; // Create reader for parsing the JSON string.
-	const auto data = file->AsByteRange();
-	size_t outSize = 0;
-	void *pDecompressedData = tinfl_decompress_mem_to_heap(&data[0], data.Size(), &outSize, 0);
-	if (pDecompressedData) {
-		jsonReader.parse(static_cast<char*>(pDecompressedData), static_cast<char*>(pDecompressedData)+outSize, rootNode); // Parse the JSON string.
-		mz_free(pDecompressedData);
+	const auto compressed_data = file->AsByteRange();
+	try {
+		const std::string plain_data = gzip::DecompressDeflateOrGZip(reinterpret_cast<const unsigned char*>(compressed_data.begin), compressed_data.Size());
+		const char *pdata = plain_data.data();
+		Json::Reader jsonReader;
+		Json::Value rootNode;
+		jsonReader.parse(pdata, pdata + plain_data.size(), rootNode); 
 		if (!rootNode.isObject()) throw SavedGameCorruptException();
-		return new Game(rootNode); // Decode the game data from JSON and create the game.
-	} else {
+		return new Game(rootNode);
+	} catch (gzip::DecompressionFailedException) {
 		throw SavedGameCorruptException();
 	}
-	// file data is freed here
 }
 
 bool Game::CanLoadGame(const std::string &filename)
 {
 	Output("Game::CanLoadGame('%s')\n", filename.c_str());
 	auto file = FileSystem::userFiles.ReadFile(FileSystem::JoinPathBelow(Pi::SAVE_DIR_NAME, filename));
-	if (!file) 
+	if (!file)
 		return false;
 
 	return true;
@@ -887,22 +877,16 @@ void Game::SaveGame(const std::string &filename, Game *game)
 	FILE *f = FileSystem::userFiles.OpenWriteStream(FileSystem::JoinPathBelow(Pi::SAVE_DIR_NAME, filename));
 	if (!f) throw CouldNotOpenFileException();
 
-	// compress in memory, write to open file 
-	size_t outSize = 0;
-	void *pCompressedData = tdefl_compress_mem_to_heap(jsonDataStr.data(), jsonDataStr.length(), &outSize, 128);
-	if (pCompressedData) 
-	{
-		size_t nwritten = fwrite(pCompressedData, outSize, 1, f);
-		mz_free(pCompressedData);
+	try {
+		const std::string comressed_data = gzip::CompressGZip(jsonDataStr, filename + ".json");
+		size_t nwritten = fwrite(comressed_data.data(), comressed_data.size(), 1, f);
 		fclose(f);
 		if (nwritten != 1) throw CouldNotWriteToFileException();
-	}
-	else
-	{
+	} catch (gzip::CompressionFailedException) {
 		fclose(f);
 		throw CouldNotWriteToFileException();
 	}
-	
+
 #ifdef PIONEER_PROFILER
 	Profiler::dumphtml(profilerPath.c_str());
 #endif

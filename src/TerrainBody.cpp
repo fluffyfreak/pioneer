@@ -10,6 +10,7 @@
 #include "Game.h"
 #include "graphics/Graphics.h"
 #include "graphics/Renderer.h"
+#include "GameSaveError.h"
 
 TerrainBody::TerrainBody(SystemBody *sbody) :
 	Body(),
@@ -129,7 +130,7 @@ bool TerrainBody::IsSuperType(SystemBody::BodySuperType t) const
 	else return m_sbody->GetSuperType() == t;
 }
 
-//static 
+//static
 void TerrainBody::OnChangeDetailLevel()
 {
 	GeoSphere::OnChangeDetailLevel();

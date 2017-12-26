@@ -231,7 +231,7 @@ void Lines::SetData(const Uint32 vertCount, const vector3f *vertices, const Colo
 	m_refreshVertexBuffer = true;
 
 	// if the number of vert mismatches then clear the current vertex buffer
-	if( m_vertexBuffer.Valid() && m_vertexBuffer->GetVertexCount() != vertCount ) {
+	if( m_vertexBuffer.Valid() && m_vertexBuffer->GetCapacity() < vertCount ) {
 		// a new one will be created when it is drawn
 		m_vertexBuffer.Reset();
 	}
@@ -252,7 +252,7 @@ void Lines::SetData(const Uint32 vertCount, const vector3f *vertices, const Colo
 	m_refreshVertexBuffer = true;
 
 	// if the number of vert mismatches then clear the current vertex buffer
-	if( m_vertexBuffer.Valid() && m_vertexBuffer->GetVertexCount() != vertCount ) {
+	if( m_vertexBuffer.Valid() && m_vertexBuffer->GetCapacity() < vertCount ) {
 		// a new one will be created when it is drawn
 		m_vertexBuffer.Reset();
 	}
@@ -271,7 +271,7 @@ void Lines::Draw(Renderer *r, RenderState *rs, const PrimitiveType pt)
 		return;
 
 	if( !m_vertexBuffer.Valid() ) {
-		CreateVertexBuffer(r, m_va->GetNumVerts());
+		CreateVertexBuffer(r, m_va->GetNumVerts() * 2); // ask for twice as many as we need to reduce buffer thrashing
 	}
 	if( m_refreshVertexBuffer ) {
 		m_refreshVertexBuffer = false;
@@ -309,13 +309,13 @@ PointSprites::PointSprites() : m_refreshVertexBuffer(true)
 void PointSprites::SetData(const int count, const vector3f *positions, const Color *colours, const float *sizes, Graphics::Material *pMaterial)
 {
 	PROFILE_SCOPED()
-	if (count < 1 ) 
+	if (count < 1 )
 		return;
 
 	assert(positions);
 
 	m_va.reset( new VertexArray(ATTRIB_POSITION | ATTRIB_NORMAL | ATTRIB_DIFFUSE, count) );
-	
+
 	for (int i=0; i<count; i++) {
 		vector3f vSize(sizes[i]);
 		m_va->Add(positions[i], colours[i], vSize);
@@ -365,7 +365,7 @@ Points::Points() : m_refreshVertexBuffer(true)
 void Points::SetData(Renderer* r, const int count, const vector3f *positions, const matrix4x4f &trans, const Color &color, const float size)
 {
 	PROFILE_SCOPED()
-	if (count < 1 ) 
+	if (count < 1 )
 		return;
 
 	assert(positions);
@@ -409,7 +409,7 @@ void Points::SetData(Renderer* r, const int count, const vector3f *positions, co
 void Points::SetData(Renderer* r, const int count, const vector3f *positions, const Color *color, const matrix4x4f &trans, const float size)
 {
 	PROFILE_SCOPED()
-	if (count < 1 ) 
+	if (count < 1 )
 		return;
 
 	assert(positions);
@@ -456,7 +456,7 @@ void Points::Draw(Renderer *r, RenderState *rs)
 	if (m_va->GetNumVerts() == 0)
 		return;
 
-	if (!m_vertexBuffer.Valid() || (m_va->GetNumVerts() != m_vertexBuffer->GetVertexCount())) {
+	if (!m_vertexBuffer.Valid() || (m_va->GetNumVerts() != m_vertexBuffer->GetSize())) {
 		CreateVertexBuffer(r, m_va->GetNumVerts());
 	}
 	if( m_refreshVertexBuffer ) {
@@ -706,7 +706,7 @@ TexturedQuad::TexturedQuad(Graphics::Renderer *r, RefCountedPtr<Graphics::Materi
 
 	//Create vtx & index buffers and copy data
 	VertexBufferDesc vbd;
-	
+
 	Uint32 attribIdx = 0;
 	assert(va.HasAttrib(ATTRIB_POSITION));
 	vbd.attrib[attribIdx].semantic = ATTRIB_POSITION;
@@ -758,7 +758,7 @@ void TexturedQuad::Draw(Graphics::Renderer *r, const Color4ub &tint)
 Rect::Rect(Graphics::Renderer *r, const vector2f &pos, const vector2f &size, const Color &c, RenderState *state, const bool bIsStatic /*= true*/) : m_renderState(state)
 {
 	PROFILE_SCOPED()
-			
+
 	using namespace Graphics;
 	VertexArray bgArr(ATTRIB_POSITION | ATTRIB_DIFFUSE, 4);
 	Graphics::MaterialDescriptor desc;
@@ -777,7 +777,7 @@ Rect::Rect(Graphics::Renderer *r, const vector2f &pos, const vector2f &size, con
 	vbd.attrib[1].format   = ATTRIB_FORMAT_UBYTE4;
 	vbd.numVertices = 4;
 	vbd.usage = bIsStatic ? BUFFER_USAGE_STATIC : BUFFER_USAGE_DYNAMIC;
-	
+
 	// VertexBuffer
 	m_vertexBuffer.Reset( r->CreateVertexBuffer(vbd) );
 	m_vertexBuffer->Populate(bgArr);
@@ -792,7 +792,7 @@ void Rect::Update(const vector2f &pos, const vector2f &size, const Color &c)
 	bgArr.Add(vector3f(size.x,size.y,0), c);
 	bgArr.Add(vector3f(size.x,pos.y,0), c);
 	bgArr.Add(vector3f(pos.x,pos.y,0), c);
-	
+
 	m_vertexBuffer->Populate(bgArr);
 }
 
@@ -801,12 +801,12 @@ void Rect::Draw(Graphics::Renderer *r)
 	PROFILE_SCOPED()
 	r->DrawBuffer(m_vertexBuffer.Get(), m_renderState, m_material.Get(), TRIANGLE_FAN);
 }
-	
+
 //------------------------------------------------------------
 RoundEdgedRect::RoundEdgedRect(Graphics::Renderer *r, const vector2f &size, const float rad, const Color &c, RenderState *state, const bool bIsStatic /*= true*/) : m_renderState(state)
 {
 	PROFILE_SCOPED()
-			
+
 	using namespace Graphics;
 	Graphics::MaterialDescriptor desc;
 	desc.vertexColors = true;
@@ -827,8 +827,8 @@ RoundEdgedRect::RoundEdgedRect(Graphics::Renderer *r, const vector2f &size, cons
 void RoundEdgedRect::Update(const vector2f &size, float rad, const Color &c)
 {
 	Graphics::VertexArray vts(Graphics::ATTRIB_POSITION | ATTRIB_DIFFUSE);
-	
-	if (rad > 0.5f*std::min(size.x, size.y)) 
+
+	if (rad > 0.5f*std::min(size.x, size.y))
 		rad = 0.5f*std::min(size.x, size.y);
 
 	// top left
@@ -862,7 +862,7 @@ void RoundEdgedRect::Draw(Graphics::Renderer *r)
 	PROFILE_SCOPED()
 	r->DrawBuffer(m_vertexBuffer.Get(), m_renderState, m_material.Get(), TRIANGLE_FAN);
 }
-	
+
 //------------------------------------------------------------
 Axes3D::Axes3D(Graphics::Renderer *r, Graphics::RenderState *state)
 {
@@ -878,7 +878,7 @@ Axes3D::Axes3D(Graphics::Renderer *r, Graphics::RenderState *state)
 	Graphics::MaterialDescriptor desc;
 	desc.vertexColors = true;
 	m_material.Reset(r->CreateMaterial(desc));
-	
+
 	//Draw plain XYZ axes using the current transform
 	static const vector3f vtsXYZ[] = {
 		vector3f(0.f, 0.f, 0.f),
@@ -919,7 +919,7 @@ void Axes3D::Draw(Graphics::Renderer *r)
 	r->DrawBuffer(m_vertexBuffer.Get(), m_renderState, m_material.Get(), LINE_SINGLE);
 }
 
-static Axes3D *s_axes = nullptr; 
+static Axes3D *s_axes = nullptr;
 Axes3D* GetAxes3DDrawable(Graphics::Renderer *r) {
 	PROFILE_SCOPED()
 	if( !s_axes ) {

@@ -8,19 +8,19 @@
 #include "GalaxyGenerator.h"
 #include "Factions.h"
 
-#include "Serializer.h"
 #include "Pi.h"
 #include "LuaEvent.h"
 #include "enum_table.h"
-#include <map>
-#include <string>
-#include <algorithm>
 #include "utils.h"
 #include "Orbit.h"
 #include "Lang.h"
 #include "StringF.h"
-#include <SDL_stdinc.h>
 #include "EnumStrings.h"
+#include "GameSaveError.h"
+#include <SDL_stdinc.h>
+#include <map>
+#include <string>
+#include <algorithm>
 
 //#define DEBUG_DUMP
 
@@ -504,6 +504,18 @@ const char *SystemBody::GetIcon() const
     default:
         Output("Warning: Invalid body icon.\n");
 		return 0;
+	}
+}
+
+bool SystemBody::IsPlanet() const {
+	BodySuperType st = GetSuperType();
+	if(st != BodySuperType::SUPERTYPE_ROCKY_PLANET && st != BodySuperType::SUPERTYPE_GAS_GIANT)
+		return false;
+	SystemBody *p = GetParent();
+	if(p != nullptr && p->GetSuperType() == BodySuperType::SUPERTYPE_STAR) {
+		return true;
+	}	else {
+		return false;
 	}
 }
 

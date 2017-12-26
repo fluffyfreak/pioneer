@@ -5,7 +5,6 @@
 #define _SFX_H
 
 #include "Body.h"
-#include "Serializer.h"
 #include "graphics/Material.h"
 #include "graphics/RenderState.h"
 
@@ -18,7 +17,7 @@ enum SFX_TYPE { TYPE_EXPLOSION=1, TYPE_DAMAGE, TYPE_SMOKE, TYPE_NONE };
 
 class Sfx {
 public:
-	
+
 	friend class SfxManager;
 	Sfx();
 	Sfx(const vector3d &pos, const vector3d &vel, const float speed, const SFX_TYPE type);

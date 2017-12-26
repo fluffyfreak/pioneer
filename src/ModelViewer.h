@@ -87,6 +87,7 @@ private:
 		bool mouselookEnabled;
 		float gridInterval;
 		int lightPreset;
+		bool orthoView;
 
 		Options();
 	};

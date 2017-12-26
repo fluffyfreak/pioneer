@@ -36,6 +36,14 @@ void Warning(const char *format, ...)  __attribute((format(printf,1,2)));
 void Output(const char *format, ...)  __attribute((format(printf,1,2)));
 void OpenGLDebugMsg(const char *format, ...)  __attribute((format(printf,1,2)));
 
+/**
+* Works like Output, but adds indent before message.
+* Call IndentIncrease and IndentDecrease to control indent level.
+*/
+void IndentedOutput(const char *format, ...) __attribute((format(printf,1,2)));
+void IndentIncrease();
+void IndentDecrease();
+
 // Helper for timing functions with multiple stages
 // Used on a branch to help time loading.
 struct MsgTimer {
@@ -183,9 +191,9 @@ static inline size_t SplitSpec(const std::string &spec, std::vector<float> &outp
 	return i;
 }
 
+std::vector<std::string> SplitString(const std::string& source, const std::string& delim);
+
 // 'Numeric type' to string conversions.
-std::string SInt64ToStr(Sint64 val);
-std::string UInt64ToStr(Uint64 val);
 std::string FloatToStr(float val);
 std::string DoubleToStr(double val);
 std::string AutoToStr(Sint32 val);

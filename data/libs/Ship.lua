@@ -11,6 +11,7 @@ local Equipment = import("Equipment")
 local Timer = import("Timer")
 local Lang = import("Lang")
 local Character = import("Character")
+local Comms = import("Comms")
 
 local l = Lang.GetResource("ui-core")
 
@@ -460,6 +461,7 @@ end
 --
 Ship.HyperjumpTo = function (self, path, is_legal)
 	local engine = self:GetEquip("engine", 1)
+	local wheels = self:GetWheelState()
 	if not engine then
 		return "NO_DRIVE"
 	end
@@ -473,6 +475,11 @@ Ship.HyperjumpTo = function (self, path, is_legal)
 	if is_legal and self.frameBody and not is_allowed then
 		print("---> Engage AI for safe distance of hyperjump")
 		self:AIEnterLowOrbit(self.frameBody)
+	end
+
+	-- display warning if gear is not retracted
+	if self == Game.player and wheels ~= 0 then
+		Comms.ImportantMessage(l.ERROR_LANDING_GEAR_DOWN)
 	end
 
 	return engine:HyperjumpTo(self, path)
@@ -626,12 +633,13 @@ function Ship:FireMissileAt(which_missile, target)
 			if not missile_object:exists() then -- Usually means it has already exploded
 				return true
 			end
-			if missile_object:DistanceTo(self) < 300 then
-				return false
-			else
+-- TODO: Due to the changes in missile, DistanceTo cause an error
+--			if missile_object:DistanceTo(self) < 300 then
+--				return false
+--			else
 				missile_object:Arm()
-				return true
-			end
+--				return true
+--			end
 		end)
 	end
 

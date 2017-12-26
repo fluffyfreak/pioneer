@@ -8,7 +8,6 @@
 #include "libs.h"
 #include "gameconsts.h"
 #include "GameLog.h"
-#include "Serializer.h"
 #include "galaxy/Galaxy.h"
 #include "galaxy/SystemPath.h"
 
@@ -190,7 +189,6 @@ private:
 	TimeAccel m_timeAccel;
 	TimeAccel m_requestedTimeAccel;
 	bool m_forceTimeAccel;
-
 	static const float s_timeAccelRates[];
 	static const float s_timeInvAccelRates[];
 };

@@ -96,10 +96,6 @@ ui.templates.Settings = function (args)
 			Engine.GetDisplayNavTunnels, Engine.SetDisplayNavTunnels,
 			l.DISPLAY_NAV_TUNNELS)
 
-		local compactRadarCheckBox = optionCheckBox(
-			Engine.GetCompactRadar, Engine.SetCompactRadar,
-			l.COMPACT_RADAR)
-
 		local confirmQuit = optionCheckBox(
 			Engine.GetConfirmQuit, Engine.SetConfirmQuit,
 			l.QUIT_CONFIRMATION)
@@ -163,8 +159,7 @@ ui.templates.Settings = function (args)
 				hudTrailsCheckBox,
 				cockpitCheckBox,
 				enableAutosave,
-				compactRadarCheckBox,
-				confirmQuit,
+				-- confirmQuit,
 				starDensity(l.STAR_FIELD_DENSITY, Engine.GetAmountStars, Engine.SetAmountStars),
 			})))
 	end

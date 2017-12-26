@@ -99,7 +99,9 @@ void SystemInfoView::OnBodyViewed(SystemBody *b)
 
 	if (b->GetType() != SystemBody::TYPE_STARPORT_ORBITAL) {
 		_add_label_and_value(Lang::SURFACE_TEMPERATURE, stringf(Lang::N_CELSIUS, formatarg("temperature", b->GetAverageTemp()-273)));
-		_add_label_and_value(Lang::SURFACE_GRAVITY, stringf("%0{f.3} m/s^2", b->CalcSurfaceGravity()));
+		static const auto earthG = G * EARTH_MASS / (EARTH_RADIUS * EARTH_RADIUS);
+		const auto surfAccel = b->CalcSurfaceGravity();
+		_add_label_and_value(Lang::SURFACE_GRAVITY, stringf("%0{f.3} m/s^2 (%1{f.3} g)", surfAccel, surfAccel / earthG));
 	}
 
 	if (b->GetParent()) {
@@ -649,7 +651,7 @@ SystemInfoView::BodyIcon::BodyIcon(const char *img, Graphics::Renderer *r)
 		vector3f(0.f, size[1], 0.f),
 	};
 	m_selectBox.SetData(COUNTOF(vts), vts, m_selectColor);
-	
+
 	static const Color portColor = Color(64, 128, 128, 255);
 	// The -0.1f offset seems to be the best compromise to make the circles closed (e.g. around Mars), symmetric, fitting with selection
 	// and not overlapping to much with asteroids

@@ -9,6 +9,7 @@
 
 #include "enum_table.h"
 
+#include "GameSaveError.h"
 #include "LuaUtils.h"
 #include "LuaVector.h"
 #include "LuaFixed.h"
@@ -278,8 +279,8 @@ static void ExportFactionToLua(const Faction *fac, const size_t index)
 
 	FILE *f = nullptr;
 	FileSystem::FileSourceFS newFS(FileSystem::GetDataDir());
-	
-	//if (!bInPlace) 
+
+	//if (!bInPlace)
 	{
 		if (!FileSystem::userFiles.MakeDirectory(SAVE_TARGET_DIR))
 			throw CouldNotOpenFileException();

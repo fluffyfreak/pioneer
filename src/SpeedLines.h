@@ -24,19 +24,25 @@ public:
 	Ship *GetShip() const { return m_ship; }
 
 private:
+	static void Init();
+	static float BOUNDS;
+	static int   DEPTH;
+	static float SPACING;
+	static float MAX_VEL;
+
 	void CreateVertexBuffer(Graphics::Renderer *r, const Uint32 size);
 
 	Ship *m_ship;
 
 	std::vector<vector3f> m_points;
-	
+
 	Graphics::RenderState *m_renderState;
 	RefCountedPtr<Graphics::Material> m_material;
 	std::unique_ptr<Graphics::VertexArray> m_varray;
 	std::unique_ptr<Graphics::VertexBuffer> m_vbuffer;
 
 	matrix4x4d m_transform;
-	
+
 	bool m_visible;
 	float m_lineLength;
 	vector3f m_dir;

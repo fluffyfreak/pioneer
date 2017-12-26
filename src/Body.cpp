@@ -17,6 +17,7 @@
 #include "Space.h"
 #include "Game.h"
 #include "LuaEvent.h"
+#include "GameSaveError.h"
 #include "json/JsonUtils.h"
 
 Body::Body() : PropertiedObject(Lua::manager)
@@ -203,7 +204,7 @@ void Body::SwitchToFrame(Frame *newFrame)
 
 void Body::UpdateFrame()
 {
-	if (!(m_flags & FLAG_CAN_MOVE_FRAME)) return;	
+	if (!(m_flags & FLAG_CAN_MOVE_FRAME)) return;
 
 	// falling out of frames
 	if (m_frame->GetRadius() < GetPosition().Length()) {

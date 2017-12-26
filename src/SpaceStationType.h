@@ -39,7 +39,7 @@ public:
 		vector3d yaxis;
 		vector3d zaxis;
 	};
-	
+
 private:
 	std::string id;
 	SceneGraph::Model *model;
@@ -92,6 +92,7 @@ public:
 	static void Init();
 
 	static const SpaceStationType* RandomStationType(Random &random, const bool bIsGround);
+	static const SpaceStationType *FindByName(const std::string &name);
 };
 
 #endif
