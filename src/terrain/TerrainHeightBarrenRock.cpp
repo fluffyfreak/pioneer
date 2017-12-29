@@ -18,7 +18,7 @@ TerrainHeightFractal<TerrainHeightBarrenRock>::TerrainHeightFractal(const System
 {
 	//SetFracDef(0, m_maxHeightInMeters, m_planetRadius);
 	// craters
-	//SetFracDef(1, 5000.0, 1000000.0, 10000.0*m_fracmult);
+	//SetFracDef(1, 5000.0, 1000000.0, 10000.0);
 }
 
 template <>

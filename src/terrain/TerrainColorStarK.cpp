@@ -13,10 +13,10 @@ template <>
 TerrainColorFractal<TerrainColorStarK>::TerrainColorFractal(const SystemBody *body) : Terrain(body)
 {
 	double height = m_maxHeightInMeters*0.1;
-	SetFracDef(0, height, 2e9, 100.0*m_fracmult);
-	SetFracDef(1, height, 7e7, 100.0*m_fracmult);
-	SetFracDef(2, height, 1e6, 100.0*m_fracmult);
-	SetFracDef(3, height, 1e3, 100.0*m_fracmult);
+	SetFracDef(0, height, 2e9, 100.0);
+	SetFracDef(1, height, 7e7, 100.0);
+	SetFracDef(2, height, 1e6, 100.0);
+	SetFracDef(3, height, 1e3, 100.0);
 }
 
 template <>

@@ -90,14 +90,6 @@ ui.templates.Settings = function (args)
 			Engine.GetPlanetDetailLevel, Engine.SetPlanetDetailLevel,
 			l.PLANET_DETAIL_DISTANCE, detailLabels, detailLevels)
 
-		local planetTextureCheckBox = optionCheckBox(
-			Engine.GetPlanetFractalColourEnabled, Engine.SetPlanetFractalColourEnabled,
-			l.PLANET_TEXTURES)
-
-		local fractalDetailDropDown = optionDropDown(
-			Engine.GetFractalDetailLevel, Engine.SetFractalDetailLevel,
-			l.FRACTAL_DETAIL, detailLabels, detailLevels)
-
 		local cityDetailDropDown = optionDropDown(
 			Engine.GetCityDetailLevel, Engine.SetCityDetailLevel,
 			l.CITY_DETAIL_LEVEL, detailLabels, detailLevels)
@@ -161,8 +153,6 @@ ui.templates.Settings = function (args)
 			})))
 			:SetCell(1,0, ui:Margin(5, 'ALL', ui:VBox(5):PackEnd({
 				planetDetailDropDown,
-				planetTextureCheckBox,
-				fractalDetailDropDown,
 				cityDetailDropDown,
 				navTunnelsCheckBox,
 				speedLinesCheckBox,
