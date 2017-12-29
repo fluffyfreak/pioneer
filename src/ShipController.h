@@ -8,9 +8,9 @@
  * Controls thrusters, autopilot according to player input or AI
  */
 #include "libs.h"
-#include "Serializer.h"
 #include "json/json.h"
 
+class Body;
 class Ship;
 class Space;
 
@@ -68,7 +68,7 @@ public:
 	bool IsMouseActive() const { return m_mouseActive; }
 	double GetSetSpeed() const override { return m_setSpeed; }
 	FlightControlState GetFlightControlState() const override { return m_flightControlState; }
-	vector3d GetMouseDir() const { return m_mouseDir; }
+	vector3d GetMouseDir() const;		// in local frame
 	void SetMouseForRearView(bool enable) { m_invertMouse = enable; }
 	void SetFlightControlState(FlightControlState s) override;
 	float GetLowThrustPower() const { return m_lowThrustPower; }

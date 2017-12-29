@@ -307,6 +307,12 @@ local jumpToSystem = function (ship, target_path)
 end
 
 local getSystemAndJump = function (ship)
+	local body = Space.GetBody(trade_ships[ship].starport.path:GetSystemBody().parent.index)
+	local port = trade_ships[ship].starport
+	-- boost away from the starport before jumping if it is too close
+	if (ship:DistanceTo(port) < 20000) then
+		ship:AIEnterLowOrbit(body)
+	end
 	return jumpToSystem(ship, getSystem(ship))
 end
 
@@ -558,6 +564,11 @@ local cleanTradeShipsTable = function ()
 end
 
 local onEnterSystem = function (ship)
+	-- dont crash when entering unexplored systems
+	if Game.system.explored == false then
+		return
+	end
+	
 	-- if the player is following a ship through hyperspace that ship may enter first
 	-- so update the system when the first ship enters (see Space::DoHyperspaceTo)
 	if not system_updated then
