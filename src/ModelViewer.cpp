@@ -585,6 +585,8 @@ void ModelViewer::MainLoop()
 {
 	std::unique_ptr<Graphics::Drawables::TexturedQuad> depthBufferQuad;
 	Graphics::RenderState *depthBufferQuadRS = nullptr;
+	if (!m_scaleModel)
+		CreateTestResources();
 	double lastTime = SDL_GetTicks() * 0.001;
 	while (!m_done)
 	{
@@ -712,7 +714,6 @@ void ModelViewer::MainLoop()
 
 					// helper rendering
 					if (m_options.showLandingPad) {
-						if (!m_scaleModel) CreateTestResources();
 						m_scaleModel->Render(mv * matrix4x4f::Translation(0.f, m_landingMinOffset, 0.f));
 					}
 
@@ -729,7 +730,6 @@ void ModelViewer::MainLoop()
 				{
 					// helper rendering
 					if (m_options.showLandingPad) {
-						if (!m_scaleModel) CreateTestResources();
 						m_scaleModel->Render(mv * matrix4x4f::Translation(0.f, m_landingMinOffset, 0.f));
 					}
 
