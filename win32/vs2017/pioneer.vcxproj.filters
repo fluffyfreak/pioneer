@@ -941,6 +941,9 @@
     <ClInclude Include="..\..\src\versioningInfo.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\BilinearInterpolation.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src\win32\pioneer.rc">

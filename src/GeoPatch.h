@@ -37,6 +37,7 @@ private:
 	std::unique_ptr<vector3f[]> normals;
 	std::unique_ptr<Color3ub[]> colors;
 	std::unique_ptr<Graphics::VertexBuffer> m_vertexBuffer;
+	RefCountedPtr<Graphics::Texture> m_patchTexture;
 	std::unique_ptr<GeoPatch> kids[NUM_KIDS];
 	GeoPatch *parent;
 	GeoSphere *geosphere;

@@ -2,6 +2,7 @@
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
+#include "BilinearInterpolation.h"
 #include "GeoPatchJobs.h"
 #include "GeoSphere.h"
 #include "GeoPatch.h"
@@ -47,7 +48,6 @@ void SSingleSplitRequest::GenerateMesh() const
 	assert(bhts==&borderHeights[numBorderedVerts]);
 
 	// Generate normals & colors for non-edge vertices since they never change
-	Color3ub *col = colors;
 	vector3f *nrm = normals;
 	double *hts = heights;
 	vrts = borderVertexs.get();
@@ -64,16 +64,32 @@ void SSingleSplitRequest::GenerateMesh() const
 			const vector3d &y2 = vrts[x + (y+1)*borderedEdgeLen];
 			const vector3d n = ((x2-x1).Cross(y2-y1)).Normalized();
 			*(nrm++) = vector3f(n);
-
-			// color
-			const vector3d p = GetSpherePoint(v0, v1, v2, v3, (x-BORDER_SIZE)*fracStep, (y-BORDER_SIZE)*fracStep);
-			setColour(*col, pTerrain->GetColor(p, height, n));
-			++col;
 		}
 	}
 	assert(hts==&heights[edgeLen*edgeLen]);
 	assert(nrm==&normals[edgeLen*edgeLen]);
-	assert(col==&colors[edgeLen*edgeLen]);
+
+	// Generate the colour by bilinear sampling the other arrays
+	Color3ub *col = colors;
+	nrm = normals;
+	hts = heights;
+	for ( int y = 0; y < pixelDims; y++ ) {
+		for ( int x = 0; x < pixelDims; x++ ) {
+
+			// height: sample from hts
+			const double height = BilinearSample(pixelDims, x, y, edgeLen, hts);
+
+			// normal: sample from nrm
+			const vector3d n = vector3d(BilinearSample(pixelDims, x, y, edgeLen, nrm));
+
+			// color:
+			const vector3d p = GetSpherePoint(v0, v1, v2, v3, x * fracStep, y * fracStep);
+			setColour(*col, pTerrain->GetColor(p, height, n));
+			assert(col != &colors[pixelDims * pixelDims]);
+			++col;
+		}
+	}
+	assert(col==&colors[pixelDims * pixelDims]);
 }
 
 // ********************************************************************************
@@ -240,7 +256,6 @@ void SQuadSplitRequest::GenerateSubPatchData(const int quadrantIndex,
 {
 	// Generate normals & colors for vertices
 	vector3d *vrts = borderVertexs.get();
-	Color3ub *col = colors[quadrantIndex];
 	vector3f *nrm = normals[quadrantIndex];
 	double *hts = heights[quadrantIndex];
 
@@ -271,32 +286,31 @@ void SQuadSplitRequest::GenerateSubPatchData(const int quadrantIndex,
 			const vector3d &y2 = vrts[bx + ((by + 1) * borderedEdgeLen)];
 			const vector3d n = ((x2 - x1).Cross(y2 - y1)).Normalized();
 			*(nrm++) = vector3f(n);
-
-			// color
-			const vector3d p = GetSpherePoint(v0, v1, v2, v3, x * fracStep, y * fracStep);
-			setColour(*col, pTerrain->GetColor(p, height, n));
-			++col;
 		}
 	}
 	assert(hts == &heights[quadrantIndex][edgeLen*edgeLen]);
 	assert(nrm == &normals[quadrantIndex][edgeLen*edgeLen]);
-	assert(col == &colors[quadrantIndex][edgeLen*edgeLen]);
 
-	/*const int colLen = edgeLen - 1;
-	for ( int y = 0; y < colLen; y++ ) {
-		for ( int x = 0; x < colLen; x++ ) {
+	// Generate the colour by bilinear sampling the other arrays
+	Color3ub *col = colors[quadrantIndex];
+	nrm = normals[quadrantIndex];
+	hts = heights[quadrantIndex];
+	const double pixelStep = 1.0 / (pixelDims-1);
+	const int edgeMinOne = edgeLen - 1;
+	for ( int y = 0; y < pixelDims; y++ ) {
+		for ( int x = 0; x < pixelDims; x++ ) {
+			// height: sample from hts
+			const double height = BilinearSample(pixelDims, x, y, edgeMinOne, hts);
 
-			// height
-			const double height = hts[0]; // sample from hts;
+			// normal: sample from nrm
+			const vector3d n = vector3d(BilinearSample(pixelDims, x, y, edgeMinOne, nrm));
 
-			// normal
-			const vector3d n = vector3d(nrm[0]); // sample from nrm
-
-			// color
-			const vector3d p = GetSpherePoint(v0, v1, v2, v3, x * fracStep, y * fracStep);
+			// color: generate
+			const vector3d p = GetSpherePoint(v0, v1, v2, v3, x * pixelStep, y * pixelStep);
 			setColour(*col, pTerrain->GetColor(p, height, n));
-			assert(col != &colors[colLen * colLen]);
+			assert(col != &colors[quadrantIndex][pixelDims * pixelDims]);
 			++col;
 		}
-	}*/
+	}
+	assert(col==&colors[quadrantIndex][pixelDims * pixelDims]);
 }

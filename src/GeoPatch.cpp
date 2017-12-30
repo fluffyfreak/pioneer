@@ -23,6 +23,8 @@
 // tri edge lengths
 static const double GEOPATCH_SUBDIVIDE_AT_CAMDIST = 5.0;
 
+static const int GEOPATCH_TEXTURE_SIZE = 32; // 256;
+
 GeoPatch::GeoPatch(const RefCountedPtr<GeoPatchContext> &ctx_, GeoSphere *gs,
 	const vector3d &v0_, const vector3d &v1_, const vector3d &v2_, const vector3d &v3_,
 	const int depth, const GeoPatchID &ID_)
@@ -73,14 +75,21 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 		vbd.attrib[0].format   = Graphics::ATTRIB_FORMAT_FLOAT3;
 		vbd.attrib[1].semantic = Graphics::ATTRIB_NORMAL;
 		vbd.attrib[1].format   = Graphics::ATTRIB_FORMAT_FLOAT3;
-		vbd.attrib[2].semantic = Graphics::ATTRIB_DIFFUSE;
-		vbd.attrib[2].format   = Graphics::ATTRIB_FORMAT_UBYTE4;
-		vbd.attrib[3].semantic = Graphics::ATTRIB_UV0;
-		vbd.attrib[3].format   = Graphics::ATTRIB_FORMAT_FLOAT2;
+		vbd.attrib[2].semantic = Graphics::ATTRIB_UV0;
+		vbd.attrib[2].format   = Graphics::ATTRIB_FORMAT_FLOAT2;
 		vbd.numVertices = ctx->NUMVERTICES();
 		vbd.usage = Graphics::BUFFER_USAGE_STATIC;
 		m_vertexBuffer.reset(renderer->CreateVertexBuffer(vbd));
 
+		// build patch texture
+		const Color3ub *pColr = colors.get();
+		const vector2f texSize(GEOPATCH_TEXTURE_SIZE, GEOPATCH_TEXTURE_SIZE);
+		const Graphics::TextureDescriptor texDesc(Graphics::TEXTURE_RGB_888, texSize, Graphics::LINEAR_CLAMP, false, false, false, 0, Graphics::TEXTURE_2D);
+		m_patchTexture.Reset(renderer->CreateTexture(texDesc));
+		m_patchTexture->Update(static_cast<void*>(colors.get()), texSize, Graphics::TEXTURE_RGB_888);
+		colors.reset();
+
+		// populate vertex buffer
 		GeoPatchContext::VBOVertex* VBOVtxPtr = m_vertexBuffer->Map<GeoPatchContext::VBOVertex>(Graphics::BUFFER_MAP_WRITE);
 		assert(m_vertexBuffer->GetDesc().stride == sizeof(GeoPatchContext::VBOVertex));
 
@@ -88,7 +97,6 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 		const double frac = ctx->GetFrac();
 		const double *pHts = heights.get();
 		const vector3f *pNorm = normals.get();
-		const Color3ub *pColr = colors.get();
 
 		double minh = DBL_MAX;
 
@@ -111,14 +119,8 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 				vtxPtr->norm = norma;
 				++pNorm; // next normal
 
-				vtxPtr->col[0] = pColr->r;
-				vtxPtr->col[1] = pColr->g;
-				vtxPtr->col[2] = pColr->b;
-				vtxPtr->col[3] = 255;
-				++pColr; // next colour
-
 				// uv coords
-				vtxPtr->uv.x = 1.0f - xFrac;
+				vtxPtr->uv.x = 1.0f - xFrac;	// must be inverted for detail texturing to work
 				vtxPtr->uv.y = yFrac;
 
 				++vtxPtr; // next vertex
@@ -142,7 +144,6 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 			GeoPatchContext::VBOVertex* vtxInr = &VBOVtxPtr[innerLeft + (y*edgeLen)];
 			vtxPtr->pos = vector3f(p);
 			vtxPtr->norm = vtxInr->norm;
-			vtxPtr->col = vtxInr->col;
 			vtxPtr->uv = vtxInr->uv;
 		}
 		// right-edge
@@ -156,7 +157,6 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 			GeoPatchContext::VBOVertex* vtxInr = &VBOVtxPtr[innerRight + (y*edgeLen)];
 			vtxPtr->pos = vector3f(p);
 			vtxPtr->norm = vtxInr->norm;
-			vtxPtr->col = vtxInr->col;
 			vtxPtr->uv = vtxInr->uv;
 		}
 		// ----------------------------------------------------
@@ -177,7 +177,6 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 			GeoPatchContext::VBOVertex* vtxInr = &VBOVtxPtr[x + (innerTop*edgeLen)];
 			vtxPtr->pos = vector3f(p);
 			vtxPtr->norm = vtxInr->norm;
-			vtxPtr->col = vtxInr->col;
 			vtxPtr->uv = vtxInr->uv;
 		}
 		// bottom-edge
@@ -192,7 +191,6 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 			GeoPatchContext::VBOVertex* vtxInr = &VBOVtxPtr[x + (innerBottom * edgeLen)];
 			vtxPtr->pos = vector3f(p);
 			vtxPtr->norm = vtxInr->norm;
-			vtxPtr->col = vtxInr->col;
 			vtxPtr->uv = vtxInr->uv;
 		}
 		// ----------------------------------------------------
@@ -228,7 +226,6 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 
 		// Don't need this anymore so throw it away
 		normals.reset();
-		colors.reset();
 
 #ifdef DEBUG_BOUNDING_SPHERES
 		RefCountedPtr<Graphics::Material> mat(Pi::renderer->CreateMaterial(Graphics::MaterialDescriptor()));
@@ -268,6 +265,7 @@ void GeoPatch::Render(Graphics::Renderer *renderer, const vector3d &campos, cons
 		for (int i=0; i<NUM_KIDS; i++) kids[i]->Render(renderer, campos, modelView, frustum);
 	} else if (heights) {
 		RefCountedPtr<Graphics::Material> mat = geosphere->GetSurfaceMaterial();
+		mat->texture2 = m_patchTexture.Get();
 		Graphics::RenderState *rs = geosphere->GetSurfRenderState();
 
 		const vector3d relpos = clipCentroid - campos;
@@ -337,7 +335,7 @@ void GeoPatch::LODUpdate(const vector3d &campos, const Graphics::Frustum &frustu
 			mHasJobRequest = true;
 
 			SQuadSplitRequest *ssrd = new SQuadSplitRequest(v0, v1, v2, v3, centroid.Normalized(), m_depth,
-						geosphere->GetSystemBody()->GetPath(), mPatchID, ctx->GetEdgeLen()-2,
+						geosphere->GetSystemBody()->GetPath(), mPatchID, ctx->GetEdgeLen()-2, GEOPATCH_TEXTURE_SIZE,
 						ctx->GetFrac(), geosphere->GetTerrain());
 
 			// add to the GeoSphere to be processed at end of all LODUpdate requests
@@ -365,7 +363,7 @@ void GeoPatch::RequestSinglePatch()
         assert(!mHasJobRequest);
 		mHasJobRequest = true;
 		SSingleSplitRequest *ssrd = new SSingleSplitRequest(v0, v1, v2, v3, centroid.Normalized(), m_depth,
-					geosphere->GetSystemBody()->GetPath(), mPatchID, ctx->GetEdgeLen()-2, ctx->GetFrac(), geosphere->GetTerrain());
+					geosphere->GetSystemBody()->GetPath(), mPatchID, ctx->GetEdgeLen()-2, GEOPATCH_TEXTURE_SIZE, ctx->GetFrac(), geosphere->GetTerrain());
 		m_job = Pi::GetAsyncJobQueue()->Queue(new SinglePatchJob(ssrd));
 	}
 }

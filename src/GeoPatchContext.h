@@ -48,7 +48,6 @@ public:
 	{
 		vector3f pos;
 		vector3f norm;
-		Color4ub col;
 		vector2f uv;
 	};
 
