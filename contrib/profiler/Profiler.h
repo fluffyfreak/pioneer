@@ -1,6 +1,9 @@
 #ifndef __PROFILER_H__
 #define __PROFILER_H__
 
+// original author
+// https://floodyberry.wordpress.com/2009/10/07/high-performance-cplusplus-profiling/
+
 #ifdef PIONEER_PROFILER
 #define __PROFILER_ENABLED__
 #endif
