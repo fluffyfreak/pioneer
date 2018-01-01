@@ -20,6 +20,65 @@
 #include <deque>
 #include <algorithm>
 
+#define TEST_BILINEAR 0
+#if TEST_BILINEAR
+#include "BilinearInterpolation.h"
+#include "FileSystem.h"
+#include "PngWriter.h"
+#include "Random.h"
+namespace
+{
+	static void textureDump(const char* destFile, const int width, const int height, const Color* buf)
+	{
+		const std::string dir = "test";
+		FileSystem::userFiles.MakeDirectory(dir);
+		const std::string fname = FileSystem::JoinPathBelow(dir, destFile);
+
+		// pad rows to 4 bytes, which is the default row alignment for OpenGL
+		//const int stride = (3*width + 3) & ~3;
+		const int stride = width * 4;
+
+		write_png(FileSystem::userFiles, fname, &buf[0].r, width, height, stride, 4);
+
+		printf("test %s saved\n", fname.c_str());
+	}
+
+	static void TestBilinearInterpolation() 
+	{ 
+		// testing bilinear interpolation
+		int imageWidth = 256; 
+		int gridSize = 32; 
+		Color *grid2d = new Color[(gridSize + 1) * (gridSize + 1)]; // lattices 
+																	// fill grid with random colors
+		Random randy; randy.seed(453987543);
+		for (int j = 0, k = 0; j <= gridSize; ++j) { 
+			for (int i = 0; i <= gridSize; ++i, ++k) { 
+				grid2d[j * (gridSize + 1) + i] = Color(randy.Double() * 255, randy.Double() * 255, randy.Double() * 255); 
+			} 
+		} 
+		textureDump("source.png", gridSize+1, gridSize+1, grid2d); 
+		// now compute our final image using bilinear interpolation
+		Color *imageData = new Color[imageWidth*imageWidth], *pixel = imageData; 
+		for (int j = 0; j < imageWidth; ++j) { 
+			for (int i = 0; i < imageWidth; ++i) { 
+				// convert i,j to grid coordinates
+				const float gx = i / float(imageWidth) * gridSize; // be careful to interpolate boundaries 
+				const float gy = j / float(imageWidth) * gridSize; // be careful to interpolate boundaries 
+				const int gxi = int(gx); 
+				const int gyi = int(gy); 
+				const Color & c00 = grid2d[gyi * (gridSize + 1) + gxi]; 
+				const Color & c10 = grid2d[gyi * (gridSize + 1) + (gxi + 1)]; 
+				const Color & c01 = grid2d[(gyi + 1) * (gridSize + 1) + gxi]; 
+				const Color & c11 = grid2d[(gyi + 1) * (gridSize + 1) + (gxi + 1)]; 
+				*(pixel++) = Bilinear(gx - gxi, gy - gyi, c00, c10, c01, c11); 
+			} 
+		} 
+		textureDump("bilinear.png", imageWidth, imageWidth, imageData); 
+		delete [] imageData; 
+	}
+}
+#endif // TEST_BILINEAR
+
 RefCountedPtr<GeoPatchContext> GeoSphere::s_patchContext;
 
 // must be odd numbers
@@ -38,6 +97,9 @@ static std::vector<GeoSphere*> s_allGeospheres;
 
 void GeoSphere::Init()
 {
+#if TEST_BILINEAR
+	TestBilinearInterpolation();
+#endif
 	s_patchContext.Reset(new GeoPatchContext(detail_edgeLen[Pi::detail.planets > 4 ? 4 : Pi::detail.planets]));
 }
 

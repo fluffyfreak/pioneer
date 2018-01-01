@@ -58,6 +58,8 @@ struct Color4ub {
 	Color4ub operator*(const Color4ub &c) const { return Color4ub(INV255(c.r)*r, INV255(c.g)*g, INV255(c.b)*b, INV255(c.a)*a); }
 	Color4ub operator/(const float f) const		{ return Color4ub(Uint8(r/f), Uint8(g/f), Uint8(b/f), Uint8(a/f)); }
 
+	friend Color4ub operator*(const float f, const Color4ub &c) { return c*f; }
+
 	friend bool operator==(const Color4ub& aIn, const Color4ub& bIn) { return ((aIn.r == bIn.r) && (aIn.g == bIn.g) && (aIn.b == bIn.b) && (aIn.a == bIn.a)); }
 	friend bool operator!=(const Color4ub& aIn, const Color4ub& bIn) { return ((aIn.r != bIn.r) || (aIn.g != bIn.g) || (aIn.b != bIn.b) || (aIn.a != bIn.a)); }
 
@@ -93,6 +95,8 @@ struct Color3ub {
 	Color3ub operator*(const float f) const { return Color3ub(Uint8(f*r), Uint8(f*g), Uint8(f*b)); }
 	Color3ub operator*(const Color3ub &c) const { return Color3ub(INV255(c.r)*r, INV255(c.g)*g, INV255(c.b)*b); }
 	Color3ub operator/(const float f) const { return Color3ub(Uint8(r/f), Uint8(g/f), Uint8(b/f)); }
+
+	friend Color3ub operator*(const float f, const Color3ub &c) { return c*f; }
 
 	Color4f ToColor4f() const { return Color4f(r/255.0f, g/255.0f, b/255.0f); }
 
