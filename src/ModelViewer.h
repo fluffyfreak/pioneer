@@ -40,6 +40,7 @@ private:
 	void CreateTestResources();
 	void DrawBackground();
 	void DrawGrid(const matrix4x4f &trans, float radius);
+	void DrawLights(const matrix4x4f &trans);
 	void DrawModel(const matrix4x4f &mv);
 	void MainLoop();
 	void OnAnimChanged(unsigned int, const std::string&);
@@ -79,6 +80,7 @@ private:
 		float gridInterval;
 		int lightPreset;
 		bool orthoView;
+		bool showLightLocators;
 
 		Options();
 	};
@@ -96,7 +98,7 @@ private:
 	float m_baseDistance;
 	Random m_rng;
 	SceneGraph::Animation *m_currentAnimation;
-	SceneGraph::Model *m_model;
+	std::unique_ptr<SceneGraph::Model> m_model;
 	Options m_options;
 	float m_landingMinOffset;
 	std::unique_ptr<NavLights> m_navLights;

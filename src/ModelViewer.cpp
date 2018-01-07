@@ -37,6 +37,7 @@ ModelViewer::Options::Options()
 , gridInterval(10.f)
 , lightPreset(0)
 , orthoView(false)
+, showLightLocators(false)
 {
 }
 
@@ -101,7 +102,6 @@ ModelViewer::ModelViewer(Graphics::Renderer *r, LuaManager *lm)
 , m_baseDistance(100.0f)
 , m_rng(time(0))
 , m_currentAnimation(0)
-, m_model(0)
 , m_modelName("")
 {
 	OS::RedirectStdio();
@@ -288,7 +288,7 @@ bool ModelViewer::OnRandomColor(UI::Widget*)
 
 	SceneGraph::ModelSkin skin;
 	skin.SetRandomColors(m_rng);
-	skin.Apply(m_model);
+	skin.Apply(m_model.get());
 
 	// We need this flag setting so that we don't override what we're changing in OnModelColorsChanged
 	m_settingColourSliders = true;
@@ -421,7 +421,7 @@ void ModelViewer::ClearLog()
 
 void ModelViewer::ClearModel()
 {
-	delete m_model; m_model = 0;
+	m_model.reset();
 	m_gunModel.reset();
 	m_scaleModel.reset();
 
@@ -520,6 +520,19 @@ void ModelViewer::DrawGrid(const matrix4x4f &trans, float radius)
 	Graphics::Drawables::GetAxes3DDrawable(m_renderer)->Draw(m_renderer);
 }
 
+void ModelViewer::DrawLights(const matrix4x4f &trans)
+{
+	//assert(m_options.showGrid);
+	const Uint32 numLights = m_renderer->GetNumLights();
+	for(Uint32 li=0; li<numLights; li++) {
+		const Graphics::Light &light = m_renderer->GetLight(li);
+		const matrix4x4f mv = trans * matrix4x4f::Translation(light.GetPosition()*20) * matrix4x4f::ScaleMatrix(5);
+		
+		m_renderer->SetTransform(mv);
+		Graphics::Drawables::GetAxes3DDrawable(m_renderer)->Draw(m_renderer);
+	}
+}
+
 void ModelViewer::DrawModel(const matrix4x4f &mv)
 {
 	assert(m_model);
@@ -604,6 +617,12 @@ void ModelViewer::MainLoop()
 				mv = matrix4x4f::Translation(0.0f, 0.0f, zd) * rot;
 			}
 
+			if (m_options.showLightLocators) {
+				// this looks bizarre because... it is
+				// lights stay in world space whilst the model is rotated
+				DrawLights(matrix4x4f::Translation(0.0f, 0.0f, zd));
+			}
+
 			// draw the model itself
 			DrawModel(mv);
 
@@ -678,7 +697,7 @@ void ModelViewer::OnDecalChanged(unsigned int index, const std::string &texname)
 
 void ModelViewer::OnLightPresetChanged(unsigned int index, const std::string&)
 {
-	m_options.lightPreset = std::min<unsigned int>(index, 3);
+	m_options.lightPreset = std::min<unsigned int>(index, 6);
 }
 
 void ModelViewer::OnModelColorsChanged(float)
@@ -791,6 +810,9 @@ void ModelViewer::PollEvents()
             case SDLK_o:
                 m_options.orthoView = !m_options.orthoView;
                 break;
+			case SDLK_k:
+				m_options.showLightLocators = !m_options.showLightLocators;
+				break;
 			case SDLK_z:
 				m_options.wireframe = !m_options.wireframe;
 				break;
@@ -938,11 +960,11 @@ void ModelViewer::SetModel(const std::string &filename)
 			//binary loader expects extension-less name. Might want to change this.
 			m_modelName = filename.substr(0, filename.size()-4);
 			SceneGraph::BinaryConverter bc(m_renderer);
-			m_model = bc.Load(m_modelName);
+			m_model.reset( bc.Load(m_modelName) );
 		} else {
 			m_modelName = filename;
 			SceneGraph::Loader loader(m_renderer, true);
-			m_model = loader.LoadModel(filename);
+			m_model.reset( loader.LoadModel(filename) );
 
 			//dump warnings
 			for (std::vector<std::string>::const_iterator it = loader.GetLogMessages().begin();
@@ -953,14 +975,14 @@ void ModelViewer::SetModel(const std::string &filename)
 			}
 		}
 
-		Shields::ReparentShieldNodes(m_model);
+		Shields::ReparentShieldNodes(m_model.get());
 
 		//set decal textures, max 4 supported.
 		//Identical texture at the moment
 		OnDecalChanged(0, "pioneer");
 		Output("\n\n");
 
-		SceneGraph::DumpVisitor d(m_model);
+		SceneGraph::DumpVisitor d(m_model.get());
 		m_model->GetRoot()->Accept(d);
 		AddLog(d.GetModelStatistics());
 
@@ -974,13 +996,13 @@ void ModelViewer::SetModel(const std::string &filename)
 			m_landingMinOffset = 0.0f;
 
 		//note: stations won't demonstrate full docking light logic in MV
-		m_navLights.reset(new NavLights(m_model));
+		m_navLights.reset(new NavLights(m_model.get()));
 		m_navLights->SetEnabled(true);
 
-		m_shields.reset(new Shields(m_model));
+		m_shields.reset(new Shields(m_model.get()));
 	} catch (SceneGraph::LoadingError &err) {
 		// report the error and show model picker.
-		m_model = 0;
+		m_model.reset();
 		AddLog(stringf("Could not load model %0: %1", filename, err.what()));
 	}
 
@@ -1162,7 +1184,9 @@ void ModelViewer::SetupUI()
 			->AddOption("1  Front white")
 			->AddOption("2  Two-point")
 			->AddOption("3  Backlight")
-			//->AddOption("4  Nuts")
+			->AddOption("4  Two-point-rotating")
+			->AddOption("5  4, many colours")
+			->AddOption("6  1 side white")
 	);
 	lightSelector->SetSelectedOption("1  Front white");
 	m_options.lightPreset = 0;
@@ -1342,11 +1366,23 @@ void ModelViewer::UpdateLights()
 		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0,-90), Color(13, 13, 26), Color::WHITE));
 		break;
 	case 3:
+	{
+		static float yaw = 0;
+		yaw+=1.0f;
+		yaw=fmod(yaw,360.0f);
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(yaw,0), Color(230, 204, 204), Color(255)));
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(-30,-90), Color(178, 128, 0), Color(255)));
+		break;
+	}
+	case 4:
 		//4 lights
 		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, 90), Color::YELLOW, Color::WHITE));
 		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, -90), Color::GREEN, Color::WHITE));
 		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, 45), Color::BLUE, Color::WHITE));
 		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0, -45), Color::WHITE, Color::WHITE));
+		break;
+	case 5:
+		lights.push_back(Light(Light::LIGHT_DIRECTIONAL, az_el_to_dir(0,0), Color(255), Color(255)));
 		break;
 	};
 
