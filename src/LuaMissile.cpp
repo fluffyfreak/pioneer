@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaMissile.h"
@@ -126,7 +126,7 @@ template <> const char *LuaObject<Missile>::s_type = "Missile";
 
 template <> void LuaObject<Missile>::RegisterClass()
 {
-	static const char *l_parent = "DynamicBody";
+	static const char *l_parent = "ModelBody"; // "DynamicBody";
 
 	static const luaL_Reg l_methods[] = {
 		{ "Arm",     l_missile_arm },

@@ -15,14 +15,6 @@
       "description" : "Alt key on keyboard",
       "message" : "Alt"
    },
-   "ALT_IN_KM" : {
-      "description" : "",
-      "message" : "Alt: %altitude{f.0}km (%vspeed{f.1}km/s)"
-   },
-   "ALT_IN_METRES" : {
-      "description" : "",
-      "message" : "Alt: %altitude{f.0}m (%vspeed{f.1}m/s)"
-   },
    "AND_HIGHLY_COMPLEX_ECOSYSTEM" : {
       "description" : "",
       "message" : "\" و نظام بيئي معقد جدا \""
@@ -155,10 +147,6 @@
       "description" : "",
       "message" : "كربون خام"
    },
-   "CARBON_ORE_DESCRIPTION" : {
-      "description" : "",
-      "message" : "خام الكربون (فحم و زيت) هناك حاجة لتركيب العديد من المواد الكيميائية المفيدة، بما في ذلك المواد البلاستيكية والمواد الغذائية الاصطناعية والأدوية والمنسوجات"
-   },
    "CARGO" : {
       "description" : "",
       "message" : "حمولة"
@@ -222,6 +210,38 @@
    "COMMUNIST" : {
       "description" : "",
       "message" : "اجتماعي"
+   },
+   "COMPASS_E" : {
+      "description" : "Abbreviation for compass direction: East",
+      "message" : "E"
+   },
+   "COMPASS_N" : {
+      "description" : "Abbreviation for compass direction: North",
+      "message" : "N"
+   },
+   "COMPASS_NE" : {
+      "description" : "Abbreviation for compass direction: North East",
+      "message" : "NE"
+   },
+   "COMPASS_NW" : {
+      "description" : "Abbreviation for compass direction: North West",
+      "message" : "NW"
+   },
+   "COMPASS_S" : {
+      "description" : "Abbreviation for compass direction: South",
+      "message" : "S"
+   },
+   "COMPASS_SE" : {
+      "description" : "Abbreviation for compass direction: South East",
+      "message" : "SE"
+   },
+   "COMPASS_SW" : {
+      "description" : "Abbreviation for compass direction: South West",
+      "message" : "SW"
+   },
+   "COMPASS_W" : {
+      "description" : "Abbreviation for compass direction: West",
+      "message" : "W"
    },
    "COMPUTERS" : {
       "description" : "",
@@ -302,10 +322,6 @@
    "DIRECTION" : {
       "description" : "Direction",
       "message" : "\" Dir \""
-   },
-   "DISTANCE_FROM_SHIP_TO_NAV_TARGET" : {
-      "description" : "",
-      "message" : "بعد المركبة عن الهدف"
    },
    "DISTANCE_LY" : {
       "description" : "",
@@ -391,17 +407,9 @@
       "description" : "",
       "message" : "سماد"
    },
-   "FINE_PAID_N" : {
-      "description" : "",
-      "message" : "لقد قمت بدفع الغرامة بمبلغ %fine."
-   },
-   "FINE_PAID_N_BUT_N_REMAINING" : {
-      "description" : "",
-      "message" : "لقد دفعت %paid لكن لا يزال من الفاتورة &fine"
-   },
    "FIRE_LASER" : {
       "description" : "",
-      "message" : "شعاع ناري"
+      "message" : "Fire weapon"
    },
    "FIRE_MISSILE" : {
       "description" : "",
@@ -531,10 +539,6 @@
       "description" : "",
       "message" : "هايدروجين"
    },
-   "HYDROGEN_DESCRIPTION" : {
-      "description" : "",
-      "message" : "يستخدم الهيدروجين في المقام الأول باعتباره وقود الاندماج"
-   },
    "HYPERSPACE" : {
       "description" : "",
       "message" : "القذف"
@@ -574,10 +578,6 @@
    "HYPERSPACE_TARGET" : {
       "description" : "",
       "message" : "القذف الى الهدف"
-   },
-   "HYPERSPACING_IN_N_SECONDS" : {
-      "description" : "",
-      "message" : "سيتم القذف بعد %countdown{f,0} ثانية"
    },
    "H_ATMOSPHERE" : {
       "description" : "",
@@ -627,14 +627,6 @@
       "description" : "",
       "message" : "روئية داخلية"
    },
-   "IN_TRANSIT" : {
-      "description" : "",
-      "message" : "في العبور"
-   },
-   "IN_TRANSIT_TO_N_X_X_X" : {
-      "description" : "",
-      "message" : "العبور الى %system [%x,%y,%z]"
-   },
    "JOY" : {
       "description" : "Short for Joystick",
       "message" : "عصا"
@@ -646,14 +638,6 @@
    "JOY_AXIS" : {
       "description" : "Regarding joystick",
       "message" : "%{sign}%joyname %axis المحور"
-   },
-   "JUMP_COMPLETE" : {
-      "description" : "",
-      "message" : "Jump complete: %percent%%"
-   },
-   "KM_S_RELATIVE_TO" : {
-      "description" : "",
-      "message" : " %speed{f.2} كم/ث الى %frame"
    },
    "L4L5_DISPLAY_MODE_TOGGLE" : {
       "description" : "Either show L4/L5 points or don't",
@@ -677,11 +661,19 @@
    },
    "LASER_FIRE_DETECTED" : {
       "description" : "",
-      "message" : "تم كشف نار الليزر "
+      "message" : "Weapons fire detected."
    },
    "LATITUDE" : {
       "description" : "Short for latitude",
       "message" : "Lat:"
+   },
+   "LATITUDE_NORTH_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'north'",
+      "message" : "N"
+   },
+   "LATITUDE_SOUTH_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'south'",
+      "message" : "S"
    },
    "LEGAL_CURRENT_SYSTEM" : {
       "description" : "Short (tooltip) description of commodity (singular) status in the system the player is currently in",
@@ -694,10 +686,6 @@
    "LIQUID_OXYGEN" : {
       "description" : "",
       "message" : "اوكسجين سائل"
-   },
-   "LIQUID_OXYGEN_DESCRIPTION" : {
-      "description" : "",
-      "message" : "الأكسجين ضروري لدعم الحياة و بعض الصناعات"
    },
    "LIQUOR" : {
       "description" : "",
@@ -714,6 +702,14 @@
    "LONGITUDE" : {
       "description" : "Short for longitude",
       "message" : "Long:"
+   },
+   "LONGITUDE_EAST_ABBREV" : {
+      "description" : "Abbreviation letter for longitude 'east'",
+      "message" : "E"
+   },
+   "LONGITUDE_WEST_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'west'",
+      "message" : "W"
    },
    "MAJOR_EXPORTS" : {
       "description" : "",
@@ -931,10 +927,6 @@
       "description" : "",
       "message" : "سبتمبر"
    },
-   "M_S_RELATIVE_TO" : {
-      "description" : "",
-      "message" : "%speed{f.0} م/ث الى %frame"
-   },
    "NAME_OBJECT" : {
       "description" : "For an item or object",
       "message" : "الاسم"
@@ -1046,10 +1038,6 @@
    "N_DEGREES" : {
       "description" : "",
       "message" : " %angle{f.1} درجة"
-   },
-   "N_DISTANCE_TO_TARGET" : {
-      "description" : "",
-      "message" : "المسافة الى الهدف: %distance"
    },
    "N_EARTH_DAYS" : {
       "description" : "",
@@ -1359,10 +1347,6 @@
       "description" : "Either show no ships, show ships, or show ships + their orbits",
       "message" : "تغيير وضع عرض السفينة."
    },
-   "SHIP_ALTITUDE_ABOVE_TERRAIN" : {
-      "description" : "",
-      "message" : "ارتفاع السفينة فوق الارض"
-   },
    "SHIP_DETECTED_NEARBY" : {
       "description" : "",
       "message" : "تم رصد مركبة قريبة"
@@ -1583,6 +1567,10 @@
       "description" : "",
       "message" : "درجة حرارة السطح"
    },
+   "SWAP_SELECTED_HYPERSPACE_TARGET" : {
+      "description" : "",
+      "message" : "Swap selected and hyperjump target"
+   },
    "SWITCHED_TO_PARENT" : {
       "description" : "Show ship's heading, coordinates are on the celestial sphere (defined by the ecliptic).",
       "message" : "تم تغيير العرض الى احداثيات النظام."
@@ -1735,9 +1723,33 @@
       "description" : "Duration unit: one 60-minute hour",
       "message" : "h"
    },
+   "UNIT_KILOMETERS" : {
+      "description" : "Distance unit: one kilometer",
+      "message" : "km"
+   },
+   "UNIT_KILOMETERS_PER_SECOND" : {
+      "description" : "Speed unit: one kilometer per second",
+      "message" : "km/s"
+   },
    "UNIT_LY" : {
       "description" : "Distance unit: a light year",
       "message" : "ly"
+   },
+   "UNIT_METERS" : {
+      "description" : "Distance unit: one meter",
+      "message" : "m"
+   },
+   "UNIT_METERS_PER_SECOND" : {
+      "description" : "Speed unit: one meter per second",
+      "message" : "m/s"
+   },
+   "UNIT_MILLION_METERS" : {
+      "description" : "Distance unit: one million meters",
+      "message" : "Mm"
+   },
+   "UNIT_MILLION_METERS_PER_SECOND" : {
+      "description" : "Speed unit: one million meters per second",
+      "message" : "Mm/s"
    },
    "UNIT_MINUTES" : {
       "description" : "Duration unit: one 60-second minute",
@@ -1746,6 +1758,10 @@
    "UNIT_SECONDS" : {
       "description" : "Duration unit: one second",
       "message" : "s"
+   },
+   "UNIT_TONNES" : {
+      "description" : "Mass unit: one tonne (t)",
+      "message" : "t"
    },
    "UNIT_WEEKS" : {
       "description" : "Duration unit: one 7-day week",
@@ -1838,10 +1854,6 @@
    "YOUNG_FARMING_COLONY" : {
       "description" : "",
       "message" : "مستعمرة زراعة صغيرة"
-   },
-   "YOU_NO_MONEY" : {
-      "description" : "",
-      "message" : "انت لا تملك اية مال"
    },
    "Z" : {
       "description" : "keybinding: z axis",

@@ -327,6 +327,10 @@
       "description" : "",
       "message" : "Erreur"
    },
+   "ERROR_LANDING_GEAR_DOWN" : {
+      "description" : "",
+      "message" : "Saut hyper-espace impossible: le train d'aterrissage n'est pas rentré!"
+   },
    "ESCAPE_SPEED" : {
       "description" : "",
       "message" : "Vitesse de libération:"
@@ -438,6 +442,318 @@
    "HIGH" : {
       "description" : "Game settings option: for graphics resolution",
       "message" : "Haut"
+   },
+   "HUD_2D_RADAR" : {
+      "description" : "Popup text: the name of the azimuthal equidistant projection radar",
+      "message" : "Projection de Postel (2D)"
+   },
+   "HUD_3D_RADAR" : {
+      "description" : "Popup text: the name of the planar projection radar (traditional frontier-style)",
+      "message" : "Projection planaire 3D"
+   },
+   "HUD_ATMOSPHERIC_PRESSURE" : {
+      "description" : "Tooltip: Atmospheric Pressure.",
+      "message" : "Pression atmosphérique"
+   },
+   "HUD_BACKWARD_GUN_TEMPERATURE" : {
+      "description" : "Tooltip: Backward Gun Temperature.",
+      "message" : "Température de l'armement arrière"
+   },
+   "HUD_BRAKE_DISTANCE_MAIN_THRUSTERS" : {
+      "description" : "Tooltip: The braking distance using the main thrusters.",
+      "message" : "La distance de freinage utilisant les réacteurs principaux"
+   },
+   "HUD_BUTTON_AUTOPILOT_DOCKING" : {
+      "description" : "Tooltip: Autopilot docking",
+      "message" : "Autopilote en cours d'arrimage"
+   },
+   "HUD_BUTTON_AUTOPILOT_ENTERING_ORBIT" : {
+      "description" : "Tooltip: Autopilot entering orbit",
+      "message" : "Autopilote en train d'entrer en orbite"
+   },
+   "HUD_BUTTON_AUTOPILOT_FLYING_TO_TARGET" : {
+      "description" : "Tooltip: Autopilot flying to target",
+      "message" : "Autopilote en train de voler vers la cible"
+   },
+   "HUD_BUTTON_BLASTOFF" : {
+      "description" : "Tooltip: Blastoff",
+      "message" : "Décollage"
+   },
+   "HUD_BUTTON_EQUIPMENT" : {
+      "description" : "Tooltip: Equipment",
+      "message" : "Equipement"
+   },
+   "HUD_BUTTON_EXTERNAL_VIEW" : {
+      "description" : "Tooltip: External camera view",
+      "message" : "Vue extérieure"
+   },
+   "HUD_BUTTON_FIX_ANTINORMAL" : {
+      "description" : "Tooltip: fix heading antinormal",
+      "message" : "Voir direction anti-normale (vers le \"bas\" par rapport au sens de déplacement)"
+   },
+   "HUD_BUTTON_FIX_NORMAL" : {
+      "description" : "Tooltip: fix heading normal",
+      "message" : "Voir direction normale (vers le \"haut\" par rapport au sens de déplacement)"
+   },
+   "HUD_BUTTON_FIX_PROGRADE" : {
+      "description" : "Tooltip: fix heading prograde",
+      "message" : "Voir direction prograde (sens de déplacement)"
+   },
+   "HUD_BUTTON_FIX_RADIAL_IN" : {
+      "description" : "Tooltip: fix heading radially inward",
+      "message" : "Voir direction radiale intérieure (vers le \"centre\" de l'orbite)"
+   },
+   "HUD_BUTTON_FIX_RADIAL_OUT" : {
+      "description" : "Tooltip: fix heading radially outward",
+      "message" : "Voir direction radiale extérieure (vers l'extérieur de l'orbite)"
+   },
+   "HUD_BUTTON_FIX_RETROGRADE" : {
+      "description" : "Tooltip: fix heading retrograde",
+      "message" : "Voir direction rétrograde (vers l'arrière par rapport au sens de déplacement)"
+   },
+   "HUD_BUTTON_HYPERDRIVE_DISABLED" : {
+      "description" : "Tooltip: Hyperdrive disabled (docked or landed)",
+      "message" : "Hyperpropulsion desactivée"
+   },
+   "HUD_BUTTON_INITIATE_HYPERJUMP" : {
+      "description" : "Tooltip: Initiate legal hyperjump",
+      "message" : "Enclencher un saut hyper-espace"
+   },
+   "HUD_BUTTON_INITIATE_ILLEGAL_HYPERJUMP" : {
+      "description" : "Tooltip: Initiate illegal hyperjump",
+      "message" : "Enclenche saut hyper-espace illégal"
+   },
+   "HUD_BUTTON_INTERNAL_VIEW" : {
+      "description" : "Tooltip: Internal camera view",
+      "message" : "Vue cockpit"
+   },
+   "HUD_BUTTON_KILL_ROTATION" : {
+      "description" : "Tooltip: kill rotation",
+      "message" : "Stop la rotation"
+   },
+   "HUD_BUTTON_LANDING_GEAR_IS_DOWN" : {
+      "description" : "Tooltip: Landing gear is down",
+      "message" : "Le train d'atterrissage est baissé"
+   },
+   "HUD_BUTTON_LANDING_GEAR_IS_MOVING" : {
+      "description" : "Tooltip: Landing gear is moving",
+      "message" : "Le train d'atterrissage est en mouvement"
+   },
+   "HUD_BUTTON_LANDING_GEAR_IS_UP" : {
+      "description" : "Tooltip: Landing gear is up",
+      "message" : "Train d'atterrissage rentré"
+   },
+   "HUD_BUTTON_MANUAL_CONTROL" : {
+      "description" : "Tooltip: Manual control",
+      "message" : "Contrôle manuel"
+   },
+   "HUD_BUTTON_ROTATION_DAMPING_IS_OFF" : {
+      "description" : "Tooltip: Rotation damping is off",
+      "message" : "Amortissement de la rotation desenclenchée"
+   },
+   "HUD_BUTTON_ROTATION_DAMPING_IS_ON" : {
+      "description" : "Tooltip: Rotation damping is on",
+      "message" : "Amortissement de la rotation enclenchée"
+   },
+   "HUD_BUTTON_SCANNER" : {
+      "description" : "Tooltip: Scanner",
+      "message" : "Senseurs"
+   },
+   "HUD_BUTTON_SET_SPEED" : {
+      "description" : "Tooltip: set speed",
+      "message" : "Ajuste la vitesse"
+   },
+   "HUD_BUTTON_SHOW_COMMS" : {
+      "description" : "Tooltip: Show comms",
+      "message" : "Affiche les communications"
+   },
+   "HUD_BUTTON_SHOW_PERSONAL_INFO" : {
+      "description" : "Tooltip: Show personal info",
+      "message" : "Affiche les informations personnelles"
+   },
+   "HUD_BUTTON_SIDEREAL_VIEW" : {
+      "description" : "Tooltip: Sidereal camera view",
+      "message" : "Vue sidérale"
+   },
+   "HUD_BUTTON_SWITCH_TO_GALAXY_MAP" : {
+      "description" : "Tooltip: Switch to galaxy map",
+      "message" : "Bascule vers carte galactique"
+   },
+   "HUD_BUTTON_SWITCH_TO_SECTOR_MAP" : {
+      "description" : "Tooltip: Switch to sector map",
+      "message" : "Bascule vers carte du secteur"
+   },
+   "HUD_BUTTON_SWITCH_TO_SYSTEM_MAP" : {
+      "description" : "Tooltip: Switch to system map",
+      "message" : "Bascule vers carte du système"
+   },
+   "HUD_BUTTON_SWITCH_TO_SYSTEM_OVERVIEW" : {
+      "description" : "Tooltip: Switch to system overview",
+      "message" : "Bascule vers vue globale du système"
+   },
+   "HUD_BUTTON_SWITCH_TO_WORLD_VIEW" : {
+      "description" : "Tooltip: Switch to world view",
+      "message" : "Bascule vers la vue du monde"
+   },
+   "HUD_BUTTON_UNDOCK" : {
+      "description" : "Tooltip: Undock",
+      "message" : "Désarrimer"
+   },
+   "HUD_CARGO_MASS" : {
+      "description" : "Cargo Mass",
+      "message" : "Poids de la cargaison"
+   },
+   "HUD_CURRENT_COMBAT_TARGET" : {
+      "description" : "Tooltip: The current combat target.",
+      "message" : "La cible de combat courante"
+   },
+   "HUD_CURRENT_FRAME" : {
+      "description" : "Tooltip: The current frame of reference.",
+      "message" : "Le cadre de référence courant"
+   },
+   "HUD_CURRENT_HEADING" : {
+      "description" : "Tooltip: the current heading.",
+      "message" : "Direction courante"
+   },
+   "HUD_CURRENT_NAV_TARGET" : {
+      "description" : "Tooltip: The current navigational target.",
+      "message" : "La cible de navigation courante"
+   },
+   "HUD_CURRENT_PITCH" : {
+      "description" : "Tooltip: the current pitch.",
+      "message" : "Le tangage courant"
+   },
+   "HUD_CURRENT_ROLL" : {
+      "description" : "Tooltip: the current roll.",
+      "message" : "Le roulis courant"
+   },
+   "HUD_DELTA_V" : {
+      "description" : "Tooltip: The remaining Δv.",
+      "message" : "Δv disponible"
+   },
+   "HUD_DELTA_V_OF_MANEUVER_BURN" : {
+      "description" : "Tooltip: The Δv for the maneuver burn.",
+      "message" : "Le Δv de la manoeuver de mise à feu"
+   },
+   "HUD_DELTA_V_PERCENT" : {
+      "description" : "Tooltip: The remaining Δv in percent.",
+      "message" : "Δv disponible"
+   },
+   "HUD_DISTANCE_TO_SURFACE_OF_FRAME" : {
+      "description" : "Tooltip: Distance to the surface of the frame of reference.",
+      "message" : "Distance du cadre de référence par rapport à la surface"
+   },
+   "HUD_DISTANCE_TO_SURFACE_OF_TARGET" : {
+      "description" : "Tooltip: Distance to the surface of the target.",
+      "message" : "Distance de la cible par rapport à la surface"
+   },
+   "HUD_DURATION_OF_MANEUVER_BURN" : {
+      "description" : "Tooltip: The approximate duration of the maneuver burn with main thrusters.",
+      "message" : "La durée approximative de mise à feu des réacteurs principaux"
+   },
+   "HUD_DURATION_UNTIL_MANEUVER_BURN" : {
+      "description" : "Tooltip: The duration until the middle of the maneuver burn.",
+      "message" : "La durée jusqu'à la moitié de la manoeuvre de mise à feu"
+   },
+   "HUD_FORWARD_GUN_TEMPERATURE" : {
+      "description" : "Tooltip: Forward Gun Temperature.",
+      "message" : "Température de l'armement avant"
+   },
+   "HUD_HULL_STRENGTH" : {
+      "description" : "Tooltip: Hull Strength.",
+      "message" : "Solidité du fuselage"
+   },
+   "HUD_HULL_TEMPERATURE" : {
+      "description" : "Tooltip: Hull Temperature.",
+      "message" : "Température du fuselage"
+   },
+   "HUD_HYPERSPACING_TO_N_IN_N_SECONDS" : {
+      "description" : "",
+      "message" : "Départ en hyper-espace vers {destination} dans {countdown} seconds"
+   },
+   "HUD_INDICATOR_AWAY_FROM_FRAME" : {
+      "description" : "Indicator: Away from the current frame.",
+      "message" : "Distance au cadre de référence"
+   },
+   "HUD_INDICATOR_COMBAT_TARGET_PROGRADE" : {
+      "description" : "Indicator: Prograde direction relative to the current combat target.",
+      "message" : "direction prograde relative à la cible de combat courante"
+   },
+   "HUD_INDICATOR_COMBAT_TARGET_RETROGRADE" : {
+      "description" : "Indicator: Retrograde direction relative to the current combat target.",
+      "message" : "direction prograde relative à la cible de combat courante"
+   },
+   "HUD_INDICATOR_FRAME_PROGRADE" : {
+      "description" : "Indicator: Prograde direction relative to the current frame.",
+      "message" : "Direction prograde relative au cadre de référence courant"
+   },
+   "HUD_INDICATOR_FRAME_RETROGRADE" : {
+      "description" : "Indicator: Retrograde direction relative to the current frame.",
+      "message" : "Direction rétrograde relative au cadre de référence courant"
+   },
+   "HUD_INDICATOR_MANEUVER_PROGRADE" : {
+      "description" : "Indicator: The prograde direction for the maneuver burn.",
+      "message" : "Direction prograde pour la manœuvre de mise à feu"
+   },
+   "HUD_INDICATOR_NAV_TARGET_PROGRADE" : {
+      "description" : "Indicator: Prograde direction relative to the current navigational target.",
+      "message" : "Direction prograde relative à la cible de navigation courante"
+   },
+   "HUD_INDICATOR_NAV_TARGET_RETROGRADE" : {
+      "description" : "Indicator: Retrograde direction relative to the current navigational target.",
+      "message" : "Direction rétrograde relative à la cible de navigation courante"
+   },
+   "HUD_IN_TRANSIT_TO_N_X_X_X" : {
+      "description" : "",
+      "message" : "En transit vers le système {system} [{x},{y},{z}]"
+   },
+   "HUD_JUMP_COMPLETE" : {
+      "description" : "",
+      "message" : "Saut complété à: {percent}%"
+   },
+   "HUD_MASS" : {
+      "description" : "Mass",
+      "message" : "Masse"
+   },
+   "HUD_RADAR_DISTANCE" : {
+      "description" : "Tooltip: Current distance of the radar.",
+      "message" : "Distance radar"
+   },
+   "HUD_REQUEST_TIME_ACCEL" : {
+      "description" : "Tooltip: Request time acceleration {time}",
+      "message" : "Demande d'accélération du temps: {time}"
+   },
+   "HUD_SHIELD_STRENGTH" : {
+      "description" : "Tooltip: Shield Strength.",
+      "message" : "Solidité du bouclier"
+   },
+   "HUD_SHOW_COMBAT_TARGET" : {
+      "description" : "Tooltip: Show the current combat target.",
+      "message" : "Affiche la cible de combat courante"
+   },
+   "HUD_SHOW_FRAME" : {
+      "description" : "Tooltip: Show the current frame of reference.",
+      "message" : "Affiche le cadre de référence courant"
+   },
+   "HUD_SHOW_NAV_TARGET" : {
+      "description" : "Tooltip: Show current navigational target.",
+      "message" : "Affiche la cible de navigation courante"
+   },
+   "HUD_SPEED_OF_APPROACH_TO_FRAME" : {
+      "description" : "Tooltip: The speed of approach towards the frame of reference.",
+      "message" : "La vitesse d'approche vers le cadre de référence"
+   },
+   "HUD_SPEED_OF_APPROACH_TO_TARGET" : {
+      "description" : "Tooltip: The speed of approach towards the target.",
+      "message" : "La vitesse d'approche vers la cible"
+   },
+   "HUD_SPEED_RELATIVE_TO_TARGET" : {
+      "description" : "Tooltip: The speed relative to the target.",
+      "message" : "Vitesse relative par rapport à la cible"
+   },
+   "HUD_THRUST_INDICATOR" : {
+      "description" : "Tooltip: describe what the thrust/velocity indicator shows",
+      "message" : "Affiche la vitesse courante pour chaque direction (lignes fines) et poussée moteur (arrière-plan épais)"
    },
    "HULL_DOES_NOT_REQUIRE_REPAIR" : {
       "description" : "",
@@ -599,6 +915,14 @@
       "description" : "Light year",
       "message" : "al"
    },
+   "MAJOR_EXPORTS_ITEM" : {
+      "description" : "",
+      "message" : "Major exports"
+   },
+   "MAJOR_IMPORTS_ITEM" : {
+      "description" : "",
+      "message" : "Major imports"
+   },
    "MAKE_NEW_FACE" : {
       "description" : "",
       "message" : "Choisir un autre visage"
@@ -674,6 +998,14 @@
    "MINIMUM_CREW" : {
       "description" : "",
       "message" : "Equipage mini."
+   },
+   "MINOR_EXPORTS_ITEM" : {
+      "description" : "",
+      "message" : "Minor exports"
+   },
+   "MINOR_IMPORTS_ITEM" : {
+      "description" : "",
+      "message" : "Minor imports"
    },
    "MISSILE_MOUNTS" : {
       "description" : "",
@@ -1075,6 +1407,10 @@
       "description" : "",
       "message" : "Gestionnaire de station"
    },
+   "STATION_ORBIT" : {
+      "description" : "Information shown in the station loby",
+      "message" : "Nous sommes dans une orbite dont la période est de {orbit_period} jours autour de {parent_body}."
+   },
    "STATUS" : {
       "description" : "",
       "message" : "Status"
@@ -1112,8 +1448,8 @@
       "message" : "Ce vaisseau est trop petit pour votre équipage."
    },
    "TOO_SMALL_TO_TRANSSHIP" : {
-      "description" : "",
-      "message" : "Le vaisseau est trop petit pour transférer votre cargaison."
+      "description" : "Ship market error message",
+      "message" : "Le nouveau vaisseau n'est pas capable de transporter la cargaison courante et l'hyperpropulsion"
    },
    "TOTAL" : {
       "description" : "",

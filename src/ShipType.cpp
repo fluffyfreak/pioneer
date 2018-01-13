@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #define ALLOW_LUA_SHIP_DEF 0
@@ -16,6 +16,8 @@
 #include "json/json.h"
 #include <algorithm>
 
+// TODO: Fix the horrible control flow that makes this exception type necessary.
+struct ShipTypeLoadError {};
 
 std::map<ShipType::Id, const ShipType> ShipType::types;
 std::vector<ShipType::Id> ShipType::player_ships;
@@ -51,15 +53,17 @@ ShipType::ShipType(const Id &_id, const std::string &path)
 	Json::Reader reader;
 	Json::Value data;
 
+	isGlobalColorDefined = false;
+
 	auto fd = FileSystem::gameDataFiles.ReadFile(path);
 	if (!fd) {
 		Output("couldn't open ship def '%s'\n", path.c_str());
-		return;
+		throw ShipTypeLoadError();
 	}
 
 	if (!reader.parse(fd->GetData(), fd->GetData()+fd->GetSize(), data)) {
 		Output("couldn't read ship def '%s': %s\n", path.c_str(), reader.getFormattedErrorMessages().c_str());
-		return;
+		throw ShipTypeLoadError();
 	}
 
 	// determine what kind (tag) of ship this is.
@@ -87,6 +91,89 @@ ShipType::ShipType(const Id &_id, const std::string &path)
 	linThrust[THRUSTER_RIGHT] = data.get("right_thrust", 0.0f).asFloat();
 	angThrust = data.get("angular_thrust", 0.0f).asFloat();
 
+	// Parse global thrusters color
+	bool error = false;
+	int parse = 0;
+	for( Json::Value::iterator thruster_color = data["thruster_global_color"].begin() ; thruster_color != data["thruster_global_color"].end() ; ++thruster_color ) {
+		const std::string colorchannel = thruster_color.key().asString();
+		if (colorchannel.length()!=1) {
+			error = true;
+			break;
+		}
+		if (colorchannel.at(0) == 'r') {
+			globalThrusterColor.r = data["thruster_global_color"].get(colorchannel, 0).asInt();
+			parse++;
+			continue;
+		} else if (colorchannel.at(0) == 'g') {
+			globalThrusterColor.g = data["thruster_global_color"].get(colorchannel, 0).asInt();
+			parse++;
+			continue;
+		} else if (colorchannel.at(0) == 'b') {
+			globalThrusterColor.b = data["thruster_global_color"].get(colorchannel, 0).asInt();
+			parse++;
+			continue;
+		} else {
+			// No 'r', no 'g', no 'b', no good :/
+			error = true;
+			break;
+		}
+	}
+	if (error==true) {
+		Output("In file \"%s.json\" global thrusters custom color must be \"r\",\"g\" and \"b\"\n", modelName.c_str());
+		throw ShipTypeLoadError();
+	} else if (parse>0 && parse<3) {
+		Output("In file \"%s.json\" global thrusters custom color is malformed\n", modelName.c_str());
+		throw ShipTypeLoadError();
+	} else if (parse==3) {
+		globalThrusterColor.a = 255;
+		isGlobalColorDefined = true;
+	}
+	// Parse direction thrusters color
+	for (int i=0; i<THRUSTER_MAX; i++) isDirectionColorDefined[i]=false;
+	error = false;
+	for( Json::Value::iterator thruster_color = data["thruster_direction_color"].begin() ; thruster_color != data["thruster_direction_color"].end() ; ++thruster_color ) {
+		const std::string th_color_dir = thruster_color.key().asString();
+		Json::Value dir_color = data["thruster_direction_color"].get(th_color_dir, 0);
+		Color color;
+		if (!dir_color.isMember("r")||!dir_color.isMember("g")||!dir_color.isMember("b")) {
+			error = true;
+			continue /* for */;
+		} else {
+			color.r = dir_color["r"].asInt();
+			color.g = dir_color["g"].asInt();
+			color.b = dir_color["b"].asInt();
+			color.a = 255;
+		}
+		if (th_color_dir.find("forward")!=std::string::npos) {
+			isDirectionColorDefined[THRUSTER_FORWARD]=true;
+			directionThrusterColor[THRUSTER_FORWARD]= color;
+		}
+		if (th_color_dir.find("retro")!=std::string::npos) {
+			isDirectionColorDefined[THRUSTER_REVERSE]=true;
+			directionThrusterColor[THRUSTER_REVERSE]= color;
+		}
+		if (th_color_dir.find("left")!=std::string::npos) {
+			isDirectionColorDefined[THRUSTER_LEFT]=true;
+			directionThrusterColor[THRUSTER_LEFT]= color;
+		}
+		if (th_color_dir.find("right")!=std::string::npos) {
+			isDirectionColorDefined[THRUSTER_RIGHT]=true;
+			directionThrusterColor[THRUSTER_RIGHT]= color;
+		}
+		if (th_color_dir.find("up")!=std::string::npos) {
+			isDirectionColorDefined[THRUSTER_UP]=true;
+			directionThrusterColor[THRUSTER_UP]= color;
+		}
+		if (th_color_dir.find("down")!=std::string::npos) {
+			isDirectionColorDefined[THRUSTER_DOWN]=true;
+			directionThrusterColor[THRUSTER_DOWN]= color;
+		}
+	}
+	if (error==true) {
+		for (int i=0; i<THRUSTER_MAX; i++) isDirectionColorDefined[i]=false;
+		Output("In file \"%s.json\" directional thrusters custom color must be \"r\",\"g\" and \"b\"\n", modelName.c_str());
+		throw ShipTypeLoadError();
+	}
 	// invert values where necessary
 	linThrust[THRUSTER_FORWARD] *= -1.f;
 	linThrust[THRUSTER_LEFT] *= -1.f;
@@ -114,6 +201,8 @@ ShipType::ShipType(const Id &_id, const std::string &path)
 		const int index = Clamp(atoi(&slotname.c_str()[9]), 1, 3);
 		thrusterUpgrades[index] = data["thrust_upgrades"].get(slotname, 0).asDouble();
 	}
+
+	atmosphericPressureLimit = data.get("atmospheric_pressure_limit", 10.0).asDouble();	// 10 atmosphere is about 90 metres underwater (on Earth)
 
 	{
 		const auto it = slots.find("engine");
@@ -316,18 +405,23 @@ void ShipType::Init()
 		const fs::FileInfo &info = files.Current();
 		if (ends_with_ci(info.GetPath(), ".json")) {
 			const std::string id(info.GetName().substr(0, info.GetName().size()-5));
-			ShipType st = ShipType(id, info.GetPath());
-			types.insert(std::make_pair(st.id, st));
+			try {
+				ShipType st = ShipType(id, info.GetPath());
+				types.insert(std::make_pair(st.id, st));
 
-			// assign the names to the various lists
-			switch( st.tag ) {
-			case TAG_SHIP:				player_ships.push_back(id);				break;
-			case TAG_STATIC_SHIP:		static_ships.push_back(id);				break;
-			case TAG_MISSILE:			missile_ships.push_back(id);			break;
-				break;
-			case TAG_NONE:
-			default:
-				break;
+				// assign the names to the various lists
+				switch( st.tag ) {
+				case TAG_SHIP:				player_ships.push_back(id);				break;
+				case TAG_STATIC_SHIP:		static_ships.push_back(id);				break;
+				case TAG_MISSILE:			missile_ships.push_back(id);			break;
+					break;
+				case TAG_NONE:
+				default:
+					break;
+				}
+			} catch (ShipTypeLoadError) {
+				// TODO: Actual error handling would be nice.
+				Error("Error while loading Ship data (check stdout/output.txt).\n");
 			}
 		}
 	}

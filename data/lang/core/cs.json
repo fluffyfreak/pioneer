@@ -15,14 +15,6 @@
       "description" : "Alt key on keyboard",
       "message" : "Alt"
    },
-   "ALT_IN_KM" : {
-      "description" : "",
-      "message" : "Alt: %altitude{f.0}km (%vspeed{f.1}km/s)"
-   },
-   "ALT_IN_METRES" : {
-      "description" : "",
-      "message" : "Výška: %altitude{f.0}m"
-   },
    "AND_HIGHLY_COMPLEX_ECOSYSTEM" : {
       "description" : "",
       "message" : "\" a velmi složitým ekosystémem.\""
@@ -155,10 +147,6 @@
       "description" : "",
       "message" : "Uhlíková ruda"
    },
-   "CARBON_ORE_DESCRIPTION" : {
-      "description" : "",
-      "message" : "Uhlíkové rudy (uhlí a ropa) jsou potřebné pro syntetizaci mnoha užitečných chemikálií, včetně plastů, syntetických potravin, léků a textilu"
-   },
    "CARGO" : {
       "description" : "",
       "message" : "Náklad"
@@ -222,6 +210,38 @@
    "COMMUNIST" : {
       "description" : "",
       "message" : "Komunismus"
+   },
+   "COMPASS_E" : {
+      "description" : "Abbreviation for compass direction: East",
+      "message" : "E"
+   },
+   "COMPASS_N" : {
+      "description" : "Abbreviation for compass direction: North",
+      "message" : "N"
+   },
+   "COMPASS_NE" : {
+      "description" : "Abbreviation for compass direction: North East",
+      "message" : "NE"
+   },
+   "COMPASS_NW" : {
+      "description" : "Abbreviation for compass direction: North West",
+      "message" : "NW"
+   },
+   "COMPASS_S" : {
+      "description" : "Abbreviation for compass direction: South",
+      "message" : "S"
+   },
+   "COMPASS_SE" : {
+      "description" : "Abbreviation for compass direction: South East",
+      "message" : "SE"
+   },
+   "COMPASS_SW" : {
+      "description" : "Abbreviation for compass direction: South West",
+      "message" : "SW"
+   },
+   "COMPASS_W" : {
+      "description" : "Abbreviation for compass direction: West",
+      "message" : "W"
    },
    "COMPUTERS" : {
       "description" : "",
@@ -302,10 +322,6 @@
    "DIRECTION" : {
       "description" : "Direction",
       "message" : "\" směr \""
-   },
-   "DISTANCE_FROM_SHIP_TO_NAV_TARGET" : {
-      "description" : "",
-      "message" : "Vzdálenost ke zvolenému cíli"
    },
    "DISTANCE_LY" : {
       "description" : "",
@@ -391,17 +407,9 @@
       "description" : "",
       "message" : "Hnojivo"
    },
-   "FINE_PAID_N" : {
-      "description" : "",
-      "message" : "Zaplatili jste pokutu %fine."
-   },
-   "FINE_PAID_N_BUT_N_REMAINING" : {
-      "description" : "",
-      "message" : "Zaplatili jste pokutu %paid, ale ještě zbývá zaplatit %fine."
-   },
    "FIRE_LASER" : {
       "description" : "",
-      "message" : "Vystřelit laser"
+      "message" : "Fire weapon"
    },
    "FIRE_MISSILE" : {
       "description" : "",
@@ -531,10 +539,6 @@
       "description" : "",
       "message" : "Vodík"
    },
-   "HYDROGEN_DESCRIPTION" : {
-      "description" : "",
-      "message" : "Vodík se primárně používá jako fúzní palivo do motorů"
-   },
    "HYPERSPACE" : {
       "description" : "",
       "message" : "Hyperprostor"
@@ -574,10 +578,6 @@
    "HYPERSPACE_TARGET" : {
       "description" : "",
       "message" : "Hyperprostorový cíl"
-   },
-   "HYPERSPACING_IN_N_SECONDS" : {
-      "description" : "",
-      "message" : "Hyperskok za %countdown{f.0} sekund"
    },
    "H_ATMOSPHERE" : {
       "description" : "",
@@ -627,14 +627,6 @@
       "description" : "",
       "message" : "Pohled zevnitř"
    },
-   "IN_TRANSIT" : {
-      "description" : "",
-      "message" : "Na cestě"
-   },
-   "IN_TRANSIT_TO_N_X_X_X" : {
-      "description" : "",
-      "message" : "Na cestě do %system [%x,%y,%z]"
-   },
    "JOY" : {
       "description" : "Short for Joystick",
       "message" : "Joy"
@@ -646,14 +638,6 @@
    "JOY_AXIS" : {
       "description" : "Regarding joystick",
       "message" : "%{sign}%joyname osa %axis"
-   },
-   "JUMP_COMPLETE" : {
-      "description" : "",
-      "message" : "Jump complete: %percent%%"
-   },
-   "KM_S_RELATIVE_TO" : {
-      "description" : "",
-      "message" : "%speed{f.2} km/s relativně k %frame"
    },
    "L4L5_DISPLAY_MODE_TOGGLE" : {
       "description" : "Either show L4/L5 points or don't",
@@ -677,11 +661,19 @@
    },
    "LASER_FIRE_DETECTED" : {
       "description" : "",
-      "message" : "Detekována střelba z laseru."
+      "message" : "Weapons fire detected."
    },
    "LATITUDE" : {
       "description" : "Short for latitude",
       "message" : "Lat:"
+   },
+   "LATITUDE_NORTH_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'north'",
+      "message" : "N"
+   },
+   "LATITUDE_SOUTH_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'south'",
+      "message" : "S"
    },
    "LEGAL_CURRENT_SYSTEM" : {
       "description" : "Short (tooltip) description of commodity (singular) status in the system the player is currently in",
@@ -694,10 +686,6 @@
    "LIQUID_OXYGEN" : {
       "description" : "",
       "message" : "Tekutý kyslík"
-   },
-   "LIQUID_OXYGEN_DESCRIPTION" : {
-      "description" : "",
-      "message" : "Kyslík je potřebný pro systémy podpory života a některé průmyslové procesy"
    },
    "LIQUOR" : {
       "description" : "",
@@ -714,6 +702,14 @@
    "LONGITUDE" : {
       "description" : "Short for longitude",
       "message" : "Long:"
+   },
+   "LONGITUDE_EAST_ABBREV" : {
+      "description" : "Abbreviation letter for longitude 'east'",
+      "message" : "E"
+   },
+   "LONGITUDE_WEST_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'west'",
+      "message" : "W"
    },
    "MAJOR_EXPORTS" : {
       "description" : "",
@@ -931,10 +927,6 @@
       "description" : "",
       "message" : "Zář"
    },
-   "M_S_RELATIVE_TO" : {
-      "description" : "",
-      "message" : "%speed{f.0} m/s relativně k %frame"
-   },
    "NAME_OBJECT" : {
       "description" : "For an item or object",
       "message" : "Jméno"
@@ -1046,10 +1038,6 @@
    "N_DEGREES" : {
       "description" : "",
       "message" : "%angle{f.1}°"
-   },
-   "N_DISTANCE_TO_TARGET" : {
-      "description" : "",
-      "message" : "%distance k cíli"
    },
    "N_EARTH_DAYS" : {
       "description" : "",
@@ -1359,10 +1347,6 @@
       "description" : "Either show no ships, show ships, or show ships + their orbits",
       "message" : "Switch between ship display modes."
    },
-   "SHIP_ALTITUDE_ABOVE_TERRAIN" : {
-      "description" : "",
-      "message" : "Výška nad terénem"
-   },
    "SHIP_DETECTED_NEARBY" : {
       "description" : "",
       "message" : "Detekována loď v blízkosti."
@@ -1583,6 +1567,10 @@
       "description" : "",
       "message" : "Povrchová teplota"
    },
+   "SWAP_SELECTED_HYPERSPACE_TARGET" : {
+      "description" : "",
+      "message" : "Swap selected and hyperjump target"
+   },
    "SWITCHED_TO_PARENT" : {
       "description" : "Show ship's heading, coordinates are on the celestial sphere (defined by the ecliptic).",
       "message" : "Switched heading display to system-wide coordinates."
@@ -1735,9 +1723,33 @@
       "description" : "Duration unit: one 60-minute hour",
       "message" : "h"
    },
+   "UNIT_KILOMETERS" : {
+      "description" : "Distance unit: one kilometer",
+      "message" : "km"
+   },
+   "UNIT_KILOMETERS_PER_SECOND" : {
+      "description" : "Speed unit: one kilometer per second",
+      "message" : "km/s"
+   },
    "UNIT_LY" : {
       "description" : "Distance unit: a light year",
       "message" : "ly"
+   },
+   "UNIT_METERS" : {
+      "description" : "Distance unit: one meter",
+      "message" : "m"
+   },
+   "UNIT_METERS_PER_SECOND" : {
+      "description" : "Speed unit: one meter per second",
+      "message" : "m/s"
+   },
+   "UNIT_MILLION_METERS" : {
+      "description" : "Distance unit: one million meters",
+      "message" : "Mm"
+   },
+   "UNIT_MILLION_METERS_PER_SECOND" : {
+      "description" : "Speed unit: one million meters per second",
+      "message" : "Mm/s"
    },
    "UNIT_MINUTES" : {
       "description" : "Duration unit: one 60-second minute",
@@ -1746,6 +1758,10 @@
    "UNIT_SECONDS" : {
       "description" : "Duration unit: one second",
       "message" : "s"
+   },
+   "UNIT_TONNES" : {
+      "description" : "Mass unit: one tonne (t)",
+      "message" : "t"
    },
    "UNIT_WEEKS" : {
       "description" : "Duration unit: one 7-day week",
@@ -1838,10 +1854,6 @@
    "YOUNG_FARMING_COLONY" : {
       "description" : "",
       "message" : "Nová zemědělská kolonie."
-   },
-   "YOU_NO_MONEY" : {
-      "description" : "",
-      "message" : "Nemáte žádné peníze."
    },
    "Z" : {
       "description" : "keybinding: z axis",

@@ -15,14 +15,6 @@
       "description" : "Alt key on keyboard",
       "message" : "Alt"
    },
-   "ALT_IN_KM" : {
-      "description" : "",
-      "message" : "Höhe: %altitude{f.0}km (%vspeed{f.1}km/s)"
-   },
-   "ALT_IN_METRES" : {
-      "description" : "",
-      "message" : "Höhe: %altitude{f.0}m (%vspeed{f.1}m/s)"
-   },
    "AND_HIGHLY_COMPLEX_ECOSYSTEM" : {
       "description" : "",
       "message" : "\" und einem sehr komplexen Ökosystem.\""
@@ -155,10 +147,6 @@
       "description" : "",
       "message" : "Kohlenstofferz"
    },
-   "CARBON_ORE_DESCRIPTION" : {
-      "description" : "",
-      "message" : "Kohlenstofferze (Kohle und Öl) sind für die Synthese von vielen nützlichen Chemikalien, darunter Kunststoffe, synthetische Lebensmittel, Pharmazeutika und Textilien erforderlich."
-   },
    "CARGO" : {
       "description" : "",
       "message" : "Ladung"
@@ -222,6 +210,38 @@
    "COMMUNIST" : {
       "description" : "",
       "message" : "Kommunistisch"
+   },
+   "COMPASS_E" : {
+      "description" : "Abbreviation for compass direction: East",
+      "message" : "O"
+   },
+   "COMPASS_N" : {
+      "description" : "Abbreviation for compass direction: North",
+      "message" : "N"
+   },
+   "COMPASS_NE" : {
+      "description" : "Abbreviation for compass direction: North East",
+      "message" : "NO"
+   },
+   "COMPASS_NW" : {
+      "description" : "Abbreviation for compass direction: North West",
+      "message" : "NW"
+   },
+   "COMPASS_S" : {
+      "description" : "Abbreviation for compass direction: South",
+      "message" : "S"
+   },
+   "COMPASS_SE" : {
+      "description" : "Abbreviation for compass direction: South East",
+      "message" : "SO"
+   },
+   "COMPASS_SW" : {
+      "description" : "Abbreviation for compass direction: South West",
+      "message" : "SW"
+   },
+   "COMPASS_W" : {
+      "description" : "Abbreviation for compass direction: West",
+      "message" : "W"
    },
    "COMPUTERS" : {
       "description" : "",
@@ -302,10 +322,6 @@
    "DIRECTION" : {
       "description" : "Direction",
       "message" : "\"-Richtung \""
-   },
-   "DISTANCE_FROM_SHIP_TO_NAV_TARGET" : {
-      "description" : "",
-      "message" : "Entfernung zum Navigationsziel"
    },
    "DISTANCE_LY" : {
       "description" : "",
@@ -391,17 +407,9 @@
       "description" : "",
       "message" : "Düngemittel"
    },
-   "FINE_PAID_N" : {
-      "description" : "",
-      "message" : "Sie haben die Geldstrafe von %fine bezahlt."
-   },
-   "FINE_PAID_N_BUT_N_REMAINING" : {
-      "description" : "",
-      "message" : "Sie haben %paid bezahlt, aber Sie müssen noch eine weitere Geldstrafe von %fine bezahlen."
-   },
    "FIRE_LASER" : {
       "description" : "",
-      "message" : "Feuer"
+      "message" : "Waffe abfeuern"
    },
    "FIRE_MISSILE" : {
       "description" : "",
@@ -531,10 +539,6 @@
       "description" : "",
       "message" : "Wasserstoff"
    },
-   "HYDROGEN_DESCRIPTION" : {
-      "description" : "",
-      "message" : "Wasserstoff wird vor allem als Fusionstreibstoff verwendet."
-   },
    "HYPERSPACE" : {
       "description" : "",
       "message" : "Hyperraum"
@@ -574,10 +578,6 @@
    "HYPERSPACE_TARGET" : {
       "description" : "",
       "message" : "Hyperraumsprungsziel"
-   },
-   "HYPERSPACING_IN_N_SECONDS" : {
-      "description" : "",
-      "message" : "Hyperraumsprung in %countdown{f.0} Sekunde(n)"
    },
    "H_ATMOSPHERE" : {
       "description" : "",
@@ -627,14 +627,6 @@
       "description" : "",
       "message" : "Innenansicht"
    },
-   "IN_TRANSIT" : {
-      "description" : "",
-      "message" : "Auf dem Weg"
-   },
-   "IN_TRANSIT_TO_N_X_X_X" : {
-      "description" : "",
-      "message" : "Auf dem Weg nach %system [%x,%y,%z]"
-   },
    "JOY" : {
       "description" : "Short for Joystick",
       "message" : "Joy"
@@ -646,14 +638,6 @@
    "JOY_AXIS" : {
       "description" : "Regarding joystick",
       "message" : "%{sign}%joyname %axis Achse"
-   },
-   "JUMP_COMPLETE" : {
-      "description" : "",
-      "message" : "Sprungfortschritt: %percent%%"
-   },
-   "KM_S_RELATIVE_TO" : {
-      "description" : "",
-      "message" : "%speed{f.2} km/s relativ zu %frame"
    },
    "L4L5_DISPLAY_MODE_TOGGLE" : {
       "description" : "Either show L4/L5 points or don't",
@@ -683,6 +667,14 @@
       "description" : "Short for latitude",
       "message" : "B.:"
    },
+   "LATITUDE_NORTH_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'north'",
+      "message" : "N"
+   },
+   "LATITUDE_SOUTH_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'south'",
+      "message" : "S"
+   },
    "LEGAL_CURRENT_SYSTEM" : {
       "description" : "Short (tooltip) description of commodity (singular) status in the system the player is currently in",
       "message" : "Legal (aktuelles System):"
@@ -694,10 +686,6 @@
    "LIQUID_OXYGEN" : {
       "description" : "",
       "message" : "Flüssiger Sauerstoff"
-   },
-   "LIQUID_OXYGEN_DESCRIPTION" : {
-      "description" : "",
-      "message" : "Sauerstoff wird für die Lebenserhaltungssysteme und einige industrielle Prozesse benötigt."
    },
    "LIQUOR" : {
       "description" : "",
@@ -714,6 +702,14 @@
    "LONGITUDE" : {
       "description" : "Short for longitude",
       "message" : "Länge:"
+   },
+   "LONGITUDE_EAST_ABBREV" : {
+      "description" : "Abbreviation letter for longitude 'east'",
+      "message" : "O"
+   },
+   "LONGITUDE_WEST_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'west'",
+      "message" : "W"
    },
    "MAJOR_EXPORTS" : {
       "description" : "",
@@ -931,10 +927,6 @@
       "description" : "",
       "message" : "Sep"
    },
-   "M_S_RELATIVE_TO" : {
-      "description" : "",
-      "message" : "%speed{f.0} m/s relativ zu %frame"
-   },
    "NAME_OBJECT" : {
       "description" : "For an item or object",
       "message" : "Name"
@@ -1046,10 +1038,6 @@
    "N_DEGREES" : {
       "description" : "",
       "message" : "%angle{f.1}°"
-   },
-   "N_DISTANCE_TO_TARGET" : {
-      "description" : "",
-      "message" : "%distance bis zum Ziel"
    },
    "N_EARTH_DAYS" : {
       "description" : "",
@@ -1359,10 +1347,6 @@
       "description" : "Either show no ships, show ships, or show ships + their orbits",
       "message" : "Zwischen Anzeigemodi des Schiffes umschalten."
    },
-   "SHIP_ALTITUDE_ABOVE_TERRAIN" : {
-      "description" : "",
-      "message" : "Höhe über Bodenniveau"
-   },
    "SHIP_DETECTED_NEARBY" : {
       "description" : "",
       "message" : "Nahes Schiff erfasst."
@@ -1583,6 +1567,10 @@
       "description" : "",
       "message" : "Oberflächentemperatur"
    },
+   "SWAP_SELECTED_HYPERSPACE_TARGET" : {
+      "description" : "",
+      "message" : "Vertausche Auswahl und Hyperraumsprungziel"
+   },
    "SWITCHED_TO_PARENT" : {
       "description" : "Show ship's heading, coordinates are on the celestial sphere (defined by the ecliptic).",
       "message" : "Schalte Kursanzeige auf Systemkoordinaten um."
@@ -1735,9 +1723,33 @@
       "description" : "Duration unit: one 60-minute hour",
       "message" : "h"
    },
+   "UNIT_KILOMETERS" : {
+      "description" : "Distance unit: one kilometer",
+      "message" : "km"
+   },
+   "UNIT_KILOMETERS_PER_SECOND" : {
+      "description" : "Speed unit: one kilometer per second",
+      "message" : "km/s"
+   },
    "UNIT_LY" : {
       "description" : "Distance unit: a light year",
       "message" : "Lj"
+   },
+   "UNIT_METERS" : {
+      "description" : "Distance unit: one meter",
+      "message" : "m"
+   },
+   "UNIT_METERS_PER_SECOND" : {
+      "description" : "Speed unit: one meter per second",
+      "message" : "m/s"
+   },
+   "UNIT_MILLION_METERS" : {
+      "description" : "Distance unit: one million meters",
+      "message" : "Mm"
+   },
+   "UNIT_MILLION_METERS_PER_SECOND" : {
+      "description" : "Speed unit: one million meters per second",
+      "message" : "Mm/s"
    },
    "UNIT_MINUTES" : {
       "description" : "Duration unit: one 60-second minute",
@@ -1746,6 +1758,10 @@
    "UNIT_SECONDS" : {
       "description" : "Duration unit: one second",
       "message" : "s"
+   },
+   "UNIT_TONNES" : {
+      "description" : "Mass unit: one tonne (t)",
+      "message" : "t"
    },
    "UNIT_WEEKS" : {
       "description" : "Duration unit: one 7-day week",
@@ -1838,10 +1854,6 @@
    "YOUNG_FARMING_COLONY" : {
       "description" : "",
       "message" : "Neu gegründete landwirtschaftliche Kolonie."
-   },
-   "YOU_NO_MONEY" : {
-      "description" : "",
-      "message" : "Sie haben kein Geld."
    },
    "Z" : {
       "description" : "keybinding: z axis",

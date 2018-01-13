@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _SPACESTATION_H
@@ -9,7 +9,6 @@
 #include "ModelBody.h"
 #include "NavLights.h"
 #include "Quaternion.h"
-#include "Serializer.h"
 #include "ShipType.h"
 #include "SpaceStationType.h"
 
@@ -31,7 +30,7 @@ public:
 
 	// Should point to SystemBody in Pi::currentSystem
 	SpaceStation(const SystemBody *);
-	SpaceStation() {}
+	SpaceStation() : m_type(nullptr) {}
 	virtual ~SpaceStation();
 	virtual vector3d GetAngVelocity() const { return vector3d(0,m_type->AngVel(),0); }
 	virtual bool OnCollision(Object *b, Uint32 flags, double relVel) override;

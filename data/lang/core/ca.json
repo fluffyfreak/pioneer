@@ -15,14 +15,6 @@
       "description" : "Alt key on keyboard",
       "message" : "Alt"
    },
-   "ALT_IN_KM" : {
-      "description" : "",
-      "message" : "Alt: %altitude{f.0}km (%vspeed{f.1}km/s)"
-   },
-   "ALT_IN_METRES" : {
-      "description" : "",
-      "message" : "Alç: %altitude{f.0}m"
-   },
    "AND_HIGHLY_COMPLEX_ECOSYSTEM" : {
       "description" : "",
       "message" : "\" i un ecosistema molt complex\""
@@ -155,10 +147,6 @@
       "description" : "",
       "message" : "Carbó brut"
    },
-   "CARBON_ORE_DESCRIPTION" : {
-      "description" : "",
-      "message" : "Els hidrocarburs (carbó i petroli) s'utilitzen per a la síntesi de molts productes químics útils, com plàstics, fustes sintètiques, medicaments i productes tèxtils."
-   },
    "CARGO" : {
       "description" : "",
       "message" : "Càrrega"
@@ -222,6 +210,38 @@
    "COMMUNIST" : {
       "description" : "",
       "message" : "Comunista"
+   },
+   "COMPASS_E" : {
+      "description" : "Abbreviation for compass direction: East",
+      "message" : "E"
+   },
+   "COMPASS_N" : {
+      "description" : "Abbreviation for compass direction: North",
+      "message" : "N"
+   },
+   "COMPASS_NE" : {
+      "description" : "Abbreviation for compass direction: North East",
+      "message" : "NE"
+   },
+   "COMPASS_NW" : {
+      "description" : "Abbreviation for compass direction: North West",
+      "message" : "NW"
+   },
+   "COMPASS_S" : {
+      "description" : "Abbreviation for compass direction: South",
+      "message" : "S"
+   },
+   "COMPASS_SE" : {
+      "description" : "Abbreviation for compass direction: South East",
+      "message" : "SE"
+   },
+   "COMPASS_SW" : {
+      "description" : "Abbreviation for compass direction: South West",
+      "message" : "SW"
+   },
+   "COMPASS_W" : {
+      "description" : "Abbreviation for compass direction: West",
+      "message" : "W"
    },
    "COMPUTERS" : {
       "description" : "",
@@ -302,10 +322,6 @@
    "DIRECTION" : {
       "description" : "Direction",
       "message" : "\" Dir \""
-   },
-   "DISTANCE_FROM_SHIP_TO_NAV_TARGET" : {
-      "description" : "",
-      "message" : "Distància de la nau a l'objectiu de navegació"
    },
    "DISTANCE_LY" : {
       "description" : "",
@@ -391,17 +407,9 @@
       "description" : "",
       "message" : "Fems"
    },
-   "FINE_PAID_N" : {
-      "description" : "",
-      "message" : "Heu pagat una multa de %fine."
-   },
-   "FINE_PAID_N_BUT_N_REMAINING" : {
-      "description" : "",
-      "message" : "Ja heu pagat %paid però encara teniu pendents %fine."
-   },
    "FIRE_LASER" : {
       "description" : "",
-      "message" : "Disparar el làser"
+      "message" : "Fire weapon"
    },
    "FIRE_MISSILE" : {
       "description" : "",
@@ -531,10 +539,6 @@
       "description" : "",
       "message" : "Hidrogen"
    },
-   "HYDROGEN_DESCRIPTION" : {
-      "description" : "",
-      "message" : "L'hidrogen s'utilitza com a principal combustible de fusió"
-   },
    "HYPERSPACE" : {
       "description" : "",
       "message" : "Hiperespai"
@@ -574,10 +578,6 @@
    "HYPERSPACE_TARGET" : {
       "description" : "",
       "message" : "Objectiu hiperespacial"
-   },
-   "HYPERSPACING_IN_N_SECONDS" : {
-      "description" : "",
-      "message" : "Hiperspai en %countdown{f.0} seconds"
    },
    "H_ATMOSPHERE" : {
       "description" : "",
@@ -627,14 +627,6 @@
       "description" : "",
       "message" : "Internal view"
    },
-   "IN_TRANSIT" : {
-      "description" : "",
-      "message" : "En trànsit"
-   },
-   "IN_TRANSIT_TO_N_X_X_X" : {
-      "description" : "",
-      "message" : "En trànsit a %system [%x,%y,%z]"
-   },
    "JOY" : {
       "description" : "Short for Joystick",
       "message" : "Joy"
@@ -646,14 +638,6 @@
    "JOY_AXIS" : {
       "description" : "Regarding joystick",
       "message" : "%{sign}%joyname %axis Axis"
-   },
-   "JUMP_COMPLETE" : {
-      "description" : "",
-      "message" : "Jump complete: %percent%%"
-   },
-   "KM_S_RELATIVE_TO" : {
-      "description" : "",
-      "message" : "%speed{f.2} km/s en rel. a %frame"
    },
    "L4L5_DISPLAY_MODE_TOGGLE" : {
       "description" : "Either show L4/L5 points or don't",
@@ -677,11 +661,19 @@
    },
    "LASER_FIRE_DETECTED" : {
       "description" : "",
-      "message" : "S'ha detectat foc de làser."
+      "message" : "Weapons fire detected."
    },
    "LATITUDE" : {
       "description" : "Short for latitude",
       "message" : "Lat:"
+   },
+   "LATITUDE_NORTH_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'north'",
+      "message" : "N"
+   },
+   "LATITUDE_SOUTH_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'south'",
+      "message" : "S"
    },
    "LEGAL_CURRENT_SYSTEM" : {
       "description" : "Short (tooltip) description of commodity (singular) status in the system the player is currently in",
@@ -694,10 +686,6 @@
    "LIQUID_OXYGEN" : {
       "description" : "",
       "message" : "Oxigen líquid"
-   },
-   "LIQUID_OXYGEN_DESCRIPTION" : {
-      "description" : "",
-      "message" : "L'oxigen s'utilitza per sistemes de vida i per algunes indústries"
    },
    "LIQUOR" : {
       "description" : "",
@@ -714,6 +702,14 @@
    "LONGITUDE" : {
       "description" : "Short for longitude",
       "message" : "Long:"
+   },
+   "LONGITUDE_EAST_ABBREV" : {
+      "description" : "Abbreviation letter for longitude 'east'",
+      "message" : "E"
+   },
+   "LONGITUDE_WEST_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'west'",
+      "message" : "W"
    },
    "MAJOR_EXPORTS" : {
       "description" : "",
@@ -931,10 +927,6 @@
       "description" : "",
       "message" : "Set."
    },
-   "M_S_RELATIVE_TO" : {
-      "description" : "",
-      "message" : "%speed{f.0} m/s en rel. a %frame"
-   },
    "NAME_OBJECT" : {
       "description" : "For an item or object",
       "message" : "Nom"
@@ -1046,10 +1038,6 @@
    "N_DEGREES" : {
       "description" : "",
       "message" : "%angle{f.1} graus"
-   },
-   "N_DISTANCE_TO_TARGET" : {
-      "description" : "",
-      "message" : "%distance per objectiu"
    },
    "N_EARTH_DAYS" : {
       "description" : "",
@@ -1359,10 +1347,6 @@
       "description" : "Either show no ships, show ships, or show ships + their orbits",
       "message" : "Switch between ship display modes."
    },
-   "SHIP_ALTITUDE_ABOVE_TERRAIN" : {
-      "description" : "",
-      "message" : "Alçada de la nau sobre el terreny"
-   },
    "SHIP_DETECTED_NEARBY" : {
       "description" : "",
       "message" : "S'ha detectat una nau propera."
@@ -1583,6 +1567,10 @@
       "description" : "",
       "message" : "Temperatura a la superfície"
    },
+   "SWAP_SELECTED_HYPERSPACE_TARGET" : {
+      "description" : "",
+      "message" : "Swap selected and hyperjump target"
+   },
    "SWITCHED_TO_PARENT" : {
       "description" : "Show ship's heading, coordinates are on the celestial sphere (defined by the ecliptic).",
       "message" : "Switched heading display to system-wide coordinates."
@@ -1735,9 +1723,33 @@
       "description" : "Duration unit: one 60-minute hour",
       "message" : "h"
    },
+   "UNIT_KILOMETERS" : {
+      "description" : "Distance unit: one kilometer",
+      "message" : "km"
+   },
+   "UNIT_KILOMETERS_PER_SECOND" : {
+      "description" : "Speed unit: one kilometer per second",
+      "message" : "km/s"
+   },
    "UNIT_LY" : {
       "description" : "Distance unit: a light year",
       "message" : "ly"
+   },
+   "UNIT_METERS" : {
+      "description" : "Distance unit: one meter",
+      "message" : "m"
+   },
+   "UNIT_METERS_PER_SECOND" : {
+      "description" : "Speed unit: one meter per second",
+      "message" : "m/s"
+   },
+   "UNIT_MILLION_METERS" : {
+      "description" : "Distance unit: one million meters",
+      "message" : "Mm"
+   },
+   "UNIT_MILLION_METERS_PER_SECOND" : {
+      "description" : "Speed unit: one million meters per second",
+      "message" : "Mm/s"
    },
    "UNIT_MINUTES" : {
       "description" : "Duration unit: one 60-second minute",
@@ -1746,6 +1758,10 @@
    "UNIT_SECONDS" : {
       "description" : "Duration unit: one second",
       "message" : "s"
+   },
+   "UNIT_TONNES" : {
+      "description" : "Mass unit: one tonne (t)",
+      "message" : "t"
    },
    "UNIT_WEEKS" : {
       "description" : "Duration unit: one 7-day week",
@@ -1838,10 +1854,6 @@
    "YOUNG_FARMING_COLONY" : {
       "description" : "",
       "message" : "Colònia minera de poca edat."
-   },
-   "YOU_NO_MONEY" : {
-      "description" : "",
-      "message" : "No teniu diners."
    },
    "Z" : {
       "description" : "keybinding: z axis",

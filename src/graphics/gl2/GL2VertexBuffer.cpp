@@ -62,7 +62,7 @@ VertexBuffer::VertexBuffer(const VertexBufferDesc &desc) :
 	assert(m_desc.stride > 0);
 	assert(m_desc.numVertices > 0);
 
-	SetVertexCount(m_desc.numVertices);
+	//SetVertexCount(m_desc.numVertices);
 
 	glGenVertexArrays(1, &m_vao);
 	glBindVertexArray(m_vao);
@@ -298,7 +298,7 @@ static inline void CopyPosNormCol(Graphics::VertexBuffer *vb, const Graphics::Ve
 bool VertexBuffer::Populate(const VertexArray &va)
 {
 	assert(va.GetNumVerts()>0);
-	assert(va.GetNumVerts()==m_numVertices);
+	assert(va.GetNumVerts()<=m_capacity);
 	bool result = false;
 	const Graphics::AttributeSet as = va.GetAttributeSet();
 	switch( as ) {
@@ -310,6 +310,7 @@ bool VertexBuffer::Populate(const VertexArray &va)
 	case Graphics::ATTRIB_POSITION | Graphics::ATTRIB_NORMAL | Graphics::ATTRIB_UV0:	CopyPosNormUV0(this, va);	result = true;	break;
 	case Graphics::ATTRIB_POSITION | Graphics::ATTRIB_NORMAL | Graphics::ATTRIB_DIFFUSE:CopyPosNormCol(this, va);	result = true;	break;
 	}
+	SetVertexCount(va.GetNumVerts());
 	return result;
 }
 
@@ -319,7 +320,7 @@ void VertexBuffer::BufferData(const size_t size, void *data)
 	if (GetDesc().usage == BUFFER_USAGE_DYNAMIC) {
 		glBindVertexArray(m_vao);
 		glBindBuffer(GL_ARRAY_BUFFER, m_buffer);
-		glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)size, (GLvoid*)data, GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(size), static_cast<GLvoid*>(data), GL_DYNAMIC_DRAW);
 	}
 }
 
@@ -427,7 +428,7 @@ void IndexBuffer::BufferData(const size_t size, void *data)
 	assert(m_mapMode == BUFFER_MAP_NONE); //must not be currently mapped
 	if (GetUsage() == BUFFER_USAGE_DYNAMIC) {
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_buffer);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)size, (GLvoid*)data, GL_DYNAMIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(size), static_cast<GLvoid*>(data), GL_DYNAMIC_DRAW);
 	}
 }
 

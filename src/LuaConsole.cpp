@@ -1,10 +1,11 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaConsole.h"
 #include "LuaManager.h"
 #include "Pi.h"
 #include "ui/Context.h"
+#include "ui/Margin.h"
 #include "text/TextureFont.h"
 #include "text/TextSupport.h"
 #include "KeyBindings.h"
@@ -50,7 +51,9 @@ LuaConsole::LuaConsole():
 
 	m_scroller = Pi::ui->Scroller()->SetInnerWidget(m_output);
 
-	m_container.Reset(Pi::ui->Margin(10)->SetInnerWidget(
+	// temporary until LuaConsole is moved to lua: move up to clear imgui time window
+	m_container.Reset(Pi::ui->Margin(80, UI::Margin::Direction::BOTTOM)->SetInnerWidget(
+	Pi::ui->Margin(10)->SetInnerWidget(
 		Pi::ui->ColorBackground(Color(0,0,0,0xc0))->SetInnerWidget(
 			Pi::ui->VBox()->PackEnd(UI::WidgetSet(
 				Pi::ui->Expand()->SetInnerWidget(
@@ -59,7 +62,7 @@ LuaConsole::LuaConsole():
 				m_entry
 			))
 		)
-	));
+	)));
 
 	m_container->SetFont(UI::Widget::FONT_MONO_NORMAL);
 

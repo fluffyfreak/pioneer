@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "SystemView.h"
@@ -192,7 +192,7 @@ void TransferPlanner::DecreaseFactor(void) {
 }
 
 std::string TransferPlanner::printFactor(void) {
-	char buf[10];
+	char buf[16];
 	snprintf(buf, sizeof(buf), "%8gx", 10 * m_factor);
 	return std::string(buf);
 }

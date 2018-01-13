@@ -1,8 +1,12 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaObject.h"
 #include "Random.h"
+
+extern "C" {
+#include "jenkins/lookup3.h"
+}
 
 /*
  * Class: Rand
@@ -20,8 +24,8 @@
  * Parameters:
  *
  *   seed - optional, the value to seed the generator with. If omitted it will
- *          be set to the current system (not game) time. seed must be numeric
- *          if given.
+ *          be set to the current system (not game) time.
+ *          seed can be a number or a string.
  *
  * Return:
  *
@@ -37,21 +41,37 @@
  */
 static int l_rand_new(lua_State *l)
 {
-	int seed = int(time(0));
-	if (!lua_isnoneornil(l, 1)) {
-		if (lua_isnumber(l, 1))
-			seed = lua_tointeger(l, 1);
-		else
-			luaL_error(l, "seed must be numeric if given");
+	std::unique_ptr<Random> rng(new Random());
+	switch (lua_type(l, 1)) {
+	case LUA_TSTRING:
+		{
+			size_t sz;
+			const char *str = lua_tolstring(l, 1, &sz);
+
+			// Note, these are inputs as well as outputs! They must be initialised.
+			Uint32 hashes[2] = { 0u, 0u };
+			lookup3_hashlittle2(str, sz, hashes+0, hashes+1);
+			rng->seed(hashes, 2);
+			break;
+		}
+	case LUA_TNUMBER:
+		rng->seed(Uint32(lua_tonumber(l, 1)));
+		break;
+	case LUA_TNIL: // fallthrough
+	case LUA_TNONE:
+		rng->seed(Uint32(time(0)));
+		break;
+	default:
+		return luaL_error(l, "seed must be a number or a string");
 	}
-	LuaObject<Random>::PushToLua(new Random(seed));
+	LuaObject<Random>::PushToLua(rng.release());
 	return 1;
 }
 
 /*
  * Method: Number
  *
- * Generates a real (non-integer) number.
+ * Generates a real (non-integer) number in an open interval
  *
  * > number = rand:Number()
  * > number = rand:Number(max)
@@ -59,11 +79,11 @@ static int l_rand_new(lua_State *l)
  *
  * Parameters:
  *
- *   min - optional, the minimum possible value for the generated number. If
- *         omitted, defaults to 0
+ *   min - optional, lower (exclusive) bound for random number.
+ *         If omitted, defaults to 0.
  *
- *   max - optional, the maximum possible value for the generated number. If
- *         omitted, defaults to a very large number (currently 2^32-1)
+ *   max - optional, upper (exclusive) bound for random number.
+ *         If omitted, defaults to 1.
  *
  * Return:
  *
@@ -91,8 +111,8 @@ static int l_rand_number(lua_State *l)
 		max = lua_tonumber(l, 2);
 	}
 	else {
-        lua_pushnumber(l, rand->Double());
-        return 1;
+		lua_pushnumber(l, rand->Double());
+		return 1;
 	}
 
 	if (min > max)
@@ -181,8 +201,8 @@ static int l_rand_normal(lua_State *l)
 		stddev = 1;
 	}
 	else {
-        lua_pushnumber(l, rand->Normal());
-        return 1;
+		lua_pushnumber(l, rand->Normal());
+		return 1;
 	}
 
 	if (stddev < 0)
@@ -235,8 +255,8 @@ static int l_rand_integer(lua_State *l)
 		max = lua_tointeger(l, 2);
 	}
 	else {
-        lua_pushnumber(l, rand->Int32());
-        return 1;
+		  lua_pushnumber(l, rand->Int32());
+		  return 1;
 	}
 
 	if (min > max)

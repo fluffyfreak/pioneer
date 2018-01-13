@@ -15,14 +15,6 @@
       "description" : "Alt key on keyboard",
       "message" : "Alt"
    },
-   "ALT_IN_KM" : {
-      "description" : "",
-      "message" : "İrt: %altitude{f.0}km (%vspeed{f.1}km/s)"
-   },
-   "ALT_IN_METRES" : {
-      "description" : "",
-      "message" : "İrt: %altitude{f.0}m (%vspeed{f.1}m/s)"
-   },
    "AND_HIGHLY_COMPLEX_ECOSYSTEM" : {
       "description" : "",
       "message" : "\" ve oldukça gelişmiş bir ekosistem\""
@@ -61,7 +53,7 @@
    },
    "AUTOPILOT_DOCK_WITH_STATION" : {
       "description" : "",
-      "message" : "Otopilot: Uzay istasyonuna sabitlen"
+      "message" : "Otopilot: Uzay istasyonuna kenetlen"
    },
    "AUTOPILOT_ENTER_HIGH_ORBIT_AROUND" : {
       "description" : "",
@@ -155,10 +147,6 @@
       "description" : "",
       "message" : "Karbon cevheri"
    },
-   "CARBON_ORE_DESCRIPTION" : {
-      "description" : "",
-      "message" : "Karbon cevherleri (kömür ve petrol) plastik, sentetik yemek, ilaç ve tekstili içeren çok sayıda faydalı kimyasalın sentezi için gerekmektedir."
-   },
    "CARGO" : {
       "description" : "",
       "message" : "Kargo"
@@ -193,11 +181,11 @@
    },
    "CLEARANCE_GRANTED_BAY_N" : {
       "description" : "",
-      "message" : "İzin verildi. %bay nolu sabitlenme bölmesine ilerleyin."
+      "message" : "İzin verildi. %bay nolu kenetlenme bölmesine ilerleyin."
    },
    "CO2_ATMOSPHERE" : {
       "description" : "",
-      "message" : "\" Karbon Diyoksit atmosfer\""
+      "message" : "\" Karbondioksit atmosfer\""
    },
    "COMMA_HIGHLY_VOLCANIC" : {
       "description" : "",
@@ -217,11 +205,43 @@
    },
    "COMMS" : {
       "description" : "",
-      "message" : "İletim"
+      "message" : "İletişim"
    },
    "COMMUNIST" : {
       "description" : "",
       "message" : "Komünist"
+   },
+   "COMPASS_E" : {
+      "description" : "Abbreviation for compass direction: East",
+      "message" : "D"
+   },
+   "COMPASS_N" : {
+      "description" : "Abbreviation for compass direction: North",
+      "message" : "K"
+   },
+   "COMPASS_NE" : {
+      "description" : "Abbreviation for compass direction: North East",
+      "message" : "KD"
+   },
+   "COMPASS_NW" : {
+      "description" : "Abbreviation for compass direction: North West",
+      "message" : "KB"
+   },
+   "COMPASS_S" : {
+      "description" : "Abbreviation for compass direction: South",
+      "message" : "G"
+   },
+   "COMPASS_SE" : {
+      "description" : "Abbreviation for compass direction: South East",
+      "message" : "GD"
+   },
+   "COMPASS_SW" : {
+      "description" : "Abbreviation for compass direction: South West",
+      "message" : "GB"
+   },
+   "COMPASS_W" : {
+      "description" : "Abbreviation for compass direction: West",
+      "message" : "B"
    },
    "COMPUTERS" : {
       "description" : "",
@@ -261,7 +281,7 @@
    },
    "CO_ATMOSPHERE" : {
       "description" : "",
-      "message" : "\" Karbon Monoksit atmosfer\""
+      "message" : "\" Karbonmonoksit atmosfer\""
    },
    "CTRL" : {
       "description" : "Ctrl key on keyboard",
@@ -281,7 +301,7 @@
    },
    "DECREASE_RADAR_RANGE" : {
       "description" : "",
-      "message" : "Decrease radar range"
+      "message" : "Radar menzilini düşür"
    },
    "DECREASE_SET_SPEED" : {
       "description" : "",
@@ -289,7 +309,7 @@
    },
    "DECREASE_TIME_ACCELERATION" : {
       "description" : "",
-      "message" : "Decrease Time Acceleration"
+      "message" : "Zamanı Yavaşlat"
    },
    "DEMOGRAPHICS" : {
       "description" : "",
@@ -301,11 +321,7 @@
    },
    "DIRECTION" : {
       "description" : "Direction",
-      "message" : "\" Dir \""
-   },
-   "DISTANCE_FROM_SHIP_TO_NAV_TARGET" : {
-      "description" : "",
-      "message" : "Gemiden navigasyon hedefine uzaklık"
+      "message" : "\" Yön \""
    },
    "DISTANCE_LY" : {
       "description" : "",
@@ -313,11 +329,11 @@
    },
    "DOCKED" : {
       "description" : "",
-      "message" : "Sabitlendi"
+      "message" : "Kenetlendi"
    },
    "DOCKING" : {
       "description" : "",
-      "message" : "Sabitleniyor"
+      "message" : "Kenetleniyor"
    },
    "DOCKING_CLEARANCE_EXPIRED" : {
       "description" : "",
@@ -391,17 +407,9 @@
       "description" : "",
       "message" : "Gübre"
    },
-   "FINE_PAID_N" : {
-      "description" : "",
-      "message" : "%fine ceza ödediniz."
-   },
-   "FINE_PAID_N_BUT_N_REMAINING" : {
-      "description" : "",
-      "message" : "%paid ödediniz fakat hala ödememiş %fine cezanız var."
-   },
    "FIRE_LASER" : {
       "description" : "",
-      "message" : "Lazeri ateşle"
+      "message" : "Silahı ateşle"
    },
    "FIRE_MISSILE" : {
       "description" : "",
@@ -433,7 +441,7 @@
    },
    "GAME_LOAD_CANNOT_OPEN" : {
       "description" : "",
-      "message" : "Save file '%filename' could not be found (or the game does not have access to open it)."
+      "message" : "'%filename' kayıt dosyası bulunamadı (veya oyunun dosyaya erişim izni yok)."
    },
    "GAME_LOAD_CORRUPT" : {
       "description" : "",
@@ -457,7 +465,7 @@
    },
    "GOVERNMENT_TYPE" : {
       "description" : "",
-      "message" : "Yönetim türü:"
+      "message" : "Hükumet türü:"
    },
    "GRAIN" : {
       "description" : "like wheat or barley",
@@ -473,7 +481,7 @@
    },
    "HAT" : {
       "description" : "Hat switch: Is the top button on a joystick",
-      "message" : "\" Şapka\""
+      "message" : "\" Üst düğme\""
    },
    "HEADING_LOCK_ANTINORMAL" : {
       "description" : "Autopilot direction (perpendicular, down), relative to plane of orbit",
@@ -489,7 +497,7 @@
    },
    "HEADING_LOCK_KILLROT" : {
       "description" : "",
-      "message" : "Döndürmeyi yok et."
+      "message" : "Dönüşü durdur."
    },
    "HEADING_LOCK_NORMAL" : {
       "description" : "Autopilot direction (perpendicular, up), relative to plane of orbit. ",
@@ -531,10 +539,6 @@
       "description" : "",
       "message" : "Hidrojen"
    },
-   "HYDROGEN_DESCRIPTION" : {
-      "description" : "",
-      "message" : "Hidrojen temel olarak füzyon yakıtı olarak kullanılır"
-   },
    "HYPERSPACE" : {
       "description" : "",
       "message" : "Üstuzay"
@@ -553,7 +557,7 @@
    },
    "HYPERSPACE_JUMP_ABORT" : {
       "description" : "Mouse over text for hyperdrive button on ship control panel",
-      "message" : "Disengage Hyperdrive"
+      "message" : "Üstuzay Sürücüsünü Durdur"
    },
    "HYPERSPACE_JUMP_ABORTED" : {
       "description" : "",
@@ -561,23 +565,19 @@
    },
    "HYPERSPACE_JUMP_DISABLED" : {
       "description" : "Mouse over text for hyperdrive button on ship control panel",
-      "message" : "Hyperdrive disabled"
+      "message" : "Üstuzay engellendi"
    },
    "HYPERSPACE_JUMP_ENGAGE" : {
       "description" : "Mouse over text for hyperdrive button on ship control panel",
-      "message" : "Engage Hyperdrive"
+      "message" : "Üstuzay Sürücüsünü Çalıştır"
    },
    "HYPERSPACE_JUMP_FORBIDDEN" : {
       "description" : "Mouse over text for hyperdrive button on ship control panel",
-      "message" : "Hyperdrive forbidden zone"
+      "message" : "Üstuzay yasaklı bölge"
    },
    "HYPERSPACE_TARGET" : {
       "description" : "",
       "message" : "Üstuzay hedefi"
-   },
-   "HYPERSPACING_IN_N_SECONDS" : {
-      "description" : "",
-      "message" : "%countdown{f.0} saniye içinde üstuzaya giriliyor"
    },
    "H_ATMOSPHERE" : {
       "description" : "",
@@ -601,7 +601,7 @@
    },
    "INCREASE_RADAR_RANGE" : {
       "description" : "",
-      "message" : "Increase radar range"
+      "message" : "Radar menzilini arttır"
    },
    "INCREASE_SET_SPEED" : {
       "description" : "",
@@ -609,7 +609,7 @@
    },
    "INCREASE_TIME_ACCELERATION" : {
       "description" : "",
-      "message" : "Increase Time Acceleration"
+      "message" : "Zamanı Hızlandır"
    },
    "INDUSTRIAL_COLONY" : {
       "description" : "",
@@ -627,17 +627,9 @@
       "description" : "",
       "message" : "İç görünüm"
    },
-   "IN_TRANSIT" : {
-      "description" : "",
-      "message" : "Yolculukta"
-   },
-   "IN_TRANSIT_TO_N_X_X_X" : {
-      "description" : "",
-      "message" : "%system [%x,%y,%z] sistemine yolculukta"
-   },
    "JOY" : {
       "description" : "Short for Joystick",
-      "message" : "Neşe"
+      "message" : "Joy"
    },
    "JOYSTICK_INPUT" : {
       "description" : "",
@@ -647,17 +639,9 @@
       "description" : "Regarding joystick",
       "message" : "%{sign}%joyname %axis Ekseni"
    },
-   "JUMP_COMPLETE" : {
-      "description" : "",
-      "message" : "Jump complete: %percent%%"
-   },
-   "KM_S_RELATIVE_TO" : {
-      "description" : "",
-      "message" : "%speed{f.2} km/s görece %frame"
-   },
    "L4L5_DISPLAY_MODE_TOGGLE" : {
       "description" : "Either show L4/L5 points or don't",
-      "message" : "Switch between Lagrange L4/L5 point display modes."
+      "message" : "Lagrange noktaları L4/L5 gösterim şeklini değiştir."
    },
    "LANDED" : {
       "description" : "",
@@ -677,11 +661,19 @@
    },
    "LASER_FIRE_DETECTED" : {
       "description" : "",
-      "message" : "Lazer atışı algılandı."
+      "message" : "Silah atışı algılandı."
    },
    "LATITUDE" : {
       "description" : "Short for latitude",
-      "message" : "Lat:"
+      "message" : "Enl:"
+   },
+   "LATITUDE_NORTH_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'north'",
+      "message" : "K"
+   },
+   "LATITUDE_SOUTH_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'south'",
+      "message" : "G"
    },
    "LEGAL_CURRENT_SYSTEM" : {
       "description" : "Short (tooltip) description of commodity (singular) status in the system the player is currently in",
@@ -694,10 +686,6 @@
    "LIQUID_OXYGEN" : {
       "description" : "",
       "message" : "Sıvı Oksijen"
-   },
-   "LIQUID_OXYGEN_DESCRIPTION" : {
-      "description" : "",
-      "message" : "Oksijen yaşam destek sistemleri ve bazı endüstriyel aşamalar için gereklidir"
    },
    "LIQUOR" : {
       "description" : "",
@@ -713,7 +701,15 @@
    },
    "LONGITUDE" : {
       "description" : "Short for longitude",
-      "message" : "Long:"
+      "message" : "Boyl:"
+   },
+   "LONGITUDE_EAST_ABBREV" : {
+      "description" : "Abbreviation letter for longitude 'east'",
+      "message" : "D"
+   },
+   "LONGITUDE_WEST_ABBREV" : {
+      "description" : "Abbreviation letter for latitude 'west'",
+      "message" : "B"
    },
    "MAJOR_EXPORTS" : {
       "description" : "",
@@ -931,10 +927,6 @@
       "description" : "",
       "message" : "Eyl"
    },
-   "M_S_RELATIVE_TO" : {
-      "description" : "",
-      "message" : "%speed{f.0} m/s görece %frame"
-   },
    "NAME_OBJECT" : {
       "description" : "For an item or object",
       "message" : "İsim"
@@ -969,7 +961,7 @@
    },
    "NOW" : {
       "description" : "In System Orbit View",
-      "message" : "Now"
+      "message" : "Şu an"
    },
    "NO_ALERT" : {
       "description" : "",
@@ -1033,7 +1025,7 @@
    },
    "N_ATMOSPHERE" : {
       "description" : "",
-      "message" : "\" Nitrojen atmosfer\""
+      "message" : "\" Azot atmosfer\""
    },
    "N_CELSIUS" : {
       "description" : "",
@@ -1046,10 +1038,6 @@
    "N_DEGREES" : {
       "description" : "",
       "message" : "%angle{f.1} derece"
-   },
-   "N_DISTANCE_TO_TARGET" : {
-      "description" : "",
-      "message" : "hedefe %distance"
    },
    "N_EARTH_DAYS" : {
       "description" : "",
@@ -1161,7 +1149,7 @@
    },
    "PLANNER_RESET_START" : {
       "description" : "For system orbit view",
-      "message" : "Maneuver start. Click to reset to default."
+      "message" : "Manevra başlangıcı. Varsayılana sıfırlamak için tıkla."
    },
    "PLASTICS" : {
       "description" : "",
@@ -1189,11 +1177,11 @@
    },
    "RADAR_CONTROL" : {
       "description" : "",
-      "message" : "Radar control"
+      "message" : "Radar kontrolü"
    },
    "RADIOACTIVES" : {
       "description" : "",
-      "message" : "Radyoaktif Çöp"
+      "message" : "Radyoaktif Atık"
    },
    "RADIUS" : {
       "description" : "",
@@ -1205,7 +1193,7 @@
    },
    "REQUEST_DOCKING_CLEARANCE" : {
       "description" : "",
-      "message" : "Sabitlenme izni iste"
+      "message" : "Kenetlenme izni iste"
    },
    "RESET" : {
       "description" : "",
@@ -1269,7 +1257,7 @@
    },
    "RUBBISH" : {
       "description" : "",
-      "message" : "Çöp"
+      "message" : "Atık"
    },
    "SCOOP" : {
       "description" : "Is followed by a number, repersenting scoop mounts/slots available to fit cargo scoop and/or fuel scoop",
@@ -1285,7 +1273,7 @@
    },
    "SEARCH_MAP" : {
       "description" : "",
-      "message" : "Haritayı Ara"
+      "message" : "Haritada Ara"
    },
    "SECTOR_COORDINATES" : {
       "description" : "",
@@ -1293,7 +1281,7 @@
    },
    "SECTOR_MAP_VIEW" : {
       "description" : "",
-      "message" : "Sektör Harita Görünümü"
+      "message" : "Sektör Haritası Görünümü"
    },
    "SECTOR_X_Y_Z" : {
       "description" : "",
@@ -1359,10 +1347,6 @@
       "description" : "Either show no ships, show ships, or show ships + their orbits",
       "message" : "Gemi ekran biçimleri arasında geçiş yap."
    },
-   "SHIP_ALTITUDE_ABOVE_TERRAIN" : {
-      "description" : "",
-      "message" : "Geminin arazi üstündeki yüksekliği"
-   },
    "SHIP_DETECTED_NEARBY" : {
       "description" : "",
       "message" : "Yakında gemi algılandı."
@@ -1409,7 +1393,7 @@
    },
    "SMALL_SCALE_PROSPECTING_NO_SETTLEMENTS" : {
       "description" : "",
-      "message" : "Küçük ölçekli maden araştırma. Kayıtlı sakin yok."
+      "message" : "Küçük ölçekli maden araştırma. Kayıtlı yerleşim yok."
    },
    "SOCIAL_DEMOCRACY" : {
       "description" : "",
@@ -1421,7 +1405,7 @@
    },
    "SOME_ESTABLISHED_MINING" : {
       "description" : "",
-      "message" : "Bazı düzgün madencilik."
+      "message" : "Bazı organize madencilik çalışmaları."
    },
    "SOURCE" : {
       "description" : "tell source system of hyperjump entry cloud",
@@ -1569,7 +1553,7 @@
    },
    "STAR_S_BH" : {
       "description" : "",
-      "message" : "Yıldız kara deliği"
+      "message" : "Kara delik"
    },
    "SUGGESTED_RESPONSES" : {
       "description" : "",
@@ -1582,6 +1566,10 @@
    "SURFACE_TEMPERATURE" : {
       "description" : "",
       "message" : "Yüzey sıcaklığı"
+   },
+   "SWAP_SELECTED_HYPERSPACE_TARGET" : {
+      "description" : "",
+      "message" : "Üstuzay hedefini seçili hedefle değiştir"
    },
    "SWITCHED_TO_PARENT" : {
       "description" : "Show ship's heading, coordinates are on the celestial sphere (defined by the ecliptic).",
@@ -1673,7 +1661,7 @@
    },
    "TOGGLE_EQUIPMENT_VIEW" : {
       "description" : "Tooltip for the Equipment View button",
-      "message" : "Equipment View"
+      "message" : "Donanım Göstergesi"
    },
    "TOGGLE_HUD_MODE" : {
       "description" : "",
@@ -1685,11 +1673,11 @@
    },
    "TOGGLE_RADAR_MODE" : {
       "description" : "",
-      "message" : "Toggle radar mode"
+      "message" : "Radar modunu değiştir"
    },
    "TOGGLE_RADAR_VIEW" : {
       "description" : "Tooltip for the Radar View button",
-      "message" : "Radar View"
+      "message" : "Radar görünümü"
    },
    "TOGGLE_ROTATION_DAMPING" : {
       "description" : "",
@@ -1709,7 +1697,7 @@
    },
    "UNDOCKING" : {
       "description" : "Flight state of ship when leaving station",
-      "message" : "Undocking"
+      "message" : "Ayrılınıyor"
    },
    "UNEXPLORED_SYSTEM_NO_DATA" : {
       "description" : "",
@@ -1725,31 +1713,59 @@
    },
    "UNIT_AU" : {
       "description" : "Distance unit: an astronomical unit, radius of Earth's orbit",
-      "message" : "AU"
+      "message" : "AB"
    },
    "UNIT_DAYS" : {
       "description" : "Duration unit: one 24-hour day",
-      "message" : "d"
+      "message" : "g"
    },
    "UNIT_HOURS" : {
       "description" : "Duration unit: one 60-minute hour",
-      "message" : "h"
+      "message" : "s"
+   },
+   "UNIT_KILOMETERS" : {
+      "description" : "Distance unit: one kilometer",
+      "message" : "km"
+   },
+   "UNIT_KILOMETERS_PER_SECOND" : {
+      "description" : "Speed unit: one kilometer per second",
+      "message" : "km/s"
    },
    "UNIT_LY" : {
       "description" : "Distance unit: a light year",
-      "message" : "Iy"
+      "message" : "ıy"
+   },
+   "UNIT_METERS" : {
+      "description" : "Distance unit: one meter",
+      "message" : "m"
+   },
+   "UNIT_METERS_PER_SECOND" : {
+      "description" : "Speed unit: one meter per second",
+      "message" : "m/s"
+   },
+   "UNIT_MILLION_METERS" : {
+      "description" : "Distance unit: one million meters",
+      "message" : "Mm"
+   },
+   "UNIT_MILLION_METERS_PER_SECOND" : {
+      "description" : "Speed unit: one million meters per second",
+      "message" : "Mm/s"
    },
    "UNIT_MINUTES" : {
       "description" : "Duration unit: one 60-second minute",
-      "message" : "m"
+      "message" : "dk"
    },
    "UNIT_SECONDS" : {
       "description" : "Duration unit: one second",
-      "message" : "s"
+      "message" : "sn"
+   },
+   "UNIT_TONNES" : {
+      "description" : "Mass unit: one tonne (t)",
+      "message" : "t"
    },
    "UNIT_WEEKS" : {
       "description" : "Duration unit: one 7-day week",
-      "message" : "w"
+      "message" : "h"
    },
    "UNKNOWN" : {
       "description" : "",
@@ -1781,7 +1797,7 @@
    },
    "VIOLENT_ANARCHY" : {
       "description" : "",
-      "message" : "Kargaşa - Tüm yönetim silahlı gruplarla çekişiyor"
+      "message" : "Kargaşa - Hükumet silahlı gruplarla çekişiyor"
    },
    "WATER" : {
       "description" : "",
@@ -1838,10 +1854,6 @@
    "YOUNG_FARMING_COLONY" : {
       "description" : "",
       "message" : "Genç tarım kolonisi."
-   },
-   "YOU_NO_MONEY" : {
-      "description" : "",
-      "message" : "Hiç paranız yok."
    },
    "Z" : {
       "description" : "keybinding: z axis",

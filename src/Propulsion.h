@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef PROPULSION_H
@@ -12,7 +12,7 @@
 #include "scenegraph/Model.h"
 #include "DynamicBody.h"
 
-enum Thruster { // <enum scope='ShipType' name=ShipTypeThruster prefix=THRUSTER_ public>
+enum Thruster { // <enum scope='Thruster' name=ShipTypeThruster prefix=THRUSTER_ public>
 	THRUSTER_REVERSE,
 	THRUSTER_FORWARD,
 	THRUSTER_UP,
@@ -31,12 +31,12 @@ class Propulsion
 		void Init(DynamicBody *b, SceneGraph::Model *m, const int tank_mass, const double effExVel, const float lin_Thrust[], const float ang_Thrust );
 
 		// Bonus:
-		inline void SetThrustPowerMult( double p ) { m_power_mul = Clamp( p, 1.0, 3.0 ); }
+		void SetThrustPowerMult(double p, const float lin_Thrust[], const float ang_Thrust);
 
 		// Thruster functions
-		inline double GetThrustFwd() const { return -m_linThrust[THRUSTER_FORWARD] * m_power_mul; }
-		inline double GetThrustRev() const { return m_linThrust[THRUSTER_REVERSE] * m_power_mul; }
-		inline double GetThrustUp() const { return m_linThrust[THRUSTER_UP] * m_power_mul; }
+		inline double GetThrustFwd() const { return -m_linThrust[THRUSTER_FORWARD]; }
+		inline double GetThrustRev() const { return m_linThrust[THRUSTER_REVERSE]; }
+		inline double GetThrustUp() const { return m_linThrust[THRUSTER_UP]; }
 		double GetThrustMin() const;
 		vector3d GetThrustMax(const vector3d &dir) const;
 
@@ -44,6 +44,7 @@ class Propulsion
 		inline double GetAccelRev() const { return GetThrustRev() / m_dBody->GetMass(); }
 		inline double GetAccelUp() const { return GetThrustUp() / m_dBody->GetMass(); }
 		inline double GetAccelMin() const { return GetThrustMin() / m_dBody->GetMass(); };
+		inline double GetAccel(Thruster thruster) const { return fabs(m_linThrust[thruster] / m_dBody->GetMass()); }
 
 		inline void SetThrusterState(int axis, double level) {
 			if (m_thrusterFuel <= 0.f) level = 0.0;
@@ -57,11 +58,11 @@ class Propulsion
 		inline void ClearLinThrusterState() { m_thrusters = vector3d(0,0,0); }
 		inline void ClearAngThrusterState() { m_angThrusters = vector3d(0,0,0); }
 
-		inline vector3d GetActualLinThrust() const { return m_thrusters * GetThrustMax( m_thrusters ) * m_power_mul; }
-		inline vector3d GetActualAngThrust() const { return m_angThrust * m_angThrusters * m_power_mul; }
+		inline vector3d GetActualLinThrust() const { return m_thrusters * GetThrustMax( m_thrusters ); }
+		inline vector3d GetActualAngThrust() const { return m_angThrust * m_angThrusters; }
 
 		// Fuel
-		enum FuelState { // <enum scope='Ship' name=ShipFuelStatus prefix=FUEL_ public>
+		enum FuelState { // <enum scope='Propulsion' name=PropulsionFuelStatus prefix=FUEL_ public>
 			FUEL_OK,
 			FUEL_WARNING,
 			FUEL_EMPTY,
@@ -100,7 +101,7 @@ class Propulsion
 		double AIFaceDirection(const vector3d &dir, double av=0);
 		vector3d AIGetLeadDir(const Body *target, const vector3d& targaccel, double projspeed);
 
-	protected:
+  public: // was protected:
 		virtual void SaveToJson(Json::Value &jsonObj, Space *space);
 		virtual void LoadFromJson(const Json::Value &jsonObj, Space *space);
 	private:
@@ -114,7 +115,6 @@ class Propulsion
 		vector3d m_thrusters;
 		vector3d m_angThrusters;
 
-		double m_power_mul;
 		const DynamicBody *m_dBody;
 		SceneGraph::Model *m_smodel;
 };

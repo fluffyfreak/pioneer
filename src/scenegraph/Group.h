@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _SCENEGRAPH_GROUP_H
@@ -22,7 +22,7 @@ public:
 	virtual void AddChild(Node *child);
 	virtual bool RemoveChild(Node *node); //true on success
 	virtual bool RemoveChildAt(unsigned int position); //true on success
-	unsigned int GetNumChildren() const { return m_children.size(); }
+	unsigned int GetNumChildren() const { return static_cast<Uint32>(m_children.size()); }
 	Node* GetChildAt(unsigned int);
 	virtual void Accept(NodeVisitor &v) override;
 	virtual void Traverse(NodeVisitor &v) override;

@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Graphics.h"
@@ -75,15 +75,6 @@ Renderer* Init(Settings vs)
 		vs.height = modes.front().height;
 	}
 
-	WindowSDL *window = new WindowSDL(vs, "Pioneer");
-	if (vs.rendererType == Graphics::RENDERER_DUMMY) {
-		width = vs.width;
-		height = vs.height;
-	} else {
-		width = window->GetWidth();
-		height = window->GetHeight();
-	}
-
 	// We deliberately ignore the value from GL_NUM_COMPRESSED_TEXTURE_FORMATS, because some drivers
 	// choose not to list any formats (despite supporting texture compression). See issue #3132.
 	// This is (probably) allowed by the spec, which states that only formats which are "suitable
@@ -91,7 +82,19 @@ Renderer* Init(Settings vs)
 
 	assert(vs.rendererType < MAX_RENDERER_TYPE);
 	assert(rendererCreateFunc[vs.rendererType]);
-	Renderer *renderer = rendererCreateFunc[vs.rendererType](window, vs);
+	Renderer *renderer = rendererCreateFunc[vs.rendererType](vs);
+	if(renderer==nullptr) {
+		Error("Failed to set video mode: %s", SDL_GetError());
+		return nullptr;
+	}
+
+	if (vs.rendererType == Graphics::RENDERER_DUMMY) {
+		width = vs.width;
+		height = vs.height;
+	} else {
+		width = renderer->GetWindowWidth();
+		height = renderer->GetWindowHeight();
+	}
 
 	Output("Initialized %s\n", renderer->GetName());
 

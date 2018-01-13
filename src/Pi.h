@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _PI_H
@@ -32,7 +32,9 @@ class TransferPlanner;
 class UIView;
 class View;
 class SDLGraphics;
+#if ENABLE_SERVER_AGENT
 class ServerAgent;
+#endif
 namespace Graphics { class Renderer; }
 namespace SceneGraph { class Model; }
 namespace Sound { class MusicPlayer; }
@@ -61,7 +63,7 @@ public:
 	static void StartGame();
 	static void RequestEndGame(); // request that the game is ended as soon as safely possible
 	static void EndGame();
-	static void Start();
+	static void Start(const int& startPlanet);
 	static void MainLoop();
 	static void TombStoneLoop();
 	static void OnChangeDetailLevel();
@@ -87,8 +89,6 @@ public:
 	static SDL_JoystickGUID JoystickGUID(int joystick);
 	static void SetMouseYInvert(bool state) { mouseYInvert = state; }
 	static bool IsMouseYInvert() { return mouseYInvert; }
-	static void SetCompactRadar(bool state) { compactRadar = state; }
-	static bool IsRadarCompact() { return compactRadar; }
 	static bool IsNavTunnelDisplayed() { return navTunnelDisplayed; }
 	static void SetNavTunnelDisplayed(bool state) { navTunnelDisplayed = state; }
 	static bool AreSpeedLinesDisplayed() { return speedLinesDisplayed; }
@@ -128,7 +128,9 @@ public:
 
 	static LuaNameGen *luaNameGen;
 
+#if ENABLE_SERVER_AGENT
 	static ServerAgent *serverAgent;
+#endif
 
 	static RefCountedPtr<UI::Context> ui;
     static RefCountedPtr<PiGui> pigui;
@@ -137,7 +139,7 @@ public:
 	static int statSceneTris;
 	static int statNumPatches;
 
-	static void DrawPiGui(double delta, std::string handler = "GAME");
+	static void DrawPiGui(double delta, std::string handler);
 	static void SetView(View *v);
 	static View *GetView() { return currentView; }
 
@@ -202,12 +204,9 @@ private:
 	static char mouseButton[6];
 	static int mouseMotion[2];
 	static bool doingMouseGrab;
-	static bool warpAfterMouseGrab;
-	static int mouseGrabWarpPos[2];
 
 	static bool joystickEnabled;
 	static bool mouseYInvert;
-	static bool compactRadar;
 	struct JoystickState {
 		SDL_Joystick *joystick;
 		SDL_JoystickGUID guid;
@@ -224,14 +223,15 @@ private:
 	static bool bRefreshBackgroundStars;
 	static float amountOfBackgroundStarsDisplayed;
 
-	static Gui::Fixed *menu;
-
 	static Graphics::RenderTarget *renderTarget;
 	static RefCountedPtr<Graphics::Texture> renderTexture;
 	static std::unique_ptr<Graphics::Drawables::TexturedQuad> renderQuad;
 	static Graphics::RenderState *quadRenderState;
 
 	static bool bRequestEndGame;
+
+	static bool isRecordingVideo;
+	static FILE *ffmpegFile;
 };
 
 #endif /* _PI_H */

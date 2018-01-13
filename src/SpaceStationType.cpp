@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "SpaceStationType.h"
@@ -12,6 +12,9 @@
 #include "json/json.h"
 
 #include <algorithm>
+
+// TODO: Fix the horrible control flow that makes this exception type necessary.
+struct StationTypeLoadError {};
 
 std::vector<SpaceStationType> SpaceStationType::surfaceTypes;
 std::vector<SpaceStationType> SpaceStationType::orbitalTypes;
@@ -35,12 +38,12 @@ SpaceStationType::SpaceStationType(const std::string &id_, const std::string &pa
 	auto fd = FileSystem::gameDataFiles.ReadFile(path_);
 	if (!fd) {
 		Output("couldn't open station def '%s'\n", path_.c_str());
-		return;
+		throw StationTypeLoadError();
 	}
 
 	if (!reader.parse(fd->GetData(), fd->GetData()+fd->GetSize(), data)) {
 		Output("couldn't read station def '%s': %s\n", path_.c_str(), reader.getFormattedErrorMessages().c_str());
-		return;
+		throw StationTypeLoadError();
 	}
 
 	modelName = data.get("model", "").asString();
@@ -52,7 +55,7 @@ SpaceStationType::SpaceStationType(const std::string &id_, const std::string &pa
 		dockMethod = ORBITAL;
 	else {
 		Output("couldn't parse station def '%s': unknown type '%s'\n", path_.c_str(), type.c_str());
-		return;
+		throw StationTypeLoadError();
 	}
 
 	angVel = data.get("angular_velocity", 0.0f).asFloat();
@@ -62,8 +65,11 @@ SpaceStationType::SpaceStationType(const std::string &id_, const std::string &pa
 
 	padOffset = data.get("pad_offset", 150.f).asFloat();
 
-	model = Pi::FindModel(modelName);
-	assert(model);
+	model = Pi::FindModel(modelName, /* allowPlaceholder = */ false);
+	if (!model) {
+		Output("couldn't initialize station type '%s' because the corresponding model ('%s') could not be found.\n", path_.c_str(), modelName.c_str());
+		throw StationTypeLoadError();
+	}
 	OnSetupComplete();
 }
 
@@ -131,8 +137,8 @@ void SpaceStationType::OnSetupComplete()
 
 		// find the port and setup the rest of it's information
 		bool bFoundPort = false;
-		matrix4x4f approach1;
-		matrix4x4f approach2;
+		matrix4x4f approach1(0.0);
+		matrix4x4f approach2(0.0);
 		for(auto &rPort : m_ports) {
 			if(rPort.portId == portId) {
 				rPort.minShipSize = std::min(minSize,rPort.minShipSize);
@@ -408,10 +414,15 @@ void SpaceStationType::Init()
 		const fs::FileInfo &info = files.Current();
 		if (ends_with_ci(info.GetPath(), ".json")) {
 			const std::string id(info.GetName().substr(0, info.GetName().size()-5));
-			SpaceStationType st = SpaceStationType(id, info.GetPath());
-			switch (st.dockMethod) {
-				case SURFACE: surfaceTypes.push_back(st); break;
-				case ORBITAL: orbitalTypes.push_back(st); break;
+			try {
+				SpaceStationType st = SpaceStationType(id, info.GetPath());
+				switch (st.dockMethod) {
+					case SURFACE: surfaceTypes.push_back(st); break;
+					case ORBITAL: orbitalTypes.push_back(st); break;
+				}
+			} catch (StationTypeLoadError) {
+				// TODO: Actual error handling would be nice.
+				Error("Error while loading Space Station data (check stdout/output.txt).\n");
 			}
 		}
 	}
@@ -425,4 +436,15 @@ const SpaceStationType* SpaceStationType::RandomStationType(Random &random, cons
 	}
 
 	return &orbitalTypes[ random.Int32(SpaceStationType::orbitalTypes.size()) ];
+}
+
+/*static*/
+const SpaceStationType *SpaceStationType::FindByName(const std::string &name) {
+	for(auto &sst : surfaceTypes)
+		if(sst.id == name)
+			return &sst;
+	for(auto &sst : orbitalTypes)
+		if(sst.id == name)
+			return &sst;
+	return nullptr;
 }
