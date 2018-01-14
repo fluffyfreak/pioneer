@@ -81,7 +81,8 @@ private:
 
 	// methods
 	static SfxManager *AllocSfxInFrame(Frame *f);
-	static vector2f CalculateOffset(const enum SFX_TYPE, const float);
+	static float CalculateBlend(const enum SFX_TYPE type, const float normalisedAge);
+	static vector2f CalculateOffset(const enum SFX_TYPE, const float normalisedAge);
 	static bool SplitMaterialData(const std::string &spec, MaterialData &output);
 	static float NormalisedAge(const enum SFX_TYPE, const float);
 

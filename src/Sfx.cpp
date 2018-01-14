@@ -29,6 +29,10 @@ namespace {
 		const float pixrad = Clamp(Graphics::GetScreenHeight() / trans.Length(), 0.1f, 50.0f);
 		return (size * Graphics::GetFovFactor()) * pixrad;
 	}
+
+	static const float TYPE_EXPLOSION_LIFETIME = 3.2;
+	static const float TYPE_DAMAGE_LIFETIME = 2.0;
+	static const float TYPE_SMOKE_LIFETIME = 8.0;
 };
 
 std::unique_ptr<Graphics::Material> SfxManager::damageParticle;
@@ -93,9 +97,9 @@ void Sfx::TimeStepUpdate(const float timeStep)
 	m_pos += m_vel * double(timeStep);
 
 	switch (m_type) {
-		case TYPE_EXPLOSION:	if (m_age > 3.2) m_type = TYPE_NONE;	break;
-		case TYPE_DAMAGE:		if (m_age > 2.0) m_type = TYPE_NONE;	break;
-		case TYPE_SMOKE:		if (m_age > 8.0) m_type = TYPE_NONE;	break;
+		case TYPE_EXPLOSION:	if (m_age > TYPE_EXPLOSION_LIFETIME) m_type = TYPE_NONE;	break;
+		case TYPE_DAMAGE:		if (m_age > TYPE_DAMAGE_LIFETIME) m_type = TYPE_NONE;	break;
+		case TYPE_SMOKE:		if (m_age > TYPE_SMOKE_LIFETIME) m_type = TYPE_NONE;	break;
 		case TYPE_NONE: break;
 	}
 }
@@ -243,8 +247,8 @@ void SfxManager::RenderAll(Renderer *renderer, Frame *f, const Frame *camFrame)
 			Graphics::RenderState *rs = nullptr;
 			Graphics::Material *material = nullptr;
 			std::vector<vector3f> positions; positions.reserve(numInstances);
-			std::vector<vector2f> prevOffsets; prevOffsets.reserve(numInstances);
 			std::vector<vector2f> currOffsets; currOffsets.reserve(numInstances);
+			std::vector<vector2f> prevOffsets; prevOffsets.reserve(numInstances);
 			std::vector<float> blends; blends.reserve(numInstances);
 			std::vector<float> sizes; sizes.reserve(numInstances);
 			for (size_t i = 0; i < numInstances; i++)
@@ -266,31 +270,33 @@ void SfxManager::RenderAll(Renderer *renderer, Frame *f, const Frame *camFrame)
 						speed = SizeToPixels(pos, inst.m_speed);
 						rs = SfxManager::alphaState;
 						material = explosionParticle.get();
-						typeStep = 1.0 / 3.2;
+						typeStep = 1.0 / TYPE_EXPLOSION_LIFETIME;
 						break;
 					}
 					case TYPE_DAMAGE:
 						speed = SizeToPixels(pos, 20.f);
 						rs = SfxManager::additiveAlphaState;
 						material = damageParticle.get();
-						typeStep = 1.0 / 2.0;
+						typeStep = 1.0 / TYPE_DAMAGE_LIFETIME;
 						break;
 					case TYPE_SMOKE:
-						speed = Clamp(SizeToPixels(pos, (inst.m_speed*inst.m_age)), 0.1f, 50.0f);
+						speed = Clamp(SizeToPixels(pos, (inst.m_speed)), 0.1f, 50.0f);
 						rs = SfxManager::alphaState;
 						material = smokeParticle.get();
-						typeStep = 1.0 / 8.0;
+						typeStep = 1.0 / TYPE_SMOKE_LIFETIME;
 						break;
 				}
 				sizes.push_back(speed);
 
+				const float ageNormCurr = NormalisedAge(type, inst.Age());
+				const float ageNormPrev = Clamp(NormalisedAge(type, inst.Age()) - typeStep, 0.0f, 1.0f);
+
 				// calculate the prevOffset and the currOffset, then the blend stage between then.
-				const vector2f prevOffset(CalculateOffset(type, NormalisedAge(type, inst.Age()-typeStep)));
-				prevOffsets.push_back(prevOffset);
-				const vector2f currOffset(CalculateOffset(type, NormalisedAge(type, inst.Age())));
+				const vector2f currOffset(CalculateOffset(type, ageNormCurr));
 				currOffsets.push_back(currOffset);
-				float blend = 1.0f-(inst.Age()-Uint32(inst.Age()-typeStep));
-				blends.push_back(blend);
+				const vector2f prevOffset(CalculateOffset(type, ageNormPrev));
+				prevOffsets.push_back(prevOffset);
+				blends.push_back(CalculateBlend(type, ageNormPrev));
 				//m_materialData[type].num_textures;
 			}
 
@@ -301,6 +307,17 @@ void SfxManager::RenderAll(Renderer *renderer, Frame *f, const Frame *camFrame)
 	for (Frame* kid : f->GetChildren()) {
 		RenderAll(renderer, kid, camFrame);
 	}
+}
+
+float SfxManager::CalculateBlend(const enum SFX_TYPE type, const float normalisedAge)
+{
+	if(m_materialData[type].effect == Graphics::EFFECT_BILLBOARD_ATLAS) {
+		const float frameMul = normalisedAge * float(m_materialData[type].num_textures - 1);
+		const float spriteframe = Clamp(Uint32(frameMul), 0U, m_materialData[type].num_textures);
+		const float t = frameMul - spriteframe;
+		return 1.0f - t;
+	}
+	return 0.0f;
 }
 
 vector2f SfxManager::CalculateOffset(const enum SFX_TYPE type, const float normalisedAge)
@@ -320,9 +337,9 @@ vector2f SfxManager::CalculateOffset(const enum SFX_TYPE type, const float norma
 float SfxManager::NormalisedAge(const enum SFX_TYPE type, const float age)
 {
 	switch (type) {
-		case TYPE_EXPLOSION:	return (3.2 - age) / 3.2;
-		case TYPE_DAMAGE:		return (2.0 - age) / 2.0;
-		case TYPE_SMOKE:		return (8.0 - age) / 8.0;
+		case TYPE_EXPLOSION:	return (TYPE_EXPLOSION_LIFETIME - age) / TYPE_EXPLOSION_LIFETIME;
+		case TYPE_DAMAGE:		return (TYPE_DAMAGE_LIFETIME - age) / TYPE_DAMAGE_LIFETIME;
+		case TYPE_SMOKE:		return (TYPE_SMOKE_LIFETIME - age) / TYPE_SMOKE_LIFETIME;
 		case TYPE_NONE:			return 0.0f;
 	}
 	return 0.0f;
