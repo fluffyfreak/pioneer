@@ -9,16 +9,18 @@
 #include "Factions.h"
 #include "GameSaveError.h"
 
+// Squarebob squarepants
+#define Square(x) ((x)*(x))
+
 static const unsigned int SYS_NAME_FRAGS = 32;
 static const char *sys_names[SYS_NAME_FRAGS] =
 { "en", "la", "can", "be", "and", "phi", "eth", "ol", "ve", "ho", "a",
   "lia", "an", "ar", "ur", "mi", "in", "ti", "qu", "so", "ed", "ess",
   "ex", "io", "ce", "ze", "fa", "ay", "wa", "da", "ack", "gre" };
+// possible additions: "rad"
 
 bool SectorCustomSystemsGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> galaxy, RefCountedPtr<Sector> sector, GalaxyGenerator::SectorConfig* config)
 {
-	PROFILE_SCOPED()
-
 	const int sx = sector->sx;
 	const int sy = sector->sy;
 	const int sz = sector->sz;
@@ -31,6 +33,7 @@ bool SectorCustomSystemsGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> gala
 	const std::vector<const CustomSystem*> &systems = galaxy->GetCustomSystems()->GetCustomSystemsForSector(sx, sy, sz);
 	if (systems.size() == 0) return true;
 
+	const Sint64 dist = (1 + sx * sx + sy * sy + sz * sz); // no need to calculate earlier, there is an exit condition before this point
 	Uint32 sysIdx = 0;
 	for (std::vector<const CustomSystem*>::const_iterator it = systems.begin(); it != systems.end(); ++it, ++sysIdx) {
 		const CustomSystem *cs = *it;
@@ -49,8 +52,7 @@ bool SectorCustomSystemsGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> gala
 			 * ~500ly - ~700ly (65-90 sectors): gradual
 			 * ~700ly+: unexplored
 			 */
-			int dist = isqrt(1 + sx*sx + sy*sy + sz*sz);
-			if (((dist <= 90) && ( dist <= 65 || rng.Int32(dist) <= 40)) || galaxy->GetFactions()->IsHomeSystem(SystemPath(sx, sy, sz, sysIdx)))
+			if (((dist <= Square(90)) && (dist <= Square(65) || rng.Int32(dist) <= Square(40))) || galaxy->GetFactions()->IsHomeSystem(SystemPath(sx, sy, sz, sysIdx)))
 				s.m_explored = StarSystem::eEXPLORED_AT_START;
 			else
 				s.m_explored = StarSystem::eUNEXPLORED;
@@ -67,7 +69,8 @@ bool SectorCustomSystemsGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> gala
 
 const std::string SectorRandomSystemsGenerator::GenName(RefCountedPtr<Galaxy> galaxy, const Sector& sec, Sector::System &sys, int si, Random &rng)
 {
-	PROFILE_SCOPED()
+	char buf[128];
+	Uint32 weight;
 	std::string name;
 	const int sx = sec.sx;
 	const int sy = sec.sy;
@@ -106,29 +109,31 @@ const std::string SectorRandomSystemsGenerator::GenName(RefCountedPtr<Galaxy> ga
 		default: chance += 16*dist; break;
 	}
 
-	Uint32 weight = rng.Int32(chance);
-	if (weight < 500 || galaxy->GetFactions()->IsHomeSystem(SystemPath(sx, sy, sz, si))) {
+	// rng is only needed if chance > 500, but rewrite would change names in the current universe !IF_UNIVERSE_CHANGE
+	weight = rng.Int32(chance);
+	if (weight < 500 || galaxy->GetFactions()->IsHomeSystem(SystemPath(sx, sy, sz, si)))
+	{
 		/* well done. you get a real name  */
+		// abusing rng. 3-4 calls. one 32 bit rng should be enough to generate 4 billion unique names, why is 128 bits needed?
+		// 32 name fragments can only generate 32*32*32 + 32*32 (= 33792) different names anyways !IF_UNIVERSE_CHANGE
 		int len = rng.Int32(2,3);
 		for (int i=0; i<len; i++) {
 			name += sys_names[rng.Int32(0,SYS_NAME_FRAGS-1)];
 		}
 		name[0] = toupper(name[0]);
 		return name;
-	} else if (weight < 800) {
-		char buf[128];
+	}
+	else
+	if (weight < 800)
+	{
 		snprintf(buf, sizeof(buf), "MJBN %d%+d%+d", rng.Int32(10,999),sx,sy); // MJBN -> Morton Jordan Bennett Norris
 		return buf;
-	} else if (weight < 1200) {
-		char buf[128];
-		snprintf(buf, sizeof(buf), "SC %d%+d%+d", rng.Int32(1000,9999),sx,sy);
-		return buf;
-	} else {
-		char buf[128];
-		snprintf(buf, sizeof(buf), "DSC %d%+d%+d", rng.Int32(1000,9999),sx,sy);
-		return buf;
 	}
+	snprintf(buf, sizeof(buf), ((weight < 1200) ? "SC %d%+d%+d" : "DSC %d%+d%+d"), rng.Int32(1000,9999),sx,sy);
+	return buf;
 }
+
+static const uint8_t NumberOfStarsInSystem[16] = { 4, 3, 3, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 
 bool SectorRandomSystemsGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> galaxy, RefCountedPtr<Sector> sector, GalaxyGenerator::SectorConfig* config)
 {
@@ -140,8 +145,8 @@ bool SectorRandomSystemsGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> gala
 	const int sy = sector->sy;
 	const int sz = sector->sz;
 	const int customCount = static_cast<Uint32>(sector->m_systems.size());
-	const int dist = isqrt(1 + sx*sx + sy*sy + sz*sz);
-	const int freqSqrt = isqrt(1 + sx * sx + sy * sy);
+	const Sint64 freq = (1 + sx * sx + sy * sy);
+	const Sint64 dist = (freq + sz * sz);
 
 	const int numSystems = (rng.Int32(4,20) * galaxy->GetSectorDensity(sx, sy, sz)) >> 8;
 	sector->m_systems.reserve(numSystems);
@@ -149,17 +154,11 @@ bool SectorRandomSystemsGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> gala
 	for (int i=0; i<numSystems; i++) {
 		Sector::System s(sector.Get(), sx, sy, sz, customCount + i);
 
-		switch (rng.Int32(15)) {
-			case 0:
-				s.m_numStars = 4; break;
-			case 1: case 2:
-				s.m_numStars = 3; break;
-			case 3: case 4: case 5: case 6:
-				s.m_numStars = 2; break;
-			default:
-				s.m_numStars = 1; break;
-		}
+		// rng.Int32() & 0xf would be faster than rng.Int32(15) but would alter the universe !IF_UNIVERSE_CHANGE
+		s.m_numStars = NumberOfStarsInSystem[rng.Int32(15)];
 
+		// 10 bits each could satisfy star position, no human would see any difference +-1 on a 0-1023 scale !IF_UNIVERSE_CHANGE
+		// rewrite would change the universe
 		s.m_pos.x = rng.Double(Sector::SIZE);
 		s.m_pos.y = rng.Double(Sector::SIZE);
 		s.m_pos.z = rng.Double(Sector::SIZE);
@@ -169,15 +168,16 @@ bool SectorRandomSystemsGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> gala
 		 * ~500ly - ~700ly (65-90 sectors): gradual
 		 * ~700ly+: unexplored
 		 */
-		if (((dist <= 90) && ( dist <= 65 || rng.Int32(dist) <= 40)) || galaxy->GetFactions()->IsHomeSystem(SystemPath(sx, sy, sz, customCount + i)))
+		if (((dist <= Square(90)) && (dist <= Square(65) || rng.Int32(dist) <= Square(40))) || galaxy->GetFactions()->IsHomeSystem(SystemPath(sx, sy, sz, customCount + i)))
 			s.m_explored = StarSystem::eEXPLORED_AT_START;
 		else
 			s.m_explored = StarSystem::eUNEXPLORED;
 
+		const Uint32 weight = rng.Int32(1000000);
 		// Frequencies are low enough that we probably don't need this anymore.
-		if (freqSqrt > 10)
+		// this checks if sector is close to Sol, to avoid having hypergiants near Sol
+		if (freq > Square(10)) // not near Sol (X,Y only, why?)
 		{
-			const Uint32 weight = rng.Int32(1000000);
 			if (weight < 1) {
 				s.m_starType[0] = SystemBody::TYPE_STAR_IM_BH;  // These frequencies are made up
 			} else if (weight < 3) {
@@ -249,8 +249,7 @@ bool SectorRandomSystemsGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> gala
 			} else {
 				s.m_starType[0] = SystemBody::TYPE_BROWN_DWARF;
 			}
-		} else {
-			const Uint32 weight = rng.Int32(1000000);
+		} else { // sector is close to Sol, no giant stars allowed (X,Y only, why?)
 			if (weight < 100) { // should be 1 but that is boring
 				s.m_starType[0] = SystemBody::TYPE_STAR_O;
 			} else if (weight < 1300) {
@@ -273,6 +272,7 @@ bool SectorRandomSystemsGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> gala
 		}
 		//Output("%d: %d%\n", sx, sy);
 
+		// unweighted star choices, not good? !IF_UNIVERSE_CHANGE
 		if (s.m_numStars > 1) {
 			s.m_starType[1] = SystemBody::BodyType(rng.Int32(SystemBody::TYPE_STAR_MIN, s.m_starType[0]));
 			if (s.m_numStars > 2) {
@@ -283,7 +283,7 @@ bool SectorRandomSystemsGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> gala
 
 		if ((s.m_starType[0] <= SystemBody::TYPE_STAR_A) && (rng.Int32(10)==0)) {
 			// make primary a giant. never more than one giant in a system
-			if (freqSqrt > 10)
+			if (freq > Square(10))
 			{
 				const Uint32 weight = rng.Int32(1000);
 				if (weight >= 999) {
@@ -311,12 +311,13 @@ bool SectorRandomSystemsGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> gala
 				} else {
 					s.m_starType[0] = SystemBody::TYPE_STAR_M_GIANT;
 				}
-			} else if (freqSqrt > 5) s.m_starType[0] = SystemBody::TYPE_STAR_M_GIANT;
+			} else if (freq > Square(5)) s.m_starType[0] = SystemBody::TYPE_STAR_M_GIANT;
 			else s.m_starType[0] = SystemBody::TYPE_STAR_M;
 
 			//Output("%d: %d%\n", sx, sy);
 		}
-
+		// rng called 6-10 times before this
+		// GenName calls rng 2-5 times all by itself and so is responsible for 16-45% cpu use
 		s.m_name = GenName(galaxy, *sector, s, customCount + i,  rng);
 		//Output("%s: \n", s.m_name.c_str());
 
