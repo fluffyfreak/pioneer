@@ -24,6 +24,7 @@ bool SectorCustomSystemsGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> gala
 	const int sx = sector->sx;
 	const int sy = sector->sy;
 	const int sz = sector->sz;
+	const Sint64 dist = (1 + sx*sx + sy*sy + sz*sz);
 
 	if ((sx >= -m_customOnlyRadius) && (sx <= m_customOnlyRadius-1) &&
 		(sy >= -m_customOnlyRadius) && (sy <= m_customOnlyRadius-1) &&
