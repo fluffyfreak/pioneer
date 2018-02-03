@@ -84,6 +84,7 @@ private:
 		bool showLandingPad;
 		bool showUI;
 		bool wireframe;
+		bool showShadowMap;
 		bool mouselookEnabled;
 		float gridInterval;
 		int lightPreset;

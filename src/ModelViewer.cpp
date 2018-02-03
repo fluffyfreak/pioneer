@@ -34,6 +34,7 @@ ModelViewer::Options::Options()
 , showLandingPad(false)
 , showUI(true)
 , wireframe(false)
+, showShadowMap(false)
 , mouselookEnabled(false)
 , gridInterval(10.f)
 , lightPreset(0)
@@ -555,7 +556,8 @@ void ModelViewer::DrawLights(const matrix4x4f &trans)
 
 void ModelViewer::DrawModel(const matrix4x4f &mv, const eRenderPasses eRP)
 {
-	assert(m_model);
+	if (!m_model)
+		return;
 
 	m_model->UpdateAnimations();
 
@@ -581,6 +583,15 @@ void ModelViewer::DrawModel(const matrix4x4f &mv, const eRenderPasses eRP)
 	m_navLights->Render(m_renderer);
 }
 
+static matrix3x3f LookAt (const vector3f &eye, const vector3f &target, const vector3f &up)
+{
+	const vector3f viewDir  = (target - eye).Normalized();
+	const vector3f viewUp   = (up - up.Dot(viewDir) * viewDir).Normalized();
+	const vector3f viewSide = viewDir.Cross(viewUp);
+
+	return matrix3x3f::FromVectors(viewSide, viewUp, -viewDir);
+}
+
 void ModelViewer::MainLoop()
 {
 	std::unique_ptr<Graphics::Drawables::TexturedQuad> depthBufferQuad;
@@ -604,38 +615,34 @@ void ModelViewer::MainLoop()
 
 		static GLfloat near_plane = 0.1f, far_plane = 100000.f;
 		static GLfloat frustumSize = 50.0f;
+		if(m_model != nullptr)
+			frustumSize = m_model->GetCollisionMesh()->GetRadius() * 1.10f;
 		const Graphics::Light &light = m_renderer->GetLight(0);
+		const vector3f lightPos = light.GetPosition() * 100.0f;
 
 		// Compute the MVP matrix from the light's point of view
-		matrix4x4f depthProjectionMatrix = matrix4x4f::OrthoFrustum(-frustumSize, frustumSize, -frustumSize, frustumSize, near_plane, far_plane);
-		matrix4x4f depthViewMatrix = MathUtil::LookAt(light.GetPosition() * 100.0f, vector3f(0.0f)/*vector3f(0.0f, 0.0f, -zoom_distance(m_baseDistance, m_zoom))*/, vector3f(0.0f, 1.0f, 0.0f));
-		matrix4x4f depthModelMatrix = matrix4x4f::Identity();
+		const matrix4x4f depthProjectionMatrix = matrix4x4f::OrthoFrustum(-frustumSize, frustumSize, -frustumSize, frustumSize, near_plane, far_plane);
+		const matrix4x4f depthViewMatrix = LookAt(lightPos, vector3f(0.0f, 0.0f, 0.0f), vector3f(0.0f, 1.0f, 0.0f));
+		const matrix4x4f depthModelMatrix = matrix4x4f::Identity();// depthViewMatrix.Inverse();
+		const matrix4x4f depthMVP = depthProjectionMatrix * depthViewMatrix * depthModelMatrix;
 
 		// calc camera info
 		matrix4x4f mv;
 		float zd=0;
 		if (m_options.mouselookEnabled) {
 			mv = m_viewRot.Transpose() * matrix4x4f::Translation(-m_viewPos);
-			depthModelMatrix = (m_viewRot.Transpose() * matrix4x4f::Translation(-m_viewPos));
 		} else {
 			m_rotX = Clamp(m_rotX, -90.0f, 90.0f);
 			matrix4x4f rot = matrix4x4f::Identity();
 			rot.RotateX(DEG2RAD(-m_rotX));
 			rot.RotateY(DEG2RAD(-m_rotY));
-			if (m_options.orthoView) zd = -m_baseDistance;
-			else zd = -zoom_distance(m_baseDistance, m_zoom);
+			if (m_options.orthoView) {
+				zd = -m_baseDistance;
+			} else {
+				zd = -zoom_distance(m_baseDistance, m_zoom);
+			}
 			mv = matrix4x4f::Translation(0.0f, 0.0f, zd) * rot;
-			depthModelMatrix = matrix4x4f::Translation(0.0f, 0.0f, zd) * rot;
 		}
-
-		const matrix4x4f depthMVP = depthProjectionMatrix * depthViewMatrix * depthModelMatrix;
-		static const float biasValues[16] = {
-			0.5f, 0.0f, 0.0f, 0.0f,
-			0.0f, 0.5f, 0.0f, 0.0f,
-			0.0f, 0.0f, 0.5f, 0.0f,
-			0.5f, 0.5f, 0.5f, 1.0f};
-		static const matrix4x4f BiasMatrix(biasValues);
-		const matrix4x4f biasDepthMVP = BiasMatrix * depthMVP;
 
 		m_navLights->Update(m_frameTime);
 		m_shields->SetEnabled(m_options.showShields || m_shieldIsHit);
@@ -650,7 +657,6 @@ void ModelViewer::MainLoop()
 
 		for( int pass = RENDER_SHADOW_MAP; pass<RENDER_PASS_MAX; pass++)
 		{
-			const matrix4x4f &mv = depthModelMatrix;
 			switch ( pass )
 			{
 			case RENDER_SHADOW_MAP:
@@ -669,7 +675,10 @@ void ModelViewer::MainLoop()
 
 				// setup rendering
 				m_renderer->SetProjection(depthProjectionMatrix);
-				m_renderer->SetTransform(matrix4x4f::Identity());
+				m_renderer->SetTransform(depthViewMatrix);
+
+				// draw the model itself
+				DrawModel(depthModelMatrix, eRenderPasses(pass));
 				break;
 
 			case RENDER_REGULAR:
@@ -682,87 +691,67 @@ void ModelViewer::MainLoop()
 				DrawBackground();
 
 				// setup rendering
-				//m_renderer->SetPerspectiveProjection(85, Graphics::GetScreenWidth() / float(Graphics::GetScreenHeight()), near_plane, far_plane);
-
-				m_renderer->SetShadowMatrix(biasDepthMVP);
+				if (!m_options.orthoView) {
+					m_renderer->SetPerspectiveProjection(85, Graphics::GetScreenWidth()/float(Graphics::GetScreenHeight()), 0.1f, 100000.f);
+				} else {
+					/* TODO: Zoom in ortho mode seems don't work as in perspective mode,
+					/ I change "screen dimensions" to avoid the problem.
+					/ However the zoom needs more care
+					*/
+					if (m_zoom<=0.0) m_zoom = 0.01;
+					float screenW = Graphics::GetScreenWidth()*m_zoom/10;
+					float screenH = Graphics::GetScreenHeight()*m_zoom/10;
+					matrix4x4f orthoMat = matrix4x4f::OrthoFrustum(-screenW,screenW, -screenH, screenH, 0.1f, 100000.0f);
+					orthoMat.ClearToRotOnly();
+					m_renderer->SetProjection(orthoMat);
+				}
+				m_renderer->SetTransform(matrix4x4f::Identity());
+				m_renderer->SetShadowMatrix(depthMVP);
 				m_renderer->SetShadowTexture(m_pShadowRT->GetDepthTexture());
+
+				// helper rendering
+				if (m_options.showLandingPad) {
+					m_scaleModel->Render(mv * matrix4x4f::Translation(0.f, m_landingMinOffset, 0.f));
+				}
+
+				if (m_options.showGrid) {
+					DrawGrid(mv, m_model->GetDrawClipRadius());
+				}
+
+				DrawLights(mv);
+
+				// draw the model itself
+				DrawModel(mv, eRenderPasses(pass));
+
+#if 1 // draw depth map quad
+				if( m_options.showShadowMap )
+				{
+					m_renderer->SetViewport(0, 0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
+					m_renderer->SetTransform(matrix4x4f::Identity());
+
+					{
+						m_renderer->SetMatrixMode(Graphics::MatrixMode::PROJECTION);
+						m_renderer->PushMatrix();
+						m_renderer->SetOrthographicProjection(0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight(), 0, -1, 1);
+						m_renderer->SetMatrixMode(Graphics::MatrixMode::MODELVIEW);
+						m_renderer->PushMatrix();
+						m_renderer->LoadIdentity();
+					}
+
+					depthBufferQuad->Draw(m_renderer);
+
+					{
+						m_renderer->SetMatrixMode(Graphics::MatrixMode::PROJECTION);
+						m_renderer->PopMatrix();
+						m_renderer->SetMatrixMode(Graphics::MatrixMode::MODELVIEW);
+						m_renderer->PopMatrix();
+					}
+				}
+#endif // draw depth map quad
 				break;
 			}
 
-			//update animations, draw model etc.
-			if (m_model)
-			{
-				if(RENDER_REGULAR==pass)
-				{
-					// setup rendering
-					if (!m_options.orthoView) {
-						m_renderer->SetPerspectiveProjection(85, Graphics::GetScreenWidth()/float(Graphics::GetScreenHeight()), 0.1f, 100000.f);
-					} else {
-						/* TODO: Zoom in ortho mode seems don't work as in perspective mode,
-						/ I change "screen dimensions" to avoid the problem.
-						/ However the zoom needs more care
-						*/
-						if (m_zoom<=0.0) m_zoom = 0.01;
-						float screenW = Graphics::GetScreenWidth()*m_zoom/10;
-						float screenH = Graphics::GetScreenHeight()*m_zoom/10;
-						matrix4x4f orthoMat = matrix4x4f::OrthoFrustum(-screenW,screenW, -screenH, screenH, 0.1f, 100000.0f);
-						orthoMat.ClearToRotOnly();
-						m_renderer->SetProjection(orthoMat);
-					}
-					//m_renderer->SetPerspectiveProjection(85, Graphics::GetScreenWidth()/float(Graphics::GetScreenHeight()), 0.1f, 100000.f);
-					m_renderer->SetTransform(matrix4x4f::Identity());
 
-					// helper rendering
-					if (m_options.showLandingPad) {
-						m_scaleModel->Render(mv * matrix4x4f::Translation(0.f, m_landingMinOffset, 0.f));
-					}
-
-					if (m_options.showGrid) {
-						DrawGrid(mv, m_model->GetDrawClipRadius());
-					}
-
-					DrawLights(mv);
-
-					// draw the model itself
-					DrawModel(mv, eRenderPasses(pass));
-				}
-				else
-				{
-					// helper rendering
-					if (m_options.showLandingPad) {
-						m_scaleModel->Render(mv * matrix4x4f::Translation(0.f, m_landingMinOffset, 0.f));
-					}
-
-					// draw the model itself
-					DrawModel(depthViewMatrix * depthModelMatrix, eRenderPasses(pass));
-				}
-			}
-
-#if 1 // draw depth map quad
-			if( pass != RENDER_SHADOW_MAP )
-			{
-				m_renderer->SetViewport(0, 0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
-				m_renderer->SetTransform(matrix4x4f::Identity());
-
-				{
-					m_renderer->SetMatrixMode(Graphics::MatrixMode::PROJECTION);
-					m_renderer->PushMatrix();
-					m_renderer->SetOrthographicProjection(0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight(), 0, -1, 1);
-					m_renderer->SetMatrixMode(Graphics::MatrixMode::MODELVIEW);
-					m_renderer->PushMatrix();
-					m_renderer->LoadIdentity();
-				}
-
-				depthBufferQuad->Draw(m_renderer);
-
-				{
-					m_renderer->SetMatrixMode(Graphics::MatrixMode::PROJECTION);
-					m_renderer->PopMatrix();
-					m_renderer->SetMatrixMode(Graphics::MatrixMode::MODELVIEW);
-					m_renderer->PopMatrix();
-				}
-			}
-#endif // draw depth map quad
 		} // end of passes loop
 
 		// Ui and other bits
@@ -942,6 +931,9 @@ void ModelViewer::PollEvents()
 			case SDLK_z:
 				m_options.wireframe = !m_options.wireframe;
 				break;
+			case SDLK_s:
+				m_options.showShadowMap = !m_options.showShadowMap;
+				break;
 			case SDLK_f:
 				ToggleViewControlMode();
 				break;
@@ -970,6 +962,10 @@ void ModelViewer::PollEvents()
 					if (colorSliders[i])
 						colorSliders[i]->SetValue(m_rng.Double());
 				}
+				break;
+			case SDLK_q: // Quit
+				if(m_keyStates[SDLK_LCTRL] || m_keyStates[SDLK_RCTRL])
+					m_done = true;
 				break;
 			default:
 				break; //shuts up -Wswitch

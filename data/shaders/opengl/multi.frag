@@ -98,19 +98,25 @@ void main(void)
 		ads(i, eyePos, vNormal, light, specular);
 	}
 
-	if(shadowMapTexCoord.w > 0.0)
+	//if(shadowMapTexCoord.w > 0.0)
 	{
+		// perform perspective divide
 		vec3 shadowMapTexCoordProj = shadowMapTexCoord.xyz / shadowMapTexCoord.w;
 		
-		if(shadowMapTexCoordProj.x >= 0.0 && shadowMapTexCoordProj.x < 1.0 &&
-		   shadowMapTexCoordProj.y >= 0.0 && shadowMapTexCoordProj.y < 1.0 &&
-		   shadowMapTexCoordProj.z >= 0.0 && shadowMapTexCoordProj.z < 1.0)
+		// transform to [0,1] range
+		shadowMapTexCoordProj = shadowMapTexCoordProj * 0.5 + 0.5;
+		
+		// get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
+		float closestDepth = texture(texture7, shadowMapTexCoordProj.xy).r;
+		
+		// get depth of current fragment from light's perspective
+		float currentDepth = shadowMapTexCoordProj.z;
+		
+		// check whether current frag pos is in shadow
+		if (currentDepth > closestDepth)
 		{
-			if(texture(texture7, shadowMapTexCoordProj.xy).r <= shadowMapTexCoordProj.z)
-			{
-				// in shadow so reset to ambient
-				light = scene.ambient;
-			}
+			// in shadow so reset to ambient
+			light = scene.ambient;
 		}
 	}
 

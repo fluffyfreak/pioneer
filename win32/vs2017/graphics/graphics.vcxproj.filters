@@ -119,6 +119,9 @@
     <ClCompile Include="..\..\..\src\graphics\gl2\GL2VtxColorMaterial.cpp">
       <Filter>gl2</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\graphics\opengl\DepthTextureMaterial.cpp">
+      <Filter>opengl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\graphics\Drawables.h" />
@@ -281,6 +284,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\src\graphics\gl2\OpenGLLibs.h">
       <Filter>gl2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\graphics\opengl\DepthTextureMaterial.h">
+      <Filter>opengl</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
