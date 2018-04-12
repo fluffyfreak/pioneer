@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaObject.h"
@@ -389,7 +389,26 @@ static int l_sbodypath_get_system_body(lua_State *l)
 	return 1;
 }
 
+static int l_sbodypath_is_body_path(lua_State *l)
+{
+	SystemPath *path = LuaObject<SystemPath>::CheckFromLua(1);
+	LuaPush(l, path->IsBodyPath());
+	return 1;
+}
 
+static int l_sbodypath_is_sector_path(lua_State *l)
+{
+	SystemPath *path = LuaObject<SystemPath>::CheckFromLua(1);
+	LuaPush(l, path->IsSectorPath());
+	return 1;
+}
+
+static int l_sbodypath_is_system_path(lua_State *l)
+{
+	SystemPath *path = LuaObject<SystemPath>::CheckFromLua(1);
+	LuaPush(l, path->IsSystemPath());
+	return 1;
+}
 /*
  * Attribute: sectorX
  *
@@ -578,7 +597,9 @@ template <> void LuaObject<SystemPath>::RegisterClass()
 
 		{ "GetStarSystem", l_sbodypath_get_star_system },
 		{ "GetSystemBody", l_sbodypath_get_system_body },
-
+		{ "IsSystemPath",  l_sbodypath_is_system_path },
+		{ "IsSectorPath",  l_sbodypath_is_sector_path },
+		{ "IsBodyPath",    l_sbodypath_is_body_path },
 		{ 0, 0 }
 	};
 

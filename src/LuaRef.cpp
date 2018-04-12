@@ -1,9 +1,10 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaRef.h"
 #include "Lua.h"
 #include "Pi.h"
+#include "GameSaveError.h"
 #include <cassert>
 
 LuaRef::LuaRef(const LuaRef & ref): m_lua(ref.m_lua), m_id(ref.m_id), m_copycount(ref.m_copycount) {
@@ -27,8 +28,13 @@ const LuaRef & LuaRef::operator=(const LuaRef & ref) {
 }
 
 LuaRef::~LuaRef() {
+  Unref();
+}
+
+void LuaRef::Unref() {
 	if (m_id != LUA_NOREF && m_lua) {
 		--(*m_copycount);
+		m_id = LUA_NOREF;
 		CheckCopyCount();
 	}
 }

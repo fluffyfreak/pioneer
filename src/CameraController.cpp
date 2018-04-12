@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "CameraController.h"
@@ -6,6 +6,7 @@
 #include "AnimationCurves.h"
 #include "Pi.h"
 #include "Game.h"
+#include "GameSaveError.h"
 #include "json/JsonUtils.h"
 
 CameraController::CameraController(RefCountedPtr<CameraContext> camera, const Ship *ship) :
@@ -50,7 +51,7 @@ static bool FillCameraPosOrient(const SceneGraph::Model *m, const char *tag, vec
 	matrix3x3d fixOrient(matrix3x3d::Identity());
 
 	const SceneGraph::MatrixTransform *mt = m->FindTagByName(tag);
-	if (!mt) 
+	if (!mt)
 	{
 		fixOrient = fallbackOrient;
 	}
@@ -175,7 +176,7 @@ void InternalCameraController::SaveToJson(Json::Value &jsonObj)
 {
 	Json::Value internalCameraObj(Json::objectValue); // Create JSON object to contain internal camera data.
 
-	internalCameraObj["mode"] = m_mode;
+	internalCameraObj["mode"] = Json::Value::Int(m_mode);
 
 	jsonObj["internal"] = internalCameraObj; // Add internal camera object to supplied object.
 }

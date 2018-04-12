@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef STARSYSTEM_GENERATOR_H
@@ -62,7 +62,7 @@ private:
 	void SetEconType(RefCountedPtr<StarSystem::GeneratorAPI> system);
 
 	void PopulateAddStations(SystemBody* sbody, StarSystem::GeneratorAPI* system);
-	void PositionSettlementOnPlanet(SystemBody* sbody);
+	void PositionSettlementOnPlanet(SystemBody* sbody, std::vector<double> &prevOrbits);
 	void PopulateStage1(SystemBody* sbody, StarSystem::GeneratorAPI* system, fixed &outTotalPop);
 };
 

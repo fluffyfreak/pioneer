@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _HYPERSPACECLOUD_H
@@ -32,10 +32,10 @@ public:
 	double GetDueDate() const { return m_due; }
 	void SetIsArrival(bool isArrival);
 	bool IsArrival() const { return m_isArrival; }
-	virtual void UpdateInterpTransform(double alpha);
+	virtual void UpdateInterpTransform(double alpha) override;
 protected:
-	virtual void SaveToJson(Json::Value &jsonObj, Space *space);
-	virtual void LoadFromJson(const Json::Value &jsonObj, Space *space);
+	virtual void SaveToJson(Json::Value &jsonObj, Space *space) override;
+	virtual void LoadFromJson(const Json::Value &jsonObj, Space *space) override;
 
 private:
 	void InitGraphics();
@@ -47,11 +47,8 @@ private:
 	bool m_isArrival;
 	bool m_isBeingKilled;
 
-	
-	//std::unique_ptr<Graphics::VertexArray> vertices;
 	RefCountedPtr<Graphics::Material> material;
 	Graphics::RenderState *renderState;
-	
 	std::unique_ptr<TriangleGraphic> m_graphic;
 };
 

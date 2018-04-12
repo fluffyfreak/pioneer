@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Pi.h"
@@ -29,6 +29,7 @@
 #include "LuaMissile.h"
 #include "LuaMusic.h"
 #include "LuaNameGen.h"
+#include "LuaPiGui.h"
 #include "LuaRef.h"
 #include "LuaServerAgent.h"
 #include "LuaShipDef.h"
@@ -41,12 +42,13 @@
 #include "Shields.h"
 #include "ObjectViewerView.h"
 #include "OS.h"
+#include "PiGui.h"
 #include "Planet.h"
 #include "Player.h"
 #include "Projectile.h"
+#include "Propulsion.h"
 #include "SDLWrappers.h"
 #include "SectorView.h"
-#include "Serializer.h"
 #include "Sfx.h"
 #include "ShipCpanel.h"
 #include "ShipType.h"
@@ -67,7 +69,10 @@
 #include "galaxy/GalaxyGenerator.h"
 #include "galaxy/StarSystem.h"
 #include "gameui/Lua.h"
+// ------------------------------------------------------------
+#include "graphics/gl2/GL2Renderer.h"
 #include "graphics/opengl/RendererGL.h"
+// ------------------------------------------------------------
 #include "graphics/Graphics.h"
 #include "graphics/Light.h"
 #include "graphics/Renderer.h"
@@ -79,12 +84,22 @@
 #include "ui/Lua.h"
 #include <algorithm>
 #include <sstream>
+#include "versioningInfo.h"
+
+#ifdef PROFILE_LUA_TIME
+#include <time.h>
+#endif
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
 	// RegisterClassA and RegisterClassW are defined as macros in WinUser.h
 	#ifdef RegisterClass
 	#undef RegisterClass
 	#endif
+#endif
+
+#if !defined(_MSC_VER) && !defined(__MINGW32__)
+	#define _popen popen
+	#define _pclose pclose
 #endif
 
 float Pi::gameTickAlpha;
@@ -98,14 +113,14 @@ sigc::signal<void> Pi::onPlayerChangeFlightControlState;
 LuaSerializer *Pi::luaSerializer;
 LuaTimer *Pi::luaTimer;
 LuaNameGen *Pi::luaNameGen;
+#ifdef ENABLE_SERVER_AGENT
 ServerAgent *Pi::serverAgent;
+#endif
 int Pi::keyModState;
 std::map<SDL_Keycode,bool> Pi::keyState; // XXX SDL2 SDLK_LAST
 char Pi::mouseButton[6];
 int Pi::mouseMotion[2];
 bool Pi::doingMouseGrab = false;
-bool Pi::warpAfterMouseGrab = false;
-int Pi::mouseGrabWarpPos[2];
 Player *Pi::player;
 View *Pi::currentView;
 TransferPlanner *Pi::planner;
@@ -127,17 +142,16 @@ GameConfig *Pi::config;
 DetailLevel Pi::detail;
 bool Pi::joystickEnabled;
 bool Pi::mouseYInvert;
-bool Pi::compactScanner;
 std::map<SDL_JoystickID,Pi::JoystickState> Pi::joysticks;
 bool Pi::navTunnelDisplayed = false;
 bool Pi::speedLinesDisplayed = false;
 bool Pi::hudTrailsDisplayed = false;
 bool Pi::bRefreshBackgroundStars = true;
 float Pi::amountOfBackgroundStarsDisplayed = 1.0f;
-Gui::Fixed *Pi::menu;
 bool Pi::DrawGUI = true;
 Graphics::Renderer *Pi::renderer;
 RefCountedPtr<UI::Context> Pi::ui;
+RefCountedPtr<PiGui> Pi::pigui;
 ModelCache *Pi::modelCache;
 Intro *Pi::intro;
 SDLGraphics *Pi::sdl;
@@ -146,6 +160,8 @@ RefCountedPtr<Graphics::Texture> Pi::renderTexture;
 std::unique_ptr<Graphics::Drawables::TexturedQuad> Pi::renderQuad;
 Graphics::RenderState *Pi::quadRenderState = nullptr;
 bool Pi::bRequestEndGame = false;
+bool Pi::isRecordingVideo = false;
+FILE *Pi::ffmpegFile = nullptr;
 
 Sound::MusicPlayer Pi::musicPlayer;
 std::unique_ptr<AsyncJobQueue> Pi::asyncJobQueue;
@@ -240,14 +256,12 @@ void Pi::EndRenderTarget() {
 #endif
 }
 
-static void draw_progress(UI::Gauge *gauge, UI::Label *label, float progress)
+static void draw_progress(float progress)
 {
-	gauge->SetValue(progress);
-	label->SetText(stringf(Lang::SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS, formatarg("age", progress * 13.7f)));
 
 	Pi::renderer->ClearScreen();
-	Pi::ui->Update();
-	Pi::ui->Draw();
+	PiGui::NewFrame(Pi::renderer->GetSDLWindow());
+	Pi::DrawPiGui(progress, "INIT");
 	Pi::renderer->SwapBuffers();
 }
 
@@ -264,6 +278,7 @@ static void LuaInit()
 	LuaObject<Missile>::RegisterClass();
 	LuaObject<CargoBody>::RegisterClass();
 	LuaObject<ModelBody>::RegisterClass();
+	LuaObject<HyperspaceCloud>::RegisterClass();
 
 	LuaObject<StarSystem>::RegisterClass();
 	LuaObject<SystemPath>::RegisterClass();
@@ -281,7 +296,9 @@ static void LuaInit()
 	LuaLang::Register();
 	LuaEngine::Register();
 	LuaFileSystem::Register();
+#ifdef ENABLE_SERVER_AGENT
 	LuaServerAgent::Register();
+#endif
 	LuaGame::Register();
 	LuaComms::Register();
 	LuaFormat::Register();
@@ -296,11 +313,18 @@ static void LuaInit()
 	GameUI::Lua::Init();
 	SceneGraph::Lua::Init();
 
+	LuaObject<PiGui>::RegisterClass();
+
 	// XXX load everything. for now, just modules
 	lua_State *l = Lua::manager->GetLuaState();
-	pi_lua_dofile(l, "libs/autoload.lua");
-	pi_lua_dofile_recursive(l, "ui");
-	pi_lua_dofile_recursive(l, "modules");
+	pi_lua_import(l, "libs/autoload.lua", true);
+	pi_lua_import_recursive(l, "ui");
+	pi_lua_import(l, "pigui/pigui.lua", true);
+	pi_lua_import(l, "pigui/game.lua", true);
+	pi_lua_import(l, "pigui/init.lua", true);
+	pi_lua_import(l, "pigui/mainmenu.lua", true);
+	pi_lua_import_recursive(l, "pigui/modules");
+	pi_lua_import_recursive(l, "modules");
 
 	Pi::luaNameGen = new LuaNameGen(Lua::manager);
 }
@@ -347,10 +371,10 @@ std::string Pi::GetSaveDir()
 void TestGPUJobsSupport()
 {
 	bool supportsGPUJobs = (Pi::config->Int("EnableGPUJobs") == 1);
-	if (supportsGPUJobs) 
+	if (supportsGPUJobs)
 	{
 		Uint32 octaves = 8;
-		for (Uint32 i = 0; i<6; i++) 
+		for (Uint32 i = 0; i<6; i++)
 		{
 			std::unique_ptr<Graphics::Material> material;
 			Graphics::MaterialDescriptor desc;
@@ -360,7 +384,7 @@ void TestGPUJobsSupport()
 			material.reset(Pi::renderer->CreateMaterial(desc));
 			supportsGPUJobs &= material->IsProgramLoaded();
 		}
-		if (!supportsGPUJobs) 
+		if (!supportsGPUJobs)
 		{
 			// failed - retry
 
@@ -379,7 +403,7 @@ void TestGPUJobsSupport()
 				material.reset(Pi::renderer->CreateMaterial(desc));
 				supportsGPUJobs &= material->IsProgramLoaded();
 			}
-			
+
 			if (!supportsGPUJobs)
 			{
 				// failed
@@ -445,15 +469,27 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 	if (SDL_Init(sdlInitFlags) < 0) {
 		Error("SDL initialization failed: %s\n", SDL_GetError());
 	}
-	SDL_version ver;
-	SDL_GetVersion(&ver);
-	Output("SDL Version %d.%d.%d\n", ver.major, ver.minor, ver.patch);
 
+	OutputVersioningInfo();
+
+	Graphics::RendererGL2::RegisterRenderer();
 	Graphics::RendererOGL::RegisterRenderer();
+
+	// determine what renderer we should use, default to Opengl 3.x
+	const std::string rendererName = config->String("RendererName", Graphics::RendererNameFromType(Graphics::RENDERER_OPENGL_3x));
+	Graphics::RendererType rType = Graphics::RENDERER_OPENGL_3x;
+	if(rendererName == Graphics::RendererNameFromType(Graphics::RENDERER_OPENGL_21))
+	{
+		rType = Graphics::RENDERER_OPENGL_21;
+	}
+	else if(rendererName == Graphics::RendererNameFromType(Graphics::RENDERER_OPENGL_3x))
+	{
+		rType = Graphics::RENDERER_OPENGL_3x;
+	}
 
 	// Do rest of SDL video initialization and create Renderer
 	Graphics::Settings videoSettings = {};
-	videoSettings.rendererType = Graphics::RENDERER_OPENGL;
+	videoSettings.rendererType = rType;
 	videoSettings.width = config->Int("ScrWidth");
 	videoSettings.height = config->Int("ScrHeight");
 	videoSettings.fullscreen = (config->Int("StartFullscreen") != 0);
@@ -463,6 +499,7 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 	videoSettings.useTextureCompression = (config->Int("UseTextureCompression") != 0);
 	videoSettings.useAnisotropicFiltering = (config->Int("UseAnisotropicFiltering") != 0);
 	videoSettings.enableDebugMessages = (config->Int("EnableGLDebug") != 0);
+	videoSettings.gl3ForwardCompatible = (config->Int("GL3ForwardCompatible") != 0);
 	videoSettings.iconFile = OS::GetIconFilename();
 	videoSettings.title = "Pioneer";
 
@@ -480,7 +517,6 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 
 	joystickEnabled = (config->Int("EnableJoystick")) ? true : false;
 	mouseYInvert = (config->Int("InvertMouseY")) ? true : false;
-	compactScanner = (config->Int("CompactScanner")) ? true : false;
 
 	navTunnelDisplayed = (config->Int("DisplayNavTunnel")) ? true : false;
 	speedLinesDisplayed = (config->Int("SpeedLines")) ? true : false;
@@ -498,7 +534,7 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 	asyncJobQueue.reset(new AsyncJobQueue(numThreads));
 	Output("started %d worker threads\n", numThreads);
 	syncJobQueue.reset(new SyncJobQueue);
-	
+
 	Output("ShipType::Init()\n");
 	// XXX early, Lua init needs it
 	ShipType::Init();
@@ -507,6 +543,9 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 	// templates. so now we have crap everywhere :/
 	Output("Lua::Init()\n");
 	Lua::Init();
+
+	Pi::pigui.Reset(new PiGui);
+	Pi::pigui->Init(Pi::renderer->GetSDLWindow());
 
 	float ui_scale = config->Float("UIScaleFactor", 1.0f);
 	if (Graphics::GetScreenHeight() < 768) {
@@ -520,6 +559,7 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 		Graphics::GetScreenHeight(),
 		ui_scale));
 
+#ifdef ENABLE_SERVER_AGENT
 	Pi::serverAgent = 0;
 	if (config->Int("EnableServerAgent")) {
 		const std::string endpoint(config->String("ServerEndpoint"));
@@ -532,37 +572,15 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 		Output("Server agent disabled\n");
 		Pi::serverAgent = new NullServerAgent();
 	}
+#endif
 
 	LuaInit();
 
-	// Gui::Init shouldn't initialise any VBOs, since we haven't tested
-	// that the capability exists. (Gui does not use VBOs so far)
 	Gui::Init(renderer, Graphics::GetScreenWidth(), Graphics::GetScreenHeight(), 800, 600);
 
-	UI::Box *box = Pi::ui->VBox(5);
-	UI::Label *label = Pi::ui->Label("");
-	UI::Gauge *gauge = Pi::ui->Gauge();
-
-	label->SetFont(UI::Widget::FONT_HEADING_NORMAL);
-
-	Pi::ui->GetTopLayer()->SetInnerWidget(
-		// expand the box to cover the whole screen
-		Pi::ui->Expand()->SetInnerWidget(
-			// align the box with label+gauge to the middle of the screen (horizontally AND vertically)
-			Pi::ui->Align(UI::Align::MIDDLE)->SetInnerWidget(
-				// put label and gauge into one combined box
-				box->PackEnd(UI::WidgetSet(
-					// center the label in the inner box
-					Pi::ui->Align(UI::Align::MIDDLE)->SetInnerWidget(label),
-					// limit the gauge by adding a margin on both sides of (0.1666*screensize) effectively centering it on the screen
-					Pi::ui->Margin(0.1666*Graphics::GetScreenWidth(), UI::Margin::HORIZONTAL)->SetInnerWidget(gauge)
-					)
-				)
-			)
-		)
-	);
-
-	draw_progress(gauge, label, 0.0f);
+	// twice, to initialize the font correctly
+	draw_progress(0.01f);
+	draw_progress(0.01f);
 
 	Output("GalaxyGenerator::Init()\n");
 	if (config->HasEntry("GalaxyGenerator"))
@@ -571,19 +589,19 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 	else
 		GalaxyGenerator::Init();
 
-	draw_progress(gauge, label, 0.1f);
+	draw_progress(0.1f);
 
 	Output("FaceParts::Init()\n");
 	FaceParts::Init();
-	draw_progress(gauge, label, 0.2f);
+	draw_progress(0.2f);
 
 	Output("new ModelCache\n");
 	modelCache = new ModelCache(Pi::renderer);
-	draw_progress(gauge, label, 0.3f);
+	draw_progress(0.3f);
 
 	Output("Shields::Init\n");
 	Shields::Init(Pi::renderer);
-	draw_progress(gauge, label, 0.4f);
+	draw_progress(0.4f);
 
 //unsigned int control_word;
 //_clearfp();
@@ -592,23 +610,23 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 
 	Output("BaseSphere::Init\n");
 	BaseSphere::Init();
-	draw_progress(gauge, label, 0.5f);
+	draw_progress(0.5f);
 
 	Output("CityOnPlanet::Init\n");
 	CityOnPlanet::Init();
-	draw_progress(gauge, label, 0.6f);
+	draw_progress(0.6f);
 
 	Output("SpaceStation::Init\n");
 	SpaceStation::Init();
-	draw_progress(gauge, label, 0.7f);
+	draw_progress(0.7f);
 
 	Output("NavLights::Init\n");
 	NavLights::Init(Pi::renderer);
-	draw_progress(gauge, label, 0.75f);
+	draw_progress(0.75f);
 
 	Output("Sfx::Init\n");
 	SfxManager::Init(Pi::renderer);
-	draw_progress(gauge, label, 0.8f);
+	draw_progress(0.8f);
 
 	if (!no_gui && !config->Int("DisableSound")) {
 		Output("Sound::Init\n");
@@ -622,10 +640,10 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 		if (config->Int("SfxMuted")) Sound::SetSfxVolume(0.f);
 		if (config->Int("MusicMuted")) GetMusicPlayer().SetEnabled(false);
 	}
-	draw_progress(gauge, label, 0.9f);
+	draw_progress(0.9f);
 
 	OS::NotifyLoadEnd();
-	draw_progress(gauge, label, 1.0f);
+	draw_progress(0.95f);
 
 #if 0
 	// frame test code
@@ -721,10 +739,10 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 
 			double simass = (hullmass + capacity) * 1000.0;
 			double angInertia = (2/5.0)*simass*brad*brad;
-			double acc1 = shipdef->linThrust[ShipType::THRUSTER_FORWARD] / (9.81*simass);
-			double acc2 = shipdef->linThrust[ShipType::THRUSTER_REVERSE] / (9.81*simass);
-			double acc3 = shipdef->linThrust[ShipType::THRUSTER_UP] / (9.81*simass);
-			double acc4 = shipdef->linThrust[ShipType::THRUSTER_RIGHT] / (9.81*simass);
+			double acc1 = shipdef->linThrust[Thruster::THRUSTER_FORWARD] / (9.81*simass);
+			double acc2 = shipdef->linThrust[Thruster::THRUSTER_REVERSE] / (9.81*simass);
+			double acc3 = shipdef->linThrust[Thruster::THRUSTER_UP] / (9.81*simass);
+			double acc4 = shipdef->linThrust[Thruster::THRUSTER_RIGHT] / (9.81*simass);
 			double acca = shipdef->angThrust/angInertia;
 			double exvel = shipdef->effectiveExhaustVelocity;
 
@@ -741,6 +759,8 @@ void Pi::Init(const std::map<std::string,std::string> &options, bool no_gui)
 
 	planner = new TransferPlanner();
 
+	draw_progress(1.0f);
+
 	timer.Stop();
 #ifdef PIONEER_PROFILER
 	Profiler::dumphtml(profilerPath.c_str());
@@ -755,6 +775,9 @@ bool Pi::IsConsoleActive()
 
 void Pi::Quit()
 {
+	if (Pi::ffmpegFile != nullptr) {
+		_pclose(Pi::ffmpegFile);
+	}
 	Projectile::FreeModel();
 	delete Pi::intro;
 	delete Pi::luaConsole;
@@ -766,7 +789,9 @@ void Pi::Quit()
 	BaseSphere::Uninit();
 	FaceParts::Uninit();
 	Graphics::Uninit();
+	Pi::pigui->Uninit();
 	Pi::ui.Reset(0);
+	Pi::pigui.Reset(0);
 	LuaUninit();
 	Gui::Uninit();
 	delete Pi::modelCache;
@@ -821,6 +846,30 @@ void Pi::HandleEvents()
 			Pi::Quit();
 		}
 
+		Pi::pigui->ProcessEvent(&event);
+
+		if(Pi::pigui->WantCaptureMouse()) {
+			// don't process mouse event any further, imgui already handled it
+            switch(event.type) {
+            case SDL_MOUSEBUTTONDOWN:
+            case SDL_MOUSEBUTTONUP:
+            case SDL_MOUSEWHEEL:
+            case SDL_MOUSEMOTION:
+			    continue;
+			default: break;
+			}
+        }
+        if(Pi::pigui->WantCaptureKeyboard()) {
+            // don't process keyboard event any further, imgui already handled it
+            switch(event.type) {
+            case SDL_KEYDOWN:
+            case SDL_KEYUP:
+            case SDL_TEXTINPUT:
+				continue;
+            default: break;
+            }
+	    }
+
 		if (skipTextInput && event.type == SDL_TEXTINPUT) {
 			skipTextInput = false;
 			continue;
@@ -872,6 +921,38 @@ void Pi::HandleEvents()
 							write_screenshot(sd, buf);
 							break;
 						}
+
+						case SDLK_SCROLLLOCK: // toggle video recording
+							Pi::isRecordingVideo = !Pi::isRecordingVideo;
+							if (Pi::isRecordingVideo) {
+								char videoName[256];
+								const time_t t = time(0);
+								struct tm *_tm = localtime(&t);
+								strftime(videoName, sizeof(videoName), "pioneer-%Y%m%d-%H%M%S", _tm);
+								const std::string dir = "videos";
+								FileSystem::userFiles.MakeDirectory(dir);
+								const std::string fname = FileSystem::JoinPathBelow(FileSystem::userFiles.GetRoot() + "/" + dir, videoName);
+								Output("Video Recording started to %s.\n", fname.c_str());
+								// start ffmpeg telling it to expect raw rgba 720p-60hz frames
+								// -i - tells it to read frames from stdin
+								// if given no frame rate (-r 60), it will just use vfr
+								char cmd[256] = { 0 };
+								snprintf(cmd, sizeof(cmd), "ffmpeg -f rawvideo -pix_fmt rgba -s %dx%d -i - -threads 0 -preset fast -y -pix_fmt yuv420p -crf 21 -vf vflip %s.mp4", config->Int("ScrWidth"), config->Int("ScrHeight"), fname.c_str());
+
+								// open pipe to ffmpeg's stdin in binary write mode
+#if defined(_MSC_VER) || defined(__MINGW32__)
+								Pi::ffmpegFile = _popen(cmd, "wb");
+#else
+								Pi::ffmpegFile = _popen(cmd, "w");
+#endif
+							} else {
+								Output("Video Recording ended.\n");
+								if (Pi::ffmpegFile != nullptr) {
+									_pclose(Pi::ffmpegFile);
+									Pi::ffmpegFile = nullptr;
+								}
+							}
+							break;
 #if WITH_DEVKEYS
 						case SDLK_i: // Toggle Debug info
 							Pi::showDebugInfo = !Pi::showDebugInfo;
@@ -1038,28 +1119,11 @@ void Pi::HandleEvents()
 
 void Pi::HandleEscKey() {
 	if (currentView != 0) {
-		if (currentView == Pi::game->GetWorldView()) {
-			static_cast<WorldView*>(currentView)->HideTargetActions();
-			if (!Pi::game->IsPaused()) {
-				Pi::game->SetTimeAccel(Game::TIMEACCEL_PAUSED);
-			}
-			else {
-				SetView(Pi::game->GetSettingsView());
-			}
-		}
-		else if (currentView == Pi::game->GetSectorView()) {
-			Pi::game->GetCpan()->SelectGroupButton(0, 0);
+		if (currentView == Pi::game->GetSectorView()) {
 			SetView(Pi::game->GetWorldView());
 		}
 		else if ((currentView == Pi::game->GetSystemView()) || (currentView == Pi::game->GetSystemInfoView())) {
-			Pi::game->GetCpan()->SelectGroupButton(1, 0);
 			SetView(Pi::game->GetSectorView());
-		}
-		else if (currentView == Pi::game->GetSettingsView()){
-			Pi::game->RequestTimeAccel(Game::TIMEACCEL_1X);
-			SetView(Pi::player->IsDead()
-					? static_cast<View*>(Pi::game->GetDeathView())
-					: static_cast<View*>(Pi::game->GetWorldView()));
 		}
 		else {
 			UIView* view = dynamic_cast<UIView*>(currentView);
@@ -1068,11 +1132,9 @@ void Pi::HandleEscKey() {
 				const char* tname = view->GetTemplateName();
 				if(tname) {
 					if (!strcmp(tname, "GalacticView")) {
-						Pi::game->GetCpan()->SelectGroupButton(1, 0);
 						SetView(Pi::game->GetSectorView());
 					}
 					else if (!strcmp(tname, "InfoView") || !strcmp(tname, "StationView")) {
-						Pi::game->GetCpan()->SelectGroupButton(0, 0);
 						SetView(Pi::game->GetWorldView());
 					}
 				}
@@ -1088,7 +1150,7 @@ void Pi::TombStoneLoop()
 	float _time = 0;
 	do {
 		Pi::HandleEvents();
-		Pi::renderer->GetWindow()->SetGrab(false);
+		Pi::renderer->SetGrab(false);
 
 		// render the scene
 		Pi::BeginRenderTarget();
@@ -1142,7 +1204,6 @@ void Pi::StartGame()
 	Pi::player->onLanded.connect(sigc::ptr_fun(&OnPlayerDockOrUndock));
 	Pi::game->GetCpan()->ShowAll();
 	DrawGUI = true;
-	Pi::game->GetCpan()->SetAlertState(Ship::ALERT_NONE);
 	SetView(game->GetWorldView());
 
 #ifdef REMOTE_LUA_REPL
@@ -1157,22 +1218,15 @@ void Pi::StartGame()
 	LuaEvent::Emit();
 }
 
-void Pi::Start()
+void Pi::Start(const int& startPlanet)
 {
 	Pi::bRequestEndGame = false;
 
 	Pi::intro = new Intro(Pi::renderer, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
 
-	ui->DropAllLayers();
-	ui->GetTopLayer()->SetInnerWidget(ui->CallTemplate("MainMenu"));
-
-	Pi::ui->SetMousePointer("icons/cursors/mouse_cursor_2.png", UI::Point(15, 8));
-
 	//XXX global ambient colour hack to make explicit the old default ambient colour dependency
 	// for some models
 	Pi::renderer->SetAmbientColor(Color(51, 51, 51, 255));
-
-	ui->Layout();
 
 	Uint32 last_time = SDL_GetTicks();
 	float _time = 0;
@@ -1182,9 +1236,56 @@ void Pi::Start()
 		while (SDL_PollEvent(&event)) {
 			if (event.type == SDL_QUIT)
 				Pi::Quit();
-			else
-				ui->DispatchSDLEvent(event);
+			else {
+				Pi::pigui->ProcessEvent(&event);
 
+				if(Pi::pigui->WantCaptureMouse()) {
+					// don't process mouse event any further, imgui already handled it
+					switch(event.type) {
+					case SDL_MOUSEBUTTONDOWN:
+					case SDL_MOUSEBUTTONUP:
+					case SDL_MOUSEWHEEL:
+					case SDL_MOUSEMOTION:
+						continue;
+					default: break;
+					}
+				}
+				if(Pi::pigui->WantCaptureKeyboard()) {
+					// don't process keyboard event any further, imgui already handled it
+					switch(event.type) {
+					case SDL_KEYDOWN:
+					case SDL_KEYUP:
+					case SDL_TEXTINPUT:
+						continue;
+					default: break;
+					}
+				}
+
+				// joystick stuff for the options window
+				switch (event.type) {
+				case SDL_JOYAXISMOTION:
+					if (!joysticks[event.jaxis.which].joystick)
+						break;
+					if (event.jaxis.value == -32768)
+						joysticks[event.jaxis.which].axes[event.jaxis.axis] = 1.f;
+					else
+						joysticks[event.jaxis.which].axes[event.jaxis.axis] = -event.jaxis.value / 32767.f;
+					break;
+				case SDL_JOYBUTTONUP:
+				case SDL_JOYBUTTONDOWN:
+					if (!joysticks[event.jaxis.which].joystick)
+						break;
+					joysticks[event.jbutton.which].buttons[event.jbutton.button] = event.jbutton.state != 0;
+					break;
+				case SDL_JOYHATMOTION:
+					if (!joysticks[event.jaxis.which].joystick)
+						break;
+					joysticks[event.jhat.which].hats[event.jhat.hat] = event.jhat.value;
+					break;
+				default: break;
+				}
+				ui->DispatchSDLEvent(event);
+			}
 			// XXX hack
 			// if we hit our exit conditions then ignore further queued events
 			// protects against eg double-click during game generation
@@ -1197,8 +1298,9 @@ void Pi::Start()
 		intro->Draw(_time);
 		Pi::renderer->EndFrame();
 
-		ui->Update();
-		ui->Draw();
+		PiGui::NewFrame(Pi::renderer->GetSDLWindow());
+		DrawPiGui(Pi::frameTime, "MAINMENU");
+
 		Pi::EndRenderTarget();
 
 		// render the rendertarget texture
@@ -1209,11 +1311,10 @@ void Pi::Start()
 		_time += Pi::frameTime;
 		last_time = SDL_GetTicks();
 
+#ifdef ENABLE_SERVER_AGENT
 		Pi::serverAgent->ProcessResponses();
+#endif
 	}
-
-	ui->DropAllLayers();
-	ui->Layout(); // UI does important things on layout, like updating keyboard shortcuts
 
 	delete Pi::intro; Pi::intro = 0;
 
@@ -1286,7 +1387,9 @@ void Pi::MainLoop()
 	while (Pi::game) {
 		PROFILE_SCOPED()
 
+#ifdef ENABLE_SERVER_AGENT
 		Pi::serverAgent->ProcessResponses();
+#endif
 
 		const Uint32 newTicks = SDL_GetTicks();
 		double newTime = 0.001 * double(newTicks);
@@ -1356,6 +1459,10 @@ void Pi::MainLoop()
 
 		currentView->Update();
 		currentView->Draw3D();
+
+		// hide cursor for ship control. Do this before imgui runs, to prevent the mouse pointer from jumping
+		SetMouseGrab(Pi::MouseButtonState(SDL_BUTTON_RIGHT) | Pi::MouseButtonState(SDL_BUTTON_MIDDLE));
+
 		// XXX HandleEvents at the moment must be after view->Draw3D and before
 		// Gui::Draw so that labels drawn to screen can have mouse events correctly
 		// detected. Gui::Draw wipes memory of label positions.
@@ -1368,17 +1475,12 @@ void Pi::MainLoop()
 		if( Pi::bRequestEndGame ) {
 			Pi::EndGame();
 		}
-		// hide cursor for ship control.
-
-		SetMouseGrab(Pi::MouseButtonState(SDL_BUTTON_RIGHT));
 
 		Pi::renderer->EndFrame();
 
 		Pi::renderer->ClearDepthBuffer();
 		if( DrawGUI ) {
 			Gui::Draw();
-			if (game)
-				game->log->DrawHudMessages(renderer);
 		} else if (game && game->IsNormalSpace()) {
 			if (config->Int("DisableScreenshotInfo")==0) {
 				const RefCountedPtr<StarSystem> sys = game->GetSpace()->GetStarSystem();
@@ -1408,7 +1510,24 @@ void Pi::MainLoop()
 			Pi::ui->Draw();
 		}
 
+		Pi::EndRenderTarget();
+		Pi::DrawRenderTarget();
+		bool endCameraFrame = false;
+		if(Pi::game && !Pi::player->IsDead()) {
+			if(Pi::GetView() == Pi::game->GetWorldView()) {
+				Pi::game->GetWorldView()->BeginCameraFrame();
+				endCameraFrame = true;
+			}
+			PiGui::NewFrame(Pi::renderer->GetSDLWindow());
+			DrawPiGui(Pi::frameTime, "GAME");
+			if(endCameraFrame) {
+				Pi::game->GetWorldView()->EndCameraFrame();
+			}
+		}
+
 #if WITH_DEVKEYS
+		// NB: this needs to be rendered last so that it appears over all other game elements
+		//	preferrably like this where it is just before the buffer swap
 		if (Pi::showDebugInfo) {
 			Gui::Screen::EnterOrtho();
 			Gui::Screen::PushFont("ConsoleFont");
@@ -1419,8 +1538,6 @@ void Pi::MainLoop()
 		}
 #endif
 
-		Pi::EndRenderTarget();
-		Pi::DrawRenderTarget();
 		Pi::renderer->SwapBuffers();
 
 		// game exit will have cleared Pi::game. we can't continue.
@@ -1506,6 +1623,12 @@ void Pi::MainLoop()
 			Screendump(fname.c_str(), Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
 		}
 #endif /* MAKING_VIDEO */
+
+		if (isRecordingVideo && (Pi::ffmpegFile!=nullptr)) {
+			Graphics::ScreendumpState sd;
+			Pi::renderer->FrameGrab(sd);
+			fwrite(sd.pixels.get(), sizeof(uint32_t) * Pi::renderer->GetWindowWidth() * Pi::renderer->GetWindowHeight(), 1, Pi::ffmpegFile);
+		}
 
 #ifdef PIONEER_PROFILER
 		Profiler::reset();
@@ -1608,12 +1731,12 @@ float Pi::JoystickAxisState(int joystick, int axis) {
 void Pi::SetMouseGrab(bool on)
 {
 	if (!doingMouseGrab && on) {
-		Pi::renderer->GetWindow()->SetGrab(true);
+		Pi::renderer->SetGrab(true);
 		Pi::ui->SetMousePointerEnabled(false);
 		doingMouseGrab = true;
 	}
 	else if(doingMouseGrab && !on) {
-		Pi::renderer->GetWindow()->SetGrab(false);
+		Pi::renderer->SetGrab(false);
 		Pi::ui->SetMousePointerEnabled(true);
 		doingMouseGrab = false;
 	}
@@ -1624,4 +1747,18 @@ float Pi::GetMoveSpeedShiftModifier() {
 	if (Pi::KeyState(SDLK_LSHIFT)) return 100.f;
 	if (Pi::KeyState(SDLK_RSHIFT)) return 10.f;
 	return 1;
+}
+
+void Pi::DrawPiGui(double delta, std::string handler) {
+	//  #define PROFILE_LUA_TIME 1
+	#ifdef PROFILE_LUA_TIME
+	auto before = clock();
+	#endif
+	if(!IsConsoleActive())
+		Pi::pigui->Render(delta, handler);
+	#ifdef PROFILE_LUA_TIME
+	auto after = clock();
+  Output("Lua PiGUI took %f\n", double(after - before) / CLOCKS_PER_SEC);
+	#endif
+	PiGui::RenderImGui();
 }

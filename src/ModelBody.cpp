@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -7,7 +7,6 @@
 #include "Game.h"
 #include "ModelCache.h"
 #include "Pi.h"
-#include "Serializer.h"
 #include "Space.h"
 #include "WorldView.h"
 #include "Camera.h"
@@ -17,6 +16,7 @@
 #include "scenegraph/SceneGraph.h"
 #include "scenegraph/NodeVisitor.h"
 #include "scenegraph/CollisionGeometry.h"
+#include "GameSaveError.h"
 
 class DynGeomFinder : public SceneGraph::NodeVisitor {
 public:
@@ -144,9 +144,7 @@ void ModelBody::RebuildCollisionMesh()
 	double maxRadius= m_collMesh->GetAabb().GetRadius();
 
 	//static geom
-	m_geom = new Geom(m_collMesh->GetGeomTree());
-	m_geom->SetUserData(static_cast<void*>(this));
-	m_geom->MoveTo(GetOrient(), GetPosition());
+	m_geom = new Geom(m_collMesh->GetGeomTree(), GetOrient(), GetPosition(), this);
 
 	SetPhysRadius(maxRadius);
 
@@ -156,9 +154,7 @@ void ModelBody::RebuildCollisionMesh()
 
 	//dynamic geoms
 	for (auto it = m_collMesh->GetDynGeomTrees().begin(); it != m_collMesh->GetDynGeomTrees().end(); ++it) {
-		Geom *dynG = new Geom(*it);
-		dynG->SetUserData(static_cast<void*>(this));
-		dynG->MoveTo(GetOrient(), GetPosition());
+		Geom *dynG = new Geom(*it, GetOrient(), GetPosition(), this);
 		dynG->m_animTransform = matrix4x4d::Identity();
 		SceneGraph::CollisionGeometry *cg = dgf.GetCgForTree(*it);
 		if (cg)

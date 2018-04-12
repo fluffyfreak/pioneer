@@ -38,6 +38,7 @@ noinst_HEADERS = \
 	FaceParts.h \
 	Factions.h \
 	FileSystem.h \
+	FixedGuns.h \
 	FontCache.h \
 	Frame.h \
 	Game.h \
@@ -45,6 +46,7 @@ noinst_HEADERS = \
 	GasGiant.h \
 	GasGiantJobs.h \
 	GeoSphere.h \
+	GZipFormat.h \
 	HudTrail.h \
 	HyperspaceCloud.h \
 	IniConfig.h \
@@ -52,6 +54,7 @@ noinst_HEADERS = \
 	IterationProxy.h \
 	JobQueue.h \
 	GameConfig.h \
+	GameSaveError.h \
 	KeyBindings.h \
 	Lang.h \
 	LangStrings.inc.h \
@@ -74,6 +77,7 @@ noinst_HEADERS = \
 	LuaMusic.h \
 	LuaNameGen.h \
 	LuaObject.h \
+	LuaPiGui.h \
 	LuaPushPull.h \
 	LuaRef.h \
 	LuaSerializer.h \
@@ -95,8 +99,8 @@ noinst_HEADERS = \
 	ObjectViewerView.h \
 	Orbit.h \
 	OS.h \
-	PersistSystemData.h \
 	Pi.h \
+	PiGui.h \
 	Plane.h \
 	Planet.h \
 	Player.h \
@@ -105,6 +109,7 @@ noinst_HEADERS = \
 	Projectile.h \
 	PropertiedObject.h \
 	PropertyMap.h \
+	Propulsion.h \
 	Quaternion.h \
 	Random.h \
 	RandomColor.h \
@@ -138,6 +143,7 @@ noinst_HEADERS = \
 	TerrainBody.h \
 	Tombstone.h \
 	UIView.h \
+	versioningInfo.h \
 	VideoLink.h \
 	View.h \
 	WorldView.h \
@@ -174,6 +180,7 @@ pioneer_SOURCES	= \
 	Factions.cpp \
 	FileSourceZip.cpp \
 	FileSystem.cpp \
+	FixedGuns.cpp \
 	FontCache.cpp \
 	Frame.cpp \
 	Game.cpp \
@@ -185,6 +192,7 @@ pioneer_SOURCES	= \
 	GeoPatchID.cpp \
 	GeoPatchJobs.cpp \
 	GeoSphere.cpp \
+	GZipFormat.cpp \
 	HudTrail.cpp \
 	HyperspaceCloud.cpp \
 	IniConfig.cpp \
@@ -206,6 +214,7 @@ pioneer_SOURCES	= \
 	LuaFileSystem.cpp \
 	LuaFormat.cpp \
 	LuaGame.cpp \
+	LuaHyperspaceCloud.cpp \
 	LuaLang.cpp \
 	LuaMatrix.cpp \
 	LuaVector.cpp \
@@ -216,6 +225,7 @@ pioneer_SOURCES	= \
 	LuaMusic.cpp \
 	LuaNameGen.cpp \
 	LuaObject.cpp \
+	LuaPiGui.cpp \
 	LuaPlanet.cpp \
 	LuaPlayer.cpp \
 	LuaPropertiedObject.cpp \
@@ -243,6 +253,7 @@ pioneer_SOURCES	= \
 	ObjectViewerView.cpp \
 	Orbit.cpp \
 	Pi.cpp \
+	PiGui.cpp \
 	Plane.cpp \
 	Planet.cpp \
 	Player.cpp \
@@ -250,6 +261,7 @@ pioneer_SOURCES	= \
 	Polit.cpp \
 	Projectile.cpp \
 	PropertyMap.cpp \
+	Propulsion.cpp \
 	RandomColor.cpp \
 	SDLWrappers.cpp \
 	SectorView.cpp \
@@ -280,6 +292,7 @@ pioneer_SOURCES	= \
 	TerrainBody.cpp \
 	Tombstone.cpp \
 	UIView.cpp \
+	versioningInfo.cpp \
 	View.cpp \
 	WorldView.cpp \
 	main.cpp \
@@ -292,6 +305,7 @@ pioneer_LDADD = \
 	gui/libgui.a \
 	graphics/libgraphics.a \
 	graphics/opengl/libgraphicsopengl.a \
+	graphics/gl2/libgraphicsgl2.a \
 	galaxy/libgalaxy.a \
 	scenegraph/libscenegraph.a \
 	text/libtext.a \
@@ -301,7 +315,9 @@ pioneer_LDADD = \
 	../contrib/PicoDDS/libpicodds.a \
 	../contrib/jenkins/libjenkins.a \
 	../contrib/json/libjson.a \
-	../contrib/profiler/libprofiler.a
+	../contrib/glew/libglew.a \
+	../contrib/profiler/libprofiler.a \
+	../contrib/imgui/libimgui.a
 
 pioneer_LDADD += \
 	$(FREETYPE_LIBS) $(GL_LIBS) \
@@ -377,10 +393,12 @@ uitest_LDADD = \
 	text/libtext.a \
 	graphics/libgraphics.a \
 	graphics/opengl/libgraphicsopengl.a \
+	graphics/gl2/libgraphicsgl2.a \
 	posix/libposix.a \
 	../contrib/jenkins/libjenkins.a \
 	../contrib/PicoDDS/libpicodds.a \
 	../contrib/json/libjson.a \
+	../contrib/glew/libglew.a \
 	../contrib/profiler/libprofiler.a
 
 uitest_LDADD += \
@@ -408,6 +426,7 @@ textstress_LDADD = \
 	graphics/libgraphics.a \
 	posix/libposix.a \
 	../contrib/json/libjson.a \
+	../contrib/glew/libglew.a \
 	../contrib/profiler/libprofiler.a
 
 textstress_LDADD += \
@@ -428,6 +447,7 @@ modelcompiler_SOURCES = \
 	FontCache.cpp \
 	IniConfig.cpp \
 	GameConfig.cpp \
+	JobQueue.cpp \
 	Lang.cpp \
 	ModManager.cpp \
 	NavLights.cpp \
@@ -446,6 +466,7 @@ modelcompiler_LDADD = \
 	text/libtext.a \
 	../contrib/PicoDDS/libpicodds.a \
 	../contrib/json/libjson.a \
+	../contrib/glew/libglew.a \
 	../contrib/profiler/libprofiler.a
 
 modelcompiler_LDADD += \

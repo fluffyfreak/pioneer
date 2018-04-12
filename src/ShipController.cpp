@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "ShipController.h"
@@ -11,6 +11,7 @@
 #include "Space.h"
 #include "WorldView.h"
 #include "OS.h"
+#include "GameSaveError.h"
 
 void ShipController::StaticUpdate(float timeStep)
 {
@@ -188,6 +189,12 @@ void PlayerShipController::CheckControlsLock()
 		|| (Pi::GetView() != Pi::game->GetWorldView()); //to prevent moving the ship in starmap etc.
 }
 
+vector3d PlayerShipController::GetMouseDir() const
+{
+	// translate from system to local frame
+	return m_mouseDir * m_ship->GetFrame()->GetOrient();
+}
+
 // mouse wraparound control function
 static double clipmouse(double cur, double inp)
 {
@@ -217,9 +224,10 @@ void PlayerShipController::PollControls(const float timeStep, const bool force_r
 		// have to use this function. SDL mouse position event is bugged in windows
 		if (Pi::MouseButtonState(SDL_BUTTON_RIGHT))
 		{
-			const matrix3x3d &rot = m_ship->GetOrient();
+			// use ship rotation relative to system, unchanged by frame transitions
+			matrix3x3d rot = m_ship->GetOrientRelTo(m_ship->GetFrame()->GetNonRotFrame());
 			if (!m_mouseActive) {
-				m_mouseDir = -rot.VectorZ();	// in world space
+				m_mouseDir = -rot.VectorZ();
 				m_mouseX = m_mouseY = 0;
 				m_mouseActive = true;
 			}
@@ -255,10 +263,14 @@ void PlayerShipController::PollControls(const float timeStep, const bool force_r
 			}
 
 			if (!stickySpeedKey) {
-				if (KeyBindings::increaseSpeed.IsActive())
+				if (KeyBindings::increaseSpeed.IsActive()) {
 					m_setSpeed += std::max(fabs(m_setSpeed)*0.05, 1.0);
-				if (KeyBindings::decreaseSpeed.IsActive())
+					if ( m_setSpeed > 300000000 ) m_setSpeed = 300000000;
+				}
+				if (KeyBindings::decreaseSpeed.IsActive()) {
 					m_setSpeed -= std::max(fabs(m_setSpeed)*0.05, 1.0);
+					if ( m_setSpeed < -300000000 ) m_setSpeed = -300000000;
+				}
 				if ( ((oldSpeed < 0.0) && (m_setSpeed >= 0.0)) ||
 						((oldSpeed > 0.0) && (m_setSpeed <= 0.0)) ) {
 					// flipped from going forward to backwards. make the speed 'stick' at zero
@@ -308,7 +320,7 @@ void PlayerShipController::PollControls(const float timeStep, const bool force_r
 				changeVec[axis] = (changeVec[axis] - dz) / (1.0f - dz);
 			}
 		}
-		
+
 		wantAngVel += changeVec;
 
 		if (wantAngVel.Length() >= 0.001 || force_rotation_damping || m_rotationDamping) {
@@ -320,7 +332,7 @@ void PlayerShipController::PollControls(const float timeStep, const bool force_r
 			m_ship->AIModelCoordsMatchAngVel(wantAngVel, angThrustSoftness);
 		}
 
-		if (m_mouseActive) m_ship->AIFaceDirection(m_mouseDir);
+		if (m_mouseActive) m_ship->AIFaceDirection(GetMouseDir());
 	}
 }
 
@@ -428,4 +440,9 @@ void PlayerShipController::SetNavTarget(Body* const target, bool setSpeedTo)
 	else if (m_setSpeedTarget == m_navTarget)
 		m_setSpeedTarget = 0;
 	m_navTarget = target;
+}
+
+void PlayerShipController::SetSetSpeedTarget(Body* const target)
+{
+	m_setSpeedTarget = target;
 }

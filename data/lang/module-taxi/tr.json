@@ -533,7 +533,7 @@
    },
    "HOW_SOON_YOU_MUST_BE_THERE" : {
       "description" : "",
-      "message" : "En yakın ne zaman orada olmanız gerekiyor?"
+      "message" : "Ne zaman orada olmanız gerekiyor?"
    },
    "I_MUST_BE_THERE_BEFORE" : {
       "description" : "",
@@ -541,7 +541,7 @@
    },
    "LY" : {
       "description" : "",
-      "message" : "ly"
+      "message" : "ıy"
    },
    "OK_AGREED" : {
       "description" : "",
@@ -561,11 +561,11 @@
    },
    "PIRATE_TAUNTS_3" : {
       "description" : "",
-      "message" : "Bugün sabitlenmeyeceksiniz!"
+      "message" : "Bugün kenetlenemeyeceksin!"
    },
    "SET_AS_TARGET" : {
       "description" : "",
-      "message" : "Set as navigation target"
+      "message" : "Navigasyon hedefi olarak seç"
    },
    "TAXI" : {
       "description" : "",
@@ -589,7 +589,7 @@
    },
    "WRONG_SYSTEM" : {
       "description" : "Shown if system name is right, but coordinates are wrong",
-      "message" : "The system name is right, but not the coordinates."
+      "message" : "Sistem adı doğru, ama koordinatlar yanlış."
    },
    "YOU_DO_NOT_HAVE_ENOUGH_CABIN_SPACE_ON_YOUR_SHIP" : {
       "description" : "",

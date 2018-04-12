@@ -1,7 +1,11 @@
 {
    "FLAVOUR_0_INTRO" : {
       "description" : "",
-      "message" : "Evitez les désagréments d'une panne de moteur Hyperspacial. Utilisez nos service dès aujourd'hui, par une compagnie approuvée officiellement {name} entretien de moteurs.\n\nMoteur:  {drive}\nEntretien: {price}\nGarantie: 18 mois\n {lasttime} "
+      "message" : "Évitez les problèmes d'une hyper-proplusion cassée. Venez réparer la vôtre aujourd'hui, par la très officielle compagnie de réparation de moteurs {name}.\n"
+   },
+   "FLAVOUR_0_PRICE" : {
+      "description" : "",
+      "message" : "\nMoteur: {drive}\nService: {price}\nGarantie: 18 mois\n{lasttime}"
    },
    "FLAVOUR_0_RESPONSE" : {
       "description" : "",
@@ -17,7 +21,11 @@
    },
    "FLAVOUR_1_INTRO" : {
       "description" : "",
-      "message" : "Je suis {proprietor}. je peut réviser votre {drive}, vous garantissant la prochaine année sans problèmes de performance. Le cout de cette révision sera de  {price}.\n{lasttime}"
+      "message" : "Je suis {proprietor}. Je peux réparer votre hyperpropulsion, avec une garantie d'un an sans pannes."
+   },
+   "FLAVOUR_1_PRICE" : {
+      "description" : "",
+      "message" : "Le coût pour la réparation de votre {drive} sera de {price}\n{lasttime}"
    },
    "FLAVOUR_1_RESPONSE" : {
       "description" : "",
@@ -33,7 +41,11 @@
    },
    "FLAVOUR_2_INTRO" : {
       "description" : "",
-      "message" : "Salutations. Sommes {proprietor} & Co. Nous construisons notre réputation grace a notre travail.\n\n{lasttime}\nNous pouvons regler {drive}devotre vaisseau, avec la garantie de 12 mois de fonctionnement sans problêmes, pour la somme de {price}. Je superviserais les travaux personellement, ainsi soyez sur que le travail sera bien fait."
+      "message" : "Bonjour. Nous à {proprietor} & Co misons notre réputation sur notre travail.\nNous pouvons régler l'hyperpropulsion de votre vaisseau, garantie 12 mois sans problèmes de fonctionnement."
+   },
+   "FLAVOUR_2_PRICE" : {
+      "description" : "",
+      "message" : "\n\n{lasttime}\nPour votre {drive}, je superviserais les travaux moi-même, vous pouvez donc être sûr que le travail sera bien fait, et cela pour la somme de {price}."
    },
    "FLAVOUR_2_RESPONSE" : {
       "description" : "",
@@ -45,11 +57,15 @@
    },
    "FLAVOUR_2_YESPLEASE" : {
       "description" : "",
-      "message" : "SVP réglez ma propulsion pour le prix indiqué"
+      "message" : "Réglez mon hyperpropulsion au prix indiqué, s'il vous plait"
    },
    "FLAVOUR_3_INTRO" : {
       "description" : "",
-      "message" : "Bienvenue chez SuperFix Maintenance.\n\n{lasttime}\nC'est le moment de votre maintenance bi-annuelle ? Laisser nous SuperFixer votre conduite !\nNous pouvons regler votre {drive} pour seulement {price}. Vous ne trouverez  pas moins cher!"
+      "message" : "Bienvenu à SuperRéparateur. Il est grand temps pour une maintenace biennale ? Amenez votre hyperpulsion à SuperRéparateur !"
+   },
+   "FLAVOUR_3_PRICE" : {
+      "description" : "",
+      "message" : "\n\n{lasttime}\nNous pouvons réparer votre {drive} pour seulement {price}. Il n'y a personne de moins cher !"
    },
    "FLAVOUR_3_RESPONSE" : {
       "description" : "",
@@ -65,7 +81,11 @@
    },
    "FLAVOUR_4_INTRO" : {
       "description" : "",
-      "message" : "Bienvenue chez Espace-Temps\n\nNous somme specialisés dans les conduites interstellaires. Tous nos travaux de maintenance sont garantis deux ans.\n{lasttime}\nLa révision de votre {drive} couteras {price}. Voulez vous proceder ? "
+      "message" : "Bienvenu à Temps et Espace.\n\nNous nous spécialisont dans les moteurs interstellaires. Tout travail de maintenance est garanti 2 ans."
+   },
+   "FLAVOUR_4_PRICE" : {
+      "description" : "",
+      "message" : "\n{lasttime}\nRéparer votre {drive} coûtera {price}. Voulez-vous continuer?"
    },
    "FLAVOUR_4_RESPONSE" : {
       "description" : "",
@@ -81,7 +101,11 @@
    },
    "FLAVOUR_5_INTRO" : {
       "description" : "",
-      "message" : "Evitez les désagréments d'une panne de moteur Hyperspacial. Utilisez nos service dès aujourd'hui.\n\nMoteur:  {drive}\nMaintenance: {price}\n{lasttime}"
+      "message" : "Évitez les inconvénients d'un moteur hyper-espace cassé. Réparez le votre aujourd'hui.\n"
+   },
+   "FLAVOUR_5_PRICE" : {
+      "description" : "",
+      "message" : "\nMoteur: {drive}\nService: {price}\n{lasttime}"
    },
    "FLAVOUR_5_RESPONSE" : {
       "description" : "",

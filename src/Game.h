@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _GAME_H
@@ -8,7 +8,6 @@
 #include "libs.h"
 #include "gameconsts.h"
 #include "GameLog.h"
-#include "Serializer.h"
 #include "galaxy/Galaxy.h"
 #include "galaxy/SystemPath.h"
 
@@ -117,7 +116,6 @@ public:
 
 	SectorView* GetSectorView() const { return m_gameViews->m_sectorView; }
 	UIView* GetGalacticView() const { return m_gameViews->m_galacticView; }
-	UIView* GetSettingsView() const { return m_gameViews->m_settingsView; }
 	SystemInfoView* GetSystemInfoView() const { return m_gameViews->m_systemInfoView; }
 	SystemView* GetSystemView() const { return m_gameViews->m_systemView; }
 	WorldView* GetWorldView() const { return m_gameViews->m_worldView; }
@@ -143,7 +141,6 @@ private:
 
 		SectorView* m_sectorView;
 		UIView* m_galacticView;
-		UIView* m_settingsView;
 		SystemInfoView* m_systemInfoView;
 		SystemView* m_systemView;
 		WorldView* m_worldView;
@@ -190,7 +187,6 @@ private:
 	TimeAccel m_timeAccel;
 	TimeAccel m_requestedTimeAccel;
 	bool m_forceTimeAccel;
-
 	static const float s_timeAccelRates[];
 	static const float s_timeInvAccelRates[];
 };

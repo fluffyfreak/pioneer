@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "MathUtil.h"
@@ -166,14 +166,14 @@ namespace MathUtil {
 			return matrix4x4f::Identity();
 
 		det = 1.0f / det;
-		
+
 		matrix4x4f m;
 		for(int i = 0; i < 16; i++)
 			m[i] = inv[i] * det;
 
 		return m;
 	}
-	matrix4x4f Transpose(const matrix4x4f &cell) 
+	matrix4x4f Transpose(const matrix4x4f &cell)
 	{
 		matrix4x4f m;
 		m[0] = cell[0];		m[1] = cell[4];		m[2] = cell[8];		m[3] = cell[12];
@@ -182,9 +182,9 @@ namespace MathUtil {
 		m[12] = cell[3];	m[13] = cell[7];	m[14] = cell[11];	m[15] = cell[15];
 		return m;
 	}
-	
+
 	// matrix3x3f utility functions
-	matrix3x3f Transpose(const matrix3x3f &cell) 
+	matrix3x3f Transpose(const matrix3x3f &cell)
 	{
 		matrix3x3f m;
 		m[0] = cell[0]; m[1] = cell[3]; m[2] = cell[6];
@@ -192,7 +192,7 @@ namespace MathUtil {
 		m[6] = cell[2]; m[7] = cell[5]; m[8] = cell[8];
 		return m;
 	}
-	matrix3x3f Inverse(const matrix3x3f &cell) 
+	matrix3x3f Inverse(const matrix3x3f &cell)
 	{
 		// computes the inverse of a matrix m
 		#define cell2d(x,y)    cell[((y*3) + x)]
@@ -215,4 +215,102 @@ namespace MathUtil {
 		minv[idx2d(2, 2)] = (cell2d(0, 0) * cell2d(1, 1) - cell2d(1, 0) * cell2d(0, 1)) * invdet;
 		return minv;
 	}
+
+	// basic distince from a line segment as described here:
+	// http://paulbourke.net/geometry/pointline/
+	float DistanceFromLineSegment(const vector3f& start, const vector3f& end, const vector3f& pos, bool& isWithinLineSegment)
+	{
+		const float magnitude = (end-start).Length();
+		float t = Dot((pos - start), (end - start)) / (magnitude * magnitude) ;
+
+		if( t<0.0f || t>1.0f ) {
+			t = (t < 0.0f) ? 0.0f : t;
+			t = (t > 1.0f) ? 1.0f : t;
+			isWithinLineSegment = false;
+		} else {
+			isWithinLineSegment = true;
+		}
+		// convert the time t to a vector to use in intersection calculation
+		vector3f tv(t,t,t);
+		vector3f intersect(start + tv * (end - start));
+
+		return (intersect-pos).Length();
+	}
+
+	float DistanceFromLine(const vector3f& start, const vector3f& end, const vector3f& pos)
+	{
+		const float magnitude = (end-start).Length();
+		const float t = Dot((pos - start), (end - start)) / (magnitude * magnitude) ;
+
+		// convert the time t to a vector to use in intersection calculation
+		vector3f tv(t,t,t);
+		vector3f intersect(start + tv * (end - start));
+
+		return (intersect-pos).Length();
+	}
+
+#ifdef TEST_MATHUTIL
+	bool TestDistanceFromLine()
+	{
+		//           P1
+		//           |
+		//           |
+		//           |
+		// E---------X---------H
+		// Fill these with a set of known data...
+		static const size_t TotalNum = 4;
+		static const vector3f E[TotalNum] = {
+			vector3f(-10.0f, 0.0f, 0.0f),
+			vector3f(-10.0f, 0.0f, 0.0f),
+			vector3f(-10.0f, 0.0f, 0.0f),
+			vector3f(-10.0f, 0.0f, 0.0f)
+		};
+		static vector3f H[TotalNum] = {
+			vector3f(10.0f, 0.0f, 0.0f),
+			vector3f(10.0f, 0.0f, 0.0f),
+			vector3f(10.0f, 0.0f, 0.0f),
+			vector3f(10.0f, 0.0f, 0.0f)
+		};
+		static const vector3f P[TotalNum] = {
+			vector3f(-20.0f, 0.0f, 0.0f), // no
+			vector3f(0.0f, 4.0f, 0.0f), // yes
+			vector3f(0.0f, 8.0f, 0.0f), // no
+			vector3f(20.0f, 4.0f, 0.0f) // no
+		};
+		static const bool RES[TotalNum] = {
+			false, // no
+			true,// yes
+			false,// no
+			false// no
+		};
+		static const bool RESLINE[TotalNum] = {
+			true, // no
+			true,// yes
+			false,// no
+			true// no
+		};
+
+		// Just working with a fixed distance.
+		static const float triggerSoundDistance = 6.0f;
+		// Iterate through the generated data and see which ones pass close enough to trigger the sound
+		bool success = true;
+		for( int i=0; i<TotalNum; i++ ) {
+			bool isWithinLineSegment = false;
+			const float dist = DistanceFromLineSegment(E[i], H[i], P[i], isWithinLineSegment);
+
+			// Compare against the expected result and accumulate
+			success &= (RES[i] == (isWithinLineSegment && dist <= triggerSoundDistance));
+		}
+
+		for( int i=0; i<TotalNum; i++ ) {
+			const float dist = DistanceFromLine(E[i], H[i], P[i]);
+
+			// Compare against the expected result and accumulate
+			success &= (RESLINE[i] == (dist <= triggerSoundDistance));
+		}
+		
+		Output("TestDistanceFromLine successful? = %s\n", success ? "yes" : "no");
+		return success;
+	}
+#endif
 }

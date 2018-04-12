@@ -7,6 +7,10 @@
       "description" : "",
       "message" : "Aktiv"
    },
+   "ADD_JUMP" : {
+      "description" : "UI-button: Add hyper jump to list of planned jumps",
+      "message" : "Add Jump"
+   },
    "AFTER_TRADE_IN" : {
       "description" : "",
       "message" : "Efter inbyte"
@@ -23,6 +27,10 @@
       "description" : "",
       "message" : "Belopp"
    },
+   "ANISOTROPIC_FILTERING_DESC" : {
+      "description" : "",
+      "message" : "Samples the texture across multiple mip levels to produce a much clearer texture when viewed at shallow angles. Stops the textures from becoming as blurred; however, it can come at a heavy performance cost."
+   },
    "AN_ERROR_HAS_OCCURRED" : {
       "description" : "",
       "message" : "Ett fel har uppstått"
@@ -34,6 +42,10 @@
    "ATTEMPT_TO_REPAIR_HULL" : {
       "description" : "",
       "message" : "Försök att reparera skrov"
+   },
+   "AUTO_ROUTE" : {
+      "description" : "Automatically find shortest jump route (measured in time) in star map",
+      "message" : "Auto Route"
    },
    "AVAILABLE_FOR_PURCHASE" : {
       "description" : "",
@@ -111,6 +123,10 @@
       "description" : "",
       "message" : "Pengar: {money}"
    },
+   "CENTER_ON_SYSTEM" : {
+      "description" : "Center on selected star system",
+      "message" : "Center on System"
+   },
    "CHANGE_BINDING" : {
       "description" : "Key binding option",
       "message" : "Ändra bindning"
@@ -135,9 +151,17 @@
       "description" : "Clear an option in game settings/options menu",
       "message" : "Rensa"
    },
+   "CLEAR_ROUTE" : {
+      "description" : "Clear a planned route of hyperjumps",
+      "message" : "Clear Route"
+   },
    "CLIENT" : {
       "description" : "",
       "message" : "Klient"
+   },
+   "CLOSE" : {
+      "description" : "",
+      "message" : "Close"
    },
    "COMBAT" : {
       "description" : "Headline for kills and combat rating",
@@ -151,9 +175,9 @@
       "description" : "",
       "message" : "Råvarumarknad"
    },
-   "COMPACT_SCANNER" : {
+   "COMPACT_RADAR" : {
       "description" : "Game settings option",
-      "message" : "Kompakt skanner"
+      "message" : "Kompakt radar"
    },
    "COMPETENT" : {
       "description" : "Combat rating",
@@ -199,6 +223,10 @@
       "description" : "For player reputation",
       "message" : "Trovärdig"
    },
+   "CREDITS" : {
+      "description" : "in game currency",
+      "message" : "Credits"
+   },
    "CREW_CABINS" : {
       "description" : "",
       "message" : "Besättningshytter"
@@ -210,6 +238,14 @@
    "CRIMINAL_RECORD" : {
       "description" : "Past crimes / crime history of character",
       "message" : "Kriminalregister"
+   },
+   "CURRENT_FUEL" : {
+      "description" : "For hyperjump planner",
+      "message" : "Current Fuel:"
+   },
+   "CURRENT_SYSTEM" : {
+      "description" : "For hyperjump planner",
+      "message" : "Nuvarande system"
    },
    "DANGEROUS" : {
       "description" : "Player combat rating",
@@ -259,6 +295,10 @@
       "description" : "Settings option: effect when travelling in space",
       "message" : "Visa hastighetslinjer"
    },
+   "DOCKED_AT" : {
+      "description" : "",
+      "message" : "Docked at"
+   },
    "DOCK_AT_CURRENT_TARGET" : {
       "description" : "",
       "message" : "Docka vid nuvarande mål"
@@ -307,6 +347,10 @@
       "description" : "",
       "message" : "Aktivera joystick"
    },
+   "END_GAME" : {
+      "description" : "",
+      "message" : "End Game"
+   },
    "ENGINEERING" : {
       "description" : "Engineering skills of crew",
       "message" : "Ingenjör:"
@@ -326,6 +370,10 @@
    "ERROR" : {
       "description" : "",
       "message" : "Fel"
+   },
+   "ERROR_LANDING_GEAR_DOWN" : {
+      "description" : "",
+      "message" : "Kan inte påbörja hopp; landningsställ är inte uppfällt!"
    },
    "ESCAPE_SPEED" : {
       "description" : "",
@@ -350,6 +398,18 @@
    "FEMALE" : {
       "description" : "",
       "message" : "Kvinna"
+   },
+   "FINAL_TARGET" : {
+      "description" : "Hyperjump planner, referring to star system target",
+      "message" : "Final Target:"
+   },
+   "FLIGHT_STATE" : {
+      "description" : "",
+      "message" : "Flight State"
+   },
+   "FLYING" : {
+      "description" : "",
+      "message" : "Flying"
    },
    "FORWARD_ACCEL" : {
       "description" : "",
@@ -391,6 +451,10 @@
       "description" : "",
       "message" : "Helskärm"
    },
+   "GAME_TIME" : {
+      "description" : "",
+      "message" : "Game time"
+   },
    "GENERAL_CREW" : {
       "description" : "",
       "message" : "Generell besättning"
@@ -402,6 +466,14 @@
    "GOOD_RIDDANCE_TO_YOU_TOO" : {
       "description" : "",
       "message" : "Hejdå till dig också."
+   },
+   "GPU_JOBS" : {
+      "description" : "",
+      "message" : "GPU Jobs"
+   },
+   "GPU_JOBS_DESC" : {
+      "description" : "",
+      "message" : "Utilize GPU for certain actions, possibly improving performance."
    },
    "HANG_UP" : {
       "description" : "",
@@ -439,6 +511,318 @@
       "description" : "Game settings option: for graphics resolution",
       "message" : "Hög"
    },
+   "HUD_2D_RADAR" : {
+      "description" : "Popup text: the name of the azimuthal equidistant projection radar",
+      "message" : "2D azimuthal equidistant projection"
+   },
+   "HUD_3D_RADAR" : {
+      "description" : "Popup text: the name of the planar projection radar (traditional frontier-style)",
+      "message" : "3D planprojektion"
+   },
+   "HUD_ATMOSPHERIC_PRESSURE" : {
+      "description" : "Tooltip: Atmospheric Pressure.",
+      "message" : "Atmosfäriskt tryck"
+   },
+   "HUD_BACKWARD_GUN_TEMPERATURE" : {
+      "description" : "Tooltip: Backward Gun Temperature.",
+      "message" : "Bakre kanon-temperatur"
+   },
+   "HUD_BRAKE_DISTANCE_MAIN_THRUSTERS" : {
+      "description" : "Tooltip: The braking distance using the main thrusters.",
+      "message" : "Stoppsträcka för huvudmotorerna"
+   },
+   "HUD_BUTTON_AUTOPILOT_DOCKING" : {
+      "description" : "Tooltip: Autopilot docking",
+      "message" : "Autopilot dockar"
+   },
+   "HUD_BUTTON_AUTOPILOT_ENTERING_ORBIT" : {
+      "description" : "Tooltip: Autopilot entering orbit",
+      "message" : "Autopilot går in i omlopp"
+   },
+   "HUD_BUTTON_AUTOPILOT_FLYING_TO_TARGET" : {
+      "description" : "Tooltip: Autopilot flying to target",
+      "message" : "Autopilot flyger till mål"
+   },
+   "HUD_BUTTON_BLASTOFF" : {
+      "description" : "Tooltip: Blastoff",
+      "message" : "Blastoff"
+   },
+   "HUD_BUTTON_EQUIPMENT" : {
+      "description" : "Tooltip: Equipment",
+      "message" : "Utrustning"
+   },
+   "HUD_BUTTON_EXTERNAL_VIEW" : {
+      "description" : "Tooltip: External camera view",
+      "message" : "Extern vy"
+   },
+   "HUD_BUTTON_FIX_ANTINORMAL" : {
+      "description" : "Tooltip: fix heading antinormal",
+      "message" : "Fix heading antinormal"
+   },
+   "HUD_BUTTON_FIX_NORMAL" : {
+      "description" : "Tooltip: fix heading normal",
+      "message" : "Fix heading normal"
+   },
+   "HUD_BUTTON_FIX_PROGRADE" : {
+      "description" : "Tooltip: fix heading prograde",
+      "message" : "Fix heading prograde"
+   },
+   "HUD_BUTTON_FIX_RADIAL_IN" : {
+      "description" : "Tooltip: fix heading radially inward",
+      "message" : "Fix heading radially inward"
+   },
+   "HUD_BUTTON_FIX_RADIAL_OUT" : {
+      "description" : "Tooltip: fix heading radially outward",
+      "message" : "Fix heading radially outward"
+   },
+   "HUD_BUTTON_FIX_RETROGRADE" : {
+      "description" : "Tooltip: fix heading retrograde",
+      "message" : "Fix heading retrograde"
+   },
+   "HUD_BUTTON_HYPERDRIVE_DISABLED" : {
+      "description" : "Tooltip: Hyperdrive disabled (docked or landed)",
+      "message" : "Hypermotor inaktiverad"
+   },
+   "HUD_BUTTON_INITIATE_HYPERJUMP" : {
+      "description" : "Tooltip: Initiate legal hyperjump",
+      "message" : "Påbörja hopp"
+   },
+   "HUD_BUTTON_INITIATE_ILLEGAL_HYPERJUMP" : {
+      "description" : "Tooltip: Initiate illegal hyperjump",
+      "message" : "Påbörja olagligt hopp"
+   },
+   "HUD_BUTTON_INTERNAL_VIEW" : {
+      "description" : "Tooltip: Internal camera view",
+      "message" : "Intern vy"
+   },
+   "HUD_BUTTON_KILL_ROTATION" : {
+      "description" : "Tooltip: kill rotation",
+      "message" : "Avbryt rotation"
+   },
+   "HUD_BUTTON_LANDING_GEAR_IS_DOWN" : {
+      "description" : "Tooltip: Landing gear is down",
+      "message" : "Landningsställ är nerfällt"
+   },
+   "HUD_BUTTON_LANDING_GEAR_IS_MOVING" : {
+      "description" : "Tooltip: Landing gear is moving",
+      "message" : "Landningsställ i rörelse"
+   },
+   "HUD_BUTTON_LANDING_GEAR_IS_UP" : {
+      "description" : "Tooltip: Landing gear is up",
+      "message" : "Landningsställ är uppfällt"
+   },
+   "HUD_BUTTON_MANUAL_CONTROL" : {
+      "description" : "Tooltip: Manual control",
+      "message" : "Manuell kontroll"
+   },
+   "HUD_BUTTON_ROTATION_DAMPING_IS_OFF" : {
+      "description" : "Tooltip: Rotation damping is off",
+      "message" : "Rotationsdämpning är av"
+   },
+   "HUD_BUTTON_ROTATION_DAMPING_IS_ON" : {
+      "description" : "Tooltip: Rotation damping is on",
+      "message" : "Rotationsdämpare är på"
+   },
+   "HUD_BUTTON_SCANNER" : {
+      "description" : "Tooltip: Scanner",
+      "message" : "Scanner"
+   },
+   "HUD_BUTTON_SET_SPEED" : {
+      "description" : "Tooltip: set speed",
+      "message" : "Sätt hastighet"
+   },
+   "HUD_BUTTON_SHOW_COMMS" : {
+      "description" : "Tooltip: Show comms",
+      "message" : "Visa kommunikationslog"
+   },
+   "HUD_BUTTON_SHOW_PERSONAL_INFO" : {
+      "description" : "Tooltip: Show personal info",
+      "message" : "Visa person-information"
+   },
+   "HUD_BUTTON_SIDEREAL_VIEW" : {
+      "description" : "Tooltip: Sidereal camera view",
+      "message" : "Sidovy"
+   },
+   "HUD_BUTTON_SWITCH_TO_GALAXY_MAP" : {
+      "description" : "Tooltip: Switch to galaxy map",
+      "message" : "Byt till galax-karta"
+   },
+   "HUD_BUTTON_SWITCH_TO_SECTOR_MAP" : {
+      "description" : "Tooltip: Switch to sector map",
+      "message" : "Byt till sektor-karta"
+   },
+   "HUD_BUTTON_SWITCH_TO_SYSTEM_MAP" : {
+      "description" : "Tooltip: Switch to system map",
+      "message" : "Byt till system-karta"
+   },
+   "HUD_BUTTON_SWITCH_TO_SYSTEM_OVERVIEW" : {
+      "description" : "Tooltip: Switch to system overview",
+      "message" : "Byt till system-översikt"
+   },
+   "HUD_BUTTON_SWITCH_TO_WORLD_VIEW" : {
+      "description" : "Tooltip: Switch to world view",
+      "message" : "Byt till världsvy"
+   },
+   "HUD_BUTTON_UNDOCK" : {
+      "description" : "Tooltip: Undock",
+      "message" : "Lämna dockan"
+   },
+   "HUD_CARGO_MASS" : {
+      "description" : "Cargo Mass",
+      "message" : "Lastmassa"
+   },
+   "HUD_CURRENT_COMBAT_TARGET" : {
+      "description" : "Tooltip: The current combat target.",
+      "message" : "Nuvarande vapenmål"
+   },
+   "HUD_CURRENT_FRAME" : {
+      "description" : "Tooltip: The current frame of reference.",
+      "message" : "Nuvarande referenssystrem"
+   },
+   "HUD_CURRENT_HEADING" : {
+      "description" : "Tooltip: the current heading.",
+      "message" : "Nuvarande kurs"
+   },
+   "HUD_CURRENT_NAV_TARGET" : {
+      "description" : "Tooltip: The current navigational target.",
+      "message" : "Nuvarande navigationsmål"
+   },
+   "HUD_CURRENT_PITCH" : {
+      "description" : "Tooltip: the current pitch.",
+      "message" : "Nuvarande inklination"
+   },
+   "HUD_CURRENT_ROLL" : {
+      "description" : "Tooltip: the current roll.",
+      "message" : "Nuvarande roll"
+   },
+   "HUD_DELTA_V" : {
+      "description" : "Tooltip: The remaining Δv.",
+      "message" : "Återstående Δv"
+   },
+   "HUD_DELTA_V_OF_MANEUVER_BURN" : {
+      "description" : "Tooltip: The Δv for the maneuver burn.",
+      "message" : "Δv för manöver"
+   },
+   "HUD_DELTA_V_PERCENT" : {
+      "description" : "Tooltip: The remaining Δv in percent.",
+      "message" : "Återstående Δv"
+   },
+   "HUD_DISTANCE_TO_SURFACE_OF_FRAME" : {
+      "description" : "Tooltip: Distance to the surface of the frame of reference.",
+      "message" : "Avstånd till ytan från referenssystemet"
+   },
+   "HUD_DISTANCE_TO_SURFACE_OF_TARGET" : {
+      "description" : "Tooltip: Distance to the surface of the target.",
+      "message" : "Avstånd till målets yta"
+   },
+   "HUD_DURATION_OF_MANEUVER_BURN" : {
+      "description" : "Tooltip: The approximate duration of the maneuver burn with main thrusters.",
+      "message" : "Uppskattad varaktighet av manöver med huvudmotorerna "
+   },
+   "HUD_DURATION_UNTIL_MANEUVER_BURN" : {
+      "description" : "Tooltip: The duration until the middle of the maneuver burn.",
+      "message" : "Hälften av tiden till manövrering"
+   },
+   "HUD_FORWARD_GUN_TEMPERATURE" : {
+      "description" : "Tooltip: Forward Gun Temperature.",
+      "message" : "Främre kanon-temperatur"
+   },
+   "HUD_HULL_STRENGTH" : {
+      "description" : "Tooltip: Hull Strength.",
+      "message" : "Skrovstyrka"
+   },
+   "HUD_HULL_TEMPERATURE" : {
+      "description" : "Tooltip: Hull Temperature.",
+      "message" : "Skrovtemperatur"
+   },
+   "HUD_HYPERSPACING_TO_N_IN_N_SECONDS" : {
+      "description" : "",
+      "message" : "Hopp till {destination} om {countdown} sekunder "
+   },
+   "HUD_INDICATOR_AWAY_FROM_FRAME" : {
+      "description" : "Indicator: Away from the current frame.",
+      "message" : "Från nuvarande referenssystem"
+   },
+   "HUD_INDICATOR_COMBAT_TARGET_PROGRADE" : {
+      "description" : "Indicator: Prograde direction relative to the current combat target.",
+      "message" : "Prograde relative to current combat target"
+   },
+   "HUD_INDICATOR_COMBAT_TARGET_RETROGRADE" : {
+      "description" : "Indicator: Retrograde direction relative to the current combat target.",
+      "message" : "Retrograde relative to current combat target"
+   },
+   "HUD_INDICATOR_FRAME_PROGRADE" : {
+      "description" : "Indicator: Prograde direction relative to the current frame.",
+      "message" : "Prograde relative to current frame of reference"
+   },
+   "HUD_INDICATOR_FRAME_RETROGRADE" : {
+      "description" : "Indicator: Retrograde direction relative to the current frame.",
+      "message" : "Retrograde relative to current frame of reference"
+   },
+   "HUD_INDICATOR_MANEUVER_PROGRADE" : {
+      "description" : "Indicator: The prograde direction for the maneuver burn.",
+      "message" : "Prograde for maneuver burn"
+   },
+   "HUD_INDICATOR_NAV_TARGET_PROGRADE" : {
+      "description" : "Indicator: Prograde direction relative to the current navigational target.",
+      "message" : "Prograde relative to current navigational target"
+   },
+   "HUD_INDICATOR_NAV_TARGET_RETROGRADE" : {
+      "description" : "Indicator: Retrograde direction relative to the current navigational target.",
+      "message" : "Retrograde relative to current navigational target"
+   },
+   "HUD_IN_TRANSIT_TO_N_X_X_X" : {
+      "description" : "",
+      "message" : "På väg mot {system} [{x},{y},{z}]"
+   },
+   "HUD_JUMP_COMPLETE" : {
+      "description" : "",
+      "message" : "Hopp färdigt: {percent}%"
+   },
+   "HUD_MASS" : {
+      "description" : "Mass",
+      "message" : "Massa"
+   },
+   "HUD_RADAR_DISTANCE" : {
+      "description" : "Tooltip: Current distance of the radar.",
+      "message" : "Aktiv radaravstånd"
+   },
+   "HUD_REQUEST_TIME_ACCEL" : {
+      "description" : "Tooltip: Request time acceleration {time}",
+      "message" : "Request time acceleration: {time}"
+   },
+   "HUD_SHIELD_STRENGTH" : {
+      "description" : "Tooltip: Shield Strength.",
+      "message" : "Sköld-styrka"
+   },
+   "HUD_SHOW_COMBAT_TARGET" : {
+      "description" : "Tooltip: Show the current combat target.",
+      "message" : "Visa nuvarande vapenmål"
+   },
+   "HUD_SHOW_FRAME" : {
+      "description" : "Tooltip: Show the current frame of reference.",
+      "message" : "Visa nuvarande referenssystem"
+   },
+   "HUD_SHOW_NAV_TARGET" : {
+      "description" : "Tooltip: Show current navigational target.",
+      "message" : "Visa nuvarande navigationsmål"
+   },
+   "HUD_SPEED_OF_APPROACH_TO_FRAME" : {
+      "description" : "Tooltip: The speed of approach towards the frame of reference.",
+      "message" : "Hastighet relativt referenssystemet"
+   },
+   "HUD_SPEED_OF_APPROACH_TO_TARGET" : {
+      "description" : "Tooltip: The speed of approach relative to target.",
+      "message" : "The speed of approach relative to target"
+   },
+   "HUD_SPEED_RELATIVE_TO_TARGET" : {
+      "description" : "Tooltip: The speed relative to the target.",
+      "message" : "Hastighet relativt målet"
+   },
+   "HUD_THRUST_INDICATOR" : {
+      "description" : "Tooltip: describe what the thrust/velocity indicator shows",
+      "message" : "Visa nuvarande hastighet för varje riktning (tunna linjer) och motorer (tjock bakgrund)"
+   },
    "HULL_DOES_NOT_REQUIRE_REPAIR" : {
       "description" : "",
       "message" : "Skrovet behöver inte repareras."
@@ -462,6 +846,10 @@
    "HYPERDRIVE_FITTED" : {
       "description" : "",
       "message" : "Installerad hypermotor:"
+   },
+   "HYPERJUMP_ROUTE" : {
+      "description" : "",
+      "message" : "HyperJump Route"
    },
    "HYPERSPACE_RANGE" : {
       "description" : "",
@@ -514,6 +902,10 @@
    "JETTISON" : {
       "description" : "",
       "message" : "Göra av med"
+   },
+   "JUMPING" : {
+      "description" : "Flight State",
+      "message" : "Jumping"
    },
    "KILLS" : {
       "description" : "",
@@ -599,6 +991,14 @@
       "description" : "Light year",
       "message" : "ly"
    },
+   "MAJOR_EXPORTS_ITEM" : {
+      "description" : "",
+      "message" : "Major exports"
+   },
+   "MAJOR_IMPORTS_ITEM" : {
+      "description" : "",
+      "message" : "Major imports"
+   },
    "MAKE_NEW_FACE" : {
       "description" : "",
       "message" : "Skapa nytt ansikte"
@@ -675,6 +1075,14 @@
       "description" : "",
       "message" : "Minimumbesättning"
    },
+   "MINOR_EXPORTS_ITEM" : {
+      "description" : "",
+      "message" : "Minor exports"
+   },
+   "MINOR_IMPORTS_ITEM" : {
+      "description" : "",
+      "message" : "Minor imports"
+   },
    "MISSILE_MOUNTS" : {
       "description" : "",
       "message" : "Missilpyloner"
@@ -695,9 +1103,21 @@
       "description" : "",
       "message" : "Till största delen ofarlig"
    },
+   "MOVE_DOWN" : {
+      "description" : "move selection down in list",
+      "message" : "Move Down"
+   },
+   "MOVE_UP" : {
+      "description" : "move selection up in list",
+      "message" : "Move Up"
+   },
    "MULTISAMPLING" : {
       "description" : "",
       "message" : "Multisampling"
+   },
+   "MULTISAMPLING_DESC" : {
+      "description" : "",
+      "message" : "A graphical fine-tuning feature, used to reduce jagged, pixelated contours. It can be quite resource-intensive."
    },
    "MURDER" : {
       "description" : "",
@@ -877,7 +1297,7 @@
    },
    "PRESS_A_KEY_OR_CONTROLLER_BUTTON" : {
       "description" : "",
-      "message" : "Tryck på en tangent eller kontrollknapp"
+      "message" : "Press a key or controller button or escape to clear"
    },
    "PRICE" : {
       "description" : "",
@@ -923,9 +1343,21 @@
       "description" : "",
       "message" : "Tanka fullt"
    },
+   "REGISTRATION_NUMBER" : {
+      "description" : "",
+      "message" : "Registration number"
+   },
    "RELIABLE" : {
       "description" : "For player reputation",
       "message" : "Pålitlig"
+   },
+   "REMOVE_JUMP" : {
+      "description" : "UI-button: remove hyper jump from list of planned jumps",
+      "message" : "Remove Jump"
+   },
+   "REMOVE_WHEN_COMPLETED" : {
+      "description" : "For UI hyperjump planner, referring to jump target system",
+      "message" : "Remove jump when completed"
    },
    "REPAIR_X_HULL_DAMAGE_FOR_X" : {
       "description" : "",
@@ -938,6 +1370,10 @@
    "REQUEST_LAUNCH" : {
       "description" : "",
       "message" : "Uppskjutningstillstånd"
+   },
+   "REQUIRED_FUEL" : {
+      "description" : "Fuel usage for traveling to star system",
+      "message" : "Required Fuel:"
    },
    "RESET" : {
       "description" : "",
@@ -962,6 +1398,14 @@
    "REWARD" : {
       "description" : "",
       "message" : "Belöning"
+   },
+   "ROUTE_INFO" : {
+      "description" : "For hyperjump planner",
+      "message" : "Route Info"
+   },
+   "ROUTE_JUMPS" : {
+      "description" : "For hyperjump planner",
+      "message" : "Route Jumps"
    },
    "SAGITTARIUS_ARM" : {
       "description" : "Arm of the Milky Way galaxy",
@@ -1007,6 +1451,10 @@
       "description" : "",
       "message" : "Sensorer och försvar"
    },
+   "SETTINGS" : {
+      "description" : "UI option",
+      "message" : "Settings"
+   },
    "SET_AS_TARGET" : {
       "description" : "",
       "message" : "Använd destination som navigationsmål"
@@ -1047,6 +1495,10 @@
       "description" : "",
       "message" : "Skeppet du tittade på har blivit sålt"
    },
+   "SIMULATING_UNIVERSE_EVOLUTION_N_BYEARS" : {
+      "description" : "",
+      "message" : "Simulerar universums evolution: {age} miljarder år ;-)"
+   },
    "SOUND" : {
       "description" : "",
       "message" : "Ljud"
@@ -1055,13 +1507,25 @@
       "description" : "",
       "message" : "Starta vid Bernard's Stjärna"
    },
+   "START_AT_BARNARDS_STAR_DESC" : {
+      "description" : "",
+      "message" : "This is a difficult start from the System Administration Resting prison station."
+   },
    "START_AT_EARTH" : {
       "description" : "",
       "message" : "Starta på Jorden"
    },
+   "START_AT_EARTH_DESC" : {
+      "description" : "",
+      "message" : "This is an easy start from London on Earth in the Sol system."
+   },
    "START_AT_NEW_HOPE" : {
       "description" : "New Hope is an in game location",
       "message" : "Starta vid New Hope"
+   },
+   "START_AT_NEW_HOPE_DESC" : {
+      "description" : "",
+      "message" : "This is a moderate start from Itzalean on New Hope in the Epsilon Eridani system."
    },
    "STAR_FIELD_DENSITY" : {
       "description" : "",
@@ -1070,6 +1534,10 @@
    "STATION_MANAGER" : {
       "description" : "",
       "message" : "Stationschef"
+   },
+   "STATION_ORBIT" : {
+      "description" : "Information shown in the station loby",
+      "message" : "Vi är i en {orbit_period} dags period runt {parent_body}."
    },
    "STATUS" : {
       "description" : "",
@@ -1082,6 +1550,10 @@
    "TECH_CERTIFIED_MILITARY" : {
       "description" : "Lobby screen shows the tech level of the station",
       "message" : "Denna station är certifierad för militär utrustning."
+   },
+   "TEXTURE_COMPRESSION" : {
+      "description" : "",
+      "message" : "This frees up more memory for the graphics card, which is likely what you want, at the expense of compressing them during game start."
    },
    "THANKS_AND_REMEMBER_TO_BUY_FUEL" : {
       "description" : "",
@@ -1108,12 +1580,20 @@
       "message" : "Skeppet för litet för nuvarande besättning"
    },
    "TOO_SMALL_TO_TRANSSHIP" : {
-      "description" : "",
-      "message" : "Skeppet är förlitet för att rymma din last."
+      "description" : "Ship market error message",
+      "message" : "Nytt skepp saknar kapacitet för nuvarande last och hypermotor."
    },
    "TOTAL" : {
       "description" : "",
       "message" : "Totalt:"
+   },
+   "TOTAL_DISTANCE" : {
+      "description" : "Total distance of a (possibly series) of hyper jump(s)",
+      "message" : "Total Distance:"
+   },
+   "TOTAL_DURATION" : {
+      "description" : "Total duration of a (possibly series) of hyper jump(s)",
+      "message" : "Total Duration:"
    },
    "TOTAL_MASS" : {
       "description" : "",
@@ -1155,6 +1635,10 @@
       "description" : "Game settings option: graphic resolution",
       "message" : "Väldigt lågt"
    },
+   "VICINITY_OF" : {
+      "description" : "",
+      "message" : "In vicinity of"
+   },
    "VIDEO" : {
       "description" : "",
       "message" : "Video"
@@ -1167,9 +1651,17 @@
       "description" : "",
       "message" : "Videoupplösning"
    },
+   "VIDEO_RESOLUTION_DESC" : {
+      "description" : "Tooltip for video mode/resultion setting",
+      "message" : "Higher resolutions display more information at a smaller size and can decrease performance."
+   },
    "VSYNC" : {
       "description" : "For the checkbox in settings window",
       "message" : "Vsync"
+   },
+   "VSYNC_DESC" : {
+      "description" : "",
+      "message" : "Vertical Sync can eliminate visual tearing or artifacts, and input latency."
    },
    "WAGE" : {
       "description" : "Salary of crew shown in crew roster",

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="src">
@@ -9,6 +9,12 @@
     </Filter>
     <Filter Include="src\posix">
       <UniqueIdentifier>{6d264ce7-1454-4144-a050-a665481a0a20}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\imgui">
+      <UniqueIdentifier>{3c92be2e-998e-4817-8563-82402b4f3b91}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\nanosvg">
+      <UniqueIdentifier>{a4f6a456-a451-445c-9017-dd2865551018}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -76,6 +82,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\LuaPlayer.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\LuaHyperspaceCloud.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\LuaRand.cpp">
@@ -432,6 +441,36 @@
     <ClCompile Include="..\..\src\RandomColor.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\contrib\imgui\imgui.cpp">
+      <Filter>src\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\contrib\imgui\imgui_draw.cpp">
+      <Filter>src\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\contrib\imgui\examples\sdl_opengl3_example\imgui_impl_sdl_gl3.cpp">
+      <Filter>src\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\LuaPiGui.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\PiGui.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\FixedGuns.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Propulsion.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\contrib\imgui\examples\sdl_opengl2_example\imgui_impl_sdl.cpp">
+      <Filter>src\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\versioningInfo.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\GZipFormat.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\Renderable.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -546,9 +585,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\perlin.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\PersistSystemData.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Pi.h">
@@ -873,6 +909,39 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\RandomColor.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\contrib\imgui\imgui.h">
+      <Filter>src\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\contrib\imgui\examples\sdl_opengl3_example\imgui_impl_sdl_gl3.h">
+      <Filter>src\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\contrib\nanosvg\nanosvg.h">
+      <Filter>src\nanosvg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\contrib\nanosvg\nanosvgrast.h">
+      <Filter>src\nanosvg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\LuaPiGui.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\PiGui.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\FixedGuns.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Propulsion.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\contrib\imgui\examples\sdl_opengl2_example\imgui_impl_sdl.h">
+      <Filter>src\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\versioningInfo.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\GZipFormat.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Renderable.h">

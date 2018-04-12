@@ -1,4 +1,4 @@
--- Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local Ship = import_core("Ship")
@@ -11,6 +11,7 @@ local Equipment = import("Equipment")
 local Timer = import("Timer")
 local Lang = import("Lang")
 local Character = import("Character")
+local Comms = import("Comms")
 
 local l = Lang.GetResource("ui-core")
 
@@ -460,6 +461,7 @@ end
 --
 Ship.HyperjumpTo = function (self, path, is_legal)
 	local engine = self:GetEquip("engine", 1)
+	local wheels = self:GetWheelState()
 	if not engine then
 		return "NO_DRIVE"
 	end
@@ -473,6 +475,11 @@ Ship.HyperjumpTo = function (self, path, is_legal)
 	if is_legal and self.frameBody and not is_allowed then
 		print("---> Engage AI for safe distance of hyperjump")
 		self:AIEnterLowOrbit(self.frameBody)
+	end
+
+	-- display warning if gear is not retracted
+	if self == Game.player and wheels ~= 0 then
+		Comms.ImportantMessage(l.ERROR_LANDING_GEAR_DOWN)
 	end
 
 	return engine:HyperjumpTo(self, path)
@@ -545,10 +552,10 @@ compat.equip.new2old = {
 	[misc.missile_unguided]="MISSILE_UNGUIDED", [misc.missile_guided]="MISSILE_GUIDED",
 	[misc.missile_smart]="MISSILE_SMART", [misc.missile_naval]="MISSILE_NAVAL",
 	[misc.atmospheric_shielding]="ATMOSPHERIC_SHIELDING", [misc.ecm_basic]="ECM_BASIC",
-	[misc.ecm_advanced]="ECM_ADVANCED", [misc.scanner]="SCANNER", [misc.cabin]="CABIN",
+	[misc.ecm_advanced]="ECM_ADVANCED", [misc.radar]="RADAR", [misc.cabin]="CABIN",
 	[misc.shield_generator]="SHIELD_GENERATOR", [misc.laser_cooling_booster]="LASER_COOLING_BOOSTER",
 	[misc.cargo_life_support]="CARGO_LIFE_SUPPORT", [misc.autopilot]="AUTOPILOT",
-	[misc.radar_mapper]="RADAR_MAPPER", [misc.fuel_scoop]="FUEL_SCOOP",
+	[misc.target_scanner]="TARGET_SCANNER", [misc.fuel_scoop]="FUEL_SCOOP",
 	[misc.cargo_scoop]="CARGO_SCOOP", [misc.hypercloud_analyzer]="HYPERCLOUD_ANALYZER",
 	[misc.shield_energy_booster]="SHIELD_ENERGY_BOOSTER", [misc.hull_autorepair]="HULL_AUTOREPAIR",
 	[hyperspace.hyperdrive_1]="DRIVE_CLASS1", [hyperspace.hyperdrive_2]="DRIVE_CLASS2", [hyperspace.hyperdrive_3]="DRIVE_CLASS3",
@@ -626,12 +633,13 @@ function Ship:FireMissileAt(which_missile, target)
 			if not missile_object:exists() then -- Usually means it has already exploded
 				return true
 			end
-			if missile_object:DistanceTo(self) < 300 then
-				return false
-			else
+-- TODO: Due to the changes in missile, DistanceTo cause an error
+--			if missile_object:DistanceTo(self) < 300 then
+--				return false
+--			else
 				missile_object:Arm()
-				return true
-			end
+--				return true
+--			end
 		end)
 	end
 

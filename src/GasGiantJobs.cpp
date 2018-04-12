@@ -127,22 +127,22 @@ namespace GasGiantJobs
 		// pick the correct colour basis texture for the planet
 		switch (0x0000FFFF & GGQuality) {
 		case Graphics::OGL::GEN_JUPITER_TEXTURE:
-			m_material->texture2 = Graphics::TextureBuilder::Billboard("textures/gasgiants/jupiterramp.png").GetOrCreateTexture(Pi::renderer, "gasgiant");
+			m_material->texture2 = Graphics::TextureBuilder::Raw("textures/gasgiants/jupiterramp.png").GetOrCreateTexture(Pi::renderer, "gasgiant");
 			break;
 		case Graphics::OGL::GEN_SATURN_TEXTURE:
-			m_material->texture2 = Graphics::TextureBuilder::Billboard("textures/gasgiants/saturnramp.png").GetOrCreateTexture(Pi::renderer, "gasgiant");
+			m_material->texture2 = Graphics::TextureBuilder::Raw("textures/gasgiants/saturnramp.png").GetOrCreateTexture(Pi::renderer, "gasgiant");
 			break;
 		case Graphics::OGL::GEN_SATURN2_TEXTURE:
-			m_material->texture2 = Graphics::TextureBuilder::Billboard("textures/gasgiants/saturn2ramp.png").GetOrCreateTexture(Pi::renderer, "gasgiant");
+			m_material->texture2 = Graphics::TextureBuilder::Raw("textures/gasgiants/saturn2ramp.png").GetOrCreateTexture(Pi::renderer, "gasgiant");
 			break;
 		case Graphics::OGL::GEN_NEPTUNE_TEXTURE:
-			m_material->texture2 = Graphics::TextureBuilder::Billboard("textures/gasgiants/neptuneramp.png").GetOrCreateTexture(Pi::renderer, "gasgiant");
+			m_material->texture2 = Graphics::TextureBuilder::Raw("textures/gasgiants/neptuneramp.png").GetOrCreateTexture(Pi::renderer, "gasgiant");
 			break;
 		case Graphics::OGL::GEN_NEPTUNE2_TEXTURE:
-			m_material->texture2 = Graphics::TextureBuilder::Billboard("textures/gasgiants/neptune2ramp.png").GetOrCreateTexture(Pi::renderer, "gasgiant");
+			m_material->texture2 = Graphics::TextureBuilder::Raw("textures/gasgiants/neptune2ramp.png").GetOrCreateTexture(Pi::renderer, "gasgiant");
 			break;
 		case Graphics::OGL::GEN_URANUS_TEXTURE:
-			m_material->texture2 = Graphics::TextureBuilder::Billboard("textures/gasgiants/uranusramp.png").GetOrCreateTexture(Pi::renderer, "gasgiant");
+			m_material->texture2 = Graphics::TextureBuilder::Raw("textures/gasgiants/uranusramp.png").GetOrCreateTexture(Pi::renderer, "gasgiant");
 			break;
 		}
 
@@ -180,7 +180,7 @@ namespace GasGiantJobs
 		PROFILE_SCOPED()
 		assert(m_texture.Valid());
 	}
-	
+
 	void SGPUGenRequest::SetupMaterialParams(const int face)
 	{
 		PROFILE_SCOPED()
@@ -188,7 +188,7 @@ namespace GasGiantJobs
 		m_specialParams.fracStep = 1.0f / float(uvDIMs);
 		m_specialParams.planetRadius = planetRadius;
 		m_specialParams.time = 0.0f;
-			
+
 		for(Uint32 i=0; i<3; i++) {
 			m_specialParams.frequency[i] = float(pTerrain->GetFracDef(i).frequency);
 		}

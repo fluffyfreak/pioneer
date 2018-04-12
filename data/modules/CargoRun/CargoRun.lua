@@ -1,4 +1,4 @@
--- Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local Engine = import("Engine")
@@ -20,6 +20,7 @@ local InfoFace = import("ui/InfoFace")
 local NavButton = import("ui/NavButton")
 
 local l = Lang.GetResource("module-cargorun")
+local l_ui_core = Lang.GetResource("ui-core")
 
 -- Get the UI class
 local ui = Engine.ui
@@ -272,7 +273,7 @@ end
 local getNumberOfFlavours = function (str)
 	local num = 1
 
-	while l[str .. "_" .. num] do
+	while l:get(str .. "_" .. num) do
 		num = num + 1
 	end
 	return num - 1
@@ -302,7 +303,7 @@ local onChat = function (form, ref, option)
 	if option == 0 then
 		local introtext  = string.interp(ad.introtext, {
 			name         = ad.client.name,
-			cash         = Format.Money(ad.reward),
+			cash         = Format.Money(ad.reward,false),
 			cargoname    = ad.cargotype:GetName(),
 			starport     = ad.location:GetSystemBody().name,
 			system       = ad.location:GetStarSystem().name,
@@ -387,7 +388,7 @@ local onChat = function (form, ref, option)
 		return
 
 	elseif option == 4 then
-		form:SetMessage(string.interp(l["URGENCY_" .. ad.branch .. "_" .. math.floor(ad.urgency * (getNumberOfFlavours("URGENCY_" .. ad.branch) - 1)) + 1]
+		form:SetMessage(string.interp(l:get("URGENCY_" .. ad.branch .. "_" .. math.floor(ad.urgency * (getNumberOfFlavours("URGENCY_" .. ad.branch) - 1)) + 1)
 			or l["URGENCY_" .. math.floor(ad.urgency * (getNumberOfFlavours("URGENCY") - 1)) + 1], { date = Format.Date(ad.due) }))
 
 	elseif option == 5 then
@@ -396,7 +397,7 @@ local onChat = function (form, ref, option)
 		else
 			local branch
 			if ad.wholesaler then branch = "WHOLESALER" else branch = ad.branch end
-			form:SetMessage(l["RISK_" .. branch .. "_" .. math.floor(ad.risk * (getNumberOfFlavours("RISK_" .. branch) - 1)) + 1] or l["RISK_" .. math.floor(ad.risk * (getNumberOfFlavours("RISK") - 1)) + 1])
+			form:SetMessage(l:get("RISK_" .. branch .. "_" .. math.floor(ad.risk * (getNumberOfFlavours("RISK_" .. branch) - 1)) + 1) or l["RISK_" .. math.floor(ad.risk * (getNumberOfFlavours("RISK") - 1)) + 1])
 		end
 	end
 
@@ -506,6 +507,7 @@ local makeAdvert = function (station)
 			due = due + Game.time
 		end
 	end
+	reward = math.ceil(reward)
 
 	local n = getNumberOfFlavours("INTROTEXT_" .. missiontype)
 	local introtext
@@ -543,7 +545,7 @@ local makeAdvert = function (station)
 	end
 	ad.desc = string.interp(adtext, {
 		system   = nearbysystem.name,
-		cash     = Format.Money(ad.reward),
+		cash     = Format.Money(ad.reward,false),
 		starport = ad.location:GetSystemBody().name,
 	})
 
@@ -608,9 +610,8 @@ local onEnterSystem = function (player)
 			-- if there is some risk and still no pirates, flip a tricoin
 			if pirates < 1 and risk >= 0.2 and Engine.rand:Integer(2) == 1 then pirates = 1 end
 
-			-- XXX hull mass is a bad way to determine suitability for role
 			local shipdefs = utils.build_array(utils.filter(function (k,def) return def.tag == 'SHIP'
-				and def.hyperdriveClass > 0 and def.hullMass <= 400 end, pairs(ShipDef)))
+				and def.hyperdriveClass > 0 and (def.roles.pirate or def.roles.mercenary) end, pairs(ShipDef)))
 			if #shipdefs == 0 then return end
 
 			local pirate
@@ -644,11 +645,11 @@ local onEnterSystem = function (player)
 				Comms.ImportantMessage(pirate_greeting, pirate.label)
 				pirate_gripes_time = Game.time
 				if mission.wholesaler or Engine.rand:Number(0, 1) >= 0.75 then
-					local escort
-					escort = Space.SpawnShipNear("kanara", Game.player, 50, 100) -- Local wholesaler or random police ship
+					local shipdef = ShipDef[Game.system.faction.policeShip]
+					local escort = Space.SpawnShipNear(shipdef.id, Game.player, 50, 100)
+					escort:SetLabel(l_ui_core.POLICE)
 					escort:AddEquip(Equipment.laser.pulsecannon_1mw)
 					escort:AddEquip(Equipment.misc.shield_generator)
-					escort:SetLabel(Ship.MakeRandomLabel())
 					escort:AIKill(pirate)
 					table.insert(escort_ships, escort)
 					Comms.ImportantMessage(l["ESCORT_CHATTER_" .. Engine.rand:Integer(1, getNumberOfFlavours("ESCORT_CHATTER"))], escort.label)
@@ -878,7 +879,7 @@ local onClick = function (mission)
 	else
 		local branch
 		if mission.wholesaler then branch = "WHOLESALER" else branch = mission.branch end
-		danger = (l["RISK_" .. branch .. "_" .. math.floor(mission.risk * (getNumberOfFlavours("RISK_" .. branch) - 1)) + 1]
+		danger = (l:get("RISK_" .. branch .. "_" .. math.floor(mission.risk * (getNumberOfFlavours("RISK_" .. branch) - 1)) + 1)
 			or l["RISK_" .. math.floor(mission.risk * (getNumberOfFlavours("RISK") - 1)) + 1])
 	end
 
@@ -890,7 +891,7 @@ local onClick = function (mission)
 											sectorx = mission.location.sectorX,
 											sectory = mission.location.sectorY,
 											sectorz = mission.location.sectorZ,
-											cash = Format.Money(mission.reward),
+											cash = Format.Money(mission.reward,false),
 											dist = dist})
 										),
 										ui:Margin(10),
@@ -990,7 +991,7 @@ local onClick = function (mission)
 											dom_sectorx = mission.domicile.sectorX,
 											dom_sectory = mission.domicile.sectorY,
 											dom_sectorz = mission.domicile.sectorZ,
-											cash = Format.Money(mission.reward),
+											cash = Format.Money(mission.reward,false),
 											dist = dist})
 										),
 										ui:Margin(10),

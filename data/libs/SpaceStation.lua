@@ -1,4 +1,4 @@
--- Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local SpaceStation = import_core("SpaceStation")
@@ -23,29 +23,46 @@ local l = Lang.GetResource("ui-core")
 -- Class: SpaceStation
 --
 
-
 function SpaceStation:Constructor()
 	-- Use a variation of the space station seed itself to ensure consistency
-	local rand = Rand.New(util.hash_random(self.seed .. '-techLevel', 2^31)-1)
+	local rand = Rand.New(self.seed .. '-techLevel')
 	local techLevel = rand:Integer(1, 6) + rand:Integer(0,6)
 	self:setprop("techLevel", techLevel)
 end
 
-
 local equipmentStock = {}
 
 local function updateEquipmentStock (station)
+	assert(station and station:exists())
 	if equipmentStock[station] then return end
 	equipmentStock[station] = {}
 	local hydrogen = Equipment.cargo.hydrogen
-	for _,slot in pairs{"cargo","laser", "hyperspace", "misc"} do
-		for key, e in pairs(Equipment[slot]) do
-			if e:IsValidSlot("cargo") then      -- is cargo
-				local min = e == hydrogen and 1 or 0 -- always stock hydrogen
-				equipmentStock[station][e] = Engine.rand:Integer(min,100) * Engine.rand:Integer(1,100)
-			else                                     -- is ship equipment
-				equipmentStock[station][e] = Engine.rand:Integer(0,100)
+	for _,e in pairs(Equipment.cargo) do
+		if e.purchasable then
+			local rn = 100000 / math.abs(e.price) --have about 100,000 worth of stock, per commodity
+			if e == hydrogen then
+				equipmentStock[station][e] = math.floor(rn/2 + Engine.rand:Integer(0,rn)) --always stock hydrogen
+			else
+				local pricemod = Game.system:GetCommodityBasePriceAlterations(e)
+				local stock =  (Engine.rand:Integer(0,rn) + Engine.rand:Integer(0,rn)) / 2 -- normal 0-100% stock
+				if pricemod > 10 then --major import, very low stock
+					stock = stock - (rn*0.6) -- 0-40% stock
+				elseif pricemod > 2 then --minor import
+					stock = stock - (rn*0.3) -- 0-70% stock
+				elseif pricemod < -10 then --major export
+					stock = stock + (rn*0.8) -- 80-180% stock
+				elseif pricemod < -2 then --minor export
+					stock = stock + (rn*0.3) -- 30-130% stock
+				end
+				equipmentStock[station][e] = math.floor(stock >=0 and stock or 0)
 			end
+		else
+			equipmentStock[station][e] = 0 -- commodity that cant be bought
+		end
+	end
+	for _,slot in pairs{"laser", "hyperspace", "misc"} do
+		for key, e in pairs(Equipment[slot]) do
+			equipmentStock[station][e] = Engine.rand:Integer(0,100)
 		end
 	end
 end
@@ -77,6 +94,7 @@ local equipmentPrice = {}
 --
 
 function SpaceStation:GetEquipmentPrice (e)
+	assert(self:exists())
 	if not equipmentPrice[self] then equipmentPrice[self] = {} end
 	if equipmentPrice[self][e] then
 		return equipmentPrice[self][e]
@@ -86,6 +104,7 @@ function SpaceStation:GetEquipmentPrice (e)
 end
 
 function SpaceStation:SetEquipmentPrice (e, v)
+	assert(self:exists())
 	if not equipmentPrice[self] then equipmentPrice[self] = {} end
 	equipmentPrice[self][e] = v
 end
@@ -114,6 +133,7 @@ end
 --   experimental
 --
 function SpaceStation:GetEquipmentStock (e)
+	assert(self:exists())
 	return equipmentStock[self][e] or 0
 end
 
@@ -139,6 +159,7 @@ end
 --   experimental
 --
 function SpaceStation:AddEquipmentStock (e, stock)
+	assert(self:exists())
 	equipmentStock[self][e] = (equipmentStock[self][e] or 0) + stock
 end
 
@@ -147,6 +168,7 @@ end
 local shipsOnSale = {}
 
 function SpaceStation:GetShipsOnSale ()
+	assert(self:exists())
 	if not shipsOnSale[self] then shipsOnSale[self] = {} end
 	return shipsOnSale[self]
 end
@@ -157,6 +179,7 @@ local function addShipOnSale (station, entry)
 end
 
 function SpaceStation:AddShipOnSale (entry)
+	assert(self:exists())
 	assert(entry.def)
 	assert(entry.skin)
 	assert(entry.label)
@@ -187,6 +210,7 @@ local function findShipOnSale (station, entry)
 end
 
 function SpaceStation:RemoveShipOnSale (entry)
+	assert(self:exists())
 	local num = findShipOnSale(self, entry)
 	if num > 0 then
 		removeShipOnSale(self, num)
@@ -195,6 +219,7 @@ function SpaceStation:RemoveShipOnSale (entry)
 end
 
 function SpaceStation:ReplaceShipOnSale (old, new)
+	assert(self:exists())
 	assert(new.def)
 	assert(new.skin)
 	assert(new.label)
@@ -432,7 +457,8 @@ SpaceStation.adverts = {}
 --
 --   description - text to display in the bulletin board
 --
---   icon - (option) filename of an icon to display alongside the advert
+--   icon - optional, filename of an icon to display alongside the advert.
+--          Defaults to bullet (data/icons/bbs/default).
 --
 --   onChat - function to call when the ad is activated. The function is
 --            passed three parameters: a <ChatForm> object for the ad
@@ -478,6 +504,7 @@ SpaceStation.adverts = {}
 --
 local nextRef = 0
 function SpaceStation:AddAdvert (description, onChat, onDelete)
+	assert(self:exists())
 	-- XXX legacy arg unpacking
 	local args
 	if (type(description) == "table") then
@@ -527,6 +554,7 @@ end
 --  stable
 --
 function SpaceStation:RemoveAdvert (ref)
+	assert(self:exists())
 	if not SpaceStation.adverts[self] then return end
 	if SpaceStation.lockedAdvert == ref then
 		SpaceStation.removeOnReleased = true
@@ -561,6 +589,7 @@ end
 --  experimental
 --
 function SpaceStation:LockAdvert (ref)
+	assert(self:exists())
 	if (SpaceStation.advertLockCount > 0) then
 		assert(SpaceStation.lockedAdvert == ref, "Attempt to lock ref "..ref
 		.."disallowed."

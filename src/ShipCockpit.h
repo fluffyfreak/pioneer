@@ -16,17 +16,19 @@ static const float COCKPIT_ACCEL_INTERP_MULTIPLIER = 0.5f;
 static const float COCKPIT_MAX_GFORCE = 10000.0f;
 static const float COCKPIT_ACCEL_OFFSET = 0.075f;
 
+class Player;
+
 class ShipCockpit : public ModelBody
 {
 public:
 	explicit ShipCockpit(const std::string &modelName);
 	virtual ~ShipCockpit();
 
-	virtual void Render(Graphics::Renderer *r, Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform) override;
+	virtual void Render(Graphics::Renderer *r, Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform) override final;
 
-	void Update(float timeStep);
+	void Update(const Player *player, float timeStep);
 	void RenderCockpit(Graphics::Renderer* renderer, Camera* camera, Frame* frame);
-	void OnActivated();
+	void OnActivated(const Player *player);
 	void resetInternalCameraController(void);
 
 protected:

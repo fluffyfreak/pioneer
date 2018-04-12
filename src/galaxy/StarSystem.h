@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _STARSYSTEM_H
@@ -7,7 +7,6 @@
 #include "libs.h"
 #include "galaxy/Economy.h"
 #include "Polit.h"
-#include "Serializer.h"
 #include <vector>
 #include <string>
 #include "RefCounted.h"
@@ -102,8 +101,11 @@ public:
 	const SystemPath& GetPath() const { return m_path; }
 	SystemBody* GetParent() const { return m_parent; }
 
+	bool IsPlanet() const;
+	bool IsMoon() const { return GetSuperType() == SUPERTYPE_ROCKY_PLANET && !IsPlanet(); }
+
 	bool HasChildren() const { return !m_children.empty(); }
-	unsigned GetNumChildren() const { return m_children.size(); }
+	Uint32 GetNumChildren() const { return static_cast<Uint32>(m_children.size()); }
 	IterationProxy<std::vector<SystemBody*> > GetChildren() { return MakeIterationProxy(m_children); }
 	const IterationProxy<const std::vector<SystemBody*> > GetChildren() const { return MakeIterationProxy(m_children); }
 
@@ -224,6 +226,8 @@ public:
 
 	StarSystem* GetStarSystem() const { return m_system; }
 
+	const std::string &GetSpaceStationType() const { return m_space_station_type; }
+
 private:
 	friend class StarSystem;
 	friend class ObjectViewerView;
@@ -280,6 +284,8 @@ private:
 	double m_atmosDensity;
 
 	StarSystem *m_system;
+
+	std::string m_space_station_type;
 };
 
 class StarSystem : public RefCounted {
@@ -315,12 +321,12 @@ public:
 	RefCountedPtr<const SystemBody> GetRootBody() const { return m_rootBody; }
 	RefCountedPtr<SystemBody> GetRootBody() { return m_rootBody; }
 	bool HasSpaceStations() const { return !m_spaceStations.empty(); }
-	unsigned GetNumSpaceStations() const { return m_spaceStations.size(); }
+	Uint32 GetNumSpaceStations() const { return static_cast<Uint32>(m_spaceStations.size()); }
 	IterationProxy<std::vector<SystemBody*> > GetSpaceStations() { return MakeIterationProxy(m_spaceStations); }
 	const IterationProxy<const std::vector<SystemBody*> > GetSpaceStations() const { return MakeIterationProxy(m_spaceStations); }
 	IterationProxy<std::vector<SystemBody*> > GetStars() { return MakeIterationProxy(m_stars); }
 	const IterationProxy<const std::vector<SystemBody*> > GetStars() const { return MakeIterationProxy(m_stars); }
-	unsigned GetNumBodies() const { return m_bodies.size(); }
+	Uint32 GetNumBodies() const { return static_cast<Uint32>(m_bodies.size()); }
 	IterationProxy<std::vector<RefCountedPtr<SystemBody> > > GetBodies() { return MakeIterationProxy(m_bodies); }
 	const IterationProxy<const std::vector<RefCountedPtr<SystemBody> > > GetBodies() const { return MakeIterationProxy(m_bodies); }
 
@@ -356,7 +362,7 @@ protected:
 	virtual ~StarSystem();
 
 	SystemBody *NewBody() {
-		SystemBody *body = new SystemBody(SystemPath(m_path.sectorX, m_path.sectorY, m_path.sectorZ, m_path.systemIndex, m_bodies.size()), this);
+		SystemBody *body = new SystemBody(SystemPath(m_path.sectorX, m_path.sectorY, m_path.sectorZ, m_path.systemIndex, static_cast<Uint32>(m_bodies.size())), this);
 		m_bodies.push_back(RefCountedPtr<SystemBody>(body));
 		return body;
 	}
