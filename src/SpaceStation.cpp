@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "SpaceStation.h"
@@ -14,7 +14,6 @@
 #include "Planet.h"
 #include "Player.h"
 #include "Polit.h"
-#include "Serializer.h"
 #include "Ship.h"
 #include "Space.h"
 #include "StringF.h"
@@ -22,7 +21,8 @@
 #include "galaxy/StarSystem.h"
 #include "graphics/Graphics.h"
 #include "scenegraph/ModelSkin.h"
-#include "json/JsonUtils.h"
+#include "JsonUtils.h"
+#include "GameSaveError.h"
 #include <algorithm>
 
 void SpaceStation::Init()
@@ -40,12 +40,16 @@ void SpaceStation::SaveToJson(Json::Value &jsonObj, Space *space)
 	for (Uint32 i = 0; i<m_shipDocking.size(); i++)
 	{
 		Json::Value shipDockingArrayEl(Json::objectValue); // Create JSON object to contain ship docking.
-		shipDockingArrayEl["index_for_body"] = space->GetIndexForBody(m_shipDocking[i].ship);
-		shipDockingArrayEl["stage"] = m_shipDocking[i].stage;
-		shipDockingArrayEl["stage_pos"] = DoubleToStr(m_shipDocking[i].stagePos); // stagePos is a double but was saved as a float in pre-JSON system for some reason (saved as double here).
-		VectorToJson(shipDockingArrayEl, m_shipDocking[i].fromPos, "from_pos");
-		QuaternionToJson(shipDockingArrayEl, m_shipDocking[i].fromRot, "from_rot");
-		shipDockingArray.append(shipDockingArrayEl); // Append ship docking object to array.
+		Uint32 bodyIndex = space->GetIndexForBody(m_shipDocking[i].ship);
+		if (bodyIndex != 0)
+		{
+			shipDockingArrayEl["index_for_body"] = bodyIndex;
+			shipDockingArrayEl["stage"] = m_shipDocking[i].stage;
+			shipDockingArrayEl["stage_pos"] = DoubleToStr(m_shipDocking[i].stagePos); // stagePos is a double but was saved as a float in pre-JSON system for some reason (saved as double here).
+			VectorToJson(shipDockingArrayEl, m_shipDocking[i].fromPos, "from_pos");
+			QuaternionToJson(shipDockingArrayEl, m_shipDocking[i].fromRot, "from_rot");
+		}
+		shipDockingArray.append(shipDockingArrayEl); // Append ship docking object to array - have to do this even for empty bays
 	}
 	spaceStationObj["ship_docking"] = shipDockingArray; // Add ship docking array to space station object.
 
@@ -55,19 +59,8 @@ void SpaceStation::SaveToJson(Json::Value &jsonObj, Space *space)
 	{
 		Json::Value portArrayEl(Json::objectValue); // Create JSON object to contain port.
 
-		portArrayEl["min_ship_size"] = m_ports[i].minShipSize;
-		portArrayEl["max_ship_size"] = m_ports[i].maxShipSize;
-		portArrayEl["in_use"] = m_ports[i].inUse;
-
-		Json::Value bayArray(Json::arrayValue); // Create JSON array to contain bay data.
-		for (Uint32 j = 0; j<m_ports[i].bayIDs.size(); j++)
-		{
-			Json::Value bayArrayEl(Json::objectValue); // Create JSON object to contain bay.
-			bayArrayEl["bay_id"] = m_ports[i].bayIDs[j].first;
-			bayArrayEl["name"] = m_ports[i].bayIDs[j].second;
-			bayArray.append(bayArrayEl); // Append bay object to array.
-		}
-		portArrayEl["bays"] = bayArray; // Add bay array to port object.
+		if(m_ports[i].inUse)
+			portArrayEl["in_use"] = m_ports[i].inUse;
 
 		portArray.append(portArrayEl); // Append port object to array.
 	}
@@ -108,17 +101,17 @@ void SpaceStation::LoadFromJson(const Json::Value &jsonObj, Space *space)
 		shipDocking_t &sd = m_shipDocking.back();
 
 		Json::Value shipDockingArrayEl = shipDockingArray[i];
-		if (!shipDockingArrayEl.isMember("index_for_body")) throw SavedGameCorruptException();
-		if (!shipDockingArrayEl.isMember("stage")) throw SavedGameCorruptException();
-		if (!shipDockingArrayEl.isMember("stage_pos")) throw SavedGameCorruptException();
-		if (!shipDockingArrayEl.isMember("from_pos")) throw SavedGameCorruptException();
-		if (!shipDockingArrayEl.isMember("from_rot")) throw SavedGameCorruptException();
-
-		sd.shipIndex = shipDockingArrayEl["index_for_body"].asInt();
-		sd.stage = shipDockingArrayEl["stage"].asInt();
-		sd.stagePos = StrToDouble(shipDockingArrayEl["stage_pos"].asString()); // For some reason stagePos was saved as a float in pre-JSON system (saved & loaded as double here).
-		JsonToVector(&(sd.fromPos), shipDockingArrayEl, "from_pos");
-		JsonToQuaternion(&(sd.fromRot), shipDockingArrayEl, "from_rot");
+		if (shipDockingArrayEl.isMember("index_for_body"))
+			sd.shipIndex = shipDockingArrayEl["index_for_body"].asInt();
+		if (shipDockingArrayEl.isMember("stage"))
+			sd.stage = shipDockingArrayEl["stage"].asInt();
+		if (shipDockingArrayEl.isMember("stage_pos"))
+			// For some reason stagePos was saved as a float in pre-JSON system (saved & loaded as double here).
+			sd.stagePos = StrToDouble(shipDockingArrayEl["stage_pos"].asString());
+		if (shipDockingArrayEl.isMember("from_pos"))
+			JsonToVector(&(sd.fromPos), shipDockingArrayEl, "from_pos");
+		if (shipDockingArrayEl.isMember("from_rot"))
+			JsonToQuaternion(&(sd.fromRot), shipDockingArrayEl, "from_rot");
 	}
 
 	// retrieve each of the port details and bay IDs
@@ -131,26 +124,8 @@ void SpaceStation::LoadFromJson(const Json::Value &jsonObj, Space *space)
 		SpaceStationType::SPort &port = m_ports.back();
 
 		Json::Value portArrayEl = portArray[i];
-		if (!portArrayEl.isMember("min_ship_size")) throw SavedGameCorruptException();
-		if (!portArrayEl.isMember("max_ship_size")) throw SavedGameCorruptException();
-		if (!portArrayEl.isMember("in_use")) throw SavedGameCorruptException();
-		if (!portArrayEl.isMember("bays")) throw SavedGameCorruptException();
-
-		port.minShipSize = portArrayEl["min_ship_size"].asInt();
-		port.maxShipSize = portArrayEl["max_ship_size"].asInt();
-		port.inUse = portArrayEl["in_use"].asBool();
-
-		Json::Value bayArray = portArrayEl["bays"];
-		if (!bayArray.isArray()) throw SavedGameCorruptException();
-		port.bayIDs.reserve(bayArray.size());
-		for (Uint32 j = 0; j < bayArray.size(); j++)
-		{
-			Json::Value bayArrayEl = bayArray[j];
-			if (!bayArrayEl.isMember("bay_id")) throw SavedGameCorruptException();
-			if (!bayArrayEl.isMember("name")) throw SavedGameCorruptException();
-
-			port.bayIDs.push_back(std::make_pair(bayArrayEl["bay_id"].asInt(), bayArrayEl["name"].asString()));
-		}
+		if (portArrayEl.isMember("in_use"))
+			port.inUse = portArrayEl["in_use"].asBool();
 	}
 
 	m_sbody = space->GetSystemBodyByIndex(spaceStationObj["index_for_system_body"].asUInt());
@@ -171,7 +146,7 @@ void SpaceStation::PostLoadFixup(Space *space)
 	}
 }
 
-SpaceStation::SpaceStation(const SystemBody *sbody): ModelBody()
+SpaceStation::SpaceStation(const SystemBody *sbody): ModelBody(), m_type(nullptr)
 {
 	m_sbody = sbody;
 
@@ -188,7 +163,14 @@ void SpaceStation::InitStation()
 	for(int i=0; i<NUM_STATIC_SLOTS; i++) m_staticSlot[i] = false;
 	Random rand(m_sbody->GetSeed());
 	const bool ground = m_sbody->GetType() == SystemBody::TYPE_STARPORT_ORBITAL ? false : true;
-	m_type = SpaceStationType::RandomStationType(rand, ground);
+	const std::string &space_station_type = m_sbody->GetSpaceStationType();
+	if(space_station_type != "") {
+		m_type = SpaceStationType::FindByName(space_station_type);
+		if(m_type == nullptr)
+			Output("WARNING: SpaceStation::InitStation wants to initialize a custom station of type %s, but no station type with that id has been found.\n", space_station_type.c_str());
+	}
+	if(m_type == nullptr)
+		m_type = SpaceStationType::RandomStationType(rand, ground);
 
 	if(m_shipDocking.empty()) {
 		m_shipDocking.reserve(m_type->NumDockingPorts());
@@ -201,7 +183,23 @@ void SpaceStation::InitStation()
 	assert(m_shipDocking.size() == m_type->NumDockingPorts());
 
 	// This SpaceStation's bay ports are an instance of...
-	m_ports = m_type->Ports();
+	if (m_ports.size() != m_type->Ports().size())
+	{
+		m_ports = m_type->Ports();
+	}
+	else
+	{
+		// since we might have loaded from JSON we've got a little bit of useful info in m_ports already
+		// backup the current data
+		auto backup = m_ports;
+		// clear it all to default
+		m_ports = m_type->Ports();
+		// now restore the "inUse" variable only since it's the only bit that might have changed
+		for (int p=0;p<m_ports.size();p++)
+		{
+			m_ports[p].inUse = backup[p].inUse;
+		}
+	}
 
 	SetStatic(ground);			// orbital stations are dynamic now
 
@@ -352,6 +350,14 @@ bool SpaceStation::GetDockingClearance(Ship *s, std::string &outMsg)
 		const SpaceStationType::SPort *const pPort = m_type->FindPortByBay(i);
 		if( !pPort ) continue;
 
+		// distance-to-station check
+		const double shipDist = s->GetPositionRelTo(this).Length();
+		double requestDist = 100000.0; //100km
+		if (s->IsType(Object::PLAYER) && shipDist > requestDist) {
+			outMsg = Lang::CLEARANCE_DENIED_TOO_FAR;
+			return false;
+		}
+
 		if( pPort->minShipSize < bboxRad && bboxRad < pPort->maxShipSize ) {
 			shipDocking_t &sd = m_shipDocking[i];
 			sd.ship = s;
@@ -378,14 +384,14 @@ bool SpaceStation::OnCollision(Object *b, Uint32 flags, double relVel)
 			if (m_shipDocking[i].ship == s) { port = i; break; }
 		}
 		if (port == -1) {
-			if (IsGroundStation())
+			if (IsGroundStation()) {
 				return DoShipDamage(s, flags, relVel);					// no permission
-			else return false;
+			} else return false;
 		}
 		if (IsPortLocked(port)) {
 			return DoShipDamage(s, flags, relVel);
 		}
-		if (m_shipDocking[port].stage != 1) return false;	// already docking?
+		if (m_shipDocking[port].stage != 1) return DoShipDamage(s, flags, relVel);	// already docking?
 
 		SpaceStationType::positionOrient_t dport;
 
@@ -401,7 +407,7 @@ bool SpaceStation::OnCollision(Object *b, Uint32 flags, double relVel)
 			float dist = (s->GetPosition() - GetPosition() - GetOrient()*dport.pos).LengthSqr();
 			// docking allowed only if inside a circle 70% greater than pad itself (*1.7)
 			float maxDist = static_cast<float>(m_type->FindPortByBay(port)->maxShipSize/2)*1.7;
-			if (dist > (maxDist*maxDist)) return false;
+			if (dist > (maxDist*maxDist)) return DoShipDamage(s, flags, relVel);
 		}
 
 		// why stage 2? Because stage 1 is permission to dock
@@ -426,6 +432,8 @@ bool SpaceStation::OnCollision(Object *b, Uint32 flags, double relVel)
 			s->SetDockedWith(this, port);				// bounces back to SS::SetDocked()
 			LuaEvent::Queue("onShipDocked", s, this);
 		}
+		// If this is reached, then you have permission
+		// to dock and a collision with docking surface
 		return false;
 	} else {
 		return true;
@@ -523,7 +531,7 @@ void SpaceStation::DockingUpdate(const double timeStep)
 
 			if (dt.stagePos >= 1.0) {
 				if (dt.ship == Pi::player)
-					Pi::game->log->Add(GetLabel(), Lang::DOCKING_CLEARANCE_EXPIRED);
+					Pi::game->log->Add(GetLabel(), Lang::DOCKING_CLEARANCE_EXPIRED, GameLog::PRIORITY_IMPORTANT);
 				dt.ship = 0;
 				dt.stage = 0;
 				m_doorAnimationStep = -0.3; // close door
@@ -775,7 +783,7 @@ vector3d SpaceStation::GetTargetIndicatorPosition(const Frame *relTo) const
 	// and the docking point's position once the docking anim starts
 	for (Uint32 i=0; i<m_shipDocking.size(); i++) {
 		if (i >= m_type->NumDockingPorts()) break;
-		if ((m_shipDocking[i].ship == Pi::player) && (m_shipDocking[i].stage > 0)) {
+		if ((m_shipDocking[i].ship == Pi::player) && (m_shipDocking[i].stage > 0) && (m_shipDocking[i].stage != m_type->NumDockingStages() + 1)) { // last part is "not currently docked"
 
 			SpaceStationType::positionOrient_t dport;
 			if (!m_type->GetShipApproachWaypoints(i, m_shipDocking[i].stage+1, dport))

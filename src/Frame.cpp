@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Frame.h"
@@ -9,7 +9,8 @@
 #include "galaxy/StarSystem.h"
 #include "Pi.h"
 #include "Game.h"
-#include "json/JsonUtils.h"
+#include "JsonUtils.h"
+#include "GameSaveError.h"
 #include <algorithm>
 
 Frame::Frame()
@@ -27,10 +28,8 @@ Frame::Frame(Frame *parent, const char *label, unsigned int flags)
 	Init(parent, label, flags);
 }
 
-void Frame::ToJson(Json::Value &jsonObj, Frame *f, Space *space)
+void Frame::ToJson(Json::Value &frameObj, Frame *f, Space *space)
 {
-	Json::Value frameObj(Json::objectValue); // Create JSON object to contain frame data.
-
 	frameObj["flags"] = f->m_flags;
 	frameObj["radius"] = DoubleToStr(f->m_radius);
 	frameObj["label"] = f->m_label;
@@ -47,27 +46,22 @@ void Frame::ToJson(Json::Value &jsonObj, Frame *f, Space *space)
 		Frame::ToJson(childFrameArrayEl, kid, space);
 		childFrameArray.append(childFrameArrayEl); // Append child frame object to array.
 	}
-	frameObj["child_frames"] = childFrameArray; // Add child frame array to frame object.
+	if (!childFrameArray.empty())
+		frameObj["child_frames"] = childFrameArray; // Add child frame array to frame object.
 
+	// Add sfx array to supplied object.
 	SfxManager::ToJson(frameObj, f);
-
-	jsonObj["frame"] = frameObj; // Add frame object to supplied object.
 }
 
-Frame *Frame::FromJson(const Json::Value &jsonObj, Space *space, Frame *parent, double at_time)
+Frame *Frame::FromJson(const Json::Value &frameObj, Space *space, Frame *parent, double at_time)
 {
 	Frame *f = new Frame();
 	f->m_parent = parent;
 
-	if (!jsonObj.isMember("frame")) throw SavedGameCorruptException();
-	Json::Value frameObj = jsonObj["frame"];
-
 	if (!frameObj.isMember("flags")) throw SavedGameCorruptException();
 	if (!frameObj.isMember("radius")) throw SavedGameCorruptException();
 	if (!frameObj.isMember("label")) throw SavedGameCorruptException();
-	if (!frameObj.isMember("pos")) throw SavedGameCorruptException();
 	if (!frameObj.isMember("ang_speed")) throw SavedGameCorruptException();
-	if (!frameObj.isMember("init_orient")) throw SavedGameCorruptException();
 	if (!frameObj.isMember("index_for_system_body")) throw SavedGameCorruptException();
 	if (!frameObj.isMember("index_for_astro_body")) throw SavedGameCorruptException();
 
@@ -83,12 +77,16 @@ Frame *Frame::FromJson(const Json::Value &jsonObj, Space *space, Frame *parent, 
 	f->m_astroBodyIndex = frameObj["index_for_astro_body"].asUInt();
 	f->m_vel = vector3d(0.0); // m_vel is set to zero.
 
-	if (!frameObj.isMember("child_frames")) throw SavedGameCorruptException();
-	Json::Value childFrameArray = frameObj["child_frames"];
-	if (!childFrameArray.isArray()) throw SavedGameCorruptException();
-	for (unsigned int i = 0; i < childFrameArray.size(); ++i) {
-		f->m_children.push_back(FromJson(childFrameArray[i], space, f, at_time));
+	if (frameObj.isMember("child_frames")) {
+		Json::Value childFrameArray = frameObj["child_frames"];
+		if (!childFrameArray.isArray()) throw SavedGameCorruptException();
+		for (unsigned int i = 0; i < childFrameArray.size(); ++i) {
+			f->m_children.push_back(FromJson(childFrameArray[i], space, f, at_time));
+		}
+	} else {
+		f->m_children.clear();
 	}
+
 	SfxManager::FromJson(frameObj, f);
 
 	f->ClearMovement();
@@ -268,7 +266,7 @@ void Frame::UpdateOrbitRails(double time, double timestep)
 	}
 	// temporary test thing
 	else m_pos = m_pos + m_vel * timestep;
-	
+
 	// update frame rotation
 	double ang = fmod(m_angSpeed * time, 2.0 * M_PI);
 	if (!is_zero_exact(ang)) {			// frequently used with e^-10 etc

@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _PROJECTILE_H
@@ -10,13 +10,15 @@
 #include "graphics/RenderState.h"
 
 struct ProjectileData {
+	ProjectileData() : lifespan(0.0f), damage(0.0f), length(0.0f), width(0.0f), speed(0.0f), color(Color::WHITE), mining(false), beam(false) {}
 	float lifespan;
 	float damage;
 	float length;
 	float width;
-	bool mining;
 	float speed;
 	Color color;
+	bool mining;
+	bool beam;
 };
 
 
@@ -37,18 +39,18 @@ public:
 
 	Projectile();
 	virtual ~Projectile();
-	virtual void Render(Graphics::Renderer *r, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform) override;
-	void TimeStepUpdate(const float timeStep) override;
-	void StaticUpdate(const float timeStep) override;
-	virtual void NotifyRemoved(const Body* const removedBody) override;
-	virtual void UpdateInterpTransform(double alpha) override;
-	virtual void PostLoadFixup(Space *space) override;
+	virtual void Render(Graphics::Renderer *r, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform)  override final;
+	void TimeStepUpdate(const float timeStep) override final;
+	void StaticUpdate(const float timeStep) override final;
+	virtual void NotifyRemoved(const Body* const removedBody) override final;
+	virtual void UpdateInterpTransform(double alpha) override final;
+	virtual void PostLoadFixup(Space *space) override final;
 
 	static void FreeModel();
 
 protected:
-	virtual void SaveToJson(Json::Value &jsonObj, Space *space) override;
-	virtual void LoadFromJson(const Json::Value &jsonObj, Space *space) override;
+	virtual void SaveToJson(Json::Value &jsonObj, Space *space) override final;
+	virtual void LoadFromJson(const Json::Value &jsonObj, Space *space) override final;
 
 private:
 	float GetDamage() const;

@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _SHIPTYPE_H
@@ -39,9 +39,15 @@ struct ShipType {
 	std::string cockpitName;
 	float linThrust[THRUSTER_MAX];
 	float angThrust;
+	float linAccelerationCap[THRUSTER_MAX];
 	std::map<std::string, int> slots;
 	std::map<std::string, bool> roles;
+	Color globalThrusterColor; // Override default color for thrusters
+	bool isGlobalColorDefined; // If globalThrusterColor is filled with... a color :)
+	Color directionThrusterColor[THRUSTER_MAX];
+	bool isDirectionColorDefined[THRUSTER_MAX];
 	double thrusterUpgrades[4];
+	double atmosphericPressureLimit;
 	int capacity; // tonnes
 	int hullMass;
 	float effectiveExhaustVelocity; // velocity at which the propellant escapes the engines

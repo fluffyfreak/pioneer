@@ -1,4 +1,4 @@
--- Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local Engine = import("Engine")
@@ -146,7 +146,7 @@ local onChat = function (form, ref, option)
 
 		local introtext = string.interp(flavours[ad.flavour].introtext, {
 			name     = ad.client.name,
-			cash     = Format.Money(ad.reward),
+			cash     = Format.Money(ad.reward,false),
 			starport = sbody.name,
 			system   = sys.name,
 			sectorx  = ad.location.sectorX,
@@ -260,6 +260,7 @@ local makeAdvert = function (station, manualFlavour, nearbystations)
 		reward = ((dist / max_delivery_dist) * typical_reward * (1+risk) * (1.5+urgency) * Engine.rand:Number(0.8,1.2))
 		due = Game.time + ((dist / max_delivery_dist) * typical_travel_time * (1.5-urgency) * Engine.rand:Number(0.9,1.1))
 	end
+	reward = math.ceil(reward)
 
 	local ad = {
 		station		= station,
@@ -279,7 +280,7 @@ local makeAdvert = function (station, manualFlavour, nearbystations)
 
 	ad.desc = string.interp(flavours[flavour].adtext, {
 		system	= nearbysystem.name,
-		cash	= Format.Money(ad.reward),
+		cash	= Format.Money(ad.reward,false),
 		starport = sbody.name,
 	})
 
@@ -460,7 +461,7 @@ local onGameStart = function ()
 	ads = {}
 	missions = {}
 
-	if not loaded_data then return end
+	if not loaded_data or not loaded_data.ads then return end
 
 	for k,ad in pairs(loaded_data.ads) do
 		local ref = ad.station:AddAdvert({
@@ -500,7 +501,7 @@ local onClick = function (mission)
 														sectorx = mission.location.sectorX,
 														sectory = mission.location.sectorY,
 														sectorz = mission.location.sectorZ,
-														cash   = Format.Money(mission.reward),
+														cash   = Format.Money(mission.reward,false),
 														dist  = dist})
 										),
 										ui:Margin(10),

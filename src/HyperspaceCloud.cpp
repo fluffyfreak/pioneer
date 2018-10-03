@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "HyperspaceCloud.h"
@@ -8,7 +8,6 @@
 #include "perlin.h"
 #include "Pi.h"
 #include "Player.h"
-#include "Serializer.h"
 #include "Ship.h"
 #include "Space.h"
 #include "graphics/Graphics.h"
@@ -16,7 +15,8 @@
 #include "graphics/Renderer.h"
 #include "graphics/VertexArray.h"
 #include "graphics/RenderState.h"
-#include "json/JsonUtils.h"
+#include "JsonUtils.h"
+#include "GameSaveError.h"
 
 using namespace Graphics;
 
@@ -97,7 +97,6 @@ void HyperspaceCloud::LoadFromJson(const Json::Value &jsonObj, Space *space)
 	if (!jsonObj.isMember("hyperspace_cloud")) throw SavedGameCorruptException();
 	Json::Value hyperspaceCloudObj = jsonObj["hyperspace_cloud"];
 
-	if (!hyperspaceCloudObj.isMember("vel")) throw SavedGameCorruptException();
 	if (!hyperspaceCloudObj.isMember("birth_date")) throw SavedGameCorruptException();
 	if (!hyperspaceCloudObj.isMember("due")) throw SavedGameCorruptException();
 	if (!hyperspaceCloudObj.isMember("is_arrival")) throw SavedGameCorruptException();

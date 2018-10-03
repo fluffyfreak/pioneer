@@ -20,6 +20,7 @@ noinst_HEADERS = \
 	AnimationCurves.h \
 	Background.h \
 	BaseSphere.h \
+	Beam.h \
 	Body.h \
 	ByteRange.h \
 	Camera.h \
@@ -46,13 +47,17 @@ noinst_HEADERS = \
 	GasGiant.h \
 	GasGiantJobs.h \
 	GeoSphere.h \
+	GZipFormat.h \
 	HudTrail.h \
 	HyperspaceCloud.h \
 	IniConfig.h \
+  Input.h \
 	Intro.h \
 	IterationProxy.h \
 	JobQueue.h \
+	JsonUtils.h \
 	GameConfig.h \
+	GameSaveError.h \
 	KeyBindings.h \
 	Lang.h \
 	LangStrings.inc.h \
@@ -66,6 +71,7 @@ noinst_HEADERS = \
 	LuaFileSystem.h \
 	LuaFormat.h \
 	LuaGame.h \
+	LuaInput.h \
 	LuaLang.h \
 	LuaMatrix.h \
 	LuaVector.h \
@@ -97,7 +103,6 @@ noinst_HEADERS = \
 	ObjectViewerView.h \
 	Orbit.h \
 	OS.h \
-	PersistSystemData.h \
 	Pi.h \
 	PiGui.h \
 	Plane.h \
@@ -142,6 +147,7 @@ noinst_HEADERS = \
 	TerrainBody.h \
 	Tombstone.h \
 	UIView.h \
+	versioningInfo.h \
 	VideoLink.h \
 	View.h \
 	WorldView.h \
@@ -162,6 +168,7 @@ pioneer_SOURCES	= \
 	AmbientSounds.cpp \
 	Background.cpp \
 	BaseSphere.cpp \
+	Beam.cpp \
 	Body.cpp \
 	Camera.cpp \
 	CameraController.cpp \
@@ -190,11 +197,14 @@ pioneer_SOURCES	= \
 	GeoPatchID.cpp \
 	GeoPatchJobs.cpp \
 	GeoSphere.cpp \
+	GZipFormat.cpp \
 	HudTrail.cpp \
 	HyperspaceCloud.cpp \
 	IniConfig.cpp \
+  Input.cpp \
 	Intro.cpp \
 	JobQueue.cpp \
+	JsonUtils.cpp \
 	GameConfig.cpp \
 	KeyBindings.cpp \
 	Lang.cpp \
@@ -211,6 +221,8 @@ pioneer_SOURCES	= \
 	LuaFileSystem.cpp \
 	LuaFormat.cpp \
 	LuaGame.cpp \
+	LuaHyperspaceCloud.cpp \
+  LuaInput.cpp \
 	LuaLang.cpp \
 	LuaMatrix.cpp \
 	LuaVector.cpp \
@@ -288,6 +300,7 @@ pioneer_SOURCES	= \
 	TerrainBody.cpp \
 	Tombstone.cpp \
 	UIView.cpp \
+	versioningInfo.cpp \
 	View.cpp \
 	WorldView.cpp \
 	main.cpp \
@@ -309,12 +322,11 @@ pioneer_LDADD = \
 	../contrib/PicoDDS/libpicodds.a \
 	../contrib/jenkins/libjenkins.a \
 	../contrib/json/libjson.a \
-	../contrib/glew/libglew.a \
 	../contrib/profiler/libprofiler.a \
 	../contrib/imgui/libimgui.a
 
 pioneer_LDADD += \
-	$(FREETYPE_LIBS) $(GL_LIBS) \
+	$(FREETYPE_LIBS) $(GL_LIBS) $(GLEW_LIBS) \
 	$(SDL2_LIBS) $(SIGC_LIBS) $(LUA_LIBS) $(VORBIS_LIBS) \
 	$(PNG_LIBS) $(CURL_LIBS) $(ASSIMP_LIBS) $(EXTRA_LIBS)
 
@@ -325,6 +337,10 @@ endif
 
 if !HAVE_LUA
 pioneer_LDADD += ../contrib/lua/liblua.a
+endif
+
+if !HAVE_GLEW
+pioneer_LDADD += ../contrib/glew/libglew.a
 endif
 
 if DO_STRIP
@@ -391,15 +407,18 @@ uitest_LDADD = \
 	../contrib/jenkins/libjenkins.a \
 	../contrib/PicoDDS/libpicodds.a \
 	../contrib/json/libjson.a \
-	../contrib/glew/libglew.a \
 	../contrib/profiler/libprofiler.a
 
 uitest_LDADD += \
-	$(FREETYPE_LIBS) $(GL_LIBS) \
+	$(FREETYPE_LIBS) $(GL_LIBS) $(GLEW_LIBS) \
 	$(SDL2_LIBS) $(SIGC_LIBS) $(LUA_LIBS) $(PNG_LIBS)
 
 if !HAVE_LUA
 uitest_LDADD += ../contrib/lua/liblua.a
+endif
+
+if !HAVE_GLEW
+uitest_LDADD += ../contrib/glew/libglew.a
 endif
 
 textstress_SOURCES = \
@@ -419,15 +438,18 @@ textstress_LDADD = \
 	graphics/libgraphics.a \
 	posix/libposix.a \
 	../contrib/json/libjson.a \
-	../contrib/glew/libglew.a \
 	../contrib/profiler/libprofiler.a
 
 textstress_LDADD += \
-	$(FREETYPE_LIBS) $(GL_LIBS) \
+	$(FREETYPE_LIBS) $(GL_LIBS) $(GLEW_LIBS) \
 	$(SDL2_LIBS) $(SIGC_LIBS) $(LUA_LIBS) $(PNG_LIBS)
 
 if !HAVE_LUA
 textstress_LDADD += ../contrib/lua/liblua.a
+endif
+
+if !HAVE_GLEW
+textstress_LDADD += ../contrib/glew/libglew.a
 endif
 
 modelcompiler_SOURCES = \
@@ -441,6 +463,7 @@ modelcompiler_SOURCES = \
 	IniConfig.cpp \
 	GameConfig.cpp \
 	JobQueue.cpp \
+	JsonUtils.cpp \
 	Lang.cpp \
 	ModManager.cpp \
 	NavLights.cpp \
@@ -459,7 +482,6 @@ modelcompiler_LDADD = \
 	text/libtext.a \
 	../contrib/PicoDDS/libpicodds.a \
 	../contrib/json/libjson.a \
-	../contrib/glew/libglew.a \
 	../contrib/profiler/libprofiler.a
 
 modelcompiler_LDADD += \
@@ -469,6 +491,10 @@ modelcompiler_LDADD += \
 
 if !HAVE_LUA
 modelcompiler_LDADD += ../contrib/lua/liblua.a
+endif
+
+if !HAVE_GLEW
+modelcompiler_LDADD += ../contrib/glew/libglew.a
 endif
 
 AM_CPPFLAGS += -isystem @top_srcdir@/contrib

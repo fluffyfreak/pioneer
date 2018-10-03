@@ -1,19 +1,24 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
 #include "DynamicBody.h"
 #include "Space.h"
 #include "Frame.h"
-#include "Serializer.h"
 #include "Planet.h"
 #include "Pi.h"
-#include "json/JsonUtils.h"
+#include "GameSaveError.h"
+#include "JsonUtils.h"
+#include "Propulsion.h"
+#include "FixedGuns.h"
 
 static const float KINETIC_ENERGY_MULT = 0.00001f;
 const double DynamicBody::DEFAULT_DRAG_COEFF = 0.1; // 'smooth sphere'
 
-DynamicBody::DynamicBody(): ModelBody()
+DynamicBody::DynamicBody()
+	: ModelBody()
+	, m_propulsion(nullptr)
+	, m_fixedGuns(nullptr)
 {
 	m_dragCoeff = DEFAULT_DRAG_COEFF;
 	m_flags = Body::FLAG_CAN_MOVE_FRAME;
@@ -35,6 +40,15 @@ DynamicBody::DynamicBody(): ModelBody()
 	m_aiMessage = AIError::AIERROR_NONE;
 	m_decelerating = false;
 	for ( int i=0; i < Feature::MAX_FEATURE; i++ ) m_features[i] = false;
+}
+
+void DynamicBody::AddFeature( Feature f ) {
+	m_features[f] = true;
+	if(f == Feature::PROPULSION && m_propulsion == nullptr) {
+		m_propulsion.Reset(new Propulsion());
+	} else if(f == Feature::FIXED_GUNS && m_fixedGuns == nullptr) {
+		m_fixedGuns.Reset(new FixedGuns());
+	}
 }
 
 void DynamicBody::SetForce(const vector3d &f)
@@ -87,10 +101,6 @@ void DynamicBody::LoadFromJson(const Json::Value &jsonObj, Space *space)
 	if (!jsonObj.isMember("dynamic_body")) throw SavedGameCorruptException();
 	Json::Value dynamicBodyObj = jsonObj["dynamic_body"];
 
-	if (!dynamicBodyObj.isMember("force")) throw SavedGameCorruptException();
-	if (!dynamicBodyObj.isMember("torque")) throw SavedGameCorruptException();
-	if (!dynamicBodyObj.isMember("vel")) throw SavedGameCorruptException();
-	if (!dynamicBodyObj.isMember("ang_vel")) throw SavedGameCorruptException();
 	if (!dynamicBodyObj.isMember("mass")) throw SavedGameCorruptException();
 	if (!dynamicBodyObj.isMember("mass_radius")) throw SavedGameCorruptException();
 	if (!dynamicBodyObj.isMember("ang_inertia")) throw SavedGameCorruptException();
@@ -115,6 +125,26 @@ void DynamicBody::PostLoadFixup(Space *space)
 	Body::PostLoadFixup(space);
 	m_oldPos = GetPosition();
 //	CalcExternalForce();		// too dangerous
+}
+
+const Propulsion *DynamicBody::GetPropulsion() const {
+	assert(m_propulsion != nullptr);
+	return m_propulsion.Get();
+}
+
+Propulsion *DynamicBody::GetPropulsion() {
+	assert(m_propulsion != nullptr);
+	return m_propulsion.Get();
+}
+
+const FixedGuns *DynamicBody::GetFixedGuns() const {
+	assert(m_fixedGuns != nullptr);
+	return m_fixedGuns.Get();
+}
+
+FixedGuns *DynamicBody::GetFixedGuns() {
+	assert(m_fixedGuns != nullptr);
+	return m_fixedGuns.Get();
 }
 
 void DynamicBody::SetTorque(const vector3d &t)
@@ -256,6 +286,8 @@ vector3d DynamicBody::GetAngularMomentum() const
 
 DynamicBody::~DynamicBody()
 {
+	m_propulsion.Reset();
+	m_fixedGuns.Reset();
 }
 
 vector3d DynamicBody::GetVelocity() const

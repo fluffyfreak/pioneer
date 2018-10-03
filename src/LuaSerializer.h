@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _LUASERIALIZER_H
@@ -8,7 +8,6 @@
 #include "LuaObject.h"
 #include "LuaRef.h"
 #include "DeleteEmitter.h"
-#include "Serializer.h"
 
 class LuaSerializer : public DeleteEmitter {
 	friend class LuaObject<LuaSerializer>;
@@ -19,9 +18,6 @@ public:
 	void ToJson(Json::Value &jsonObj);
 	void FromJson(const Json::Value &jsonObj);
 
-	void WrLuaRef(LuaRef &ref, Serializer::Writer &wr);
-	void RdLuaRef(LuaRef &ref, Serializer::Reader &rd);
-
 	void InitTableRefs();
 	void UninitTableRefs();
 
@@ -31,6 +27,9 @@ private:
 
 	static void pickle(lua_State *l, int idx, std::string &out, std::string key = "");
 	static const char *unpickle(lua_State *l, const char *pos);
+
+	static void pickle_json(lua_State *l, int idx, Json::Value &out, const std::string &key = "");
+	static void unpickle_json(lua_State *l, const Json::Value &value);
 };
 
 #endif

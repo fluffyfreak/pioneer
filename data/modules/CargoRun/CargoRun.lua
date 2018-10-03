@@ -1,4 +1,4 @@
--- Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local Engine = import("Engine")
@@ -303,7 +303,7 @@ local onChat = function (form, ref, option)
 	if option == 0 then
 		local introtext  = string.interp(ad.introtext, {
 			name         = ad.client.name,
-			cash         = Format.Money(ad.reward),
+			cash         = Format.Money(ad.reward,false),
 			cargoname    = ad.cargotype:GetName(),
 			starport     = ad.location:GetSystemBody().name,
 			system       = ad.location:GetStarSystem().name,
@@ -507,6 +507,7 @@ local makeAdvert = function (station)
 			due = due + Game.time
 		end
 	end
+	reward = math.ceil(reward)
 
 	local n = getNumberOfFlavours("INTROTEXT_" .. missiontype)
 	local introtext
@@ -544,7 +545,7 @@ local makeAdvert = function (station)
 	end
 	ad.desc = string.interp(adtext, {
 		system   = nearbysystem.name,
-		cash     = Format.Money(ad.reward),
+		cash     = Format.Money(ad.reward,false),
 		starport = ad.location:GetSystemBody().name,
 	})
 
@@ -842,7 +843,7 @@ end
 local loaded_data
 
 local onGameStart = function ()
-	if loaded_data then
+	if loaded_data and loaded_data.ads then
 		ads = {}
 		missions = {}
 		custom_cargo = {}
@@ -890,7 +891,7 @@ local onClick = function (mission)
 											sectorx = mission.location.sectorX,
 											sectory = mission.location.sectorY,
 											sectorz = mission.location.sectorZ,
-											cash = Format.Money(mission.reward),
+											cash = Format.Money(mission.reward,false),
 											dist = dist})
 										),
 										ui:Margin(10),
@@ -977,7 +978,15 @@ local onClick = function (mission)
 		:SetColumn(1, {
 			ui:VBox(10):PackEnd(InfoFace.New(mission.client))
 		})
-	else return ui:Grid(2,1)
+	else
+		local is_cargo_loaded
+
+		if mission.cargo_picked_up then
+			is_cargo_loaded = l.CARGO_IS_LOADED
+		else
+			is_cargo_loaded = l.CARGO_IS_NOT_LOADED
+		end
+		return ui:Grid(2,1)
 		:SetColumn(0,{ui:VBox():PackEnd({ui:MultiLineText((mission.introtext):interp({name = mission.client.name,
 											cargoname = mission.cargotype:GetName(),
 											starport = mission.location:GetSystemBody().name,
@@ -990,7 +999,7 @@ local onClick = function (mission)
 											dom_sectorx = mission.domicile.sectorX,
 											dom_sectory = mission.domicile.sectorY,
 											dom_sectorz = mission.domicile.sectorZ,
-											cash = Format.Money(mission.reward),
+											cash = Format.Money(mission.reward,false),
 											dist = dist})
 										),
 										ui:Margin(10),
@@ -1100,7 +1109,7 @@ local onClick = function (mission)
 											})
 											:SetColumn(1, {
 												ui:VBox():PackEnd({
-													ui:Label(mission.amount.."t")
+													ui:Label(mission.amount.."t "..is_cargo_loaded)
 												})
 											}),
 										ui:Grid(2,1)

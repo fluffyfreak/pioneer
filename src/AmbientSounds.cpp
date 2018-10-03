@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -161,7 +161,9 @@ void AmbientSounds::Update()
                     s_planetSurfaceNoise.Stop();
                 }
             }
-        }
+		} else if (Pi::game->IsHyperspace()) {
+			s_planetSurfaceNoise.Stop();
+		}
     } else {
 		if (s_stationNoise.IsPlaying()) {
 			const float target[2] = {0.0f,0.0f};
@@ -240,7 +242,7 @@ void AmbientSounds::Update()
 				const float inv = s_rangeTable[i][1];
 				volumes[i] = Clamp((pressureVolume - beg) * inv, 0.0f, 1.0f) * v_env;
 			}
-			
+
 			for(int i=0; i<eMaxNumAtmosphereSounds; i++) {
 				const float volume = volumes[i];
 				if (s_atmosphereNoises[i].IsPlaying()) {

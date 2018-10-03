@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "ModelViewer.h"
@@ -17,6 +17,7 @@
 #include "Pi.h"
 #include "StringF.h"
 #include "ModManager.h"
+#include "GameSaveError.h"
 #include <sstream>
 
 //default options
@@ -108,7 +109,7 @@ ModelViewer::ModelViewer(Graphics::Renderer *r, LuaManager *lm)
 
 	m_log = m_ui->MultiLineText("");
 	m_log->SetFont(UI::Widget::FONT_SMALLEST);
-	
+
 	m_logScroller.Reset(m_ui->Scroller());
 	m_logScroller->SetInnerWidget(m_ui->ColorBackground(Color(0x0,0x0,0x0,0x40))->SetInnerWidget(m_log));
 
@@ -148,9 +149,17 @@ void ModelViewer::Run(const std::string &modelName)
 
 	Graphics::RendererOGL::RegisterRenderer();
 
+	// determine what renderer we should use, default to Opengl 3.x
+	const std::string rendererName = config->String("RendererName", Graphics::RendererNameFromType(Graphics::RENDERER_OPENGL_3x));
+	Graphics::RendererType rType = Graphics::RENDERER_OPENGL_3x;
+	//if(rendererName == Graphics::RendererNameFromType(Graphics::RENDERER_OPENGL_3x))
+	//{
+	//	rType = Graphics::RENDERER_OPENGL_3x;
+	//}
+
 	//video
 	Graphics::Settings videoSettings = {};
-	videoSettings.rendererType = Graphics::RENDERER_OPENGL;
+	videoSettings.rendererType = rType;
 	videoSettings.width = config->Int("ScrWidth");
 	videoSettings.height = config->Int("ScrHeight");
 	videoSettings.fullscreen = (config->Int("StartFullscreen") != 0);
@@ -319,7 +328,7 @@ void ModelViewer::HitImpl()
 			// Please don't do this in game, no speed guarantee
 			const Uint32 posOffs = mesh.vertexBuffer->GetDesc().GetOffset(Graphics::ATTRIB_POSITION);
 			const Uint32 stride  = mesh.vertexBuffer->GetDesc().stride;
-			const Uint32 vtxIdx = m_rng.Int32() % mesh.vertexBuffer->GetVertexCount();
+			const Uint32 vtxIdx = m_rng.Int32() % mesh.vertexBuffer->GetSize();
 
 			const Uint8 *vtxPtr = mesh.vertexBuffer->Map<Uint8>(Graphics::BUFFER_MAP_READ);
 			const vector3f pos = *reinterpret_cast<const vector3f*>(vtxPtr + vtxIdx * stride + posOffs);
@@ -388,7 +397,7 @@ void ModelViewer::ChangeCameraPreset(SDL_Keycode key, SDL_Keymod mod)
 void ModelViewer::ToggleViewControlMode()
 {
 	m_options.mouselookEnabled = !m_options.mouselookEnabled;
-	m_renderer->GetWindow()->SetGrab(m_options.mouselookEnabled);
+	m_renderer->SetGrab(m_options.mouselookEnabled);
 
 	if (m_options.mouselookEnabled) {
 		m_viewRot = matrix3x3f::RotateY(DEG2RAD(m_rotY)) * matrix3x3f::RotateX(DEG2RAD(Clamp(m_rotX, -90.0f, 90.0f)));
@@ -411,7 +420,7 @@ void ModelViewer::ClearModel()
 	m_scaleModel.reset();
 
 	m_options.mouselookEnabled = false;
-	m_renderer->GetWindow()->SetGrab(false);
+	m_renderer->SetGrab(false);
 	m_viewPos = vector3f(0.0f, 0.0f, 10.0f);
 	ResetCamera();
 }
@@ -458,12 +467,12 @@ void ModelViewer::DrawBackground()
 		vbd.attrib[1].format	= Graphics::ATTRIB_FORMAT_UBYTE4;
 		vbd.numVertices = 6;
 		vbd.usage = Graphics::BUFFER_USAGE_STATIC;
-	
+
 		// VertexBuffer
 		m_bgBuffer.Reset( m_renderer->CreateVertexBuffer(vbd) );
 		m_bgBuffer->Populate(bgArr);
 	}
-	
+
 	m_renderer->DrawBuffer(m_bgBuffer.Get(), m_bgState, Graphics::vtxColorMaterial, Graphics::TRIANGLES);
 }
 
@@ -555,7 +564,7 @@ void ModelViewer::MainLoop()
 			const float dif = dif2 / (dif1 * 1.0f);
 
 			m_shields->Update(m_options.showShields ? 1.0f : (1.0f - dif), 1.0f);
-			
+
 			// setup rendering
 			if (!m_options.orthoView) {
                 m_renderer->SetPerspectiveProjection(85, Graphics::GetScreenWidth()/float(Graphics::GetScreenHeight()), 0.1f, 100000.f);
@@ -1072,10 +1081,10 @@ void ModelViewer::SetupUI()
 		hitItButton->onClick.connect(sigc::bind(sigc::mem_fun(*this, &ModelViewer::OnHitIt), hitItButton));
 	}
 
-	
+
 	add_pair(c, mainBox, randomColours = c->SmallButton(), "Random Colours");
 	randomColours->onClick.connect(sigc::bind(sigc::mem_fun(*this, &ModelViewer::OnRandomColor), randomColours));
-	
+
 
 	//pattern selector
 	if (m_model->SupportsPatterns()) {

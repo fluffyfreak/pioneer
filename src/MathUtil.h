@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _MATHUTIL_H
@@ -20,7 +20,7 @@ namespace MathUtil {
 
 	// interpolation, glsl style naming "mix"
 	template< class T, class F >
-	T mix(const T& v1, const T& v2, const F t){ 
+	inline T mix(const T& v1, const T& v2, const F t){
 		return t*v2 + (F(1.0)-t)*v1;
 	}
 
@@ -30,10 +30,19 @@ namespace MathUtil {
 	matrix4x4f Inverse(const matrix4x4f &);
 	matrix4x4f InverseSlow(const matrix4x4f &);
 	matrix4x4f Transpose(const matrix4x4f &);
-	
+
 	// matrix3x3f utility functions
 	matrix3x3f Inverse(const matrix3x3f &);
 	matrix3x3f Transpose(const matrix3x3f &);
+
+	// distince from a line segment:
+	float DistanceFromLineSegment(const vector3f& start, const vector3f& end, const vector3f& pos, bool& isWithinLineSegment);
+	float DistanceFromLine(const vector3f& start, const vector3f& end, const vector3f& pos);
+
+//#define TEST_MATHUTIL
+#ifdef TEST_MATHUTIL
+	bool TestDistanceFromLine();
+#endif
 }
 
 #endif

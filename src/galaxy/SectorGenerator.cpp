@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Pi.h"
@@ -7,6 +7,9 @@
 #include "CustomSystem.h"
 #include "Galaxy.h"
 #include "Factions.h"
+#include "GameSaveError.h"
+
+#define Square(x) ((x)*(x))
 
 static const unsigned int SYS_NAME_FRAGS = 32;
 static const char *sys_names[SYS_NAME_FRAGS] =
@@ -16,11 +19,10 @@ static const char *sys_names[SYS_NAME_FRAGS] =
 
 bool SectorCustomSystemsGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> galaxy, RefCountedPtr<Sector> sector, GalaxyGenerator::SectorConfig* config)
 {
-	PROFILE_SCOPED()
-
 	const int sx = sector->sx;
 	const int sy = sector->sy;
 	const int sz = sector->sz;
+	const Sint64 dist = (1 + sx*sx + sy*sy + sz*sz);
 
 	if ((sx >= -m_customOnlyRadius) && (sx <= m_customOnlyRadius-1) &&
 		(sy >= -m_customOnlyRadius) && (sy <= m_customOnlyRadius-1) &&
@@ -36,6 +38,7 @@ bool SectorCustomSystemsGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> gala
 		Sector::System s(sector.Get(), sx, sy, sz, sysIdx);
 		s.m_pos = Sector::SIZE*cs->pos;
 		s.m_name = cs->name;
+		s.m_other_names = cs->other_names;
 		for (s.m_numStars=0; s.m_numStars<cs->numStars; s.m_numStars++) {
 			if (cs->primaryType[s.m_numStars] == 0) break;
 			s.m_starType[s.m_numStars] = cs->primaryType[s.m_numStars];
@@ -48,8 +51,7 @@ bool SectorCustomSystemsGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> gala
 			 * ~500ly - ~700ly (65-90 sectors): gradual
 			 * ~700ly+: unexplored
 			 */
-			int dist = isqrt(1 + sx*sx + sy*sy + sz*sz);
-			if (((dist <= 90) && ( dist <= 65 || rng.Int32(dist) <= 40)) || galaxy->GetFactions()->IsHomeSystem(SystemPath(sx, sy, sz, sysIdx)))
+			if (((dist <= Square(90)) && ( dist <= Square(65) || rng.Int32(dist) <= Square(40))) || galaxy->GetFactions()->IsHomeSystem(SystemPath(sx, sy, sz, sysIdx)))
 				s.m_explored = StarSystem::eEXPLORED_AT_START;
 			else
 				s.m_explored = StarSystem::eUNEXPLORED;
@@ -66,7 +68,6 @@ bool SectorCustomSystemsGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> gala
 
 const std::string SectorRandomSystemsGenerator::GenName(RefCountedPtr<Galaxy> galaxy, const Sector& sec, Sector::System &sys, int si, Random &rng)
 {
-	PROFILE_SCOPED()
 	std::string name;
 	const int sx = sec.sx;
 	const int sy = sec.sy;
@@ -138,9 +139,12 @@ bool SectorRandomSystemsGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> gala
 	const int sx = sector->sx;
 	const int sy = sector->sy;
 	const int sz = sector->sz;
-	const int customCount = sector->m_systems.size();
+	const int customCount = static_cast<Uint32>(sector->m_systems.size());
+	const Sint64 dist = (1 + sx*sx + sy*sy + sz*sz);
+	const Sint64 freq = (1 + sx * sx + sy * sy);
 
-	int numSystems = (rng.Int32(4,20) * galaxy->GetSectorDensity(sx, sy, sz)) >> 8;
+	const int numSystems = (rng.Int32(4,20) * galaxy->GetSectorDensity(sx, sy, sz)) >> 8;
+	sector->m_systems.reserve(numSystems);
 
 	for (int i=0; i<numSystems; i++) {
 		Sector::System s(sector.Get(), sx, sy, sz, customCount + i);
@@ -160,25 +164,20 @@ bool SectorRandomSystemsGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> gala
 		s.m_pos.y = rng.Double(Sector::SIZE);
 		s.m_pos.z = rng.Double(Sector::SIZE);
 
-		s.m_seed = 0;
-		s.m_customSys = 0;
-
 		/*
 		 * 0 - ~500ly from sol: explored
 		 * ~500ly - ~700ly (65-90 sectors): gradual
 		 * ~700ly+: unexplored
 		 */
-		int dist = isqrt(1 + sx*sx + sy*sy + sz*sz);
-		if (((dist <= 90) && ( dist <= 65 || rng.Int32(dist) <= 40)) || galaxy->GetFactions()->IsHomeSystem(SystemPath(sx, sy, sz, customCount + i)))
+		if (((dist <= Square(90)) && ( dist <= Square(65) || rng.Int32(dist) <= Square(40))) || galaxy->GetFactions()->IsHomeSystem(SystemPath(sx, sy, sz, customCount + i)))
 			s.m_explored = StarSystem::eEXPLORED_AT_START;
 		else
 			s.m_explored = StarSystem::eUNEXPLORED;
 
-		Uint32 weight = rng.Int32(1000000);
-
 		// Frequencies are low enough that we probably don't need this anymore.
-		if (isqrt(1+sx*sx+sy*sy) > 10)
+		if (freq > Square(10))
 		{
+			const Uint32 weight = rng.Int32(1000000);
 			if (weight < 1) {
 				s.m_starType[0] = SystemBody::TYPE_STAR_IM_BH;  // These frequencies are made up
 			} else if (weight < 3) {
@@ -251,6 +250,7 @@ bool SectorRandomSystemsGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> gala
 				s.m_starType[0] = SystemBody::TYPE_BROWN_DWARF;
 			}
 		} else {
+			const Uint32 weight = rng.Int32(1000000);
 			if (weight < 100) { // should be 1 but that is boring
 				s.m_starType[0] = SystemBody::TYPE_STAR_O;
 			} else if (weight < 1300) {
@@ -283,10 +283,9 @@ bool SectorRandomSystemsGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> gala
 
 		if ((s.m_starType[0] <= SystemBody::TYPE_STAR_A) && (rng.Int32(10)==0)) {
 			// make primary a giant. never more than one giant in a system
-			// while
-			if (isqrt(1+sx*sx+sy*sy) > 10)
+			if (freq > Square(10))
 			{
-				weight = rng.Int32(1000);
+				const Uint32 weight = rng.Int32(1000);
 				if (weight >= 999) {
 					s.m_starType[0] = SystemBody::TYPE_STAR_B_HYPER_GIANT;
 				} else if (weight >= 998) {
@@ -312,7 +311,7 @@ bool SectorRandomSystemsGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> gala
 				} else {
 					s.m_starType[0] = SystemBody::TYPE_STAR_M_GIANT;
 				}
-			} else if (isqrt(1+sx*sx+sy*sy) > 5) s.m_starType[0] = SystemBody::TYPE_STAR_M_GIANT;
+			} else if (freq > Square(5)) s.m_starType[0] = SystemBody::TYPE_STAR_M_GIANT;
 			else s.m_starType[0] = SystemBody::TYPE_STAR_M;
 
 			//Output("%d: %d%\n", sx, sy);
@@ -329,31 +328,38 @@ bool SectorRandomSystemsGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> gala
 
 void SectorPersistenceGenerator::SetExplored(Sector::System* sys, StarSystem::ExplorationState e, double time)
 {
-	Sint32 date;
-	if (e != StarSystem::eUNEXPLORED) {
-		int year, month, day;
+	if (e == StarSystem::eUNEXPLORED) {
+		m_exploredSystems.erase(sys->GetPath());
+	} else if (e == StarSystem::eEXPLORED_AT_START) {
+		m_exploredSystems[sys->GetPath()] = 0;
+	} else {
+		assert(e == StarSystem::eEXPLORED_BY_PLAYER);
 		Time::DateTime dt = Time::DateTime(3200,1,1,0,0,0) + Time::TimeDelta(time, Time::Second);
+		int year, month, day;
 		dt.GetDateParts(&year, &month, &day);
-		date = day | month << 5 | year << 9;
+		Sint32 date = day | month << 5 | year << 9;
+		m_exploredSystems[sys->GetPath()] = date;
 	}
-	m_exploredSystems.Set(SystemPath(sys->sx, sys->sy, sys->sz, sys->idx), (e == StarSystem::eUNEXPLORED) ? -1 : date);
 }
 
 bool SectorPersistenceGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> galaxy, RefCountedPtr<Sector> sector, GalaxyGenerator::SectorConfig* config)
 {
 	if (galaxy->IsInitialized()) {
 		for (Sector::System& secsys : sector->m_systems) {
-			Sint32 exploredTime = m_exploredSystems.Get(SystemPath(secsys.sx, secsys.sy, secsys.sz, secsys.idx), -1);
-			if (exploredTime == 0) {
-				secsys.m_explored = StarSystem::eEXPLORED_AT_START;
-				secsys.m_exploredTime = 0.0;
-			} else if (exploredTime > 0) {
-				int year = exploredTime >> 9;
-				int month = (exploredTime >> 5) & 0xf;
-				int day = exploredTime & 0x1f;
-				Time::DateTime dt(year, month, day);
-				secsys.m_explored = StarSystem::eEXPLORED_BY_PLAYER;
-				secsys.m_exploredTime = dt.ToGameTime();
+			const auto iter = m_exploredSystems.find(SystemPath(secsys.sx, secsys.sy, secsys.sz, secsys.idx));
+			if (iter != m_exploredSystems.end()) {
+				Sint32 date = iter->second;
+				if (date == 0) {
+					secsys.m_explored = StarSystem::eEXPLORED_AT_START;
+					secsys.m_exploredTime = 0.0;
+				} else if (date > 0) {
+					int year = date >> 9;
+					int month = (date >> 5) & 0xf;
+					int day = date & 0x1f;
+					Time::DateTime dt(year, month, day);
+					secsys.m_explored = StarSystem::eEXPLORED_BY_PLAYER;
+					secsys.m_exploredTime = dt.ToGameTime();
+				}
 			}
 		}
 	}
@@ -363,12 +369,36 @@ bool SectorPersistenceGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> galaxy
 
 void SectorPersistenceGenerator::FromJson(const Json::Value &jsonObj, RefCountedPtr<Galaxy> galaxy)
 {
-	m_exploredSystems.Clear();
-	if (m_version >= 1)
-		m_exploredSystems.FromJson(jsonObj, &m_exploredSystems);
+	m_exploredSystems.clear();
+	if (m_version < 1) { return; }
+
+	// The layout of this data is really weird for historical reasons.
+	// It used to be stored by a general System-information container type called PersistSystemData<>.
+
+	if (!jsonObj.isMember("dict")) throw SavedGameCorruptException();
+	Json::Value dictArray = jsonObj["dict"];
+	if (!dictArray.isArray()) throw SavedGameCorruptException();
+	for (unsigned int arrayIndex = 0; arrayIndex < dictArray.size(); ++arrayIndex) {
+		const Json::Value &dictArrayEl = dictArray[arrayIndex];
+		if (!dictArrayEl.isMember("value")) throw SavedGameCorruptException();
+		SystemPath path = SystemPath::FromJson(dictArrayEl);
+		Sint32 val;
+		StrToAuto(&val, dictArrayEl["value"].asString());
+		m_exploredSystems[path] = val;
+	}
 }
 
 void SectorPersistenceGenerator::ToJson(Json::Value &jsonObj, RefCountedPtr<Galaxy> galaxy)
 {
-	m_exploredSystems.ToJson(jsonObj);
+	// The layout of this data is really weird for historical reasons.
+	// It used to be stored by a general System-information container type called PersistSystemData<>.
+
+	Json::Value dictArray(Json::arrayValue); // Create JSON array to contain dict data.
+	for (const auto &element : m_exploredSystems) {
+		Json::Value dictArrayEl(Json::objectValue); // Create JSON object to contain dict element.
+		element.first.ToJson(dictArrayEl);
+		dictArrayEl["value"] = AutoToStr(element.second);
+		dictArray.append(dictArrayEl); // Append dict object to array.
+	}
+	jsonObj["dict"] = dictArray; // Add dict array to supplied object.
 }

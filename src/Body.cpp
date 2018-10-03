@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -18,7 +18,8 @@
 #include "Space.h"
 #include "Game.h"
 #include "LuaEvent.h"
-#include "json/JsonUtils.h"
+#include "GameSaveError.h"
+#include "JsonUtils.h"
 
 Body::Body() : PropertiedObject(Lua::manager)
 	, m_flags(0)
@@ -207,7 +208,7 @@ void Body::SwitchToFrame(Frame *newFrame)
 
 void Body::UpdateFrame()
 {
-	if (!(m_flags & FLAG_CAN_MOVE_FRAME)) return;	
+	if (!(m_flags & FLAG_CAN_MOVE_FRAME)) return;
 
 	// falling out of frames
 	if (m_frame->GetRadius() < GetPosition().Length()) {

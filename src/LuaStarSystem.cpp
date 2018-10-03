@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaObject.h"
@@ -20,6 +20,7 @@
 #include "galaxy/GalaxyCache.h"
 #include "Factions.h"
 #include "FileSystem.h"
+#include "GameSaveError.h"
 
 /*
  * Class: StarSystem
@@ -305,6 +306,19 @@ static int l_starsystem_get_nearby_systems(lua_State *l)
 	return 1;
 }
 
+static int l_starsystem_get_stars(lua_State *l)
+{
+	const StarSystem *s = LuaObject<StarSystem>::CheckFromLua(1);
+	lua_newtable(l);
+	int i = 1;
+	for(SystemBody *star : s->GetStars()) {
+		lua_pushnumber(l, i++);
+		LuaObject<SystemBody>::PushToLua(star);
+		lua_settable(l, -3);
+	}
+	return 1;
+}
+
 /*
  * Method: DistanceTo
  *
@@ -345,9 +359,17 @@ static int l_starsystem_distance_to(lua_State *l)
 	RefCountedPtr<const Sector> sec1 = s->m_galaxy->GetSector(*loc1);
 	RefCountedPtr<const Sector> sec2 = s->m_galaxy->GetSector(*loc2);
 
-	double dist = Sector::DistanceBetween(sec1, loc1->systemIndex, sec2, loc2->systemIndex);
-
-	lua_pushnumber(l, dist);
+	// this only works if the SystemPath is valid
+	if (loc1->HasValidSystem() && loc2->HasValidSystem())
+	{
+		double dist = Sector::DistanceBetween(sec1, loc1->systemIndex, sec2, loc2->systemIndex);
+		lua_pushnumber(l, dist);
+	}
+	else
+	{
+		lua_pushnumber(l, FLT_MAX);
+		return luaL_error(l, "Cannot compare non-systemPaths");
+	}
 
 	LUA_DEBUG_END(l, 1);
 	return 1;
@@ -451,6 +473,20 @@ static int l_starsystem_attr_name(lua_State *l)
 	return 1;
 }
 
+static int l_starsystem_attr_other_names(lua_State *l)
+{
+	PROFILE_SCOPED();
+	StarSystem *s = LuaObject<StarSystem>::CheckFromLua(1);
+	LuaTable names(l);
+	int i = 1;
+	for(std::string n : s->GetOtherNames()) {
+		LuaPush(l, i++);
+		LuaPush(l, n);
+		lua_settable(l, -3);
+	}
+	return 1;
+}
+
 /*
  * Attribute: path
  *
@@ -541,6 +577,50 @@ static int l_starsystem_attr_faction(lua_State *l)
 	}
 }
 
+static int l_starsystem_attr_number_of_stars(lua_State *l)
+{
+	StarSystem *s = LuaObject<StarSystem>::CheckFromLua(1);
+	LuaPush(l, s->GetNumStars());
+	return 1;
+}
+
+static int l_starsystem_attr_root_system_body(lua_State *l)
+{
+	StarSystem *s = LuaObject<StarSystem>::CheckFromLua(1);
+	SystemBody *body = s->GetBodyByPath(s->GetRootBody()->GetPath());
+	LuaObject<SystemBody>::PushToLua(body);
+	return 1;
+}
+
+static int l_starsystem_attr_short_description(lua_State *l)
+{
+		StarSystem *s = LuaObject<StarSystem>::CheckFromLua(1);
+		LuaPush(l, s->GetShortDescription());
+		return 1;
+}
+
+/*
+* Attribute: govtype
+*
+* The government type used in the system
+* (PolitGovType string constant, EARTHCOLONIAL, EARTHDEMOC, EMPIRERULE, etc.
+*
+* Availability:
+*
+*   december 2017
+*
+* Status:
+*
+*   experimental
+*/
+static int l_starsystem_attr_govtype(lua_State *l)
+{
+	PROFILE_SCOPED()
+	StarSystem *s = LuaObject<StarSystem>::CheckFromLua(1);
+	lua_pushstring(l, EnumStrings::GetString("PolitGovType", s->GetSysPolit().govType));
+	return 1;
+}
+
 /*
  * Attribute: explored
  *
@@ -570,6 +650,7 @@ template <> void LuaObject<StarSystem>::RegisterClass()
 	static const luaL_Reg l_methods[] = {
 		{ "GetStationPaths", l_starsystem_get_station_paths },
 		{ "GetBodyPaths", l_starsystem_get_body_paths },
+		{ "GetStars", l_starsystem_get_stars },
 
 		{ "GetCommodityBasePriceAlterations", l_starsystem_get_commodity_base_price_alterations },
 		{ "IsCommodityLegal",                 l_starsystem_is_commodity_legal                   },
@@ -587,13 +668,17 @@ template <> void LuaObject<StarSystem>::RegisterClass()
 
 	static const luaL_Reg l_attrs[] = {
 		{ "name", l_starsystem_attr_name },
+		{ "other_names", l_starsystem_attr_other_names },
 		{ "path", l_starsystem_attr_path },
 
 		{ "lawlessness", l_starsystem_attr_lawlessness },
 		{ "population",  l_starsystem_attr_population  },
 		{ "faction",     l_starsystem_attr_faction     },
+		{ "govtype",     l_starsystem_attr_govtype     },
 		{ "explored",    l_starsystem_attr_explored    },
-
+		{ "numberOfStars",    l_starsystem_attr_number_of_stars },
+		{ "rootSystemBody",   l_starsystem_attr_root_system_body },
+		{ "shortDescription", l_starsystem_attr_short_description },
 		{ 0, 0 }
 	};
 

@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -16,7 +16,6 @@
 #include "galaxy/Galaxy.h"
 #include "galaxy/StarSystem.h"
 #include "SpaceStation.h"
-#include "Serializer.h"
 #include "collider/collider.h"
 #include "Missile.h"
 #include "HyperspaceCloud.h"
@@ -135,7 +134,8 @@ Space::Space(Game *game, RefCountedPtr<Galaxy> galaxy, const Json::Value &jsonOb
 
 	CityOnPlanet::SetCityModelPatterns(m_starSystem->GetPath());
 
-	m_rootFrame.reset(Frame::FromJson(spaceObj, this, 0, at_time));
+	if (!spaceObj.isMember("frame")) throw SavedGameCorruptException();
+	m_rootFrame.reset(Frame::FromJson(spaceObj["frame"], this, 0, at_time));
 	RebuildFrameIndex();
 
 	if (!spaceObj.isMember("bodies")) throw SavedGameCorruptException();
@@ -179,7 +179,9 @@ void Space::ToJson(Json::Value &jsonObj)
 
 	StarSystem::ToJson(spaceObj, m_starSystem.Get());
 
-	Frame::ToJson(spaceObj, m_rootFrame.get(), this);
+	Json::Value frameObj(Json::objectValue);
+	Frame::ToJson(frameObj, m_rootFrame.get(), this);
+	spaceObj["frame"] = frameObj;
 
 	Json::Value bodyArray(Json::arrayValue); // Create JSON array to contain body data.
 	for (Body* b : m_bodies)

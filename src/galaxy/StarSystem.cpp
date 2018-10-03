@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "StarSystem.h"
@@ -8,21 +8,32 @@
 #include "GalaxyGenerator.h"
 #include "Factions.h"
 
-#include "Serializer.h"
 #include "Pi.h"
 #include "LuaEvent.h"
 #include "enum_table.h"
-#include <map>
-#include <string>
-#include <algorithm>
 #include "utils.h"
 #include "Orbit.h"
 #include "Lang.h"
 #include "StringF.h"
-#include <SDL_stdinc.h>
 #include "EnumStrings.h"
+#include "GameSaveError.h"
+#include <SDL_stdinc.h>
+#include <map>
+#include <string>
+#include <algorithm>
 
 //#define DEBUG_DUMP
+
+namespace
+{
+	bool InvalidSystemNameChar (char c)
+	{
+		return !(
+			(c >= 'a' && c <= 'z') ||
+			(c >= 'A' && c <= 'Z') ||
+			(c >= '0' && c <= '9'));
+	}
+}
 
 // indexed by enum type turd
 const Color StarSystem::starColors[] = {
@@ -101,7 +112,7 @@ const Color StarSystem::starRealColors[] = {
 	{ 255, 153, 153 }, // M WF
 	{ 204, 204, 255 }, // B WF
 	{ 255, 204, 255 },  // O WF
-	{ 255, 255, 255 },  // small Black hole
+	{ 22, 0, 24 },  // small Black hole
 	{ 16, 0, 20 }, // med BH
 	{ 10, 0, 16 } // massive BH
 };
@@ -247,7 +258,8 @@ SystemBody::BodySuperType SystemBody::GetSuperType() const
 std::string SystemBody::GetAstroDescription() const
 {
 	PROFILE_SCOPED()
-	switch (m_type) {
+	switch (m_type)
+	{
 	case TYPE_BROWN_DWARF: return Lang::BROWN_DWARF;
 	case TYPE_WHITE_DWARF: return Lang::WHITE_DWARF;
 	case TYPE_STAR_M: return Lang::STAR_M;
@@ -291,51 +303,67 @@ std::string SystemBody::GetAstroDescription() const
 		else return Lang::SMALL_GAS_GIANT;
 	case TYPE_PLANET_ASTEROID: return Lang::ASTEROID;
 	case TYPE_PLANET_ORBITAL:
-	case TYPE_PLANET_TERRESTRIAL: {
+	case TYPE_PLANET_TERRESTRIAL:
+	{
 		std::string s;
-		if (m_mass > fixed(2,1)) s = Lang::MASSIVE;
-		else if (m_mass > fixed(3,2)) s = Lang::LARGE;
-		else if (m_mass < fixed(1,10)) s = Lang::TINY;
-		else if (m_mass < fixed(1,5)) s = Lang::SMALL;
+		if (m_mass > fixed(2,1))
+			s = Lang::MASSIVE;
+		else if (m_mass > fixed(3,2))
+			s = Lang::LARGE;
+		else if (m_mass < fixed(1,10))
+			s = Lang::TINY;
+		else if (m_mass < fixed(1,5))
+			s = Lang::SMALL;
 
-		if (m_volcanicity > fixed(7,10)) {
-			if (s.size()) s += Lang::COMMA_HIGHLY_VOLCANIC;
-			else s = Lang::HIGHLY_VOLCANIC;
+		if (m_volcanicity > fixed(7,10))
+		{
+			if (s.size())
+				s += Lang::COMMA_HIGHLY_VOLCANIC;
+			else
+				s = Lang::HIGHLY_VOLCANIC;
 		}
 
-		if (m_volatileIces + m_volatileLiquid > fixed(4,5)) {
-			if (m_volatileIces > m_volatileLiquid) {
-				if (m_averageTemp < fixed(250)) {
-					s += Lang::ICE_WORLD;
-				} else s += Lang::ROCKY_PLANET;
-			} else {
-				if (m_averageTemp < fixed(250)) {
-					s += Lang::ICE_WORLD;
-				} else {
-					s += Lang::OCEANICWORLD;
-				}
+		// m_averageTemp <-- in degrees Kelvin. -273 for Celsius.
+		// ^--- is not in fixed() format, but rather plain integer
+
+		if (m_volatileIces + m_volatileLiquid > fixed(4,5))
+		{
+			if (m_volatileIces > m_volatileLiquid)
+			{
+				s += (m_averageTemp < 273) ? Lang::ICE_WORLD : Lang::ROCKY_PLANET;
 			}
-		} else if (m_volatileLiquid > fixed(2,5)){
-			if (m_averageTemp > fixed(250)) {
-				s += Lang::PLANET_CONTAINING_LIQUID_WATER;
-			} else {
-				s += Lang::PLANET_WITH_SOME_ICE;
+			else
+			{
+				s += (m_averageTemp < 273) ? Lang::ICE_WORLD : Lang::OCEANICWORLD;
 			}
-		} else if (m_volatileLiquid > fixed(1,5)){
-			s += Lang::ROCKY_PLANET_CONTAINING_COME_LIQUIDS;
-		} else {
-			s += Lang::ROCKY_PLANET;
+			// what is a waterworld with temperature above 100C? possible?
+		}
+		else if (m_volatileLiquid > fixed(2,5))
+		{
+			s += (m_averageTemp > 273) ? Lang::PLANET_CONTAINING_LIQUID_WATER : Lang::PLANET_WITH_SOME_ICE;
+		}
+		else
+		{
+			s += (m_volatileLiquid > fixed(1,5)) ? Lang::ROCKY_PLANET_CONTAINING_COME_LIQUIDS : Lang::ROCKY_PLANET;
 		}
 
-		if (m_volatileGas < fixed(1,100)) {
+		if (m_volatileGas < fixed(1,100))
+		{
 			s += Lang::WITH_NO_SIGNIFICANT_ATMOSPHERE;
-		} else {
+		}
+		else
+		{
 			std::string thickness;
-			if (m_volatileGas < fixed(1,10)) thickness = Lang::TENUOUS;
-			else if (m_volatileGas < fixed(1,5)) thickness = Lang::THIN;
-			else if (m_volatileGas < fixed(2,1)) {}
-			else if (m_volatileGas < fixed(4,1)) thickness = Lang::THICK;
-			else thickness = Lang::VERY_DENSE;
+			if (m_volatileGas < fixed(1,10))
+				thickness = Lang::TENUOUS;
+			else if (m_volatileGas < fixed(1,5))
+				thickness = Lang::THIN;
+			else if (m_volatileGas < fixed(2,1))	// normal atmosphere
+				{}
+			else if (m_volatileGas < fixed(4,1))
+				thickness = Lang::THICK;
+			else
+				thickness = Lang::VERY_DENSE;
 
 			if (m_atmosOxidizing > fixed(95,100)) {
 				s += Lang::WITH_A+thickness+Lang::O2_ATMOSPHERE;
@@ -346,7 +374,7 @@ std::string SystemBody::GetAstroDescription() const
 			} else if (m_atmosOxidizing > fixed(55,100)) {
 				s += Lang::WITH_A+thickness+Lang::CH4_ATMOSPHERE;
 			} else if (m_atmosOxidizing > fixed(3,10)) {
-				s += Lang::WITH_A+thickness+Lang::H_ATMOSPHERE;
+				s += Lang::WITH_A+thickness+Lang::H_ATMOSPHERE; // IsScoopable depends on these if/then/else values fixed(3,10) -> fixed(55,100) == hydrogen
 			} else if (m_atmosOxidizing > fixed(2,10)) {
 				s += Lang::WITH_A+thickness+Lang::HE_ATMOSPHERE;
 			} else if (m_atmosOxidizing > fixed(15,100)) {
@@ -510,6 +538,18 @@ const char *SystemBody::GetIcon() const
 	}
 }
 
+bool SystemBody::IsPlanet() const {
+	BodySuperType st = GetSuperType();
+	if(st != BodySuperType::SUPERTYPE_ROCKY_PLANET && st != BodySuperType::SUPERTYPE_GAS_GIANT)
+		return false;
+	SystemBody *p = GetParent();
+	if(p != nullptr && p->GetSuperType() == BodySuperType::SUPERTYPE_STAR) {
+		return true;
+	}	else {
+		return false;
+	}
+}
+
 double SystemBody::GetMaxChildOrbitalDistance() const
 {
 	PROFILE_SCOPED()
@@ -579,7 +619,15 @@ bool SystemBody::HasAtmosphere() const
 bool SystemBody::IsScoopable() const
 {
 	PROFILE_SCOPED()
-	return (GetSuperType() == SUPERTYPE_GAS_GIANT);
+
+	if (GetSuperType() == SUPERTYPE_GAS_GIANT)
+		return true;
+	if ((m_type == TYPE_PLANET_TERRESTRIAL) &&
+		m_volatileGas > fixed(1, 100) &&
+		m_atmosOxidizing > fixed(3, 10) &&
+		m_atmosOxidizing <= fixed(55, 100))
+		return true;
+	return false;
 }
 
 // Calculate parameters used in the atmospheric model for shaders
@@ -864,54 +912,51 @@ RefCountedPtr<StarSystem> StarSystem::FromJson(RefCountedPtr<Galaxy> galaxy, con
 	return galaxy->GetStarSystem(SystemPath(sec_x, sec_y, sec_z, sys_idx));
 }
 
-std::string StarSystem::ExportBodyToLua(FILE *f, SystemBody *body) {
+std::string StarSystem::ExportBodyToLua(FILE *f, SystemBody *body)
+{
 	const int multiplier = 10000;
-	int i;
 
+	// strip characters that will not work in Lua
 	std::string code_name = body->GetName();
 	std::transform(code_name.begin(), code_name.end(), code_name.begin(), ::tolower);
-	code_name.erase(remove_if(code_name.begin(), code_name.end(), isspace), code_name.end());
-	for(unsigned int j = 0; j < code_name.length(); j++) {
-		if(code_name[j] == ',')
-			code_name[j] = 'X';
-		if(!((code_name[j] >= 'a' && code_name[j] <= 'z') ||
-				(code_name[j] >= 'A' && code_name[j] <= 'Z') ||
-				(code_name[j] >= '0' && code_name[j] <= '9')))
-			code_name[j] = 'Y';
-	}
+	code_name.erase(remove_if(code_name.begin(), code_name.end(), InvalidSystemNameChar), code_name.end());
 
-	std::string code_list = code_name;
-
-	for(i = 0; ENUM_BodyType[i].name != 0; i++) {
-		if(ENUM_BodyType[i].value == body->GetType())
+	// find the body type index so we can lookup the name
+	const char *pBodyTypeName = nullptr;
+	for (int bodyTypeIdx = 0; ENUM_BodyType[bodyTypeIdx].name != 0; bodyTypeIdx++) {
+		if (ENUM_BodyType[bodyTypeIdx].value == body->GetType()) {
+			pBodyTypeName = ENUM_BodyType[bodyTypeIdx].name;
 			break;
+		}
 	}
 
-	if(body->GetType() == SystemBody::TYPE_STARPORT_SURFACE) {
+	if (body->GetType() == SystemBody::TYPE_STARPORT_SURFACE)
+	{
 		fprintf(f,
 			"local %s = CustomSystemBody:new(\"%s\", '%s')\n"
-				"\t:latitude(math.deg2rad(%.1f))\n"
-                "\t:longitude(math.deg2rad(%.1f))\n",
+			"\t:latitude(math.deg2rad(%.1f))\n"
+			"\t:longitude(math.deg2rad(%.1f))\n",
 
-				code_name.c_str(),
-				body->GetName().c_str(), ENUM_BodyType[i].name,
-				body->m_inclination.ToDouble()*180/M_PI,
-				body->m_orbitalOffset.ToDouble()*180/M_PI
-				);
-	} else {
-
+			code_name.c_str(),
+			body->GetName().c_str(), pBodyTypeName,
+			body->m_inclination.ToDouble() * 180 / M_PI,
+			body->m_orbitalOffset.ToDouble() * 180 / M_PI
+		);
+	}
+	else
+	{
 		fprintf(f,
-				"local %s = CustomSystemBody:new(\"%s\", '%s')\n"
-				"\t:radius(f(%d,%d))\n"
-				"\t:mass(f(%d,%d))\n",
-				code_name.c_str(),
-				body->GetName().c_str(), ENUM_BodyType[i].name,
-				int(round(body->GetRadiusAsFixed().ToDouble()*multiplier)), multiplier,
-				int(round(body->GetMassAsFixed().ToDouble()*multiplier)), multiplier
+			"local %s = CustomSystemBody:new(\"%s\", '%s')\n"
+			"\t:radius(f(%d,%d))\n"
+			"\t:mass(f(%d,%d))\n",
+			code_name.c_str(),
+			body->GetName().c_str(), pBodyTypeName,
+			int(round(body->GetRadiusAsFixed().ToDouble()*multiplier)), multiplier,
+			int(round(body->GetMassAsFixed().ToDouble()*multiplier)), multiplier
 		);
 
-		if(body->GetType() != SystemBody::TYPE_GRAVPOINT)
-		fprintf(f,
+		if (body->GetType() != SystemBody::TYPE_GRAVPOINT)
+			fprintf(f,
 				"\t:seed(%u)\n"
 				"\t:temp(%d)\n"
 				"\t:semi_major_axis(f(%d,%d))\n"
@@ -921,25 +966,25 @@ std::string StarSystem::ExportBodyToLua(FILE *f, SystemBody *body) {
 				"\t:rotational_phase_at_start(fixed.deg2rad(f(%d,%d)))\n"
 				"\t:orbital_phase_at_start(fixed.deg2rad(f(%d,%d)))\n"
 				"\t:orbital_offset(fixed.deg2rad(f(%d,%d)))\n",
-			body->GetSeed(), body->GetAverageTemp(),
-			int(round(body->GetOrbit().GetSemiMajorAxis()/AU*multiplier)), multiplier,
-			int(round(body->GetOrbit().GetEccentricity()*multiplier)), multiplier,
-			int(round(body->m_rotationPeriod.ToDouble()*multiplier)), multiplier,
-			int(round(body->GetAxialTilt()*multiplier)), multiplier,
-			int(round(body->m_rotationalPhaseAtStart.ToDouble()*multiplier*180/M_PI)), multiplier,
-			int(round(body->m_orbitalPhaseAtStart.ToDouble()*multiplier*180/M_PI)), multiplier,
-			int(round(body->m_orbitalOffset.ToDouble()*multiplier*180/M_PI)), multiplier
-		);
+				body->GetSeed(), body->GetAverageTemp(),
+				int(round(body->GetOrbit().GetSemiMajorAxis() / AU * multiplier)), multiplier,
+				int(round(body->GetOrbit().GetEccentricity()*multiplier)), multiplier,
+				int(round(body->m_rotationPeriod.ToDouble()*multiplier)), multiplier,
+				int(round(body->GetAxialTilt()*multiplier)), multiplier,
+				int(round(body->m_rotationalPhaseAtStart.ToDouble()*multiplier * 180 / M_PI)), multiplier,
+				int(round(body->m_orbitalPhaseAtStart.ToDouble()*multiplier * 180 / M_PI)), multiplier,
+				int(round(body->m_orbitalOffset.ToDouble()*multiplier * 180 / M_PI)), multiplier
+			);
 
-		if(body->GetType() == SystemBody::TYPE_PLANET_TERRESTRIAL)
+		if (body->GetType() == SystemBody::TYPE_PLANET_TERRESTRIAL)
 			fprintf(f,
-					"\t:metallicity(f(%d,%d))\n"
-					"\t:volcanicity(f(%d,%d))\n"
-					"\t:atmos_density(f(%d,%d))\n"
-					"\t:atmos_oxidizing(f(%d,%d))\n"
-					"\t:ocean_cover(f(%d,%d))\n"
-					"\t:ice_cover(f(%d,%d))\n"
-					"\t:life(f(%d,%d))\n",
+				"\t:metallicity(f(%d,%d))\n"
+				"\t:volcanicity(f(%d,%d))\n"
+				"\t:atmos_density(f(%d,%d))\n"
+				"\t:atmos_oxidizing(f(%d,%d))\n"
+				"\t:ocean_cover(f(%d,%d))\n"
+				"\t:ice_cover(f(%d,%d))\n"
+				"\t:life(f(%d,%d))\n",
 				int(round(body->GetMetallicity()*multiplier)), multiplier,
 				int(round(body->GetVolcanicity()*multiplier)), multiplier,
 				int(round(body->GetVolatileGas()*multiplier)), multiplier,
@@ -952,7 +997,8 @@ std::string StarSystem::ExportBodyToLua(FILE *f, SystemBody *body) {
 
 	fprintf(f, "\n");
 
-	if(body->m_children.size() > 0) {
+	std::string code_list = code_name;
+	if (body->m_children.size() > 0) {
 		code_list = code_list + ", \n\t{\n";
 		for (Uint32 ii = 0; ii < body->m_children.size(); ii++) {
 			code_list = code_list + "\t" + ExportBodyToLua(f, body->m_children[ii]) + ", \n";
@@ -961,20 +1007,19 @@ std::string StarSystem::ExportBodyToLua(FILE *f, SystemBody *body) {
 	}
 
 	return code_list;
-
 }
 
 std::string StarSystem::GetStarTypes(SystemBody *body) {
-	int i = 0;
+	int bodyTypeIdx = 0;
 	std::string types = "";
 
 	if(body->GetSuperType() == SystemBody::SUPERTYPE_STAR) {
-		for(i = 0; ENUM_BodyType[i].name != 0; i++) {
-			if(ENUM_BodyType[i].value == body->GetType())
+		for(bodyTypeIdx = 0; ENUM_BodyType[bodyTypeIdx].name != 0; bodyTypeIdx++) {
+			if(ENUM_BodyType[bodyTypeIdx].value == body->GetType())
 				break;
 		}
 
-		types = types + "'" + ENUM_BodyType[i].name + "', ";
+		types = types + "'" + ENUM_BodyType[bodyTypeIdx].name + "', ";
 	}
 
 	for (Uint32 ii = 0; ii < body->m_children.size(); ii++) {
@@ -991,7 +1036,7 @@ void StarSystem::ExportToLua(const char *filename) {
 	if(f == 0)
 		return;
 
-	fprintf(f,"-- Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details\n");
+	fprintf(f,"-- Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details\n");
 	fprintf(f,"-- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt\n\n");
 
 	std::string stars_in_system = GetStarTypes(m_rootBody.Get());

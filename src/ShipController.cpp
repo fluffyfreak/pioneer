@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "ShipController.h"
@@ -11,6 +11,7 @@
 #include "Space.h"
 #include "WorldView.h"
 #include "OS.h"
+#include "GameSaveError.h"
 
 void ShipController::StaticUpdate(float timeStep)
 {
@@ -27,6 +28,7 @@ PlayerShipController::PlayerShipController() :
 	m_controlsLocked(false),
 	m_invertMouse(false),
 	m_mouseActive(false),
+	m_disableMouseFacing(false),
 	m_rotationDamping(true),
 	m_mouseX(0.0),
 	m_mouseY(0.0),
@@ -40,12 +42,50 @@ PlayerShipController::PlayerShipController() :
 	m_fovY = Pi::config->Float("FOVVertical");
 	m_lowThrustPower = Pi::config->Float("DefaultLowThrustPower");
 
-	m_connRotationDampingToggleKey = KeyBindings::toggleRotationDamping.onPress.connect(
-			sigc::mem_fun(this, &PlayerShipController::ToggleRotationDamping));
+	if (!InputBindings.primaryFire) {
+		Error("PlayerShipController was not properly initialized!\n"
+			"You must call PlayerShipController::RegisterInputBindings before initializing a PlayerShipController");
+	}
 
-	m_fireMissileKey = KeyBindings::fireMissile.onPress.connect(
+	m_connRotationDampingToggleKey = InputBindings.toggleRotationDamping->onPress.connect(
+		sigc::mem_fun(this, &PlayerShipController::ToggleRotationDamping));
+
+	m_fireMissileKey = InputBindings.secondaryFire->onPress.connect(
 			sigc::mem_fun(this, &PlayerShipController::FireMissile));
 
+}
+
+PlayerShipController::InputBinding PlayerShipController::InputBindings;
+
+void PlayerShipController::RegisterInputBindings()
+{
+	using namespace KeyBindings;
+	auto controlsPage = Pi::input.GetBindingPage("Controls");
+
+	auto weaponsGroup = controlsPage->GetBindingGroup("Weapons");
+	InputBindings.targetObject = Pi::input.AddActionBinding("BindTargetObject", weaponsGroup, ActionBinding(SDLK_y));
+	InputBindings.primaryFire = Pi::input.AddActionBinding("BindPrimaryFire", weaponsGroup, ActionBinding(SDLK_SPACE));
+	InputBindings.secondaryFire = Pi::input.AddActionBinding("BindSecondaryFire", weaponsGroup, ActionBinding(SDLK_m));
+
+	auto flightGroup = controlsPage->GetBindingGroup("Ship Orientation");
+	InputBindings.pitch = Pi::input.AddAxisBinding("BindAxisPitch", flightGroup, AxisBinding(SDLK_k, SDLK_i));
+	InputBindings.yaw = Pi::input.AddAxisBinding("BindAxisYaw", flightGroup, AxisBinding(SDLK_j, SDLK_l));
+	InputBindings.roll = Pi::input.AddAxisBinding("BindAxisRoll", flightGroup, AxisBinding(SDLK_u, SDLK_o));
+	InputBindings.killRot = Pi::input.AddActionBinding("BindKillRot", flightGroup, ActionBinding(SDLK_p, SDLK_x));
+
+	auto thrustGroup = controlsPage->GetBindingGroup("Manual Control Mode");
+	InputBindings.thrustForward = Pi::input.AddAxisBinding("BindAxisThrustForward", thrustGroup, AxisBinding(SDLK_w, SDLK_s));
+	InputBindings.thrustUp = Pi::input.AddAxisBinding("BindAxisThrustUp", thrustGroup, AxisBinding(SDLK_r, SDLK_f));
+	InputBindings.thrustLeft = Pi::input.AddAxisBinding("BindAxisThrustLeft", thrustGroup, AxisBinding(SDLK_a, SDLK_d));
+	InputBindings.thrustLowPower = Pi::input.AddActionBinding("BindThrustLowPower", thrustGroup, ActionBinding(SDLK_LSHIFT));
+
+	auto speedGroup = controlsPage->GetBindingGroup("Speed Control Mode");
+	InputBindings.increaseSpeed = Pi::input.AddActionBinding("BindIncreaseSpeed", speedGroup, ActionBinding(SDLK_RETURN, SDLK_t));
+	InputBindings.decreaseSpeed = Pi::input.AddActionBinding("BindDecreaseSpeed", speedGroup, ActionBinding(SDLK_RSHIFT, SDLK_g));
+	InputBindings.throttleAxis = Pi::input.AddAxisBinding("BindAxisThrottle", speedGroup, AxisBinding());
+
+	auto miscGroup = controlsPage->GetBindingGroup("Miscellaneous");
+	InputBindings.toggleRotationDamping = Pi::input.AddActionBinding("BindToggleRotationDamping", miscGroup, ActionBinding(SDLK_v));
 }
 
 PlayerShipController::~PlayerShipController()
@@ -106,15 +146,15 @@ void PlayerShipController::StaticUpdate(const float timeStep)
 	SDL_GetRelativeMouseState (mouseMotion+0, mouseMotion+1);	// call to flush
 
 	// external camera mouselook
-	if (Pi::MouseButtonState(SDL_BUTTON_MIDDLE)) {
-            MoveableCameraController *mcc = static_cast<MoveableCameraController*>(Pi::game->GetWorldView()->GetCameraController());
-            const double accel = 0.01; // XXX configurable?
-            mcc->RotateLeft(mouseMotion[0] * accel);
-            mcc->RotateUp(  mouseMotion[1] * accel);
-            // only mouselook if the player presses both mmb and rmb
-            mouseMotion[0] = 0;
-            mouseMotion[1] = 0;
-        }
+	if (Pi::input.MouseButtonState(SDL_BUTTON_MIDDLE)) {
+			MoveableCameraController *mcc = static_cast<MoveableCameraController*>(Pi::game->GetWorldView()->GetCameraController());
+			const double accel = 0.01; // XXX configurable?
+			mcc->RotateLeft(mouseMotion[0] * accel);
+			mcc->RotateUp(  mouseMotion[1] * accel);
+			// only mouselook if the player presses both mmb and rmb
+			mouseMotion[0] = 0;
+			mouseMotion[1] = 0;
+		}
 
 	if (m_ship->GetFlightState() == Ship::FLYING) {
 		switch (m_flightControlState) {
@@ -138,10 +178,10 @@ void PlayerShipController::StaticUpdate(const float timeStep)
 			if (IsAnyAngularThrusterKeyDown()) break;
 			v = m_ship->GetVelocity().NormalizedSafe();
 			if (m_flightControlState == CONTROL_FIXHEADING_BACKWARD ||
-			    m_flightControlState == CONTROL_FIXHEADING_ANTINORMAL)
+				m_flightControlState == CONTROL_FIXHEADING_ANTINORMAL)
 				v = -v;
 			if (m_flightControlState == CONTROL_FIXHEADING_NORMAL ||
-			    m_flightControlState == CONTROL_FIXHEADING_ANTINORMAL)
+				m_flightControlState == CONTROL_FIXHEADING_ANTINORMAL)
 				v = v.Cross(m_ship->GetPosition().NormalizedSafe());
 			if (m_flightControlState == CONTROL_FIXHEADING_RADIALLY_INWARD)
 				v = -m_ship->GetPosition().NormalizedSafe();
@@ -188,6 +228,12 @@ void PlayerShipController::CheckControlsLock()
 		|| (Pi::GetView() != Pi::game->GetWorldView()); //to prevent moving the ship in starmap etc.
 }
 
+vector3d PlayerShipController::GetMouseDir() const
+{
+	// translate from system to local frame
+	return m_mouseDir * m_ship->GetFrame()->GetOrient();
+}
+
 // mouse wraparound control function
 static double clipmouse(double cur, double inp)
 {
@@ -209,17 +255,18 @@ void PlayerShipController::PollControls(const float timeStep, const bool force_r
 		m_ship->SetGunState(0,0);
 		m_ship->SetGunState(1,0);
 
-		vector3d wantAngVel(0.0);
+		// vector3d wantAngVel(0.0);
 		double angThrustSoftness = 10.0;
 
-		const float linearThrustPower = (KeyBindings::thrustLowPower.IsActive() ? m_lowThrustPower : 1.0f);
+		const float linearThrustPower = (InputBindings.thrustLowPower->IsActive() ? m_lowThrustPower : 1.0f);
 
 		// have to use this function. SDL mouse position event is bugged in windows
-		if (Pi::MouseButtonState(SDL_BUTTON_RIGHT))
+		if (Pi::input.MouseButtonState(SDL_BUTTON_RIGHT))
 		{
-			const matrix3x3d &rot = m_ship->GetOrient();
-			if (!m_mouseActive) {
-				m_mouseDir = -rot.VectorZ();	// in world space
+			// use ship rotation relative to system, unchanged by frame transitions
+			matrix3x3d rot = m_ship->GetOrientRelTo(m_ship->GetFrame()->GetNonRotFrame());
+			if (!m_mouseActive && !m_disableMouseFacing) {
+				m_mouseDir = -rot.VectorZ();
 				m_mouseX = m_mouseY = 0;
 				m_mouseActive = true;
 			}
@@ -233,7 +280,7 @@ void PlayerShipController::PollControls(const float timeStep, const bool force_r
 			double modx = clipmouse(objDir.x, m_mouseX);
 			m_mouseX -= modx;
 
-			const bool invertY = (Pi::IsMouseYInvert() ? !m_invertMouse : m_invertMouse);
+			const bool invertY = (Pi::input.IsMouseYInvert() ? !m_invertMouse : m_invertMouse);
 
 			m_mouseY += mouseMotion[1] * accel * radiansPerPixel * (invertY ? -1 : 1);
 			double mody = clipmouse(objDir.y, m_mouseY);
@@ -249,17 +296,17 @@ void PlayerShipController::PollControls(const float timeStep, const bool force_r
 		if (m_flightControlState == CONTROL_FIXSPEED) {
 			double oldSpeed = m_setSpeed;
 			if (stickySpeedKey) {
-				if (!(KeyBindings::increaseSpeed.IsActive() || KeyBindings::decreaseSpeed.IsActive())) {
+				if (!(InputBindings.increaseSpeed->IsActive() || InputBindings.decreaseSpeed->IsActive())) {
 					stickySpeedKey = false;
 				}
 			}
 
 			if (!stickySpeedKey) {
-				if (KeyBindings::increaseSpeed.IsActive()) {
+				if (InputBindings.increaseSpeed->IsActive()) {
 					m_setSpeed += std::max(fabs(m_setSpeed)*0.05, 1.0);
 					if ( m_setSpeed > 300000000 ) m_setSpeed = 300000000;
 				}
-				if (KeyBindings::decreaseSpeed.IsActive()) {
+				if (InputBindings.decreaseSpeed->IsActive()) {
 					m_setSpeed -= std::max(fabs(m_setSpeed)*0.05, 1.0);
 					if ( m_setSpeed < -300000000 ) m_setSpeed = -300000000;
 				}
@@ -273,47 +320,27 @@ void PlayerShipController::PollControls(const float timeStep, const bool force_r
 			}
 		}
 
-		if (KeyBindings::thrustForward.IsActive()) m_ship->SetThrusterState(2, -linearThrustPower);
-		if (KeyBindings::thrustBackwards.IsActive()) m_ship->SetThrusterState(2, linearThrustPower);
-		if (KeyBindings::thrustUp.IsActive()) m_ship->SetThrusterState(1, linearThrustPower);
-		if (KeyBindings::thrustDown.IsActive()) m_ship->SetThrusterState(1, -linearThrustPower);
-		if (KeyBindings::thrustLeft.IsActive()) m_ship->SetThrusterState(0, -linearThrustPower);
-		if (KeyBindings::thrustRight.IsActive()) m_ship->SetThrusterState(0, linearThrustPower);
+		if (InputBindings.thrustForward->IsActive())
+			m_ship->SetThrusterState(2, -linearThrustPower * InputBindings.thrustForward->GetValue());
+		if (InputBindings.thrustUp->IsActive())
+			m_ship->SetThrusterState(1, linearThrustPower * InputBindings.thrustUp->GetValue());
+		if (InputBindings.thrustLeft->IsActive())
+			m_ship->SetThrusterState(0, -linearThrustPower * InputBindings.thrustLeft->GetValue());
 
-		if (KeyBindings::fireLaser.IsActive() || (Pi::MouseButtonState(SDL_BUTTON_LEFT) && Pi::MouseButtonState(SDL_BUTTON_RIGHT))) {
+		if (InputBindings.primaryFire->IsActive() || (Pi::input.MouseButtonState(SDL_BUTTON_LEFT) && Pi::input.MouseButtonState(SDL_BUTTON_RIGHT))) {
 				//XXX worldview? madness, ask from ship instead
 				m_ship->SetGunState(Pi::game->GetWorldView()->GetActiveWeapon(), 1);
 		}
 
-		if (KeyBindings::yawLeft.IsActive()) wantAngVel.y += 1.0;
-		if (KeyBindings::yawRight.IsActive()) wantAngVel.y += -1.0;
-		if (KeyBindings::pitchDown.IsActive()) wantAngVel.x += -1.0;
-		if (KeyBindings::pitchUp.IsActive()) wantAngVel.x += 1.0;
-		if (KeyBindings::rollLeft.IsActive()) wantAngVel.z += 1.0;
-		if (KeyBindings::rollRight.IsActive()) wantAngVel.z -= 1.0;
-		if (KeyBindings::killRot.IsActive()) SetFlightControlState(CONTROL_FIXHEADING_KILLROT);
+		vector3d wantAngVel = vector3d(
+			InputBindings.pitch->GetValue(),
+			InputBindings.yaw->GetValue(),
+			InputBindings.roll->GetValue());
 
-		if (KeyBindings::thrustLowPower.IsActive())
+		if (InputBindings.killRot->IsActive()) SetFlightControlState(CONTROL_FIXHEADING_KILLROT);
+
+		if (InputBindings.thrustLowPower->IsActive())
 			angThrustSoftness = 50.0;
-
-		vector3d changeVec;
-		changeVec.x = KeyBindings::pitchAxis.GetValue();
-		changeVec.y = KeyBindings::yawAxis.GetValue();
-		changeVec.z = KeyBindings::rollAxis.GetValue();
-
-		// Deadzone per-axis with normalisation
-		const float dz = m_joystickDeadzone;
-		for (int axis=0; axis<3; axis++) {
-			if (fabs(changeVec[axis]) < dz) {
-				// no input
-				changeVec[axis] = 0.0f;
-			} else {
-				// subtract deadzone and re-normalise to full range
-				changeVec[axis] = (changeVec[axis] - dz) / (1.0f - dz);
-			}
-		}
-
-		wantAngVel += changeVec;
 
 		if (wantAngVel.Length() >= 0.001 || force_rotation_damping || m_rotationDamping) {
 			if (Pi::game->GetTimeAccel()!=Game::TIMEACCEL_1X) {
@@ -324,31 +351,25 @@ void PlayerShipController::PollControls(const float timeStep, const bool force_r
 			m_ship->AIModelCoordsMatchAngVel(wantAngVel, angThrustSoftness);
 		}
 
-		if (m_mouseActive) m_ship->AIFaceDirection(m_mouseDir);
+		if (m_mouseActive && !m_disableMouseFacing) m_ship->AIFaceDirection(GetMouseDir());
 	}
 }
 
 bool PlayerShipController::IsAnyAngularThrusterKeyDown()
 {
 	return !Pi::IsConsoleActive() && (
-		KeyBindings::pitchUp.IsActive()   ||
-		KeyBindings::pitchDown.IsActive() ||
-		KeyBindings::yawLeft.IsActive()   ||
-		KeyBindings::yawRight.IsActive()  ||
-		KeyBindings::rollLeft.IsActive()  ||
-		KeyBindings::rollRight.IsActive()
+		InputBindings.pitch->IsActive()	||
+		InputBindings.yaw->IsActive()	||
+		InputBindings.roll->IsActive()
 	);
 }
 
 bool PlayerShipController::IsAnyLinearThrusterKeyDown()
 {
 	return !Pi::IsConsoleActive() && (
-		KeyBindings::thrustForward.IsActive()	||
-		KeyBindings::thrustBackwards.IsActive()	||
-		KeyBindings::thrustUp.IsActive()		||
-		KeyBindings::thrustDown.IsActive()		||
-		KeyBindings::thrustLeft.IsActive()		||
-		KeyBindings::thrustRight.IsActive()
+		InputBindings.thrustForward->IsActive()	||
+		InputBindings.thrustLeft->IsActive()	||
+		InputBindings.thrustUp->IsActive()
 	);
 }
 
@@ -432,4 +453,9 @@ void PlayerShipController::SetNavTarget(Body* const target, bool setSpeedTo)
 	else if (m_setSpeedTarget == m_navTarget)
 		m_setSpeedTarget = 0;
 	m_navTarget = target;
+}
+
+void PlayerShipController::SetSetSpeedTarget(Body* const target)
+{
+	m_setSpeedTarget = target;
 }

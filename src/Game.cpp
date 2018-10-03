@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Game.h"
@@ -22,17 +22,14 @@
 #include "LuaRef.h"
 #include "ObjectViewerView.h"
 #include "FileSystem.h"
+#include "GZipFormat.h"
 #include "graphics/Renderer.h"
 #include "ui/Context.h"
 #include "galaxy/GalaxyGenerator.h"
+#include "GameSaveError.h"
 
-extern "C" {
-#include "miniz/miniz.h"
-}
-
-static const int  s_saveVersion   = 84;
+static const int  s_saveVersion   = 85;
 static const char s_saveStart[]   = "PIONEER";
-static const char s_saveEnd[]     = "END";
 
 Game::Game(const SystemPath &path, double time) :
 	m_galaxy(GalaxyGenerator::Create()),
@@ -177,12 +174,6 @@ m_forceTimeAccel(false)
 
 	Pi::luaSerializer->UninitTableRefs();
 
-	// signature check (don't really need this anymore)
-	if (!jsonObj.isMember("trailing_signature")) throw SavedGameCorruptException();
-	Json::Value trailingSignature = jsonObj["trailing_signature"];
-	if (trailingSignature.isString() && trailingSignature.asString().compare(s_saveEnd) == 0) {}
-	else throw SavedGameCorruptException();
-
 	EmitPauseState(IsPaused());
 }
 
@@ -232,8 +223,46 @@ void Game::ToJson(Json::Value &jsonObj)
 	// lua
 	Pi::luaSerializer->ToJson(jsonObj);
 
-	// trailing signature
-	jsonObj["trailing_signature"] = s_saveEnd; // Don't really need this anymore.
+	// Stuff to show in the preview in load game window
+	// some may be redundant, but this won't require loading up a game to get it all
+	Json::Value gameInfo(Json::objectValue);
+	float credits = LuaObject<Player>::CallMethod<float>(Pi::player, "GetMoney");
+
+	gameInfo["system"] = Pi::game->GetSpace()->GetStarSystem()->GetName();
+	gameInfo["credits"] = credits;
+	gameInfo["ship"] = Pi::player->GetShipType()->modelName;
+	if (Pi::player->IsDocked()) {
+		gameInfo["docked_at"] = Pi::player->GetDockedWith()->GetSystemBody()->GetName();
+	}
+
+	switch (Pi::player->GetFlightState()) {
+	case Ship::FlightState::DOCKED:
+		gameInfo["flight_state"] = "docked";
+		break;
+	case Ship::FlightState::DOCKING:
+		gameInfo["flight_state"] = "docking";
+		break;
+	case Ship::FlightState::FLYING:
+		gameInfo["flight_state"] = "flying";
+		break;
+	case Ship::FlightState::HYPERSPACE:
+		gameInfo["flight_state"] = "hyperspace";
+		break;
+	case Ship::FlightState::JUMPING:
+		gameInfo["flight_state"] = "jumping";
+		break;
+	case Ship::FlightState::LANDED:
+		gameInfo["flight_state"] = "landed";
+		break;
+	case Ship::FlightState::UNDOCKING:
+		gameInfo["flight_state"] = "undocking";
+		break;
+	default:
+		gameInfo["flight_state"] = "unknown";
+		break;
+	}
+
+	jsonObj["game_info"] = gameInfo;
 
 	Pi::luaSerializer->UninitTableRefs();
 }
@@ -250,7 +279,6 @@ void Game::TimeStep(float step)
 	// XXX ui updates, not sure if they belong here
 	m_gameViews->m_cpan->TimeStepUpdate(step);
 	SfxManager::TimeStepAll(step, m_space->GetRootFrame());
-	log->Update(m_timeAccel == Game::TIMEACCEL_PAUSED);
 
 	if (m_state == STATE_HYPERSPACE) {
 		if (Pi::game->GetTime() >= m_hyperspaceEndTime) {
@@ -678,7 +706,6 @@ void Game::RequestTimeAccelDec(bool force)
 Game::Views::Views()
 	: m_sectorView(nullptr)
 	, m_galacticView(nullptr)
-	, m_settingsView(nullptr)
 	, m_systemInfoView(nullptr)
 	, m_systemView(nullptr)
 	, m_worldView(nullptr)
@@ -714,7 +741,6 @@ void Game::Views::Init(Game* game)
 	m_spaceStationView = new UIView("StationView");
 	m_infoView = new UIView("InfoView");
 	m_deathView = new DeathView(game);
-	m_settingsView = new UIView("SettingsInGame");
 
 #if WITH_OBJECTVIEWER
 	m_objectViewerView = new ObjectViewerView();
@@ -735,7 +761,6 @@ void Game::Views::LoadFromJson(const Json::Value &jsonObj, Game* game)
 	m_spaceStationView = new UIView("StationView");
 	m_infoView = new UIView("InfoView");
 	m_deathView = new DeathView(game);
-	m_settingsView = new UIView("SettingsInGame");
 
 #if WITH_OBJECTVIEWER
 	m_objectViewerView = new ObjectViewerView();
@@ -750,7 +775,6 @@ Game::Views::~Views()
 	delete m_objectViewerView;
 #endif
 
-	delete m_settingsView;
 	delete m_deathView;
 	delete m_infoView;
 	delete m_spaceStationView;
@@ -779,10 +803,7 @@ void Game::CreateViews()
 	m_gameViews.reset(new Views);
 	m_gameViews->Init(this);
 
-	UI::Point scrSize = Pi::ui->GetContext()->GetSize();
-	log = new GameLog(
-		Pi::ui->GetContext()->GetFont(UI::Widget::FONT_NORMAL),
-		vector2f(scrSize.x, scrSize.y));
+	log = new GameLog();
 }
 
 // XXX mostly a copy of CreateViews
@@ -797,10 +818,7 @@ void Game::LoadViewsFromJson(const Json::Value &jsonObj)
 	m_gameViews.reset(new Views);
 	m_gameViews->LoadFromJson(jsonObj, this);
 
-	UI::Point scrSize = Pi::ui->GetContext()->GetSize();
-	log = new GameLog(
-		Pi::ui->GetContext()->GetFont(UI::Widget::FONT_NORMAL),
-		vector2f(scrSize.x, scrSize.y));
+	log = new GameLog();
 }
 
 void Game::DestroyViews()
@@ -830,25 +848,25 @@ Game *Game::LoadGame(const std::string &filename)
 	Output("Game::LoadGame('%s')\n", filename.c_str());
 	auto file = FileSystem::userFiles.ReadFile(FileSystem::JoinPathBelow(Pi::SAVE_DIR_NAME, filename));
 	if (!file) throw CouldNotOpenFileException();
-	Json::Value rootNode; // Create the root JSON value for receiving the game data.
-	Json::Reader jsonReader; // Create reader for parsing the JSON string.
-	const auto data = file->AsByteRange();
-	size_t outSize = 0;
-	void *pDecompressedData = tinfl_decompress_mem_to_heap(&data[0], data.Size(), &outSize, 0);
-	if (pDecompressedData) {
-		jsonReader.parse(static_cast<char*>(pDecompressedData), static_cast<char*>(pDecompressedData)+outSize, rootNode); // Parse the JSON string.
-		mz_free(pDecompressedData);
+	const auto compressed_data = file->AsByteRange();
+	try {
+		const std::string plain_data = gzip::DecompressDeflateOrGZip(reinterpret_cast<const unsigned char*>(compressed_data.begin), compressed_data.Size());
+		const char *pdata = plain_data.data();
+		Json::Reader jsonReader;
+		Json::Value rootNode;
+		if (!jsonReader.parse(pdata, pdata + plain_data.size(), rootNode)) {
+			Output("Game load failed: %s\n", jsonReader.getFormattedErrorMessages().c_str());
+			throw SavedGameCorruptException();
+		}
 		if (!rootNode.isObject()) throw SavedGameCorruptException();
-		return new Game(rootNode); // Decode the game data from JSON and create the game.
-	} else {
+		return new Game(rootNode);
+	} catch (gzip::DecompressionFailedException) {
 		throw SavedGameCorruptException();
 	}
-	// file data is freed here
 }
 
 bool Game::CanLoadGame(const std::string &filename)
 {
-	Output("Game::CanLoadGame('%s')\n", filename.c_str());
 	auto file = FileSystem::userFiles.ReadFile(FileSystem::JoinPathBelow(Pi::SAVE_DIR_NAME, filename));
 	if (!file)
 		return false;
@@ -883,23 +901,21 @@ void Game::SaveGame(const std::string &filename, Game *game)
 	Json::Value rootNode; // Create the root JSON value for receiving the game data.
 	game->ToJson(rootNode); // Encode the game data as JSON and give to the root value.
 	Json::FastWriter jsonWriter; // Create writer for writing the JSON data to string.
-	const std::string jsonDataStr = jsonWriter.write(rootNode); // Write the JSON data.
+	std::string jsonDataStr;
+	{
+		PROFILE_SCOPED_DESC("jsonWriter.write");
+		jsonDataStr = jsonWriter.write(rootNode); // Write the JSON data.
+	}
 
 	FILE *f = FileSystem::userFiles.OpenWriteStream(FileSystem::JoinPathBelow(Pi::SAVE_DIR_NAME, filename));
 	if (!f) throw CouldNotOpenFileException();
 
-	// compress in memory, write to open file
-	size_t outSize = 0;
-	void *pCompressedData = tdefl_compress_mem_to_heap(jsonDataStr.data(), jsonDataStr.length(), &outSize, 128);
-	if (pCompressedData)
-	{
-		size_t nwritten = fwrite(pCompressedData, outSize, 1, f);
-		mz_free(pCompressedData);
+	try {
+		const std::string comressed_data = gzip::CompressGZip(jsonDataStr, filename + ".json");
+		size_t nwritten = fwrite(comressed_data.data(), comressed_data.size(), 1, f);
 		fclose(f);
 		if (nwritten != 1) throw CouldNotWriteToFileException();
-	}
-	else
-	{
+	} catch (gzip::CompressionFailedException) {
 		fclose(f);
 		throw CouldNotWriteToFileException();
 	}

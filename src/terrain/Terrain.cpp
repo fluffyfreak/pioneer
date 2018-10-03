@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Terrain.h"
@@ -94,8 +94,14 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 		case SystemBody::TYPE_STAR_O_HYPER_GIANT:
 		case SystemBody::TYPE_STAR_O_SUPER_GIANT:
 		case SystemBody::TYPE_STAR_O_WF:
-			gi = InstanceGenerator<TerrainHeightEllipsoid,TerrainColorSolid>;
-		break;
+			gi = InstanceGenerator<TerrainHeightEllipsoid,TerrainColorWhite>;
+			break;
+
+		case SystemBody::TYPE_STAR_S_BH:
+		case SystemBody::TYPE_STAR_IM_BH:
+		case SystemBody::TYPE_STAR_SM_BH:
+			gi = InstanceGenerator<TerrainHeightEllipsoid, TerrainColorBlack>;
+			break;
 
 		case SystemBody::TYPE_PLANET_GAS_GIANT: {
 			const GeneratorInstancer choices[] = {
@@ -344,7 +350,7 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 		}
 
 		default:
-			gi = InstanceGenerator<TerrainHeightFlat,TerrainColorSolid>;
+			gi = InstanceGenerator<TerrainHeightFlat,TerrainColorWhite>;
 			break;
 	}
 
@@ -477,12 +483,12 @@ Terrain::Terrain(const SystemBody *body) : m_seed(body->GetSeed()), m_rand(body-
 	if (!body->GetHeightMapFilename().empty() && body->GetHeightMapFractal() > 1){ // if scaled heightmap
 		m_maxHeightInMeters = 1.1*pow(2.0, 16.0)*m_heightScaling; // no min height required as it's added to radius in lua
 	}else {
+		// max mountain height for earth-like planet (same mass, radius)
 		m_maxHeightInMeters = std::max(100.0, (9000.0*rad*rad*(m_volcanic+0.5)) / (body->GetMass() * 6.64e-12));
-		if (!is_finite(m_maxHeightInMeters)) m_maxHeightInMeters = rad * 0.5;
-		//             ^^^^ max mountain height for earth-like planet (same mass, radius)
-		// and then in sphere normalized jizz
+		m_maxHeightInMeters = std::min(rad, m_maxHeightInMeters);		// small asteroid case
 	}
-	m_maxHeight = std::min(1.0, m_maxHeightInMeters / rad);
+	// and then in sphere normalized jizz
+	m_maxHeight = m_maxHeightInMeters / rad;
 	//Output("%s: max terrain height: %fm [%f]\n", m_minBody.name.c_str(), m_maxHeightInMeters, m_maxHeight);
 	m_invMaxHeight = 1.0 / m_maxHeight;
 	m_planetRadius = rad;

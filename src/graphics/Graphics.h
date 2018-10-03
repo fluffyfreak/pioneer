@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _GRAPHICS_H
@@ -15,9 +15,11 @@ namespace Graphics {
 
 	enum RendererType {
 		RENDERER_DUMMY,
-		RENDERER_OPENGL,
+		RENDERER_OPENGL_3x,
 		MAX_RENDERER_TYPE
 	};
+
+	const char* RendererNameFromType(const RendererType rType);
 
 	// requested video settings
 	struct Settings {
@@ -37,9 +39,8 @@ namespace Graphics {
 	};
 
 	class Renderer;
-	class WindowSDL;
 
-	typedef Renderer* (*RendererCreateFunc)(WindowSDL *window, const Settings &vs);
+	typedef Renderer* (*RendererCreateFunc)(const Settings &vs);
 	void RegisterRenderer(RendererType type, RendererCreateFunc fn);
 
 	//for querying available modes

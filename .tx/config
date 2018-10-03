@@ -16,9 +16,19 @@ file_filter = data/lang/equipment-core/<lang>.json
 source_file = data/lang/equipment-core/en.json
 source_lang = en
 
+[pioneer.commodity]
+file_filter = data/lang/commodity/<lang>.json
+source_file = data/lang/commodity/en.json
+source_lang = en
+
 [pioneer.quitconfirmation-core]
 file_filter = data/lang/quitconfirmation-core/<lang>.json
 source_file = data/lang/quitconfirmation-core/en.json
+source_lang = en
+
+[pioneer.module-advice]
+file_filter = data/lang/module-advice/<lang>.json
+source_file = data/lang/module-advice/en.json
 source_lang = en
 
 [pioneer.module-aiwarning]
@@ -51,9 +61,19 @@ file_filter = data/lang/module-cargorun/<lang>.json
 source_file = data/lang/module-cargorun/en.json
 source_lang = en
 
+[pioneer.module-combat]
+file_filter = data/lang/module-combat/<lang>.json
+source_file = data/lang/module-combat/en.json
+source_lang = en
+
 [pioneer.module-crewcontracts]
 file_filter = data/lang/module-crewcontracts/<lang>.json
 source_file = data/lang/module-crewcontracts/en.json
+source_lang = en
+
+[pioneer.module-easteregg-message]
+file_filter = data/lang/module-easteregg-message/<lang>.json
+source_file = data/lang/module-easteregg-message/en.json
 source_lang = en
 
 [pioneer.module-fuelclub]
@@ -69,6 +89,11 @@ source_lang = en
 [pioneer.module-newseventcommodity]
 file_filter = data/lang/module-newseventcommodity/<lang>.json
 source_file = data/lang/module-newseventcommodity/en.json
+source_lang = en
+
+[pioneer.module-policepatrol]
+file_filter = data/lang/module-policepatrol/<lang>.json
+source_file = data/lang/module-policepatrol/en.json
 source_lang = en
 
 [pioneer.module-searchrescue]

@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright Â© 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -25,6 +25,7 @@
 #include "OS.h"
 #include "StringF.h"
 #include "ModManager.h"
+#include "GameSaveError.h"
 #include <sstream>
 
 std::unique_ptr<GameConfig> s_config;
@@ -94,7 +95,7 @@ void SetupRenderer()
 	Uint32 numThreads = s_config->Int("WorkerThreads");
 	const int numCores = OS::GetNumCores();
 	assert(numCores > 0);
-	if (numThreads == 0) 
+	if (numThreads == 0)
 		numThreads = std::max(Uint32(numCores), 1U); // this is a tool, we can use all of the cores for processing unlike Pioneer
 	asyncJobQueue.reset(new AsyncJobQueue(numThreads));
 	Output("started %d worker threads\n", numThreads);
@@ -189,7 +190,7 @@ int main(int argc, char** argv)
 	}
 
 start:
-	
+
 	// Init here since we'll need it for both batch and RunCompiler modes.
 	FileSystem::Init();
 	FileSystem::userFiles.MakeDirectory(""); // ensure the config directory exists
@@ -274,7 +275,7 @@ start:
 			while(true) {
 				asyncJobQueue->FinishJobs();
 				bool hasJobs = false;
-				for(auto &handle : handles) 
+				for(auto &handle : handles)
 					hasJobs |= handle.HasJob();
 
 				if(!hasJobs)

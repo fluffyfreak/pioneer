@@ -1,4 +1,4 @@
--- Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local Ship = import_core("Ship")
@@ -11,6 +11,7 @@ local Equipment = import("Equipment")
 local Timer = import("Timer")
 local Lang = import("Lang")
 local Character = import("Character")
+local Comms = import("Comms")
 
 local l = Lang.GetResource("ui-core")
 
@@ -460,6 +461,7 @@ end
 --
 Ship.HyperjumpTo = function (self, path, is_legal)
 	local engine = self:GetEquip("engine", 1)
+	local wheels = self:GetWheelState()
 	if not engine then
 		return "NO_DRIVE"
 	end
@@ -473,6 +475,11 @@ Ship.HyperjumpTo = function (self, path, is_legal)
 	if is_legal and self.frameBody and not is_allowed then
 		print("---> Engage AI for safe distance of hyperjump")
 		self:AIEnterLowOrbit(self.frameBody)
+	end
+
+	-- display warning if gear is not retracted
+	if self == Game.player and wheels ~= 0 then
+		Comms.ImportantMessage(l.ERROR_LANDING_GEAR_DOWN)
 	end
 
 	return engine:HyperjumpTo(self, path)

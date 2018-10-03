@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "StarSystemGenerator.h"
@@ -64,218 +64,153 @@ const fixed StarSystemLegacyGeneratorBase::starMetallicities[] = {
 
 const StarSystemLegacyGeneratorBase::StarTypeInfo StarSystemLegacyGeneratorBase::starTypeInfo[] = {
 	{
-		SystemBody::SUPERTYPE_NONE, {}, {},
+		{}, {},
         0, 0
 	}, {
-		SystemBody::SUPERTYPE_STAR, //Brown Dwarf
+		//Brown Dwarf
 		{2,8}, {10,30},
 		1000, 2000
 	}, {
-		SystemBody::SUPERTYPE_STAR,  //white dwarf
+		 //white dwarf
 		{20,100}, {1,2},
 		4000, 40000
 	}, {
-		SystemBody::SUPERTYPE_STAR, //M
+		//M
 		{10,47}, {30,60},
 		2000, 3500
 	}, {
-		SystemBody::SUPERTYPE_STAR, //K
+		//K
 		{50,78}, {60,100},
 		3500, 5000
 	}, {
-		SystemBody::SUPERTYPE_STAR, //G
+		//G
 		{80,110}, {80,120},
 		5000, 6000
 	}, {
-		SystemBody::SUPERTYPE_STAR, //F
+		//F
 		{115,170}, {110,150},
 		6000, 7500
 	}, {
-		SystemBody::SUPERTYPE_STAR, //A
+		//A
 		{180,320}, {120,220},
 		7500, 10000
 	}, {
-		SystemBody::SUPERTYPE_STAR,  //B
+		 //B
 		{200,300}, {120,290},
 		10000, 30000
 	}, {
-		SystemBody::SUPERTYPE_STAR, //O
+		//O
 		{300,400}, {200,310},
 		30000, 60000
 	}, {
-		SystemBody::SUPERTYPE_STAR, //M Giant
+		//M Giant
 		{60,357}, {2000,5000},
 		2500, 3500
 	}, {
-		SystemBody::SUPERTYPE_STAR, //K Giant
+		//K Giant
 		{125,500}, {1500,3000},
 		3500, 5000
 	}, {
-		SystemBody::SUPERTYPE_STAR, //G Giant
+		//G Giant
 		{200,800}, {1000,2000},
 		5000, 6000
 	}, {
-		SystemBody::SUPERTYPE_STAR, //F Giant
+		//F Giant
 		{250,900}, {800,1500},
 		6000, 7500
 	}, {
-		SystemBody::SUPERTYPE_STAR, //A Giant
+		//A Giant
 		{400,1000}, {600,1000},
 		7500, 10000
 	}, {
-		SystemBody::SUPERTYPE_STAR,  //B Giant
+		 //B Giant
 		{500,1000}, {600,1000},
 		10000, 30000
 	}, {
-		SystemBody::SUPERTYPE_STAR, //O Giant
+		//O Giant
 		{600,1200}, {600,1000},
 		30000, 60000
 	}, {
-		SystemBody::SUPERTYPE_STAR, //M Super Giant
+		//M Super Giant
 		{1050,5000}, {7000,15000},
 		2500, 3500
 	}, {
-		SystemBody::SUPERTYPE_STAR, //K Super Giant
+		//K Super Giant
 		{1100,5000}, {5000,9000},
 		3500, 5000
 	}, {
-		SystemBody::SUPERTYPE_STAR, //G Super Giant
+		//G Super Giant
 		{1200,5000}, {4000,8000},
 		5000, 6000
 	}, {
-		SystemBody::SUPERTYPE_STAR, //F Super Giant
+		//F Super Giant
 		{1500,6000}, {3500,7000},
 		6000, 7500
 	}, {
-		SystemBody::SUPERTYPE_STAR, //A Super Giant
+		//A Super Giant
 		{2000,8000}, {3000,6000},
 		7500, 10000
 	}, {
-		SystemBody::SUPERTYPE_STAR,  //B Super Giant
+		 //B Super Giant
 		{3000,9000}, {2500,5000},
 		10000, 30000
 	}, {
-		SystemBody::SUPERTYPE_STAR, //O Super Giant
+		//O Super Giant
 		{5000,10000}, {2000,4000},
 		30000, 60000
 	}, {
-		SystemBody::SUPERTYPE_STAR, //M Hyper Giant
+		//M Hyper Giant
 		{5000,15000}, {20000,40000},
 		2500, 3500
 	}, {
-		SystemBody::SUPERTYPE_STAR, //K Hyper Giant
+		//K Hyper Giant
 		{5000,17000}, {17000,25000},
 		3500, 5000
 	}, {
-		SystemBody::SUPERTYPE_STAR, //G Hyper Giant
+		//G Hyper Giant
 		{5000,18000}, {14000,20000},
 		5000, 6000
 	}, {
-		SystemBody::SUPERTYPE_STAR, //F Hyper Giant
+		//F Hyper Giant
 		{5000,19000}, {12000,17500},
 		6000, 7500
 	}, {
-		SystemBody::SUPERTYPE_STAR, //A Hyper Giant
+		//A Hyper Giant
 		{5000,20000}, {10000,15000},
 		7500, 10000
 	}, {
-		SystemBody::SUPERTYPE_STAR,  //B Hyper Giant
+		 //B Hyper Giant
 		{5000,23000}, {6000,10000},
 		10000, 30000
 	}, {
-		SystemBody::SUPERTYPE_STAR, //O Hyper Giant
+		//O Hyper Giant
 		{10000,30000}, {4000,7000},
 		30000, 60000
 	}, {
-		SystemBody::SUPERTYPE_STAR,  // M WF
+		 // M WF
 		{2000,5000}, {2500,5000},
 		25000, 35000
 	}, {
-		SystemBody::SUPERTYPE_STAR,  // B WF
+		 // B WF
 		{2000,7500}, {2500,5000},
 		35000, 45000
 	}, {
-		SystemBody::SUPERTYPE_STAR,  // O WF
+		 // O WF
 		{2000,10000}, {2500,5000},
 		45000, 60000
 	}, {
-		SystemBody::SUPERTYPE_STAR,  // S BH
+		 // S BH
 		{20,2000}, {0,0},	// XXX black holes are < 1 Sol radii big; this is clamped to a non-zero value later
 		10, 24
 	}, {
-		SystemBody::SUPERTYPE_STAR,  // IM BH
+		 // IM BH
 		{900000,1000000}, {100,500},
 		1, 10
 	}, {
-		SystemBody::SUPERTYPE_STAR,  // SM BH
+		 // SM BH
 		{2000000,5000000}, {10000,20000},
 		10, 24
 	}
-/*	}, {
-		SystemBody::SUPERTYPE_GAS_GIANT,
-		{}, 950, Lang::MEDIUM_GAS_GIANT,
-	}, {
-		SystemBody::SUPERTYPE_GAS_GIANT,
-		{}, 1110, Lang::LARGE_GAS_GIANT,
-	}, {
-		SystemBody::SUPERTYPE_GAS_GIANT,
-		{}, 1500, Lang::VERY_LARGE_GAS_GIANT,
-	}, {
-		SystemBody::SUPERTYPE_ROCKY_PLANET,
-		{}, 1, Lang::ASTEROID,
-		"icons/object_planet_asteroid.png"
-	}, {
-		SystemBody::SUPERTYPE_ROCKY_PLANET,
-		{}, 2, "Large asteroid",
-	}, {
-		SystemBody::SUPERTYPE_ROCKY_PLANET,
-		{}, 26, "Small, rocky dwarf planet", // moon radius
-	}, {
-		SystemBody::SUPERTYPE_ROCKY_PLANET,
-		{}, 26, "Small, rocky dwarf planet", // dwarf2 for moon-like colours
-	}, {
-		SystemBody::SUPERTYPE_ROCKY_PLANET,
-		{}, 52, "Small, rocky planet with a thin atmosphere", // mars radius
-	}, {
-		SystemBody::SUPERTYPE_ROCKY_PLANET,
-		{}, 100, "Rocky frozen planet with a thin nitrogen atmosphere", // earth radius
-	}, {
-		SystemBody::SUPERTYPE_ROCKY_PLANET,
-		{}, 100, "Dead world that once housed it's own intricate ecosystem.", // earth radius
-	}, {
-		SystemBody::SUPERTYPE_ROCKY_PLANET,
-		{}, 100, "Rocky planet with a carbon dioxide atmosphere",
-	}, {
-		SystemBody::SUPERTYPE_ROCKY_PLANET,
-		{}, 100, "Rocky planet with a methane atmosphere",
-	}, {
-		SystemBody::SUPERTYPE_ROCKY_PLANET,
-		{}, 100, "Water world with vast oceans and a thick nitrogen atmosphere",
-	}, {
-		SystemBody::SUPERTYPE_ROCKY_PLANET,
-		{}, 100, "Rocky planet with a thick carbon dioxide atmosphere",
-	}, {
-		SystemBody::SUPERTYPE_ROCKY_PLANET,
-		{}, 100, "Rocky planet with a thick methane atmosphere",
-	}, {
-		SystemBody::SUPERTYPE_ROCKY_PLANET,
-		{}, 100, "Highly volcanic world",
-	}, {
-		SystemBody::SUPERTYPE_ROCKY_PLANET,
-		{}, 100, "World with indigenous life and an oxygen atmosphere",
-	}, {
-		SystemBody::SUPERTYPE_ROCKY_PLANET,
-		{}, 60, "Marginal terraformed world with minimal plant life",
-	}, {
-		SystemBody::SUPERTYPE_ROCKY_PLANET,
-		{}, 90, "Fully terraformed world with introduced species from numerous successful colonies",
-	}, {
-		SystemBody::SUPERTYPE_STARPORT,
-		{}, 0, Lang::ORBITAL_STARPORT,
-	}, {
-		SystemBody::SUPERTYPE_STARPORT,
-		{}, 0, Lang::STARPORT,
-	}*/
 };
 
 
@@ -286,9 +221,10 @@ bool StarSystemFromSectorGenerator::Apply(Random& rng, RefCountedPtr<Galaxy> gal
 	assert(system->GetPath().systemIndex >= 0 && system->GetPath().systemIndex < sec->m_systems.size());
 	const Sector::System& secSys = sec->m_systems[system->GetPath().systemIndex];
 
-	system->SetFaction(galaxy->GetFactions()->GetNearestFaction(&secSys));
+	system->SetFaction(galaxy->GetFactions()->GetNearestClaimant(&secSys));
 	system->SetSeed(secSys.GetSeed());
 	system->SetName(secSys.GetName());
+	system->SetOtherNames(secSys.GetOtherNames());
 	system->SetExplored(secSys.GetExplored(), secSys.GetExploredTime());
 	return true;
 }
@@ -395,7 +331,30 @@ void StarSystemLegacyGeneratorBase::PickRings(SystemBody* sbody, bool forceRings
 	sbody->m_rings.maxRadius = fixed();
 	sbody->m_rings.baseColor = Color(255,255,255,255);
 
-	if (sbody->GetType() == SystemBody::TYPE_PLANET_GAS_GIANT) {
+	bool bHasRings = forceRings;
+	if (!bHasRings)
+	{
+		Random ringRng(sbody->GetSeed() + 965467);
+		// today's forecast:
+		if (sbody->GetType() == SystemBody::TYPE_PLANET_GAS_GIANT)
+		{
+			// 50% chance of rings
+			bHasRings = ringRng.Double() < 0.5;
+		}
+		else if (sbody->GetType() == SystemBody::TYPE_PLANET_TERRESTRIAL)
+		{
+			// 10% chance of rings
+			bHasRings = ringRng.Double() < 0.1;
+		}
+		/*else if (sbody->GetType() == SystemBody::TYPE_PLANET_ASTEROID)
+		{
+			// 1:10 (10%) chance of rings
+			bHasRings = ringRng.Double() < 0.1;
+		}*/
+	}
+
+	if (bHasRings)
+	{
 		Random ringRng(sbody->GetSeed() + 965467);
 
 		// today's forecast: 50% chance of rings
@@ -495,7 +454,8 @@ void StarSystemCustomGenerator::CustomGetKidsOf(RefCountedPtr<StarSystem::Genera
 		kid->m_isCustomBody = true;
 
 		kid->m_mass = csbody->mass;
-		if (kid->GetType() == SystemBody::TYPE_PLANET_ASTEROID) kid->m_mass /= 100000;
+		// obsolete adjustment, probably existed because of denominator precision problems, see LuaFixed.cpp
+//		if (kid->GetType() == SystemBody::TYPE_PLANET_ASTEROID) kid->m_mass /= 100000;
 
 		kid->m_metallicity    = csbody->metallicity;
 		//multiple of Earth's surface density
@@ -505,7 +465,7 @@ void StarSystemCustomGenerator::CustomGetKidsOf(RefCountedPtr<StarSystem::Genera
 		kid->m_volcanicity    = csbody->volcanicity;
 		kid->m_atmosOxidizing = csbody->atmosOxidizing;
 		kid->m_life           = csbody->life;
-
+		kid->m_space_station_type = csbody->spaceStationType;
 		kid->m_rotationPeriod = csbody->rotationPeriod;
 		kid->m_rotationalPhaseAtStart = csbody->rotationalPhaseAtStart;
 		kid->m_eccentricity = csbody->eccentricity;
@@ -531,24 +491,25 @@ void StarSystemCustomGenerator::CustomGetKidsOf(RefCountedPtr<StarSystem::Genera
 
 		if (kid->GetType() == SystemBody::TYPE_STARPORT_SURFACE) {
 			kid->m_orbit.SetPlane(matrix3x3d::RotateY(csbody->longitude) * matrix3x3d::RotateX(-0.5*M_PI + csbody->latitude));
-		} else {
-                        if (kid->GetSuperType() == SystemBody::SUPERTYPE_STARPORT) {
-                            fixed lowestOrbit = fixed().FromDouble(parent->CalcAtmosphereParams().atmosRadius + 500000.0/EARTH_RADIUS);
-                            if (kid->m_orbit.GetSemiMajorAxis() < lowestOrbit.ToDouble()) {
-                                    Error("%s's orbit is too close to its parent (%.2f/%.2f)", csbody->name.c_str(),kid->m_orbit.GetSemiMajorAxis(),lowestOrbit.ToFloat());
-                            }
-                        }
-                        else {
-                            if (kid->m_orbit.GetSemiMajorAxis() < 1.2 * parent->GetRadius()) {
-                                    Error("%s's orbit is too close to its parent", csbody->name.c_str());
-                            }
-                        }
-			double offset = csbody->want_rand_offset ? rand.Double(2*M_PI) : (csbody->orbitalOffset.ToDouble());
+		}
+		else {
+			if (kid->GetSuperType() == SystemBody::SUPERTYPE_STARPORT) {
+				fixed lowestOrbit = fixed().FromDouble(parent->CalcAtmosphereParams().atmosRadius + 500000.0 / EARTH_RADIUS);
+				if (kid->m_orbit.GetSemiMajorAxis() < lowestOrbit.ToDouble()) {
+					Error("%s's orbit is too close to its parent (%.2f/%.2f)", csbody->name.c_str(), kid->m_orbit.GetSemiMajorAxis(), lowestOrbit.ToFloat());
+				}
+			}
+			else {
+				if (kid->m_orbit.GetSemiMajorAxis() < 1.2 * parent->GetRadius()) {
+					Error("%s's orbit is too close to its parent", csbody->name.c_str());
+				}
+			}
+			double offset = csbody->want_rand_offset ? rand.Double(2 * M_PI) : (csbody->orbitalOffset.ToDouble());
 			kid->m_orbit.SetPlane(matrix3x3d::RotateY(offset) * matrix3x3d::RotateX(-0.5*M_PI + csbody->latitude));
 		}
 		if (kid->GetSuperType() == SystemBody::SUPERTYPE_STARPORT) {
 			(*outHumanInfestedness)++;
-            system->AddSpaceStation(kid);
+			system->AddSpaceStation(kid);
 		}
 		parent->m_children.push_back(kid);
 
@@ -977,6 +938,13 @@ static fixed get_disc_density(SystemBody *primary, fixed discMin, fixed discMax,
 	return primary->GetMassInEarths() * percentOfPrimaryMass / total;
 }
 
+static inline bool test_overlap(const fixed& x1, const fixed& x2, const fixed& y1, const fixed& y2) {
+	return	(x1 >= y1 && x1 <= y2) ||
+			(x2 >= y1 && x2 <= y2) ||
+			(y1 >= x1 && y1 <= x2) ||
+			(y2 >= x1 && y2 <= x2);
+}
+
 void StarSystemRandomGenerator::MakePlanetsAround(RefCountedPtr<StarSystem::GeneratorAPI> system, SystemBody *primary, Random &rand)
 {
 	PROFILE_SCOPED()
@@ -984,9 +952,9 @@ void StarSystemRandomGenerator::MakePlanetsAround(RefCountedPtr<StarSystem::Gene
 	fixed discMax = fixed(5000,1);
 	fixed discDensity;
 
-	SystemBody::BodySuperType superType = primary->GetSuperType();
+	SystemBody::BodySuperType parentSuperType = primary->GetSuperType();
 
-	if (superType <= SystemBody::SUPERTYPE_STAR) {
+	if (parentSuperType <= SystemBody::SUPERTYPE_STAR) {
 		if (primary->GetType() == SystemBody::TYPE_GRAVPOINT) {
 			/* around a binary */
 			discMin = primary->m_children[0]->m_orbMax * SAFE_DIST_FROM_BINARY;
@@ -1010,7 +978,7 @@ void StarSystemRandomGenerator::MakePlanetsAround(RefCountedPtr<StarSystem::Gene
 		// disc density
 		discDensity = rand.Fixed() * get_disc_density(primary, discMin, discMax, fixed(2,100));
 
-		if ((superType == SystemBody::SUPERTYPE_STAR) && (primary->m_parent)) {
+		if ((parentSuperType == SystemBody::SUPERTYPE_STAR) && (primary->m_parent)) {
 			// limit planets out to 10% distance to star's binary companion
 			discMax = std::min(discMax, primary->m_orbMin * fixed(1,10));
 		}
@@ -1036,6 +1004,8 @@ void StarSystemRandomGenerator::MakePlanetsAround(RefCountedPtr<StarSystem::Gene
 
 	fixed initialJump = rand.NFixed(5);
 	fixed pos = (fixed(1,1) - initialJump)*discMin + (initialJump*discMax);
+	const RingStyle &ring = primary->GetRings();
+	const bool hasRings = primary->HasRings();
 
 	while (pos < discMax) {
 		// periapsis, apoapsis = closest, farthest distance in orbit
@@ -1086,19 +1056,30 @@ void StarSystemRandomGenerator::MakePlanetsAround(RefCountedPtr<StarSystem::Gene
 		planet->m_orbMax = apoapsis;
 		primary->m_children.push_back(planet);
 
+		if (hasRings &&
+			parentSuperType == SystemBody::SUPERTYPE_ROCKY_PLANET &&
+			test_overlap(ring.minRadius, ring.maxRadius, periapsis, apoapsis))
+		{
+			//Output("Overlap, eliminating rings from parent SystemBody\n");
+			//Overlap, eliminating rings from parent SystemBody
+			primary->m_rings.minRadius = fixed();
+			primary->m_rings.maxRadius = fixed();
+			primary->m_rings.baseColor = Color(255, 255, 255, 255);
+		}
+
 		/* minimum separation between planets of 1.35 */
 		pos = apoapsis * fixed(135,100);
 	}
 
 	int idx=0;
-	bool make_moons = superType <= SystemBody::SUPERTYPE_STAR;
+	bool make_moons = parentSuperType <= SystemBody::SUPERTYPE_STAR;
 
 	for (std::vector<SystemBody*>::iterator i = primary->m_children.begin(); i != primary->m_children.end(); ++i) {
 		// planets around a binary pair [gravpoint] -- ignore the stars...
 		if ((*i)->GetSuperType() == SystemBody::SUPERTYPE_STAR) continue;
 		// Turn them into something!!!!!!!
-		char buf[8];
-		if (superType <= SystemBody::SUPERTYPE_STAR) {
+		char buf[12];
+		if (parentSuperType <= SystemBody::SUPERTYPE_STAR) {
 			// planet naming scheme
 			snprintf(buf, sizeof(buf), " %c", 'a'+idx);
 		} else {
@@ -1363,20 +1344,36 @@ try_that_again_guvnah:
  * Position a surface starport anywhere. Space.cpp::MakeFrameFor() ensures it
  * is on dry land (discarding this position if necessary)
  */
-void PopulateStarSystemGenerator::PositionSettlementOnPlanet(SystemBody* sbody)
+void PopulateStarSystemGenerator::PositionSettlementOnPlanet(SystemBody* sbody, std::vector<double> &prevOrbits)
 {
 	PROFILE_SCOPED()
 	Random r(sbody->GetSeed());
 	// used for orientation on planet surface
 	double r2 = r.Double(); 	// function parameter evaluation order is implementation-dependent
 	double r1 = r.Double();		// can't put two rands in the same expression
+
+	// try to ensure that stations are far enough apart
+	
+	for (size_t i = 0, iterations = 0; i<prevOrbits.size() && iterations<128; i++, iterations++)
+	{
+		const double &orev = prevOrbits[i];
+		const double len = fabs(r1 - orev);
+		if(len < 0.05)
+		{
+			r2 = r.Double();
+			r1 = r.Double();
+			i = 0; // reset to start the checking from beginning as we're generating new values.
+		}
+	}
+	prevOrbits.push_back(r1);
+
+	// pset the orbit
 	sbody->m_orbit.SetPlane(matrix3x3d::RotateZ(2*M_PI*r1) * matrix3x3d::RotateY(2*M_PI*r2));
 
 	// store latitude and longitude to equivalent orbital parameters to
 	// be accessible easier
 	sbody->m_inclination = fixed(r1*10000,10000) + FIXED_PI/2;	// latitide
 	sbody->m_orbitalOffset = FIXED_PI/2;						// longitude
-
 }
 
 /*
@@ -1414,13 +1411,19 @@ void PopulateStarSystemGenerator::PopulateStage1(SystemBody* sbody, StarSystem::
 
 	/* Bad type of planet for settlement */
 	if ((sbody->GetAverageTemp() > CELSIUS+100) || (sbody->GetAverageTemp() < 100) ||
-	    (sbody->GetType() != SystemBody::TYPE_PLANET_TERRESTRIAL && sbody->GetType() != SystemBody::TYPE_PLANET_ASTEROID)) {
+	    (sbody->GetType() != SystemBody::TYPE_PLANET_TERRESTRIAL && sbody->GetType() != SystemBody::TYPE_PLANET_ASTEROID))
+	{
+		Random starportPopRand;
+		starportPopRand.seed(_init, 6);
 
         // orbital starports should carry a small amount of population
         if (sbody->GetType() == SystemBody::TYPE_STARPORT_ORBITAL) {
-			sbody->m_population = fixed(1,100000);
+			sbody->m_population = fixed(1, 100000) + fixed(1, 1000000 + starportPopRand.Int32(-10000,10000));
 			outTotalPop += sbody->m_population;
-        }
+		} else if (sbody->GetType() == SystemBody::TYPE_STARPORT_SURFACE) {
+			sbody->m_population = fixed(1, 10000) + fixed(1, 100000 + starportPopRand.Int32(-100, 100));
+			outTotalPop += sbody->m_population;
+		}
 
 		return;
 	}
@@ -1541,7 +1544,7 @@ void PopulateStarSystemGenerator::PopulateAddStations(SystemBody* sbody, StarSys
 		PopulateAddStations(child, system);
 
 	Uint32 _init[6] = { system->GetPath().systemIndex, Uint32(system->GetPath().sectorX),
-			Uint32(system->GetPath().sectorY), Uint32(system->GetPath().sectorZ), sbody->GetSeed(), UNIVERSE_SEED };
+	Uint32(system->GetPath().sectorY), Uint32(system->GetPath().sectorZ), sbody->GetSeed(), UNIVERSE_SEED };
 
 	Random rand;
 	rand.seed(_init, 6);
@@ -1552,7 +1555,7 @@ void PopulateStarSystemGenerator::PopulateAddStations(SystemBody* sbody, StarSys
 	if (sbody->GetPopulationAsFixed() < fixed(1,1000)) return;
 	fixed orbMaxS = fixed(1,4)*CalcHillRadius(sbody);
 	fixed orbMinS = fixed().FromDouble((sbody->CalcAtmosphereParams().atmosRadius + + 500000.0/EARTH_RADIUS)) * AU_EARTH_RADIUS;
-	if (sbody->GetNumChildren() > 0) 
+	if (sbody->GetNumChildren() > 0)
 		orbMaxS = std::min(orbMaxS, fixed(1,2) * sbody->GetChildren()[0]->GetOrbMinAsFixed());
 
 	// starports - orbital
@@ -1571,20 +1574,20 @@ void PopulateStarSystemGenerator::PopulateAddStations(SystemBody* sbody, StarSys
 		if( NumToMake > 0 )
 		{
 			const double centralMass = sbody->GetMassAsFixed().ToDouble() * EARTH_MASS;
-                        
+
 			// What is our innermost orbit?
 			fixed innerOrbit = orbMinS;// + ((orbMaxS - orbMinS) / 25);
 
 			// Try to limit the inner orbit to at least three hours.
 			{
-                                const double minHours = 3.0;
+				const double minHours = 3.0;
 				const double seconds = Orbit::OrbitalPeriod(innerOrbit.ToDouble() * AU, centralMass);
 				const double hours = seconds / (60.0*60.0);
 				if (hours < minHours)
 				{
-                                        //knowing that T=2*pi*R/sqrt(G*M/R) find R for set T=4 hours: 
-                                        fixed orbitFromPeriod = fixed().FromDouble((std::pow(G*centralMass, 1.0/3.0)*std::pow(minHours*60.0*60.0, 2.0/3.0))/(std::pow(2.0*M_PI, 2.0/3.0)*AU));
-                                        // We can't go higher than our maximum so set it to that.
+					//knowing that T=2*pi*R/sqrt(G*M/R) find R for set T=4 hours:
+					fixed orbitFromPeriod = fixed().FromDouble((std::pow(G*centralMass, 1.0/3.0)*std::pow(minHours*60.0*60.0, 2.0/3.0))/(std::pow(2.0*M_PI, 2.0/3.0)*AU));
+					// We can't go higher than our maximum so set it to that.
 					innerOrbit = std::min(orbMaxS, orbitFromPeriod);
 				}
 			}
@@ -1603,13 +1606,19 @@ void PopulateStarSystemGenerator::PopulateAddStations(SystemBody* sbody, StarSys
 				shells[0] = shells[1] = shells[2] = innerOrbit;
 			}
 			Uint32 orbitIdx = 0;
+			double orbitSlt = 0.0;
+			const double orbitSeparation = (NumToMake > 1) ? ((M_PI * 2.0) / double(NumToMake-1)) : M_PI;
 
-			for( Uint32 i=0; i<NumToMake; i++ ) 
+			for( Uint32 i=0; i<NumToMake; i++ )
 			{
 				// Pick the orbit we've currently placing a station into.
 				const fixed currOrbit = shells[orbitIdx];
-				++orbitIdx; 
-				orbitIdx = orbitIdx % MAX_ORBIT_SHELLS; // wrap it
+				++orbitIdx;
+				if (orbitIdx >= MAX_ORBIT_SHELLS) // wrap it
+				{
+					orbitIdx = 0;
+					orbitSlt += 1.0;
+				}
 
 				// Begin creation of the new station
 				SystemBody *sp = system->NewBody();
@@ -1625,14 +1634,15 @@ void PopulateStarSystemGenerator::PopulateAddStations(SystemBody* sbody, StarSys
 				sp->m_eccentricity = fixed();
 				sp->m_axialTilt = fixed();
 
-				sp->m_orbit.SetShapeAroundPrimary(sp->GetSemiMajorAxisAsFixed().ToDouble()*AU, centralMass, 0.0);
-				if (NumToMake > 1) {
-					// The rotations around X & Y perturb the orbits just a little bit so that not all stations are exactly within the same plane
-					// The Z rotation is what gives them the separation in their orbit around the parent body as a whole.
-					sp->m_orbit.SetPlane(matrix3x3d::RotateX(rand.Double(M_PI * 0.03125)) * matrix3x3d::RotateY(rand.Double(M_PI * 0.03125)) * matrix3x3d::RotateZ(double(i) * ((M_PI * 2.0) / double(NumToMake-1))));
-				} else {
-					sp->m_orbit.SetPlane(matrix3x3d::Identity());
-				}
+				sp->m_orbit.SetShapeAroundPrimary(sp->GetSemiMajorAxis()*AU, centralMass, 0.0);
+
+				// The rotations around X & Y perturb the orbits just a little bit so that not all stations are exactly within the same plane
+				// The Z rotation is what gives them the separation in their orbit around the parent body as a whole.
+				sp->m_orbit.SetPlane(
+					matrix3x3d::RotateX(rand.Double(M_PI * 0.03125)) *
+					matrix3x3d::RotateY(rand.Double(M_PI * 0.03125)) *
+					matrix3x3d::RotateZ(orbitSlt * orbitSeparation)
+				);
 
 				sp->m_inclination = fixed();
 				sbody->m_children.insert(sbody->m_children.begin(), sp);
@@ -1647,6 +1657,8 @@ void PopulateStarSystemGenerator::PopulateAddStations(SystemBody* sbody, StarSys
 	// starports - surface
 	// give it a fighting chance of having a decent number of starports (*3)
 	pop = sbody->GetPopulationAsFixed() + (rand.Fixed() * 3);
+	std::vector<double> previousOrbits;
+	previousOrbits.reserve(8);
 	int max = 6;
 	while (max-- > 0) {
 		pop -= rand.Fixed();
@@ -1660,7 +1672,7 @@ void PopulateStarSystemGenerator::PopulateAddStations(SystemBody* sbody, StarSys
 		sp->m_mass = 0;
 		sp->m_name = gen_unique_station_name(sp, system, namerand);
 		memset(&sp->m_orbit, 0, sizeof(Orbit));
-		PositionSettlementOnPlanet(sp);
+		PositionSettlementOnPlanet(sp, previousOrbits);
 		sbody->m_children.insert(sbody->m_children.begin(), sp);
 		system->AddSpaceStation(sp);
 	}
@@ -1676,7 +1688,7 @@ void PopulateStarSystemGenerator::PopulateAddStations(SystemBody* sbody, StarSys
 		sp->m_mass = 0;
 		sp->m_name = gen_unique_station_name(sp, system, namerand);
 		memset(&sp->m_orbit, 0, sizeof(Orbit));
-		PositionSettlementOnPlanet(sp);
+		PositionSettlementOnPlanet(sp, previousOrbits);
 		sbody->m_children.insert(sbody->m_children.begin(), sp);
 		system->AddSpaceStation(sp);
 	}

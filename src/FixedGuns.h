@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef FIXEDGUNS_H
@@ -8,7 +8,7 @@
 #include "libs.h"
 #include "Space.h"
 #include "Camera.h"
-#include "json/JsonUtils.h"
+#include "JsonUtils.h"
 #include "scenegraph/Model.h"
 #include "Projectile.h"
 #include "DynamicBody.h"
@@ -19,40 +19,46 @@ enum Guns {
 	GUNMOUNT_MAX = 2
 };
 
-class FixedGuns
+class FixedGuns : public RefCounted
 {
 	public:
 		FixedGuns();
-		~FixedGuns();
+		virtual ~FixedGuns();
 		void Init(DynamicBody *b);
 		void InitGun( SceneGraph::Model *m, const char *tag, int num);
 		void UpdateGuns( float timeStep );
-		bool Fire( int num, Body* b );
+		bool Fire( const int num, Body* b );
 		bool IsFiring();
-		inline float GetGunTemperature(int idx) const { return m_temperature_stat[idx]; }
+		bool IsFiring(const int num);
+		bool IsBeam(const int num);
+		float GetGunTemperature(int idx) const;
 		inline void IsDual( int idx, bool dual ) { m_gun[idx].dual = dual; };
-		void MountGun( int num, const float recharge, const float lifespan, const float dam, const float length,
-						 const float width, const bool mining, const Color& color, const float speed );
+		void MountGun( const int num, const float recharge, const float lifespan, const float damage, const float length,
+						 const float width, const bool mining, const Color& color, const float speed, const bool beam, const float heatrate, const float coolrate);
 		void UnMountGun( int num );
 		inline float GetGunRange( int idx ) { return m_gun[idx].projData.speed*m_gun[idx].projData.lifespan; };
 		inline float GetProjSpeed(int idx ) { return m_gun[idx].projData.speed; };
 		inline void SetCoolingBoost( float cooler ) { m_cooler_boost = cooler; };
-		inline void SetGunFiringState( int idx, int s ) { if (m_gun_present[idx]) m_state[idx] = s; };
-	protected:
-		virtual void SaveToJson( Json::Value &jsonObj );
-		virtual void LoadFromJson( const Json::Value &jsonObj );
+		inline void SetGunFiringState( int idx, int s ) {
+			if(m_gun_present[idx])
+				m_is_firing[idx] = s;
+		};
+		virtual void SaveToJson( Json::Value &jsonObj, Space *space);
+		virtual void LoadFromJson( const Json::Value &jsonObj, Space *space);
 	private:
 
 		struct GunData {
+			GunData() : pos(0.0f), dir(0.0f), recharge(0.0f), temp_heat_rate(0.0f), temp_cool_rate(0.0f), dual(false) {}
 			vector3f pos;
 			vector3f dir;
 			float recharge;
-			float temp_slope;
+			float temp_heat_rate;
+			float temp_cool_rate;
 			bool dual;
 			ProjectileData projData;
 		};
 
-		bool m_state[Guns::GUNMOUNT_MAX];
+		bool m_is_firing[Guns::GUNMOUNT_MAX];
 		float m_recharge_stat[Guns::GUNMOUNT_MAX];
 		float m_temperature_stat[Guns::GUNMOUNT_MAX];
 		//TODO: Make it a vector and rework struct Gun to have bool dir={Forward,Backward}

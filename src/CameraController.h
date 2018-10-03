@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef CAMERACONTROLLER_H
@@ -7,7 +7,6 @@
 #include "vector3.h"
 #include "matrix4x4.h"
 #include "Lang.h"
-#include "Serializer.h"
 #include "Camera.h"
 #include "json/json.h"
 
@@ -19,7 +18,8 @@ public:
 	enum Type { //can be used for serialization & identification
 		INTERNAL,
 		EXTERNAL,
-		SIDEREAL
+		SIDEREAL,
+		FLYBY
 	};
 
 	CameraController(RefCountedPtr<CameraContext> camera, const Ship *ship);
@@ -186,6 +186,40 @@ public:
 private:
 	double m_dist, m_distTo;
 	matrix3x3d m_sidOrient;
+};
+
+// Zoomable, fly by camera, always looks at the ship
+class FlyByCameraController : public MoveableCameraController {
+public:
+	FlyByCameraController(RefCountedPtr<CameraContext> camera, const Ship *ship);
+
+	Type GetType() const { return FLYBY; }
+	const char *GetName() const { return Lang::FLYBY_VIEW; }
+
+	void RollLeft(float frameTime);
+	void RollRight(float frameTime);
+	void RotateDown(float frameTime);
+	void RotateLeft(float frameTime);
+	void RotateRight(float frameTime);
+	void RotateUp(float frameTime);
+	void ZoomIn(float frameTime);
+	void ZoomOut(float frameTime);
+	void ZoomEvent(float amount);
+	void ZoomEventUpdate(float frameTime);
+	void Reset();
+	bool IsExternal() const { return true; }
+
+	void SaveToJson(Json::Value &jsonObj);
+	void LoadFromJson(const Json::Value &jsonObj);
+
+	void Update();
+
+private:
+	double m_dist, m_distTo;
+	float m_roll;
+	matrix3x3d m_flybyOrient;
+	vector3d m_old_pos;
+	Frame *m_old_frame;
 };
 
 #endif

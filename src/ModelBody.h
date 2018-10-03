@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _MODELBODY_H
@@ -21,7 +21,6 @@ public:
 	virtual ~ModelBody();
 	void SetPosition(const vector3d &p) override;
 	void SetOrient(const matrix3x3d &r) override;
-	void TransformToModelCoords(const Frame *camFrame);
 	virtual void SetFrame(Frame *f) override;
 	// Colliding: geoms are checked against collision space
 	void SetColliding(bool colliding);
@@ -32,6 +31,7 @@ public:
 	const Aabb &GetAabb() const { return m_collMesh->GetAabb(); }
 	SceneGraph::Model *GetModel() const { return m_model; }
 	CollMesh *GetCollMesh() { return m_collMesh.Get(); }
+	Geom* GetGeom() const { return m_geom;  }
 
 	void SetModel(const char *modelName);
 

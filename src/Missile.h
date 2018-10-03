@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _MISSILE_H
@@ -9,7 +9,7 @@
 #include "DynamicBody.h"
 #include "ShipAICmd.h"
 
-class Missile: public DynamicBody, public Propulsion {
+class Missile: public DynamicBody {
 public:
 	OBJDEF(Missile, DynamicBody, MISSILE);
 	Missile(const ShipType::Id &type, Body *owner, int power=-1);
