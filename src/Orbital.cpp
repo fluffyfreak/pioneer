@@ -7,7 +7,8 @@
 #include "GeoRing.h"
 #include "graphics/Renderer.h"
 #include "perlin.h"
-#include "json/JsonUtils.h"
+#include "GameSaveError.h"
+#include "JsonUtils.h"
 
 Orbital::Orbital() : Body(),
 	m_mass(0),
