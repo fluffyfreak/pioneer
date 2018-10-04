@@ -114,7 +114,11 @@ void SinglePlateJob::GenerateMesh(double *heights, vector3f *normals, Color3ub *
 			const vector3d p = GetSurfacePointCyl(xfrac, yfrac, ang0, ang1, yoffset, halfLen);
 			// vector from axis to point-on-surface
 			const vector3d cDir = (p - axisPt).Normalized();
+#ifdef TEST_PATTERN
+			const double height = (y % 2) ? 0.0 : 0.000001;//pTerrain->GetHeight(p);
+#else
 			const double height = pTerrain->GetHeight(p);
+#endif
 			assert(height >= 0.0f && height <= 1.0f);
 			*(bhts++) = -height;
 			*(vrts++) = p + (cDir * height);//p * (height + 1.0);
@@ -145,7 +149,11 @@ void SinglePlateJob::GenerateMesh(double *heights, vector3f *normals, Color3ub *
 
 			// color
 			const vector3d p = GetSurfacePointCyl((x-BORDER_SIZE)*fracStep, (y-BORDER_SIZE)*fracStep, ang0, ang1, yoffset, halfLen);
+#ifdef TEST_PATTERN
+			SetColour(col, (y % 2) ? vector3d(0.5) : (x % 2) ? vector3d(0,0,1) : vector3d(1,0,0));//pTerrain->GetColor(p, height, n));
+#else
 			SetColour(col, pTerrain->GetColor(p, height, n));
+#endif
 			assert(col!=&colors[edgeLen*edgeLen]);
 			++col;
 		}
@@ -299,7 +307,11 @@ void QuadPlateJob::GenerateBorderedData(
 			const vector3d p = GetSurfacePointCyl(xfrac, yfrac, ang0, ang1, yoffset, halfLen);
 			// vector from axis to point-on-surface
 			const vector3d cDir = (p - axisPt).Normalized();
+#ifdef TEST_PATTERN
+			const double height = (y % 2) ? 0.0 : 0.000001;//pTerrain->GetHeight(p);
+#else
 			const double height = pTerrain->GetHeight(p);
+#endif
 			assert(height >= 0.0f && height <= 1.0f);
 			*(bhts++) = -height;
 			*(vrts++) = p + (cDir * height);
@@ -353,7 +365,11 @@ void QuadPlateJob::GenerateSubPatchData(
 
 			// color
 			const vector3d p = GetSurfacePointCyl(x * fracStep, y * fracStep, ang0, ang1, yoffset, halfLen);
+#ifdef TEST_PATTERN
+			SetColour(col, (y % 2) ? vector3d(0.5) : (x % 2) ? vector3d(0, 0, 1) : vector3d(1, 0, 0));//pTerrain->GetColor(p, -height, -n));
+#else
 			SetColour(col, pTerrain->GetColor(p, -height, -n));
+#endif
 			assert(col != &colors[edgeLen * edgeLen]);
 			++col;
 		}

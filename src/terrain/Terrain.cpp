@@ -132,7 +132,10 @@ Terrain *Terrain::InstanceTerrain(const SystemBody *body)
 			break;
 		}
 
-		case SystemBody::TYPE_PLANET_ORBITAL:
+		case SystemBody::TYPE_PLANET_ORBITAL: {
+			gi = InstanceGenerator<TerrainHeightHillsDunes, TerrainColorDesert>;
+			break;
+		}
 		case SystemBody::TYPE_PLANET_TERRESTRIAL: {
 
 			//Over-ride:
