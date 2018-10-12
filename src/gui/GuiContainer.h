@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _GUICONTAINER_H
@@ -22,7 +22,7 @@ namespace Gui {
 		void RemoveAllChildren();
 		void DeleteAllChildren();
 		void GetChildPosition(const Widget *child, float outPos[2]) const;
-		int GetNumChildren() { return m_children.size(); }
+		int GetNumChildren() { return static_cast<Uint32>(m_children.size()); }
 		virtual void Draw();
 		void ShowChildren();
 		void HideChildren();

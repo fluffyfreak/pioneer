@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Camera.h"
@@ -85,10 +85,11 @@ Camera::Camera(RefCountedPtr<CameraContext> context, Graphics::Renderer *rendere
 	m_renderer(renderer)
 {
 	Graphics::MaterialDescriptor desc;
+	desc.effect = Graphics::EFFECT_BILLBOARD;
 	desc.textures = 1;
 
 	m_billboardMaterial.reset(m_renderer->CreateMaterial(desc));
-	m_billboardMaterial->texture0 = Graphics::TextureBuilder::Billboard("textures/planet_billboard.png").GetOrCreateTexture(m_renderer, "billboard");
+	m_billboardMaterial->texture0 = Graphics::TextureBuilder::Billboard("textures/planet_billboard.dds").GetOrCreateTexture(m_renderer, "billboard");
 }
 
 static void position_system_lights(Frame *camFrame, Frame *frame, std::vector<Camera::LightSource> &lights)
@@ -148,11 +149,14 @@ void Camera::Update()
 		if (b->IsType(Object::TERRAINBODY)) {
 			if (pixSize < BILLBOARD_PIXEL_THRESHOLD) {
 				attrs.billboard = true;
+
+				// project the position
 				vector3d pos;
-				// limit the minimum billboard size for planets so they're always a little visible
-				const double size = std::max(0.5, rad * 2.0 * m_context->GetFrustum().TranslatePoint(attrs.viewCoords, pos));
+				m_context->GetFrustum().TranslatePoint(attrs.viewCoords, pos);
 				attrs.billboardPos = vector3f(pos);
-				attrs.billboardSize = float(size);
+
+				// limit the minimum billboard size for planets so they're always a little visible
+				attrs.billboardSize = std::max(1.0f, pixSize);
 				if (b->IsType(Object::STAR)) {
 					attrs.billboardColor = StarSystem::starRealColors[b->GetSystemBody()->GetType()];
 				}
@@ -223,7 +227,7 @@ void Camera::Draw(const Body *excludeBody, ShipCockpit* cockpit)
 				//go through all lights to calculate something resembling light intensity
 				float intensity = 0.f;
 				const Player* pBody = Pi::game->GetPlayer();
-				for( Uint32 i=0; i<m_lightSources.size() ; i++ ) 
+				for( Uint32 i=0; i<m_lightSources.size() ; i++ )
 				{
 					// Set up data for eclipses. All bodies are assumed to be spheres.
 					const LightSource &it = m_lightSources[i];

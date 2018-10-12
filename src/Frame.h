@@ -1,13 +1,12 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _FRAME_H
 #define _FRAME_H
 
 #include "libs.h"
-#include "Serializer.h"
 #include "IterationProxy.h"
-#include "json/json.h"
+#include "JsonFwd.h"
 #include <string>
 #include <list>
 
@@ -28,9 +27,9 @@ public:
 	Frame(Frame *parent, const char *label);
 	Frame(Frame *parent, const char *label, unsigned int flags);
 	~Frame();
-	static void ToJson(Json::Value &jsonObj, Frame *f, Space *space);
+	static void ToJson(Json &jsonObj, Frame *f, Space *space);
 	static void PostUnserializeFixup(Frame *f, Space *space);
-	static Frame *FromJson(const Json::Value &jsonObj, Space *space, Frame *parent, double at_time);
+	static Frame *FromJson(const Json &jsonObj, Space *space, Frame *parent, double at_time);
 	const std::string &GetLabel() const { return m_label; }
 	void SetLabel(const char *label) { m_label = label; }
 
@@ -62,7 +61,7 @@ public:
 	void AddChild(Frame *f) { m_children.push_back(f); }
 	void RemoveChild(Frame *f);
 	bool HasChildren() const { return !m_children.empty(); }
-	unsigned GetNumChildren() const { return m_children.size(); }
+	unsigned GetNumChildren() const { return static_cast<Uint32>(m_children.size()); }
 	IterationProxy<std::vector<Frame*> > GetChildren() { return MakeIterationProxy(m_children); }
 	const IterationProxy<const std::vector<Frame*> > GetChildren() const { return MakeIterationProxy(m_children); }
 

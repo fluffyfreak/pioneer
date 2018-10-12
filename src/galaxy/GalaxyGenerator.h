@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef GALAXYGENERATOR_H
@@ -7,7 +7,6 @@
 #include <list>
 #include <string>
 #include "RefCounted.h"
-#include "Serializer.h"
 #include "Sector.h"
 #include "StarSystem.h"
 #include "SystemPath.h"
@@ -27,8 +26,7 @@ public:
 	static RefCountedPtr<Galaxy> Create() {
 		return Create(s_defaultGenerator, s_defaultVersion);
 	}
-	static RefCountedPtr<Galaxy> Create(Serializer::Reader& rd);
-	static RefCountedPtr<Galaxy> CreateFromJson(const Json::Value &jsonObj);
+	static RefCountedPtr<Galaxy> CreateFromJson(const Json &jsonObj);
 
 	static std::string GetDefaultGeneratorName() { return s_defaultGenerator; }
 	static Version GetDefaultGeneratorVersion() { return s_defaultVersion; }
@@ -41,8 +39,8 @@ public:
 
 	bool IsDefault() const { return m_name == s_defaultGenerator && m_version == s_defaultVersion; }
 
-	void ToJson(Json::Value &jsonObj, RefCountedPtr<Galaxy> galaxy);
-	void FromJson(const Json::Value &jsonObj, RefCountedPtr<Galaxy> galaxy);
+	void ToJson(Json &jsonObj, RefCountedPtr<Galaxy> galaxy);
+	void FromJson(const Json &jsonObj, RefCountedPtr<Galaxy> galaxy);
 
 	// Templated for the template cache class.
 	template <typename T, typename Cache>
@@ -94,8 +92,8 @@ class GalaxyGeneratorStage {
 public:
 	virtual ~GalaxyGeneratorStage() { }
 
-	virtual void ToJson(Json::Value &jsonObj, RefCountedPtr<Galaxy> galaxy) { }
-	virtual void FromJson(const Json::Value &jsonObj, RefCountedPtr<Galaxy> galaxy) { }
+	virtual void ToJson(Json &jsonObj, RefCountedPtr<Galaxy> galaxy) { }
+	virtual void FromJson(const Json &jsonObj, RefCountedPtr<Galaxy> galaxy) { }
 
 protected:
 	GalaxyGeneratorStage() : m_galaxyGenerator(nullptr) { }

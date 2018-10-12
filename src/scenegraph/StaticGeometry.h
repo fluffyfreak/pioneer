@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _STATICGEOMETRY_H
@@ -38,7 +38,7 @@ public:
 	void AddMesh(RefCountedPtr<Graphics::VertexBuffer>,
 		RefCountedPtr<Graphics::IndexBuffer>,
 		RefCountedPtr<Graphics::Material>);
-	unsigned int GetNumMeshes() const { return m_meshes.size(); }
+	unsigned int GetNumMeshes() const { return static_cast<Uint32>(m_meshes.size()); }
 	Mesh &GetMeshAt(unsigned int i);
 
 	void SetRenderState(Graphics::RenderState *s) { m_renderState = s; }

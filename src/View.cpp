@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "View.h"
@@ -57,8 +57,5 @@ void View::Detach() {
 	Gui::Screen::RemoveBaseWidget(m_rightRegion1);
 	Gui::Screen::RemoveBaseWidget(s_cpan);
 	Gui::Screen::RemoveBaseWidget(this);
-	if (s_cpan)
-		s_cpan->ClearOverlay();
-
 	OnSwitchFrom();
 }

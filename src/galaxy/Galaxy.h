@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _GALAXY_H
@@ -6,11 +6,10 @@
 
 #include <cstdio>
 #include "RefCounted.h"
-#include "Serializer.h"
 #include "Factions.h"
 #include "CustomSystem.h"
 #include "GalaxyCache.h"
-#include "json/json.h"
+#include "Json.h"
 
 struct SDL_Surface;
 class GalaxyGenerator;
@@ -29,8 +28,8 @@ public:
 	const float SOL_OFFSET_X;
 	const float SOL_OFFSET_Y;
 
-	static RefCountedPtr<Galaxy> LoadFromJson(const Json::Value &jsonObj);
-	void ToJson(Json::Value &jsonObj);
+	static RefCountedPtr<Galaxy> LoadFromJson(const Json &jsonObj);
+	void ToJson(Json &jsonObj);
 
 	~Galaxy();
 

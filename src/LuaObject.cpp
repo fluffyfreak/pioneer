@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -6,6 +6,7 @@
 #include "LuaUtils.h"
 #include "PropertiedObject.h"
 #include "PropertyMap.h"
+#include "Json.h"
 
 #include <map>
 #include <utility>
@@ -927,6 +928,36 @@ bool LuaObjectBase::Deserialize(const char *stream, const char **next)
 	}
 
 	return (*i).second.deserialize(end, next);
+}
+
+void LuaObjectBase::ToJson(Json &out)
+{
+	lua_State *l = Lua::manager->GetLuaState();
+
+	const auto it = serializers->find(m_type);
+	if (it == serializers->end()) {
+		luaL_error(l, "No registered serializer for type %s\n", m_type);
+		abort();
+	}
+
+	out["cpp_class"] = Json(m_type);
+	Json inner = Json::object();
+	it->second.to_json(inner, GetObject());
+	out["inner"] = inner;
+}
+
+bool LuaObjectBase::FromJson(const Json &obj)
+{
+	if (obj["cpp_class"].is_null() || obj["inner"].is_null()) return false;
+	const std::string type = obj["cpp_class"];
+	auto it = serializers->find(type);
+	if (it == serializers->end()) {
+		lua_State *l = Lua::manager->GetLuaState();
+		luaL_error(l, "No registered deserializer for type %s\n", type.c_str());
+		abort();
+	}
+
+	return it->second.from_json(obj["inner"]);
 }
 
 void *LuaObjectBase::Allocate(size_t n) {

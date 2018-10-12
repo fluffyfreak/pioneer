@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef GAMEUI_BINDINGCAPTURE_H
@@ -44,9 +44,9 @@ public:
 
 	virtual bool IsSelectable() const { return true; }
 
-	const KeyBindings::AxisBinding &GetBinding() const { return m_binding; }
+	const KeyBindings::JoyAxisBinding &GetBinding() const { return m_binding; }
 
-	sigc::signal<void,const KeyBindings::AxisBinding &> onCapture;
+	sigc::signal<void,const KeyBindings::JoyAxisBinding &> onCapture;
 
 protected:
 	virtual void HandleVisible();
@@ -58,7 +58,7 @@ private:
 	bool OnJoystickAxisMove(const UI::JoystickAxisMotionEvent &event);
 
 	sigc::connection m_connJoystickAxisMove;
-	KeyBindings::AxisBinding m_binding;
+	KeyBindings::JoyAxisBinding m_binding;
 };
 
 }

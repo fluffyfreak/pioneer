@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "ShipCpanelMultiFuncDisplays.h"
@@ -20,6 +20,7 @@
 #include "graphics/Graphics.h"
 #include "graphics/Renderer.h"
 #include "graphics/VertexArray.h"
+#include "GameSaveError.h"
 
 using namespace Graphics;
 
@@ -50,22 +51,20 @@ RadarWidget::RadarWidget(Graphics::Renderer *r) :
 	InitObject();
 }
 
-RadarWidget::RadarWidget(Graphics::Renderer *r, const Json::Value &jsonObj) :
+RadarWidget::RadarWidget(Graphics::Renderer *r, const Json &jsonObj) :
 m_renderer(r)
 {
-	// Radar used to be called "scanner" for Frontier-reasons
-	if (!jsonObj.isMember("scanner")) throw SavedGameCorruptException();
-	Json::Value radarObj = jsonObj["scanner"];
+	try {
+		// Radar used to be called "scanner" for Frontier-reasons
+		Json radarObj = jsonObj["scanner"];
 
-	if (!radarObj.isMember("mode")) throw SavedGameCorruptException();
-	if (!radarObj.isMember("current_range")) throw SavedGameCorruptException();
-	if (!radarObj.isMember("manual_range")) throw SavedGameCorruptException();
-	if (!radarObj.isMember("target_range")) throw SavedGameCorruptException();
-
-	m_mode = RadarMode(radarObj["mode"].asInt());
-	m_currentRange = StrToFloat(radarObj["current_range"].asString());
-	m_manualRange = StrToFloat(radarObj["manual_range"].asString());
-	m_targetRange = StrToFloat(radarObj["target_range"].asString());
+		m_mode = radarObj["mode"];
+		m_currentRange = radarObj["current_range"];
+		m_manualRange = radarObj["manual_range"];
+		m_targetRange = radarObj["target_range"];
+	} catch (Json::type_error &e) {
+		throw SavedGameCorruptException();
+	}
 
 	InitObject();
 }
@@ -114,6 +113,9 @@ void RadarWidget::Draw()
 	Pi::player->Properties().Get("radar_cap", radar_cap);
 	if (radar_cap <= 0) return;
 
+	if (Pi::player->GetFlightState() == Ship::HYPERSPACE)
+		return;
+
 	float size[2];
 	GetSize(size);
 	m_x = size[0] / (RADAR_XSHRINK * 2);
@@ -159,25 +161,12 @@ void RadarWidget::Draw()
 }
 
 void RadarWidget::InitScaling(void) {
-	isCompact = Pi::IsRadarCompact();
-	if(isCompact) {
-		RADAR_XSHRINK = 4.0f;
-		RADAR_YSHRINK = 0.95f;
-	} else {
-		// original values
-		RADAR_XSHRINK = 1.0f;
-		RADAR_YSHRINK = 0.75f;
-	}
+	RADAR_XSHRINK = 4.0f;
+	RADAR_YSHRINK = 0.95f;
 }
 
 void RadarWidget::Update()
 {
-	if(Pi::IsRadarCompact() != isCompact) {
-		InitScaling();
-		GenerateBaseGeometry();
-		GenerateRingsAndSpokes();
-	}
-
 	m_contacts.clear();
 
 	int radar_cap = 0;
@@ -483,163 +472,15 @@ void RadarWidget::TimeStepUpdate(float step)
 	m_scale = RADAR_SCALE * (RADAR_RANGE_MAX / m_currentRange);
 }
 
-void RadarWidget::SaveToJson(Json::Value &jsonObj)
+void RadarWidget::SaveToJson(Json &jsonObj)
 {
-	Json::Value radarObj(Json::objectValue); // Create JSON object to contain radar data.
+	Json radarObj({}); // Create JSON object to contain radar data.
 
-	radarObj["mode"] = Sint32(m_mode);
-	radarObj["current_range"] = FloatToStr(m_currentRange);
-	radarObj["manual_range"] = FloatToStr(m_manualRange);
-	radarObj["target_range"] = FloatToStr(m_targetRange);
+	radarObj["mode"] = m_mode;
+	radarObj["current_range"] = m_currentRange;
+	radarObj["manual_range"] = m_manualRange;
+	radarObj["target_range"] = m_targetRange;
 
 	// Radar used to be called "scanner".
 	jsonObj["scanner"] = radarObj; // Add radar object to supplied object.
-}
-
-/////////////////////////////////
-
-UseEquipWidget::UseEquipWidget(): Gui::Fixed(400,100)
-{
-	m_onPlayerEquipChangedCon = Pi::player->onChangeEquipment.connect(sigc::mem_fun(this, &UseEquipWidget::UpdateEquip));
-	UpdateEquip();
-}
-
-UseEquipWidget::~UseEquipWidget()
-{
-	m_onPlayerEquipChangedCon.disconnect();
-}
-
-void UseEquipWidget::GetSizeRequested(float size[2])
-{
-	size[0] = 400;
-	size[1] = 62;
-}
-
-void UseEquipWidget::FireMissile(int idx)
-{
-	if (!Pi::player->GetCombatTarget()) {
-		Pi::game->log->Add(Lang::SELECT_A_TARGET);
-		return;
-	}
-	LuaObject<Ship>::CallMethod(Pi::player, "FireMissileAt", idx+1, static_cast<Ship*>(Pi::player->GetCombatTarget()));
-}
-
-static void FireECM()
-{
-	Pi::player->UseECM();
-}
-
-void UseEquipWidget::UpdateEquip()
-{
-	DeleteAllChildren();
-	lua_State *l = Lua::manager->GetLuaState();
-	LuaObject<Ship>::CallMethod<LuaRef>(Pi::player, "GetEquip", "missile").PushCopyToStack();
-	int numSlots = LuaObject<Ship>::CallMethod<int>(Pi::player, "GetEquipSlotCapacity", "missile");
-
-	if (numSlots) {
-		const float spacing = Pi::IsRadarCompact() ? 16 : (380.0f / numSlots);
-		lua_pushnil(l);
-		while(lua_next(l, -2)) {
-			if (lua_type(l, -2) == LUA_TNUMBER) {
-				int i = lua_tointeger(l, -2);
-				LuaTable missile(l, -1);
-				Gui::ImageButton *b = new Gui::ImageButton((std::string("icons/")+missile.Get<std::string>("icon_name", "")+".png").c_str());
-				Add(b, spacing*i, 40);
-				b->onClick.connect(sigc::bind(sigc::mem_fun(this, &UseEquipWidget::FireMissile), i-1));
-				b->SetToolTip(missile.CallMethod<std::string>("GetName"));
-				b->SetRenderDimensions(16, 16);
-			}
-			lua_pop(l, 1);
-		}
-	}
-
-	{
-		int ecm_power_cap = 0;
-		Pi::player->Properties().Get("ecm_power_cap", ecm_power_cap);
-		if (ecm_power_cap > 0) {
-			Gui::ImageButton *b = 0;
-			if (ecm_power_cap == 3) 
-				b = new Gui::ImageButton("icons/ecm_basic.png");
-			else 
-				b = new Gui::ImageButton("icons/ecm_advanced.png");
-
-			// Note, FireECM() is a wrapper around Ship::UseECM() and is only used here
-			b->onClick.connect(sigc::ptr_fun(&FireECM));
-			b->SetRenderDimensions(32, 32);
-
-			Add(b, 32, 0);
-		}
-	}
-
-	LuaObject<Ship>::CallMethod<LuaRef>(Pi::player, "GetEquip", "sensor").PushCopyToStack();
-	const int numSensorSlots = LuaObject<Ship>::CallMethod<int>(Pi::player, "GetEquipSlotCapacity", "sensor");
-	if (numSensorSlots) {
-		const float spacing = 32.0f ;
-		lua_pushnil(l);
-		while(lua_next(l, -2)) {
-			if (lua_type(l, -2) == LUA_TNUMBER) {
-				int i = lua_tointeger(l, -2);
-				LuaTable sensor(l, -1);
-				Gui::MultiStateImageButton *b = new Gui::MultiStateImageButton();
-				b->AddState(0, (std::string("icons/")+sensor.Get<std::string>("icon_off_name", "")+".png").c_str());
-				b->AddState(1, (std::string("icons/")+sensor.Get<std::string>("icon_on_name", "")+".png").c_str());
-				const std::string sensor_label = sensor.CallMethod<std::string>("GetName");
-				b->SetToolTip(sensor_label);
-				b->onClick.connect([i](Gui::MultiStateImageButton *button){
-					if (button->GetState() == 1) {
-						LuaObject<Ship>::CallMethod(Pi::player, "StartSensor", i);
-					} else {
-						LuaObject<Ship>::CallMethod(Pi::player, "StopSensor", i);
-					}
-				});
-				b->SetRenderDimensions(30.0f, 22.0f);
-				Add(b, spacing*i, 38.0f);
-			}
-			lua_pop(l, 1);
-		}
-	}
-}
-
-///////////////////////////////////////////////
-
-MultiFuncSelectorWidget::MultiFuncSelectorWidget(): Gui::Fixed(104, 17)
-{
-	m_active = 0;
-	m_rg = new Gui::RadioGroup();
-
-	m_buttons[0] = new Gui::ImageRadioButton(m_rg, "icons/multifunc_scanner.png", "icons/multifunc_scanner_on.png");
-	m_buttons[0]->onSelect.connect(sigc::bind(sigc::mem_fun(this, &MultiFuncSelectorWidget::OnClickButton), MFUNC_RADAR));
-	m_buttons[0]->SetShortcut(SDLK_F9, KMOD_NONE);
-	m_buttons[0]->SetSelected(true);
-	m_buttons[0]->SetRenderDimensions(34, 17);
-
-	m_buttons[1] = new Gui::ImageRadioButton(m_rg, "icons/multifunc_equip.png", "icons/multifunc_equip_on.png");
-	m_buttons[1]->onSelect.connect(sigc::bind(sigc::mem_fun(this, &MultiFuncSelectorWidget::OnClickButton), MFUNC_EQUIPMENT));
-	m_buttons[1]->SetShortcut(SDLK_F10, KMOD_NONE);
-	m_buttons[0]->SetRenderDimensions(34, 17);
-
-	UpdateButtons();
-
-	ShowAll();
-}
-
-MultiFuncSelectorWidget::~MultiFuncSelectorWidget()
-{
-	delete m_rg;
-}
-
-void MultiFuncSelectorWidget::OnClickButton(multifuncfunc_t f)
-{
-	m_active = int(f);
-	UpdateButtons();
-	onSelect.emit(f);
-}
-
-void MultiFuncSelectorWidget::UpdateButtons()
-{
-	RemoveAllChildren();
-
-	for (int i = 0; i < MFUNC_MAX; ++i) {
-		Add(m_buttons[i], 36.0f + 36.0f * float(i), 0.0);
-	}
 }

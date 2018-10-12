@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _LIBS_H
@@ -6,6 +6,7 @@
 
 #include "buildopts.h"
 
+#include <cmath>
 #include <cassert>
 #include <cstdio>
 #include <sigc++/sigc++.h>
@@ -37,10 +38,8 @@
 #	endif
 
 #	ifndef __MINGW32__
-#		define alloca _alloca
 #		define strncasecmp _strnicmp
 #		define strcasecmp _stricmp
-#		define snprintf _snprintf
 #	endif
 #endif
 

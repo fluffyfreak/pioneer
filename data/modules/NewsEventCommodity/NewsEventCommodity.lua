@@ -1,4 +1,4 @@
--- Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 -- Create a news event on the BBS (to do: place it on
@@ -380,7 +380,7 @@ local onGameStart = function ()
 	ads = {}
 	news = {}
 
-	if not loadedData then return end
+	if not loadedData or not loadedData.ads then return end
 
 	for k,ad in pairs(loadedData.ads) do
 		local ref = ad.station:AddAdvert(

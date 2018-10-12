@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _TERRAIN_H
@@ -226,6 +226,7 @@ class TerrainHeightWaterSolid;
 
 class TerrainColorAsteroid;
 class TerrainColorBandedRock;
+class TerrainColorBlack;
 class TerrainColorDeadWithWater;
 class TerrainColorDesert;
 /*ColorEarthlike uses features not yet included in all terrain colours
@@ -244,7 +245,7 @@ class TerrainColorIce;
 class TerrainColorMethane;
 class TerrainColorRock2;
 class TerrainColorRock;
-class TerrainColorSolid;
+class TerrainColorWhite;
 class TerrainColorStarBrownDwarf;
 class TerrainColorStarG;
 class TerrainColorStarK;

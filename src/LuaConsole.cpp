@@ -1,10 +1,11 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaConsole.h"
 #include "LuaManager.h"
 #include "Pi.h"
 #include "ui/Context.h"
+#include "ui/Margin.h"
 #include "text/TextureFont.h"
 #include "text/TextSupport.h"
 #include "KeyBindings.h"
@@ -50,7 +51,9 @@ LuaConsole::LuaConsole():
 
 	m_scroller = Pi::ui->Scroller()->SetInnerWidget(m_output);
 
-	m_container.Reset(Pi::ui->Margin(10)->SetInnerWidget(
+	// temporary until LuaConsole is moved to lua: move up to clear imgui time window
+	m_container.Reset(Pi::ui->Margin(80, UI::Margin::Direction::BOTTOM)->SetInnerWidget(
+	Pi::ui->Margin(10)->SetInnerWidget(
 		Pi::ui->ColorBackground(Color(0,0,0,0xc0))->SetInnerWidget(
 			Pi::ui->VBox()->PackEnd(UI::WidgetSet(
 				Pi::ui->Expand()->SetInnerWidget(
@@ -59,7 +62,7 @@ LuaConsole::LuaConsole():
 				m_entry
 			))
 		)
-	));
+	)));
 
 	m_container->SetFont(UI::Widget::FONT_MONO_NORMAL);
 
@@ -546,7 +549,7 @@ void LuaConsole::OpenTCPDebugConnection(int portnumber) {
 	destination.sin_family = AF_INET;
 	destination.sin_port = htons(portnumber);
 	destination.sin_addr.s_addr = INADDR_ANY; // this should be localhost only!
-	if (bind(m_debugSocket, (struct sockaddr*)&destination, sizeof(destination)) < 0) {
+	if (bind(m_debugSocket, reinterpret_cast<struct sockaddr*>(&destination), sizeof(destination)) < 0) {
 		Output("Binding socket failed.\n");
 		if(m_debugSocket) {
 			close(m_debugSocket);
@@ -598,7 +601,7 @@ void LuaConsole::HandleNewDebugTCPConnection(int socket) {
 	}
 	// set to no buffering
 	int flag = 1;
-	setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char *)&flag, sizeof(int));
+	setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<char *>(&flag), sizeof(int));
 
 	m_debugConnections.push_back(sock);
 	std::string welcome = "** Welcome to the Pioneer Remote Debugging Console!\n> ";

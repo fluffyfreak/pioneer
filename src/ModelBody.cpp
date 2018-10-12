@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -7,7 +7,6 @@
 #include "Game.h"
 #include "ModelCache.h"
 #include "Pi.h"
-#include "Serializer.h"
 #include "Space.h"
 #include "WorldView.h"
 #include "Camera.h"
@@ -17,6 +16,7 @@
 #include "scenegraph/SceneGraph.h"
 #include "scenegraph/NodeVisitor.h"
 #include "scenegraph/CollisionGeometry.h"
+#include "GameSaveError.h"
 
 class DynGeomFinder : public SceneGraph::NodeVisitor {
 public:
@@ -78,11 +78,11 @@ ModelBody::~ModelBody()
 	delete m_model;
 }
 
-void ModelBody::SaveToJson(Json::Value &jsonObj, Space *space)
+void ModelBody::SaveToJson(Json &jsonObj, Space *space)
 {
 	Body::SaveToJson(jsonObj, space);
 
-	Json::Value modelBodyObj(Json::objectValue); // Create JSON object to contain model body data.
+	Json modelBodyObj = Json::object(); // Create JSON object to contain model body data.
 
 	modelBodyObj["is_static"] = m_isStatic;
 	modelBodyObj["is_colliding"] = m_colliding;
@@ -91,6 +91,23 @@ void ModelBody::SaveToJson(Json::Value &jsonObj, Space *space)
 	m_shields->SaveToJson(modelBodyObj);
 
 	jsonObj["model_body"] = modelBodyObj; // Add model body object to supplied object.
+}
+
+void ModelBody::LoadFromJson(const Json &jsonObj, Space *space)
+{
+	Body::LoadFromJson(jsonObj, space);
+	Json modelBodyObj = jsonObj["model_body"];
+
+	try {
+		m_isStatic = modelBodyObj["is_static"];
+		m_colliding = modelBodyObj["is_colliding"];
+		SetModel(modelBodyObj["model_name"].get<std::string>().c_str());
+	} catch (Json::type_error &e) {
+		throw SavedGameCorruptException();
+	}
+
+	m_model->LoadFromJson(modelBodyObj);
+	m_shields->LoadFromJson(modelBodyObj);
 }
 
 void ModelBody::SetStatic(bool isStatic)
@@ -107,24 +124,6 @@ void ModelBody::SetStatic(bool isStatic)
 		GetFrame()->RemoveStaticGeom(m_geom);
 		GetFrame()->AddGeom(m_geom);
 	}
-}
-
-void ModelBody::LoadFromJson(const Json::Value &jsonObj, Space *space)
-{
-	Body::LoadFromJson(jsonObj, space);
-
-	if (!jsonObj.isMember("model_body")) throw SavedGameCorruptException();
-	Json::Value modelBodyObj = jsonObj["model_body"];
-
-	if (!modelBodyObj.isMember("is_static")) throw SavedGameCorruptException();
-	if (!modelBodyObj.isMember("is_colliding")) throw SavedGameCorruptException();
-	if (!modelBodyObj.isMember("model_name")) throw SavedGameCorruptException();
-
-	m_isStatic = modelBodyObj["is_static"].asBool();
-	m_colliding = modelBodyObj["is_colliding"].asBool();
-	SetModel(modelBodyObj["model_name"].asString().c_str());
-	m_model->LoadFromJson(modelBodyObj);
-	m_shields->LoadFromJson(modelBodyObj);
 }
 
 void ModelBody::SetColliding(bool colliding)
@@ -145,9 +144,7 @@ void ModelBody::RebuildCollisionMesh()
 	double maxRadius= m_collMesh->GetAabb().GetRadius();
 
 	//static geom
-	m_geom = new Geom(m_collMesh->GetGeomTree());
-	m_geom->SetUserData(static_cast<void*>(this));
-	m_geom->MoveTo(GetOrient(), GetPosition());
+	m_geom = new Geom(m_collMesh->GetGeomTree(), GetOrient(), GetPosition(), this);
 
 	SetPhysRadius(maxRadius);
 
@@ -157,9 +154,7 @@ void ModelBody::RebuildCollisionMesh()
 
 	//dynamic geoms
 	for (auto it = m_collMesh->GetDynGeomTrees().begin(); it != m_collMesh->GetDynGeomTrees().end(); ++it) {
-		Geom *dynG = new Geom(*it);
-		dynG->SetUserData(static_cast<void*>(this));
-		dynG->MoveTo(GetOrient(), GetPosition());
+		Geom *dynG = new Geom(*it, GetOrient(), GetPosition(), this);
 		dynG->m_animTransform = matrix4x4d::Identity();
 		SceneGraph::CollisionGeometry *cg = dgf.GetCgForTree(*it);
 		if (cg)

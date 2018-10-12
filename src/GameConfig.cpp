@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "GameConfig.h"
@@ -46,6 +46,7 @@ GameConfig::GameConfig(const map_string &override_)
 	map["EnableServerAgent"] = "0";
 	map["AmountOfBackgroundStars"] = "1.0";
 	map["UseAnisotropicFiltering"] = "0";
+	map["RendererName"] = "Opengl 3.x"; // default to our best renderer
 
 #ifdef _WIN32
 	map["RedirectStdio"] = "1";
@@ -54,6 +55,7 @@ GameConfig::GameConfig(const map_string &override_)
 #endif
 	map["EnableGLDebug"] = "0";
 	map["EnableGPUJobs"] = "1";
+	map["GL3ForwardCompatible"] = "1";
 
 	Load();
 

@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _GEOSPHERE_H
@@ -36,7 +36,7 @@ public:
 	virtual void Update() override;
 	virtual void Render(Graphics::Renderer *renderer, const matrix4x4d &modelView, vector3d campos, const float radius, const std::vector<Camera::Shadow> &shadows) override;
 
-	virtual double GetHeight(const vector3d &p) const override {
+	virtual double GetHeight(const vector3d &p) const override final {
 		const double h = m_terrain->GetHeight(p);
 #ifdef DEBUG
 		// XXX don't remove this. Fix your fractals instead
@@ -50,7 +50,7 @@ public:
 #endif /* DEBUG */
 		return h;
 	}
-	
+
 	static void Init();
 	static void Uninit();
 	static void UpdateAllGeoSpheres();

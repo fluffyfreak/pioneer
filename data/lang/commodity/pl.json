@@ -1,0 +1,250 @@
+{
+  "AIR_PROCESSORS": {
+    "description": "",
+    "message": "Klimatyzacja"
+  },
+  "AIR_PROCESSORS_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Czyste powietrze zapewnione jest tylko wtedy, gdy już jest go pod dostatkiem. Technika jego oczyszczania wzięła się podobno z obcych statków, znalezionych na Marsie. Wiele firm produkuje różne typy procesorów powietrza, zdolnych przemienić nawet najbardziej wrogie atmosfery w środowisko zdatne do pracy, a rządy nie tolerują monopolu na produkcję powietrza."
+  },
+  "ANIMAL_MEAT": {
+    "description": "",
+    "message": "Mięso ze zwierząt"
+  },
+  "ANIMAL_MEAT_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Będące źródłem wielu kontrowersji mięso jest ciałem zwierząt. Mając dostęp do syntetycznych protein, większość ludzi uważa zabijanie zwierząt za złe. Podczas, gdy mięso jest nielegalne w wielu kluczowych systemach, żywe zwierzęta oraz ich mięso jest ważną częścią życia ludzi w bardziej tradycjonalistycznych światach."
+  },
+  "BATTLE_WEAPONS": {
+    "description": "",
+    "message": "Broń ciężka"
+  },
+  "BATTLE_WEAPONS_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Ciężka broń klasy wojskowej, jak opancerzone czołgi czy pociski ziemia-kosmos. Na handel nimi z reguły mają monopol rządy. Jednakże na czarnym rynku potrafią osiągać spore sumy."
+  },
+  "CARBON_ORE": {
+    "description": "",
+    "message": "Paliwa kopalne"
+  },
+  "CARBON_ORE_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Węgiel to jeden z najpowszechniejszych znanych nam pierwiastków. Używany jest w niemal wszystkim, od plastiku po stopy a nawet produkcję energii. Jest drogim, ale ważnym towarem. Jako taki, jest importowany przez niemal wszyskie osady przemysłowe."
+  },
+  "COMPUTERS": {
+    "description": "",
+    "message": "Komputery"
+  },
+  "COMPUTERS_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Od przeszło tysiąca lat, od Abacusa, DPD-11 i Motorola 68k, aż po nowoczesne linie HAL 9001 i Multivac, komputery zaznaczyły początek ery informacji. są równie ważne we wchodzeniu w hiperprzestrzeń, co w wymienianiu się filmikami ślicznych quibblów w UniNecie."
+  },
+  "CONSUMER_GOODS": {
+    "description": "",
+    "message": "Towary konsumpcyjne"
+  },
+  "CONSUMER_GOODS_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Produkty końcowe, gotowe dla ogólnego rynku konsumentów, bez potrzeby dalszej obróbki. Wszystko począwszy od szczoteczek do zębów, urządzeń kuchennych po latajace samochody."
+  },
+  "FARM_MACHINERY": {
+    "description": "",
+    "message": "Maszyny rolnicze"
+  },
+  "FARM_MACHINERY_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Chociaż jest to rzadkie, można jeszcze spotkać rolnika za pługiem, ciągniętym przez woły. Ale w niemal każdym miejscu z rolnictwem, do uprawy ziemi korzysta się z maszyn - czy jest to podziemna hydroponika, czy niekończące się pola świata ogrodu."
+  },
+  "FERTILIZER": {
+    "description": "",
+    "message": "Nawozy"
+  },
+  "FERTILIZER_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Nawozy są kluczowe dla wzrostu upraw na skalę przemysłową, pozwalając na monokultury i wyższe wypłaty, niż w przypadku zwykłej ziemi. Często dzieje sie to kosztem ekologii, co widać dopiero z czasem."
+  },
+  "FRUIT_AND_VEG": {
+    "description": "",
+    "message": "Owoce i warzywa"
+  },
+  "FRUIT_AND_VEG_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Chociaż istnieje wiele syntetycznych alernatyw, prawdziwe owoce i warzywa wciąż są ważną częścią naszej kuchni i odżywiania. Rosnące w światach agrokulturalnych lub jako część podtrzymywania życia, eksportowane są do systemów, gdzie ich uprawa jest niemożliwa."
+  },
+  "GRAIN": {
+    "description": "",
+    "message": "Zboże"
+  },
+  "GRAIN_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Podstawa diety wielu ludzi. Używane jest w rolnictwie, jako pasza dla zwierząt oraz suplement syntetycznej diety. Ziarna są również składnikiem wielu innych potraw, jak owsianka czy wypieki. Wiele gwiezdnych kultur uprawia i konsumuje przynajmniej część ziaren, które zostały zaadoptowane do klimatu ich miejsca zamieszkania."
+  },
+  "HAND_WEAPONS": {
+    "description": "",
+    "message": "Broń ręczna"
+  },
+  "HAND_WEAPONS_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Dając zabezpieczenie poza długą ręką prawa, broń ręczna jest kluczowa dla handlarzy w odległych układach. Jednakże, wiele rządów postrzega ją jako zamach na ich kontrolę nad populacją i ściśle kontroluje jej handel i posiadanie."
+  },
+  "HYDROGEN": {
+    "description": "",
+    "message": "Wodór"
+  },
+  "HYDROGEN_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Używany jako paliwo do hipernapędów i pędnik dla statków, wodór jest niezmiernie ważnym pierwiastkiem. Na szczęście, jest również najbardziej powszechnym we Wszechświecie, choć jego przechowywanie nie należy do łatwych. Z reguły jest najtańszym towarem na rynku. Porty są w niego ciągle zaopatrzone."
+  },
+  "INDUSTRIAL_MACHINERY": {
+    "description": "",
+    "message": "Maszyny przemysłowe"
+  },
+  "INDUSTRIAL_MACHINERY_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Potrzebne do montażu linii, rafinerii, hut i wytworu maszynerii, która z kolei wytwarza inne dobra. Do produkcji zaawansowanej maszynerii potrzebne są wysokie kompetencje."
+  },
+  "LIQUID_OXYGEN": {
+    "description": "",
+    "message": "Ciekły tlen"
+  },
+  "LIQUID_OXYGEN_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Płynny tlen ma wiele zastosowań, szczególnie medycznych i przemysłowych, czasami nawet w utylizacji odpadów. Jest bardzo tani, gdyż łatwo wytworzyć go z wody."
+  },
+  "LIQUOR": {
+    "description": "",
+    "message": "Trunki"
+  },
+  "LIQUOR_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Większość placówek posiada lokalny trunek, ciężkostrawny dla obcych. Alkohol może być w niektórych systemach zakazany za mącenie umysłu. Jednak niezależnie od prawa, za odpowiednią cenę na czarnym rynku można dostać trochę szkockiej."
+  },
+  "LIVE_ANIMALS": {
+    "description": "",
+    "message": "Żywe zwierzęta"
+  },
+  "LIVE_ANIMALS_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Częściowo z powodów humanitarnych, ekonomicznych i ekologicznych, chów i handel zwięrzętami ściśle regulowany, a w wielu głównych układach nawet nielegalny. Im dalej ku rubieżom, trzoda staje się coraz ważniejszym elementem życia, zarówno jako źródło żywności i siłę roboczą. Egzotyczne ogrody zoologiczne i dzika przyroda dokładają do handlu zwierzętami wokół galaktyki, zwykle pod ścisłymi przepisami, celem walki z nielegalnymi polowainami."
+  },
+  "MEDICINES": {
+    "description": "",
+    "message": "Lekarstwa"
+  },
+  "MEDICINES_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Otrzymywane ze źródeł naturalnych, bądź sztucznie syntezowane, lekarstwa potrzebne są wszędzie, gdzie są ludzie. Od leczenia zwykłego przeziębienia po zwalczanie skutków długotrwałych podróży kosmicznych, lekarstwa są kluczowe dla rozwoju międzygwiezdnej populacji ludzkiej. Są pilnie obserwowane przez oddelegowanych agentów, gdyż powszechnie pod ich przykrywką przewozi się narkotyki."
+  },
+  "METAL_ALLOYS": {
+    "description": "",
+    "message": "Stopy metali"
+  },
+  "METAL_ALLOYS_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Gdy ruda metalu jest wydobyta i przerafinowana, ulega przetworzeniu na różne rodzaje stopów. Stop jest połączeniem różnych metali w odpowiednich proporcjach, aby nadać mu żądane właściwości. Tak więc większość metali konsumenckich to stopy."
+  },
+  "METAL_ORE": {
+    "description": "",
+    "message": "Rudy metali"
+  },
+  "METAL_ORE_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Wiele kolonii wydobywa złoża metalu na eksport, gdzie po rafinacji są używane w przemyśle. Używa się ich do wszystkiego, od małych zabawek, po statki kosmiczne. Metale są kluczowe we współczesnej cywilizacji."
+  },
+  "MILITARY_FUEL": {
+    "description": "",
+    "message": "Paliwo wojskowe"
+  },
+  "MILITARY_FUEL_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Używane jako paliwo w bardziej zaawansowanych napędach wojskowych. Napędy te powodują zanieczyszczenia, które trzeba utylizować. Ze względu na syntetyczną naturę, paliwo wojskowe jest droższe i trudniej dostępne, niż wodór, nie występuje też naturalnie."
+  },
+  "MINING_MACHINERY": {
+    "description": "",
+    "message": "Maszyny górnicze"
+  },
+  "MINING_MACHINERY_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Tradycyjnie wyczerpujące prace górnicze są usprawnione przez użycie maszyn, pomagajacych górnikom umiejscawiać i wydobywać różne surowce oraz transportować je do najbliższych przetwórni."
+  },
+  "NARCOTICS": {
+    "description": "",
+    "message": "Narkotyki"
+  },
+  "NARCOTICS_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Naturalne lub sztuczne substancje, działające na stan umyslu i ciała. Choć używanie narkotyków, zarówno rekreacyjnie, jak i w medycynie, jest stare jak sama ludzkość, przewożenie ich i handel nimi jest przeważnie zabroniony."
+  },
+  "NERVE_GAS": {
+    "description": "",
+    "message": "Gaz paraliżujący"
+  },
+  "NERVE_GAS_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Powszechnie przyjmuje się, iż jest to broń masowej zagłady. W Wielu układach jest odrzucona nawet przez wojsko, a więc i nielegalna."
+  },
+  "PLASTICS": {
+    "description": "",
+    "message": "Tworzywa sztuczne"
+  },
+  "PLASTICS_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Materiały syntetyczne lub pół-syntetyczne, używane we wszystkim, od rzeczy codziennego użytku po konstrukcje statków kosmicznych. Z reguły łatwo ich używać w manufakturach, wszechstronne i łatwe do wytworzenia, są więc ważną częścią ludzkiej cywilizacji."
+  },
+  "PRECIOUS_METALS": {
+    "description": "",
+    "message": "Metale szlachetne"
+  },
+  "PRECIOUS_METALS_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Metale szlachetne są, z reguły, mniej reaktywne, trudniejsze do wydobycia i bardziej deficytowe, co czyni je drogimi na rynku. Należą do nich złoto, srebro, plantyna i metale ziem rzadkich. Konkretne pierwiastki, jak złoto, krzem czy te z ziem rzadkich, są kluczowe dla konstrukcji komputerów i innej elektroniki."
+  },
+  "RADIOACTIVES": {
+    "description": "",
+    "message": "Radioaktywne odpady"
+  },
+  "RADIOACTIVES_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Wytwarzane przez reaktory jądrowe i wojskowe hipernapędy, odpadki nuklearne są najtrudniejszymi i najniebezpieczniejszymi towarami do transportu i przechowywania. S tego powodu, większość portów gwiezdnych płaci za ich wywóz. Wyrzucanie ich gdzie popadnie jet poważnym wykroczeniem."
+  },
+  "ROBOTS": {
+    "description": "",
+    "message": "Roboty"
+  },
+  "ROBOTS_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Roboty są często importowane do układów przemysłowychi górniczych, ze względu na swoje zdolności łatwego wykonywania zadań zbyt trudnych, nudnych lub niebezpiecznych dla ludzi. Mogą również służyć za policjantów i prawników."
+  },
+  "RUBBISH": {
+    "description": "",
+    "message": "Odpady"
+  },
+  "RUBBISH_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Produkt uboczny cywilizacji, na który składają się odpadki przemysłowe, domowe oraz zużyty sprzęt. Większość odpadków jest ponownie przetwarzana, odzyskiwana lub wysyłana do portów celem wywiezeinia ze świata. Zrzucanie śmieci na niezamieszkane układy niemal zawsze jest nielegalne. Porty gwiezdne zwykle pobierają opłaty za utylizację śmieci, jednak również zapłacą za ich wywiezienie."
+  },
+  "SLAVES": {
+    "description": "",
+    "message": "Niewolnicy"
+  },
+  "SLAVES_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Jako, że maszyny zastąpiły niewolników w roli siły roboczej dla cywilizacji, niewolnictwo jest obecnie niemal powszechnie widziane jako niemoralne, a przekroczenie jego zakazu pociąga za sobią najostrzejsze kary. Jednakże, mimo najlepszych wysiłków humanitarnych, niewolnictwo wciąż jest rozpowszechnione, nawet w rozwiniętych światach."
+  },
+  "TEXTILES": {
+    "description": "",
+    "message": "Tekstylia"
+  },
+  "TEXTILES_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Tekstylia to zwykłe tkaniny, tkane z włókien syntetycznych, roślinnych lub odzwierzęcych. Zwykle wytwarzane są przez roboty w wielkich fabrykach, ale wciąż można spotkać indywidualnych tkaczy."
+  },
+  "WATER": {
+    "description": "",
+    "message": "Woda"
+  },
+  "WATER_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Kluczowa dla życia, jakie znamy, często jest przeoczanym dobrem. Woda potrzebna jest wszędzie tam, dokąd zawędruje ludzkość. Zdecydwana większość kolonii spoza światów importuje wodę z komet lub planet podobnych do Ziemi. Woda jest używana na masową skalę w produkcji wooru i tlenu."
+  }
+}

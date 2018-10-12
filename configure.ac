@@ -1,4 +1,4 @@
-dnl Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+dnl Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 dnl Licensed under the terms of the GPL v3. See COPYING.txt for details
 
 dnl Process this file with autoconf to create configure.
@@ -81,7 +81,15 @@ WARN_CPPFLAGS=
 AC_SUBST(ARFLAGS)
 if test -z "$ARFLAGS"
 then
-	ARFLAGS="rcD"
+  case "${host_os}" in
+  darwin*)
+  # darwin uses it's own version of ar with different flags to what GNU uses
+  ARFLAGS="r"
+  ;;
+  *)
+  ARFLAGS="rcD"
+  ;;
+  esac
 fi
 dnl Check for ccache if they want it
 AC_ARG_WITH([ccache], AS_HELP_STRING([--with-ccache], [Compile using ccache]), [AC_PATH_PROG([CCACHE], [ccache])])
@@ -139,7 +147,6 @@ AC_SUBST([OPTIMISE])
 dnl Debug stuff
 AC_ARG_ENABLE([debug], AS_HELP_STRING([--enable-debug], [Enable debugging code (stack checks, debug tools features, etc)]), [EXTRA_CPPFLAGS="$EXTRA_CPPFLAGS -DDEBUG"])
 AC_ARG_ENABLE([remote-lua-repl], AS_HELP_STRING([--enable-remote-lua-repl], [Enable remote lua repl (tcp port 12345 or -DREMOTE_LUA_REPL_PORT=54321]), [EXTRA_CPPFLAGS="$EXTRA_CPPFLAGS -DREMOTE_LUA_REPL"])
-AC_ARG_ENABLE([ldb], AS_HELP_STRING([--enable-ldb], [Enable ldb support.]), [EXTRA_CPPFLAGS="$EXTRA_CPPFLAGS -DENABLE_LDB" ; EXTRA_LIBS="$EXTRA_LIBS -lldbcore"])
 AC_ARG_ENABLE([profiler], AS_HELP_STRING([--enable-profiler], [Enable internal profiler]), [EXTRA_CPPFLAGS="$EXTRA_CPPFLAGS -DPIONEER_PROFILER"])
 
 AC_ARG_WITH([fno-inline],  AS_HELP_STRING([--with-fno-inline], [Compile without inlining. Helps debugging segaults that occur in STL code]), [PIONEER_C_CXX_FLAG([-fno-inline])])
@@ -296,7 +303,9 @@ if test "x$cross_compiling" = "xno" ; then
 	AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <assimp/defs.h>
 	                                 #include <assimp/version.h>]],
 	                            [[do {
-	                                if (aiGetVersionMajor() >= 3 && aiGetVersionMinor() >= 2)
+	                                if (aiGetVersionMajor() > 3)
+	                                    return 0;
+	                                else if (aiGetVersionMajor() == 3 && aiGetVersionMinor() >= 2)
 	                                    return 0;
 	                                return 1;
 	                              } while(0)]])],
@@ -313,17 +322,35 @@ if test "x$cross_compiling" = "xno" ; then
 fi
 
 dnl Check for libcurl
-PKG_CHECK_MODULES([CURL], [libcurl])
+AC_ARG_WITH([server-agent], AS_HELP_STRING([--with-server-agent], [Compile in our server agent, adding libcurl as a dependency]), [], [with_server_agent=no])
+if test "$with_server_agent" = yes; then
+  EXTRA_CPPFLAGS="$EXTRA_CPPFLAGS -DENABLE_SERVER_AGENT"
+  PKG_CHECK_MODULES([CURL], [libcurl])
+fi
 
 dnl Optionally use external liblua
 AC_ARG_WITH([external-liblua], AS_HELP_STRING([--with-external-liblua], [Use external liblua in place of our internal copy]), [], [with_external_liblua=no; HAVE_LUA=no])
 if test "$with_external_liblua" = yes; then
-  PKG_CHECK_MODULES([LUA], [lua >= 5.2], [HAVE_LUA=yes], [foundlua=no])
+  PKG_CHECK_MODULES([LUA], [lua >= 5.2 lua < 5.3], [HAVE_LUA=yes], [foundlua=no])
   if test "$foundlua" = no; then
-    PKG_CHECK_MODULES([LUA], [lua5.2 >= 5.2], [HAVE_LUA=yes], [AC_MSG_ERROR([External liblua was requested but is not available])])
+    dnl On ArchLinux at least, Lua 5.2 is provided through pkg-config lua52.pc.
+    PKG_CHECK_MODULES([LUA], [lua52 >= 5.2], [HAVE_LUA=yes],
+        [PKG_CHECK_MODULES([LUA], [lua5.2 >= 5.2], [HAVE_LUA=yes],
+            [AC_MSG_ERROR([External liblua was requested but is not available])])])
   fi
 fi
 AM_CONDITIONAL([HAVE_LUA], [test "$HAVE_LUA" = yes])
+
+dnl Optionally use external libglew
+AC_ARG_WITH([external-libglew], AS_HELP_STRING([--with-external-libglew], [Use external libglew in place of our internal copy]), [], [with_external_libglew=no; HAVE_GLEW=no])
+if test "$with_external_libglew" = yes; then
+  PKG_CHECK_MODULES([GLEW], [glew >= 2.0.0], [HAVE_GLEW=yes], [AC_MSG_ERROR(["External libglew was requested but is not available"])])
+fi
+AM_CONDITIONAL([HAVE_GLEW], [test "$HAVE_GLEW" = yes])
+
+AM_COND_IF([HAVE_GLEW],
+		   [],
+		   [GLEW_CFLAGS="-DGLEW_STATIC"])
 
 LUA_CFLAGS="$LUA_CFLAGS -DLUA_USE_APICHECK"
 case "$host" in
@@ -422,10 +449,9 @@ AC_CONFIG_FILES([
 	contrib/jenkins/Makefile
 	contrib/imgui/Makefile
 	contrib/nanosvg/Makefile
-	contrib/json/Makefile
 	contrib/PicoDDS/Makefile
 	contrib/vcacheopt/Makefile
+	contrib/glew/Makefile
 	contrib/profiler/Makefile
-	osx/Makefile
 	win32/Makefile])
 AC_OUTPUT

@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Node.h"
@@ -50,7 +50,7 @@ Node* Node::FindNode(const std::string &name)
 	if (m_name == name)
 		return this;
 	else
-		return 0;
+		return nullptr;
 }
 
 void Node::DrawAxes()
@@ -62,7 +62,7 @@ void Node::DrawAxes()
 void Node::Save(NodeDatabase &db)
 {
     db.wr->String(GetTypeName());
-	db.wr->String(m_name.c_str());
+    db.wr->String(m_name.c_str());
     db.wr->Int32(m_nodeMask);
     db.wr->Int32(m_nodeFlags);
 }

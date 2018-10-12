@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "BindingCapture.h"
@@ -102,7 +102,7 @@ bool AxisBindingCapture::OnJoystickAxisMove(const UI::JoystickAxisMotionEvent &e
 	const float threshold = 0.4f; // joystick axis value is in range -1 to 1
 	if (event.value < -threshold || event.value > threshold) {
 		const auto dir = (event.value > 0 ? KeyBindings::POSITIVE : KeyBindings::NEGATIVE);
-		m_binding = KeyBindings::AxisBinding(event.joystick, event.axis, dir);
+		m_binding = KeyBindings::JoyAxisBinding(event.joystick, event.axis, dir);
 		onCapture.emit(m_binding);
 		return true;
 	}

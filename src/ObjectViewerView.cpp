@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "ObjectViewerView.h"
@@ -12,6 +12,7 @@
 #include "graphics/Light.h"
 #include "graphics/Renderer.h"
 #include "StringF.h"
+#include <sstream>
 
 #if WITH_OBJECTVIEWER
 
@@ -113,10 +114,10 @@ void ObjectViewerView::Draw3D()
 	Graphics::Light light;
 	light.SetType(Graphics::Light::LIGHT_DIRECTIONAL);
 
-	const int btnState = Pi::MouseButtonState(SDL_BUTTON_RIGHT);
+	const int btnState = Pi::input.MouseButtonState(SDL_BUTTON_RIGHT);
 	if (btnState) {
 		int m[2];
-		Pi::GetMouseMotion(m);
+		Pi::input.GetMouseMotion(m);
 		m_camRot = matrix4x4d::RotateXMatrix(-0.002*m[1]) *
 				matrix4x4d::RotateYMatrix(-0.002*m[0]) * m_camRot;
 		m_cameraContext->SetPosition(Pi::player->GetInterpPosition() + vector3d(0, 0, viewingDist));
@@ -150,8 +151,8 @@ void ObjectViewerView::OnSwitchTo()
 
 void ObjectViewerView::Update()
 {
-	if (Pi::KeyState(SDLK_EQUALS)) viewingDist *= 0.99f;
-	if (Pi::KeyState(SDLK_MINUS)) viewingDist *= 1.01f;
+	if (Pi::input.KeyState(SDLK_EQUALS)) viewingDist *= 0.99f;
+	if (Pi::input.KeyState(SDLK_MINUS)) viewingDist *= 1.01f;
 	viewingDist = Clamp(viewingDist, 10.0f, 1e12f);
 
 	char buf[128];
@@ -175,7 +176,24 @@ void ObjectViewerView::Update()
 			m_sbodyRadius->SetText(stringf("%0{f}", sbody->GetRadiusAsFixed().ToFloat()));
 		}
 	}
-	snprintf(buf, sizeof(buf), "View dist: %s     Object: %s", format_distance(viewingDist).c_str(), (body ? body->GetLabel().c_str() : "<none>"));
+
+	std::ostringstream pathStr;
+	if(body)
+	{
+		// fill in pathStr from sp values and sys->GetName()
+		static const std::string comma(", ");
+		const SystemBody *psb = body->GetSystemBody();
+		if(psb) {
+			const SystemPath sp = psb->GetPath();
+			pathStr << body->GetSystemBody()->GetName() << " (" << sp.sectorX << comma << sp.sectorY << comma << sp.sectorZ << comma << sp.systemIndex << comma << sp.bodyIndex << ")";
+		} else {
+			pathStr << "<unknown>";
+		}
+	}
+
+	snprintf(buf, sizeof(buf), "View dist: %s     Object: %s\nSystemPath: %s",
+		format_distance(viewingDist).c_str(), (body ? body->GetLabel().c_str() : "<none>"),
+		pathStr.str().c_str());
 	m_infoLabel->SetText(buf);
 
 	if (body && body->IsType(Object::TERRAINBODY)) m_vbox->ShowAll();

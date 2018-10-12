@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "PropertyMap.h"
@@ -29,12 +29,12 @@ void PropertyMap::PushLuaTable()
 	m_table.PushCopyToStack();
 }
 
-void PropertyMap::SaveToJson(Json::Value &jsonObj)
+void PropertyMap::SaveToJson(Json &jsonObj)
 {
 	m_table.SaveToJson(jsonObj);
 }
 
-void PropertyMap::LoadFromJson(const Json::Value &jsonObj)
+void PropertyMap::LoadFromJson(const Json &jsonObj)
 {
 	m_table.LoadFromJson(jsonObj);
 }

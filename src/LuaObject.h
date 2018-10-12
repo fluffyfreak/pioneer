@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _LUAOBJECT_H
@@ -11,7 +11,6 @@
 #include "LuaWrappable.h"
 #include "RefCounted.h"
 #include "DeleteEmitter.h"
-#include "Serializer.h"
 #include <typeinfo>
 #include <tuple>
 
@@ -74,23 +73,34 @@ struct SerializerPair {
 	typedef std::string (*Serializer)(LuaWrappable *o);
 	typedef bool (*Deserializer)(const char *stream, const char **next);
 
+	typedef void (*ToJson)(Json &out, LuaWrappable *o);
+	typedef bool (*FromJson)(const Json &obj);
+
 	SerializerPair() :
 		serialize(nullptr),
-		deserialize(nullptr)
+		deserialize(nullptr),
+		to_json(nullptr),
+		from_json(nullptr)
 	{}
 
-	SerializerPair(Serializer _serialize, Deserializer _deserialize) :
-		serialize(_serialize),
-		deserialize(_deserialize)
+	SerializerPair(
+			Serializer serialize_, Deserializer deserialize_,
+			ToJson to_json_, FromJson from_json_):
+		serialize(serialize_),
+		deserialize(deserialize_),
+		to_json(to_json_),
+		from_json(from_json_)
 	{}
 
 	Serializer serialize;
 	Deserializer deserialize;
+	ToJson to_json;
+	FromJson from_json;
 };
 
 
 // wrapper baseclass, and extra bits for getting at certain parts of the
-// LuaObject layer 
+// LuaObject layer
 class LuaObjectBase {
 	friend class LuaSerializer;
 
@@ -148,6 +158,9 @@ protected:
 
 	std::string Serialize();
 	static bool Deserialize(const char *stream, const char **next);
+
+	void ToJson(Json &out);
+	static bool FromJson(const Json &obj);
 
     // allocate n bytes from Lua memory and leave it an associated userdata on
     // the stack. this is a wrapper around lua_newuserdata
@@ -224,12 +237,28 @@ public:
 	// pull an object off the stack, unwrap and return it
 	// if not found or doesn't match the type, throws a lua exception
 	static inline T *CheckFromLua(int idx) {
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wundefined-var-template"
+#endif
 		return dynamic_cast<T*>(LuaObjectBase::CheckFromLua(idx, s_type));
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
+
 	}
 
 	// same but without error checks. returns 0 on failure
 	static inline T *GetFromLua(int idx) {
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wundefined-var-template"
+#endif
 		return dynamic_cast<T*>(LuaObjectBase::GetFromLua(idx, s_type));
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
+
 	}
 
 	// standard cast promotion test for convenience
@@ -238,15 +267,20 @@ public:
 	}
 
 protected:
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wundefined-var-template"
+#endif
 	LuaObject() : LuaObjectBase(s_type) {}
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 
 private:
-
 	// initial lua type string. defined in a specialisation in the appropriate
 	// .cpp file
 	static const char *s_type;
 };
-
 
 // wrapper for a "core" object - one owned by c++ (eg Body).
 // Lua needs to know when the object is deleted so that it can handle

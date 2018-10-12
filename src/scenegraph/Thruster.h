@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _SCENEGRAPH_THRUSTER_H
@@ -28,6 +28,8 @@ public:
 	virtual void Render(const matrix4x4f &trans, const RenderData *rd) override;
 	virtual void Save(NodeDatabase&) override;
 	static Thruster *Load(NodeDatabase&);
+	void SetColor(const Color c) { currentColor = c; }
+	const vector3f &GetDirection() { return dir; }
 
 private:
 	static Graphics::VertexBuffer* CreateThrusterGeometry(Graphics::Renderer*, Graphics::Material*);
@@ -40,6 +42,7 @@ private:
 	bool linearOnly;
 	vector3f dir;
 	vector3f pos;
+	Color currentColor;
 };
 
 }

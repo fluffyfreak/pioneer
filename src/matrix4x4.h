@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _MATRIX4X4_H
@@ -403,13 +403,16 @@ typedef matrix4x4<double> matrix4x4d;
 
 static inline void matrix4x4ftod(const matrix4x4f &in, matrix4x4d &out)
 {
-	for (int i = 0; i < 16; i++) 
+	for (int i = 0; i < 16; i++)
 		out[i] = double(in[i]);
 }
 static inline void matrix4x4dtof(const matrix4x4d &in, matrix4x4f &out)
 {
-	for (int i = 0; i < 16; i++) 
+	for (int i = 0; i < 16; i++)
 		out[i] = float(in[i]);
 }
+
+static const matrix4x4f matrix4x4fIdentity(matrix4x4f::Identity());
+static const matrix4x4d matrix4x4dIdentity(matrix4x4d::Identity());
 
 #endif /* _MATRIX4X4_H */

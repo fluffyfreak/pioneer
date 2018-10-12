@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Pi.h"
@@ -86,12 +86,14 @@ void SystemInfoView::OnBodyViewed(SystemBody *b)
 		m_infoBox->PackStart(l);
 	}
 
-	_add_label_and_value(Lang::MASS, stringf(Lang::N_WHATEVER_MASSES, formatarg("mass", b->GetMassAsFixed().ToDouble()),
-		formatarg("units", std::string(b->GetSuperType() == SystemBody::SUPERTYPE_STAR ? Lang::SOLAR : Lang::EARTH))));
+	if (b->GetType() != SystemBody::TYPE_STARPORT_ORBITAL) {
+		_add_label_and_value(Lang::MASS, stringf(Lang::N_WHATEVER_MASSES, formatarg("mass", b->GetMassAsFixed().ToDouble()),
+			formatarg("units", std::string(b->GetSuperType() == SystemBody::SUPERTYPE_STAR ? Lang::SOLAR : Lang::EARTH))));
 
-	_add_label_and_value(Lang::RADIUS, stringf(Lang::N_WHATEVER_RADII, formatarg("radius", b->GetRadiusAsFixed().ToDouble()),
-		formatarg("units", std::string(b->GetSuperType() == SystemBody::SUPERTYPE_STAR ? Lang::SOLAR : Lang::EARTH)),
-		formatarg("radkm", b->GetRadius() / 1000.0)));
+		_add_label_and_value(Lang::RADIUS, stringf(Lang::N_WHATEVER_RADII, formatarg("radius", b->GetRadiusAsFixed().ToDouble()),
+			formatarg("units", std::string(b->GetSuperType() == SystemBody::SUPERTYPE_STAR ? Lang::SOLAR : Lang::EARTH)),
+			formatarg("radkm", b->GetRadius() / 1000.0)));
+	}
 
 	if (b->GetSuperType() == SystemBody::SUPERTYPE_STAR) {
 		_add_label_and_value(Lang::EQUATORIAL_RADIUS_TO_POLAR_RADIUS_RATIO, stringf("%0{f.3}", b->GetAspectRatio()));
@@ -99,7 +101,9 @@ void SystemInfoView::OnBodyViewed(SystemBody *b)
 
 	if (b->GetType() != SystemBody::TYPE_STARPORT_ORBITAL) {
 		_add_label_and_value(Lang::SURFACE_TEMPERATURE, stringf(Lang::N_CELSIUS, formatarg("temperature", b->GetAverageTemp()-273)));
-		_add_label_and_value(Lang::SURFACE_GRAVITY, stringf("%0{f.3} m/s^2", b->CalcSurfaceGravity()));
+		static const auto earthG = G * EARTH_MASS / (EARTH_RADIUS * EARTH_RADIUS);
+		const auto surfAccel = b->CalcSurfaceGravity();
+		_add_label_and_value(Lang::SURFACE_GRAVITY, stringf("%0{f.3} m/s^2 (%1{f.3} g)", surfAccel, surfAccel / earthG));
 	}
 
 	if (b->GetParent()) {
@@ -609,7 +613,10 @@ void SystemInfoView::UpdateIconSelections()
 		if (currentSys && currentSys->GetPath() == m_system->GetPath()) {
 			//navtarget can be only set in current system
 			Body* navtarget = Pi::player->GetNavTarget();
-			if ( navtarget && !navtarget->IsType(Body::SHIP) ) {
+			if ( navtarget &&
+			     (navtarget->IsType(Body::STAR) ||
+			      navtarget->IsType(Body::PLANET) ||
+			      navtarget->IsType(Body::SPACESTATION))) {
 				const SystemPath& navpath = navtarget->GetSystemBody()->GetPath();
 				if (bodyIcon.first == navpath.bodyIndex) {
 					bodyIcon.second->SetSelectColor(Color(0, 255, 0, 255));
@@ -649,7 +656,7 @@ SystemInfoView::BodyIcon::BodyIcon(const char *img, Graphics::Renderer *r)
 		vector3f(0.f, size[1], 0.f),
 	};
 	m_selectBox.SetData(COUNTOF(vts), vts, m_selectColor);
-	
+
 	static const Color portColor = Color(64, 128, 128, 255);
 	// The -0.1f offset seems to be the best compromise to make the circles closed (e.g. around Mars), symmetric, fitting with selection
 	// and not overlapping to much with asteroids

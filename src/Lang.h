@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _LANG_H
@@ -22,7 +22,7 @@ public:
 
 	bool Load();
 
-	Uint32 GetNumStrings() const { return m_strings.size(); }
+	Uint32 GetNumStrings() const { return static_cast<Uint32>(m_strings.size()); }
 
 	const std::string &Get(const std::string &token) const;
 

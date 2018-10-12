@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef PROPERTYMAP_H
@@ -7,7 +7,6 @@
 #include "LuaManager.h"
 #include "LuaRef.h"
 #include "LuaTable.h"
-#include "Serializer.h"
 #include "libs.h"
 
 struct lua_State;
@@ -31,8 +30,8 @@ public:
 		return m_signals[k].connect(fn);
 	}
 
-	void SaveToJson(Json::Value &jsonObj);
-	void LoadFromJson(const Json::Value &jsonObj);
+	void SaveToJson(Json &jsonObj);
+	void LoadFromJson(const Json &jsonObj);
 
 private:
 	LuaRef m_table;

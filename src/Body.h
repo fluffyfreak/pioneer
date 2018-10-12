@@ -1,4 +1,4 @@
-// Copyright © 2008-2016 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _BODY_H
@@ -8,7 +8,6 @@
 #include "matrix4x4.h"
 #include "Object.h"
 #include "Frame.h"
-#include "Serializer.h"
 #include "PropertiedObject.h"
 #include <string>
 
@@ -23,8 +22,8 @@ public:
 	OBJDEF(Body, Object, BODY);
 	Body();
 	virtual ~Body();
-	void ToJson(Json::Value &jsonObj, Space *space);
-	static Body *FromJson(const Json::Value &jsonObj, Space *space);
+	void ToJson(Json &jsonObj, Space *space);
+	static Body *FromJson(const Json &jsonObj, Space *space);
 	virtual void PostLoadFixup(Space *space) {};
 
 	virtual void SetPosition(const vector3d &p) { m_pos = p; }
@@ -39,7 +38,7 @@ public:
 	void SetClipRadius(double r) { m_clipRadius = r; }
 	double GetClipRadius() const { return m_clipRadius; }
 	virtual double GetMass() const { assert(0); return 0; }
-	
+
 	// return true if to do collision response and apply damage
 	virtual bool OnCollision(Object *o, Uint32 flags, double relVel) { return false; }
 	// Attacker may be null
@@ -102,8 +101,8 @@ public:
 			FLAG_DRAW_LAST = (1<<2) };		// causes the body drawn after other bodies in the z-sort
 
 protected:
-	virtual void SaveToJson(Json::Value &jsonObj, Space *space);
-	virtual void LoadFromJson(const Json::Value &jsonObj, Space *space);
+	virtual void SaveToJson(Json &jsonObj, Space *space);
+	virtual void LoadFromJson(const Json &jsonObj, Space *space);
 	unsigned int m_flags;
 
 	// Interpolated draw orientation-position

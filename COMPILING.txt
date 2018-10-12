@@ -1,12 +1,14 @@
 Table of Contents
 =================
 1 How to compile Pioneer
-  1.1 Linux - Autotools
+  1.1 Linux
+    1.1.a Autotools
+    1.1.b CMake
   1.2 Windows - MSVC
   1.3 Windows - Autotools (Linux cross-compile)
   1.4 OS X - Autotools
-  1.5 OS X - XCode 4
-  1.6 OS X - Homebrew
+  1.5 OS X - Homebrew
+  1.6 OS X - CMake and XCode
   1.7 Nix - Autotools
 2 pioneer-thirdparty
   2.1 Linux - Autotools
@@ -26,7 +28,9 @@ Table of Contents
 Pioneer is known to build on the following platforms and build systems:
 
 Linux: GNU Autotools with GCC or Clang
+       CMake with GCC or Clang
 Windows: Microsoft Visual C++ 2015 (Community or Pro)
+         Microsoft Visual C++ 2017 (Community or Pro)
 Windows: GNU Autotools with MXE (MinGW GCC) (cross-compile on Linux)
 OS X: XCode 4 or Homebrew or GNU Autotools
 
@@ -43,8 +47,8 @@ If you're having trouble compiling, please ask in #pioneer on
 irc.freenode.net.
 
 
-1.1 Linux - Autotools
----------------------
+1.1 Linux
+---------
 
 1. Install the following libraries (with development headers) for your system.
    If your system is not Debian/Ubuntu based, they may have different names.
@@ -62,20 +66,37 @@ irc.freenode.net.
     libfreetype6-dev
     libvorbis-dev
     libpng-dev
-    libassimp-dev >= 3.0
+    libassimp-dev >= 3.2
     mesa-common-dev
 
-   If your platform doesn't have assimp 3.0, you'll need to build it from
-   source. Its available in pioneer-thirdparty, see below.
+   If you are building with CMake instead of Autotools, you'll need to install
+   the cmake package instead of the automake package.
 
-2. Run ./bootstrap to generate your 'configure' file
+   If your platform doesn't have assimp 3.2, you'll need to build it from
+   source. It's available in pioneer-thirdparty, see below.
 
-3. Run ./configure to configure the build. If you're using the
+1.1.a Linux - Autotools
+-----------------------
+
+1. Run ./bootstrap to generate your 'configure' file
+
+2. Run ./configure to configure the build. If you're using the
    pioneer-thirdparty repository, pass
    --with-thirdparty=/path/to/pioneer-thirdparty to configure.
 
-4. Run make to build everything
+3. Run make to build everything
 
+1.1.b Linux - CMake
+-------------------
+
+1. Run './bootstrap cmake' to generate CMake build files in the 'build' folder.
+
+2. Either run 'cd build; make -jX' or 'cmake --build ./build -j X', where X is
+   the number of CPU cores you have. If in doubt, 4 is a good default.
+
+3. To run pioneer, you will need to use the invocation './build/pioneer' from
+   the project root. Just running ./pioneer will invoke the autotools build
+   process.
 
 1.2 Windows - MSVC
 ------------------
@@ -85,8 +106,11 @@ irc.freenode.net.
    relative path to it is included in the project files.
 
 2. Open the pioneer solution from /win32/vc2015/pioneer.sln
+   or /win32/vc2017/pioneer.sln according to your MSVC version.
 
-3. Build and run the project or solution.
+3. Build and run the project or solution. Note: the default is to build debug
+   version, which is what you want if developing, but release gives an executable
+   optimized for performance.
 
 
 1.3 Windows - Autotools (Linux cross-compile)
@@ -152,31 +176,7 @@ Note: Compiling from source this way isn't recommended as it doesn't allow you
       bundle). It also isn't the 'Apple way', To do that you need to use XCode.
 
 
-1.5 OS X - XCode 6
-------------------
-
-You will need the following libraries installed. The best method I found was to install macports (http://www.macports.org/) and install the following ports (sudo port install xxxx):
-
-     autoconf
-     automake
-     pkgconfig
-     assimp
-     freetype
-     libsigcxx2
-     libsdl2
-     libsdl2_image
-     libvorbis
-     libvorbisfile
-
-Alternatively you can also run the script in the ./osx folder install_ports.sh
-
-The latest XCode project files are located in ./osx. Simply build the
-aplication bundle. The XCode project uses the mac port libraries that you
-have installed above. Once the pioneer.app bundle is complete you can move it
-around where you like (/Applications is a nice place for it).
-
-
-1.6 OS X - Homebrew
+1.5 OS X - Homebrew
 -------------------
 
 1. Install Homebrew package manager (http://brew.sh/) if you don't have one yet.
@@ -195,19 +195,39 @@ around where you like (/Applications is a nice place for it).
      brew install --HEAD pioneer
 
 
+1.6 OS X - CMake and XCode
+--------------------------
+
+THESE INSTRUCTIONS ARE APPROXIMATE AND ARE UNTESTED; PLEASE SUBMIT CORRECTIONS!
+
+1. Install XCode (free download from Apple) as in the 'OS X Autotools'
+   instructions.
+
+2. Install required libraries, as in the 'OS X Autotools' instructions.
+
+3. Install CMake, from https://cmake.org/download/, or via MacPorts.
+
+4. Create a new directory for the build files. Use the CMake GUI to generate
+   an XCode project in the new directory.
+
+5. Open the project in XCode and build 'pioneer'.
+
 1.7 Nix - Autotools
 -------------------
 
-1. Install the development environment using the included expressions.
+1. Install nix-shell.
 
-    nix-env -i -f nix/env.nix         # build and install the environment
-    load-env-pioneer                  # load the environment
+2. Install and load the development environment using the included expressions.
 
-2. Run ./bootstrap to generate your 'configure' file
+    nix-shell nix/env.nix             # build, install and load the environment
 
-3. Run ./configure to configure the build.
+3. Run ./bootstrap to generate your 'configure' file.
 
-4. Run make to build everything
+4. Run ./configure to configure the build.
+
+5. Run make to build everything
+
+6. Exit the development environment by exiting the shell.
 
 Executing ./pioneer requires the development environment to be loaded,
 executing ./src/pioneer does not.
