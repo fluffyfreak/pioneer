@@ -449,7 +449,7 @@ void Game::SwitchToHyperspace()
 	// create hyperspace :)
 	m_space.reset(new Space(this, m_galaxy, m_space.get()));
 
-	m_space->GetBackground()->SetDrawFlags( Background::Container::DRAW_STARS );
+	m_space->GetBackground()->SetDrawFlags( Background::Container::DRAW_HYPERSPACE);
 
 	// Reset planner
 	Pi::planner->ResetStartTime();

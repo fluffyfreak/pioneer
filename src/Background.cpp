@@ -57,11 +57,6 @@ struct MilkyWayVert {
 	Color4ub col;
 };
 
-struct StarVert {
-	vector3f pos;
-	Color4ub col;
-};
-
 struct SkyboxVert {
 	vector3f pos;
 	vector2f uv;
@@ -73,6 +68,7 @@ void BackgroundElement::SetIntensity(float intensity)
 	m_material->emissive = Color(intensity * 255, intensity * 255, intensity*255);
 }
 
+///////////////////////////////////////////////////////////////////////////////
 UniverseBox::UniverseBox(Graphics::Renderer *renderer)
 {
 	m_renderer = renderer;
@@ -190,6 +186,7 @@ void UniverseBox::LoadCubeMap(Random &rand)
 	}
 }
 
+///////////////////////////////////////////////////////////////////////////////
 Starfield::Starfield(Graphics::Renderer *renderer, Random &rand)
 {
 	m_renderer = renderer;
@@ -207,11 +204,11 @@ void Starfield::Init()
 	m_material->emissive = Color::WHITE;
 	m_material->texture0 = Graphics::TextureBuilder::Billboard("textures/star_point.png").GetOrCreateTexture(m_renderer, "billboard");
 
-	Graphics::MaterialDescriptor descStreaks;
+	/*Graphics::MaterialDescriptor descStreaks;
 	descStreaks.effect = Graphics::EFFECT_VTXCOLOR;
 	descStreaks.vertexColors = true;
 	m_materialStreaks.Reset(m_renderer->CreateMaterial(descStreaks));
-	m_materialStreaks->emissive = Color::WHITE;
+	m_materialStreaks->emissive = Color::WHITE;*/
 
 	IniConfig cfg;
 	cfg.Read(FileSystem::gameDataFiles, "configs/Starfield.ini");
@@ -244,7 +241,6 @@ void Starfield::Fill(Random &rand)
 
 	m_pointSprites.reset( new Graphics::Drawables::PointSprites );
 
-	assert(sizeof(StarVert) == 16);
 	std::unique_ptr<vector3f[]> stars( new vector3f[NUM_BG_STARS] );
 	std::unique_ptr<Color[]> colors( new Color[NUM_BG_STARS] );
 	std::unique_ptr<float[]> sizes( new float[NUM_BG_STARS] );
@@ -358,7 +354,7 @@ void Starfield::Draw(Graphics::RenderState *rs)
 	// XXX would be nice to get rid of the Pi:: stuff here
 	if (!Pi::game || Pi::player->GetFlightState() != Ship::HYPERSPACE) {
 		m_pointSprites->Draw(m_renderer, m_renderState);
-	} else {
+	}/* else {
 		assert(sizeof(StarVert) == 16);
 		assert(m_animBuffer->GetDesc().stride == sizeof(StarVert));
 		auto vtxPtr = m_animBuffer->Map<StarVert>(Graphics::BUFFER_MAP_WRITE);
@@ -385,9 +381,10 @@ void Starfield::Draw(Graphics::RenderState *rs)
 		}
 		m_animBuffer->Unmap();
 		m_renderer->DrawBuffer(m_animBuffer.get(), rs, m_materialStreaks.Get(), Graphics::LINE_SINGLE);
-	}
+	}*/
 }
 
+///////////////////////////////////////////////////////////////////////////////
 MilkyWay::MilkyWay(Graphics::Renderer *renderer)
 {
 	m_renderer = renderer;
@@ -401,37 +398,22 @@ MilkyWay::MilkyWay(Graphics::Renderer *renderer)
 
 	//bottom
 	float theta;
-	for (theta=0.0; theta < 2.f*float(M_PI); theta+=0.1f) {
-		bottom->Add(
-				vector3f(100.0f*sin(theta), float(-40.0 - 30.0*noise(vector3d(sin(theta),1.0,cos(theta)))), 100.0f*cos(theta)),
-				dark);
-		bottom->Add(
-			vector3f(100.0f*sin(theta), float(5.0*noise(vector3d(sin(theta),0.0,cos(theta)))), 100.0f*cos(theta)),
-			bright);
+	for (theta = 0.0; theta < 2.f*float(M_PI); theta += 0.1f) {
+		bottom->Add(vector3f(100.0f*sin(theta), float(-40.0 - 30.0*noise(vector3d(sin(theta), 1.0, cos(theta)))), 100.0f*cos(theta)), dark);
+		bottom->Add(vector3f(100.0f*sin(theta), float(5.0*noise(vector3d(sin(theta), 0.0, cos(theta)))), 100.0f*cos(theta)), bright);
 	}
 	theta = 2.f*float(M_PI);
-	bottom->Add(
-		vector3f(100.0f*sin(theta), float(-40.0 - 30.0*noise(vector3d(sin(theta),1.0,cos(theta)))), 100.0f*cos(theta)),
-		dark);
-	bottom->Add(
-		vector3f(100.0f*sin(theta), float(5.0*noise(vector3d(sin(theta),0.0,cos(theta)))), 100.0f*cos(theta)),
-		bright);
+	bottom->Add(vector3f(100.0f*sin(theta), float(-40.0 - 30.0*noise(vector3d(sin(theta), 1.0, cos(theta)))), 100.0f*cos(theta)), dark);
+	bottom->Add(vector3f(100.0f*sin(theta), float(5.0*noise(vector3d(sin(theta), 0.0, cos(theta)))), 100.0f*cos(theta)), bright);
+
 	//top
-	for (theta=0; theta < 2.f*float(M_PI); theta+=0.1f) {
-		top->Add(
-			vector3f(100.0f*sin(theta), float(5.0*noise(vector3d(sin(theta),0.0,cos(theta)))), 100.0f*cos(theta)),
-			bright);
-		top->Add(
-			vector3f(100.0f*sin(theta), float(40.0 + 30.0*noise(vector3d(sin(theta),-1.0,cos(theta)))), 100.0f*cos(theta)),
-			dark);
+	for (theta = 0; theta < 2.f*float(M_PI); theta += 0.1f) {
+		top->Add(vector3f(100.0f*sin(theta), float(5.0*noise(vector3d(sin(theta), 0.0, cos(theta)))), 100.0f*cos(theta)), bright);
+		top->Add(vector3f(100.0f*sin(theta), float(40.0 + 30.0*noise(vector3d(sin(theta), -1.0, cos(theta)))), 100.0f*cos(theta)), dark);
 	}
 	theta = 2.f*float(M_PI);
-	top->Add(
-		vector3f(100.0f*sin(theta), float(5.0*noise(vector3d(sin(theta),0.0,cos(theta)))), 100.0f*cos(theta)),
-		bright);
-	top->Add(
-		vector3f(100.0f*sin(theta), float(40.0 + 30.0*noise(vector3d(sin(theta),-1.0,cos(theta)))), 100.0f*cos(theta)),
-		dark);
+	top->Add(vector3f(100.0f*sin(theta), float(5.0*noise(vector3d(sin(theta), 0.0, cos(theta)))), 100.0f*cos(theta)), bright);
+	top->Add(vector3f(100.0f*sin(theta), float(40.0 + 30.0*noise(vector3d(sin(theta), -1.0, cos(theta)))), 100.0f*cos(theta)), dark);
 
 	Graphics::MaterialDescriptor desc;
 	desc.effect = Graphics::EFFECT_STARFIELD;
@@ -471,11 +453,106 @@ void MilkyWay::Draw(Graphics::RenderState *rs)
 	m_renderer->DrawBuffer(m_vertexBuffer.get(), rs, m_material.Get(), Graphics::TRIANGLE_STRIP);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+#pragma optimize("",off)
+Hyperspace::Hyperspace(Graphics::Renderer *renderer, Random &rand)
+{
+	m_renderer = renderer;
+
+	Graphics::MaterialDescriptor desc;
+	desc.effect = Graphics::EFFECT_STARFIELD;
+	desc.textures = 1;
+	desc.vertexColors = true;
+	m_material.Reset(m_renderer->CreateMaterial(desc));
+	m_material->emissive = Color::WHITE;
+	m_material->texture0 = Graphics::TextureBuilder::Billboard("textures/star_point.png").GetOrCreateTexture(m_renderer, "billboard");
+
+#if 0
+	// make an open cylinder
+	static const float radius = 100.0f, halfLength = 1000.0f;
+	static const int slices = 32;
+	static const float uvStep = 1.0f / (float)slices;
+	VertexArray va(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_NORMAL | Graphics::ATTRIB_UV0, slices * 6);
+	for (int i = 0; i < slices; i++)
+	{
+		const float theta = ((float)i)*2.0f*M_PI;
+		const float nextTheta = ((float)i + 1)*2.0f*M_PI;
+		/*vertices at edges of circle*/
+		// triangle one
+		const vector2f uv0(uvStep * (float)i, 0.0f);
+		va.Add(vector3f(radius*cos(theta), halfLength, radius*sin(theta)), vector3f(-cos(theta), 0.0f, -sin(theta)), uv0);
+		va.Add(vector3f(radius*cos(nextTheta), halfLength, radius*sin(nextTheta)), vector3f(-cos(nextTheta), 0.0f, -sin(nextTheta)), uv0);
+		va.Add(vector3f(radius*cos(nextTheta), -halfLength, radius*sin(nextTheta)), vector3f(-cos(nextTheta), 0.0f, -sin(nextTheta)), uv0);
+
+		/* the same vertices at the bottom of the cylinder*/
+		// triangle two
+		const vector2f uv1(uvStep * (float)i, 1.0f);
+		va.Add(vector3f(radius*cos(nextTheta), halfLength, radius*sin(nextTheta)), vector3f(-cos(nextTheta), 0.0f, -sin(nextTheta)), uv1);
+		va.Add(vector3f(radius*cos(nextTheta), -halfLength, radius*sin(nextTheta)), vector3f(-cos(nextTheta), 0.0f, -sin(nextTheta)), uv1);
+		va.Add(vector3f(radius*cos(theta), -halfLength, radius*sin(theta)), vector3f(-cos(theta), 0.0f, -sin(theta)), uv1);
+	}
+#endif
+	Fill(rand);
+}
+#pragma optimize("",off)
+void Hyperspace::Fill(Random &rand)
+{
+	const Sint32 NUM_BG_STARS = Clamp(Uint32(Pi::GetAmountBackgroundStars() * BG_STAR_MAX), BG_STAR_MIN, BG_STAR_MAX);
+
+	m_pointSprites.reset(new Graphics::Drawables::PointSprites);
+
+	std::unique_ptr<vector3f[]> stars(new vector3f[NUM_BG_STARS]);
+	std::unique_ptr<Color[]> colors(new Color[NUM_BG_STARS]);
+	std::unique_ptr<float[]> sizes(new float[NUM_BG_STARS]);
+	//fill the array
+	for (int i = 0; i < NUM_BG_STARS; i++) {
+		const double size = rand.Double(0.2, 0.9);
+		const Uint8 colScale = size * 255;
+
+		// this is proper random distribution on a sphere's surface
+		const float theta = float(rand.Double(0.0, 2.0*M_PI));
+		const float u = float(rand.Double(-1.0, 1.0));
+
+		sizes[i] = size;
+		stars[i] = vector3f(sqrt(1.0f - u * u) * cos(theta), u, sqrt(1.0f - u * u) * sin(theta)).Normalized() * 1000.0f;
+		colors[i] = Color::PINK;
+	}
+	m_pointSprites->SetData(NUM_BG_STARS, stars.get(), colors.get(), sizes.get(), m_material.Get());
+
+	Graphics::RenderStateDesc rsd;
+	rsd.depthTest = false;
+	rsd.depthWrite = false;
+	rsd.blendMode = Graphics::BLEND_ALPHA;
+	m_renderState = m_renderer->CreateRenderState(rsd);
+}
+#pragma optimize("",off)
+void Hyperspace::Draw(Graphics::RenderState *rs)
+{
+	// Enter hyperspace - fading booming sounds
+	// white-out, fullscreen white quad
+	//	- fade out
+
+	// tunnel effect - constant background loops
+	//	- scrolling walls
+	//	- streaking sparks like bebop
+
+	// approach exit - rising sounds
+	//	- bright disc / star
+	//	- white out screen fades
+
+	//assert(m_vertexBuffer);
+	//assert(m_material);
+	//m_renderer->DrawBuffer(m_vertexBuffer.get(), rs, m_material.Get(), Graphics::???);
+	m_pointSprites->Draw(m_renderer, m_renderState);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 Container::Container(Graphics::Renderer *renderer, Random &rand)
 : m_renderer(renderer)
 , m_milkyWay(renderer)
 , m_starField(renderer, rand)
 , m_universeBox(renderer)
+, m_hyperspace(renderer, rand)
 , m_drawFlags( DRAW_SKYBOX | DRAW_STARS )
 {
 	Graphics::RenderStateDesc rsd;
@@ -490,12 +567,16 @@ void Container::Refresh(Random &rand)
 	// always redo starfield, milkyway stays normal for now
 	m_starField.Fill(rand);
 	m_universeBox.LoadCubeMap(rand);
+	m_hyperspace.Fill(rand);
 }
 
 void Container::Draw(const matrix4x4d &transform)
 {
 	PROFILE_SCOPED()
+	// set the common rendering transform
 	m_renderer->SetTransform(transform);
+
+	// now render only what's been requested
 	if( DRAW_SKYBOX & m_drawFlags ) {
 		m_universeBox.Draw(m_renderState);
 	}
@@ -503,8 +584,10 @@ void Container::Draw(const matrix4x4d &transform)
 		m_milkyWay.Draw(m_renderState);
 	}
 	if( DRAW_STARS & m_drawFlags ) {
-		m_renderer->SetTransform(transform);
 		m_starField.Draw(m_renderState);
+	}
+	if (DRAW_HYPERSPACE & m_drawFlags) {
+		m_hyperspace.Draw(m_renderState);
 	}
 }
 
@@ -515,6 +598,7 @@ void Container::SetIntensity(float intensity)
 	m_universeBox.SetIntensity(intensity);
 	m_starField.SetIntensity(intensity);
 	m_milkyWay.SetIntensity(intensity);
+	m_hyperspace.SetIntensity(intensity);
 }
 
 void Container::SetDrawFlags(const Uint32 flags)

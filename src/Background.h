@@ -30,7 +30,7 @@ namespace Background
 	protected:
 		Graphics::Renderer *m_renderer;
 		RefCountedPtr<Graphics::Material> m_material;
-		RefCountedPtr<Graphics::Material> m_materialStreaks;
+		//RefCountedPtr<Graphics::Material> m_materialStreaks;
 
 		float m_rMin;
 		float m_rMax;
@@ -89,6 +89,18 @@ namespace Background
 		std::unique_ptr<Graphics::VertexBuffer> m_vertexBuffer;
 	};
 
+	class Hyperspace : public BackgroundElement
+	{
+	public:
+		Hyperspace(Graphics::Renderer *, Random &);
+		void Draw(Graphics::RenderState*);
+		void Fill(Random &);
+
+	private:
+		std::unique_ptr<Graphics::Drawables::PointSprites> m_pointSprites;
+		Graphics::RenderState* m_renderState; // NB: we don't own RenderState pointers, just borrow them
+	};
+
 
 
 	// contains starfield, milkyway, possibly other Background elements
@@ -99,7 +111,8 @@ namespace Background
 		{
 			DRAW_STARS = 1<<0,
 			DRAW_MILKY = 1<<1,
-			DRAW_SKYBOX = 1<<2
+			DRAW_SKYBOX = 1<<2,
+			DRAW_HYPERSPACE = 1<<3
 		};
 
 		Container(Graphics::Renderer*, Random &rand);
@@ -115,6 +128,7 @@ namespace Background
 		MilkyWay m_milkyWay;
 		Starfield m_starField;
 		UniverseBox m_universeBox;
+		Hyperspace m_hyperspace;
 		Uint32 m_drawFlags;
 		Graphics::RenderState *m_renderState;
 	};
