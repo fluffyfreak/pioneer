@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -8,6 +8,7 @@
 #include "galaxy/GalaxyGenerator.h"
 #include "galaxy/Galaxy.h"
 #include "utils.h"
+#include "versioningInfo.h"
 #include <cstdio>
 #include <cstdlib>
 
@@ -15,6 +16,7 @@ enum RunMode {
 	MODE_GAME,
 	MODE_MODELVIEWER,
 	MODE_GALAXYDUMP,
+	MODE_START_AT,
 	MODE_VERSION,
 	MODE_USAGE,
 	MODE_USAGE_ERROR
@@ -27,6 +29,7 @@ int main(int argc, char** argv)
 #endif
 
 	RunMode mode = MODE_GAME;
+	std::string modeopt;
 
 	if (argc > 1) {
 		const char switchchar = argv[1][0];
@@ -35,7 +38,7 @@ int main(int argc, char** argv)
 			goto start;
 		}
 
-		const std::string modeopt(std::string(argv[1]).substr(1));
+		modeopt = std::string(argv[1]).substr(1);
 
 		if (modeopt == "game" || modeopt == "g") {
 			mode = MODE_GAME;
@@ -49,6 +52,13 @@ int main(int argc, char** argv)
 
 		if (modeopt == "galaxydump" || modeopt == "gd") {
 			mode = MODE_GALAXYDUMP;
+			goto start;
+		}
+
+		if (modeopt.find("startat", 0, 7) != std::string::npos ||
+			modeopt.find("sa", 0, 2) != std::string::npos)
+		{
+			mode = MODE_START_AT;
 			goto start;
 		}
 
@@ -71,6 +81,8 @@ start:
 	long int radius = 4;
 	long int sx = 0, sy = 0, sz = 0;
 	std::string filename;
+	SystemPath startPath(0,0,0,0,0);
+
 	switch (mode) {
 		case MODE_GALAXYDUMP: {
 			if (argc < 3) {
@@ -109,25 +121,71 @@ start:
 			}
 			// fallthrough
 		}
+		case MODE_START_AT: {
+			// fallthrough protect
+			if (mode == MODE_START_AT)
+			{
+				// try to get start planet number
+				std::vector<std::string> keyValue = SplitString(modeopt, "=");
+
+				// if found value
+				if (keyValue.size() == 2)
+				{
+					if (keyValue[1].empty())
+					{
+						startPath = SystemPath(0,0,0,0,0);
+						Error("Please provide an actual SystemPath, like 0,0,0,0,18\n");
+						return -1;
+					}
+					else
+					{
+						try {
+							startPath = SystemPath::Parse(keyValue[1].c_str());
+						} catch(const SystemPath::ParseFailure &spf) {
+							startPath = SystemPath(0,0,0,0,0);
+							Error("Failed to parse system path %s\n", keyValue[1].c_str());
+							return -1;
+						}
+					}
+				}
+				// if value not exists - start on Sol, Mars, Cydonia
+				else
+					startPath = SystemPath(0,0,0,0,18);
+				// set usual mode
+				mode = MODE_GAME;
+			}
+			// fallthrough
+		}
 		case MODE_GAME: {
 			std::map<std::string,std::string> options;
+
+			// if arguments more than parsed already
 			if (argc > pos) {
 				static const std::string delim("=");
+
+				// for each argument
 				for (; pos < argc; pos++) {
 					const std::string arg(argv[pos]);
-					size_t mid = arg.find_first_of(delim, 0);
-					if (mid == std::string::npos || mid == 0 || mid == arg.length()-1) {
+					std::vector<std::string> keyValue = SplitString(arg, "=");
+
+					// if there no key and value || key is empty || value is empty
+					if (keyValue.size() != 2 || keyValue[0].empty() || keyValue[1].empty()) {
 						Output("malformed option: %s\n", arg.c_str());
 						return 1;
 					}
-					const std::string key(arg.substr(0, mid));
-					const std::string val(arg.substr(mid+1, arg.length()));
-					options[key] = val;
+
+					// put key and value to config
+					options[keyValue[0]] = keyValue[1];
 				}
 			}
+
 			Pi::Init(options, mode == MODE_GALAXYDUMP);
+
 			if (mode == MODE_GAME)
-				for (;;) Pi::Start();
+				for (;;) {
+					Pi::Start(startPath);
+					startPath = SystemPath(0,0,0,0,0); // Reset the start planet when coming back to the menu
+				}
 			else if (mode == MODE_GALAXYDUMP) {
 				FILE* file = filename == "-" ? stdout : fopen(filename.c_str(), "w");
 				if (file == nullptr) {
@@ -156,6 +214,7 @@ start:
 			std::string version(PIONEER_VERSION);
 			if (strlen(PIONEER_EXTRAVERSION)) version += " (" PIONEER_EXTRAVERSION ")";
 			Output("pioneer %s\n", version.c_str());
+			OutputVersioningInfo();
 			break;
 		}
 
@@ -170,6 +229,8 @@ start:
 				"    -game        [-g]     game (default)\n"
 				"    -modelviewer [-mv]    model viewer\n"
 				"    -galaxydump  [-gd]    galaxy dumper\n"
+				"    -startat     [-sa]    skip main menu and start at Mars\n"
+				"    -startat=sp  [-sa=sp]  skip main menu and start at systempath x,y,z,si,bi\n"
 				"    -version     [-v]     show version\n"
 				"    -help        [-h,-?]  this help\n"
 			);

@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaObject.h"
@@ -183,7 +183,7 @@ static int l_space_spawn_ship(lua_State *l)
  *
  * > -- spawn a ship 10km from the player
  * > local ship = Ship.SpawnNear("viper_police_craft", Game.player, 10, 10)
- * 
+ *
  * > -- spawn a ship 10km from the player with the players velocity
  * > local ship = Ship.SpawnNear("viper_police_craft", Game.player, 10, 10, nil, Game.player:velocity)
  *
@@ -215,8 +215,8 @@ static int l_space_spawn_ship_near(lua_State *l)
 	_unpack_hyperspace_args(l, 5, path, due);
 
 	vector3d newVelocity(nearbody->GetVelocity());
-    if (!lua_isnone(l, 6))
-        newVelocity = *LuaVector::CheckFromLua(l, 6); // If we have a 6th argument, it better be a vector, otherwise ERROR!!! Hence Check and not Get
+	if (!lua_isnone(l, 6))
+		newVelocity = *LuaVector::CheckFromLua(l, 6); // If we have a 6th argument, it better be a vector, otherwise ERROR!!! Hence Check and not Get
 
 	Ship *ship = new Ship(type);
 	assert(ship);
@@ -673,6 +673,22 @@ static int l_space_get_bodies(lua_State *l)
 	return 1;
 }
 
+static int l_space_attr_root_system_body(lua_State *l)
+{
+	if (!Pi::game) {
+		luaL_error(l, "Game is not started");
+		return 0;
+	}
+
+	LUA_DEBUG_START(l);
+
+	LuaObject<SystemBody>::PushToLua(Pi::game->GetSpace()->GetRootFrame()->GetSystemBody());
+
+	LUA_DEBUG_END(l, 1);
+
+	return 1;
+}
+
 void LuaSpace::Register()
 {
 	lua_State *l = Lua::manager->GetLuaState();
@@ -692,8 +708,13 @@ void LuaSpace::Register()
 		{ 0, 0 }
 	};
 
+	static const luaL_Reg l_attrs[] = {
+		{ "rootSystemBody", l_space_attr_root_system_body },
+		{ 0, 0 }
+	};
+
 	lua_getfield(l, LUA_REGISTRYINDEX, "CoreImports");
-	LuaObjectBase::CreateObject(l_methods, 0, 0);
+	LuaObjectBase::CreateObject(l_methods, l_attrs, 0);
 	lua_setfield(l, -2, "Space");
 	lua_pop(l, 1);
 

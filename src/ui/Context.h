@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef UI_CONTEXT_H
@@ -142,6 +142,8 @@ public:
 
 	void DisableWidget(Widget *target) { m_eventDispatcher.DisableWidget(target); }
 	void EnableWidget(Widget *target) { m_eventDispatcher.EnableWidget(target); }
+
+	void ResetMouseActiveReceiver() { m_eventDispatcher.ResetMouseActiveReceiver(); }
 
 	virtual void Layout();
 	virtual void Update();

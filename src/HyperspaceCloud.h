@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _HYPERSPACECLOUD_H
@@ -33,8 +33,8 @@ public:
 	bool IsArrival() const { return m_isArrival; }
 	virtual void UpdateInterpTransform(double alpha) override;
 protected:
-	virtual void SaveToJson(Json::Value &jsonObj, Space *space) override;
-	virtual void LoadFromJson(const Json::Value &jsonObj, Space *space) override;
+	virtual void SaveToJson(Json &jsonObj, Space *space) override;
+	virtual void LoadFromJson(const Json &jsonObj, Space *space) override;
 
 private:
 	void InitGraphics();

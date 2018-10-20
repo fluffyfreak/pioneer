@@ -1,4 +1,4 @@
--- Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local utils = import("utils")
@@ -212,7 +212,7 @@ end
 HyperdriveType.GetDuration = function (self, ship, distance, range_max)
 	range_max = range_max or self:GetMaximumRange(ship)
 	local hyperclass = self.capabilities.hyperclass
-	return 0.36*distance^2/(range_max*hyperclass) * (3600*24*math.sqrt(ship.staticMass + ship.fuelMassLeft))
+	return 0.36*distance^2/(range_max*hyperclass) * (86400*math.sqrt(ship.staticMass + ship.fuelMassLeft))
 end
 
 -- range_max is optional, distance defaults to the maximal range.
@@ -273,6 +273,18 @@ HyperdriveType.GetRange = function (self, ship, remaining_fuel)
 	return range, range_max
 end
 
+local HYPERDRIVE_SOUNDS_NORMAL = {
+	warmup = "Hyperdrive_Charge",
+	abort = "Hyperdrive_Abort",
+	jump = "Hyperdrive_Jump",
+}
+
+local HYPERDRIVE_SOUNDS_MILITARY = {
+	warmup = "Hyperdrive_Charge_Military",
+	abort = "Hyperdrive_Abort_Military",
+	jump = "Hyperdrive_Jump_Military",
+}
+
 HyperdriveType.HyperjumpTo = function (self, ship, destination)
 	-- First off, check that this is the primary engine.
 	local engines = ship:GetEquip('engine')
@@ -296,7 +308,15 @@ HyperdriveType.HyperjumpTo = function (self, ship, destination)
 	end
 	ship:setprop('nextJumpFuelUse', fuel_use)
 	local warmup_time = 5 + self.capabilities.hyperclass*1.5
-	return ship:InitiateHyperjumpTo(destination, warmup_time, duration), fuel_use, duration
+
+	local sounds
+	if self.fuel == cargo.military_fuel then
+		sounds = HYPERDRIVE_SOUNDS_MILITARY
+	else
+		sounds = HYPERDRIVE_SOUNDS_NORMAL
+	end
+
+	return ship:InitiateHyperjumpTo(destination, warmup_time, duration, sounds), fuel_use, duration
 end
 
 HyperdriveType.OnEnterHyperspace = function (self, ship)
@@ -393,7 +413,7 @@ function BodyScannerType:OnBeginAcquisition()
 	local closest_planet = Game.player:FindNearestTo("PLANET")
 	if closest_planet then
 		local altitude = self:DistanceToSurface(closest_planet)
-		if altitude < self.max_range then
+		if altitude and altitude < self.max_range then
 			self.target_altitude = altitude
 			self.target_body_path = closest_planet.path
 			local l = Lang.GetResource(self.l10n_resource)
@@ -469,159 +489,161 @@ end
 -- autopilot - autopilot
 -- trade_computer - commodity trade analyzer computer module
 
+local CARGOLANGRESOURCE = "commodity"
+
 cargo = {
 	hydrogen = EquipType.New({
-		l10n_key = 'HYDROGEN', l10n_resource = "core", slots="cargo", price=1,
+		l10n_key = 'HYDROGEN', l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=1,
 		capabilities={mass=1}, economy_type="mining",
 		purchasable=true, icon_name="Hydrogen"
 	}),
 	liquid_oxygen = EquipType.New({
-		l10n_key="LIQUID_OXYGEN", l10n_resource = "core", slots="cargo", price=1.5,
+		l10n_key="LIQUID_OXYGEN", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=1.5,
 		capabilities={mass=1}, economy_type="mining",
 		purchasable=true, icon_name="Liquid_Oxygen"
 	}),
 	water = EquipType.New({
-		l10n_key="WATER", l10n_resource = "core", slots="cargo", price=1.2,
+		l10n_key="WATER", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=1.2,
 		capabilities={mass=1}, economy_type="mining",
 		purchasable=true, icon_name="Water"
 	}),
 	carbon_ore = EquipType.New({
-		l10n_key="CARBON_ORE", l10n_resource = "core", slots="cargo", price=5,
+		l10n_key="CARBON_ORE", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=5,
 		capabilities={mass=1}, economy_type="mining",
 		purchasable=true, icon_name="Carbon_ore"
 	}),
 	metal_ore = EquipType.New({
-		l10n_key="METAL_ORE", l10n_resource = "core", slots="cargo", price=3,
+		l10n_key="METAL_ORE", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=3,
 		capabilities={mass=1}, economy_type="mining",
 		purchasable=true, icon_name="Metal_ore"
 	}),
 	metal_alloys = EquipType.New({
-		l10n_key="METAL_ALLOYS", l10n_resource = "core", slots="cargo", price=8,
+		l10n_key="METAL_ALLOYS", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=8,
 		capabilities={mass=1}, economy_type="industry",
 		purchasable=true, icon_name="Metal_alloys"
 	}),
 	precious_metals = EquipType.New({
-		l10n_key="PRECIOUS_METALS", l10n_resource = "core", slots="cargo", price=180,
+		l10n_key="PRECIOUS_METALS", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=180,
 		capabilities={mass=1}, economy_type="industry",
 		purchasable=true, icon_name="Precious_metals"
 	}),
 	plastics = EquipType.New({
-		l10n_key="PLASTICS", l10n_resource = "core", slots="cargo", price=12,
+		l10n_key="PLASTICS", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=12,
 		capabilities={mass=1}, economy_type="industry",
 		purchasable=true, icon_name="Plastics"
 	}),
 	fruit_and_veg = EquipType.New({
-		l10n_key="FRUIT_AND_VEG", l10n_resource = "core", slots="cargo", price=12,
+		l10n_key="FRUIT_AND_VEG", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=12,
 		capabilities={mass=1}, economy_type="agriculture",
 		purchasable=true, icon_name="Fruit_and_Veg"
 	}),
 	animal_meat = EquipType.New({
-		l10n_key="ANIMAL_MEAT", l10n_resource = "core", slots="cargo", price=18,
+		l10n_key="ANIMAL_MEAT", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=18,
 		capabilities={mass=1}, economy_type="agriculture",
 		purchasable=true, icon_name="Animal_Meat"
 	}),
 	live_animals = EquipType.New({
-		l10n_key="LIVE_ANIMALS", l10n_resource = "core", slots="cargo", price=32,
+		l10n_key="LIVE_ANIMALS", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=32,
 		capabilities={mass=1}, economy_type="agriculture",
 		purchasable=true, icon_name="Live_Animals"
 	}),
 	liquor = EquipType.New({
-		l10n_key="LIQUOR", l10n_resource = "core", slots="cargo", price=8,
+		l10n_key="LIQUOR", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=8,
 		capabilities={mass=1}, economy_type="agriculture",
 		purchasable=true, icon_name="Liquor"
 	}),
 	grain = EquipType.New({
-		l10n_key="GRAIN", l10n_resource = "core", slots="cargo", price=10,
+		l10n_key="GRAIN", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=10,
 		capabilities={mass=1}, economy_type="agriculture",
 		purchasable=true, icon_name="Grain"
 	}),
 	slaves = EquipType.New({
-		l10n_key="SLAVES", l10n_resource = "core", slots="cargo", price=232,
+		l10n_key="SLAVES", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=232,
 		capabilities={mass=1}, economy_type="agriculture",
 		purchasable=true, icon_name="Slaves"
 	}),
 	textiles = EquipType.New({
-		l10n_key="TEXTILES", l10n_resource = "core", slots="cargo", price=8.5,
+		l10n_key="TEXTILES", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=8.5,
 		capabilities={mass=1}, economy_type="industry",
 		purchasable=true, icon_name="Textiles"
 	}),
 	fertilizer = EquipType.New({
-		l10n_key="FERTILIZER", l10n_resource = "core", slots="cargo", price=4,
+		l10n_key="FERTILIZER", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=4,
 		capabilities={mass=1}, economy_type="industry",
 		purchasable=true, icon_name="Fertilizer"
 	}),
 	medicines = EquipType.New({
-		l10n_key="MEDICINES", l10n_resource = "core", slots="cargo", price=22,
+		l10n_key="MEDICINES", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=22,
 		capabilities={mass=1}, economy_type="industry",
 		purchasable=true, icon_name="Medicines"
 	}),
 	consumer_goods = EquipType.New({
-		l10n_key="CONSUMER_GOODS", l10n_resource = "core", slots="cargo", price=140,
+		l10n_key="CONSUMER_GOODS", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=140,
 		capabilities={mass=1}, economy_type="industry",
 		purchasable=true, icon_name="Consumer_goods"
 	}),
 	computers = EquipType.New({
-		l10n_key="COMPUTERS", l10n_resource = "core", slots="cargo", price=80,
+		l10n_key="COMPUTERS", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=80,
 		capabilities={mass=1}, economy_type="industry",
 		purchasable=true, icon_name="Computers"
 	}),
 	rubbish = EquipType.New({
-		l10n_key="RUBBISH", l10n_resource = "core", slots="cargo", price=-0.1,
+		l10n_key="RUBBISH", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=-0.1,
 		capabilities={mass=1}, economy_type="industry",
 		purchasable=true, icon_name="Rubbish"
 	}),
 	radioactives = EquipType.New({
-		l10n_key="RADIOACTIVES", l10n_resource = "core", slots="cargo", price=-3.5,
+		l10n_key="RADIOACTIVES", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=-3.5,
 		capabilities={mass=1}, economy_type="industry",
 		purchasable=true, icon_name="Radioactive_waste"
 	}),
 	narcotics = EquipType.New({
-		l10n_key="NARCOTICS", l10n_resource = "core", slots="cargo", price=157,
+		l10n_key="NARCOTICS", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=157,
 		capabilities={mass=1}, economy_type="industry",
 		purchasable=true, icon_name="Narcotics"
 	}),
 	nerve_gas = EquipType.New({
-		l10n_key="NERVE_GAS", l10n_resource = "core", slots="cargo", price=265,
+		l10n_key="NERVE_GAS", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=265,
 		capabilities={mass=1}, economy_type="industry",
 		purchasable=true, icon_name="Nerve_Gas"
 	}),
 	military_fuel = EquipType.New({
-		l10n_key="MILITARY_FUEL", l10n_resource = "core", slots="cargo", price=60,
+		l10n_key="MILITARY_FUEL", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=60,
 		capabilities={mass=1}, economy_type="industry",
 		purchasable=true, icon_name="Military_fuel"
 	}),
 	robots = EquipType.New({
-		l10n_key="ROBOTS", l10n_resource = "core", slots="cargo", price=63,
+		l10n_key="ROBOTS", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=63,
 		capabilities={mass=1}, economy_type="industry",
 		purchasable=true, icon_name="Robots"
 	}),
 	hand_weapons = EquipType.New({
-		l10n_key="HAND_WEAPONS", l10n_resource = "core", slots="cargo", price=124,
+		l10n_key="HAND_WEAPONS", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=124,
 		capabilities={mass=1}, economy_type="industry",
 		purchasable=true, icon_name="Hand_weapons"
 	}),
 	air_processors = EquipType.New({
-		l10n_key="AIR_PROCESSORS", l10n_resource = "core", slots="cargo", price=20,
+		l10n_key="AIR_PROCESSORS", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=20,
 		capabilities={mass=1}, economy_type="industry",
 		purchasable=true, icon_name="Air_processors"
 	}),
 	farm_machinery = EquipType.New({
-		l10n_key="FARM_MACHINERY", l10n_resource = "core", slots="cargo", price=11,
+		l10n_key="FARM_MACHINERY", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=11,
 		capabilities={mass=1}, economy_type="industry",
 		purchasable=true, icon_name="Farm_machinery"
 	}),
 	mining_machinery = EquipType.New({
-		l10n_key="MINING_MACHINERY", l10n_resource = "core", slots="cargo", price=12,
+		l10n_key="MINING_MACHINERY", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=12,
 		capabilities={mass=1}, economy_type="industry",
 		purchasable=true, icon_name="Mining_machinery"
 	}),
 	battle_weapons = EquipType.New({
-		l10n_key="BATTLE_WEAPONS", l10n_resource = "core", slots="cargo", price=220,
+		l10n_key="BATTLE_WEAPONS", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=220,
 		capabilities={mass=1}, economy_type="industry",
 		purchasable=true, icon_name="Battle_weapons"
 	}),
 	industrial_machinery = EquipType.New({
-		l10n_key="INDUSTRIAL_MACHINERY", l10n_resource = "core", slots="cargo", price=13,
+		l10n_key="INDUSTRIAL_MACHINERY", l10n_resource = CARGOLANGRESOURCE, slots="cargo", price=13,
 		capabilities={mass=1}, economy_type="industry",
 		purchasable=true, icon_name="Industrial_machinery"
 	}),
@@ -683,15 +705,20 @@ misc.atmospheric_shielding = EquipType.New({
 	capabilities={mass=1, atmo_shield=1},
 	purchasable=true, tech_level=3
 })
+misc.heavy_atmospheric_shielding = EquipType.New({
+	l10n_key="ATMOSPHERIC_SHIELDING_HEAVY", slots="atmo_shield", price=900,
+	capabilities={mass=2, atmo_shield=2},
+	purchasable=true, tech_level=5
+})
 misc.ecm_basic = EquipType.New({
 	l10n_key="ECM_BASIC", slots="ecm", price=6000,
 	capabilities={mass=2, ecm_power=2, ecm_recharge=5},
-	purchasable=true, tech_level=9
+	purchasable=true, tech_level=9, ecm_type = 'ecm'
 })
 misc.ecm_advanced = EquipType.New({
 	l10n_key="ECM_ADVANCED", slots="ecm", price=15200,
 	capabilities={mass=2, ecm_power=3, ecm_recharge=5},
-	purchasable=true, tech_level="MILITARY"
+	purchasable=true, tech_level="MILITARY", ecm_type = 'ecm_advanced'
 })
 misc.radar = EquipType.New({
 	l10n_key="RADAR", slots="radar", price=680,
@@ -774,7 +801,7 @@ misc.thrusters_best = EquipType.New({
 	icon_name="thrusters_best"
 })
 misc.trade_computer = EquipType.New({
-	l10n_key="TRADE_COMPUTER", slots="trade_compunter", price=400,
+	l10n_key="TRADE_COMPUTER", slots="trade_computer", price=400,
 	capabilities={mass=0, trade_computer=1}, purchasable=true, tech_level=9
 })
 misc.planetscanner = BodyScannerType.New({
@@ -788,75 +815,75 @@ misc.planetscanner = BodyScannerType.New({
 hyperspace = {}
 hyperspace.hyperdrive_1 = HyperdriveType.New({
 	l10n_key="DRIVE_CLASS1", fuel=cargo.hydrogen, slots="engine",
-	price=700, capabilities={mass=4, hyperclass=1}, purchasable=true, tech_level=3
+	price=700, capabilities={mass=4, hyperclass=1}, purchasable=true, tech_level=3,
 })
 hyperspace.hyperdrive_2 = HyperdriveType.New({
 	l10n_key="DRIVE_CLASS2", fuel=cargo.hydrogen, slots="engine",
-	price=1300, capabilities={mass=10, hyperclass=2}, purchasable=true, tech_level=4
+	price=1300, capabilities={mass=10, hyperclass=2}, purchasable=true, tech_level=4,
 })
 hyperspace.hyperdrive_3 = HyperdriveType.New({
 	l10n_key="DRIVE_CLASS3", fuel=cargo.hydrogen, slots="engine",
-	price=2500, capabilities={mass=20, hyperclass=3}, purchasable=true, tech_level=4
+	price=2500, capabilities={mass=20, hyperclass=3}, purchasable=true, tech_level=4,
 })
 hyperspace.hyperdrive_4 = HyperdriveType.New({
 	l10n_key="DRIVE_CLASS4", fuel=cargo.hydrogen, slots="engine",
-	price=5000, capabilities={mass=40, hyperclass=4}, purchasable=true, tech_level=5
+	price=5000, capabilities={mass=40, hyperclass=4}, purchasable=true, tech_level=5,
 })
 hyperspace.hyperdrive_5 = HyperdriveType.New({
 	l10n_key="DRIVE_CLASS5", fuel=cargo.hydrogen, slots="engine",
-	price=10000, capabilities={mass=120, hyperclass=5}, purchasable=true, tech_level=5
+	price=10000, capabilities={mass=120, hyperclass=5}, purchasable=true, tech_level=5,
 })
 hyperspace.hyperdrive_6 = HyperdriveType.New({
 	l10n_key="DRIVE_CLASS6", fuel=cargo.hydrogen, slots="engine",
-	price=20000, capabilities={mass=225, hyperclass=6}, purchasable=true, tech_level=6
+	price=20000, capabilities={mass=225, hyperclass=6}, purchasable=true, tech_level=6,
 })
 hyperspace.hyperdrive_7 = HyperdriveType.New({
 	l10n_key="DRIVE_CLASS7", fuel=cargo.hydrogen, slots="engine",
-	price=30000, capabilities={mass=400, hyperclass=7}, purchasable=true, tech_level=8
+	price=30000, capabilities={mass=400, hyperclass=7}, purchasable=true, tech_level=8,
 })
 hyperspace.hyperdrive_8 = HyperdriveType.New({
 	l10n_key="DRIVE_CLASS8", fuel=cargo.hydrogen, slots="engine",
-	price=60000, capabilities={mass=580, hyperclass=8}, purchasable=true, tech_level=9
+	price=60000, capabilities={mass=580, hyperclass=8}, purchasable=true, tech_level=9,
 })
 hyperspace.hyperdrive_9 = HyperdriveType.New({
 	l10n_key="DRIVE_CLASS9", fuel=cargo.hydrogen, slots="engine",
-	price=120000, capabilities={mass=740, hyperclass=9}, purchasable=true, tech_level=10
+	price=120000, capabilities={mass=740, hyperclass=9}, purchasable=true, tech_level=10,
 })
 hyperspace.hyperdrive_mil1 = HyperdriveType.New({
 	l10n_key="DRIVE_MIL1", fuel=cargo.military_fuel, byproduct=cargo.radioactives, slots="engine",
-	price=23000, capabilities={mass=3, hyperclass=1}, purchasable=true, tech_level=10
+	price=23000, capabilities={mass=3, hyperclass=1}, purchasable=true, tech_level=10,
 })
 hyperspace.hyperdrive_mil2 = HyperdriveType.New({
 	l10n_key="DRIVE_MIL2", fuel=cargo.military_fuel, byproduct=cargo.radioactives, slots="engine",
-	price=47000, capabilities={mass=8, hyperclass=2}, purchasable=true, tech_level="MILITARY"
+	price=47000, capabilities={mass=8, hyperclass=2}, purchasable=true, tech_level="MILITARY",
 })
 hyperspace.hyperdrive_mil3 = HyperdriveType.New({
 	l10n_key="DRIVE_MIL3", fuel=cargo.military_fuel, byproduct=cargo.radioactives, slots="engine",
-	price=85000, capabilities={mass=16, hyperclass=3}, purchasable=true, tech_level=11
+	price=85000, capabilities={mass=16, hyperclass=3}, purchasable=true, tech_level=11,
 })
 hyperspace.hyperdrive_mil4 = HyperdriveType.New({
 	l10n_key="DRIVE_MIL4", fuel=cargo.military_fuel, byproduct=cargo.radioactives, slots="engine",
-	price=214000, capabilities={mass=30, hyperclass=4}, purchasable=true, tech_level=12
+	price=214000, capabilities={mass=30, hyperclass=4}, purchasable=true, tech_level=12,
 })
 hyperspace.hyperdrive_mil5 = HyperdriveType.New({
 	l10n_key="DRIVE_MIL5", fuel=cargo.military_fuel, byproduct=cargo.radioactives, slots="engine",
-	price=540000, capabilities={mass=53, hyperclass=5}, purchasable=false, tech_level="MILITARY"
+	price=540000, capabilities={mass=53, hyperclass=5}, purchasable=false, tech_level="MILITARY",
 })
 hyperspace.hyperdrive_mil6 = HyperdriveType.New({
 	l10n_key="DRIVE_MIL6", fuel=cargo.military_fuel, byproduct=cargo.radioactives, slots="engine",
-	price=1350000, capabilities={mass=78, hyperclass=6}, purchasable=false, tech_level="MILITARY"
+	price=1350000, capabilities={mass=78, hyperclass=6}, purchasable=false, tech_level="MILITARY",
 })
 hyperspace.hyperdrive_mil7 = HyperdriveType.New({
 	l10n_key="DRIVE_MIL7", fuel=cargo.military_fuel, byproduct=cargo.radioactives, slots="engine",
-	price=3500000, capabilities={mass=128, hyperclass=7}, purchasable=false, tech_level="MILITARY"
+	price=3500000, capabilities={mass=128, hyperclass=7}, purchasable=false, tech_level="MILITARY",
 })
 hyperspace.hyperdrive_mil8 = HyperdriveType.New({
 	l10n_key="DRIVE_MIL8", fuel=cargo.military_fuel, byproduct=cargo.radioactives, slots="engine",
-	price=8500000, capabilities={mass=196, hyperclass=8}, purchasable=false, tech_level="MILITARY"
+	price=8500000, capabilities={mass=196, hyperclass=8}, purchasable=false, tech_level="MILITARY",
 })
 hyperspace.hyperdrive_mil9 = HyperdriveType.New({
 	l10n_key="DRIVE_MIL9", fuel=cargo.military_fuel, byproduct=cargo.radioactives, slots="engine",
-	price=22000000, capabilities={mass=285, hyperclass=9}, purchasable=false, tech_level="MILITARY"
+	price=22000000, capabilities={mass=285, hyperclass=9}, purchasable=false, tech_level="MILITARY",
 })
 
 laser = {}
@@ -864,70 +891,94 @@ laser.pulsecannon_1mw = LaserType.New({
 	l10n_key="PULSECANNON_1MW", price=600, capabilities={mass=1},
 	slots = {"laser_front", "laser_rear"}, laser_stats = {
 		lifespan=8, speed=1000, damage=1000, rechargeTime=0.25, length=30,
-		width=5, dual=0, mining=0, rgba_r = 255, rgba_g = 51, rgba_b = 51, rgba_a = 255
+		width=5, beam=0, dual=0, mining=0, rgba_r = 255, rgba_g = 51, rgba_b = 51, rgba_a = 255
 	}, purchasable=true, tech_level=3
 })
 laser.pulsecannon_dual_1mw = LaserType.New({
 	l10n_key="PULSECANNON_DUAL_1MW", price=1100, capabilities={mass=4},
 	slots = {"laser_front", "laser_rear"}, laser_stats = {
 		lifespan=8, speed=1000, damage=1000, rechargeTime=0.25, length=30,
-		width=5, dual=1, mining=0, rgba_r = 255, rgba_g = 51, rgba_b = 51, rgba_a = 255
+		width=5, beam=0, dual=1, mining=0, rgba_r = 255, rgba_g = 51, rgba_b = 51, rgba_a = 255
 	}, purchasable=true, tech_level=4
 })
 laser.pulsecannon_2mw = LaserType.New({
 	l10n_key="PULSECANNON_2MW", price=1000, capabilities={mass=3},
 	slots = {"laser_front", "laser_rear"}, laser_stats = {
 		lifespan=8, speed=1000, damage=2000, rechargeTime=0.25, length=30,
-		width=5, dual=0, mining=0, rgba_r = 255, rgba_g = 127, rgba_b = 51, rgba_a = 255
+		width=5, beam=0, dual=0, mining=0, rgba_r = 255, rgba_g = 127, rgba_b = 51, rgba_a = 255
 	}, purchasable=true, tech_level=5
 })
 laser.pulsecannon_rapid_2mw = LaserType.New({
 	l10n_key="PULSECANNON_RAPID_2MW", price=1800, capabilities={mass=7},
 	slots = {"laser_front", "laser_rear"}, laser_stats = {
 		lifespan=8, speed=1000, damage=2000, rechargeTime=0.13, length=30,
-		width=5, dual=0, mining=0, rgba_r = 255, rgba_g = 127, rgba_b = 51, rgba_a = 255
+		width=5, beam=0, dual=0, mining=0, rgba_r = 255, rgba_g = 127, rgba_b = 51, rgba_a = 255
 	}, purchasable=true, tech_level=5
+})
+laser.beamlaser_1mw = LaserType.New({
+	l10n_key="BEAMLASER_1MW", price=2400, capabilities={mass=3},
+	slots = {"laser_front", "laser_rear"}, laser_stats = {
+		lifespan=8, speed=1000, damage=1500, rechargeTime=0.25, length=10000,
+		width=1, beam=1, dual=0, mining=0, rgba_r = 255, rgba_g = 51, rgba_b = 127, rgba_a = 255,
+		heatrate=0.02, coolrate=0.01
+	}, purchasable=true, tech_level=4
+})
+laser.beamlaser_dual_1mw = LaserType.New({
+	l10n_key="BEAMLASER_DUAL_1MW", price=4800, capabilities={mass=6},
+	slots = {"laser_front", "laser_rear"}, laser_stats = {
+		lifespan=8, speed=1000, damage=1500, rechargeTime=0.5, length=10000,
+		width=1, beam=1, dual=1, mining=0, rgba_r = 255, rgba_g = 51, rgba_b = 127, rgba_a = 255,
+		heatrate=0.02, coolrate=0.01
+	}, purchasable=true, tech_level=5
+})
+laser.beamlaser_2mw = LaserType.New({
+	l10n_key="BEAMLASER_RAPID_2MW", price=5600, capabilities={mass=7},
+	slots = {"laser_front", "laser_rear"}, laser_stats = {
+		lifespan=8, speed=1000, damage=3000, rechargeTime=0.13, length=20000,
+		width=1, beam=1, dual=0, mining=0, rgba_r = 255, rgba_g = 192, rgba_b = 192, rgba_a = 255,
+		heatrate=0.02, coolrate=0.01
+	}, purchasable=true, tech_level=6
 })
 laser.pulsecannon_4mw = LaserType.New({
 	l10n_key="PULSECANNON_4MW", price=2200, capabilities={mass=10},
 	slots = {"laser_front", "laser_rear"}, laser_stats = {
 		lifespan=8, speed=1000, damage=4000, rechargeTime=0.25, length=30,
-		width=5, dual=0, mining=0, rgba_r = 255, rgba_g = 255, rgba_b = 51, rgba_a = 255
+		width=5, beam=0, dual=0, mining=0, rgba_r = 255, rgba_g = 255, rgba_b = 51, rgba_a = 255
 	}, purchasable=true, tech_level=6
 })
 laser.pulsecannon_10mw = LaserType.New({
 	l10n_key="PULSECANNON_10MW", price=4900, capabilities={mass=30},
 	slots = {"laser_front", "laser_rear"}, laser_stats = {
 		lifespan=8, speed=1000, damage=10000, rechargeTime=0.25, length=30,
-		width=5, dual=0, mining=0, rgba_r = 51, rgba_g = 255, rgba_b = 51, rgba_a = 255
+		width=5, beam=0, dual=0, mining=0, rgba_r = 51, rgba_g = 255, rgba_b = 51, rgba_a = 255
 	}, purchasable=true, tech_level=7
 })
 laser.pulsecannon_20mw = LaserType.New({
 	l10n_key="PULSECANNON_20MW", price=12000, capabilities={mass=65},
 	slots = {"laser_front", "laser_rear"}, laser_stats = {
 		lifespan=8, speed=1000, damage=20000, rechargeTime=0.25, length=30,
-		width=5, dual=0, mining=0, rgba_r = 0.1, rgba_g = 51, rgba_b = 255, rgba_a = 255
+		width=5, beam=0, dual=0, mining=0, rgba_r = 0.1, rgba_g = 51, rgba_b = 255, rgba_a = 255
 	}, purchasable=true, tech_level="MILITARY"
 })
 laser.miningcannon_17mw = LaserType.New({
 	l10n_key="MININGCANNON_17MW", price=10600, capabilities={mass=10},
 	slots = {"laser_front", "laser_rear"}, laser_stats = {
 		lifespan=8, speed=1000, damage=17000, rechargeTime=2, length=30,
-		width=5, dual=0, mining=1, rgba_r = 51, rgba_g = 127, rgba_b = 0, rgba_a = 255
+		width=5, beam=0, dual=0, mining=1, rgba_r = 51, rgba_g = 127, rgba_b = 0, rgba_a = 255
 	}, purchasable=true, tech_level=8
 })
 laser.small_plasma_accelerator = LaserType.New({
 	l10n_key="SMALL_PLASMA_ACCEL", price=120000, capabilities={mass=22},
 	slots = {"laser_front", "laser_rear"}, laser_stats = {
 		lifespan=8, speed=1000, damage=50000, rechargeTime=0.3, length=42,
-		width=7, dual=0, mining=0, rgba_r = 51, rgba_g = 255, rgba_b = 255, rgba_a = 255
+		width=7, beam=0, dual=0, mining=0, rgba_r = 51, rgba_g = 255, rgba_b = 255, rgba_a = 255
 	}, purchasable=true, tech_level=10
 })
 laser.large_plasma_accelerator = LaserType.New({
 	l10n_key="LARGE_PLASMA_ACCEL", price=390000, capabilities={mass=50},
 	slots = {"laser_front", "laser_rear"}, laser_stats = {
 		lifespan=8, speed=1000, damage=100000, rechargeTime=0.3, length=42,
-		width=7, dual=0, mining=0, rgba_r = 127, rgba_g = 255, rgba_b = 255, rgba_a = 255
+		width=7, beam=0, dual=0, mining=0, rgba_r = 127, rgba_g = 255, rgba_b = 255, rgba_a = 255
 	}, purchasable=true, tech_level=12
 })
 local equipment = {

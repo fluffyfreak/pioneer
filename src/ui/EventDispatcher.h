@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef UI_EVENTDISPATCHER_H
@@ -36,6 +36,7 @@ public:
 
 	Point GetMousePos() const { return m_lastMousePosition; }
 
+	void ResetMouseActiveReceiver();
 private:
 	void DispatchMouseOverOut(Widget *target, const Point &mousePos);
 	void DispatchSelect(Widget *target);

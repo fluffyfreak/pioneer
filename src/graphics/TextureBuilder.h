@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _TEXTUREBUILDER_H
@@ -80,7 +80,7 @@ private:
 	TextureType m_textureType;
 
 	TextureDescriptor m_descriptor;
-	
+
 	Texture *CreateTexture(Renderer *r) {
 		Texture *t = r->CreateTexture(GetDescriptor());
 		UpdateTexture(t);
@@ -92,7 +92,7 @@ private:
 
 	void LoadSurface();
 	void LoadDDS();
-	
+
 	static SDL_mutex *m_textureLock;
 };
 

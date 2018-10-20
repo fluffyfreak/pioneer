@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _GASGIANT_H
@@ -23,8 +23,8 @@ class SystemBody;
 class GasGiant;
 class GasPatch;
 class GasPatchContext;
-namespace { 
-	class STextureFaceResult; 
+namespace {
+	class STextureFaceResult;
 	class SGPUGenResult;
 }
 
@@ -38,7 +38,7 @@ public:
 	virtual void Update() override;
 	virtual void Render(Graphics::Renderer *renderer, const matrix4x4d &modelView, vector3d campos, const float radius, const std::vector<Camera::Shadow> &shadows) override;
 
-	virtual double GetHeight(const vector3d &p) const override { return 0.0; }
+	virtual double GetHeight(const vector3d &p) const override final { return 0.0; }
 
 	// in sbody radii
 	virtual double GetMaxFeatureHeight() const override { return 0.0; }
@@ -77,7 +77,7 @@ private:
 	RefCountedPtr<Graphics::Texture> m_surfaceTextureSmall;
 	RefCountedPtr<Graphics::Texture> m_surfaceTexture;
 	RefCountedPtr<Graphics::Texture> m_builtTexture;
-	
+
 	std::unique_ptr<Color[]> m_jobColorBuffers[NUM_PATCHES];
 	Job::Handle m_job[NUM_PATCHES];
 	bool m_hasJobRequest[NUM_PATCHES];

@@ -5,10 +5,12 @@ AM_CPPFLAGS += $(WARN_CPPFLAGS)
 AM_CXXFLAGS += $(STD_CXXFLAGS) $(WARN_CXXFLAGS)
 
 AM_CPPFLAGS += -I$(srcdir)/../.. -isystem $(top_srcdir)/contrib
+if !HAVE_LUA
+AM_CPPFLAGS += -isystem @top_srcdir@/contrib/lua
+endif
 
 noinst_LIBRARIES = libgraphicsopengl.a
 noinst_HEADERS = \
-	gl_core_3_x.h \
 	OpenGLLibs.h \
 	GLDebug.h \
 	MaterialGL.h \
@@ -33,7 +35,6 @@ noinst_HEADERS = \
 	BillboardMaterial.h
 
 libgraphicsopengl_a_SOURCES = \
-	gl_core_3_x.c \
 	MaterialGL.cpp \
 	RenderStateGL.cpp \
 	RenderTargetGL.cpp \

@@ -1,12 +1,11 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _LUAREF_H
 #define _LUAREF_H
 
-#include "lua/lua.hpp"
-#include "Serializer.h"
-#include "json/json.h"
+#include <lua.hpp>
+#include "JsonFwd.h"
 #include <vector>
 #include <cassert>
 
@@ -25,8 +24,8 @@ public:
 
 	bool IsValid() const { return m_lua && m_id != LUA_NOREF; }
 
-	void SaveToJson(Json::Value &jsonObj);
-	void LoadFromJson(const Json::Value &jsonObj);
+	void SaveToJson(Json &jsonObj);
+	void LoadFromJson(const Json &jsonObj);
 	void Unref();
 private:
 	lua_State * m_lua;

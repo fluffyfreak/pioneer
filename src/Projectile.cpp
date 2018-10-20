@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -7,7 +7,6 @@
 #include "Frame.h"
 #include "galaxy/StarSystem.h"
 #include "Space.h"
-#include "Serializer.h"
 #include "collider/collider.h"
 #include "CargoBody.h"
 #include "Planet.h"
@@ -15,6 +14,7 @@
 #include "Ship.h"
 #include "Pi.h"
 #include "Game.h"
+#include "Player.h"
 #include "LuaEvent.h"
 #include "LuaUtils.h"
 #include "graphics/Graphics.h"
@@ -22,7 +22,8 @@
 #include "graphics/Renderer.h"
 #include "graphics/VertexArray.h"
 #include "graphics/TextureBuilder.h"
-#include "json/JsonUtils.h"
+#include "JsonUtils.h"
+#include "GameSaveError.h"
 
 std::unique_ptr<Graphics::VertexArray> Projectile::s_sideVerts;
 std::unique_ptr<Graphics::VertexArray> Projectile::s_glowVerts;
@@ -126,54 +127,46 @@ Projectile::~Projectile()
 {
 }
 
-void Projectile::SaveToJson(Json::Value &jsonObj, Space *space)
+void Projectile::SaveToJson(Json &jsonObj, Space *space)
 {
 	Body::SaveToJson(jsonObj, space);
 
-	Json::Value projectileObj(Json::objectValue); // Create JSON object to contain projectile data.
+	Json projectileObj({}); // Create JSON object to contain projectile data.
 
-	VectorToJson(projectileObj, m_baseVel, "base_vel");
-	VectorToJson(projectileObj, m_dirVel, "dir_vel");
-	projectileObj["age"] = FloatToStr(m_age);
-	projectileObj["life_span"] = FloatToStr(m_lifespan);
-	projectileObj["base_dam"] = FloatToStr(m_baseDam);
-	projectileObj["length"] = FloatToStr(m_length);
-	projectileObj["width"] = FloatToStr(m_width);
+	projectileObj["base_vel"] = m_baseVel;
+	projectileObj["dir_vel"] = m_dirVel;
+	projectileObj["age"] = m_age;
+	projectileObj["life_span"] = m_lifespan;
+	projectileObj["base_dam"] = m_baseDam;
+	projectileObj["length"] = m_length;
+	projectileObj["width"] = m_width;
 	projectileObj["mining"] = m_mining;
-	ColorToJson(projectileObj, m_color, "color");
+	projectileObj["color"] = m_color;
 	projectileObj["index_for_body"] = space->GetIndexForBody(m_parent);
 
 	jsonObj["projectile"] = projectileObj; // Add projectile object to supplied object.
 }
 
-void Projectile::LoadFromJson(const Json::Value &jsonObj, Space *space)
+void Projectile::LoadFromJson(const Json &jsonObj, Space *space)
 {
 	Body::LoadFromJson(jsonObj, space);
 
-	if (!jsonObj.isMember("projectile")) throw SavedGameCorruptException();
-	Json::Value projectileObj = jsonObj["projectile"];
+	try {
+		Json projectileObj = jsonObj["projectile"];
 
-	if (!projectileObj.isMember("base_vel")) throw SavedGameCorruptException();
-	if (!projectileObj.isMember("dir_vel")) throw SavedGameCorruptException();
-	if (!projectileObj.isMember("age")) throw SavedGameCorruptException();
-	if (!projectileObj.isMember("life_span")) throw SavedGameCorruptException();
-	if (!projectileObj.isMember("base_dam")) throw SavedGameCorruptException();
-	if (!projectileObj.isMember("length")) throw SavedGameCorruptException();
-	if (!projectileObj.isMember("width")) throw SavedGameCorruptException();
-	if (!projectileObj.isMember("mining")) throw SavedGameCorruptException();
-	if (!projectileObj.isMember("color")) throw SavedGameCorruptException();
-	if (!projectileObj.isMember("index_for_body")) throw SavedGameCorruptException();
-
-	JsonToVector(&m_baseVel, projectileObj, "base_vel");
-	JsonToVector(&m_dirVel, projectileObj, "dir_vel");
-	m_age = StrToFloat(projectileObj["age"].asString());
-	m_lifespan = StrToFloat(projectileObj["life_span"].asString());
-	m_baseDam = StrToFloat(projectileObj["base_dam"].asString());
-	m_length = StrToFloat(projectileObj["length"].asString());
-	m_width = StrToFloat(projectileObj["width"].asString());
-	m_mining = projectileObj["mining"].asBool();
-	JsonToColor(&m_color, projectileObj, "color");
-	m_parentIndex = projectileObj["index_for_body"].asInt();
+		m_baseVel = projectileObj["base_vel"];
+		m_dirVel = projectileObj["dir_vel"];
+		m_age = projectileObj["age"];
+		m_lifespan = projectileObj["life_span"];
+		m_baseDam = projectileObj["base_dam"];
+		m_length = projectileObj["length"];
+		m_width = projectileObj["width"];
+		m_mining = projectileObj["mining"];
+		m_color = projectileObj["color"];
+		m_parentIndex = projectileObj["index_for_body"];
+	} catch (Json::type_error &) {
+		throw SavedGameCorruptException();
+	}
 }
 
 void Projectile::PostLoadFixup(Space *space)
@@ -217,21 +210,27 @@ double Projectile::GetRadius() const
 static void MiningLaserSpawnTastyStuff(Frame *f, const SystemBody *asteroid, const vector3d &pos)
 {
 	lua_State *l = Lua::manager->GetLuaState();
-	pi_lua_import(l, "Equipment");
-	LuaTable cargo_types = LuaTable(l, -1).Sub("cargo");
-	if (20*Pi::rng.Fixed() < asteroid->GetMetallicityAsFixed()) {
-		cargo_types.Sub("precious_metals");
-	} else if (8*Pi::rng.Fixed() < asteroid->GetMetallicityAsFixed()) {
-		cargo_types.Sub("metal_alloys");
-	} else if (Pi::rng.Fixed() < asteroid->GetMetallicityAsFixed()) {
-		cargo_types.Sub("metal_ore");
-	} else if (Pi::rng.Fixed() < fixed(1,2)) {
-		cargo_types.Sub("water");
-	} else {
-		cargo_types.Sub("rubbish");
-	}
+
+	// lua cant push "const SystemBody", needs to convert to non-const
+	RefCountedPtr<StarSystem> s = Pi::game->GetGalaxy()->GetStarSystem(asteroid->GetPath());
+	SystemBody *liveasteroid = s->GetBodyByPath(asteroid->GetPath());
+
+	// this is an adapted version of "CallMethod", because;
+	// 1, there is no template for LuaObject<LuaTable>::CallMethod(..., SystemBody)
+	// 2, this leaves the return value on the lua stack to be used by "new CargoBody()"
+	LUA_DEBUG_START(l);
+	LuaObject<Player>::PushToLua(Pi::player);
+	lua_pushstring(l, "SpawnMiningContainer");
+	lua_gettable(l, -2);
+	lua_pushvalue(l, -2);
+	lua_remove(l, -3);
+	LuaObject<SystemBody>::PushToLua(liveasteroid);
+	pi_lua_protected_call(l, 2, 1);
+
 	CargoBody *cargo = new CargoBody(LuaRef(l, -1));
-	lua_pop(l, 3);
+	lua_pop(l, 1);
+	LUA_DEBUG_END(l, 0);
+
 	cargo->SetFrame(f);
 	cargo->SetPosition(pos);
 	const double x = Pi::rng.Double();
@@ -245,7 +244,8 @@ void Projectile::StaticUpdate(const float timeStep)
 {
 	PROFILE_SCOPED()
 	CollisionContact c;
-	vector3d vel = (m_baseVel+m_dirVel) * timeStep;
+	// Collision spaces don't store velocity, so dirvel-only is still wrong but less awful than dirvel+basevel
+	vector3d vel = m_dirVel * timeStep;
 	GetFrame()->GetCollisionSpace()->TraceRay(GetPosition(), vel.Normalized(), vel.Length(), &c);
 
 	if (c.userData1) {
@@ -264,16 +264,20 @@ void Projectile::StaticUpdate(const float timeStep)
 			}
 		}
 	}
-	if (m_mining) {
+	if (m_mining) // mining lasers can break off chunks of terrain
+	{
 		// need to test for terrain hit
-		if (GetFrame()->GetBody() && GetFrame()->GetBody()->IsType(Object::PLANET)) {
-			Planet *const planet = static_cast<Planet*>(GetFrame()->GetBody());
-			const SystemBody *b = planet->GetSystemBody();
+		Planet *const planet = static_cast<Planet*>(GetFrame()->GetBody()); // cache the value even for the if statement
+		if (planet && planet->IsType(Object::PLANET))
+		{
 			vector3d pos = GetPosition();
 			double terrainHeight = planet->GetTerrainHeight(pos.Normalized());
-			if (terrainHeight > pos.Length()) {
+			if (terrainHeight > pos.Length())
+			{
+				const SystemBody *b = planet->GetSystemBody();
 				// hit the fucker
-				if (b->GetType() == SystemBody::TYPE_PLANET_ASTEROID) {
+				if (b->GetType() == SystemBody::TYPE_PLANET_ASTEROID)
+				{
 					vector3d n = GetPosition().Normalized();
 					MiningLaserSpawnTastyStuff(planet->GetFrame(), b, n*terrainHeight + 5.0*n);
 					SfxManager::Add(this, TYPE_EXPLOSION);

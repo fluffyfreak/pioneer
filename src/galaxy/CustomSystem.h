@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _CUSTOMSYSTEM_H
@@ -60,6 +60,7 @@ public:
 
 	Uint32 seed;
 	bool   want_rand_seed;
+	std::string spaceStationType;
 };
 
 class CustomSystem {
@@ -69,6 +70,7 @@ public:
 	~CustomSystem();
 
 	std::string            name;
+	std::vector<std::string> other_names;
     CustomSystemBody*      sBody;
 	SystemBody::BodyType   primaryType[4];
 	unsigned               numStars;

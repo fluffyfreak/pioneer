@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "LuaEngine.h"
@@ -20,8 +20,11 @@
 #include "KeyBindings.h"
 #include "Lang.h"
 #include "Player.h"
+#include "Game.h"
 #include "scenegraph/Model.h"
-
+#include "LuaPiGui.h"
+#include "SectorView.h"
+#include "LuaPiGui.h"
 /*
  * Interface: Engine
  *
@@ -155,6 +158,22 @@ static int l_engine_quit(lua_State *l)
 	return 0;
 }
 
+/*
+ * Method: GetVideoModeList
+ *
+ * Get the available video modes
+ *
+ * > Engine.GetVideoModeList()
+ *
+ * Availability:
+ *
+ *   2017-04
+ *
+ * Status:
+ *
+ *   stable
+ */
+
 static int l_engine_get_video_mode_list(lua_State *l)
 {
 	LUA_DEBUG_START(l);
@@ -176,12 +195,82 @@ static int l_engine_get_video_mode_list(lua_State *l)
 	return 1;
 }
 
+/*
+* Method: GetMaximumAASamples
+*
+* Get the maximum number of samples the current OpenGL context supports
+*
+* > Engine.GetMaximumAASamples()
+*
+* Availability:
+*
+*   2017-12
+*
+* Status:
+*
+*   stable
+*/
+
+static int l_engine_get_maximum_aa_samples(lua_State *l)
+{
+	LUA_DEBUG_START(l);
+
+	if(Pi::renderer != nullptr) {
+		int maxSamples = Pi::renderer->GetMaximumNumberAASamples();
+		lua_pushinteger(l, maxSamples);
+	} else {
+		lua_pushinteger(l, 0);
+	}
+
+	LUA_DEBUG_END(l, 1);
+	return 1;
+}
+
+
+
+/*
+ * Method: GetVideoResolution
+ *
+ * Get the current video resolution width and height
+ *
+ * > width,height = Engine.GetVideoResolution()
+ *
+ * Availability:
+ *
+ *   2017-04
+ *
+ * Status:
+ *
+ *   stable
+ */
+
 static int l_engine_get_video_resolution(lua_State *l)
 {
-	lua_pushinteger(l, Graphics::GetScreenWidth());
-	lua_pushinteger(l, Graphics::GetScreenHeight());
+	lua_pushinteger(l, Pi::config->Int("ScrWidth"));
+	lua_pushinteger(l, Pi::config->Int("ScrHeight"));
 	return 2;
 }
+
+/*
+ * Method: SetVideoResolution
+ *
+ * Set the current video resolution width and height
+ *
+ * > Engine.SetVideoResolution(width, height)
+ *
+ * Parameters:
+ *
+ *   width - the new width in pixels
+ *   height - the new height in pixels
+ *
+ * Availability:
+ *
+ *   2017-04
+ *
+ * Status:
+ *
+ *   stable
+ */
 
 static int l_engine_set_video_resolution(lua_State *l)
 {
@@ -193,11 +282,47 @@ static int l_engine_set_video_resolution(lua_State *l)
 	return 0;
 }
 
+/*
+ * Method: GetFullscreen
+ *
+ * Return true if fullscreen is enabled
+ *
+ * > fullscreen = Engine.GetFullscreen()
+ *
+ * Availability:
+ *
+ *   2017-04
+ *
+ * Status:
+ *
+ *   stable
+ */
+
 static int l_engine_get_fullscreen(lua_State *l)
 {
 	lua_pushboolean(l, Pi::config->Int("StartFullscreen") != 0);
 	return 1;
 }
+
+/*
+ * Method: SetFullscreen
+ *
+ * Turn fullscreen on or off
+ *
+ * > Engine.SetFullscreen(true)
+ *
+ * Parameters:
+ *
+ *   fullscreen - true to turn on
+ *
+ * Availability:
+ *
+ *   2017-04
+ *
+ * Status:
+ *
+ *   stable
+ */
 
 static int l_engine_set_fullscreen(lua_State *l)
 {
@@ -573,226 +698,101 @@ static int l_engine_set_gpu_jobs_enabled(lua_State *l)
 	return 0;
 }
 
-static void push_bindings(lua_State *l, const KeyBindings::BindingPrototype *protos) {
-	LUA_DEBUG_START(l);
-
-	lua_newtable(l); // [-1] bindings
-	lua_pushnil(l); // [-2] bindings, [-1] group (no current group)
-
-	assert(!protos[0].function); // first entry should be a group header
-
-	int group_idx = 1;
-	int binding_idx = 1;
-	for (const KeyBindings::BindingPrototype *proto = protos; proto->label; ++proto) {
-		if (! proto->function) {
-			// start a new named binding group
-
-			// [-2] bindings, [-1] group
-			lua_pop(l, 1);
-			// [-1] bindings
-			lua_newtable(l);
-			lua_pushstring(l, proto->label);
-			lua_setfield(l, -2, "label");
-			// [-2] bindings, [-1] group
-			lua_pushvalue(l, -1);
-			// [-3] bindings, [-2] group, [-1] group copy
-			lua_rawseti(l, -3, group_idx);
-			++group_idx;
-
-			binding_idx = 1;
-		} else {
-			// key or axis binding prototype
-
-			// [-2] bindings, [-1] group
-			lua_createtable(l, 0, 5);
-			// [-3] bindings, [-2] group, [-1] binding
-
-			// fields are: type ('KEY' or 'AXIS'), id ('BindIncreaseSpeed'), label ('Increase Speed'), binding ('Key13'), bindingDescription ('')
-			lua_pushstring(l, (proto->kb ? "KEY" : "AXIS"));
-			lua_setfield(l, -2, "type");
-			lua_pushstring(l, proto->function);
-			lua_setfield(l, -2, "id");
-			lua_pushstring(l, proto->label);
-			lua_setfield(l, -2, "label");
-			if (proto->kb) {
-				const KeyBindings::KeyBinding kb1 = proto->kb->binding1;
-				if (kb1.Enabled()) {
-					lua_pushstring(l, kb1.ToString().c_str());
-					lua_setfield(l, -2, "binding1");
-					lua_pushstring(l, kb1.Description().c_str());
-					lua_setfield(l, -2, "bindingDescription1");
-				}
-				const KeyBindings::KeyBinding kb2 = proto->kb->binding2;
-				if (kb2.Enabled()) {
-					lua_pushstring(l, kb2.ToString().c_str());
-					lua_setfield(l, -2, "binding2");
-					lua_pushstring(l, kb2.Description().c_str());
-					lua_setfield(l, -2, "bindingDescription2");
-				}
-			} else if (proto->ab) {
-				const KeyBindings::AxisBinding &ab = *proto->ab;
-				lua_pushstring(l, ab.ToString().c_str());
-				lua_setfield(l, -2, "binding1");
-				lua_pushstring(l, ab.Description().c_str());
-				lua_setfield(l, -2, "bindingDescription1");
-			} else {
-				assert(0); // invalid prototype binding
-			}
-
-			// [-3] bindings, [-2] group, [-1] binding
-			lua_rawseti(l, -2, binding_idx);
-			++binding_idx;
-		}
-
-		LUA_DEBUG_CHECK(l, 2); // [-2] bindings, [-1] group
-	}
-
-	// pop the group table (which should already have been put in the bindings table)
-	lua_pop(l, 1);
-
-	LUA_DEBUG_END(l, 1);
-}
-
 /*
- * Function: GetKeyBindings
+ * Method: ShipSpaceToScreenSpace
  *
- * Get a table listing all the current key and axis bindings.
+ * Convert a Vector from ship space to screen space
  *
- * > bindings = Engine.GetKeyBindings()
+ * > screen_space = Engine.ShipSpaceToScreenSpace(ship_space)
  *
- * Returns:
+ * Parameters:
  *
- *   bindings - A table containing all the key and axis bindings.
- *
- * The bindings table has the following structure (in Lua syntax):
- *
- * > bindings = {
- * >   { -- a page
- * >      label = 'CONTROLS', -- the (translated) name of the page
- * >      { -- a group
- * >          label = 'Miscellaneous', -- the (translated) name of the group
- * >          { -- a binding
- * >              type = 'KEY', -- the type of binding; can be 'KEY' or 'AXIS'
- * >              id = 'BindToggleLuaConsole', -- the internal ID of the binding; pass this to Engine.SetKeyBinding
- * >              label = 'Toggle Lua console', -- the (translated) label for the binding
- * >              binding1 = 'Key96', -- the first bound key or axis (value stored in config file)
- * >              bindingDescription1 = '`', -- display text for the first bound key or axis
- * >              binding2 = 'Key96', -- the second bound key or axis (value stored in config file)
- * >              bindingDescription2 = '`', -- display text for the second bound key or axis
- * >          },
- * >          -- ... more bindings
- * >      },
- * >      -- ... more groups
- * >   },
- * >   -- ... more pages
- * > }
+ *   ship_space - a Vector in ship space
  *
  * Availability:
  *
- *   October 2013
+ *   2017-04
  *
  * Status:
  *
- *   temporary
+ *   stable
  */
-static int l_engine_get_key_bindings(lua_State *l)
+
+static int l_engine_ship_space_to_screen_space(lua_State *l)
 {
-	// XXX maybe this key-bindings table should be cached in the Lua registry?
-
-	int idx = 1;
-	lua_newtable(l);
-
-#define BINDING_PAGE(name) \
-	push_bindings(l, KeyBindings :: BINDING_PROTOS_ ## name); \
-	lua_pushstring(l, Lang :: name); \
-	lua_setfield(l, -2, "label"); \
-	lua_rawseti(l, -2, idx++);
-#include "KeyBindings.inc.h"
-
+	vector3d pos = LuaPull<vector3d>(l, 1);
+	vector3d cam = Pi::game->GetWorldView()->ShipSpaceToScreenSpace(pos);
+	LuaPush(l, cam);
 	return 1;
 }
 
-static int set_key_binding(lua_State *l, const char *config_id, KeyBindings::KeyAction *action) {
-	const char *binding_config_1 = lua_tostring(l, 2);
-	const char *binding_config_2 = lua_tostring(l, 3);
-	KeyBindings::KeyBinding kb1, kb2;
-	if (binding_config_1) {
-		if (!KeyBindings::KeyBinding::FromString(binding_config_1, kb1))
-			return luaL_error(l, "invalid first key binding given to Engine.SetKeyBinding");
-	} else
-		kb1.Clear();
-	if (binding_config_2) {
-		if (!KeyBindings::KeyBinding::FromString(binding_config_2, kb2))
-			return luaL_error(l, "invalid second key binding given to Engine.SetKeyBinding");
-	} else
-		kb2.Clear();
-	action->binding1 = kb1;
-	action->binding2 = kb2;
-	Pi::config->SetString(config_id, action->ToString());
-	Pi::config->Save();
-	return 0;
-}
+/*
+ * Method: CameraSpaceToScreenSpace
+ *
+ * Convert a Vector from camera space to screen space
+ *
+ * > screen_space = Engine.CameraSpaceToScreenSpace(camera_space)
+ *
+ * Parameters:
+ *
+ *   camera_space - a Vector in camera space
+ *
+ * Availability:
+ *
+ *   2017-04
+ *
+ * Status:
+ *
+ *   stable
+ */
 
-static int set_axis_binding(lua_State *l, const char *config_id, KeyBindings::AxisBinding *binding) {
-	const char *binding_config = lua_tostring(l, 2);
-	KeyBindings::AxisBinding ab;
-	if (binding_config) {
-		if (!KeyBindings::AxisBinding::FromString(binding_config, ab))
-			return luaL_error(l, "invalid axis binding given to Engine.SetKeyBinding");
-	} else
-		ab.Clear();
-	*binding = ab;
-	Pi::config->SetString(config_id, ab.ToString());
-	Pi::config->Save();
-	return 0;
-}
-
-static int l_engine_set_key_binding(lua_State *l)
+static int l_engine_camera_space_to_screen_space(lua_State *l)
 {
-	const char *binding_id = luaL_checkstring(l, 1);
-
-#define KEY_BINDING(action, config_id, label, def1, def2) \
-	if (strcmp(binding_id, config_id) == 0) { return set_key_binding(l, config_id, &KeyBindings :: action); }
-#define AXIS_BINDING(action, config_id, label, default_axis) \
-	if (strcmp(binding_id, config_id) == 0) { return set_axis_binding(l, config_id, &KeyBindings :: action); }
-
-#include "KeyBindings.inc.h"
-
-	return luaL_error(l, "Invalid binding ID given to Engine.SetKeyBinding");
-}
-
-static int l_engine_get_mouse_y_inverted(lua_State *l)
-{
-	lua_pushboolean(l, Pi::config->Int("InvertMouseY") != 0);
+	vector3d pos = LuaPull<vector3d>(l, 1);
+	vector3d cam = Pi::game->GetWorldView()->CameraSpaceToScreenSpace(pos);
+	LuaPush(l, cam);
 	return 1;
 }
 
-static int l_engine_set_mouse_y_inverted(lua_State *l)
+/*
+ * Method: WorldSpaceToScreenSpace
+ *
+ * Convert a Vector from world space to screen space
+ *
+ * > screen_space = Engine.WorldSpaceToScreenSpace(world_space)
+ *
+ * Parameters:
+ *
+ *   world_space - a Vector in world space
+ *
+ * Availability:
+ *
+ *   2017-04
+ *
+ * Status:
+ *
+ *   stable
+ */
+
+static int l_engine_world_space_to_screen_space(lua_State *l)
 {
-	if (lua_isnone(l, 1))
-		return luaL_error(l, "SetMouseYInverted takes one boolean argument");
-	const bool inverted = lua_toboolean(l, 1);
-	Pi::config->SetInt("InvertMouseY", (inverted ? 1 : 0));
-	Pi::config->Save();
-	Pi::SetMouseYInvert(inverted);
-	return 0;
+	vector3d pos = LuaPull<vector3d>(l, 1);
+
+	std::tuple<bool, vector3d, vector3d> res = lua_world_space_to_screen_space(pos); // defined in LuaPiGui.cpp
+
+	LuaPush<bool>(l, std::get<0>(res));
+	LuaPush<vector3d>(l, std::get<1>(res));
+	LuaPush<vector3d>(l, std::get<2>(res));
+	return 3;
 }
 
-static int l_engine_get_compact_radar(lua_State *l)
+static int l_engine_world_space_to_ship_space(lua_State *l)
 {
-	lua_pushboolean(l, Pi::config->Int("CompactRadar") != 0);
+	vector3d vec = LuaPull<vector3d>(l, 1);
+	auto res = vec * Pi::game->GetPlayer()->GetOrient();
+
+	LuaPush<vector3d>(l, res);
 	return 1;
-}
-
-static int l_engine_set_compact_radar(lua_State *l)
-{
-	if (lua_isnone(l, 1))
-		return luaL_error(l, "SetCompactRadar takes one boolean argument");
-	const bool shrunk = lua_toboolean(l, 1);
-	Pi::config->SetInt("CompactRadar", (shrunk ? 1 : 0));
-	Pi::config->Save();
-	Pi::SetCompactRadar(shrunk);
-	return 0;
 }
 
 static int l_engine_get_confirm_quit(lua_State *l)
@@ -811,28 +811,262 @@ static int l_engine_set_confirm_quit(lua_State *l)
 	return 0;
 }
 
-static int l_engine_get_joystick_enabled(lua_State *l)
-{
-	lua_pushboolean(l, Pi::config->Int("EnableJoystick") != 0);
-	return 1;
-}
-
-static int l_engine_set_joystick_enabled(lua_State *l)
-{
-	if (lua_isnone(l, 1))
-		return luaL_error(l, "SetJoystickEnabled takes one boolean argument");
-	const bool enabled = lua_toboolean(l, 1);
-	Pi::config->SetInt("EnableJoystick", (enabled ? 1 : 0));
-	Pi::config->Save();
-	Pi::SetJoystickEnabled(enabled);
-	return 0;
-}
-
 static int l_engine_get_model(lua_State *l)
 {
 	const std::string name(luaL_checkstring(l, 1));
 	SceneGraph::Model *model = Pi::FindModel(name);
 	LuaObject<SceneGraph::Model>::PushToLua(model);
+	return 1;
+}
+
+static int l_engine_sector_map_clear_route(lua_State *l)
+{
+	SectorView *sv = Pi::game->GetSectorView();
+	sv->ClearRoute();
+	return 0;
+}
+
+static int l_engine_sector_map_add_to_route(lua_State *l)
+{
+	SectorView *sv = Pi::game->GetSectorView();
+	SystemPath *path = LuaObject<SystemPath>::CheckFromLua(1);
+	sv->AddToRoute(path);
+	return 0;
+}
+
+static int l_engine_get_sector_map_zoom_level(lua_State *l)
+{
+	SectorView *sv = Pi::game->GetSectorView();
+	LuaPush(l, sv->GetZoomLevel());
+	return 1;
+}
+
+static int l_engine_get_sector_map_center_distance(lua_State *l)
+{
+	SectorView *sv = Pi::game->GetSectorView();
+	LuaPush(l, sv->GetCenterDistance());
+	return 1;
+}
+
+static int l_engine_get_sector_map_center_sector(lua_State *l)
+{
+	SectorView *sv = Pi::game->GetSectorView();
+	LuaPush(l, sv->GetCenterSector());
+	return 1;
+}
+
+static int l_engine_get_sector_map_current_system_path(lua_State *l)
+{
+	SectorView *sv = Pi::game->GetSectorView();
+	LuaObject<SystemPath>::PushToLua(sv->GetCurrent());
+	return 1;
+}
+
+static int l_engine_get_sector_map_selected_system_path(lua_State *l)
+{
+	SectorView *sv = Pi::game->GetSectorView();
+	LuaObject<SystemPath>::PushToLua(sv->GetSelected());
+	return 1;
+}
+
+static int l_engine_get_sector_map_hyperspace_target_system_path(lua_State *l)
+{
+	SectorView *sv = Pi::game->GetSectorView();
+	LuaObject<SystemPath>::PushToLua(sv->GetHyperspaceTarget());
+	return 1;
+}
+
+static int l_engine_set_sector_map_draw_uninhabited_labels(lua_State *l)
+{
+	SectorView *sv = Pi::game->GetSectorView();
+	bool value = LuaPull<bool>(l, 1);
+	sv->SetDrawUninhabitedLabels(value);
+	return 0;
+}
+
+static int l_engine_set_sector_map_draw_out_range_labels(lua_State *l)
+{
+	SectorView *sv = Pi::game->GetSectorView();
+	bool value = LuaPull<bool>(l, 1);
+	sv->SetDrawOutRangeLabels(value);
+	return 0;
+}
+
+static int l_engine_set_sector_map_lock_hyperspace_target(lua_State *l)
+{
+	SectorView *sv = Pi::game->GetSectorView();
+	bool value = LuaPull<bool>(l, 1);
+	sv->LockHyperspaceTarget(value);
+	return 0;
+}
+
+static int l_engine_set_sector_map_draw_vertical_lines(lua_State *l)
+{
+	SectorView *sv = Pi::game->GetSectorView();
+	bool value = LuaPull<bool>(l, 1);
+	sv->SetDrawVerticalLines(value);
+	return 0;
+}
+
+static int l_engine_set_sector_map_automatic_system_selection(lua_State *l)
+{
+	SectorView *sv = Pi::game->GetSectorView();
+	bool value = LuaPull<bool>(l, 1);
+	sv->SetAutomaticSystemSelection(value);
+	return 0;
+}
+
+static int l_engine_sector_map_get_route(lua_State *l) {
+	SectorView *sv = Pi::game->GetSectorView();
+	std::vector<SystemPath> route = sv->GetRoute();
+
+	lua_newtable(l);
+	int i = 1;
+	for (const SystemPath j : route) {
+		lua_pushnumber(l, i++);
+		LuaObject<SystemPath>::PushToLua(j);
+		lua_settable(l, -3);
+	}
+	return 1;
+}
+
+static int l_engine_sector_map_get_route_size(lua_State *l) {
+	SectorView *sv = Pi::game->GetSectorView();
+	std::vector<SystemPath> route = sv->GetRoute();
+	const int size = route.size();
+	LuaPush(l, size);
+	return 1;
+}
+
+static int l_engine_sector_map_auto_route(lua_State *l)
+{
+	SectorView *sv = Pi::game->GetSectorView();
+	SystemPath current_path = sv->GetCurrent();
+	SystemPath target_path = sv->GetSelected();
+
+	std::vector<SystemPath> route;
+	sv->AutoRoute(current_path, target_path, route);
+	sv->ClearRoute();
+	for (auto it = route.begin(); it != route.end(); it++) {
+		sv->AddToRoute(*it);
+	}
+
+	return l_engine_sector_map_get_route(l);
+}
+
+static int l_engine_sector_map_move_route_item_up(lua_State *l) {
+	SectorView *sv = Pi::game->GetSectorView();
+	int element = LuaPull<int>(l, 1);
+
+	// lua indexes start at 1
+	element -= 1;
+
+	bool r = sv->MoveRouteItemUp(element);
+	LuaPush<bool>(l, r);
+	return 1;
+}
+
+static int l_engine_sector_map_move_route_item_down(lua_State *l) {
+	SectorView *sv = Pi::game->GetSectorView();
+	int element = LuaPull<int>(l, 1);
+
+	// lua indexes start at 1
+	element -= 1;
+
+	bool r = sv->MoveRouteItemDown(element);
+	LuaPush<bool>(l, r);
+	return 1;
+}
+
+static int l_engine_sector_map_remove_route_item(lua_State *l) {
+	SectorView *sv = Pi::game->GetSectorView();
+	int element = LuaPull<int>(l, 1);
+
+	// lua indexes start at 1
+	element -= 1;
+
+	bool r = sv->RemoveRouteItem(element);
+	LuaPush<bool>(l, r);
+	return 1;
+}
+
+static int l_engine_set_sector_map_selected(lua_State *l)
+{
+		SectorView *sv = Pi::game->GetSectorView();
+		SystemPath *path = LuaObject<SystemPath>::CheckFromLua(1);
+		sv->SetSelected(*path);
+		return 0;
+}
+
+static int l_engine_sector_map_goto_sector_path(lua_State *l)
+{
+	SectorView *sv = Pi::game->GetSectorView();
+	SystemPath *path = LuaObject<SystemPath>::CheckFromLua(1);
+	sv->GotoSector(*path);
+	return 0;
+}
+
+static int l_engine_sector_map_goto_system_path(lua_State *l)
+{
+		SectorView *sv = Pi::game->GetSectorView();
+		SystemPath *path = LuaObject<SystemPath>::CheckFromLua(1);
+		sv->GotoSystem(*path);
+		return 0;
+}
+
+static int l_engine_search_nearby_star_systems_by_name(lua_State *l)
+{
+	SectorView *sv = Pi::game->GetSectorView();
+	std::string pattern = LuaPull<std::string>(l, 1);
+
+	std::vector<SystemPath> matches = sv->GetNearbyStarSystemsByName(pattern);
+	int i = 1;
+	lua_newtable(l);
+	for(const SystemPath &path : matches) {
+		lua_pushnumber(l, i++);
+		LuaObject<SystemPath>::PushToLua(path);
+		lua_settable(l, -3);
+	}
+	return 1;
+}
+
+static int l_engine_sector_map_zoom_in(lua_State *l)
+{
+	Pi::game->GetSectorView()->ZoomIn();
+	return 0;
+}
+
+static int l_engine_sector_map_zoom_out(lua_State *l)
+{
+	Pi::game->GetSectorView()->ZoomOut();
+	return 0;
+}
+
+static int l_engine_set_sector_map_faction_visible(lua_State *l)
+{
+	SectorView *sv = Pi::game->GetSectorView();
+	Faction *faction = LuaObject<Faction>::CheckFromLua(1);
+	bool visible = LuaPull<bool>(l, 2);
+	sv->SetFactionVisible(faction, visible);
+	return 0;
+}
+
+static int l_engine_get_sector_map_factions(lua_State *l)
+{
+	SectorView *sv = Pi::game->GetSectorView();
+	const std::set<const Faction *> visible = sv->GetVisibleFactions();
+	const std::set<const Faction *> hidden = sv->GetHiddenFactions();
+	lua_newtable(l); // outer table
+	int i = 1;
+	for(const Faction *f : visible) {
+		lua_pushnumber(l, i++);
+		lua_newtable(l); // inner table
+		LuaObject<Faction>::PushToLua(const_cast<Faction*>(f));
+		lua_setfield(l, -2, "faction");
+		lua_pushboolean(l, hidden.count(f) == 0);
+		lua_setfield(l, -2, "visible"); // inner table
+		lua_settable(l, -3); // outer table
+	}
 	return 1;
 }
 
@@ -858,6 +1092,7 @@ void LuaEngine::Register()
 		{ "Quit", l_engine_quit },
 
 		{ "GetVideoModeList", l_engine_get_video_mode_list },
+		{ "GetMaximumAASamples", l_engine_get_maximum_aa_samples },
 		{ "GetVideoResolution", l_engine_get_video_resolution },
 		{ "SetVideoResolution", l_engine_set_video_resolution },
 		{ "GetFullscreen", l_engine_get_fullscreen },
@@ -899,9 +1134,6 @@ void LuaEngine::Register()
 		{ "GetDisplayHudTrails", l_engine_get_display_hud_trails },
 		{ "SetDisplayHudTrails", l_engine_set_display_hud_trails },
 
-		{ "GetCompactRadar", l_engine_get_compact_radar },
-		{ "SetCompactRadar", l_engine_set_compact_radar },
-
 		{ "GetConfirmQuit", l_engine_get_confirm_quit },
 		{ "SetConfirmQuit", l_engine_set_confirm_quit },
 
@@ -921,18 +1153,45 @@ void LuaEngine::Register()
 		{ "GetMusicVolume", l_engine_get_music_volume },
 		{ "SetMusicVolume", l_engine_set_music_volume },
 
-		{ "GetKeyBindings", l_engine_get_key_bindings },
-		{ "SetKeyBinding", l_engine_set_key_binding },
-		{ "GetMouseYInverted", l_engine_get_mouse_y_inverted },
-		{ "SetMouseYInverted", l_engine_set_mouse_y_inverted },
-		{ "GetJoystickEnabled", l_engine_get_joystick_enabled },
-		{ "SetJoystickEnabled", l_engine_set_joystick_enabled },
-		
 		{ "CanBrowseUserFolder", l_get_can_browse_user_folders },
 		{ "OpenBrowseUserFolder", l_browse_user_folders },
 
 		{ "GetModel", l_engine_get_model },
 
+		{ "GetSectorMapZoomLevel",      l_engine_get_sector_map_zoom_level },
+		{ "SectorMapZoomIn",            l_engine_sector_map_zoom_in },
+		{ "SectorMapZoomOut",           l_engine_sector_map_zoom_out },
+		{ "GetSectorMapCenterSector",   l_engine_get_sector_map_center_sector },
+		{ "GetSectorMapCenterDistance", l_engine_get_sector_map_center_distance },
+		{ "GetSectorMapCurrentSystemPath",  l_engine_get_sector_map_current_system_path },
+		{ "GetSectorMapSelectedSystemPath", l_engine_get_sector_map_selected_system_path },
+		{ "GetSectorMapHyperspaceTargetSystemPath", l_engine_get_sector_map_hyperspace_target_system_path },
+		{ "SetSectorMapDrawUninhabitedLabels",      l_engine_set_sector_map_draw_uninhabited_labels },
+		{ "SetSectorMapDrawVerticalLines",          l_engine_set_sector_map_draw_vertical_lines },
+		{ "SetSectorMapDrawOutRangeLabels",         l_engine_set_sector_map_draw_out_range_labels },
+		{ "SetSectorMapAutomaticSystemSelection",   l_engine_set_sector_map_automatic_system_selection },
+		{ "SetSectorMapLockHyperspaceTarget",       l_engine_set_sector_map_lock_hyperspace_target },
+		{ "SetSectorMapSelected",                   l_engine_set_sector_map_selected },
+		{ "SectorMapGotoSectorPath",                l_engine_sector_map_goto_sector_path },
+		{ "SectorMapGotoSystemPath",                l_engine_sector_map_goto_system_path },
+		{ "GetSectorMapFactions",                   l_engine_get_sector_map_factions },
+		{ "SetSectorMapFactionVisible",             l_engine_set_sector_map_faction_visible },
+		{ "SectorMapAutoRoute",                     l_engine_sector_map_auto_route },
+		{ "SectorMapGetRoute",                      l_engine_sector_map_get_route },
+		{ "SectorMapGetRouteSize",                  l_engine_sector_map_get_route_size },
+		{ "SectorMapMoveRouteItemUp",               l_engine_sector_map_move_route_item_up },
+		{ "SectorMapMoveRouteItemDown",             l_engine_sector_map_move_route_item_down },
+		{ "SectorMapRemoveRouteItem",               l_engine_sector_map_remove_route_item },
+
+		{"SectorMapClearRoute", l_engine_sector_map_clear_route },
+		{"SectorMapAddToRoute", l_engine_sector_map_add_to_route },
+
+		{ "SearchNearbyStarSystemsByName",  l_engine_search_nearby_star_systems_by_name },
+
+		{ "ShipSpaceToScreenSpace",   l_engine_ship_space_to_screen_space },
+		{ "CameraSpaceToScreenSpace", l_engine_camera_space_to_screen_space },
+		{ "WorldSpaceToScreenSpace",     l_engine_world_space_to_screen_space },
+		{ "WorldSpaceToShipSpace",     l_engine_world_space_to_ship_space },
 		{ 0, 0 }
 	};
 

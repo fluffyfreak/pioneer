@@ -1,15 +1,21 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
+
+#ifdef ENABLE_SERVER_AGENT
 
 #if defined(_MSC_VER) && !defined(NOMINMAX)
 #define NOMINMAX
+#endif
+
+#ifdef WIN32
+#pragma comment(lib, "libcurl.lib")
 #endif
 
 #include "ServerAgent.h"
 #include "StringF.h"
 #include <curl/curl.h>
 
-void NullServerAgent::Call(const std::string &method, const Json::Value &data, SuccessCallback onSuccess, FailCallback onFail, void *userdata)
+void NullServerAgent::Call(const std::string &method, const Json &data, SuccessCallback onSuccess, FailCallback onFail, void *userdata)
 {
 	m_queue.push(Response(onFail, userdata));
 }
@@ -80,7 +86,7 @@ HTTPServerAgent::~HTTPServerAgent()
 	curl_easy_cleanup(m_curl);
 }
 
-void HTTPServerAgent::Call(const std::string &method, const Json::Value &data, SuccessCallback onSuccess, FailCallback onFail, void *userdata)
+void HTTPServerAgent::Call(const std::string &method, const Json &data, SuccessCallback onSuccess, FailCallback onFail, void *userdata)
 {
 	SDL_LockMutex(m_requestQueueLock);
 	m_requestQueue.push(Request(method, data, onSuccess, onFail, userdata));
@@ -218,3 +224,4 @@ const std::string &HTTPServerAgent::UserAgent()
 	return userAgent;
 }
 
+#endif //ENABLE_SERVER_AGENT

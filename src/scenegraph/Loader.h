@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _SCENEGRAPH_ASSIMPLOADER_H
@@ -9,7 +9,18 @@
 #include "BaseLoader.h"
 #include "CollisionGeometry.h"
 #include "graphics/Material.h"
-#include <assimp/types.h>
+
+// Disable some GCC diagnostics errors.
+#ifdef __GNUC__
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wfloat-equal"
+	#pragma GCC diagnostic ignored "-Wshadow"
+	#pragma GCC diagnostic ignored "-Wold-style-cast"
+	#include <assimp/types.h>
+	#pragma GCC diagnostic pop
+#else
+	#include <assimp/types.h>
+#endif
 
 struct aiNode;
 struct aiMesh;

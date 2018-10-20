@@ -1,13 +1,12 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _SHIPCPANELMULTIFUNCDISPLAYS_H
 #define _SHIPCPANELMULTIFUNCDISPLAYS_H
 
 #include "gui/Gui.h"
-#include "Serializer.h"
 #include "Object.h"
-#include "json/json.h"
+#include "JsonFwd.h"
 
 class Body;
 namespace Graphics { class Renderer; }
@@ -28,7 +27,7 @@ public:
 class RadarWidget: public IMultiFunc, public Gui::Widget {
 public:
 	RadarWidget(Graphics::Renderer *r);
-	RadarWidget(Graphics::Renderer *r, const Json::Value &jsonObj);
+	RadarWidget(Graphics::Renderer *r, const Json &jsonObj);
 	virtual ~RadarWidget();
 	void GetSizeRequested(float size[2]);
 	void ToggleMode();
@@ -38,7 +37,7 @@ public:
 
 	void TimeStepUpdate(float step);
 
-	void SaveToJson(Json::Value &jsonObj);
+	void SaveToJson(Json &jsonObj);
 
 private:
 	void InitObject();
@@ -69,7 +68,6 @@ private:
 	float m_y;
 
 	float m_lastRange;
-	bool isCompact;
 	float RADAR_XSHRINK;
 	float RADAR_YSHRINK;
 
@@ -81,43 +79,9 @@ private:
 
 	Graphics::Renderer *m_renderer;
 	Graphics::RenderState *m_renderState;
-	
+
 	Graphics::Drawables::Lines m_scanLines;
 	Graphics::Drawables::Lines m_edgeLines;
-};
-
-class UseEquipWidget: public IMultiFunc, public Gui::Fixed {
-public:
-	UseEquipWidget();
-	virtual ~UseEquipWidget();
-	void GetSizeRequested(float size[2]);
-	virtual void Update() {}
-private:
-	void UpdateEquip();
-	void UseRadarMapper();
-	void UseHypercloudAnalyzer();
-	enum { MAX_MISSILE_SLOTS = 8 };
-
-	sigc::connection m_onPlayerEquipChangedCon;
-
-	void FireMissile(int idx);
-};
-
-class MultiFuncSelectorWidget: public Gui::Fixed {
-public:
-	MultiFuncSelectorWidget();
-	virtual ~MultiFuncSelectorWidget();
-	sigc::signal<void, multifuncfunc_t> onSelect;
-	void SetSelected(multifuncfunc_t f) {
-		m_rg->SetSelected(int(f));
-	}
-private:
-	void UpdateButtons();
-	void OnClickButton(multifuncfunc_t f);
-
-	int m_active;
-	Gui::ImageRadioButton *m_buttons[MFUNC_MAX];
-	Gui::RadioGroup *m_rg;
 };
 
 #endif /* _SHIPCPANELMULTIFUNCDISPLAYS_H */

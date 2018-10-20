@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _FILESYSTEM_H
@@ -211,6 +211,7 @@ namespace FileSystem {
 		void RemoveSource(FileSource *fs);
 
 		virtual FileInfo Lookup(const std::string &path);
+		std::vector<FileInfo> LookupAll(const std::string &path);
 		virtual RefCountedPtr<FileData> ReadFile(const std::string &path);
 		virtual bool ReadDirectory(const std::string &path, std::vector<FileInfo> &output);
 

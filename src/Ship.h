@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _SHIP_H
@@ -11,14 +11,17 @@
 #include "NavLights.h"
 #include "Planet.h"
 #include "Sensors.h"
-#include "Serializer.h"
 #include "ShipType.h"
 #include "Space.h"
 #include "scenegraph/SceneGraph.h"
 #include "scenegraph/ModelSkin.h"
+#include "Sound.h"
 #include "LuaTable.h"
 #include <list>
 #include <unordered_map>
+
+#include "Propulsion.h"
+#include "FixedGuns.h"
 
 class SpaceStation;
 class HyperspaceCloud;
@@ -47,6 +50,12 @@ struct shipstats_t {
 	float fuel_tank_mass_left;
 };
 
+struct HyperdriveSoundsTable {
+	std::string jump_sound;
+	std::string warmup_sound;
+	std::string abort_sound;
+};
+
 class Ship: public DynamicBody {
 	friend class ShipController; //only controllers need access to AITimeStep
 	friend class PlayerShipController;
@@ -60,41 +69,32 @@ public:
 
 	void SetController(ShipController *c); //deletes existing
 	ShipController *GetController() const { return m_controller; }
-	virtual bool IsPlayerShip() const { return false; } //XXX to be replaced with an owner check
 
 	virtual void SetDockedWith(SpaceStation *, int port);
 	/** Use GetDockedWith() to determine if docked */
 	SpaceStation *GetDockedWith() const { return m_dockedWith; }
 	int GetDockingPort() const { return m_dockedWithPort; }
+	bool IsDocked() const { return GetFlightState() == Ship::DOCKED; }
+	bool IsLanded() const { return GetFlightState() == Ship::LANDED; }
 
 	virtual void SetLandedOn(Planet *p, float latitude, float longitude);
 
 	virtual void Render(Graphics::Renderer *r, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform) override;
 
-	void SetThrusterState(int axis, double level) {
-		if (m_thrusterFuel <= 0.f) level = 0.0;
-		m_thrusters[axis] = Clamp(level, -1.0, 1.0);
+	inline void ClearThrusterState() {
+		ClearAngThrusterState();
+		if (m_launchLockTimeout <= 0.0f) ClearLinThrusterState();
 	}
-	void SetThrusterState(const vector3d &levels);
-	vector3d GetThrusterState() const { return m_thrusters; }
-	void SetAngThrusterState(int axis, double level) { m_angThrusters[axis] = Clamp(level, -1.0, 1.0); }
-	void SetAngThrusterState(const vector3d &levels);
-	vector3d GetAngThrusterState() const { return m_angThrusters; }
-	void ClearThrusterState();
-
-	vector3d GetMaxThrust(const vector3d &dir) const;
-	double GetAccelFwd() const { return -m_type->linThrust[ShipType::THRUSTER_FORWARD] / GetMass(); }
-	double GetAccelRev() const { return m_type->linThrust[ShipType::THRUSTER_REVERSE] / GetMass(); }
-	double GetAccelUp() const { return m_type->linThrust[ShipType::THRUSTER_UP] / GetMass(); }
-	double GetAccelMin() const;
-
 	void UpdateLuaStats();
 	void UpdateEquipStats();
 	void UpdateFuelStats();
+	void UpdateGunsStats();
 	const shipstats_t &GetStats() const { return m_stats; }
 
 	void Explode();
+	virtual bool DoCrushDamage(float kgDamage); // can be overloaded in Player to add "crush" audio
 	void SetGunState(int idx, int state);
+	float GetGunTemperature(int idx) const { return GetFixedGuns()->GetGunTemperature(idx); }
 	void UpdateMass();
 	virtual bool SetWheelState(bool down); // returns success of state change, NOT state itself
 	void Blastoff();
@@ -103,7 +103,7 @@ public:
 	virtual void StaticUpdate(const float timeStep) override;
 
 	void TimeAccelAdjust(const float timeStep);
-	void SetDecelerating(bool decel) { m_decelerating = decel; }
+
 	bool IsDecelerating() const { return m_decelerating; }
 
 	virtual void NotifyRemoved(const Body* const removedBody) override;
@@ -147,7 +147,7 @@ public:
 	};
 
 	Ship::HyperjumpStatus CheckHyperjumpCapability() const;
-	virtual Ship::HyperjumpStatus InitiateHyperjumpTo(const SystemPath &dest, int warmup_time, double duration, LuaRef checks);
+	virtual Ship::HyperjumpStatus InitiateHyperjumpTo(const SystemPath &dest, int warmup_time, double duration, const HyperdriveSoundsTable &sounds, LuaRef checks);
 	virtual void AbortHyperjump();
 	float GetHyperspaceCountdown() const { return m_hyperspace.countdown; }
 	bool IsHyperspaceActive() const { return (m_hyperspace.countdown > 0.0); }
@@ -174,40 +174,21 @@ public:
 	};
 	AlertState GetAlertState() { return m_alertState; }
 
-	bool AIMatchVel(const vector3d &vel);
-	bool AIChangeVelBy(const vector3d &diffvel);		// acts in obj space
-	vector3d AIChangeVelDir(const vector3d &diffvel);	// world space, maintain direction
-	void AIMatchAngVelObjSpace(const vector3d &angvel);
-	double AIFaceUpdir(const vector3d &updir, double av=0);
-	double AIFaceDirection(const vector3d &dir, double av=0);
-	vector3d AIGetLeadDir(const Body *target, const vector3d& targaccel, int gunindex=0);
-
-	// old stuff, deprecated
-	void AIAccelToModelRelativeVelocity(const vector3d &v);
-	void AIModelCoordsMatchAngVel(const vector3d &desiredAngVel, double softness);
-	void AIModelCoordsMatchSpeedRelTo(const vector3d &v, const Ship *);
-
-	void AIClearInstructions();
+	void AIClearInstructions(); // Note: defined in Ship-AI.cpp
 	bool AIIsActive() { return m_curAICmd ? true : false; }
-	void AIGetStatusText(char *str);
+	void AIGetStatusText(char *str); // Note: defined in Ship-AI.cpp
 
-	enum AIError { // <enum scope='Ship' name=ShipAIError prefix=AIERROR_ public>
-		AIERROR_NONE=0,
-		AIERROR_GRAV_TOO_HIGH,
-		AIERROR_REFUSED_PERM,
-		AIERROR_ORBIT_IMPOSSIBLE
-	};
-	AIError AIMessage(AIError msg=AIERROR_NONE) { AIError tmp = m_aiMessage; m_aiMessage = msg; return tmp; }
-
-	void AIKamikaze(Body *target);
-	void AIKill(Ship *target);
+	void AIKamikaze(Body *target); // Note: defined in Ship-AI.cpp
+	void AIKill(Ship *target); // Note: defined in Ship-AI.cpp
 	//void AIJourney(SystemBodyPath &dest);
-	void AIDock(SpaceStation *target);
-	void AIFlyTo(Body *target);
-	void AIOrbit(Body *target, double alt);
-	void AIHoldPosition();
+	void AIDock(SpaceStation *target); // Note: defined in Ship-AI.cpp
+	void AIFlyTo(Body *target); // Note: defined in Ship-AI.cpp
+	void AIOrbit(Body *target, double alt); // Note: defined in Ship-AI.cpp
+	void AIHoldPosition(); // Note: defined in Ship-AI.cpp
 
-	void AIBodyDeleted(const Body* const body) {};		// todo: signals
+	void AIBodyDeleted(const Body* const body) {}; // Note: defined in Ship-AI.cpp // todo: signals
+
+	const AICommand *GetAICommand() const { return m_curAICmd; }
 
 	virtual void PostLoadFixup(Space *space) override;
 
@@ -225,23 +206,6 @@ public:
 	float GetPercentShields() const;
 	float GetPercentHull() const;
 	void SetPercentHull(float);
-	float GetGunTemperature(int idx) const { return m_gun[idx].temperature; }
-
-	enum FuelState { // <enum scope='Ship' name=ShipFuelStatus prefix=FUEL_ public>
-		FUEL_OK,
-		FUEL_WARNING,
-		FUEL_EMPTY,
-	};
-	FuelState GetFuelState() { return m_thrusterFuel > 0.05f ? FUEL_OK : m_thrusterFuel > 0.0f ? FUEL_WARNING : FUEL_EMPTY; }
-
-	// fuel left, 0.0-1.0
-	double GetFuel() const { return m_thrusterFuel;	}
-	void SetFuel(const double f);
-	double GetFuelReserve() const { return m_reserveFuel; }
-	void SetFuelReserve(const double f) { m_reserveFuel = Clamp(f, 0.0, 1.0); }
-
-	// available delta-V given the ship's current fuel state
-	double GetSpeedReachedWithFuel() const;
 
 	void EnterSystem();
 
@@ -266,8 +230,8 @@ public:
 	double GetLandingPosOffset() const { return m_landingMinOffset; }
 
 protected:
-	virtual void SaveToJson(Json::Value &jsonObj, Space *space) override;
-	virtual void LoadFromJson(const Json::Value &jsonObj, Space *space) override;
+	virtual void SaveToJson(Json &jsonObj, Space *space) override;
+	virtual void LoadFromJson(const Json &jsonObj, Space *space) override;
 
 	bool AITimeStep(float timeStep); // Called by controller. Returns true if complete
 
@@ -279,32 +243,31 @@ protected:
 	SpaceStation *m_dockedWith;
 	int m_dockedWithPort;
 
-	struct Gun {
-		vector3f pos;
-		vector3f dir;
-		Uint32 state;
-		float recharge;
-		float temperature;
-	};
-	Gun m_gun[ShipType::GUNMOUNT_MAX];
-
 	float m_ecmRecharge;
 
 	ShipController *m_controller;
+
+	struct HyperspacingOut {
+		SystemPath dest;
+		// > 0 means active
+		float countdown;
+		bool now;
+		double duration;
+		LuaRef checks; // A Lua function to check all the conditions before the jump
+		HyperdriveSoundsTable sounds;
+	} m_hyperspace;
 
 	LuaRef m_equipSet;
 
 private:
 	float GetECMRechargeTime();
 	void DoThrusterSounds() const;
-	void FireWeapon(int num);
 	void Init();
 	void TestLanded();
 	void UpdateAlertState();
-	void UpdateFuel(float timeStep, const vector3d &thrust);
+	void UpdateFuel(float timeStep);
 	void SetShipId(const ShipType::Id &shipId);
 	void EnterHyperspace();
-	void InitGun(const char *tag, int num);
 	void InitMaterials();
 	void InitEquipSet();
 
@@ -316,14 +279,13 @@ private:
 	const ShipType *m_type;
 	SceneGraph::ModelSkin m_skin;
 
+	Sound::Event m_beamLaser[2];
+
 	FlightState m_flightState;
 	bool m_testLanded;
 	float m_launchLockTimeout;
 	float m_wheelState;
 	int m_wheelTransition;
-
-	vector3d m_thrusters;
-	vector3d m_angThrusters;
 
 	AlertState m_alertState;
 	double m_lastAlertUpdate;
@@ -332,22 +294,9 @@ private:
 	bool m_shipFiring;
 	Space::BodyNearList m_nearbyBodies;
 
-	struct HyperspacingOut {
-		SystemPath dest;
-		// > 0 means active
-		float countdown;
-		bool now;
-		double duration;
-		LuaRef checks; // A Lua function to check all the conditions before the jump
-	} m_hyperspace;
 	HyperspaceCloud *m_hyperspaceCloud;
 
 	AICommand *m_curAICmd;
-	AIError m_aiMessage;
-	bool m_decelerating;
-
-	double m_thrusterFuel;	// remaining fuel 0.0-1.0
-	double m_reserveFuel;	// 0-1, fuel not to touch for the current AI program
 
 	double m_landingMinOffset;	// offset from the centre of the ship used during docking
 
@@ -362,6 +311,21 @@ private:
 	std::unordered_map<Body*, Uint8> m_relationsMap;
 
 	std::string m_shipName;
+public:
+	void ClearAngThrusterState() { GetPropulsion()->ClearAngThrusterState(); }
+	void ClearLinThrusterState() { GetPropulsion()->ClearLinThrusterState(); }
+	double GetAccelFwd() { return GetPropulsion()->GetAccelFwd(); }
+	void SetAngThrusterState(const vector3d &levels) { GetPropulsion()->SetAngThrusterState(levels); }
+	double GetFuel() const { return GetPropulsion()->GetFuel(); }
+	double GetAccel(Thruster thruster) const { return GetPropulsion()->GetAccel(thruster); }
+	void SetFuel(const double f) { GetPropulsion()->SetFuel(f); }
+	void SetFuelReserve(const double f) { GetPropulsion()->SetFuelReserve(f); }
+
+	bool AIMatchVel(const vector3d &vel) { return GetPropulsion()->AIMatchVel(vel); }
+	double AIFaceDirection(const vector3d &dir, double av=0) { return GetPropulsion()->AIFaceDirection(dir, av); }
+	void AIMatchAngVelObjSpace(const vector3d &angvel) { return GetPropulsion()->AIMatchAngVelObjSpace(angvel); }
+	void SetThrusterState(int axis, double level) { return GetPropulsion()->SetLinThrusterState(axis, level); }
+	void AIModelCoordsMatchAngVel(const vector3d &desiredAngVel, double softness) { return GetPropulsion()->AIModelCoordsMatchAngVel(desiredAngVel, softness); }
 };
 
 

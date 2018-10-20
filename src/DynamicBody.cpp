@@ -1,19 +1,24 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
 #include "DynamicBody.h"
 #include "Space.h"
 #include "Frame.h"
-#include "Serializer.h"
 #include "Planet.h"
 #include "Pi.h"
-#include "json/JsonUtils.h"
+#include "GameSaveError.h"
+#include "JsonUtils.h"
+#include "Propulsion.h"
+#include "FixedGuns.h"
 
 static const float KINETIC_ENERGY_MULT = 0.00001f;
 const double DynamicBody::DEFAULT_DRAG_COEFF = 0.1; // 'smooth sphere'
 
-DynamicBody::DynamicBody(): ModelBody()
+DynamicBody::DynamicBody()
+	: ModelBody()
+	, m_propulsion(nullptr)
+	, m_fixedGuns(nullptr)
 {
 	m_dragCoeff = DEFAULT_DRAG_COEFF;
 	m_flags = Body::FLAG_CAN_MOVE_FRAME;
@@ -32,6 +37,18 @@ DynamicBody::DynamicBody(): ModelBody()
 	m_externalForce = vector3d(0.0);		// do external forces calc instead?
 	m_lastForce = vector3d(0.0);
 	m_lastTorque = vector3d(0.0);
+	m_aiMessage = AIError::AIERROR_NONE;
+	m_decelerating = false;
+	for ( int i=0; i < Feature::MAX_FEATURE; i++ ) m_features[i] = false;
+}
+
+void DynamicBody::AddFeature( Feature f ) {
+	m_features[f] = true;
+	if(f == Feature::PROPULSION && m_propulsion == nullptr) {
+		m_propulsion.Reset(new Propulsion());
+	} else if(f == Feature::FIXED_GUNS && m_fixedGuns == nullptr) {
+		m_fixedGuns.Reset(new FixedGuns());
+	}
 }
 
 void DynamicBody::SetForce(const vector3d &f)
@@ -59,48 +76,46 @@ void DynamicBody::AddRelTorque(const vector3d &t)
 	m_torque += GetOrient() * t;
 }
 
-void DynamicBody::SaveToJson(Json::Value &jsonObj, Space *space)
+void DynamicBody::SaveToJson(Json &jsonObj, Space *space)
 {
 	ModelBody::SaveToJson(jsonObj, space);
 
-	Json::Value dynamicBodyObj(Json::objectValue); // Create JSON object to contain dynamic body data.
+	Json dynamicBodyObj = Json::object(); // Create JSON object to contain dynamic body data.
 
-	VectorToJson(dynamicBodyObj, m_force, "force");
-	VectorToJson(dynamicBodyObj, m_torque, "torque");
-	VectorToJson(dynamicBodyObj, m_vel, "vel");
-	VectorToJson(dynamicBodyObj, m_angVel, "ang_vel");
-	dynamicBodyObj["mass"] = DoubleToStr(m_mass);
-	dynamicBodyObj["mass_radius"] = DoubleToStr(m_massRadius);
-	dynamicBodyObj["ang_inertia"] = DoubleToStr(m_angInertia);
+	dynamicBodyObj["force"] = m_force;
+	dynamicBodyObj["torque"] = m_torque;
+	dynamicBodyObj["vel"] = m_vel;
+	dynamicBodyObj["ang_vel"] = m_angVel;
+	dynamicBodyObj["mass"] = m_mass;
+	dynamicBodyObj["mass_radius"] = m_massRadius;
+	dynamicBodyObj["ang_inertia"] = m_angInertia;
 	dynamicBodyObj["is_moving"] = m_isMoving;
 
 	jsonObj["dynamic_body"] = dynamicBodyObj; // Add dynamic body object to supplied object.
 }
 
-void DynamicBody::LoadFromJson(const Json::Value &jsonObj, Space *space)
+void DynamicBody::LoadFromJson(const Json &jsonObj, Space *space)
 {
 	ModelBody::LoadFromJson(jsonObj, space);
 
-	if (!jsonObj.isMember("dynamic_body")) throw SavedGameCorruptException();
-	Json::Value dynamicBodyObj = jsonObj["dynamic_body"];
+	try {
+		Json dynamicBodyObj = jsonObj["dynamic_body"];
 
-	if (!dynamicBodyObj.isMember("force")) throw SavedGameCorruptException();
-	if (!dynamicBodyObj.isMember("torque")) throw SavedGameCorruptException();
-	if (!dynamicBodyObj.isMember("vel")) throw SavedGameCorruptException();
-	if (!dynamicBodyObj.isMember("ang_vel")) throw SavedGameCorruptException();
-	if (!dynamicBodyObj.isMember("mass")) throw SavedGameCorruptException();
-	if (!dynamicBodyObj.isMember("mass_radius")) throw SavedGameCorruptException();
-	if (!dynamicBodyObj.isMember("ang_inertia")) throw SavedGameCorruptException();
-	if (!dynamicBodyObj.isMember("is_moving")) throw SavedGameCorruptException();
+		m_force = dynamicBodyObj["force"];
+		m_torque = dynamicBodyObj["torque"];
+		m_vel = dynamicBodyObj["vel"];
+		m_angVel = dynamicBodyObj["ang_vel"];
+		m_mass = dynamicBodyObj["mass"];
+		m_massRadius = dynamicBodyObj["mass_radius"];
+		m_angInertia = dynamicBodyObj["ang_inertia"];
+		m_isMoving = dynamicBodyObj["is_moving"];
+	} catch (Json::type_error &) {
+		throw SavedGameCorruptException();
+	}
 
-	JsonToVector(&m_force, dynamicBodyObj, "force");
-	JsonToVector(&m_torque, dynamicBodyObj, "torque");
-	JsonToVector(&m_vel, dynamicBodyObj, "vel");
-	JsonToVector(&m_angVel, dynamicBodyObj, "ang_vel");
-	m_mass = StrToDouble(dynamicBodyObj["mass"].asString());
-	m_massRadius = StrToDouble(dynamicBodyObj["mass_radius"].asString());
-	m_angInertia = StrToDouble(dynamicBodyObj["ang_inertia"].asString());
-	m_isMoving = dynamicBodyObj["is_moving"].asBool();
+	m_aiMessage = AIError::AIERROR_NONE;
+	m_decelerating = false;
+	for ( int i=0; i < Feature::MAX_FEATURE; i++ ) m_features[i] = false;
 }
 
 void DynamicBody::PostLoadFixup(Space *space)
@@ -108,6 +123,26 @@ void DynamicBody::PostLoadFixup(Space *space)
 	Body::PostLoadFixup(space);
 	m_oldPos = GetPosition();
 //	CalcExternalForce();		// too dangerous
+}
+
+const Propulsion *DynamicBody::GetPropulsion() const {
+	assert(m_propulsion != nullptr);
+	return m_propulsion.Get();
+}
+
+Propulsion *DynamicBody::GetPropulsion() {
+	assert(m_propulsion != nullptr);
+	return m_propulsion.Get();
+}
+
+const FixedGuns *DynamicBody::GetFixedGuns() const {
+	assert(m_fixedGuns != nullptr);
+	return m_fixedGuns.Get();
+}
+
+FixedGuns *DynamicBody::GetFixedGuns() {
+	assert(m_fixedGuns != nullptr);
+	return m_fixedGuns.Get();
 }
 
 void DynamicBody::SetTorque(const vector3d &t)
@@ -249,6 +284,8 @@ vector3d DynamicBody::GetAngularMomentum() const
 
 DynamicBody::~DynamicBody()
 {
+	m_propulsion.Reset();
+	m_fixedGuns.Reset();
 }
 
 vector3d DynamicBody::GetVelocity() const

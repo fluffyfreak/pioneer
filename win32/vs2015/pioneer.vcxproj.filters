@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="src">
@@ -15,6 +15,9 @@
     </Filter>
     <Filter Include="src\nanosvg">
       <UniqueIdentifier>{a4f6a456-a451-445c-9017-dd2865551018}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\json">
+      <UniqueIdentifier>{9493c942-fe23-49f7-9cfe-0984403ead6f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -82,6 +85,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\LuaPlayer.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\LuaHyperspaceCloud.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\LuaRand.cpp">
@@ -444,13 +450,46 @@
     <ClCompile Include="..\..\contrib\imgui\imgui_draw.cpp">
       <Filter>src\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\contrib\imgui\examples\sdl_opengl3_example\imgui_impl_sdl_gl3.cpp">
-      <Filter>src\imgui</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\LuaPiGui.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\PiGui.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\FixedGuns.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Propulsion.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\GZipFormat.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\versioningInfo.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Beam.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\JsonUtils.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\LuaInput.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Input.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\contrib\imgui\imgui_widgets.cpp">
+      <Filter>src\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\contrib\imgui\examples\imgui_impl_opengl3.cpp">
+      <Filter>src\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\contrib\imgui\examples\imgui_impl_sdl.cpp">
+      <Filter>src\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\LuaJson.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -564,9 +603,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\perlin.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\PersistSystemData.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Pi.h">
@@ -896,9 +932,6 @@
     <ClInclude Include="..\..\contrib\imgui\imgui.h">
       <Filter>src\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\contrib\imgui\examples\sdl_opengl3_example\imgui_impl_sdl_gl3.h">
-      <Filter>src\imgui</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\contrib\nanosvg\nanosvg.h">
       <Filter>src\nanosvg</Filter>
     </ClInclude>
@@ -909,6 +942,63 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\PiGui.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\FixedGuns.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Propulsion.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\GZipFormat.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\versioningInfo.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Beam.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\JsonUtils.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Input.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\LuaInput.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\contrib\imgui\imconfig.h">
+      <Filter>src\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\contrib\imgui\imgui_internal.h">
+      <Filter>src\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\contrib\imgui\stb_rect_pack.h">
+      <Filter>src\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\contrib\imgui\stb_textedit.h">
+      <Filter>src\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\contrib\imgui\stb_truetype.h">
+      <Filter>src\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\contrib\imgui\examples\imgui_impl_opengl3.h">
+      <Filter>src\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\contrib\imgui\examples\imgui_impl_sdl.h">
+      <Filter>src\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\contrib\base64\base64.hpp">
+      <Filter>src\json</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\contrib\json\json.hpp">
+      <Filter>src\json</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\contrib\json\json_fwd.hpp">
+      <Filter>src\json</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\LuaJson.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

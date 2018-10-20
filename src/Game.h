@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _GAME_H
@@ -8,9 +8,9 @@
 #include "libs.h"
 #include "gameconsts.h"
 #include "GameLog.h"
-#include "Serializer.h"
 #include "galaxy/Galaxy.h"
 #include "galaxy/SystemPath.h"
+#include "JsonFwd.h"
 
 class HyperspaceCloud;
 class Player;
@@ -40,6 +40,7 @@ class ObjectViewerView;
 
 class Game {
 public:
+	static Json LoadGameToJson(const std::string &filename);
 	// LoadGame and SaveGame throw exceptions on failure
 	static Game *LoadGame(const std::string &filename);
 	static bool CanLoadGame(const std::string &filename);
@@ -51,12 +52,12 @@ public:
 	Game(const SystemPath &path, double time = 0.0);
 
 	// load game
-	Game(const Json::Value &jsonObj);
+	Game(const Json &jsonObj);
 
 	~Game();
 
 	// save game
-	void ToJson(Json::Value &jsonObj);
+	void ToJson(Json &jsonObj);
 
 	// various game states
 	bool IsNormalSpace() const { return m_state == STATE_NORMAL; }
@@ -117,7 +118,6 @@ public:
 
 	SectorView* GetSectorView() const { return m_gameViews->m_sectorView; }
 	UIView* GetGalacticView() const { return m_gameViews->m_galacticView; }
-	UIView* GetSettingsView() const { return m_gameViews->m_settingsView; }
 	SystemInfoView* GetSystemInfoView() const { return m_gameViews->m_systemInfoView; }
 	SystemView* GetSystemView() const { return m_gameViews->m_systemView; }
 	WorldView* GetWorldView() const { return m_gameViews->m_worldView; }
@@ -136,14 +136,13 @@ private:
 	public:
 		Views();
 		void Init(Game* game);
-		void LoadFromJson(const Json::Value &jsonObj, Game* game);
+		void LoadFromJson(const Json &jsonObj, Game* game);
 		~Views();
 
 		void SetRenderer(Graphics::Renderer *r);
 
 		SectorView* m_sectorView;
 		UIView* m_galacticView;
-		UIView* m_settingsView;
 		SystemInfoView* m_systemInfoView;
 		SystemView* m_systemView;
 		WorldView* m_worldView;
@@ -157,7 +156,7 @@ private:
 	};
 
 	void CreateViews();
-	void LoadViewsFromJson(const Json::Value &jsonObj);
+	void LoadViewsFromJson(const Json &jsonObj);
 	void DestroyViews();
 
 	static void EmitPauseState(bool paused);
@@ -190,7 +189,6 @@ private:
 	TimeAccel m_timeAccel;
 	TimeAccel m_requestedTimeAccel;
 	bool m_forceTimeAccel;
-
 	static const float s_timeAccelRates[];
 	static const float s_timeInvAccelRates[];
 };

@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Orbit.h"
@@ -164,7 +164,7 @@ double Orbit::OrbitalTimeAtPos(const vector3d& pos, double centralMass) const
 			E *= -1.;
 		meanAnomaly = E - m_eccentricity * std::sinh(E);
 	}
-	
+
 	if(m_eccentricity <= 1.)
 	{
 		meanAnomaly -= m_orbitalPhaseAtStart;

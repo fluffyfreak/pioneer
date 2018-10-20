@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "CameraController.h"
@@ -6,7 +6,9 @@
 #include "AnimationCurves.h"
 #include "Pi.h"
 #include "Game.h"
-#include "json/JsonUtils.h"
+#include "GameSaveError.h"
+#include "JsonUtils.h"
+#include "MathUtil.h"
 
 CameraController::CameraController(RefCountedPtr<CameraContext> camera, const Ship *ship) :
 m_camera(camera),
@@ -25,12 +27,16 @@ void CameraController::Reset()
 void CameraController::Update()
 {
 	m_camera->SetFrame(m_ship->GetFrame());
-
-	// interpolate between last physics tick position and current one,
-	// to remove temporal aliasing
-	const matrix3x3d &m = m_ship->GetInterpOrient();
-	m_camera->SetOrient(m * m_orient);
-	m_camera->SetPosition(m * m_pos + m_ship->GetInterpPosition());
+	if (GetType() == FLYBY) {
+		m_camera->SetOrient(m_orient);
+		m_camera->SetPosition(m_pos);
+	} else {
+		// interpolate between last physics tick position and current one,
+		// to remove temporal aliasing
+		const matrix3x3d &m = m_ship->GetInterpOrient();
+		m_camera->SetOrient(m * m_orient);
+		m_camera->SetPosition(m * m_pos + m_ship->GetInterpPosition());
+	}
 }
 
 
@@ -50,7 +56,7 @@ static bool FillCameraPosOrient(const SceneGraph::Model *m, const char *tag, vec
 	matrix3x3d fixOrient(matrix3x3d::Identity());
 
 	const SceneGraph::MatrixTransform *mt = m->FindTagByName(tag);
-	if (!mt) 
+	if (!mt)
 	{
 		fixOrient = fallbackOrient;
 	}
@@ -171,22 +177,24 @@ void InternalCameraController::RotateRight(float frameTime)
 	m_rotY += 45.0f * frameTime;
 }
 
-void InternalCameraController::SaveToJson(Json::Value &jsonObj)
+void InternalCameraController::SaveToJson(Json &jsonObj)
 {
-	Json::Value internalCameraObj(Json::objectValue); // Create JSON object to contain internal camera data.
+	Json internalCameraObj = Json::object(); // Create JSON object to contain internal camera data.
 
 	internalCameraObj["mode"] = m_mode;
 
 	jsonObj["internal"] = internalCameraObj; // Add internal camera object to supplied object.
 }
 
-void InternalCameraController::LoadFromJson(const Json::Value &jsonObj)
+void InternalCameraController::LoadFromJson(const Json &jsonObj)
 {
-	if (!jsonObj.isMember("internal")) throw SavedGameCorruptException();
-	Json::Value internalCameraObj = jsonObj["internal"];
-	if (!internalCameraObj.isMember("mode")) throw SavedGameCorruptException();
-
-	SetMode(static_cast<Mode>(internalCameraObj["mode"].asInt()));
+	try {
+		Json internalCameraObj = jsonObj["internal"];
+		SetMode(internalCameraObj["mode"].get<Mode>());
+	}
+	catch (Json::type_error &) {
+		throw SavedGameCorruptException();
+	}
 }
 
 ExternalCameraController::ExternalCameraController(RefCountedPtr<CameraContext> camera, const Ship *ship) :
@@ -272,28 +280,29 @@ void ExternalCameraController::Update()
 	CameraController::Update();
 }
 
-void ExternalCameraController::SaveToJson(Json::Value &jsonObj)
+void ExternalCameraController::SaveToJson(Json &jsonObj)
 {
-	Json::Value externalCameraObj(Json::objectValue); // Create JSON object to contain external camera data.
+	Json externalCameraObj = Json::object(); // Create JSON object to contain external camera data.
 
-	externalCameraObj["rot_x"] = DoubleToStr(m_rotX);
-	externalCameraObj["rot_y"] = DoubleToStr(m_rotY);
-	externalCameraObj["dist"] = DoubleToStr(m_dist);
+	externalCameraObj["rot_x"] = m_rotX;
+	externalCameraObj["rot_y"] = m_rotY;
+	externalCameraObj["dist"] = m_dist;
 
 	jsonObj["external"] = externalCameraObj; // Add external camera object to supplied object.
 }
 
-void ExternalCameraController::LoadFromJson(const Json::Value &jsonObj)
+void ExternalCameraController::LoadFromJson(const Json &jsonObj)
 {
-	if (!jsonObj.isMember("external")) throw SavedGameCorruptException();
-	Json::Value externalCameraObj = jsonObj["external"];
-	if (!externalCameraObj.isMember("rot_x")) throw SavedGameCorruptException();
-	if (!externalCameraObj.isMember("rot_y")) throw SavedGameCorruptException();
-	if (!externalCameraObj.isMember("dist")) throw SavedGameCorruptException();
+	try {
+		Json externalCameraObj = jsonObj["external"];
 
-	m_rotX = StrToDouble(externalCameraObj["rot_x"].asString());
-	m_rotY = StrToDouble(externalCameraObj["rot_y"].asString());
-	m_dist = StrToDouble(externalCameraObj["dist"].asString());
+		m_rotX = externalCameraObj["rot_x"];
+		m_rotY = externalCameraObj["rot_y"];
+		m_dist = externalCameraObj["dist"];
+	} catch (Json::type_error &) {
+		throw SavedGameCorruptException();
+	}
+
 	m_distTo = m_dist;
 }
 
@@ -383,23 +392,150 @@ void SiderealCameraController::Update()
 	CameraController::Update();
 }
 
-void SiderealCameraController::SaveToJson(Json::Value &jsonObj)
+void SiderealCameraController::SaveToJson(Json &jsonObj)
 {
-	Json::Value siderealCameraObj(Json::objectValue); // Create JSON object to contain sidereal camera data.
+	Json siderealCameraObj = Json::object(); // Create JSON object to contain sidereal camera data.
 
-	MatrixToJson(siderealCameraObj, m_sidOrient, "sid_orient");
-	siderealCameraObj["dist"] = DoubleToStr(m_dist);
+	MatrixToJson(siderealCameraObj["sid_orient"], m_sidOrient);
+	siderealCameraObj["dist"] = m_dist;
 
 	jsonObj["sidereal"] = siderealCameraObj; // Add sidereal camera object to supplied object.
 }
 
-void SiderealCameraController::LoadFromJson(const Json::Value &jsonObj)
+void SiderealCameraController::LoadFromJson(const Json &jsonObj)
 {
-	if (!jsonObj.isMember("sidereal")) throw SavedGameCorruptException();
-	Json::Value siderealCameraObj = jsonObj["sidereal"];
-	if (!siderealCameraObj.isMember("dist")) throw SavedGameCorruptException();
+	try {
+		Json siderealCameraObj = jsonObj["sidereal"];
 
-	JsonToMatrix(&m_sidOrient, siderealCameraObj, "sid_orient");
-	m_dist = StrToDouble(siderealCameraObj["dist"].asString());
+		JsonToMatrix(&m_sidOrient, siderealCameraObj["sid_orient"]);
+		m_dist = siderealCameraObj["dist"];
+	} catch (Json::type_error &) {
+		throw SavedGameCorruptException();
+	}
+
+	m_distTo = m_dist;
+}
+
+FlyByCameraController::FlyByCameraController(RefCountedPtr<CameraContext> camera, const Ship *ship) :
+MoveableCameraController(camera, ship),
+m_dist(500), m_distTo(m_dist),
+m_roll(0),
+m_flybyOrient(matrix3x3d::Identity())
+{
+}
+
+void FlyByCameraController::ZoomIn(float frameTime)
+{
+	ZoomOut(-frameTime);
+}
+
+void FlyByCameraController::ZoomOut(float frameTime)
+{
+	m_dist += 400 * frameTime;
+	m_dist = std::max(GetShip()->GetClipRadius(), m_dist);
+	m_distTo = m_dist;
+}
+
+void FlyByCameraController::ZoomEvent(float amount)
+{
+	m_distTo += 400 * amount;
+	m_distTo = std::max(GetShip()->GetClipRadius(), m_distTo);
+}
+
+void FlyByCameraController::ZoomEventUpdate(float frameTime)
+{
+	AnimationCurves::Approach(m_dist, m_distTo, frameTime, 4.0, 50. / std::max(m_distTo, 1e-7));		// std::max() here just avoid dividing by 0.
+	m_dist = std::max(GetShip()->GetClipRadius(), m_dist);
+}
+
+void FlyByCameraController::RollLeft(float frameTime)
+{
+	m_roll += M_PI / 4 * frameTime;
+}
+
+void FlyByCameraController::RollRight(float frameTime)
+{
+	m_roll += -M_PI / 4 * frameTime;
+}
+
+void FlyByCameraController::RotateUp(float frameTime)
+{
+	const vector3d rotAxis = m_flybyOrient.VectorX();
+	m_flybyOrient = matrix3x3d::Rotate(-M_PI / 4 * frameTime, rotAxis) * m_flybyOrient;
+}
+
+void FlyByCameraController::RotateDown(float frameTime)
+{
+	const vector3d rotAxis = m_flybyOrient.VectorX();
+	m_flybyOrient = matrix3x3d::Rotate(M_PI / 4 * frameTime, rotAxis) * m_flybyOrient;
+}
+
+void FlyByCameraController::RotateLeft(float frameTime)
+{
+	const vector3d rotAxis = m_flybyOrient.VectorY();
+	m_flybyOrient = matrix3x3d::Rotate(-M_PI / 4 * frameTime, rotAxis) * m_flybyOrient;
+}
+
+void FlyByCameraController::RotateRight(float frameTime)
+{
+	const vector3d rotAxis = m_flybyOrient.VectorY();
+	m_flybyOrient = matrix3x3d::Rotate(M_PI / 4 * frameTime, rotAxis) * m_flybyOrient;
+}
+
+void FlyByCameraController::Reset()
+{
+	m_dist = 500;
+	m_distTo = m_dist;
+	SetPosition(vector3d(0, 0, 0));
+}
+
+void FlyByCameraController::Update()
+{
+	const Ship *ship = GetShip();
+
+	matrix3x3d camerao;
+	vector3d ship_pos = ship->GetInterpPosition();
+	vector3d camerap;
+
+	if (GetPosition() == vector3d(0, 0, 0) || m_old_frame != ship->GetFrame()) {
+		m_old_pos = ship_pos;
+		m_old_frame = ship->GetFrame();
+	}
+
+	m_flybyOrient.Renormalize();
+	camerap = m_old_pos + m_flybyOrient.VectorZ() * m_dist;
+	SetPosition(camerap);
+	camerao = MathUtil::LookAt(camerap, ship_pos, vector3d(0, 1, 0));
+	const vector3d rotAxis = camerao.VectorZ();
+	camerao = matrix3x3d::Rotate(m_roll, rotAxis) * camerao;
+	SetOrient(camerao);
+
+	CameraController::Update();
+}
+
+void FlyByCameraController::SaveToJson(Json &jsonObj)
+{
+	Json flybyCameraObj = Json::object(); // Create JSON object to contain flyby camera data.
+
+	flybyCameraObj["roll"] = m_roll;
+	flybyCameraObj["dist"] = m_dist;
+	MatrixToJson(flybyCameraObj["flyby_orient"], m_flybyOrient);
+
+	jsonObj["flyby"] = flybyCameraObj; // Add flyby camera object to supplied object.
+}
+
+void FlyByCameraController::LoadFromJson(const Json &jsonObj)
+{
+	try {
+		Json flybyCameraObj = jsonObj["flyby"];
+
+		m_roll = flybyCameraObj["roll"];
+		m_dist = flybyCameraObj["dist"];
+
+		JsonToMatrix(&m_flybyOrient, flybyCameraObj["flyby_orient"]);
+	} catch (Json::type_error &) {
+		throw SavedGameCorruptException();
+	}
+
 	m_distTo = m_dist;
 }

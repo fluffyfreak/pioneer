@@ -1,11 +1,10 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _SFX_H
 #define _SFX_H
 
 #include "Body.h"
-#include "Serializer.h"
 #include "graphics/Material.h"
 #include "graphics/RenderState.h"
 
@@ -18,7 +17,7 @@ enum SFX_TYPE { TYPE_EXPLOSION=1, TYPE_DAMAGE, TYPE_SMOKE, TYPE_NONE };
 
 class Sfx {
 public:
-	
+
 	friend class SfxManager;
 	Sfx();
 	Sfx(const vector3d &pos, const vector3d &vel, const float speed, const SFX_TYPE type);
@@ -30,8 +29,8 @@ public:
 
 private:
 	void TimeStepUpdate(const float timeStep);
-	void SaveToJson(Json::Value &jsonObj);
-	void LoadFromJson(const Json::Value &jsonObj);
+	void SaveToJson(Json &jsonObj);
+	void LoadFromJson(const Json &jsonObj);
 
 	vector3d m_pos;
 	vector3d m_vel;
@@ -50,8 +49,8 @@ public:
 	static void AddThrustSmoke(const Body *b, float speed, const vector3d &adjustpos);
 	static void TimeStepAll(const float timeStep, Frame *f);
 	static void RenderAll(Graphics::Renderer *r, Frame *f, const Frame *camFrame);
-	static void ToJson(Json::Value &jsonObj, const Frame *f);
-	static void FromJson(const Json::Value &jsonObj, Frame *f);
+	static void ToJson(Json &jsonObj, const Frame *f);
+	static void FromJson(const Json &jsonObj, Frame *f);
 
 	//create shared models
 	static void Init(Graphics::Renderer *r);

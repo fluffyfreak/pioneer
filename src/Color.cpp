@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Color.h"
@@ -24,6 +24,7 @@ const Color4ub Color::YELLOW  = Color(255, 255, 0, 255);
 const Color4ub Color::GRAY    = Color(128,128,128,255);
 const Color4ub Color::STEELBLUE = Color(68, 130, 181, 255);
 const Color4ub Color::BLANK = Color(0, 0, 0, 0);
+const Color4ub Color::PINK	= Color(252, 15, 192, 255); // debug pink
 
 const Color3ub Color3ub::BLACK   = Color3ub(0, 0, 0);
 const Color3ub Color3ub::WHITE   = Color3ub(255, 255, 255);

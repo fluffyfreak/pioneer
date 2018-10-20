@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Context.h"
@@ -96,10 +96,12 @@ Layer *Context::NewLayer()
 void Context::DropLayer()
 {
 	// dropping the last layer would be bad
-	assert(m_layers.size() > 1);
-	RemoveWidget(m_layers.back());
-	m_layers.pop_back();
-	m_needsLayout = true;
+	if(m_layers.size() > 1)
+	{
+		RemoveWidget(m_layers.back());
+		m_layers.pop_back();
+		m_needsLayout = true;
+	}
 }
 
 void Context::DropAllLayers()
@@ -110,7 +112,7 @@ void Context::DropAllLayers()
 	NewLayer();
 	m_needsLayout = true;
 }
-	
+
 void Context::HandleKeyDown(const KeyboardEvent &event) {
 	if (event.keysym.sym == SDLK_ESCAPE) {
 		if (m_layers.size()>1) {

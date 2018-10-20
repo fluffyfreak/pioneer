@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "libs.h"
@@ -187,6 +187,18 @@ namespace FileSystem {
 			if (info.Exists()) { return info; }
 		}
 		return MakeFileInfo(path, FileInfo::FT_NON_EXISTENT);
+	}
+
+	std::vector<FileInfo> FileSourceUnion::LookupAll(const std::string &path)
+	{
+		std::vector<FileInfo> outFiles;
+
+		for (FileSource *fs : m_sources) {
+			FileInfo info = fs->Lookup(path);
+			if (info.Exists()) outFiles.push_back(info);
+		}
+
+		return outFiles;
 	}
 
 	RefCountedPtr<FileData> FileSourceUnion::ReadFile(const std::string &path)

@@ -1,4 +1,4 @@
-// Copyright © 2008-2017 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2018 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _LUATABLE_H
@@ -7,7 +7,8 @@
 #include <cassert>
 #include <iterator>
 
-#include "lua/lua.hpp"
+#include <lua.hpp>
+
 #include "LuaRef.h"
 #include "LuaPushPull.h"
 #include "LuaUtils.h"
@@ -141,7 +142,7 @@ public:
 
 	lua_State * GetLua() const { return m_lua; }
 	int GetIndex() const { return m_index; }
-	int Size() const {return lua_rawlen(m_lua, m_index);}
+	size_t Size() const {return lua_rawlen(m_lua, m_index);}
 
 	/* VecIter, as in VectorIterator (only shorter to type :-)
 	 *
