@@ -385,28 +385,31 @@ bool TerrainNodeData::LoadHeightmap(const std::string &filename)
 		Uint16 minHMapScld = UINT16_MAX, maxHMapScld = 0;
 
 		// XXX unify heightmap types
-		Uint16 v;
-		bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeX = v;
-		bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeY = v;
-		const Uint32 heightmapPixelArea = (m_heightMapSizeX * m_heightMapSizeY);
+		if (filename != "moon.hmap")
+		{
+			Uint16 v;
+			bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeX = v;
+			bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeY = v;
+			const Uint32 heightmapPixelArea = (m_heightMapSizeX * m_heightMapSizeY);
 
-		std::unique_ptr<Sint16[]> heightMap(new Sint16[heightmapPixelArea]);
-		bufread_or_die(heightMap.get(), sizeof(Sint16), heightmapPixelArea, databuf);
-		assert(m_heightMap==nullptr);
-		m_heightMap = new double[heightmapPixelArea];
-		double *pHeightMap = m_heightMap;
-		for(Uint32 i=0; i<heightmapPixelArea; i++) {
-			const Sint16 val = heightMap.get()[i];
-			minHMap = std::min(minHMap, val);
-			maxHMap = std::max(maxHMap, val);
-			// store then increment pointer
-			(*pHeightMap) = val;
-			++pHeightMap;
+			std::unique_ptr<Sint16[]> heightMap(new Sint16[heightmapPixelArea]);
+			bufread_or_die(heightMap.get(), sizeof(Sint16), heightmapPixelArea, databuf);
+			assert(m_heightMap == nullptr);
+			m_heightMap = new double[heightmapPixelArea];
+			double *pHeightMap = m_heightMap;
+			for (Uint32 i = 0; i < heightmapPixelArea; i++) {
+				const Sint16 val = heightMap.get()[i];
+				minHMap = std::min(minHMap, val);
+				maxHMap = std::max(maxHMap, val);
+				// store then increment pointer
+				(*pHeightMap) = val;
+				++pHeightMap;
+			}
+			assert(pHeightMap == &m_heightMap[heightmapPixelArea]);
+			//Output("minHMap = (%hd), maxHMap = (%hd)\n", minHMap, maxHMap);
 		}
-		assert(pHeightMap == &m_heightMap[heightmapPixelArea]);
-		//Output("minHMap = (%hd), maxHMap = (%hd)\n", minHMap, maxHMap);
-
-		/*case 1: {
+		else
+		{
 			Uint16 v;
 			// XXX x and y reversed from above *sigh*
 			bufread_or_die(&v, 2, 1, databuf); m_heightMapSizeY = v;
@@ -422,8 +425,8 @@ bool TerrainNodeData::LoadHeightmap(const std::string &filename)
 
 			std::unique_ptr<Uint16[]> heightMapScaled(new Uint16[heightmapPixelArea]);
 			bufread_or_die(heightMapScaled.get(), sizeof(Uint16), heightmapPixelArea, databuf);
-			m_heightMap.reset(new double[heightmapPixelArea]);
-			double *pHeightMap = m_heightMap.get();
+			m_heightMap = new double[heightmapPixelArea];
+			double *pHeightMap = m_heightMap;
 			for(Uint32 i=0; i<heightmapPixelArea; i++) {
 				const Uint16 val = heightMapScaled[i];
 				minHMapScld = std::min(minHMapScld, val);
@@ -434,8 +437,7 @@ bool TerrainNodeData::LoadHeightmap(const std::string &filename)
 			}
 			assert(pHeightMap == &m_heightMap[heightmapPixelArea]);
 			//Output("minHMapScld = (%hu), maxHMapScld = (%hu)\n", minHMapScld, maxHMapScld);
-			break;
-		}*/
+		}
 		return true;
 	}
 	return false;
