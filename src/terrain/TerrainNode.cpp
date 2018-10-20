@@ -7,11 +7,12 @@
 
 #include <math.h>
 #include "MathUtil.h"
+#include "utils.h"
+#include "JsonUtils.h"
 
 #include "Easing.h"
 
 #include "FileSystem.h"
-#include "json/json.h"
 
 #include "vector2.h"
 
@@ -503,56 +504,54 @@ double TerrainNodeData::GetHeightMapValue(const vector3d& p)
 	return h;
 }
 
-
-void ParseTerrainNode(Json::Value::iterator& j, TerrainNodeData& node)
+void ParseTerrainNode(Json& j, TerrainNodeData& node)
 {
 	bool accum = false;
 	double tempHigh = 0.0;
 	double tempLow = 0.0;
-	for (Json::Value::iterator funcTag = (*j).begin(), funcTagEnd = (*j).end(); funcTag != funcTagEnd; ++funcTag)
+	for (auto funcTag = j.begin(), funcTagEnd = j.end(); funcTag != funcTagEnd; ++funcTag)
 	{
-		const std::string tag = funcTag.key().asString();
+		const std::string tag = funcTag.key();
 		if (tag == "children")
 		{
-			const bool bIsArray = (*funcTag).isArray();
-			for (Json::Value::iterator childIT = (*funcTag).begin(), childEnd = (*funcTag).end(); childIT != childEnd; ++childIT)
+			for (auto childIT = (*funcTag).begin(), childEnd = (*funcTag).end(); childIT != childEnd; ++childIT)
 			{
 				TerrainNodeData child;
-				ParseTerrainNode(childIT, child);
+				ParseTerrainNode(*childIT, child);
 				node.AddChild(child);
 			}
 		}
 		else if (tag == "clamp")
 		{
-			const bool bIsArray = (*funcTag).isArray();
+			const bool bIsArray = (*funcTag).is_array();
 			assert(bIsArray);
-			const double low = (*funcTag).get(Json::ArrayIndex(0), 0).asDouble();
-			const double high = (*funcTag).get(Json::ArrayIndex(1), 0).asDouble();
+			const double low = (*funcTag).at(0);
+			const double high = (*funcTag).at(1);
 			node.ClampNoise(low, high);
 		}
 		else if (tag == "frequency")
 		{
-			node.Frequency((*funcTag).asDouble());
+			node.Frequency((*funcTag));
 		}
 		else if (tag == "scale")
 		{
-			const bool bIsArray = (*funcTag).isArray();
+			const bool bIsArray = (*funcTag).is_array();
 			assert(bIsArray);
-			const double low = (*funcTag).get(Json::ArrayIndex(0), 0).asDouble();
-			const double high = (*funcTag).get(Json::ArrayIndex(1), 0).asDouble();
+			const double low = (*funcTag).at(0);
+			const double high = (*funcTag).at(1);
 			node.Scale(low, high);
 		}
 		else if (tag == "name")
 		{
-			node.Name((*funcTag).asString());
+			node.Name((*funcTag));
 		}
 		else if (tag == "octaves")
 		{
-			node.Octaves((*funcTag).asInt());
+			node.Octaves((*funcTag));
 		}
 		else if (tag == "op")
 		{
-			const std::string opStr = (*funcTag).asString();
+			const std::string opStr = (*funcTag);
 			if (opStr == "add") { node.Op(TerrainNodeData::TO_ADD); }
 			else if (opStr == "sub") { node.Op(TerrainNodeData::TO_SUB); }
 			else if (opStr == "mul") { node.Op(TerrainNodeData::TO_MUL); }
@@ -560,15 +559,15 @@ void ParseTerrainNode(Json::Value::iterator& j, TerrainNodeData& node)
 		}
 		else if (tag == "persistence")
 		{
-			node.Persistence((*funcTag).asDouble());
+			node.Persistence((*funcTag));
 		}
 		else if (tag == "type")
 		{
-			node.NoiseType((*funcTag).asString());
+			node.NoiseType((*funcTag));
 		}
 		else if (tag == "file")
 		{
-			node.LoadHeightmap((*funcTag).asString());
+			node.LoadHeightmap((*funcTag));
 		}
 		Output("\t\ttag:\"%s\"\n", tag.c_str());
 	}
@@ -576,25 +575,24 @@ void ParseTerrainNode(Json::Value::iterator& j, TerrainNodeData& node)
 
 void LoadTerrainJSON(const std::string& path, std::vector<TerrainSource>& sources)
 {
-	Json::Reader reader;
-	Json::Value data;
+	Json rootNode = JsonUtils::LoadJsonFile(path, FileSystem::gameDataFiles);
 
-	auto fd = FileSystem::gameDataFiles.ReadFile(path);
-	if (!fd) {
+	if (!rootNode.is_object()) {
 		Output("couldn't open json terrain definition '%s'\n", path.c_str());
 		return;
 	}
 
-	if (!reader.parse(fd->GetData(), fd->GetData() + fd->GetSize(), data)) {
-		Output("couldn't read json terrain definition '%s': %s\n", path.c_str(), reader.getFormattedErrorMessages().c_str());
+	
+	if (rootNode.size() == 0) {
+		Output("couldn't read json terrain definition '%s'\n", path.c_str());
 		return;
 	}
 
 	Output("\n%s\n", path.c_str());
-	for (Json::Value::iterator slot = data.begin(); slot != data.end(); ++slot)
+	for (auto slot = rootNode.begin(); slot != rootNode.end(); ++slot)
 	{
 		TerrainSource source;
-		const std::string key = slot.key().asString();
+		const std::string key = slot.key();
 		if (key == "baseHeight") {
 			source.SetType(TerrainSource::ST_HEIGHT);
 		}
@@ -609,22 +607,23 @@ void LoadTerrainJSON(const std::string& path, std::vector<TerrainSource>& source
 		}
 
 		// get base height
-		const double baseHeight = (*slot).get("base", 0).asDouble();
+		
+		const double baseHeight = (*slot)["base"];
 		source.SetBaseHeight(baseHeight);
 
-		Json::Value funcs = (*slot).get("funcs", Json::arrayValue);
+		Json funcs = (*slot)["funcs"].get<Json::array_t>();
 		if (!funcs.empty())
 		{
-			for (Json::Value::iterator j = funcs.begin(), jEnd = funcs.end(); j != jEnd; ++j)
+			for (auto j = funcs.begin(), jEnd = funcs.end(); j != jEnd; ++j)
 			{
-				Json::Value name = (*j).get("name", 0);
-				if (!name.empty() && name.isString()) {
-					const std::string func(name.asString());
+				Json name = (*j)["name"];
+				if (!name.empty()) {
+					const std::string func = name;
 					Output("\tfunc:\"%s\"\n", func.c_str());
 				}
 
 				TerrainNodeData tn;
-				ParseTerrainNode(j, tn);
+				ParseTerrainNode(*j, tn);
 				source.AddNode(tn);
 			}
 		}
