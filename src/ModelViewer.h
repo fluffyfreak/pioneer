@@ -21,6 +21,10 @@ public:
 	static void Run(const std::string &modelName);
 
 private:
+	enum eUIMessage
+	{
+		ECalculateSphericalHarmonics
+	};
 	bool OnPickModel(UI::List*);
 	bool OnQuit();
 	bool OnReloadModel(UI::Widget*);
@@ -29,6 +33,7 @@ private:
 	bool OnToggleGrid(UI::Widget*);
 	bool OnToggleGuns(UI::CheckBox*);
 	bool OnRandomColor(UI::Widget*);
+	bool OnCalculateSphericalHarmonics(UI::Widget*);
 	void UpdateShield();
 	bool OnHitIt(UI::Widget*);
 	void HitImpl();
@@ -62,6 +67,7 @@ private:
 	void UpdateCamera();
 	void UpdateLights();
 	void UpdatePatternList();
+	void CalculateSphericalHarmonics();
 
 	//toggleable options
 	struct Options {
@@ -133,6 +139,8 @@ private:
 	sigc::signal<void> onModelChanged;
 
 	Graphics::Drawables::Lines m_gridLines;
+
+	std::vector<eUIMessage> m_uiMessageQueue;
 };
 
 #endif

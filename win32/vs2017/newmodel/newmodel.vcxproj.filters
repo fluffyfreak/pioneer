@@ -27,6 +27,7 @@
     <ClCompile Include="..\..\..\src\scenegraph\LuaModel.cpp" />
     <ClCompile Include="..\..\..\src\scenegraph\BinaryConverter.cpp" />
     <ClCompile Include="..\..\..\src\scenegraph\BaseLoader.cpp" />
+    <ClCompile Include="..\..\..\src\SH.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\scenegraph\Thruster.h" />
@@ -58,5 +59,6 @@
     <ClInclude Include="..\..\..\src\scenegraph\NodeCopyCache.h" />
     <ClInclude Include="..\..\..\src\scenegraph\BinaryConverter.h" />
     <ClInclude Include="..\..\..\src\scenegraph\BaseLoader.h" />
+    <ClInclude Include="..\..\..\src\SH.h" />
   </ItemGroup>
 </Project>

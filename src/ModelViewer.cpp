@@ -18,6 +18,7 @@
 #include "StringF.h"
 #include "ModManager.h"
 #include "GameSaveError.h"
+#include "SH.h"
 #include <sstream>
 
 //default options
@@ -297,6 +298,271 @@ bool ModelViewer::OnRandomColor(UI::Widget*)
 	m_settingColourSliders = false;
 
 	return true;
+}
+
+namespace
+{
+	using namespace SceneGraph;
+	class FindStaticGeometryVisitor : public NodeVisitor {
+	public:
+
+		FindStaticGeometryVisitor() {};
+		virtual void ApplyNode(Node &n)
+		{
+			if(n.GetTypeName() == "StaticGeometry") {
+				auto sg = dynamic_cast<StaticGeometry*>(&n);
+				m_results.push_back(sg);
+			}
+
+			n.Traverse(*this);
+		}
+
+		const std::vector<StaticGeometry*> &GetResults() { return m_results; }
+
+	private:
+		std::vector<StaticGeometry*> m_results;
+	};
+	class FindLODVisitor : public NodeVisitor {
+	public:
+
+		FindLODVisitor() {};
+		virtual void ApplyNode(Node &n)
+		{
+			if (n.GetTypeName() == "LOD") {
+				auto sg = dynamic_cast<LOD*>(&n);
+				m_results.push_back(sg);
+			}
+
+			n.Traverse(*this);
+		}
+
+		const std::vector<LOD*> &GetResults() { return m_results; }
+
+	private:
+		std::vector<LOD*> m_results;
+	};
+
+	struct Sampler
+	{
+		//Cartesian direction
+		vector3f direction;
+
+		//Values of each SH function at this point
+		std::vector<double> shValues;
+	};
+
+	bool GenerateSamples(const int numSamples, const int sqrtNumSamples, const int numBands, const int numFunctions, std::vector<Sampler> &samples)
+	{
+		//Create space for the SH values in each sample
+		samples.resize(numSamples);
+		for (int i = 0; i < numSamples; ++i)
+		{
+			samples[i].shValues.resize(numFunctions);
+		}
+
+		int index = 0;
+		for (int i = 0; i < sqrtNumSamples; ++i)
+		{
+			for (int j = 0; j < sqrtNumSamples; ++j)
+			{
+				// Generate the position of this sample in [0, 1)x[0, 1)
+				const float x = (i + ((float)rand() / RAND_MAX)) / sqrtNumSamples;
+				const float y = (j + ((float)rand() / RAND_MAX)) / sqrtNumSamples;
+
+				// Convert to spherical polars
+				const float theta = 2.0*acos(sqrt(1.0 - x));
+				const float phi = 2.0*M_PI*y;
+
+				// Convert to cartesians
+				samples[index].direction.x = float(sin(theta)*cos(phi)),
+				samples[index].direction.y = float(sin(theta)*sin(phi)),
+				samples[index].direction.z = float(cos(theta));
+
+				//Compute SH coefficients for this sample
+				for (int l = 0; l < numBands; ++l)
+				{
+					for (int m = -l; m <= l; ++m)
+					{
+						int index2 = l * (l + 1) + m;
+
+						samples[index].shValues[index2] = SH::SampleSHFunc(l, m, theta, phi);
+					}
+				}
+
+				++index;
+			}
+		}
+
+		return true;
+	}
+
+	//double Light(const double theta, const double phi)
+	//{
+	//	return (theta < M_PI / 6) ? 1 : 0;
+	//}
+}
+
+bool ModelViewer::OnCalculateSphericalHarmonics(UI::Widget*)
+{
+	m_uiMessageQueue.push_back(ECalculateSphericalHarmonics);
+	return true;
+}
+#pragma optimize("",off)
+void ModelViewer::CalculateSphericalHarmonics()
+{
+	Profiler::Timer timer;
+	timer.Start();
+
+	using SceneGraph::Node;
+	using SceneGraph::Group;
+	using SceneGraph::MatrixTransform;
+	using SceneGraph::StaticGeometry;
+
+	const int numBands = 3;
+	const int numFunctions = numBands * numBands;
+	const int sqrtNumSamples = 50;
+	const int numSamples = sqrtNumSamples * sqrtNumSamples;
+	std::vector<Sampler> samples;
+	GenerateSamples(numSamples, sqrtNumSamples, numBands, numFunctions, samples);
+
+	//This will find all StaticGeometry
+	FindStaticGeometryVisitor StaticGeometryFinder;
+	m_model->GetRoot()->Accept(StaticGeometryFinder);
+	const std::vector<StaticGeometry*> &results = StaticGeometryFinder.GetResults();
+
+	//This will find all StaticGeometry
+	FindLODVisitor LODFinder;
+	m_model->GetRoot()->Accept(LODFinder);
+	const std::vector<LOD*> &LODresults = LODFinder.GetResults();
+	for (auto lod : LODresults)
+	{
+		const Uint32 num = lod->GetNumChildren();
+		for (Uint32 ichild = 0; ichild < num; ichild++) {
+			auto child = lod->GetChildAt(ichild);
+			Output("Type name: %s\n", child->GetTypeName());
+
+			FindStaticGeometryVisitor StaticGeometryFinder;
+			lod->Accept(StaticGeometryFinder);
+			const std::vector<StaticGeometry*> &sgresults = StaticGeometryFinder.GetResults();
+		}
+	}
+
+	//auto coll = m_model->CreateCollisionMesh();
+	auto coll = m_model->GetCollisionMesh();
+
+	//{
+	//	m_model->
+	//	//duplicate data again for geomtree...
+	//	const size_t numVertices = m_vertices.size();
+	//	const size_t numIndices = m_indices.size();
+	//	const size_t numTris = numIndices / 3;
+	//	std::vector<vector3f> vertices(numVertices);
+	//	Uint32 *indices = new Uint32[numIndices];
+	//	Uint32 *triFlags = new Uint32[numTris];
+
+	//	m_totalTris += numTris;
+
+	//	for (size_t i = 0; i < numVertices; i++)
+	//		vertices[i] = m_vertices[i];
+
+	//	for (size_t i = 0; i < numIndices; i++)
+	//		indices[i] = m_indices[i];
+
+	//	for (size_t i = 0; i < numTris; i++)
+	//		triFlags[i] = m_flags[i];
+
+	//	//create geomtree
+	//	//takes ownership of data
+	//	GeomTree *gt = new GeomTree(
+	//		numVertices, numTris,
+	//		vertices,
+	//		indices, triFlags);
+	//	m_collMesh->SetGeomTree(gt);
+	//	m_collMesh->SetNumTriangles(m_totalTris);
+	//}
+
+	//Otherwise, regenerate the coefficients
+	//Loop through the vertices and project the transfer function into SH space
+	const size_t numObjects = results.size();
+	for (int i = 0; i < numObjects; ++i)
+	{
+		const auto sg = results[i];
+		const size_t numMeshes = sg->GetNumMeshes();
+		for (size_t iMesh = 0; iMesh < numMeshes; iMesh++)
+		{
+			auto mesh = sg->GetMeshAt(iMesh);
+			const Uint32 numVertices = mesh.vertexBuffer->GetSize();
+
+			// get positions and normals from the mesh
+			const auto& vbDesc = mesh.vertexBuffer->GetDesc();
+			const Uint32 posOffset = vbDesc.GetOffset(Graphics::ATTRIB_POSITION);
+			const Uint32 nrmOffset = vbDesc.GetOffset(Graphics::ATTRIB_NORMAL);
+			const Uint32 uv0Offset = vbDesc.GetOffset(Graphics::ATTRIB_UV0);
+			const Uint32 stride = vbDesc.stride;
+
+			std::vector<vector3f> vertices(numVertices);
+			std::vector<vector3f> normals(numVertices);
+			std::vector<double> unshadowedCoeffs; unshadowedCoeffs.resize(numFunctions);
+			std::vector<double> shadowedCoeffs; shadowedCoeffs.resize(numFunctions);
+			Uint8 *vtxPtr = mesh.vertexBuffer->Map<Uint8>(Graphics::BUFFER_MAP_READ);
+			for (Uint32 i = 0; i < vbDesc.numVertices; i++) {
+				vertices.push_back(*reinterpret_cast<vector3f*>(vtxPtr + i * stride + posOffset));
+				normals.push_back(*reinterpret_cast<vector3f*>(vtxPtr + i * stride + nrmOffset));
+			}
+			mesh.vertexBuffer->Unmap();
+
+			for (int j = 0; j < numVertices; ++j)
+			{
+				const vector3f &position = vertices[j];
+				const vector3f &normal = normals[j];
+
+				//Clear the coefficients for this vertex
+				for (int k = 0; k < numFunctions; ++k)
+				{
+					unshadowedCoeffs[k] = 0.0;
+					shadowedCoeffs[k] = 0.0;
+				}
+
+				//Loop through samples
+				for (int k = 0; k < numSamples; ++k)
+				{
+					//Calculate cosine term for this sample
+					const double dot = samples[k].direction.Dot(normal);
+
+					//Clamp to [0, 1]
+					if (dot > 0.0)
+					{
+						//See if the ray is blocked by any object
+						isect_t isect;
+						isect.dist = float(1000.0f);
+						isect.triIdx = -1;
+						coll->GetGeomTree()->TraceRay(position + 2 * std::numeric_limits<float>::epsilon() * normal, samples[k].direction, &isect);
+						bool rayBlocked = (isect.triIdx != -1);
+
+						//Add the contribution of this sample to the coefficients
+						for (int l = 0; l < numFunctions; ++l)
+						{
+							double contribution = dot * samples[k].shValues[l];
+
+							unshadowedCoeffs[l] += contribution;
+
+							if (!rayBlocked)
+								shadowedCoeffs[l] += contribution;
+						}
+					}
+				}
+
+				//Rescale the coefficients
+				for (int k = 0; k < numFunctions; ++k)
+				{
+					unshadowedCoeffs[k] *= 4 * M_PI / numSamples;
+					shadowedCoeffs[k] *= 4 * M_PI / numSamples;
+				}
+			}
+		}
+	}
+	timer.Stop();
+	Output("\n\nCalculateSphericalHarmonics took: %lf milliseconds\n", timer.millicycles());
 }
 
 void ModelViewer::UpdateShield()
@@ -829,6 +1095,20 @@ void ModelViewer::PollEvents()
 			break;
 		}
 	}
+
+	// handle all UI messages we've queued
+	for (auto message : m_uiMessageQueue)
+	{
+		switch (message)
+		{
+		case ECalculateSphericalHarmonics:
+			CalculateSphericalHarmonics();
+			break;
+		default:
+			break;
+		}
+	}
+	m_uiMessageQueue.clear();
 }
 
 static void collect_models(std::vector<std::string> &list)
@@ -1039,6 +1319,7 @@ void ModelViewer::SetupUI()
 	UI::SmallButton *toggleGridButton = nullptr;
 	UI::SmallButton *hitItButton = nullptr;
 	UI::SmallButton *randomColours = nullptr;
+	UI::SmallButton *calculateSphericalHarmonics = nullptr;
 	UI::CheckBox *collMeshCheck = nullptr;
 	UI::CheckBox *showShieldsCheck = nullptr;
 	UI::CheckBox *gunsCheck = nullptr;
@@ -1081,6 +1362,9 @@ void ModelViewer::SetupUI()
 		hitItButton->onClick.connect(sigc::bind(sigc::mem_fun(*this, &ModelViewer::OnHitIt), hitItButton));
 	}
 
+	
+	add_pair(c, mainBox, calculateSphericalHarmonics = c->SmallButton(), "Calculate SH");
+	calculateSphericalHarmonics->onClick.connect(sigc::bind(sigc::mem_fun(*this, &ModelViewer::OnCalculateSphericalHarmonics), calculateSphericalHarmonics));
 
 	add_pair(c, mainBox, randomColours = c->SmallButton(), "Random Colours");
 	randomColours->onClick.connect(sigc::bind(sigc::mem_fun(*this, &ModelViewer::OnRandomColor), randomColours));

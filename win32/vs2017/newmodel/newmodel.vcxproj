@@ -257,6 +257,7 @@
     <ClCompile Include="..\..\..\src\scenegraph\Pattern.cpp" />
     <ClCompile Include="..\..\..\src\scenegraph\StaticGeometry.cpp" />
     <ClCompile Include="..\..\..\src\scenegraph\Thruster.cpp" />
+    <ClCompile Include="..\..\..\src\SH.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\scenegraph\Animation.h" />
@@ -288,6 +289,7 @@
     <ClInclude Include="..\..\..\src\scenegraph\Pattern.h" />
     <ClInclude Include="..\..\..\src\scenegraph\StaticGeometry.h" />
     <ClInclude Include="..\..\..\src\scenegraph\Thruster.h" />
+    <ClInclude Include="..\..\..\src\SH.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
