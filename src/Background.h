@@ -31,13 +31,6 @@ namespace Background
 		Graphics::Renderer *m_renderer;
 		RefCountedPtr<Graphics::Material> m_material;
 		//RefCountedPtr<Graphics::Material> m_materialStreaks;
-
-		float m_rMin;
-		float m_rMax;
-		float m_gMin;
-		float m_gMax;
-		float m_bMin;
-		float m_bMax;
 	};
 
 	class UniverseBox : public BackgroundElement
@@ -69,6 +62,13 @@ namespace Background
 
 	private:
 		void Init();
+
+		float m_rMin;
+		float m_rMax;
+		float m_gMin;
+		float m_gMax;
+		float m_bMin;
+		float m_bMax;
 
 		std::unique_ptr<Graphics::Drawables::PointSprites> m_pointSprites;
 		Graphics::RenderState* m_renderState; // NB: we don't own RenderState pointers, just borrow them
