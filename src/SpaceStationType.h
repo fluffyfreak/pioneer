@@ -77,17 +77,17 @@ public:
 	 * ship has been released and is under player control again */
 	bool GetDockAnimPositionOrient(const unsigned int port, int stage, double t, const vector3d &from, positionOrient_t &outPosOrient, const Ship *ship) const;
 
-	const std::string& ModelName() const { return modelName; }
-	float AngVel() const { return angVel; }
-	bool IsSurfaceStation() const { return (SURFACE==dockMethod); }
-	bool IsOrbitalStation() const { return (ORBITAL==dockMethod); }
-	unsigned int NumDockingPorts() const { return numDockingPorts; }
-	int NumDockingStages() const { return numDockingStages; }
-	int NumUndockStages() const { return numUndockStages; }
-	int ShipLaunchStage() const { return shipLaunchStage; }
-	float ParkingDistance() const { return parkingDistance; }
-	float ParkingGapSize() const { return parkingGapSize; }
-	const TPorts& Ports() const { return m_ports; }
+	inline const std::string& ModelName() const { return modelName; }
+	inline float AngVel() const { return angVel; }
+	inline bool IsSurfaceStation() const { return (SURFACE==dockMethod); }
+	inline bool IsOrbitalStation() const { return (ORBITAL==dockMethod); }
+	inline unsigned int NumDockingPorts() const { return numDockingPorts; }
+	inline int NumDockingStages() const { return numDockingStages; }
+	inline int NumUndockStages() const { return numUndockStages; }
+	inline int ShipLaunchStage() const { return shipLaunchStage; }
+	inline float ParkingDistance() const { return parkingDistance; }
+	inline float ParkingGapSize() const { return parkingGapSize; }
+	inline const TPorts& Ports() const { return m_ports; }
 
 	static void Init();
 

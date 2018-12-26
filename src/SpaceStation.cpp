@@ -699,11 +699,6 @@ void SpaceStation::UpdateInterpTransform(double alpha)
 	m_interpPos = GetPosition();
 }
 
-bool SpaceStation::IsGroundStation() const
-{
-	return m_type->IsSurfaceStation();
-}
-
 // Renders space station and adjacent city if applicable
 // For orbital starports: renders as normal
 // For surface starports:

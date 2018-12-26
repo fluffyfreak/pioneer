@@ -57,8 +57,13 @@ public:
 	int GetMyDockingPort(const Ship *s) const;
 	int NumShipsDocked() const;
 
-	const SpaceStationType *GetStationType() const { return m_type; }
-	bool IsGroundStation() const;
+	inline const SpaceStationType *GetStationType() const { return m_type; }
+	inline bool IsGroundStation() const {
+		return m_type->IsSurfaceStation();
+	}
+	inline bool IsOrbitalStation() const {
+		return m_type->IsOrbitalStation();
+	}
 
 	bool AllocateStaticSlot(int& slot);
 

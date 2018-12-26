@@ -13,6 +13,31 @@
 
 #include <algorithm>
 
+namespace
+{
+	// for reference: http://paulbourke.net/geometry/pointlineplane/
+	static bool ClosestPointOnLine(const vector3f &Point, const vector3f &LineStart, const vector3f &LineEnd, vector3f &Intersection)
+	{
+		const float LineMag = (LineStart - LineEnd).Length();
+
+		const float U = (((Point.x - LineStart.x) * (LineEnd.x - LineStart.x)) +
+			((Point.y - LineStart.y) * (LineEnd.y - LineStart.y)) +
+			((Point.z - LineStart.z) * (LineEnd.z - LineStart.z))) /
+			(LineMag * LineMag);
+
+		if (U < 0.0f || U > 1.0f)
+			return false;   // closest point does not fall within the line segment
+
+		Intersection.x = LineStart.x + U * (LineEnd.x - LineStart.x);
+		Intersection.y = LineStart.y + U * (LineEnd.y - LineStart.y);
+		Intersection.z = LineStart.z + U * (LineEnd.z - LineStart.z);
+
+		return true;
+	}
+
+	inline std::string ToString(const vector3f &v) { return stringf("%0{f.3}, %1{f.3}, %2{f.3}", v.x, v.y, v.z); }
+}
+
 // TODO: Fix the horrible control flow that makes this exception type necessary.
 struct StationTypeLoadError {};
 
@@ -64,7 +89,7 @@ SpaceStationType::SpaceStationType(const std::string &id_, const std::string &pa
 	}
 	OnSetupComplete();
 }
-
+#pragma optimize("",off)
 void SpaceStationType::OnSetupComplete()
 {
 	// Since the model contains (almost) all of the docking information we have to extract that
@@ -89,6 +114,41 @@ void SpaceStationType::OnSetupComplete()
 	model->FindTagsByStartOfName("exit_", exit_mts);
 
 	Output("%s has:\n %lu entrances,\n %lu pads,\n %lu exits\n", modelName.c_str(), entrance_mts.size(), locator_mts.size(), exit_mts.size());
+
+	// store light locations
+	// NB: Using pad locations as proxy
+	std::vector<matrix4x4f> lightLocations(256);
+
+	// only bothering with ORBITAL stations
+	if (ORBITAL == dockMethod)
+	{
+		// convert to matrix4x4f and store
+		for (auto locIter : locator_mts)
+		{
+			const matrix4x4f &locTransform = locIter->GetTransform();
+			lightLocations.push_back(locTransform);
+		}
+
+		// find the entrance location (singular)
+		vector3f entPos(0.0f);
+		for (auto entIter : entrance_mts)
+		{
+			const vector3f position = entIter->GetTransform().GetTranslate();
+			entPos += position;
+		}
+		entPos /= (float)entrance_mts.size();
+
+		// find the exit location (singular)
+		vector3f exitPos(0.0f);
+		for (auto exitIter : exit_mts)
+		{
+			const vector3f position = exitIter->GetTransform().GetTranslate();
+			exitPos += position;
+		}
+		exitPos /= (float)exit_mts.size();
+
+		Output("Light/Pads %d, entrance (%s), exit (%s)\n", lightLocations.size(), ToString(entPos).c_str(), ToString(exitPos).c_str());
+	}
 
 	// Add the partially initialised ports
 	for (auto apprIter : entrance_mts)
@@ -154,28 +214,6 @@ void SpaceStationType::OnSetupComplete()
 		}
 		else
 		{
-			struct TPointLine
-			{
-				// for reference: http://paulbourke.net/geometry/pointlineplane/
-				static bool ClosestPointOnLine( const vector3f &Point, const vector3f &LineStart, const vector3f &LineEnd, vector3f &Intersection )
-				{
-					const float LineMag = ( LineStart - LineEnd ).Length();
-
-					const float U = ( ( ( Point.x - LineStart.x ) * ( LineEnd.x - LineStart.x ) ) +
-									(   ( Point.y - LineStart.y ) * ( LineEnd.y - LineStart.y ) ) +
-									(   ( Point.z - LineStart.z ) * ( LineEnd.z - LineStart.z ) ) ) /
-									( LineMag * LineMag );
-
-					if( U < 0.0f || U > 1.0f )
-						return false;   // closest point does not fall within the line segment
-
-					Intersection.x = LineStart.x + U * ( LineEnd.x - LineStart.x );
-					Intersection.y = LineStart.y + U * ( LineEnd.y - LineStart.y );
-					Intersection.z = LineStart.z + U * ( LineEnd.z - LineStart.z );
-
-					return true;
-				}
-			};
 
 			// create the docking locators
 			// start
@@ -190,7 +228,7 @@ void SpaceStationType::OnSetupComplete()
 				const vector3f l = (approach2Pos - approach1Pos).Normalized(); // ray direction
 				const vector3f l0 = approach1Pos + (l*10000.0f);
 
-				if(!TPointLine::ClosestPointOnLine(p0, approach1Pos, l0, intersectionPos)) {
+				if(!ClosestPointOnLine(p0, approach1Pos, l0, intersectionPos)) {
 					Output("No point found on line segment");
 				}
 			}
