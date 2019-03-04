@@ -18,6 +18,7 @@ GameConfig::GameConfig(const map_string &override_)
 	map["UIScaleFactor"] = "1";
 	map["DetailCities"] = "1";
 	map["DetailPlanets"] = "1";
+	map["TexturePatchSize"] = "1";
 	map["SfxVolume"] = "0.8";
 	map["EnableJoystick"] = "1";
 	map["InvertMouseY"] = "0";

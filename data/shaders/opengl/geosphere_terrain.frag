@@ -16,9 +16,11 @@ uniform vec3 geosphereCenter;
 uniform float geosphereAtmosFogDensity;
 uniform float geosphereAtmosInvScaleHeight;
 
-uniform sampler2D texture0;
-uniform sampler2D texture1;
+uniform sampler2D texture0; // hi detail
+uniform sampler2D texture1; // lo detail
+uniform sampler2D texture2; // terrain texture
 in vec2 texCoord0;
+in vec2 invTexCoord;
 
 in float dist;
 uniform float detailScaleHi;
@@ -29,11 +31,6 @@ uniform Scene scene;
 
 in vec3 varyingEyepos;
 in vec3 varyingNormal;
-in vec4 vertexColor;
-
-#ifdef TERRAIN_WITH_LAVA
-in vec4 varyingEmission;
-#endif
 
 out vec4 frag_color;
 
@@ -41,12 +38,11 @@ void main(void)
 {
 	vec4 hidetail = texture(texture0, texCoord0 * detailScaleHi);
 	vec4 lodetail = texture(texture1, texCoord0 * detailScaleLo);
-
+	vec4 texel = texture(texture2, invTexCoord);
 	vec3 eyepos = varyingEyepos;
 	vec3 eyenorm = normalize(eyepos);
 	vec3 tnorm = normalize(varyingNormal);
 	vec4 diff = vec4(0.0);
-
 
 	// calculate the detail texture contribution from hi and lo textures
 	float hiloMix = exp(-0.004 * dist);
@@ -58,6 +54,16 @@ void main(void)
 	float nnDotVP=0.0;
 #ifdef TERRAIN_WITH_WATER
 	float specularReflection=0.0;
+#endif
+
+#ifdef TERRAIN_WITH_LAVA
+	vec4 varyingEmission; = material.emission;
+	//Glow lava terrains
+	if ( texel.r > 0.4 && texel.g < 0.2 && texel.b < 0.4 ) 
+	{
+		varyingEmission = 3.0*texel;
+		varyingEmission *= (texel.r+texel.g+texel.b);
+	}
 #endif
 
 #if (NUM_LIGHTS > 0)
@@ -75,14 +81,14 @@ void main(void)
 		vec3 E = normalize(-eyepos);
 		vec3 R = normalize(-reflect(L,tnorm)); 
 		//water only for specular
-	    if (vertexColor.b > 0.05 && vertexColor.r < 0.05) {
+	    if (texel.b > 0.05 && texel.r < 0.05) {
 			specularReflection += pow(max(dot(R,E),0.0),16.0)*0.4 * INV_NUM_LIGHTS;
 		}
 #endif
 	}
 
 	// Use the detail value to multiply the final colour before lighting
-	vec4 final = vertexColor * detailMul;
+	vec4 final = texel;// * detailMul;
 	
 #ifdef ATMOSPHERE
 	// when does the eye ray intersect atmosphere
@@ -109,7 +115,7 @@ void main(void)
 		varyingEmission +
 #endif
 		fogFactor *
-		((scene.ambient * vertexColor) +
+		((scene.ambient * texel) +
 		(diff * final)) +
 		(1.0-fogFactor)*(diff*atmosColor) +
 #ifdef TERRAIN_WITH_WATER
@@ -123,13 +129,13 @@ void main(void)
 #ifdef TERRAIN_WITH_LAVA
 		varyingEmission +
 #endif
-		(scene.ambient * vertexColor) +
+		(scene.ambient * texel) +
 		(diff * final * 2.0);
 #endif //ATMOSPHERE
 
 #else // NUM_LIGHTS > 0 -- unlit rendering - stars
 	//emission is used to boost colour of stars, which is a bit odd
-	frag_color = material.emission + vertexColor;
+	frag_color = material.emission + texel;
 #endif
 	SetFragDepth();
 }

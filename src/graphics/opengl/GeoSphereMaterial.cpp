@@ -91,8 +91,9 @@ namespace Graphics {
 		void GeoSphereSurfaceMaterial::Unapply()
 		{
 			if (texture0) {
-				static_cast<TextureGL *>(texture1)->Unbind();
-				static_cast<TextureGL *>(texture0)->Unbind();
+				static_cast<TextureGL*>(texture2)->Unbind();
+				static_cast<TextureGL*>(texture1)->Unbind();
+				static_cast<TextureGL*>(texture0)->Unbind();
 			}
 		}
 
@@ -119,6 +120,7 @@ namespace Graphics {
 			if (this->texture0) {
 				p->texture0.Set(this->texture0, 0);
 				p->texture1.Set(this->texture1, 1);
+				p->texture2.Set(this->texture2, 2);
 
 				const float fDetailFrequency = pow(2.0f, float(params.maxPatchDepth) - float(params.patchDepth));
 

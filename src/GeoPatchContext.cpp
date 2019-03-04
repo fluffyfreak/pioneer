@@ -17,6 +17,7 @@
 
 // static instances
 int GeoPatchContext::edgeLen = 0;
+int GeoPatchContext::textureSize = 0;
 int GeoPatchContext::numTris = 0;
 double GeoPatchContext::frac = 0.0;
 RefCountedPtr<Graphics::IndexBuffer> GeoPatchContext::indices;

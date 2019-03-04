@@ -33,12 +33,18 @@ static const int detail_edgeLen[5] = {
 	9, 17, 17, 33, 33
 };
 
+static const int texture_sizes[3] = {
+	32, 64, 128
+};
+
 static const double gs_targetPatchTriLength(100.0);
 static std::vector<GeoSphere *> s_allGeospheres;
 
 void GeoSphere::Init()
 {
-	s_patchContext.Reset(new GeoPatchContext(detail_edgeLen[Pi::detail.planets > 4 ? 4 : Pi::detail.planets]));
+	s_patchContext.Reset(new GeoPatchContext(
+		detail_edgeLen[Pi::detail.planets > 4 ? 4 : Pi::detail.planets],
+		texture_sizes[Pi::detail.texture > 2 ? 2 : Pi::detail.texture]));
 }
 
 void GeoSphere::Uninit()
@@ -69,7 +75,9 @@ void GeoSphere::UpdateAllGeoSpheres()
 // static
 void GeoSphere::OnChangeDetailLevel()
 {
-	s_patchContext.Reset(new GeoPatchContext(detail_edgeLen[Pi::detail.planets > 4 ? 4 : Pi::detail.planets]));
+	s_patchContext.Reset(new GeoPatchContext(
+		detail_edgeLen[Pi::detail.planets > 4 ? 4 : Pi::detail.planets],
+		texture_sizes[Pi::detail.texture > 2 ? 2 : Pi::detail.texture]));
 
 	// reinit the geosphere terrain data
 	for (std::vector<GeoSphere *>::iterator i = s_allGeospheres.begin(); i != s_allGeospheres.end(); ++i) {
@@ -472,46 +480,53 @@ void GeoSphere::SetUpMaterials()
 	rsd.depthWrite = false;
 	m_atmosRenderState = Pi::renderer->CreateRenderState(rsd);
 
-	// Request material for this star or planet, with or without
-	// atmosphere. Separate material for surface and sky.
-	Graphics::MaterialDescriptor surfDesc;
-	const Uint32 effect_flags = m_terrain->GetSurfaceEffects();
-	if (effect_flags & Terrain::EFFECT_LAVA)
-		surfDesc.effect = Graphics::EFFECT_GEOSPHERE_TERRAIN_WITH_LAVA;
-	else if (effect_flags & Terrain::EFFECT_WATER)
-		surfDesc.effect = Graphics::EFFECT_GEOSPHERE_TERRAIN_WITH_WATER;
-	else
-		surfDesc.effect = Graphics::EFFECT_GEOSPHERE_TERRAIN;
+	{
+		// Request material for this star or planet, with or without
+		// atmosphere. Separate material for surface and sky.
+		Graphics::MaterialDescriptor surfDesc;
+		const Uint32 effect_flags = m_terrain->GetSurfaceEffects();
+		if (effect_flags & Terrain::EFFECT_LAVA)
+			surfDesc.effect = Graphics::EFFECT_GEOSPHERE_TERRAIN_WITH_LAVA;
+		else if (effect_flags & Terrain::EFFECT_WATER)
+			surfDesc.effect = Graphics::EFFECT_GEOSPHERE_TERRAIN_WITH_WATER;
+		else
+			surfDesc.effect = Graphics::EFFECT_GEOSPHERE_TERRAIN;
 
-	if ((GetSystemBody()->GetType() == SystemBody::TYPE_BROWN_DWARF) ||
-		(GetSystemBody()->GetType() == SystemBody::TYPE_STAR_M)) {
-		//dim star (emits and receives light)
-		surfDesc.lighting = true;
-		surfDesc.quality &= ~Graphics::HAS_ATMOSPHERE;
-	} else if (GetSystemBody()->GetSuperType() == SystemBody::SUPERTYPE_STAR) {
-		//normal star
-		surfDesc.lighting = false;
-		surfDesc.quality &= ~Graphics::HAS_ATMOSPHERE;
-		surfDesc.effect = Graphics::EFFECT_GEOSPHERE_STAR;
-	} else {
-		//planetoid with or without atmosphere
-		const SystemBody::AtmosphereParameters ap(GetSystemBody()->CalcAtmosphereParams());
-		surfDesc.lighting = true;
-		if (ap.atmosDensity > 0.0) {
-			surfDesc.quality |= Graphics::HAS_ATMOSPHERE;
-		} else {
+		if ((GetSystemBody()->GetType() == SystemBody::TYPE_BROWN_DWARF) ||
+			(GetSystemBody()->GetType() == SystemBody::TYPE_STAR_M)) {
+			//dim star (emits and receives light)
+			surfDesc.lighting = true;
 			surfDesc.quality &= ~Graphics::HAS_ATMOSPHERE;
 		}
+		else if (GetSystemBody()->GetSuperType() == SystemBody::SUPERTYPE_STAR) {
+			//normal star
+			surfDesc.lighting = false;
+			surfDesc.quality &= ~Graphics::HAS_ATMOSPHERE;
+			surfDesc.effect = Graphics::EFFECT_GEOSPHERE_STAR;
+		}
+		else {
+			//planetoid with or without atmosphere
+			const SystemBody::AtmosphereParameters ap(GetSystemBody()->CalcAtmosphereParams());
+			surfDesc.lighting = true;
+			if (ap.atmosDensity > 0.0) {
+				surfDesc.quality |= Graphics::HAS_ATMOSPHERE;
+			}
+			else {
+				surfDesc.quality &= ~Graphics::HAS_ATMOSPHERE;
+			}
+		}
+
+		surfDesc.quality |= Graphics::HAS_ECLIPSES;
+		surfDesc.textures = 3;
+		m_surfaceMaterial.Reset(Pi::renderer->CreateMaterial(surfDesc));
+
+		m_texHi.Reset(Graphics::TextureBuilder::Model("textures/high.dds").GetOrCreateTexture(Pi::renderer, "model"));
+		m_texLo.Reset(Graphics::TextureBuilder::Model("textures/low.dds").GetOrCreateTexture(Pi::renderer, "model"));
+		m_surfaceMaterial->texture0 = m_texHi.Get();
+		m_surfaceMaterial->texture1 = m_texLo.Get();
 	}
 
-	surfDesc.quality |= Graphics::HAS_ECLIPSES;
-	m_surfaceMaterial.Reset(Pi::renderer->CreateMaterial(surfDesc));
-
-	m_texHi.Reset(Graphics::TextureBuilder::Model("textures/high.dds").GetOrCreateTexture(Pi::renderer, "model"));
-	m_texLo.Reset(Graphics::TextureBuilder::Model("textures/low.dds").GetOrCreateTexture(Pi::renderer, "model"));
-	m_surfaceMaterial->texture0 = m_texHi.Get();
-	m_surfaceMaterial->texture1 = m_texLo.Get();
-
+	// sky material
 	{
 		Graphics::MaterialDescriptor skyDesc;
 		skyDesc.effect = Graphics::EFFECT_GEOSPHERE_SKY;

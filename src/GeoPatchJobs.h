@@ -20,7 +20,7 @@ class GeoSphere;
 class SBaseRequest {
 public:
 	SBaseRequest(const vector3d &v0_, const vector3d &v1_, const vector3d &v2_, const vector3d &v3_, const vector3d &cn,
-		const uint32_t depth_, const SystemPath &sysPath_, const GeoPatchID &patchID_, const int edgeLen_, const double fracStep_,
+		const uint32_t depth_, const SystemPath &sysPath_, const GeoPatchID &patchID_, const int edgeLen_, const int pixelDims_, const double fracStep_,
 		Terrain *pTerrain_) :
 		v0(v0_),
 		v1(v1_),
@@ -31,12 +31,13 @@ public:
 		sysPath(sysPath_),
 		patchID(patchID_),
 		edgeLen(edgeLen_),
+		pixelDims(pixelDims_),
 		fracStep(fracStep_),
 		pTerrain(pTerrain_)
 	{
 	}
 
-	inline int NUMVERTICES(const int el) const { return el * el; }
+	inline int Square(const int el) const { return el * el; }
 
 	const vector3d v0, v1, v2, v3;
 	const vector3d centroid;
@@ -44,6 +45,7 @@ public:
 	const SystemPath sysPath;
 	const GeoPatchID patchID;
 	const int edgeLen;
+	const int pixelDims;
 	const double fracStep;
 	RefCountedPtr<Terrain> pTerrain;
 
@@ -55,17 +57,21 @@ protected:
 class SQuadSplitRequest : public SBaseRequest {
 public:
 	SQuadSplitRequest(const vector3d &v0_, const vector3d &v1_, const vector3d &v2_, const vector3d &v3_, const vector3d &cn,
-		const uint32_t depth_, const SystemPath &sysPath_, const GeoPatchID &patchID_, const int edgeLen_, const double fracStep_,
+		const uint32_t depth_, const SystemPath &sysPath_, const GeoPatchID &patchID_, const int edgeLen_, const int pixelDims_, const double fracStep_,
 		Terrain *pTerrain_) :
-		SBaseRequest(v0_, v1_, v2_, v3_, cn, depth_, sysPath_, patchID_, edgeLen_, fracStep_, pTerrain_)
+		SBaseRequest(v0_, v1_, v2_, v3_, cn, depth_, sysPath_, patchID_, edgeLen_, pixelDims_, fracStep_, pTerrain_)
 	{
-		const int numVerts = NUMVERTICES(edgeLen_);
+		const int numVerts = Square(edgeLen_);
 		for (int i = 0; i < 4; ++i) {
 			heights[i] = new double[numVerts];
 			normals[i] = new vector3f[numVerts];
-			colors[i] = new Color3ub[numVerts];
 		}
-		const int numBorderedVerts = NUMVERTICES((edgeLen_ * 2) + (BORDER_SIZE * 2) - 1);
+		const int numPixels = Square(pixelDims_);
+		for (int i = 0; i < 4; ++i)
+		{
+			colors[i] = new Color3ub[numPixels];
+		}
+		const int numBorderedVerts = Square((edgeLen_ * 2) + (BORDER_SIZE * 2) - 1);
 		borderHeights.reset(new double[numBorderedVerts]);
 		borderVertexs.reset(new vector3d[numBorderedVerts]);
 	}
@@ -94,16 +100,18 @@ protected:
 class SSingleSplitRequest : public SBaseRequest {
 public:
 	SSingleSplitRequest(const vector3d &v0_, const vector3d &v1_, const vector3d &v2_, const vector3d &v3_, const vector3d &cn,
-		const uint32_t depth_, const SystemPath &sysPath_, const GeoPatchID &patchID_, const int edgeLen_, const double fracStep_,
+		const uint32_t depth_, const SystemPath &sysPath_, const GeoPatchID &patchID_, const int edgeLen_, const int pixelDims_, const double fracStep_,
 		Terrain *pTerrain_) :
-		SBaseRequest(v0_, v1_, v2_, v3_, cn, depth_, sysPath_, patchID_, edgeLen_, fracStep_, pTerrain_)
+		SBaseRequest(v0_, v1_, v2_, v3_, cn, depth_, sysPath_, patchID_, edgeLen_, pixelDims_, fracStep_, pTerrain_)
 	{
-		const int numVerts = NUMVERTICES(edgeLen_);
+		const int numVerts = Square(edgeLen_);
 		heights = new double[numVerts];
 		normals = new vector3f[numVerts];
-		colors = new Color3ub[numVerts];
+		
+		const int numPixels = Square(pixelDims_);
+		colors = new Color3ub[numPixels];
 
-		const int numBorderedVerts = NUMVERTICES(edgeLen_ + (BORDER_SIZE * 2));
+		const int numBorderedVerts = Square(edgeLen_ + (BORDER_SIZE * 2));
 		borderHeights.reset(new double[numBorderedVerts]);
 		borderVertexs.reset(new vector3d[numBorderedVerts]);
 	}

@@ -29,6 +29,7 @@ class GeoSphere;
 class GeoPatchContext : public RefCounted {
 private:
 	static int edgeLen;
+	static int textureSize;
 	static int numTris;
 
 	static double frac;
@@ -49,13 +50,13 @@ public:
 	struct VBOVertex {
 		vector3f pos;
 		vector3f norm;
-		Color4ub col;
 		vector2f uv;
 	};
 
-	GeoPatchContext(const int _edgeLen)
+	GeoPatchContext(const int _edgeLen, const int _textureSize)
 	{
 		edgeLen = _edgeLen + 2; // +2 for the skirt
+		textureSize = _textureSize;
 		Init();
 	}
 
@@ -71,6 +72,7 @@ public:
 	static inline int NUMVERTICES() { return edgeLen * edgeLen; }
 
 	static inline int GetEdgeLen() { return edgeLen; }
+	static inline int GetTextureSize() { return textureSize; }
 	static inline int GetNumTris() { return numTris; }
 	static inline double GetFrac() { return frac; }
 };

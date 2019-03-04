@@ -413,6 +413,24 @@ static int l_engine_set_planet_detail_level(lua_State *l)
 	return 0;
 }
 
+static int l_engine_get_planet_texture_patch_size(lua_State *l)
+{
+	lua_pushstring(l, EnumStrings::GetString("TexturePatchSize", Pi::detail.texture));
+	return 1;
+}
+
+static int l_engine_set_planet_texture_patch_size(lua_State *l)
+{
+	const int level = LuaConstants::GetConstantFromArg(l, "TexturePatchSize", 1);
+	if (level != Pi::detail.texture) {
+		Pi::detail.texture = level;
+		Pi::config->SetInt("TexturePatchSize", level);
+		Pi::config->Save();
+		Pi::OnChangeDetailLevel();
+	}
+	return 0;
+}
+
 static int l_engine_get_city_detail_level(lua_State *l)
 {
 	lua_pushstring(l, EnumStrings::GetString("DetailLevel", Pi::detail.cities));
@@ -1121,6 +1139,10 @@ void LuaEngine::Register()
 
 		{ "GetPlanetDetailLevel", l_engine_get_planet_detail_level },
 		{ "SetPlanetDetailLevel", l_engine_set_planet_detail_level },
+
+		{ "GetPlanetTexturePatchSize", l_engine_get_planet_texture_patch_size },
+		{ "SetPlanetTexturePatchSize", l_engine_set_planet_texture_patch_size },
+
 		{ "GetCityDetailLevel", l_engine_get_city_detail_level },
 		{ "SetCityDetailLevel", l_engine_set_city_detail_level },
 
