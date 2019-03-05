@@ -88,7 +88,7 @@ void main(void)
 	}
 
 	// Use the detail value to multiply the final colour before lighting
-	vec4 final = texel;// * detailMul;
+	vec4 final = texel * detailMul;
 	
 #ifdef ATMOSPHERE
 	// when does the eye ray intersect atmosphere
