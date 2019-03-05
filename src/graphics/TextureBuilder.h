@@ -17,7 +17,7 @@ namespace Graphics {
 	class TextureBuilder {
 	public:
 		TextureBuilder(const SDLSurfacePtr &surface, TextureSampleMode sampleMode = LINEAR_CLAMP, bool generateMipmaps = false, bool potExtend = false, bool forceRGBA = true, bool compressTextures = true, bool anisoFiltering = true);
-		TextureBuilder(const std::string &filename, TextureSampleMode sampleMode = LINEAR_CLAMP, bool generateMipmaps = false, bool potExtend = false, bool forceRGBA = true, bool compressTextures = true, bool anisoFiltering = true, TextureType textureType = TEXTURE_2D);
+		TextureBuilder(const std::string &filename, TextureSampleMode sampleMode = LINEAR_CLAMP, bool generateMipmaps = false, bool potExtend = false, bool forceRGBA = true, bool compressTextures = true, bool anisoFiltering = true, TextureType textureType = TEXTURE_2D, const size_t layers = 1);
 		~TextureBuilder();
 
 		static void Init();
@@ -50,6 +50,14 @@ namespace Graphics {
 		static TextureBuilder Cube(const std::string &filename)
 		{
 			return TextureBuilder(filename, LINEAR_CLAMP, true, true, false, true, false, TEXTURE_CUBE_MAP);
+		}
+		static TextureBuilder LookUpTable(const std::string &filename) 
+		{
+			return TextureBuilder(filename, NEAREST_CLAMP, false, true, true, false, false);
+		}
+		static TextureBuilder Array(const std::string &filename, const size_t layers) 
+		{
+			return TextureBuilder(filename, LINEAR_REPEAT, true, true, false, true, true, TEXTURE_2D_ARRAY, layers);
 		}
 
 		const TextureDescriptor &GetDescriptor()
@@ -84,6 +92,7 @@ namespace Graphics {
 		SDLSurfacePtr m_surface;
 		std::vector<SDLSurfacePtr> m_cubemap;
 		PicoDDS::DDSImage m_dds;
+		std::vector<PicoDDS::DDSImage> m_ddsarray;
 		std::string m_filename;
 
 		TextureSampleMode m_sampleMode;
@@ -94,6 +103,7 @@ namespace Graphics {
 		bool m_compressTextures;
 		bool m_anisotropicFiltering;
 		TextureType m_textureType;
+		size_t m_layers;
 
 		TextureDescriptor m_descriptor;
 
