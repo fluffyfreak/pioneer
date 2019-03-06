@@ -1,6 +1,7 @@
 // Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
+#include "FileSystem.h"
 #include "GeoSphere.h"
 
 #include "GameConfig.h"
@@ -20,6 +21,7 @@
 #include "graphics/TextureBuilder.h"
 #include "graphics/VertexArray.h"
 #include "perlin.h"
+#include "StringF.h"
 #include "vcacheopt/vcacheopt.h"
 #include <algorithm>
 #include <deque>
@@ -552,9 +554,50 @@ void GeoSphere::SetUpMaterials()
 
 	m_texHi.Reset(Graphics::TextureBuilder::Model("textures/high.dds").GetOrCreateTexture(Pi::renderer, "model"));
 	m_texLo.Reset(Graphics::TextureBuilder::Model("textures/low.dds").GetOrCreateTexture(Pi::renderer, "model"));
-	m_surfaceLUT.Reset(	Graphics::TextureBuilder::LookUpTable("textures/terrain/terrainLUT.png").GetOrCreateTexture(Pi::renderer, "lut") );
-	m_surfaceAtlas.Reset( Graphics::TextureBuilder::Array("textures/terrain/atlas.dds", 16).GetOrCreateTexture(Pi::renderer, "array") );
 
+	IniConfig cfg;
+	// set defaults in case they're missing from the file
+	cfg.SetString("LUT", "textures/terrain/terrainLUT.png");
+
+	cfg.SetString("numberLayers", "16");
+
+	cfg.SetString("atlas0", "textures/terrain/atlas0.dds");
+	cfg.SetString("atlas1", "textures/terrain/atlas1.dds");
+	cfg.SetString("atlas2", "textures/terrain/atlas2.dds");
+	cfg.SetString("atlas3", "textures/terrain/atlas3.dds");
+
+	cfg.SetString("atlas4", "textures/terrain/atlas4.dds");
+	cfg.SetString("atlas5", "textures/terrain/atlas5.dds");
+	cfg.SetString("atlas6", "textures/terrain/atlas6.dds");
+	cfg.SetString("atlas7", "textures/terrain/atlas7.dds");
+
+	cfg.SetString("atlas8", "textures/terrain/atlas8.dds");
+	cfg.SetString("atlas9", "textures/terrain/atlas9.dds");
+	cfg.SetString("atlas10", "textures/terrain/atlas10.dds");
+	cfg.SetString("atlas11", "textures/terrain/atlas11.dds");
+
+	cfg.SetString("atlas12", "textures/terrain/atlas12.dds");
+	cfg.SetString("atlas13", "textures/terrain/atlas13.dds");
+	cfg.SetString("atlas14", "textures/terrain/atlas14.dds");
+	cfg.SetString("atlas15", "textures/terrain/atlas15.dds");
+
+	// load config based on the terrain colour fractals name
+	cfg.Read(FileSystem::gameDataFiles, stringf("textures/terrain/%0.ini", m_terrain->GetColorFractalName()));
+
+	// load the look-up-table
+	m_surfaceLUT.Reset(	Graphics::TextureBuilder::LookUpTable(cfg.String("LUT")).GetOrCreateTexture(Pi::renderer, "lut") );
+
+	// find the texture filenames this terrain uses
+	const int numberLayers = cfg.Int("numberLayers");
+	std::vector<std::string> textureFilenames; textureFilenames.reserve(numberLayers);
+	for (int i = 0; i < numberLayers; i++) {
+		textureFilenames.push_back(cfg.String(stringf("atlas%0", i)));
+	}
+
+	// load 'em
+	m_surfaceAtlas.Reset(Graphics::TextureBuilder::Array(textureFilenames, numberLayers).GetOrCreateTexture(Pi::renderer, "array"));
+
+	// assign all our beautiful textures
 	m_surfaceMaterial->texture0 = m_texHi.Get();
 	m_surfaceMaterial->texture1 = m_texLo.Get();
 	m_surfaceMaterial->texture2 = m_surfaceLUT.Get();

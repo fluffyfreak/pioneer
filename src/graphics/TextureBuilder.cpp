@@ -31,7 +31,21 @@ namespace Graphics {
 	}
 
 	TextureBuilder::TextureBuilder(const std::string &filename, TextureSampleMode sampleMode, bool generateMipmaps, bool potExtend, bool forceRGBA, bool compressTextures, bool anisoFiltering, TextureType textureType, const size_t layers) :
-		m_filename(filename),
+		m_sampleMode(sampleMode),
+		m_generateMipmaps(generateMipmaps),
+		m_potExtend(potExtend),
+		m_forceRGBA(forceRGBA),
+		m_compressTextures(compressTextures),
+		m_anisotropicFiltering(anisoFiltering),
+		m_textureType(textureType),
+		m_prepared(false),
+		m_layers(layers)
+	{
+		m_filenames.push_back(filename);
+	}
+
+	TextureBuilder::TextureBuilder(const std::vector<std::string> &filenames, TextureSampleMode sampleMode, bool generateMipmaps, bool potExtend, bool forceRGBA, bool compressTextures, bool anisoFiltering, TextureType textureType, const size_t layers) :
+		m_filenames(filenames),
 		m_sampleMode(sampleMode),
 		m_generateMipmaps(generateMipmaps),
 		m_potExtend(potExtend),
@@ -117,8 +131,8 @@ namespace Graphics {
 		PROFILE_SCOPED()
 		if (m_prepared) return;
 
-		if (!m_surface && !m_filename.empty()) {
-			std::string filename = m_filename;
+		if (!m_surface && !m_filenames.empty()) {
+			std::string filename = m_filenames.front();
 			std::transform(filename.begin(), filename.end(), filename.begin(), ::tolower);
 			if (ends_with_ci(filename, ".dds")) {
 				LoadDDS();
@@ -177,13 +191,13 @@ namespace Graphics {
 						assert(0);
 					}
 				}
-			} else if (!m_filename.empty()) {
+			} else if (!m_filenames.front().empty()) {
 				// power-of-two check
 				unsigned long width = ceil_pow2(m_surface->w);
 				unsigned long height = ceil_pow2(m_surface->h);
 
 				if (width != virtualWidth || height != virtualHeight)
-					Output("WARNING: texture '%s' is not power-of-two and may not display correctly\n", m_filename.c_str());
+					Output("WARNING: texture '%s' is not power-of-two and may not display correctly\n", m_filenames.front().c_str());
 			}
 		} else {
 			if(m_textureType != TEXTURE_2D_ARRAY) {
@@ -191,7 +205,7 @@ namespace Graphics {
 				case PicoDDS::FORMAT_DXT1: targetTextureFormat = TEXTURE_DXT1; break;
 				case PicoDDS::FORMAT_DXT5: targetTextureFormat = TEXTURE_DXT5; break;
 				default:
-					Output("ERROR: DDS texture with invalid format '%s' (only DXT1 and DXT5 are supported)\n", m_filename.c_str());
+					Output("ERROR: DDS texture with invalid format '%s' (only DXT1 and DXT5 are supported)\n", m_filenames.front().c_str());
 					assert(false);
 					return;
 				}
@@ -211,7 +225,7 @@ namespace Graphics {
 				case PicoDDS::FORMAT_DXT1: targetTextureFormat = TEXTURE_DXT1; break;
 				case PicoDDS::FORMAT_DXT5: targetTextureFormat = TEXTURE_DXT5; break;
 				default:
-					Output("ERROR: DDS texture with invalid format '%s' (only DXT1 and DXT5 are supported)\n", m_filename.c_str());
+					Output("ERROR: DDS texture with invalid format '%s' (only DXT1 and DXT5 are supported)\n", m_filenames.front().c_str());
 					assert(false);
 					return;
 				}
@@ -254,14 +268,14 @@ namespace Graphics {
 
 		SDLSurfacePtr s;
 		if (m_textureType == TEXTURE_2D) {
-			s = LoadSurfaceFromFile(m_filename);
+			s = LoadSurfaceFromFile(m_filenames.front());
 			if (!s) {
 				s = LoadSurfaceFromFile("textures/unknown.png");
 			}
 		} else if (m_textureType == TEXTURE_CUBE_MAP) {
-			Output("LoadSurface: %s: cannot load non-DDS cubemaps\n", m_filename.c_str());
+			Output("LoadSurface: %s: cannot load non-DDS cubemaps\n", m_filenames.front().c_str());
 		} else if(m_textureType == TEXTURE_2D_ARRAY) {
-			Output("LoadSurface: %s: cannot load non-DDS texture array files\n", m_filename.c_str());
+			Output("LoadSurface: %s: cannot load non-DDS texture array files\n", m_filenames.front().c_str());
 		}
 
 		// XXX if we can't load the fallback texture, then what?
@@ -273,29 +287,26 @@ namespace Graphics {
 	{
 		assert(!m_surface);
 		assert(!m_dds.headerdone_);
-		if(m_textureType != TEXTURE_2D_ARRAY) {
-			LoadDDSFromFile(m_filename, m_dds);
+		if(m_textureType != TEXTURE_2D_ARRAY)
+		{
+			LoadDDSFromFile(m_filenames.front(), m_dds);
 
 			if (!m_dds.headerdone_) {
 				m_surface = LoadSurfaceFromFile("textures/unknown.png");
 			}
-		} else if(m_textureType == TEXTURE_2D_ARRAY) {
-			const size_t idx = m_filename.find_last_of('.');
-			assert(idx != std::string::npos); // Error: filename incorrect, should be "file.ext"
-			// Loads cube map based on SpaceScape format: cubemap_sideN.png/.jpg
+		} else if(m_textureType == TEXTURE_2D_ARRAY)
+		{
 			m_ddsarray.clear();
 			const size_t layers = m_layers;
 			m_ddsarray.resize(layers);
-			for( size_t i=0; i<layers; i++) {
-				std::stringstream num;
-				num << i;
-				const std::string filename = m_filename.substr(0, idx) + num.str() + m_filename.substr(idx);
-				Output("LoadDDS: loading DDS atlas texture file (%s)\n", filename.c_str());
-				PiVerify( LoadDDSFromFile( filename, m_ddsarray[i]) );
+
+			for (int i = 0; i < layers; i++)
+			{
+				PiVerify(LoadDDSFromFile(m_filenames[i], m_ddsarray[i]));
 			}
 		}
 		// XXX if we can't load the fallback texture, then what?
-}
+	}
 
 	void TextureBuilder::UpdateTexture(Texture *texture)
 	{
