@@ -215,10 +215,8 @@ public:
 };
 
 // These are here in this manner to enforce that only float and double versions are possible.
-template <>
-inline vector3<float>::vector3() {}
-template <>
-inline vector3<double>::vector3() {}
+template <> inline vector3<float>::vector3() : x(0.0f), y(0.0f), z(0.0f) {}
+template <> inline vector3<double>::vector3() : x(0.0), y(0.0), z(0.0) {}
 template <>
 inline vector3<float>::vector3(const vector3<float> &v) :
 	x(v.x),
