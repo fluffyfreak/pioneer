@@ -48,7 +48,6 @@ public:
 	}
 
 	virtual double GetHeight(const vector3d &p) const = 0;
-	virtual vector3d GetColor(const vector3d &p, double height, const vector3d &norm) const = 0;
 
 	virtual const char *GetHeightFractalName() const = 0;
 	virtual const char *GetColorFractalName() const = 0;
@@ -146,7 +145,6 @@ private:
 template <typename ColorFractal>
 class TerrainColorFractal : virtual public Terrain {
 public:
-	virtual vector3d GetColor(const vector3d &p, double height, const vector3d &norm) const;
 	virtual const char *GetColorFractalName() const;
 
 protected:
