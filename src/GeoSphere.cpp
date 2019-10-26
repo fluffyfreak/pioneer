@@ -649,8 +649,8 @@ void GeoSphere::SetUpMaterials()
 	surfDesc.textures = 4;
 	m_surfaceMaterial.Reset(Pi::renderer->CreateMaterial(surfDesc));
 
-	LoadTerrainJSON(stringf("textures/terrain/%0.json", m_terrain->GetColorFractalName()));
-	//LoadTerrainJSON("textures/terrain/template.json");
+	LoadTerrainJSON(stringf("terrain/%0.json", m_terrain->GetColorFractalName()));
+	//LoadTerrainJSON("terrain/template.json");
 
 	// assign all our beautiful textures
 	m_surfaceMaterial->texture0 = m_texHi.Get();
