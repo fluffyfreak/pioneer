@@ -20,7 +20,7 @@ namespace PiGUI {
 	vector2f Image::GetSize()
 	{
 		auto size = m_texture->GetDescriptor().dataSize;
-		return { size.x, size.y };
+		return vector3f(size.x, size.y, 0.0f);
 	}
 
 	vector2f Image::GetUv()
