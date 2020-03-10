@@ -24,7 +24,7 @@ namespace Graphics {
 			virtual void Unapply() override {}
 			virtual bool IsProgramLoaded() const override final { return false; }
 			virtual void SetProgram(Program *p) {}
-			virtual void SetCommonUniforms(const matrix4x4f &mv, const matrix4x4f &proj) override {}
+			virtual void SetCommonUniforms(const matrix4x4f &mv, const matrix4x4f &proj, const double time) override {}
 		};
 	} // namespace Dummy
 } // namespace Graphics

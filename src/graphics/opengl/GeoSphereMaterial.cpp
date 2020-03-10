@@ -230,6 +230,8 @@ namespace Graphics {
 		void GeoSphereStarMaterial::Unapply()
 		{
 			if (texture0) {
+				static_cast<TextureGL *>(texture3)->Unbind();
+				static_cast<TextureGL *>(texture2)->Unbind();
 				static_cast<TextureGL *>(texture1)->Unbind();
 				static_cast<TextureGL *>(texture0)->Unbind();
 			}
@@ -240,6 +242,12 @@ namespace Graphics {
 			OGL::Material::Apply();
 
 			GeoSphereProgram *p = static_cast<GeoSphereProgram *>(m_program);
+			if (this->texture0) {
+				p->texture0.Set(this->texture0, 0);
+				p->texture1.Set(this->texture1, 1);
+				p->texture2.Set(this->texture2, 2);
+				p->texture3.Set(this->texture3, 3);
+			}
 
 			p->emission.Set(this->emissive);
 		}

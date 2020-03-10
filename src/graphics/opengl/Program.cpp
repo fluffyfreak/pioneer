@@ -279,7 +279,8 @@ namespace Graphics {
 		void Program::InitUniforms()
 		{
 			PROFILE_SCOPED()
-			//Init generic uniforms, like matrices
+			//Init generic uniforms, like matrices, and time
+			uTime.Init("uTime", m_program);
 			uProjectionMatrix.Init("uProjectionMatrix", m_program);
 			uViewMatrix.Init("uViewMatrix", m_program);
 			uViewMatrixInverse.Init("uViewMatrixInverse", m_program);

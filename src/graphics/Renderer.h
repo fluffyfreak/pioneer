@@ -198,10 +198,12 @@ namespace Graphics {
 		Stats &GetStats() { return m_stats; }
 
 		void SetGrab(const bool grabbed);
+		void SetTime(const double time);
 
 	protected:
 		int m_width;
 		int m_height;
+		double m_time;
 		Color m_ambient;
 		Light m_lights[4];
 		Stats m_stats;

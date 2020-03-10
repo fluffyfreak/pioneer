@@ -6,9 +6,11 @@
 #include "lib.glsl"
 
 out vec4 vertexColor;
+out vec3 varyingTexCoord0;
 
 void main(void)
 {
 	gl_Position = logarithmicTransform();
 	vertexColor = a_color;
+	varyingTexCoord0 = a_normal.xyz;
 }

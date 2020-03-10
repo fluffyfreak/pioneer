@@ -237,7 +237,6 @@ void Pi::EndRenderTarget()
 
 static void draw_progress(float progress)
 {
-
 	Pi::renderer->ClearScreen();
 	Pi::pigui->NewFrame(Pi::renderer->GetSDLWindow());
 	Pi::DrawPiGui(progress, "INIT");
@@ -960,6 +959,7 @@ void Pi::TombStoneLoop()
 	do {
 		Pi::HandleEvents();
 		Pi::renderer->SetGrab(false);
+		Pi::renderer->SetTime(1.0f);
 
 		// render the scene
 		Pi::BeginRenderTarget();
@@ -1075,6 +1075,7 @@ void Pi::Start(const SystemPath &startPath)
 		}
 
 		Pi::BeginRenderTarget();
+		Pi::renderer->SetTime(_time);
 		Pi::renderer->BeginFrame();
 		intro->Draw(_time);
 		Pi::renderer->EndFrame();
@@ -1176,6 +1177,8 @@ void Pi::MainLoop()
 	double accumulator = Pi::game->GetTimeStep();
 	Pi::gameTickAlpha = 0;
 
+	float renderTimeAccum = 0.0f;
+
 #ifdef PIONEER_PROFILER
 	Profiler::reset();
 #endif
@@ -1206,6 +1209,7 @@ void Pi::MainLoop()
 					break;
 				}
 				game->TimeStep(step);
+				renderTimeAccum += step;
 				BaseSphere::UpdateAllBaseSphereDerivatives();
 
 				accumulator -= step;
@@ -1232,10 +1236,16 @@ void Pi::MainLoop()
 		perfTimer.SoftStop();
 		phys_time = perfTimer.milliseconds();
 
+		// limit to a low float value and wrap it
+		if (renderTimeAccum > 10000.0f)
+			renderTimeAccum -= 10000.0f;
+
+		const double gameTime = Pi::game->GetTime();
+
 		// did the player die?
 		if (Pi::player->IsDead()) {
 			if (time_player_died > 0.0) {
-				if (Pi::game->GetTime() - time_player_died > 8.0) {
+				if (gameTime - time_player_died > 8.0) {
 					Pi::SetView(0);
 					Pi::TombStoneLoop();
 					Pi::EndGame();
@@ -1245,7 +1255,7 @@ void Pi::MainLoop()
 				Pi::game->SetTimeAccel(Game::TIMEACCEL_1X);
 				Pi::game->GetDeathView()->Init();
 				Pi::SetView(Pi::game->GetDeathView());
-				time_player_died = Pi::game->GetTime();
+				time_player_died = gameTime;
 			}
 		}
 
@@ -1253,6 +1263,7 @@ void Pi::MainLoop()
 		Pi::renderer->SetViewport(0, 0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
 		Pi::renderer->BeginFrame();
 		Pi::renderer->SetTransform(matrix4x4f::Identity());
+		Pi::renderer->SetTime(renderTimeAccum);
 
 		/* Calculate position for this rendered frame (interpolated between two physics ticks */
 		// XXX should this be here? what is this anyway?

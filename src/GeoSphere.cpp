@@ -481,7 +481,6 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView
 		emission = StarSystem::starRealColors[GetSystemBody()->GetType()];
 		emission.a = 255;
 	}
-
 	else {
 		// give planet some ambient lighting if the viewer is close to it
 		double camdist = 0.1 / campos.LengthSqr();
@@ -643,21 +642,30 @@ void GeoSphere::SetUpMaterials()
 		} else {
 			surfDesc.quality &= ~Graphics::HAS_ATMOSPHERE;
 		}
+		surfDesc.quality |= Graphics::HAS_ECLIPSES;
+		surfDesc.textures = 4;
 	}
 
-	surfDesc.quality |= Graphics::HAS_ECLIPSES;
-	surfDesc.textures = 4;
 	m_surfaceMaterial.Reset(Pi::renderer->CreateMaterial(surfDesc));
 
-	LoadTerrainJSON(stringf("terrain/%0.json", m_terrain->GetColorFractalName()));
-	//LoadTerrainJSON("terrain/template.json");
+	if (GetSystemBody()->GetSuperType() == SystemBody::SUPERTYPE_STAR) {
+		// star
+		surfDesc.textures = 1;
+		m_texHi.Reset(Graphics::TextureBuilder::Cube("textures/starSurface.dds").GetOrCreateTexture(Pi::renderer, "model"));
+		m_surfaceMaterial->texture0 = m_texHi.Get();
+	} else {
+		// planet
+		LoadTerrainJSON(stringf("terrain/%0.json", m_terrain->GetColorFractalName()));
+		//LoadTerrainJSON("terrain/template.json");
 
-	// assign all our beautiful textures
-	m_surfaceMaterial->texture0 = m_texHi.Get();
-	m_surfaceMaterial->texture1 = m_texLo.Get();
-	m_surfaceMaterial->texture2 = m_surfaceLUT.Get();
-	m_surfaceMaterial->texture3 = m_surfaceAtlas.Get();
+		// assign all our beautiful textures
+		m_surfaceMaterial->texture0 = m_texHi.Get();
+		m_surfaceMaterial->texture1 = m_texLo.Get();
+		m_surfaceMaterial->texture2 = m_surfaceLUT.Get();
+		m_surfaceMaterial->texture3 = m_surfaceAtlas.Get();
+	}
 
+	if (surfDesc.quality & Graphics::HAS_ATMOSPHERE)
 	{
 		Graphics::MaterialDescriptor skyDesc;
 		skyDesc.effect = Graphics::EFFECT_GEOSPHERE_SKY;

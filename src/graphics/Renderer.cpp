@@ -54,4 +54,9 @@ namespace Graphics {
 		SDL_SetRelativeMouseMode(SDL_bool(grabbed));
 	}
 
+	void Renderer::SetTime(const double time)
+	{
+		m_time = time;
+	}
+
 } // namespace Graphics

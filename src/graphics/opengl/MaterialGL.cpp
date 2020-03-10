@@ -23,12 +23,16 @@ namespace Graphics {
 			return m_program->Loaded();
 		}
 
-		void Material::SetCommonUniforms(const matrix4x4f &mv, const matrix4x4f &proj)
+		void Material::SetCommonUniforms(const matrix4x4f &mv, const matrix4x4f &proj, const double time)
 		{
 			const matrix4x4f ViewProjection = proj * mv;
 			const matrix3x3f orient(mv.GetOrient());
 			const matrix3x3f NormalMatrix(orient.Inverse());
 
+			// time
+			m_program->uTime.Set((float)time * 0.001f);
+
+			// common matrices
 			m_program->uProjectionMatrix.Set(proj);
 			m_program->uViewMatrix.Set(mv);
 			m_program->uViewMatrixInverse.Set(mv.Inverse());

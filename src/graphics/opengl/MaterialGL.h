@@ -33,7 +33,7 @@ namespace Graphics {
 			virtual void Unapply() override;
 			virtual bool IsProgramLoaded() const override final;
 			virtual void SetProgram(Program *p) { m_program = p; }
-			virtual void SetCommonUniforms(const matrix4x4f &mv, const matrix4x4f &proj) override;
+			virtual void SetCommonUniforms(const matrix4x4f &mv, const matrix4x4f &proj, const double time) override;
 
 		protected:
 			friend class Graphics::RendererOGL;

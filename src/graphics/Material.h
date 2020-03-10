@@ -101,7 +101,7 @@ namespace Graphics {
 		virtual void Unapply() {}
 		virtual bool IsProgramLoaded() const = 0;
 
-		virtual void SetCommonUniforms(const matrix4x4f &mv, const matrix4x4f &proj) = 0;
+		virtual void SetCommonUniforms(const matrix4x4f &mv, const matrix4x4f &proj, const double time) = 0;
 
 		void *specialParameter0; //this can be whatever. Bit of a hack.
 

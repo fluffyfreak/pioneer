@@ -150,11 +150,10 @@ namespace Graphics {
 	RendererOGL::RendererOGL(SDL_Window *window, const Graphics::Settings &vs, SDL_GLContext &glContext) :
 		Renderer(window, vs.width, vs.height),
 		m_numLights(0),
-		m_numDirLights(0)
+		m_numDirLights(0),
 		//the range is very large due to a "logarithmic z-buffer" trick used
 		//http://outerra.blogspot.com/2009/08/logarithmic-z-buffer.html
 		//http://www.gamedev.net/blog/73/entry-2006307-tip-of-the-day-logarithmic-zbuffer-artifacts-fix/
-		,
 		m_minZNear(0.001f),
 		m_maxZFar(100000000.0f),
 		m_useCompressedTextures(false),
@@ -659,7 +658,7 @@ namespace Graphics {
 
 	void RendererOGL::SetMaterialShaderTransforms(Material *m)
 	{
-		m->SetCommonUniforms(m_modelViewStack.top(), m_projectionStack.top());
+		m->SetCommonUniforms(m_modelViewStack.top(), m_projectionStack.top(), m_time);
 		CheckRenderErrors(__FUNCTION__, __LINE__);
 	}
 
