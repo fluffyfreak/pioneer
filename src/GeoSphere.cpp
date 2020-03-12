@@ -651,7 +651,7 @@ void GeoSphere::SetUpMaterials()
 	if (GetSystemBody()->GetSuperType() == SystemBody::SUPERTYPE_STAR) {
 		// star
 		surfDesc.textures = 1;
-		m_texHi.Reset(Graphics::TextureBuilder::Cube("textures/starSurface.dds").GetOrCreateTexture(Pi::renderer, "model"));
+		m_texHi.Reset(Graphics::TextureBuilder::Cube("textures/stars/StarSurface.dds").GetOrCreateTexture(Pi::renderer, "model"));
 		m_surfaceMaterial->texture0 = m_texHi.Get();
 	} else {
 		// planet
