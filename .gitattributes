@@ -1,6 +1,6 @@
 * text=auto
-
 *.dae -text
 *.DAE -text
 *.obj -text
 *.OBJ -text
+*.dds filter=lfs diff=lfs merge=lfs -text
