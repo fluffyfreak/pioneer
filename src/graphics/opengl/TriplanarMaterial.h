@@ -4,8 +4,7 @@
 #ifndef _OGL_TRIPLANARMATERIAL_H
 #define _OGL_TRIPLANARMATERIAL_H
 /*
- * A generic material & program for simple uses
- * textured/untextured, vertex colors or no...
+ * Triplanar texture mapping material
  *
  */
 #include "MaterialGL.h"

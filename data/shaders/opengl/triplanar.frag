@@ -1,6 +1,10 @@
 // Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
+#include "attributes.glsl"
+#include "logz.glsl"
+#include "lib.glsl"
+
 #ifdef TEXTURE0
 uniform sampler2D texture0; //diffuse + intensity
 uniform sampler2D texture1; //normal(enc) + specular + AO
@@ -9,9 +13,6 @@ uniform sampler2D texture3; //normal(enc) + specular + AO
 in vec2 texCoord0;
 #endif
 
-#ifdef VERTEXCOLOR
-in vec4 vertexColor;
-#endif
 #if (NUM_LIGHTS > 0)
 in vec3 eyePos;
 in vec3 normal;
@@ -22,11 +23,6 @@ in vec3 wCoords23;
 in vec3 tangent;
 in vec3 bitangent;
 #endif
-#ifdef HEAT_COLOURING
-uniform sampler2D heatGradient;
-uniform float heatingAmount; // 0.0 to 1.0 used for `u` component of heatGradient texture
-in vec3 heatingDir;
-#endif // HEAT_COLOURING
 #endif // (NUM_LIGHTS > 0)
 
 uniform Scene scene;
@@ -91,11 +87,7 @@ vec3 decode(in vec2 enc)
 
 void main(void)
 {
-#ifdef VERTEXCOLOR
-	vec4 color = vertexColor;
-#else
 	vec4 color = material.diffuse;
-#endif
 
 #ifdef TEXTURE0
 	// in wNormal is the world-space normal of the fragment
@@ -123,7 +115,6 @@ void main(void)
 	float spec = mix(tex1.z, tex3.z, texCoord0.x);
 	float ambi = mix(tex1.w, tex3.w, texCoord0.x);
 	
-	
 #endif
 
 //directional lighting
@@ -138,6 +129,8 @@ void main(void)
 #else
 	vec3 v_normal = normal;
 #endif // MAP_NORMAL
+	//v_normal = normal;
+	//color = vec4(v_normal, 1.0);
 
 	//ambient only make sense with lighting
 	vec4 light = scene.ambient;
@@ -158,22 +151,7 @@ void main(void)
 #endif //NUM_LIGHTS
 
 #if (NUM_LIGHTS > 0)
-	#ifdef HEAT_COLOURING
-		if (heatingAmount > 0.0)
-		{
-			float dphNn = clamp(dot(heatingDir, v_normal), 0.0, 1.0);
-			float heatDot = heatingAmount * (dphNn * dphNn * dphNn);
-			vec4 heatColour = texture(heatGradient, vec2(heatDot, 0.5)); //heat gradient blend
-			frag_color = color * light + specular;
-			frag_color.rgb = frag_color.rgb + heatColour.rgb;
-		}
-		else
-		{
-			frag_color = color * light + specular;
-		}
-	#else
-		frag_color = color * light + specular;
-	#endif // HEAT_COLOURING
+	frag_color = color;// * light + specular;
 #else
 	frag_color = color;
 #endif

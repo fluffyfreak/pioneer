@@ -196,7 +196,7 @@ namespace AsteroidFunctions
 	{
 		return fbm(p + vector3f(fbm(p + vector3f(fbm(p)))));
 	}
-
+#pragma pack(push, 4)
 	struct PosNormTangentUVVert {
 		vector3f pos;
 		vector3f norm;
@@ -206,6 +206,7 @@ namespace AsteroidFunctions
 			return (pos == a.pos) && (norm == a.norm) && (uv0 == a.uv0) && (tangent == a.tangent);
 		}
 	};
+#pragma pack(pop)
 
 	struct VertFaces {
 		VertFaces() : count(0) {}
@@ -446,8 +447,8 @@ namespace AsteroidFunctions
 		{
 			vOut[i].pos = vtsIn.position[i];
 			vOut[i].norm = vtsIn.normal[i];
-			vOut[i].tangent = vtsIn.tangent[i];
 			vOut[i].uv0 = vtsIn.uv0[i];
+			vOut[i].tangent = vtsIn.tangent[i];
 		}
 	}
 
@@ -925,10 +926,12 @@ void Asteroid::CreateAndPopulateRenderBuffers(TLOD *pLOD, Graphics::Renderer *r)
 void Asteroid::Draw(Renderer *r, const matrix4x4f &trans)
 {
 	PROFILE_SCOPED();
+	m_model->Render(trans);
+
 	static const size_t idx = m_lods.size() - 1;
 	const TLOD *pLOD = m_lods[idx];
 	if (pLOD) {
-		m_model->Render(trans);
+		//r->SetTransform(trans);
 		//r->DrawBufferIndexed(pLOD->m_vb.Get(), pLOD->m_ib.Get(), m_renderState, m_material.Get());
 #ifdef DEBUG_RENDER_NORMALS
 		pLOD->m_normLines->Draw(r, m_renderState, Graphics::LINE_SINGLE);

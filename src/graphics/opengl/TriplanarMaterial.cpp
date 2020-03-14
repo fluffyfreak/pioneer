@@ -6,7 +6,6 @@
 
 #include "graphics/Material.h"
 #include "graphics/Graphics.h"
-#include "HeatGradientPar.h"
 #include "RendererGL.h"
 #include "TextureGL.h"
 #include <sstream>
@@ -24,8 +23,6 @@ TriplanarProgram::TriplanarProgram(const MaterialDescriptor &desc, int numLights
 	std::stringstream ss;
 	if (desc.textures > 0)
 		ss << "#define TEXTURE0\n";
-	if (desc.vertexColors)
-		ss << "#define VERTEXCOLOR\n";
 	//using only one light
 	if (desc.lighting && numLights > 0)
 		ss << stringf("#define NUM_LIGHTS %0{d}\n", numLights);
@@ -39,8 +36,6 @@ TriplanarProgram::TriplanarProgram(const MaterialDescriptor &desc, int numLights
 		ss << "#define MAP_EMISSIVE\n";
 	if (desc.ambientMap)
 		ss << "#define MAP_AMBIENT\n";
-	if (desc.quality & HAS_HEAT_GRADIENT)
-		ss << "#define HEAT_COLOURING\n";
 
 	m_name = "triplanar";
 	m_defines = ss.str();
@@ -116,27 +111,11 @@ void TriplanarMaterial::Apply()
 	p->texture3.Set(this->texture3, 3);
 	p->texture4.Set(this->texture4, 4);
 	p->texture5.Set(this->texture5, 5);
-
-	p->heatGradient.Set(this->heatGradient, 6);
-	if(nullptr!=specialParameter0) {
-		HeatGradientParameters_t *pMGP = static_cast<HeatGradientParameters_t*>(specialParameter0);
-		p->heatingMatrix.Set(pMGP->heatingMatrix);
-		p->heatingNormal.Set(pMGP->heatingNormal);
-		p->heatingAmount.Set(pMGP->heatingAmount);
-	} else {
-		p->heatingMatrix.Set(matrix3x3f::Identity());
-		p->heatingNormal.Set(vector3f(0.0f, -1.0f, 0.0f));
-		p->heatingAmount.Set(0.0f);
-	}
 }
 
 void TriplanarMaterial::Unapply()
 {
 	// Might not be necessary to unbind textures, but let's not old graphics code (eg, old-UI)
-	if (heatGradient) {
-		static_cast<TextureGL*>(heatGradient)->Unbind();
-		glActiveTexture(GL_TEXTURE5);
-	}
 	if (texture5) {
 		static_cast<TextureGL*>(texture5)->Unbind();
 		glActiveTexture(GL_TEXTURE4);
