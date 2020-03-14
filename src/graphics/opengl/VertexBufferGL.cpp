@@ -1,4 +1,4 @@
-// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
+// Copyright Â© 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "graphics/opengl/VertexBufferGL.h"
@@ -353,7 +353,7 @@ namespace Graphics {
 				case ATTRIB_NORMAL: glEnableVertexAttribArray(1); break;
 				case ATTRIB_DIFFUSE: glEnableVertexAttribArray(2); break;
 				case ATTRIB_UV0: glEnableVertexAttribArray(3); break;
-				case ATTRIB_TANGENT: glEnableVertexAttribArray(4); break;
+				case ATTRIB_TANGENT: glEnableVertexAttribArray(5); break;
 				case ATTRIB_NONE:
 				default:
 					return;
@@ -371,7 +371,7 @@ namespace Graphics {
 				case ATTRIB_NORMAL: glDisableVertexAttribArray(1); break;
 				case ATTRIB_DIFFUSE: glDisableVertexAttribArray(2); break;
 				case ATTRIB_UV0: glDisableVertexAttribArray(3); break;
-				case ATTRIB_TANGENT: glDisableVertexAttribArray(4); break;
+				case ATTRIB_TANGENT: glDisableVertexAttribArray(5); break;
 				case ATTRIB_NONE:
 				default:
 					return;
