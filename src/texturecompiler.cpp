@@ -1,6 +1,7 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright Â© 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
+#include "buildopts.h"
 #include "libs.h"
 #include "utils.h"
 #include <cstdio>
@@ -68,12 +69,12 @@ namespace encodings
 		virtual vector2f encode(const vector3f& n) override
 		{
 			const float f = sqrt(8.0f * n.z + 8.0f);
-			return n.xy() / f + 0.5f;
+			return n.xy() / f + vector2f(0.5f);
 		}
 
 		virtual vector3f decode(const vector4f& enc) override
 		{
-			vector2f fenc = (enc.xy() * 4.0f) - 2.0f;
+			vector2f fenc = (enc.xy() * 4.0f) - vector2f(2.0f);
 			float f = fenc.Dot(fenc);
 			float g = sqrt(1.0f - f / 4.0f);
 			vector3f n;
@@ -94,7 +95,7 @@ namespace encodings
 
 		virtual vector3f decode(const vector4f& enc) override
 		{
-			vector2f ang = (enc.xy() * 2.0f) - 1.0f;
+			vector2f ang = (enc.xy() * 2.0f) - vector2f(1.0f);
 			vector2f scth;
 			sincos(ang.x * kPI, scth.x, scth.y);
 			vector2f scphi = vector2f(sqrt(1.0f - ang.y*ang.y), ang.y);
@@ -112,10 +113,10 @@ namespace encodings
 	public:
 		virtual vector2f encode(const vector3f& n) override
 		{
-			const float scale = 1.7777f;
+			const vector2f scale(1.7777f);
 			vector2f enc = vector2f(n.x, n.y) / (n.z + 1.0f);
-			enc /= scale;
-			enc = (enc * 0.5f) + 0.5f;
+			enc = enc / scale;
+			enc = (enc * 0.5f) + vector2f(0.5f);
 			return enc;
 		}
 

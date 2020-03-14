@@ -1,10 +1,11 @@
--- Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
-local Game = import("Game")
-local Serializer = import("Serializer")
-local Character = import("Character")
-local Lang = import("Lang")
+local Game = require 'Game'
+local Serializer = require 'Serializer'
+local Character = require 'Character'
+local Lang = require 'Lang'
+local Engine = require 'Engine'
 
 local l = Lang.GetResource("ui-core")
 

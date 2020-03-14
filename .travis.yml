@@ -1,13 +1,90 @@
-language: cpp
-compiler:
-  - gcc
-script: ./bootstrap && ./configure --with-thirdparty=$(pwd)/pioneer-thirdparty LIBS="-ldl -lrt" && make
-before_install:
-     - git clone --depth 1 git://github.com/pioneerspacesim/pioneer-thirdparty.git pioneer-thirdparty
-     - cd pioneer-thirdparty/ && autoconf && ./configure && make assimp && make sdl2 && make sdl2_image && cd ../
-     - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-     - sudo apt-get update -qq
-     - sudo apt-get install -qq mesa-common-dev libfreetype6-dev libfreeimage-dev libsigc++-2.0-dev libvorbis-dev gcc-4.8 g++-4.8
-     - sudo rm /usr/bin/gcc /usr/bin/g++
-     - sudo ln -s /usr/bin/gcc-4.8 /usr/bin/gcc
-     - sudo ln -s /usr/bin/g++-4.8 /usr/bin/g++
+dist: xenial
+language: minimal
+compiler: gcc
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - mesa-common-dev
+      - libfreeimage-dev
+      - libglew-dev
+      - libsigc++-2.0-dev
+      - libvorbis-dev
+      - libassimp-dev
+      - libsdl2-dev
+      - libsdl2-image-dev
+  homebrew:
+    packages:
+      - gcc
+      - freetype
+      - freeimage
+      - glew
+      - libsigc++@2
+      - libvorbis
+      - libpng
+      - assimp
+      - sdl2
+      - sdl2_image
+      - libogg
+    update: true
+
+matrix:
+  include:
+    # OSX is faster to boot and execute the checks, but has more contention for VM instances.
+    # Not waiting fifteen minutes for an instance to come available is faster.
+    - name: Static Checks
+      os: linux
+      env: STATIC_CHECKS=yes
+      deploy:
+        provider: null
+      before_install: skip
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - clang-format
+      script: bash ./scripts/clang-format.sh
+
+    - name: Build GCC
+      os: linux
+
+    - name: Build Clang
+      os: linux
+      env: CC=clang CXX=clang++
+
+    - name: Build OSX
+      os: osx
+
+script:
+  - ./bootstrap cmake && make -C build
+
+before_deploy:
+  - env SDL_VIDEODRIVER=dummy ./build/modelcompiler -b inplace
+  - ./scripts/build-travis.sh
+
+deploy:
+  provider: releases
+  api_key:
+    secure: "Ajn9CykEp1CHKvIFmqYhP617A6cvZbsgHLw4VeDXeYob1aatUCAQXrjF9gUhbo4jwi2vtGFQyuK5TPHHHjSvk9EksW6c++qADqviAGvid6EAcG6AKuV76Nhx/IkCW0nUHk4ET2Zms3S2MON+rxUzihi4uCzuOlHUfG+5XntvL5Y="
+  skip_cleanup: true
+  file_glob: true
+  file: release/zip/*
+  on:
+    repo: pioneerspacesim/pioneer
+    tags: true
+    condition: $STATIC_CHECKS != yes
+
+notifications:
+  irc:
+    channels:
+      - "ircs://chat.freenode.net:6669/#pioneer"
+    on_success: always
+    on_failure: always
+    template:
+      - "%{repository_slug}#%{build_number} (%{branch} - %{commit} : %{author}): %{message}"
+      - "Change view : %{compare_url}"
+      - "Build details : %{build_url}"
+    nick: travis-jameson
+    password: flyordie

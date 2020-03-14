@@ -1,17 +1,32 @@
--- Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
-local Engine = import("Engine")
-local Lang = import("Lang")
-local Game = import("Game")
-local Rand = import("Rand")
-local Event = import("Event")
-local Character = import("Character")
-local Format = import("Format")
-local Serializer = import("Serializer")
-local Equipment = import("Equipment")
+local Engine = require 'Engine'
+local Lang = require 'Lang'
+local Game = require 'Game'
+local Rand = require 'Rand'
+local Event = require 'Event'
+local Character = require 'Character'
+local Format = require 'Format'
+local Serializer = require 'Serializer'
+local Equipment = require 'Equipment'
+local ModalWindow = require 'pigui.libs.modal-win'
+local ui = require 'pigui'
 
-local MessageBox = import("ui/MessageBox")
+local rescaleVector = ui.rescaleUI(Vector2(1, 1), Vector2(1600, 900), true)
+local popupSpacer = Vector2(0,0)
+local popupButtonSize = Vector2(0,0)
+local popupMsg = ''
+local popup = ModalWindow.New('goodsTraderPopup', function(self)
+	popupSpacer((ui.getContentRegion().x - 100*rescaleVector.x) / 2, 0)
+	popupButtonSize(100 * rescaleVector.x, 0)
+	ui.text(popupMsg)
+	ui.dummy(popupSpacer)
+	ui.sameLine()
+	if ui.button("OK", popupButtonSize) then
+		self:close()
+	end
+end)
 
 ---------------
 -- Fuel Club --
@@ -43,16 +58,38 @@ local memberships = {
 -- }
 }
 
--- 1 / probability that you'll see one in a BBS
-local chance_of_availability = 3
-
 local flavours = {
-	{
+	{    -- Independent club
 		clubname = l.FLAVOUR_0_CLUBNAME,
 		welcome = l.FLAVOUR_0_WELCOME,
 		nonmember_intro = l.FLAVOUR_0_NONMEMBER_INTRO,
 		member_intro = l.FLAVOUR_0_MEMBER_INTRO,
 		annual_fee = 400,
+		availability = {FED = 0.1, CIW = 0.1, HABER = 0, IND = 0.4} -- probability for these factions
+	},
+	{   -- SolFed club (reuse some messages)
+		clubname = l.FLAVOUR_1_CLUBNAME,
+		welcome = l.FLAVOUR_0_WELCOME,
+		nonmember_intro = l.FLAVOUR_1_NONMEMBER_INTRO,
+		member_intro = l.FLAVOUR_0_MEMBER_INTRO,
+		annual_fee = 400,
+		availability = {FED = 0.4, CIW = 0, HABER = 0, IND = 0}
+	},
+	{   -- Confederation club
+		clubname = l.FLAVOUR_2_CLUBNAME,
+		welcome = l.FLAVOUR_2_WELCOME,
+		nonmember_intro = l.FLAVOUR_2_NONMEMBER_INTRO,
+		member_intro = l.FLAVOUR_0_MEMBER_INTRO,
+		annual_fee = 300,
+		availability = {FED = 0, CIW = 0.4, HABER = 0, IND = 0}
+	},
+	{   -- Haber fuel division
+		clubname = l.FLAVOUR_3_CLUBNAME,
+		welcome = l.FLAVOUR_0_WELCOME,
+		nonmember_intro = l.FLAVOUR_3_NONMEMBER_INTRO,
+		member_intro = l.FLAVOUR_3_MEMBER_INTRO,
+		annual_fee = 600,
+		availability = {FED = 0, CIW = 0, HABER=1, IND = 0}
 	}
 }
 
@@ -81,6 +118,13 @@ onChat = function (form, ref, option)
 		form:SetMessage(string.interp(ad.flavour.member_intro, {radioactives=Equipment.cargo.radioactives:GetName()}))
 		form:AddGoodsTrader({
 			canTrade = function (ref, commodity)
+				return ({
+					[Equipment.cargo.hydrogen] = true,
+					[Equipment.cargo.military_fuel] = true,
+					[Equipment.cargo.radioactives] = true
+				})[commodity]
+			end,
+			canDisplayItem = function (ref, commodity)
 				return ({
 					[Equipment.cargo.hydrogen] = true,
 					[Equipment.cargo.military_fuel] = true,
@@ -120,26 +164,42 @@ onChat = function (form, ref, option)
 			onClickBuy = function (ref, commodity)
 				return membership.joined + membership.expiry > Game.time
 			end,
-			onClickSell = function (ref, commodity)
-				if (commodity == Equipment.cargo.radioactives and membership.milrads < 1) then
-					MessageBox.Message(string.interp(l.YOU_MUST_BUY, {
+			onClickSell = function (ref, commodity, market)
+				local count = 1
+				if market.tradeAmount ~= nil then
+					count = market.tradeAmount
+				end
+
+				if (commodity == Equipment.cargo.radioactives and membership.milrads < count) then
+					popupMsg = string.interp(l.YOU_MUST_BUY, {
 						military_fuel = Equipment.cargo.military_fuel:GetName(),
 						radioactives = Equipment.cargo.radioactives:GetName(),
-					}))
+					})
+					popup:open()
 					return false
 				end
 				return	membership.joined + membership.expiry > Game.time
 			end,
-			bought = function (ref, commodity)
-				ad.stock[commodity] = ad.stock[commodity] + 1
+			bought = function (ref, commodity, market)
+				local count = 1
+				if market.tradeAmount ~= nil then
+					count = market.tradeAmount
+				end
+
+				ad.stock[commodity] = ad.stock[commodity] - count
 				if commodity == Equipment.cargo.radioactives or commodity == Equipment.cargo.military_fuel then
-					membership.milrads = membership.milrads -1
+					membership.milrads = membership.milrads + count
 				end
 			end,
-			sold = function (ref, commodity)
-				ad.stock[commodity] = ad.stock[commodity] - 1
+			sold = function (ref, commodity, market)
+				local count = 1
+				if market.tradeAmount ~= nil then
+					count = market.tradeAmount
+				end
+
+				ad.stock[commodity] = ad.stock[commodity] + count
 				if commodity == Equipment.cargo.radioactives or commodity == Equipment.cargo.military_fuel then
-					membership.milrads = membership.milrads +1
+					membership.milrads = membership.milrads - count
 				end
 			end,
 		})
@@ -177,7 +237,7 @@ onChat = function (form, ref, option)
 
 	else
 		-- non-members get offered membership
-		message = ad.flavour.nonmember_intro:interp({clubname=ad.flavour.clubname}).."\n"..
+		local message = ad.flavour.nonmember_intro:interp({clubname=ad.flavour.clubname}).."\n"..
 			"\n\t* " ..l.LIST_BENEFITS_FUEL_INTRO..
 			"\n\t* "..string.interp(l.LIST_BENEFITS_FUEL, {fuel=Equipment.cargo.hydrogen:GetName()})..
 			"\n\t* "..string.interp(l.LIST_BENEFITS_FUEL, {fuel=Equipment.cargo.military_fuel:GetName()})..
@@ -192,27 +252,45 @@ onChat = function (form, ref, option)
 end
 
 local onCreateBB = function (station)
+
+	local faction = Game.system.faction.name
+
+	-- For convenes, map long faction name to shorter table key
+	local faction_key
+	if faction == "Solar Federation" then
+		faction_key = "FED"
+	elseif faction == "Commonwealth of Independent Worlds" then
+		faction_key = "CIW"
+	elseif faction == "Haber Corporation" then
+		faction_key = "HABER"
+	else
+		faction_key = "IND"
+	end
+
 	-- deterministically generate our instance
 	local rand = Rand.New(station.seed + seedbump)
-	if rand:Integer(1,chance_of_availability) == 1 then
-		-- Create our bulletin board ad
-		local ad = {station = station, stock = {}, price = {}}
-		ad.flavour = flavours[rand:Integer(1,#flavours)]
-		ad.character = Character.New({
-			title = ad.flavour.clubname,
-			armour = false,
-		})
-		ads[station:AddAdvert({
-			description = ad.flavour.clubname,
-			icon        = "fuel_club",
-			onChat      = onChat,
-			onDelete    = onDelete})] = ad
+
+	for k,flavour in pairs(flavours) do
+		if rand:Number(0,1) < flavour.availability[faction_key] then
+			-- Create our bulletin board ad
+			local ad = {station = station, stock = {}, price = {}}
+			ad.flavour = flavour
+			ad.character = Character.New({
+					title = ad.flavour.clubname,
+					armour = false,
+			})
+			ads[station:AddAdvert({
+						description = ad.flavour.clubname,
+						icon        = "fuel_club",
+						onChat      = onChat,
+						onDelete    = onDelete})] = ad
+		end
 	end
 end
 
 local onGameStart = function ()
-	local ref
-	if loaded_data then
+
+	if loaded_data and loaded_data.ads then
 		-- rebuild saved adverts
 		for k,ad in pairs(loaded_data.ads) do
 			ads[ad.station:AddAdvert({
@@ -223,10 +301,6 @@ local onGameStart = function ()
 		end
 		-- load membership info
 		memberships = loaded_data.memberships
-		for k,v in pairs(memberships) do
-			for l,w in pairs(v) do
-			end
-		end
 		loaded_data = nil
 	else
 		-- Hopefully this won't be necessary after Pioneer handles Lua teardown

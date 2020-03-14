@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef GALAXY_ECONOMY_H
@@ -6,9 +6,9 @@
 
 namespace GalacticEconomy {
 	enum EconType { // <enum scope=GalacticEconomy name=EconType prefix=ECON_ public>
-		ECON_MINING      = 1<<0,
-		ECON_AGRICULTURE = 1<<1,
-		ECON_INDUSTRY    = 1<<2
+		ECON_MINING = 1 << 0,
+		ECON_AGRICULTURE = 1 << 1,
+		ECON_INDUSTRY = 1 << 2
 	};
 
 	enum class Commodity { // <enum scope='GalacticEconomy::Commodity' name=CommodityType public>
@@ -62,6 +62,6 @@ namespace GalacticEconomy {
 	};
 
 	extern const CommodityInfo COMMODITY_DATA[];
-}
+} // namespace GalacticEconomy
 
 #endif

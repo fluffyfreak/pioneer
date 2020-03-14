@@ -1,34 +1,38 @@
 {
-   "BASE" : {
-      "description" : "",
-      "message" : "Basis"
-   },
-   "BASES" : {
-      "description" : "",
-      "message" : "Basen"
-   },
-   "BODIES" : {
-      "description" : "",
-      "message" : "Körpern"
-   },
-   "BODY" : {
-      "description" : "",
-      "message" : "Körper"
-   },
-   "DISCOVERED_HIDDEN_BASES" : {
-      "description" : "",
-      "message" : "Du hast {portcount} versteckte {bases} entdeckt!"
-   },
-   "EXPLORING_SYSTEM" : {
-      "description" : "",
-      "message" : "System mit {bodycount} wichtigen {bodies} erkunden."
-   },
-   "YOUR_FUEL_TANK_IS_ALMOST_EMPTY" : {
-      "description" : "",
-      "message" : "Ihr Treibstofftank ist fast leer."
-   },
-   "YOUR_FUEL_TANK_IS_EMPTY" : {
-      "description" : "",
-      "message" : "Ihr Treibstofftank ist leer."
-   }
+  "BASE": {
+    "description": "",
+    "message": "Basis"
+  },
+  "BASES": {
+    "description": "",
+    "message": "Basen"
+  },
+  "BODIES": {
+    "description": "",
+    "message": "Körpern"
+  },
+  "BODY": {
+    "description": "",
+    "message": "Körper"
+  },
+  "DISCOVERED_HIDDEN_BASES": {
+    "description": "",
+    "message": "Du hast {portcount} versteckte {bases} entdeckt!"
+  },
+  "EXPLORED_SYSTEM": {
+    "description": "",
+    "message": "Erforschtes System mit {bodycount} größeren {bodies}."
+  },
+  "GETTING_SENSOR_DATA": {
+    "description": "Shown when entering an unexplored system",
+    "message": "Sammlung von Systemdaten und Analyse wird durchgeführt…"
+  },
+  "YOUR_FUEL_TANK_IS_ALMOST_EMPTY": {
+    "description": "",
+    "message": "Ihr Treibstofftank ist fast leer."
+  },
+  "YOUR_FUEL_TANK_IS_EMPTY": {
+    "description": "",
+    "message": "Ihr Treibstofftank ist leer."
+  }
 }

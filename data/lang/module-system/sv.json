@@ -1,34 +1,38 @@
 {
-   "BASE" : {
-      "description" : "",
-      "message" : "bas"
-   },
-   "BASES" : {
-      "description" : "",
-      "message" : "baser"
-   },
-   "BODIES" : {
-      "description" : "",
-      "message" : "kroppar"
-   },
-   "BODY" : {
-      "description" : "",
-      "message" : "kropp"
-   },
-   "DISCOVERED_HIDDEN_BASES" : {
-      "description" : "",
-      "message" : "Du har upptäckt {portcount} gömda {bases}!"
-   },
-   "EXPLORING_SYSTEM" : {
-      "description" : "",
-      "message" : "Utforskar system med {bodycount} större {bodies}."
-   },
-   "YOUR_FUEL_TANK_IS_ALMOST_EMPTY" : {
-      "description" : "",
-      "message" : "Din bränsletank är nästan tom."
-   },
-   "YOUR_FUEL_TANK_IS_EMPTY" : {
-      "description" : "",
-      "message" : "Din bränsletank är tom."
-   }
+  "BASE": {
+    "description": "",
+    "message": "bas"
+  },
+  "BASES": {
+    "description": "",
+    "message": "baser"
+  },
+  "BODIES": {
+    "description": "",
+    "message": "kroppar"
+  },
+  "BODY": {
+    "description": "",
+    "message": "kropp"
+  },
+  "DISCOVERED_HIDDEN_BASES": {
+    "description": "",
+    "message": "Du har upptäckt {portcount} gömda {bases}!"
+  },
+  "EXPLORED_SYSTEM": {
+    "description": "",
+    "message": "Utforskat system med {bodycount} signifikanta himlakroppar {bodies}"
+  },
+  "GETTING_SENSOR_DATA": {
+    "description": "Shown when entering an unexplored system",
+    "message": "Systemdata insamlad, analys pågår"
+  },
+  "YOUR_FUEL_TANK_IS_ALMOST_EMPTY": {
+    "description": "",
+    "message": "Din bränsletank är nästan tom."
+  },
+  "YOUR_FUEL_TANK_IS_EMPTY": {
+    "description": "",
+    "message": "Din bränsletank är tom."
+  }
 }

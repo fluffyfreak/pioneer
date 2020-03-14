@@ -1,47 +1,53 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "CheckBox.h"
-#include "LuaObject.h"
 #include "LuaSignal.h"
+#include "lua/LuaObject.h"
 
 namespace UI {
 
-class LuaCheckBox {
-public:
-	static int l_toggle(lua_State *l) {
-		UI::CheckBox *c = LuaObject<UI::CheckBox>::CheckFromLua(1);
-		c->Toggle();
-		return 1;
-	}
+	class LuaCheckBox {
+	public:
+		static int l_toggle(lua_State *l)
+		{
+			UI::CheckBox *c = LuaObject<UI::CheckBox>::CheckFromLua(1);
+			c->Toggle();
+			return 1;
+		}
 
-	static int l_set_state(lua_State *l) {
-		UI::CheckBox *c = LuaObject<UI::CheckBox>::CheckFromLua(1);
-		luaL_checktype(l, 2, LUA_TBOOLEAN);
-		c->SetState(lua_toboolean(l, 2));
-		return 1;
-	}
+		static int l_set_state(lua_State *l)
+		{
+			UI::CheckBox *c = LuaObject<UI::CheckBox>::CheckFromLua(1);
+			luaL_checktype(l, 2, LUA_TBOOLEAN);
+			c->SetState(lua_toboolean(l, 2));
+			return 1;
+		}
 
-	static int l_attr_is_checked(lua_State *l) {
-		UI::CheckBox *c = LuaObject<UI::CheckBox>::CheckFromLua(1);
-		lua_pushboolean(l, c->IsChecked());
-		return 1;
-	}
+		static int l_attr_is_checked(lua_State *l)
+		{
+			UI::CheckBox *c = LuaObject<UI::CheckBox>::CheckFromLua(1);
+			lua_pushboolean(l, c->IsChecked());
+			return 1;
+		}
 
-	static int l_attr_on_value_changed(lua_State *l) {
-		UI::CheckBox *c = LuaObject<UI::CheckBox>::CheckFromLua(1);
-		LuaSignal<bool>().Wrap(l, c->onValueChanged);
-		return 1;
-	}
-};
+		static int l_attr_on_value_changed(lua_State *l)
+		{
+			UI::CheckBox *c = LuaObject<UI::CheckBox>::CheckFromLua(1);
+			LuaSignal<bool>().Wrap(l, c->onValueChanged);
+			return 1;
+		}
+	};
 
-}
+} // namespace UI
 
 using namespace UI;
 
-template <> const char *LuaObject<UI::CheckBox>::s_type = "UI.CheckBox";
+template <>
+const char *LuaObject<UI::CheckBox>::s_type = "UI.CheckBox";
 
-template <> void LuaObject<UI::CheckBox>::RegisterClass()
+template <>
+void LuaObject<UI::CheckBox>::RegisterClass()
 {
 	static const char *l_parent = "UI.Widget";
 
@@ -52,7 +58,7 @@ template <> void LuaObject<UI::CheckBox>::RegisterClass()
 	};
 	static const luaL_Reg l_attrs[] = {
 		{ "isChecked", LuaCheckBox::l_attr_is_checked },
-		{ "onValueChanged", LuaCheckBox::l_attr_on_value_changed  },
+		{ "onValueChanged", LuaCheckBox::l_attr_on_value_changed },
 
 		{ 0, 0 }
 	};

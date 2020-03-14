@@ -1,31 +1,33 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "CustomSystem.h"
+
 #include "Galaxy.h"
 #include "SystemPath.h"
 
-#include "LuaUtils.h"
-#include "LuaVector.h"
-#include "LuaFixed.h"
-#include "LuaConstants.h"
-#include "Pi.h"
-#include "Polit.h"
+#include "../gameconsts.h"
 #include "Factions.h"
 #include "FileSystem.h"
+#include "Polit.h"
+#include "lua/LuaConstants.h"
+#include "lua/LuaFixed.h"
+#include "lua/LuaUtils.h"
+#include "lua/LuaVector.h"
 #include <map>
 
 const CustomSystemsDatabase::SystemList CustomSystemsDatabase::s_emptySystemList; // see: Null Object pattern
 
-static CustomSystemsDatabase* s_activeCustomSystemsDatabase = nullptr;
+static CustomSystemsDatabase *s_activeCustomSystemsDatabase = nullptr;
 
 // ------- CustomSystemBody --------
 
 static const char LuaCustomSystemBody_TypeName[] = "CustomSystemBody";
 
-static CustomSystemBody **l_csb_check_ptr(lua_State *L, int idx) {
-	CustomSystemBody **csbptr = static_cast<CustomSystemBody**>(
-			luaL_checkudata(L, idx, LuaCustomSystemBody_TypeName));
+static CustomSystemBody **l_csb_check_ptr(lua_State *L, int idx)
+{
+	CustomSystemBody **csbptr = static_cast<CustomSystemBody **>(
+		luaL_checkudata(L, idx, LuaCustomSystemBody_TypeName));
 	if (!(*csbptr)) {
 		abort();
 		luaL_argerror(L, idx, "invalid body (this body has already been used)");
@@ -34,7 +36,9 @@ static CustomSystemBody **l_csb_check_ptr(lua_State *L, int idx) {
 }
 
 static CustomSystemBody *l_csb_check(lua_State *L, int idx)
-{ return *l_csb_check_ptr(L, idx); }
+{
+	return *l_csb_check_ptr(L, idx);
+}
 
 static int l_csb_new(lua_State *L)
 {
@@ -45,8 +49,8 @@ static int l_csb_new(lua_State *L)
 		return luaL_error(L, "body '%s' does not have a valid type", name);
 	}
 
-	CustomSystemBody **csbptr = static_cast<CustomSystemBody**>(
-			lua_newuserdata(L, sizeof(CustomSystemBody*)));
+	CustomSystemBody **csbptr = static_cast<CustomSystemBody **>(
+		lua_newuserdata(L, sizeof(CustomSystemBody *)));
 	*csbptr = new CustomSystemBody;
 	luaL_setmetatable(L, LuaCustomSystemBody_TypeName);
 
@@ -56,28 +60,65 @@ static int l_csb_new(lua_State *L)
 	return 1;
 }
 
-#define CSB_FIELD_SETTER_FIXED(luaname, fieldname)         \
-	static int l_csb_ ## luaname (lua_State *L) {          \
-		CustomSystemBody *csb = l_csb_check(L, 1);         \
-		const fixed *value = LuaFixed::CheckFromLua(L, 2); \
-		csb->fieldname = *value;                         \
-		lua_settop(L, 1); return 1;                        \
+static double *getDoubleOrFixed(lua_State *L, int which)
+{
+	static double mixvalue;
+
+	const char *s = luaL_typename(L, which);
+	if (strcmp(s, "userdata") == 0) {
+		const fixed *mix = LuaFixed::CheckFromLua(L, which);
+		mixvalue = mix->ToDouble();
+		return (&mixvalue);
+	} else if (strcmp(s, "number") == 0) {
+		mixvalue = luaL_checknumber(L, which);
+		return (&mixvalue);
+	}
+	return nullptr;
+}
+
+// Used when the value MUST not be NEGATIVE but can be Zero, for life, etc
+#define CSB_FIELD_SETTER_FIXED(luaname, fieldname)                                                                                        \
+	static int l_csb_##luaname(lua_State *L)                                                                                              \
+	{                                                                                                                                     \
+		CustomSystemBody *csb = l_csb_check(L, 1);                                                                                        \
+		double *value = getDoubleOrFixed(L, 2);                                                                                           \
+		if (value == nullptr)                                                                                                             \
+			return luaL_error(L, "Bad datatype. Expected fixed or float, got %s", luaL_typename(L, 2));                                   \
+		if (*value < 0.0)                                                                                                                 \
+			Output("Error: Custom system definition: Value cannot be negative (%lf) for %s : %s\n", *value, csb->name.c_str(), #luaname); \
+		csb->fieldname = fixed::FromDouble(*value);                                                                                       \
+		lua_settop(L, 1);                                                                                                                 \
+		return 1;                                                                                                                         \
 	}
 
-#define CSB_FIELD_SETTER_FLOAT(luaname, fieldname)         \
-	static int l_csb_ ## luaname (lua_State *L) {          \
-		CustomSystemBody *csb = l_csb_check(L, 1);         \
-		double value = luaL_checknumber(L, 2);             \
-		csb->fieldname = value;                          \
-		lua_settop(L, 1); return 1;                        \
+#define CSB_FIELD_SETTER_REAL(luaname, fieldname)  \
+	static int l_csb_##luaname(lua_State *L)       \
+	{                                              \
+		CustomSystemBody *csb = l_csb_check(L, 1); \
+		double value = luaL_checknumber(L, 2);     \
+		csb->fieldname = value;                    \
+		lua_settop(L, 1);                          \
+		return 1;                                  \
 	}
 
-#define CSB_FIELD_SETTER_INT(luaname, fieldname)           \
-	static int l_csb_ ## luaname (lua_State *L) {          \
-		CustomSystemBody *csb = l_csb_check(L, 1);         \
-		int value = luaL_checkinteger(L, 2);               \
-		csb->fieldname = value;                          \
-		lua_settop(L, 1); return 1;                        \
+#define CSB_FIELD_SETTER_INT(luaname, fieldname)   \
+	static int l_csb_##luaname(lua_State *L)       \
+	{                                              \
+		CustomSystemBody *csb = l_csb_check(L, 1); \
+		int value = luaL_checkinteger(L, 2);       \
+		csb->fieldname = value;                    \
+		lua_settop(L, 1);                          \
+		return 1;                                  \
+	}
+
+#define CSB_FIELD_SETTER_STRING(luaname, fieldname) \
+	static int l_csb_##luaname(lua_State *L)        \
+	{                                               \
+		CustomSystemBody *csb = l_csb_check(L, 1);  \
+		std::string value = luaL_checkstring(L, 2); \
+		csb->fieldname = value;                     \
+		lua_settop(L, 1);                           \
+		return 1;                                   \
 	}
 
 CSB_FIELD_SETTER_FIXED(radius, radius)
@@ -85,8 +126,8 @@ CSB_FIELD_SETTER_FIXED(mass, mass)
 CSB_FIELD_SETTER_INT(temp, averageTemp)
 CSB_FIELD_SETTER_FIXED(semi_major_axis, semiMajorAxis)
 CSB_FIELD_SETTER_FIXED(eccentricity, eccentricity)
-CSB_FIELD_SETTER_FLOAT(latitude, latitude)
-CSB_FIELD_SETTER_FLOAT(longitude, longitude)
+CSB_FIELD_SETTER_REAL(latitude, latitude)
+CSB_FIELD_SETTER_REAL(longitude, longitude)
 CSB_FIELD_SETTER_FIXED(rotation_period, rotationPeriod)
 CSB_FIELD_SETTER_FIXED(axial_tilt, axialTilt)
 CSB_FIELD_SETTER_FIXED(metallicity, metallicity)
@@ -96,15 +137,26 @@ CSB_FIELD_SETTER_FIXED(atmos_oxidizing, atmosOxidizing)
 CSB_FIELD_SETTER_FIXED(ocean_cover, volatileLiquid)
 CSB_FIELD_SETTER_FIXED(ice_cover, volatileIces)
 CSB_FIELD_SETTER_FIXED(life, life)
+CSB_FIELD_SETTER_STRING(space_station_type, spaceStationType)
 
 #undef CSB_FIELD_SETTER_FIXED
 #undef CSB_FIELD_SETTER_FLOAT
 #undef CSB_FIELD_SETTER_INT
 
+static int l_csb_radius_km(lua_State *L)
+{
+	CustomSystemBody *csb = l_csb_check(L, 1);
+	double value = luaL_checknumber(L, 2);
+	// earth mean radiusMean radius = 6371.0 km (source: wikipedia)
+	csb->radius = (value / 6371.0);
+	lua_settop(L, 1);
+	return 1;
+}
+
 static int l_csb_seed(lua_State *L)
 {
 	CustomSystemBody *csb = l_csb_check(L, 1);
-	csb->seed = luaL_checkinteger(L, 2);
+	csb->seed = luaL_checkunsigned(L, 2);
 	csb->want_rand_seed = false;
 	lua_settop(L, 1);
 	return 1;
@@ -113,8 +165,10 @@ static int l_csb_seed(lua_State *L)
 static int l_csb_orbital_offset(lua_State *L)
 {
 	CustomSystemBody *csb = l_csb_check(L, 1);
-	const fixed *value = LuaFixed::CheckFromLua(L, 2);
-	csb->orbitalOffset = *value;
+	double *value = getDoubleOrFixed(L, 2);
+	if (value == nullptr)
+		return luaL_error(L, "Bad datatype. Expected fixed or float, got %s", luaL_typename(L, 2));
+	csb->orbitalOffset = fixed::FromDouble(*value);
 	csb->want_rand_offset = false;
 	lua_settop(L, 1);
 	return 1;
@@ -123,10 +177,12 @@ static int l_csb_orbital_offset(lua_State *L)
 static int l_csb_orbital_phase_at_start(lua_State *L)
 {
 	CustomSystemBody *csb = l_csb_check(L, 1);
-	const fixed *value = LuaFixed::CheckFromLua(L, 2);
-	if ((value->ToDouble() < 0.0) || (value->ToDouble() > double(2.0*M_PI)))
+	double *value = getDoubleOrFixed(L, 2);
+	if (value == nullptr)
+		return luaL_error(L, "Bad datatype. Expected fixed or float, got %s", luaL_typename(L, 2));
+	if ((*value < 0.0) || (*value > double(2.0 * M_PI)))
 		return luaL_error(L, "Error: Custom system definition: Orbital phase at game start must be between 0 and 2 PI radians (including 0 but not 2 PI).");
-	csb->orbitalPhaseAtStart = *value;
+	csb->orbitalPhaseAtStart = fixed::FromDouble(*value);
 	lua_settop(L, 1);
 	return 1;
 }
@@ -134,10 +190,12 @@ static int l_csb_orbital_phase_at_start(lua_State *L)
 static int l_csb_rotational_phase_at_start(lua_State *L)
 {
 	CustomSystemBody *csb = l_csb_check(L, 1);
-	const fixed *value = LuaFixed::CheckFromLua(L, 2);
-	if ((value->ToDouble() < 0.0) || (value->ToDouble() > double(2.0*M_PI)))
+	double *value = getDoubleOrFixed(L, 2);
+	if (value == nullptr)
+		return luaL_error(L, "Bad datatype. Expected fixed or float, got %s", luaL_typename(L, 2));
+	if ((*value < 0.0) || (*value > double(2.0 * M_PI)))
 		return luaL_error(L, "Error: Custom system definition: Rotational phase at start must be between 0 and 2 PI radians (including 0 but not 2 PI).\n The rotational phase is the phase of the body's spin about it's axis at game start.");
-	csb->rotationalPhaseAtStart = *value;
+	csb->rotationalPhaseAtStart = fixed::FromDouble(*value);
 	lua_settop(L, 1);
 	return 1;
 }
@@ -147,7 +205,9 @@ static int l_csb_height_map(lua_State *L)
 	CustomSystemBody *csb = l_csb_check(L, 1);
 	const char *fname = luaL_checkstring(L, 2);
 	int fractal = luaL_checkinteger(L, 3);
-	if (fractal >= 2) { return luaL_error(L, "invalid terrain fractal type"); }
+	if (fractal >= 2) {
+		return luaL_error(L, "invalid terrain fractal type");
+	}
 
 	csb->heightMapFilename = FileSystem::JoinPathBelow("heightmaps", fname);
 	csb->heightMapFractal = fractal;
@@ -166,8 +226,14 @@ static int l_csb_rings(lua_State *L)
 		}
 	} else {
 		csb->ringStatus = CustomSystemBody::WANT_CUSTOM_RINGS;
-		csb->ringInnerRadius = *LuaFixed::CheckFromLua(L, 2);
-		csb->ringOuterRadius = *LuaFixed::CheckFromLua(L, 3);
+		double *value = getDoubleOrFixed(L, 2);
+		if (value == nullptr)
+			return luaL_error(L, "Bad datatype. Expected fixed or float, got %s", luaL_typename(L, 2));
+		csb->ringInnerRadius = fixed::FromDouble(*value);
+		value = getDoubleOrFixed(L, 3);
+		if (value == nullptr)
+			return luaL_error(L, "Bad datatype. Expected fixed or float, got %s", luaL_typename(L, 3));
+		csb->ringOuterRadius = fixed::FromDouble(*value);
 		luaL_checktype(L, 4, LUA_TTABLE);
 		Color4f col;
 		lua_rawgeti(L, 4, 1);
@@ -186,8 +252,8 @@ static int l_csb_rings(lua_State *L)
 
 static int l_csb_gc(lua_State *L)
 {
-	CustomSystemBody **csbptr = static_cast<CustomSystemBody**>(
-			luaL_checkudata(L, 1, LuaCustomSystemBody_TypeName));
+	CustomSystemBody **csbptr = static_cast<CustomSystemBody **>(
+		luaL_checkudata(L, 1, LuaCustomSystemBody_TypeName));
 	delete *csbptr; // does nothing if *csbptr is null
 	*csbptr = 0;
 	return 0;
@@ -196,12 +262,18 @@ static int l_csb_gc(lua_State *L)
 static int l_csb_aspect_ratio(lua_State *L)
 {
 	CustomSystemBody *csb = l_csb_check(L, 1);
-	const fixed *value = LuaFixed::CheckFromLua(L, 2);
-	csb->aspectRatio = *value;
-	if (csb->aspectRatio < fixed(1,1) ) { return luaL_error(
-		L, "Error: Custom system definition: Equatorial to Polar radius ratio cannot be less than 1."); }
-	if (csb->aspectRatio > fixed(10000,1) ) { return luaL_error(
-		L, "Error: Custom system definition: Equatorial to Polar radius ratio cannot be greater than 10000.0."); }
+	double *value = getDoubleOrFixed(L, 2);
+	if (value == nullptr)
+		return luaL_error(L, "Bad datatype. Expected fixed or float, got %s", luaL_typename(L, 2));
+	csb->aspectRatio = fixed::FromDouble(*value);
+	if (csb->aspectRatio < fixed(1, 1)) {
+		return luaL_error(
+			L, "Error: Custom system definition: Equatorial to Polar radius ratio cannot be less than 1.");
+	}
+	if (csb->aspectRatio > fixed(10000, 1)) {
+		return luaL_error(
+			L, "Error: Custom system definition: Equatorial to Polar radius ratio cannot be greater than 10000.0.");
+	}
 	lua_settop(L, 1);
 	return 1;
 }
@@ -210,6 +282,7 @@ static luaL_Reg LuaCustomSystemBody_meta[] = {
 	{ "new", &l_csb_new },
 	{ "seed", &l_csb_seed },
 	{ "radius", &l_csb_radius },
+	{ "radius_km", &l_csb_radius_km },
 	{ "equatorial_to_polar_radius", &l_csb_aspect_ratio },
 	{ "mass", &l_csb_mass },
 	{ "temp", &l_csb_temp },
@@ -231,6 +304,7 @@ static luaL_Reg LuaCustomSystemBody_meta[] = {
 	{ "atmos_oxidizing", &l_csb_atmos_oxidizing },
 	{ "ocean_cover", &l_csb_ocean_cover },
 	{ "ice_cover", &l_csb_ice_cover },
+	{ "space_station_type", &l_csb_space_station_type },
 	{ "life", &l_csb_life },
 	{ "rings", &l_csb_rings },
 	{ "__gc", &l_csb_gc },
@@ -241,9 +315,10 @@ static luaL_Reg LuaCustomSystemBody_meta[] = {
 
 static const char LuaCustomSystem_TypeName[] = "CustomSystem";
 
-static CustomSystem **l_csys_check_ptr(lua_State *L, int idx) {
-	CustomSystem **csptr = static_cast<CustomSystem**>(
-			luaL_checkudata(L, idx, LuaCustomSystem_TypeName));
+static CustomSystem **l_csys_check_ptr(lua_State *L, int idx)
+{
+	CustomSystem **csptr = static_cast<CustomSystem **>(
+		luaL_checkudata(L, idx, LuaCustomSystem_TypeName));
 	if (!(*csptr)) {
 		abort();
 		luaL_error(L, "invalid system (this system has already been used)");
@@ -252,7 +327,9 @@ static CustomSystem **l_csys_check_ptr(lua_State *L, int idx) {
 }
 
 static CustomSystem *l_csys_check(lua_State *L, int idx)
-{ return *l_csys_check_ptr(L, idx); }
+{
+	return *l_csys_check_ptr(L, idx);
+}
 
 static unsigned interpret_star_types(int *starTypes, lua_State *L, int idx)
 {
@@ -265,13 +342,12 @@ static unsigned interpret_star_types(int *starTypes, lua_State *L, int idx)
 		lua_rawgeti(L, -1, i + 1);
 		if (lua_type(L, -1) == LUA_TSTRING) {
 			ty = LuaConstants::GetConstantFromArg(L, "BodyType", -1);
-			if ((ty < SystemBody::TYPE_STAR_MIN || ty > SystemBody::TYPE_STAR_MAX)
-					&& ty != SystemBody::TYPE_GRAVPOINT) {
-				luaL_error(L, "system star %d does not have a valid star type", i+1);
+			if ((ty < SystemBody::TYPE_STAR_MIN || ty > SystemBody::TYPE_STAR_MAX) && ty != SystemBody::TYPE_GRAVPOINT) {
+				luaL_error(L, "system star %d does not have a valid star type", i + 1);
 				// unreachable (longjmp in luaL_error)
 			}
 		} else if (!lua_isnil(L, -1)) {
-			luaL_error(L, "system star %d is not a string constant", i+1);
+			luaL_error(L, "system star %d is not a string constant", i + 1);
 		}
 		lua_pop(L, 1);
 		LUA_DEBUG_CHECK(L, 1);
@@ -290,8 +366,8 @@ static int l_csys_new(lua_State *L)
 	int starTypes[4];
 	unsigned numStars = interpret_star_types(starTypes, L, 3);
 
-	CustomSystem **csptr = static_cast<CustomSystem**>(
-			lua_newuserdata(L, sizeof(CustomSystem*)));
+	CustomSystem **csptr = static_cast<CustomSystem **>(
+		lua_newuserdata(L, sizeof(CustomSystem *)));
 	*csptr = new CustomSystem;
 	luaL_setmetatable(L, LuaCustomSystem_TypeName);
 
@@ -306,7 +382,7 @@ static int l_csys_new(lua_State *L)
 static int l_csys_seed(lua_State *L)
 {
 	CustomSystem *cs = l_csys_check(L, 1);
-	cs->seed = luaL_checkinteger(L, 2);
+	cs->seed = luaL_checkunsigned(L, 2);
 	lua_settop(L, 1);
 	return 1;
 }
@@ -356,6 +432,26 @@ static int l_csys_faction(lua_State *L)
 	return 1;
 }
 
+static int l_csys_other_names(lua_State *L)
+{
+	CustomSystem *cs = l_csys_check(L, 1);
+	std::vector<std::string> other_names;
+	if (lua_istable(L, 2)) {
+		lua_pushnil(L);
+		while (lua_next(L, -2) != 0) {
+			if (lua_isstring(L, -2)) {
+				std::string n(lua_tostring(L, -1));
+				other_names.push_back(n);
+			}
+			lua_pop(L, 1); // pop value, keep key for lua_next
+		}
+		lua_pop(L, 1); // pop table
+	}
+	cs->other_names = other_names;
+	lua_settop(L, 1);
+	return 1;
+}
+
 static int l_csys_govtype(lua_State *L)
 {
 	CustomSystem *cs = l_csys_check(L, 1);
@@ -367,8 +463,10 @@ static int l_csys_govtype(lua_State *L)
 static int l_csys_lawlessness(lua_State *L)
 {
 	CustomSystem *cs = l_csys_check(L, 1);
-	const fixed *value = LuaFixed::CheckFromLua(L, 2);
-	cs->lawlessness = *value;
+	double *value = getDoubleOrFixed(L, 2);
+	if (value == nullptr)
+		return luaL_error(L, "Bad datatype. Expected fixed or float, got %s", luaL_typename(L, 2));
+	cs->lawlessness = fixed::FromDouble(*value);
 	cs->want_rand_lawlessness = false;
 	lua_settop(L, 1);
 	return 1;
@@ -395,7 +493,7 @@ static void _add_children_to_sbody(lua_State *L, CustomSystemBody *sbody)
 
 		// then there are any number of sub-tables containing direct children
 		while (true) {
-			lua_rawgeti(L, -1, i+1);
+			lua_rawgeti(L, -1, i + 1);
 			LUA_DEBUG_CHECK(L, 1);
 			if (!lua_istable(L, -1)) break;
 			_add_children_to_sbody(L, kid);
@@ -414,14 +512,14 @@ static void _add_children_to_sbody(lua_State *L, CustomSystemBody *sbody)
 	LUA_DEBUG_END(L, 0);
 }
 
-static unsigned count_stars(CustomSystemBody* csb)
+static unsigned count_stars(CustomSystemBody *csb)
 {
 	if (!csb)
 		return 0;
 	unsigned count = 0;
 	if (csb->type >= SystemBody::TYPE_STAR_MIN && csb->type <= SystemBody::TYPE_STAR_MAX)
 		++count;
-	for (CustomSystemBody* child : csb->children)
+	for (CustomSystemBody *child : csb->children)
 		count += count_stars(child);
 	return count;
 }
@@ -433,8 +531,7 @@ static int l_csys_bodies(lua_State *L)
 	int primary_type = (*primary_ptr)->type;
 	luaL_checktype(L, 3, LUA_TTABLE);
 
-	if ((primary_type < SystemBody::TYPE_STAR_MIN || primary_type > SystemBody::TYPE_STAR_MAX)
-			&& primary_type != SystemBody::TYPE_GRAVPOINT)
+	if ((primary_type < SystemBody::TYPE_STAR_MIN || primary_type > SystemBody::TYPE_STAR_MAX) && primary_type != SystemBody::TYPE_GRAVPOINT)
 		return luaL_error(L, "first body does not have a valid star type");
 	if (primary_type != cs->primaryType[0] && primary_type != SystemBody::TYPE_GRAVPOINT)
 		return luaL_error(L, "first body type does not match the system's primary star type");
@@ -461,6 +558,8 @@ static int l_csys_add_to_sector(lua_State *L)
 {
 	CustomSystem **csptr = l_csys_check_ptr(L, 1);
 
+	(*csptr)->SanityChecks();
+
 	int x = luaL_checkinteger(L, 2);
 	int y = luaL_checkinteger(L, 3);
 	int z = luaL_checkinteger(L, 4);
@@ -480,8 +579,8 @@ static int l_csys_add_to_sector(lua_State *L)
 
 static int l_csys_gc(lua_State *L)
 {
-	CustomSystem **csptr = static_cast<CustomSystem**>(
-			luaL_checkudata(L, 1, LuaCustomSystem_TypeName));
+	CustomSystem **csptr = static_cast<CustomSystem **>(
+		luaL_checkudata(L, 1, LuaCustomSystem_TypeName));
 	delete *csptr;
 	*csptr = 0;
 	return 0;
@@ -497,6 +596,7 @@ static luaL_Reg LuaCustomSystem_meta[] = {
 	{ "govtype", &l_csys_govtype },
 	{ "lawlessness", &l_csys_lawlessness },
 	{ "bodies", &l_csys_bodies },
+	{ "other_names", &l_csys_other_names },
 	{ "add_to_sector", &l_csys_add_to_sector },
 	{ "__gc", &l_csys_gc },
 	{ 0, 0 }
@@ -526,9 +626,8 @@ static void RegisterCustomSystemsAPI(lua_State *L)
 	register_class(L, LuaCustomSystemBody_TypeName, LuaCustomSystemBody_meta);
 }
 
-void CustomSystemsDatabase::Init()
+void CustomSystemsDatabase::Load()
 {
-	PROFILE_SCOPED()
 	assert(!s_activeCustomSystemsDatabase);
 	s_activeCustomSystemsDatabase = this;
 	lua_State *L = luaL_newstate();
@@ -568,10 +667,9 @@ void CustomSystemsDatabase::Init()
 
 CustomSystemsDatabase::~CustomSystemsDatabase()
 {
-	PROFILE_SCOPED()
 	for (SectorMap::iterator secIt = m_sectorMap.begin(); secIt != m_sectorMap.end(); ++secIt) {
-		for (CustomSystemsDatabase::SystemList::iterator
-				sysIt = secIt->second.begin(); sysIt != secIt->second.end(); ++sysIt) {
+		for (CustomSystemsDatabase::SystemList::iterator sysIt = secIt->second.begin();
+			 sysIt != secIt->second.end(); ++sysIt) {
 			delete *sysIt;
 		}
 	}
@@ -580,28 +678,25 @@ CustomSystemsDatabase::~CustomSystemsDatabase()
 
 const CustomSystemsDatabase::SystemList &CustomSystemsDatabase::GetCustomSystemsForSector(int x, int y, int z) const
 {
-	PROFILE_SCOPED()
-	SystemPath path(x,y,z);
+	SystemPath path(x, y, z);
 	SectorMap::const_iterator it = m_sectorMap.find(path);
 	return (it != m_sectorMap.end()) ? it->second : s_emptySystemList;
 }
 
-void CustomSystemsDatabase::AddCustomSystem(const SystemPath& path, CustomSystem* csys)
+void CustomSystemsDatabase::AddCustomSystem(const SystemPath &path, CustomSystem *csys)
 {
 	m_sectorMap[path].push_back(csys);
-
 }
 
-CustomSystem::CustomSystem():
-	sBody(0),
+CustomSystem::CustomSystem() :
+	sBody(nullptr),
 	numStars(0),
 	seed(0),
 	want_rand_explored(true),
-	faction(0),
+	faction(nullptr),
 	govType(Polit::GOV_INVALID),
 	want_rand_lawlessness(true)
 {
-	PROFILE_SCOPED()
 	for (int i = 0; i < 4; ++i)
 		primaryType[i] = SystemBody::TYPE_GRAVPOINT;
 }
@@ -611,8 +706,16 @@ CustomSystem::~CustomSystem()
 	delete sBody;
 }
 
-CustomSystemBody::CustomSystemBody():
-	aspectRatio(fixed(1,1)),
+void CustomSystem::SanityChecks()
+{
+	if (IsRandom())
+		return;
+	else
+		sBody->SanityChecks();
+}
+
+CustomSystemBody::CustomSystemBody() :
+	aspectRatio(fixed(1, 1)),
 	averageTemp(1),
 	want_rand_offset(true),
 	latitude(0.0),
@@ -622,13 +725,58 @@ CustomSystemBody::CustomSystemBody():
 	seed(0),
 	want_rand_seed(true)
 {
-	PROFILE_SCOPED()
 }
 
 CustomSystemBody::~CustomSystemBody()
 {
-	for (std::vector<CustomSystemBody*>::iterator
-			it = children.begin(); it != children.end(); ++it) {
+	for (std::vector<CustomSystemBody *>::iterator
+			 it = children.begin();
+		 it != children.end(); ++it) {
 		delete (*it);
 	}
+}
+
+static void checks(CustomSystemBody &csb)
+{
+	if (csb.name.empty()) {
+		Error("custom system with name not set!\n");
+		// throw an exception? Then it can be "catch" *per file*...
+	}
+	if (csb.radius <= 0 && csb.mass <= 0) {
+		if (csb.type != SystemBody::TYPE_STARPORT_ORBITAL &&
+			csb.type != SystemBody::TYPE_STARPORT_SURFACE &&
+			csb.type != SystemBody::TYPE_GRAVPOINT) Error("custom system body '%s' with both radius ans mass left undefined!", csb.name.c_str());
+	}
+	if (csb.radius <= 0 && csb.type != SystemBody::TYPE_STARPORT_ORBITAL &&
+		csb.type != SystemBody::TYPE_STARPORT_SURFACE &&
+		csb.type != SystemBody::TYPE_GRAVPOINT) {
+		Output("Warning: 'radius' is %f for body '%s'\n", csb.radius.ToFloat(), csb.name.c_str());
+	}
+	if (csb.mass <= 0 && csb.type != SystemBody::TYPE_STARPORT_ORBITAL &&
+		csb.type != SystemBody::TYPE_STARPORT_SURFACE &&
+		csb.type != SystemBody::TYPE_GRAVPOINT) {
+		Output("Warning: 'mass' is %f for body '%s'\n", csb.mass.ToFloat(), csb.name.c_str());
+	}
+	if (csb.averageTemp <= 0 && csb.type != SystemBody::TYPE_STARPORT_ORBITAL &&
+		csb.type != SystemBody::TYPE_STARPORT_SURFACE &&
+		csb.type != SystemBody::TYPE_GRAVPOINT) {
+		Output("Warning: 'averageTemp' is %i for body '%s'\n", csb.averageTemp, csb.name.c_str());
+	}
+	if (csb.type == SystemBody::TYPE_STAR_S_BH ||
+		csb.type == SystemBody::TYPE_STAR_IM_BH ||
+		csb.type == SystemBody::TYPE_STAR_SM_BH) {
+		double schwarzschild = 2 * csb.mass.ToDouble() * ((G * SOL_MASS) / (LIGHT_SPEED * LIGHT_SPEED));
+		schwarzschild /= SOL_RADIUS;
+		if (csb.radius < schwarzschild) {
+			Output("Warning: Blackhole radius defaulted to Schwarzschild radius (%f Sol radii)\n", schwarzschild);
+			csb.radius = schwarzschild;
+		}
+	}
+}
+
+void CustomSystemBody::SanityChecks()
+{
+	checks(*this);
+	for (CustomSystemBody *csb : children)
+		csb->SanityChecks();
 }

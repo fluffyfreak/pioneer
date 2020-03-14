@@ -2,26 +2,27 @@
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "ShipCockpit.h"
-#include "ShipType.h"
+
+#include "CameraController.h"
+#include "Easing.h"
+#include "Game.h"
 #include "Pi.h"
 #include "Player.h"
-#include "Easing.h"
-#include "CameraController.h"
-#include "Game.h"
 #include "WorldView.h"
+#include "graphics/Renderer.h"
 
 ShipCockpit::ShipCockpit(const std::string &modelName) :
-m_shipDir(0.0),
-m_shipYaw(0.0),
-m_dir(0.0),
-m_yaw(0.0),
-m_rotInterp(0.f),
-m_transInterp(0.f),
-m_gForce(0.f),
-m_offset(0.f),
-m_shipVel(0.f),
-m_translate(0.0),
-m_transform(matrix4x4d::Identity())
+	m_shipDir(0.0),
+	m_shipYaw(0.0),
+	m_dir(0.0),
+	m_yaw(0.0),
+	m_rotInterp(0.f),
+	m_transInterp(0.f),
+	m_gForce(0.f),
+	m_offset(0.f),
+	m_shipVel(0.f),
+	m_translate(0.0),
+	m_transform(matrix4x4d::Identity())
 {
 	assert(!modelName.empty());
 	SetModel(modelName.c_str());
@@ -32,19 +33,20 @@ m_transform(matrix4x4d::Identity())
 
 ShipCockpit::~ShipCockpit()
 {
-
 }
 
 void ShipCockpit::Render(Graphics::Renderer *renderer, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform)
 {
+	PROFILE_SCOPED()
 	RenderModel(renderer, camera, viewCoords, viewTransform);
 }
 
-inline void ShipCockpit::resetInternalCameraController() {
-	m_icc = static_cast<InternalCameraController*>(Pi::game->GetWorldView()->GetCameraController());
+inline void ShipCockpit::resetInternalCameraController()
+{
+	m_icc = static_cast<InternalCameraController *>(Pi::game->GetWorldView()->shipView.GetCameraController());
 }
 
-void ShipCockpit::Update(float timeStep)
+void ShipCockpit::Update(const Player *player, float timeStep)
 {
 	m_transform = matrix4x4d::Identity();
 
@@ -59,23 +61,23 @@ void ShipCockpit::Update(float timeStep)
 	m_transform.RotateX(rotX);
 	m_transform.RotateY(rotY);
 
-	vector3d cur_dir = Pi::player->GetOrient().VectorZ().Normalized();
+	vector3d cur_dir = player->GetOrient().VectorZ().Normalized();
 	if (cur_dir.Dot(m_shipDir) < 1.0f) {
 		m_rotInterp = 0.0f;
 		m_shipDir = cur_dir;
 	}
 
 	//---------------------------------------- Acceleration
-	float cur_vel = CalculateSignedForwardVelocity(-cur_dir, Pi::player->GetVelocity()); // Forward is -Z
-	float gforce = Clamp(floorf(((abs(cur_vel) - m_shipVel) / timeStep) / 9.8f), -COCKPIT_MAX_GFORCE, COCKPIT_MAX_GFORCE);
-	if (abs(cur_vel) > 500000.0f ||      // Limit gforce measurement so we don't get astronomical fluctuations
-		abs(gforce - m_gForce) > 100.0) { // Smooth out gforce one frame spikes, sometimes happens when hitting max speed due to the thrust limiters
+	float cur_vel = CalculateSignedForwardVelocity(-cur_dir, player->GetVelocity()); // Forward is -Z
+	float gforce = Clamp(floorf(((fabs(cur_vel) - m_shipVel) / timeStep) / 9.8f), -COCKPIT_MAX_GFORCE, COCKPIT_MAX_GFORCE);
+	if (fabs(cur_vel) > 500000.0f || // Limit gforce measurement so we don't get astronomical fluctuations
+		fabs(gforce - m_gForce) > 100.0) { // Smooth out gforce one frame spikes, sometimes happens when hitting max speed due to the thrust limiters
 		gforce = 0.0f;
 	}
-	if (abs(gforce - m_gForce) > 100.0) {
+	if (fabs(gforce - m_gForce) > 100.0) {
 		gforce = 0.0f;
 	}
-	if (abs(m_translate.z - m_offset) < 0.001f) {
+	if (fabs(m_translate.z - m_offset) < 0.001f) {
 		m_transInterp = 0.0f;
 	}
 	float offset = (gforce > 14.0f ? -1.0f : (gforce < -14.0f ? 1.0f : 0.0f)) * COCKPIT_ACCEL_OFFSET;
@@ -92,8 +94,8 @@ void ShipCockpit::Update(float timeStep)
 	//------------------------------------------ Rotation
 	// For yaw/pitch
 	vector3d rot_axis = cur_dir.Cross(m_dir).Normalized();
-	vector3d yaw_axis = Pi::player->GetOrient().VectorY().Normalized();
-	vector3d pitch_axis = Pi::player->GetOrient().VectorX().Normalized();
+	vector3d yaw_axis = player->GetOrient().VectorY().Normalized();
+	vector3d pitch_axis = player->GetOrient().VectorX().Normalized();
 	float dot = cur_dir.Dot(m_dir);
 	float angle = acos(dot);
 	// For roll
@@ -143,8 +145,7 @@ void ShipCockpit::Update(float timeStep)
 					}
 					m_transform.RotateY(-yaw_angle);
 				}
-			}
-			else {
+			} else {
 				angle = 0.0f;
 			}
 		}
@@ -171,36 +172,36 @@ void ShipCockpit::Update(float timeStep)
 					}
 					m_transform.RotateZ(-roll_angle);
 				}
-			}
-			else {
+			} else {
 				angle_yaw = 0.0f;
 			}
 		}
-	}
-	else {
+	} else {
 		m_rotInterp = 0.0f;
 	}
 }
 
-void ShipCockpit::RenderCockpit(Graphics::Renderer* renderer, const Camera* camera, Frame* frame)
+void ShipCockpit::RenderCockpit(Graphics::Renderer *renderer, const Camera *camera, FrameId frameId)
 {
+	PROFILE_SCOPED()
 	renderer->ClearDepthBuffer();
-	SetFrame(frame);
+	Body::SetFrame(frameId);
 	Render(renderer, camera, m_translate, m_transform);
-	SetFrame(nullptr);
+	Body::SetFrame(FrameId::Invalid);
 }
 
-void ShipCockpit::OnActivated()
+void ShipCockpit::OnActivated(const Player *player)
 {
-	assert(Pi::player);
-	m_dir = Pi::player->GetOrient().VectorZ().Normalized();
-	m_yaw = Pi::player->GetOrient().VectorY().Normalized();
+	assert(player);
+	m_dir = player->GetOrient().VectorZ().Normalized();
+	m_yaw = player->GetOrient().VectorY().Normalized();
 	m_shipDir = m_dir;
 	m_shipYaw = m_yaw;
-	m_shipVel = CalculateSignedForwardVelocity(-m_shipDir, Pi::player->GetVelocity());
+	m_shipVel = CalculateSignedForwardVelocity(-m_shipDir, player->GetVelocity());
 }
 
-float ShipCockpit::CalculateSignedForwardVelocity(vector3d normalized_forward, vector3d velocity) {
+float ShipCockpit::CalculateSignedForwardVelocity(const vector3d &normalized_forward, const vector3d &velocity)
+{
 	float velz_cos = velocity.Dot(normalized_forward);
 	return (velz_cos * normalized_forward).Length() * (velz_cos < 0.0 ? -1.0 : 1.0);
 }

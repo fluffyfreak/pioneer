@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef UI_LAYER_H
@@ -8,24 +8,25 @@
 
 namespace UI {
 
-class Layer : public Container {
-public:
-	virtual void Layout();
+	class Layer : public Container {
+	public:
+		virtual void Layout();
 
-	Layer *SetInnerWidget(Widget *w, const Point &pos, const Point &size);
-	Layer *SetInnerWidget(Widget *w) { return SetInnerWidget(w, GetPosition(), GetSize()); }
-	virtual void RemoveInnerWidget();
-	Widget *GetInnerWidget() const { return m_widget.Get(); }
+		Layer *SetInnerWidget(Widget *w, const Point &pos, const Point &size);
+		Layer *SetInnerWidget(Widget *w) { return SetInnerWidget(w, GetPosition(), GetSize()); }
+		virtual void RemoveInnerWidget();
+		Widget *GetInnerWidget() const { return m_widget.Get(); }
 
-private:
-	virtual Point PreferredSize() { return Point(); }
+	private:
+		virtual Point PreferredSize() { return Point(); }
 
-	friend class Context;
-	Layer(Context *context) : Container(context) {}
+		friend class Context;
+		Layer(Context *context) :
+			Container(context) {}
 
-	RefCountedPtr<Widget> m_widget;
-};
+		RefCountedPtr<Widget> m_widget;
+	};
 
-}
+} // namespace UI
 
 #endif

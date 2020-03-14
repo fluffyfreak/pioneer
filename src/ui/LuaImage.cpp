@@ -1,31 +1,32 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Image.h"
-#include "LuaObject.h"
+#include "lua/LuaObject.h"
 
 namespace UI {
 
-class LuaImage {
-public:
+	class LuaImage {
+	public:
+		static int l_set_height_lines(lua_State *l)
+		{
+			Image *img = LuaObject<UI::Image>::CheckFromLua(1);
+			Uint32 lines = luaL_checkinteger(l, 2);
+			img->SetHeightLines(lines);
+			lua_pushvalue(l, 1);
+			return 1;
+		}
+	};
 
-	static int l_set_height_lines(lua_State *l) {
-		Image *img = LuaObject<UI::Image>::CheckFromLua(1);
-		Uint32 lines = luaL_checkinteger(l, 2);
-		img->SetHeightLines(lines);
-		lua_pushvalue(l, 1);
-		return 1;
-	}
-
-};
-
-}
+} // namespace UI
 
 using namespace UI;
 
-template <> const char *LuaObject<UI::Image>::s_type = "UI.Image";
+template <>
+const char *LuaObject<UI::Image>::s_type = "UI.Image";
 
-template <> void LuaObject<UI::Image>::RegisterClass()
+template <>
+void LuaObject<UI::Image>::RegisterClass()
 {
 	static const char *l_parent = "UI.Widget";
 

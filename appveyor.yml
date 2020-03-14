@@ -1,0 +1,14 @@
+clone_depth: 1
+image: Visual Studio 2017
+
+environment:
+  matrix:
+    - TARGET: msvc
+    - TARGET: mingw
+
+install:
+    - IF "%TARGET%"=="mingw" (choco install InnoSetup)
+    - C:\msys64\usr\bin\bash -l /c/projects/pioneer/CI/appveyor/%TARGET%/prepare.sh
+
+build_script:
+    - C:\msys64\usr\bin\bash -l /c/projects/pioneer/CI/appveyor/%TARGET%/build.sh

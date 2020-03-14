@@ -1,6 +1,7 @@
-local Game = import("Game")
-local Event = import("Event")
-local FileSystem = import("FileSystem")
+local Game = require 'Game'
+local Engine = require 'Engine'
+local Event = require 'Event'
+local FileSystem = require 'FileSystem'
 
 local max_autosaves = 9
 
@@ -33,6 +34,10 @@ local function PickNextAutosave()
 end
 
 local function CheckedSave(filename)
+	if not Engine.GetAutosaveEnabled() then
+		return
+	end
+
 	local ok, err = pcall(Game.SaveGame, filename)
 	if not ok then
 		print('Error making autosave:')

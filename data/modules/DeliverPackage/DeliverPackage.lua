@@ -1,23 +1,23 @@
--- Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
-local Engine = import("Engine")
-local Lang = import("Lang")
-local Game = import("Game")
-local Space = import("Space")
-local Comms = import("Comms")
-local Event = import("Event")
-local Mission = import("Mission")
-local NameGen = import("NameGen")
-local Format = import("Format")
-local Serializer = import("Serializer")
-local Character = import("Character")
-local Equipment = import("Equipment")
-local ShipDef = import("ShipDef")
-local Ship = import("Ship")
-local utils = import("utils")
+local Engine = require 'Engine'
+local Lang = require 'Lang'
+local Game = require 'Game'
+local Space = require 'Space'
+local Comms = require 'Comms'
+local Event = require 'Event'
+local Mission = require 'Mission'
+local Format = require 'Format'
+local Serializer = require 'Serializer'
+local Character = require 'Character'
+local Equipment = require 'Equipment'
+local ShipDef = require 'ShipDef'
+local Ship = require 'Ship'
+local utils = require 'utils'
 
 local InfoFace = import("ui/InfoFace")
+local NavButton = import("ui/NavButton")
 
 local l = Lang.GetResource("module-deliverpackage")
 
@@ -137,6 +137,8 @@ local onChat = function (form, ref, option)
 		return
 	end
 
+	form:AddNavButton(ad.location)
+
 	if option == 0 then
 
 		local sys   = ad.location:GetStarSystem()
@@ -144,7 +146,7 @@ local onChat = function (form, ref, option)
 
 		local introtext = string.interp(flavours[ad.flavour].introtext, {
 			name     = ad.client.name,
-			cash     = Format.Money(ad.reward),
+			cash     = Format.Money(ad.reward,false),
 			starport = sbody.name,
 			system   = sys.name,
 			sectorx  = ad.location.sectorX,
@@ -207,7 +209,7 @@ local onDelete = function (ref)
 end
 
 local isEnabled = function (ref)
-	return isQualifiedFor(Character.persistent.player.reputation, ads[ref])
+	return ads[ref] ~= nil and isQualifiedFor(Character.persistent.player.reputation, ads[ref])
 end
 
 local nearbysystems
@@ -258,6 +260,7 @@ local makeAdvert = function (station, manualFlavour, nearbystations)
 		reward = ((dist / max_delivery_dist) * typical_reward * (1+risk) * (1.5+urgency) * Engine.rand:Number(0.8,1.2))
 		due = Game.time + ((dist / max_delivery_dist) * typical_travel_time * (1.5-urgency) * Engine.rand:Number(0.9,1.1))
 	end
+	reward = math.ceil(reward)
 
 	local ad = {
 		station		= station,
@@ -270,7 +273,6 @@ local makeAdvert = function (station, manualFlavour, nearbystations)
 		risk		= risk,
 		urgency		= urgency,
 		reward		= reward,
-		isfemale	= isfemale,
 		faceseed	= Engine.rand:Integer(),
 	}
 
@@ -278,7 +280,7 @@ local makeAdvert = function (station, manualFlavour, nearbystations)
 
 	ad.desc = string.interp(flavours[flavour].adtext, {
 		system	= nearbysystem.name,
-		cash	= Format.Money(ad.reward),
+		cash	= Format.Money(ad.reward,false),
 		starport = sbody.name,
 	})
 
@@ -362,9 +364,8 @@ local onEnterSystem = function (player)
 			-- if there is some risk and still no ships, flip a tricoin
 			if ships < 1 and risk >= 0.2 and Engine.rand:Integer(2) == 1 then ships = 1 end
 
-			-- XXX hull mass is a bad way to determine suitability for role
 			local shipdefs = utils.build_array(utils.filter(function (k,def) return def.tag == 'SHIP'
-				and def.hyperdriveClass > 0 and def.hullMass <= 400 end, pairs(ShipDef)))
+				and def.hyperdriveClass > 0 and (def.roles.pirate or def.roles.mercenary) end, pairs(ShipDef)))
 			if #shipdefs == 0 then return end
 
 			local ship
@@ -460,12 +461,12 @@ local onGameStart = function ()
 	ads = {}
 	missions = {}
 
-	if not loaded_data then return end
+	if not loaded_data or not loaded_data.ads then return end
 
 	for k,ad in pairs(loaded_data.ads) do
 		local ref = ad.station:AddAdvert({
 			description = ad.desc,
-            icon        = ad.urgency >=  0.8 and "delivery_urgent" or "delivery",
+			icon        = ad.urgency >=  0.8 and "delivery_urgent" or "delivery",
 			onChat      = onChat,
 			onDelete    = onDelete,
 			isEnabled   = isEnabled })
@@ -479,7 +480,7 @@ end
 
 local onClick = function (mission)
 	local dist = Game.system and string.format("%.2f", Game.system:DistanceTo(mission.location)) or "???"
-
+	local danger
 	if mission.risk <= 0.1 then
 		danger = (l.I_HIGHLY_DOUBT_IT)
 	elseif mission.risk > 0.1 and mission.risk <= 0.3 then
@@ -500,7 +501,7 @@ local onClick = function (mission)
 														sectorx = mission.location.sectorX,
 														sectory = mission.location.sectorY,
 														sectorz = mission.location.sectorZ,
-														cash   = Format.Money(mission.reward),
+														cash   = Format.Money(mission.reward,false),
 														dist  = dist})
 										),
 										ui:Margin(10),
@@ -560,6 +561,8 @@ local onClick = function (mission)
 													ui:Label(dist.." "..l.LY)
 												})
 											}),
+										ui:Margin(5),
+										NavButton.New(l.SET_AS_TARGET, mission.location),
 		})})
 		:SetColumn(1, {
 			ui:VBox(10):PackEnd(InfoFace.New(mission.client))

@@ -1,30 +1,30 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _OBJECTVIEWERVIEW_H
 #define _OBJECTVIEWERVIEW_H
 
-#include "libs.h"
-#include "gui/Gui.h"
-#include "UIView.h"
 #include "Camera.h"
-
-#if WITH_OBJECTVIEWER
+#include "UIView.h"
+#include "gui/Gui.h"
+#include "libs.h"
 
 class Body;
 
-class ObjectViewerView: public UIView {
+class ObjectViewerView : public UIView {
 public:
 	ObjectViewerView();
 	virtual void Update();
 	virtual void Draw3D();
+
 protected:
 	virtual void OnSwitchTo();
+
 private:
 	float viewingDist;
 	Gui::Label *m_infoLabel;
 	Gui::VBox *m_vbox;
-	const Body* lastTarget;
+	const Body *lastTarget;
 	matrix4x4d m_camRot;
 
 	RefCountedPtr<CameraContext> m_cameraContext;
@@ -44,7 +44,5 @@ private:
 	void OnNextSeed();
 	void OnPrevSeed();
 };
-
-#endif
 
 #endif /* _OBJECTVIEWERVIEW_H */

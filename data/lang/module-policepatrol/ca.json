@@ -1,0 +1,74 @@
+{
+  "ILLEGAL_GOODS_DETECTED": {
+    "description": "",
+    "message": "Mercaderia il·legal detectada."
+  },
+  "INITIATE_CARGO_SCAN_1": {
+    "description": "",
+    "message": "Iniciant anàlisi de càrrega."
+  },
+  "INITIATE_CARGO_SCAN_2": {
+    "description": "",
+    "message": "Manteniu rumb i velocitat mentre analitzem la vostra càrrega."
+  },
+  "INITIATE_CARGO_SCAN_3": {
+    "description": "",
+    "message": "Iniciant detecció de contraban."
+  },
+  "NOTHING_DETECTED": {
+    "description": "",
+    "message": "No s'ha detectat mercaderia il·legal. Podeu continuar."
+  },
+  "OUTLAW_DETECTED_1": {
+    "description": "",
+    "message": "La nau {ship_label} pertany a un conegut proscrit. Atacar i destruir!"
+  },
+  "OUTLAW_DETECTED_2": {
+    "description": "",
+    "message": "Bandit, els teus dies estan comptats!"
+  },
+  "OUTLAW_DETECTED_3": {
+    "description": "",
+    "message": "Enxampat! No sortiràs viu d'aquest sistema!"
+  },
+  "POLICE_TAUNT_1": {
+    "description": "",
+    "message": "Noi, això ha estat una mala idea!"
+  },
+  "POLICE_TAUNT_2": {
+    "description": "",
+    "message": "Contrabandista, pagaràs el preu definitiu!"
+  },
+  "POLICE_TAUNT_3": {
+    "description": "",
+    "message": "Ximple, el crim no paga!"
+  },
+  "RESPECT_THE_LAW_1": {
+    "description": "",
+    "message": "Respecteu la llei! El crim no paga al sistema {system}!"
+  },
+  "RESPECT_THE_LAW_2": {
+    "description": "",
+    "message": "Heu entrat al sistema {system}. Respecteu la llei!"
+  },
+  "TAKE_A_HIKE": {
+    "description": "",
+    "message": "D'acord, tens una segona oportunitat. Toca el dos!"
+  },
+  "TARGET_DESTROYED_1": {
+    "description": "",
+    "message": "Target destroyed!"
+  },
+  "TARGET_DESTROYED_2": {
+    "description": "",
+    "message": "Yeah!"
+  },
+  "TARGET_DESTROYED_3": {
+    "description": "",
+    "message": "Rest in pieces! Haha."
+  },
+  "TARGET_DESTROYED_4": {
+    "description": "",
+    "message": "Another one bites the dust!"
+  }
+}

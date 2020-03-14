@@ -1,9 +1,12 @@
 // Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
+
 #include "TriplanarMaterial.h"
+
 #include "graphics/Material.h"
 #include "graphics/Graphics.h"
+#include "HeatGradientPar.h"
 #include "RendererGL.h"
 #include "TextureGL.h"
 #include <sstream>

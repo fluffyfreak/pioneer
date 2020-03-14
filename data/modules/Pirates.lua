@@ -1,20 +1,20 @@
--- Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
-local Engine = import("Engine")
-local Game = import("Game")
-local Space = import("Space")
-local Event = import("Event")
-local Equipment = import("Equipment")
-local ShipDef = import("ShipDef")
-local Ship = import("Ship")
-local utils = import("utils")
+local Engine = require 'Engine'
+local Game = require 'Game'
+local Space = require 'Space'
+local Event = require 'Event'
+local Equipment = require 'Equipment'
+local ShipDef = require 'ShipDef'
+local Ship = require 'Ship'
+local utils = require 'utils'
 
 local onEnterSystem = function (player)
 	if not player:IsPlayer() then return end
 
 	local shipdefs = utils.build_array(utils.filter(function (k,def) return def.tag == 'SHIP'
-		and def.hyperdriveClass > 0 and def.hullMass <= 150 end, pairs(ShipDef)))
+		and def.hyperdriveClass > 0 and def.roles.pirate end, pairs(ShipDef)))
 	if #shipdefs == 0 then return end
 
 	local lawlessness = Game.system.lawlessness

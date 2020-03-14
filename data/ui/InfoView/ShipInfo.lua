@@ -1,4 +1,4 @@
--- Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local Engine = import("Engine")
@@ -6,8 +6,6 @@ local Lang = import("Lang")
 local Game = import("Game")
 local Equipment = import("Equipment")
 local ShipDef = import("ShipDef")
-
-local ModelSpinner = import("UI.Game.ModelSpinner")
 
 local ui = Engine.ui
 local l = Lang.GetResource("ui-core");
@@ -22,11 +20,11 @@ local yes_no = function (binary)
 end
 
 local shipInfo = function (args)
-	local shipDef = ShipDef[Game.player.shipId]
-
-	local hyperdrive =              table.unpack(Game.player:GetEquip("engine"))
-	local frontWeapon =             table.unpack(Game.player:GetEquip("laser_front"))
-	local rearWeapon =              table.unpack(Game.player:GetEquip("laser_rear"))
+	local shipDef     =    ShipDef[Game.player.shipId]
+	local shipLabel   =    Game.player:GetLabel()
+	local hyperdrive  =    table.unpack(Game.player:GetEquip("engine"))
+	local frontWeapon =    table.unpack(Game.player:GetEquip("laser_front"))
+	local rearWeapon  =    table.unpack(Game.player:GetEquip("laser_rear"))
 
 	hyperdrive =  hyperdrive  or nil
 	frontWeapon = frontWeapon or nil
@@ -39,7 +37,7 @@ local shipInfo = function (args)
 		player:SetShipName(newName)
 	end )
 
-	local mass_with_fuel = player.totalMass + player.fuelMassLeft
+	local mass_with_fuel = player.staticMass + player.fuelMassLeft
 	local mass_with_fuel_kg = 1000 * mass_with_fuel
 
 	-- ship stats mass is in tonnes; scale by 1000 to convert to kg
@@ -48,7 +46,7 @@ local shipInfo = function (args)
 	local up_acc = shipDef.linearThrust.UP / mass_with_fuel_kg
 
 	-- delta-v calculation according to http://en.wikipedia.org/wiki/Tsiolkovsky_rocket_equation
-	local deltav = shipDef.effectiveExhaustVelocity * math.log((player.totalMass + player.fuelMassLeft) / player.totalMass)
+	local deltav = shipDef.effectiveExhaustVelocity * math.log((player.staticMass + player.fuelMassLeft) / player.staticMass)
 
 	local equipItems = {}
 	local equips = {Equipment.cargo, Equipment.misc, Equipment.hyperspace, Equipment.laser}
@@ -84,6 +82,7 @@ local shipInfo = function (args)
 			:SetColumn(0, {
 				ui:Table():AddRows({
 					ui:Table():SetColumnSpacing(10):AddRows({
+						{ l.REGISTRATION_NUMBER..":",  shipLabel},
 						{ l.HYPERDRIVE..":", hyperdrive and hyperdrive:GetName() or l.NONE },
 						{
 							l.HYPERSPACE_RANGE..":",
@@ -95,7 +94,7 @@ local shipInfo = function (args)
 							),
 						},
 						"",
-						{ l.WEIGHT_EMPTY..":",  string.format("%dt", player.totalMass - player.usedCapacity) },
+						{ l.WEIGHT_EMPTY..":",  string.format("%dt", player.staticMass - player.usedCapacity) },
 						{ l.CAPACITY_USED..":", string.format("%dt (%dt "..l.FREE..")", player.usedCapacity,  player.freeCapacity) },
 						{ l.CARGO_SPACE..":", string.format("%dt (%dt "..l.MAX..")", player.totalCargo, shipDef.equipSlotCapacity.cargo) },
 						{ l.CARGO_SPACE_USED..":", string.format("%dt (%dt "..l.FREE..")", player.usedCargo, player.totalCargo - player.usedCargo) },
@@ -133,7 +132,6 @@ local shipInfo = function (args)
 							ui:Expand("HORIZONTAL", shipNameEntry),
 						})
 					}))
-					:PackEnd(ModelSpinner.New(ui, shipDef.modelName, Game.player:GetSkin()))
 			})
 end
 

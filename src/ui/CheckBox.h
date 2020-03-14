@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef UI_CHECKBOX_H
@@ -8,28 +8,30 @@
 
 namespace UI {
 
-class CheckBox: public Widget {
-public:
-	virtual Point PreferredSize();
-	virtual void Layout();
-	virtual void Draw();
+	class CheckBox : public Widget {
+	public:
+		virtual Point PreferredSize();
+		virtual void Layout();
+		virtual void Draw();
 
-	void Toggle();
-	bool IsChecked() const;
-	void SetState(bool state);
+		void Toggle();
+		bool IsChecked() const;
+		void SetState(bool state);
 
-	sigc::signal<void, bool> onValueChanged;
+		sigc::signal<void, bool> onValueChanged;
 
-protected:
-	friend class Context;
-	CheckBox(Context *context): Widget(context), m_checked(false) {}
+	protected:
+		friend class Context;
+		CheckBox(Context *context) :
+			Widget(context),
+			m_checked(false) {}
 
-	void HandleClick();
+		void HandleClick();
 
-private:
-	bool m_checked;
-};
+	private:
+		bool m_checked;
+	};
 
-}
+} // namespace UI
 
 #endif

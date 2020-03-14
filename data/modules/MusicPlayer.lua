@@ -1,10 +1,11 @@
--- Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
-local Engine = import("Engine")
-local Game = import("Game")
-local Music = import("Music")
-local Event = import("Event")
+local Engine = require 'Engine'
+local Game = require 'Game'
+local Music = require 'Music'
+local Event = require 'Event'
+local SystemPath = require 'SystemPath'
 
 local music = {}
 
@@ -57,6 +58,9 @@ end
 local playAmbient = function ()
 	local category
 
+	local sol = SystemPath.New(0, 0, 0, 0, 0)
+	local unexplored_distance = 690
+
 	-- if we're near a planet or spacestation then choose something specific
 	-- player can usually be in a planet's frame but still be so far away that
 	-- they'd say they're not near it, so only use its rotating frame (which
@@ -73,7 +77,15 @@ local playAmbient = function ()
 
 	-- not near anything interesting so just use the normal space music
 	if not category then
-		playRandomSongFromCategory("space")
+		if Game.system then
+			if Game.system:DistanceTo(sol) > unexplored_distance then
+				playRandomSongFromCategory("unexplored")
+			else
+				playRandomSongFromCategory("space")
+			end
+		else
+			playRandomSongFromCategory("unexplored")
+		end
 		return
 	end
 
@@ -81,7 +93,15 @@ local playAmbient = function ()
 	-- have any specific music) then fall back to normal space music
 	playRandomSongFromCategory(category)
 	if not Music.IsPlaying() then
-		playRandomSongFromCategory("space")
+		if Game.system then
+			if Game.system:DistanceTo(sol) > unexplored_distance then
+				playRandomSongFromCategory("unexplored")
+			else
+				playRandomSongFromCategory("space")
+			end
+		else
+			playRandomSongFromCategory("unexplored")
+		end
 	end
 end
 
@@ -106,9 +126,29 @@ Event.Register("onSongFinished", function ()
 	playAmbient()
 end)
 
--- start some ambient music when first arriving in system
+-- play discovery music if player enters an interesting system
+-- otherwise, start some ambient music
 Event.Register("onEnterSystem", function ()
-	playAmbient()
+	local player_body = Game.player.frameBody
+	if player_body and not Game.system.explored then
+		if player_body.type == 'STAR_SM_BH' then 
+			playRandomSongFromCategory("discovery")
+		elseif player_body.type == 'STAR_IM_BH' then
+			playRandomSongFromCategory("discovery")
+		elseif player_body.type == 'STAR_S_BH' then
+			playRandomSongFromCategory("discovery")
+		elseif player_body.type == 'STAR_O_WF' then
+			playRandomSongFromCategory("discovery")
+		elseif player_body.type == 'STAR_B_WF' then
+			playRandomSongFromCategory("discovery")
+		elseif player_body.type == 'STAR_M_WF' then
+			playRandomSongFromCategory("discovery")
+		else
+			playAmbient()
+		end
+	else
+		playAmbient()
+	end
 end)
 
 -- ship or player destruction (aka game over)
@@ -135,7 +175,7 @@ end)
 -- ship near the player
 Event.Register("onShipAlertChanged", function (ship, alert)
 	if not ship:IsPlayer() then return end
-	if alert == "SHIP_NEARBY" then
+	if alert == "SHIP_NEARBY" and not ship:IsDocked() then
 		playRandomSongFromCategory("ship-nearby")
 	elseif alert == "SHIP_FIRING" then
 		playRandomSongFromCategory("ship-firing")

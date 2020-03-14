@@ -4,37 +4,45 @@
 #include "Ship.h"
 #include "AsteroidBody.h"
 #include "Game.h"
+#include "GameSaveError.h"
 #include "Pi.h"
-#include "Serializer.h"
 #include "Sfx.h"
 #include "Space.h"
 #include "EnumStrings.h"
-#include "LuaTable.h"
 #include "collider/collider.h"
 #include "scenegraph/SceneGraph.h"
 #include "scenegraph/ModelSkin.h"
 
-void AsteroidBody::SaveToJson(Json::Value &jsonObj, Space *space)
+AsteroidBody::AsteroidBody()
+{
+	SetModel("cargo");
+	Init();
+	SetMass(1.0);
+}
+
+AsteroidBody::AsteroidBody(const Json &jsonObj, Space *space) :
+	DynamicBody(jsonObj, space)
+{
+	Init();
+
+	try {
+		Json asteroidBodyObj = jsonObj["asteroid_body"];
+		m_hitpoints = StrToFloat(asteroidBodyObj["hit_points"]);
+	} catch (Json::type_error &) {
+		throw SavedGameCorruptException();
+	}
+
+}
+
+void AsteroidBody::SaveToJson(Json &jsonObj, Space *space)
 {
 	DynamicBody::SaveToJson(jsonObj, space);
 
-	Json::Value asteroidBodyObj(Json::objectValue); // Create JSON object to contain dynamic body data.
+	Json asteroidBodyObj = Json::object(); // Create JSON object to contain dynamic body data.
 
 	asteroidBodyObj["hit_points"] = FloatToStr(m_hitpoints);
 
 	jsonObj["asteroid_body"] = asteroidBodyObj; // Add asteroid body object to supplied object.
-}
-
-void AsteroidBody::LoadFromJson(const Json::Value &jsonObj, Space *space)
-{
-	DynamicBody::LoadFromJson(jsonObj, space);
-	Init();
-
-	if (!jsonObj.isMember("asteroid_body")) throw SavedGameCorruptException();
-	Json::Value asteroidBodyObj = jsonObj["asteroid_body"];
-
-	if (!asteroidBodyObj.isMember("hit_points")) throw SavedGameCorruptException();
-	m_hitpoints = StrToFloat(asteroidBodyObj["hit_points"].asString());
 }
 
 void AsteroidBody::Init()
@@ -56,13 +64,6 @@ void AsteroidBody::Init()
 	GetModel()->SetColors(colors);
 }
 
-AsteroidBody::AsteroidBody()
-{
-	SetModel("cargo");
-	Init();
-	SetMass(1.0);
-}
-
 void AsteroidBody::TimeStepUpdate(const float timeStep)
 {
 	// Suggestion: since asteroids don't need thrust or AI, it could be
@@ -77,7 +78,7 @@ bool AsteroidBody::OnDamage(Object *attacker, float kgDamage, const CollisionCon
 	m_hitpoints -= kgDamage*0.001f;
 	if (m_hitpoints < 0) {
 		Pi::game->GetSpace()->KillBody(this);
-		Sfx::Add(this, Sfx::TYPE_EXPLOSION);
+		SfxManager::Add(this, TYPE_EXPLOSION);
 	}
 	return true;
 }

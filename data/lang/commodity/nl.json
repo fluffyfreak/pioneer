@@ -1,0 +1,250 @@
+{
+  "AIR_PROCESSORS": {
+    "description": "",
+    "message": "Luchtverwerkinginstallaties"
+  },
+  "AIR_PROCESSORS_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Schone lucht wordt alleen voor lief genomen als het volop voorhanden is. Er gaan geruchten dat de techniek achter luchtpurificatie van buitenaardse bodemvonsten op Mars afkomstig is. Veel bedrijven maken verschillende soorten luchtprocessors die in staat zijn zelfs de meest vijandige atmosferen om te zetten in bruikbare lucht en regeringen staan monopolies hierop niet toe."
+  },
+  "ANIMAL_MEAT": {
+    "description": "",
+    "message": "Dierenvlees"
+  },
+  "ANIMAL_MEAT_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Dierenvlees is controversieel. Omdat kunstmatige eiwitten volop beschikbaar zijn, vinden de meeste mensen dat het doden van dieren niet kan. Hoewel vlees verboden is in de meeste kernstelsels, zijn levenden dieren en hun vlees een belangrijk onderdeel van het leven van mensen op traditionelere werelden."
+  },
+  "BATTLE_WEAPONS": {
+    "description": "",
+    "message": "Strijdwapens"
+  },
+  "BATTLE_WEAPONS_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Zware militaire wapens, zoals gepantserde zweeftanks en oppervlak-naar-ruimteraketten. Handel hierin is normaal gesproken een regeringsmonopolie. Op de zwarte markt kunnen ze echter een stevige winst opleveren."
+  },
+  "CARBON_ORE": {
+    "description": "",
+    "message": "Koolstof"
+  },
+  "CARBON_ORE_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Koolstof is een van de meest diverse elementen die we kennen. Het wordt toegepast in vrijwel alles, van plastic to metaallegeringen en soms zelfs energieopwekking. Koolstof is goedkoop maar belangrijk. Daarom importeren bijna alle industriële vestigingen koolstoferts."
+  },
+  "COMPUTERS": {
+    "description": "",
+    "message": "Computers"
+  },
+  "COMPUTERS_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Sinds duizend jaar geleden, met de Abacus, PDP-11 and Motorola 68k-chip tot onze moderne HAL 9001 en Multivac-lijn, stonden computers aan het begin van het informatietijdperk. Net zo belangrijk voor het binnengaan van de hyperruimte als voor het delen van schattige video's over het UniNet."
+  },
+  "CONSUMER_GOODS": {
+    "description": "",
+    "message": "Consumptiegoederen"
+  },
+  "CONSUMER_GOODS_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Eindproducten die klaar zijn om te worden gebruikt door consumenten, van tandenbortels en  keukenapparatuur tot zweefauto's."
+  },
+  "FARM_MACHINERY": {
+    "description": "",
+    "message": "Landbouw-apparatuur"
+  },
+  "FARM_MACHINERY_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Hoewel zeldzaam, is het nog steeds mogelijk een boer te zien die zijn land omploegt met een os. Maar vrijwel overal waar landbouw plaatsvindt worden machines gebruikt om het land te cultiveren, zowel in ondergrondse hydroponics als op de eindeloze velden van een tuinwereld."
+  },
+  "FERTILIZER": {
+    "description": "",
+    "message": "Kunstmest"
+  },
+  "FERTILIZER_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Kunstmest is van groot belang voor het begroeien van land op industriële schaal, waardoor monoculturen en grotere opbrengst mogelijk zijn dan met gewone grond. Meestal wordt hiervoor een ecologische prijs betaald die bij aanvang niet duidelijk is."
+  },
+  "FRUIT_AND_VEG": {
+    "description": "",
+    "message": "Fruit & groenten"
+  },
+  "FRUIT_AND_VEG_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Hoewel er vele kunstmatige alternatieven bestaan, zijn echte fruit en groenten nog steeds een belangrijk deel van onze keuken en voeding. Het wordt verbouwd op agriculturele werelden of als onderdeel van de life support van habitats, en geëxporteerd naar stelsels waar landbouw niet mogelijk is."
+  },
+  "GRAIN": {
+    "description": "",
+    "message": "Graan"
+  },
+  "GRAIN_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "De basis van het dieet van veel mensen. Het wordt gebruikt in landbouw, als diervoeder, en als toevoeging aan kunstmatige voeding. Graan wordt ook gebruikt in veel ander voedsel, zoals havermout en baksels. Veel door de ruimte reizende culturen verbouwen en consumeren graan, aangepast aan het klimaat van hun leefomgeving."
+  },
+  "HAND_WEAPONS": {
+    "description": "",
+    "message": "Kleine wapens"
+  },
+  "HAND_WEAPONS_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Handwapens bieden bescherming die verder gaat dan de lange arm van de wet en zijn essentieel voor ruimtehandelaren in ver weg gelegen stelsels. Veel regeringen zien ze echter als bedreiging voor de controle over hun bevolkingen en houden strikte controle over de handel en het bezit."
+  },
+  "HYDROGEN": {
+    "description": "",
+    "message": "Waterstof"
+  },
+  "HYDROGEN_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Waterstof wordt gebruikt als brandstof voor hyper- en scheepsaandrijving en is een zeer belangrijk element. Gelukkig is het het meest voorkomende element in het universum, hoewel het niet eenvoudig op te slaan is. Gewoonlijk hoort het tot de goedkoopste waren op de markt. Ruimtehavens zijn altijd goed voorzien."
+  },
+  "INDUSTRIAL_MACHINERY": {
+    "description": "",
+    "message": "Industriële apparatuur"
+  },
+  "INDUSTRIAL_MACHINERY_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Nodig voor assemblagelijnen, raffinaderijen, hoogovens en productie van machines die andere goederen produceren. Om deze geavanceerde machines te maken is grote competentie vereist."
+  },
+  "LIQUID_OXYGEN": {
+    "description": "",
+    "message": "Vloeibare Zuurstof"
+  },
+  "LIQUID_OXYGEN_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Vloeibare zuurstof heeft vele toepassingen, meestal medisch of industrieel en soms ook bij afvalverwerking. Het is zeer betaalbaar doordat het eenvoudig uit water te verkrijgen is."
+  },
+  "LIQUOR": {
+    "description": "",
+    "message": "Drank"
+  },
+  "LIQUOR_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "De meeste buitenposten hebben een lokale brouw die voor buitenstaanders moeilijk te verteren is. Alcohol is in sommige stelsels verboden vanwege de benevelende effecten. De wet daargelaten is er altijd wel een ouwe jenever op de zwarte markt te vinden, voor een prijs."
+  },
+  "LIVE_ANIMALS": {
+    "description": "",
+    "message": "Levende Dieren"
+  },
+  "LIVE_ANIMALS_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Deels vanwege humanistische, economische en ecologische redenen wordt het grootbrengen van en handelen in dieren strikt gereguleerd, en is het zelfs verboden in veel centrale stelsels. Verder naar buiten wordt vee een belangrijk deel van het levensonderhoud, zowel als lastdier als voor voeding. Exotische dierentuinen en dierenreservaten dragen bij aan de handel in dieren rond de Melkweg, gewoonlijk onder strikte overheidsregels, om illegale jacht te bestrijden."
+  },
+  "MEDICINES": {
+    "description": "",
+    "message": "Medicijnen"
+  },
+  "MEDICINES_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Medicijnen zijn overal waar mensen heen gaan nodig. Ze worden gewonnen uit natuurlijke bronnen of kunstmatig geproduceerd. Ze zijn essentieel voor de voorspoed van een interstellaire mensheid, van het genezen van een verkoudheid tot het bestrijden van de nadelige gevolgen van lange ruimtereizen. Medicijnen worden goed in de gaten gehouden door douanemensen, omdat het niet ongebruikelijk is om drugs als medicijnen voor het doen."
+  },
+  "METAL_ALLOYS": {
+    "description": "",
+    "message": "Legeringen"
+  },
+  "METAL_ALLOYS_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Nadat metaalerts gedolven en geraffineerd is wordt het verwerkt in diverse legeringen. Een legering is een vermenging van metalen, en geen puur element, gecombineerd in exacte verhoudingen om specifieke gewenste eigenschappen te krijgen. Daarom zijn de meeste metalen voor consumenten legeringen."
+  },
+  "METAL_ORE": {
+    "description": "",
+    "message": "Erts"
+  },
+  "METAL_ORE_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Veel koloniën delven metaalertsen om te exporteren, om geraffineerd en gebruikt te worden in industriële fabricage. Metaal is in al zijn vormen essentieel voor de moderne beschaving, omdat het gebruikt worden in alles van klein speelgoed tot ruimteschepen."
+  },
+  "MILITARY_FUEL": {
+    "description": "",
+    "message": "Militaire brandstof"
+  },
+  "MILITARY_FUEL_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Wordt gebruikt als brandstof voor geavanceerdere militaire hyperruimte-aandrijvingen. Deze aandrijvingen produceren terwijl ze werken kernafval, die moet worden verwijderd. Door zijn kunstmatige aard is militaire brandstof duurder en minder beschikbaar dan waterstof en kan niet in de natuur worden gevonden."
+  },
+  "MINING_MACHINERY": {
+    "description": "",
+    "message": "Mijnbouw apparatuur"
+  },
+  "MINING_MACHINERY_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "De oorspronkelijk ongezonde mijnwerkzaamheden wordt verlicht door het gebruik van machines die mijnwerkers helpen bij het vinden en delven van diverse ertsen, en ze te transporteren naar de dichtstbijzijnde verwerkingsfaciliteiten."
+  },
+  "NARCOTICS": {
+    "description": "",
+    "message": "Narcotica"
+  },
+  "NARCOTICS_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Natuurlijke of kunstmatige bewustzijnsverruimende substanties. Hoewel het gebruik van drugs, zowel voor recreatie als voor medische doeleinden, zo oud is als de mensheid zelf, is het transport en de handel erin tegenwoordig verboden,"
+  },
+  "NERVE_GAS": {
+    "description": "",
+    "message": "Zenuwgas"
+  },
+  "NERVE_GAS_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Algemeen wordt het gezien als een massavernietigingswapen, zelfs door de militairen in de meeste stelsels gemeden, en daardoor illegaal in de meeste stelsels."
+  },
+  "PLASTICS": {
+    "description": "",
+    "message": "Kunststoffen"
+  },
+  "PLASTICS_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Kunstmatige en semi-kunstmatige materialen die in alles gebruikt worden van dagelijkse voorwerpen tot ruimtescheepsbouw. Ze zijn betrekkelijk eenvoudig te gebruiken in fabricage, veelzijdig en goedkoop te maken, en zijn daardoor een belangrijk onderdeel van menselijke beschaving."
+  },
+  "PRECIOUS_METALS": {
+    "description": "",
+    "message": "Edelmetalen"
+  },
+  "PRECIOUS_METALS_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Zeldzame metalen reageren in het algemeen minder, zijn moeilijker te delven en schaarser, wat resulteert in een aanzienlijke economische waarde. Voorbeelden zijn goud, zilver, platina, en zeldzame mineralen. Deze zijn cruciaal voor de constructie van computers en andere elektronica."
+  },
+  "RADIOACTIVES": {
+    "description": "",
+    "message": "Radioactieve elementen"
+  },
+  "RADIOACTIVES_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Kernafval wordt geproduceerd door kernreactors en militaire hyper-aandrijvingen en is de moeilijkste en gevaarlijkste vorm van afval om te vervoeren of te verwerken. Hierom betalen de meeste ruimtehavens om van hun overschot af te komen. Kernafvaldumping is een zwaar misdrijf."
+  },
+  "ROBOTS": {
+    "description": "",
+    "message": "Robots"
+  },
+  "ROBOTS_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Robots worden vaak geïmporteerd in industrie- en mijnbouwstelsels, vanwege hun betrouwbaarheid en hun capaciteit taken uit te voeren die te moeilijk, eentonig of onveilig zijn voor menselijke arbeiders. Ze kunnen ook dienst doen als politieagenten en advocaten."
+  },
+  "RUBBISH": {
+    "description": "",
+    "message": "Afval"
+  },
+  "RUBBISH_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Het bijproduct van beschaving, industrieel afval, huishoudafval en versleten apparaten. Het meeste wordt verwerkt, gerecycled of naar ruimtehavens gestuurd om ergens anders heen te worden gebracht. Afvaldumping is in bewoonde stelsels altijd verboden. Ruimtehavens rekenen geld voor afvalverwerking en betalen als je het van ze afneemt. "
+  },
+  "SLAVES": {
+    "description": "",
+    "message": "Slaven"
+  },
+  "SLAVES_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Sinds machines slaven hebben vervangen als de machine die de beschaving vooruit helpt, wordt slavernij nu bijna algemeen als immoreel gezien, en wordt illegale slavernij hard bestraft. Toch kom je het hier en daar nog steeds tegen, zelfs op ontwikkelde werelden."
+  },
+  "TEXTILES": {
+    "description": "",
+    "message": "Textiel"
+  },
+  "TEXTILES_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Textiel is een eenvoudige stof, geweven van kunstmatige, plantaardige of dierlijke garen. Hoewel gewoonlijk geproduceerd door robots in grote fabrieken is het nog steeds mogelijk hier en daar een wever te vinden die zijn eigen textiel maakt."
+  },
+  "WATER": {
+    "description": "",
+    "message": "Water"
+  },
+  "WATER_DESCRIPTION": {
+    "description": "This is an artistic description of the commodity. Translate as you deem appropriate or come up with your own description, long or short, its up to you.",
+    "message": "Water is essentieel voor het leven zoals we dat kennen, vaak voor lief genomen maar overal nodig waar mensen komen. Daarom importeren de meeste buitenwereldse koloniën water van kometen en planeten als de Aarde. Water wordt in enorme hoeveelheden gebruikt voor waterstof- en zuurstofproductie."
+  }
+}

@@ -8,10 +8,15 @@ The Pioneer Developers are:
 * Abram Hindle
 * Ae
 * Alan Briggs
+* Alan 'joonicks' Londa
 * Alessandro Giachi
+* Alexander Noack
 * Andrew Cook
 * Andrew Copland
+* Anton Korzun
 * Antti Salonen
+* Arda Güler
+* Armin Kretschmer
 * Asier Basagoiti
 * Benamucki
 * Benjamin Hodgetts
@@ -21,14 +26,21 @@ The Pioneer Developers are:
 * Chip Richards
 * Chris Collins
 * Chris Dennett
+* Christian Koch
+* Christian Wyss
+* Claudius Mueller
+* Clinton Mead
+* ColdSpirit
 * Connor Findlay
 * Craig Thomson
+* CylonicRaider
 * Dan Bennett
 * Darren Salt
 * Denis Volk
 * DerpyHooves
 * Dionisis Kontominas
 * Dmitry Marakasov
+* Edoardo Morandi
 * Emery Hemingway
 * Enric Morales
 * Florian Schmidt
@@ -40,13 +52,19 @@ The Pioneer Developers are:
 * HeadHunter
 * Jan Olsina
 * jmf
+* Jeremy List
 * John Bartholomew
 * John Jordan
+* Jon Jenkins
+* Joshua Mathews
+* Jost Triller
 * Karl Fogelmark
 * Kimmo Kotajärvi
 * Konrad Mruk
 * Krzysztof Niedźwiecki
+* Kyungdahm Yun
 * Lars Westerhoff
+* Leandro Papi
 * Lee Reilly
 * Leonardo Manna
 * Luca Ganzerla
@@ -54,15 +72,20 @@ The Pioneer Developers are:
 * Marcel Tulloh
 * Marcus de Roos
 * Michele Botticelli
+* Michele Fanti
 * Miha Vitorovič
+* Nathan Jones
 * Nic
 * Nick Wanstall
 * Oleg Ovcharenko
+* Paul Cercueil
 * Paul Mahol
 * Paul Roberts
+* Peter Feigl
 * Pedro Gimeno
 * Peter Kurucz
 * Phil Howlett
+* Pieter Thielens
 * Piotr Gredka
 * PVJeltz
 * Radek Valášek aka vaLin
@@ -71,6 +94,7 @@ The Pioneer Developers are:
 * Robert Norris
 * Robert Pallier
 * Roland Mas
+* Sal Borrelli
 * Sean Bailey
 * Simon Chopin
 * SolCommand
@@ -79,6 +103,7 @@ The Pioneer Developers are:
 * Sukender (Benoit Neil)
 * Szilárd Bálint
 * Taiki Kim
+* Taylor Talkington
 * Thierry Dupré
 * Tim Jones
 * Timothy Hills
@@ -86,14 +111,17 @@ The Pioneer Developers are:
 * Torham2234
 * Ulf Pettersson
 * Uncle Bob
+* Vakhoir
 * Vincent Teerling
 * Vladimir Rutsky
 * Wayne Ashworth
+* Webster Sheets
+* 42triangles
 
 Licensing
 =========
 
-Copyright © 2008-2015 Pioneer Developers
+Copyright © 2008-2020 Pioneer Developers
 Portions copyright © 2013-2014 Meteoric Games Ltd.
 
 Pioneer's core code and extension modules are licensed under the terms of the
@@ -109,8 +137,18 @@ Pioneer includes the following third-party software:
   Copyright (C) 1994-2012 Lua.org, PUC-Rio
   Licensed under the MIT licence (see contrib/lua/lua.h)
 
+  GLEW: The OpenGL Extension Wrangler
+  Copyright (C) 2002-2008, Milan Ikits <milan ikits[]ieee org>
+  Copyright (C) 2002-2008, Marcelo E. Magallon <mmagallo[]debian org>
+  Copyright (C) 2002, Lev Povalahev
+  Licensed under the Modified BSD licence (see licenses/GLEW.txt)
+
   miniz by Rich Geldreich, April 2012
   Public domain (see contrib/miniz/miniz.h)
+
+  LZ4 Library
+  Copyright (c) 2011-2016, Yann Collet
+  Licensed under the BSD 2-Clause license (see licenses/LZ4.txt)
 
   lookup3.c, by Bob Jenkins, May 2006,
   Public domain (see contrib/jenkins/lookup3.c)
@@ -127,9 +165,13 @@ Pioneer includes the following third-party software:
   GTL and PicoDDS are licensed under the zlib License
     (see contrib/PicoDDS/PicoDDS.h)
 
-  jsoncpp
-  Copyright (c) 2007-2010 Baptiste Lepilleur
-  Licensed under the MIT licence (see contrib/json/json.h)
+  JSON for Modern C++
+  Copyright © 2013-2018 Niels Lohmann.
+  Licensed under the MIT License (see contrib/json/json.hpp)
+
+  Base64 Encode / Decode
+  Copyright © 2013 Tomas Kislan, Adam Rudd
+  Licensed under the MIT License (see contrib/base64/base64.hpp)
 
   High Performance C++ Profiler
   https://code.google.com/p/high-performance-cplusplus-profiler/
@@ -189,5 +231,8 @@ and services, without which Pioneer would not be possible:
   assimp        http://assimp.sourceforge.net/
   MXE           http://mxe.cc/
 
-  GitHub        https://github.com/
-  SourceForge   https://sourceforge.net/
+  GitHub                        https://github.com/
+  SourceForge                   https://sourceforge.net/
+  randomColorSharped	https://github.com/nathanpjones/randomColorSharped
+
+  OpenGameArt	http://opengameart.org (specifically http://opengameart.org/content/smoke-aura)

@@ -1,11 +1,12 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _GRAPHICS_H
 #define _GRAPHICS_H
 
-#include "libs.h"
 #include "RenderTarget.h"
+#include <memory>
+#include <vector>
 
 /*
  * bunch of reused 3d drawy routines.
@@ -15,9 +16,11 @@ namespace Graphics {
 
 	enum RendererType {
 		RENDERER_DUMMY,
-		RENDERER_OPENGL,
+		RENDERER_OPENGL_3x,
 		MAX_RENDERER_TYPE
 	};
+
+	const char *RendererNameFromType(const RendererType rType);
 
 	// requested video settings
 	struct Settings {
@@ -25,7 +28,9 @@ namespace Graphics {
 		bool fullscreen;
 		bool hidden;
 		bool useTextureCompression;
+		bool useAnisotropicFiltering;
 		bool enableDebugMessages;
+		bool gl3ForwardCompatible;
 		int vsync;
 		int requestedSamples;
 		int height;
@@ -35,15 +40,15 @@ namespace Graphics {
 	};
 
 	class Renderer;
-	class WindowSDL;
 
-	typedef Renderer* (*RendererCreateFunc)(WindowSDL *window, const Settings &vs);
+	typedef Renderer *(*RendererCreateFunc)(const Settings &vs);
 	void RegisterRenderer(RendererType type, RendererCreateFunc fn);
 
 	//for querying available modes
 	struct VideoMode {
-		VideoMode(int w, int h)
-		: width(w), height(h) { }
+		VideoMode(int w, int h) :
+			width(w),
+			height(h) {}
 
 		int width;
 		int height;
@@ -60,7 +65,7 @@ namespace Graphics {
 	float GetFovFactor(); //cached 2*tan(fov/2) for LOD
 
 	// does SDL video init, constructs appropriate Renderer
-	Renderer* Init(Settings);
+	Renderer *Init(Settings);
 	void Uninit();
 	std::vector<VideoMode> GetAvailableVideoModes();
 
@@ -71,6 +76,6 @@ namespace Graphics {
 		Uint32 stride;
 		Uint32 bpp;
 	};
-}
+} // namespace Graphics
 
 #endif /* _RENDER_H */

@@ -1,38 +1,40 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Label.h"
-#include "LuaObject.h"
+#include "lua/LuaObject.h"
 
 namespace UI {
 
-class LuaLabel {
-public:
+	class LuaLabel {
+	public:
+		static int l_set_text(lua_State *l)
+		{
+			UI::Label *label = LuaObject<UI::Label>::CheckFromLua(1);
+			const std::string text(luaL_checkstring(l, 2));
+			label->SetText(text);
+			return 0;
+		}
 
-	static int l_set_text(lua_State *l) {
-		UI::Label *label = LuaObject<UI::Label>::CheckFromLua(1);
-		const std::string text(luaL_checkstring(l, 2));
-		label->SetText(text);
-		return 0;
-	}
+		static int l_set_color(lua_State *l)
+		{
+			UI::Label *label = LuaObject<UI::Label>::CheckFromLua(1);
+			Color c = Color::FromLuaTable(l, 2);
+			label->SetColor(c);
+			lua_pushvalue(l, 1);
+			return 1;
+		}
+	};
 
-	static int l_set_color(lua_State *l) {
-		UI::Label *label = LuaObject<UI::Label>::CheckFromLua(1);
-		Color c = Color::FromLuaTable(l, 2);
-		label->SetColor(c);
-		lua_pushvalue(l, 1);
-		return 1;
-	}
-
-};
-
-}
+} // namespace UI
 
 using namespace UI;
 
-template <> const char *LuaObject<UI::Label>::s_type = "UI.Label";
+template <>
+const char *LuaObject<UI::Label>::s_type = "UI.Label";
 
-template <> void LuaObject<UI::Label>::RegisterClass()
+template <>
+void LuaObject<UI::Label>::RegisterClass()
 {
 	static const char *l_parent = "UI.Widget";
 

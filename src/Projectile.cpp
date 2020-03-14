@@ -1,28 +1,30 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
-#include "libs.h"
-#include "Pi.h"
 #include "Projectile.h"
-#include "Frame.h"
-#include "galaxy/StarSystem.h"
-#include "Space.h"
-#include "Serializer.h"
-#include "collider/collider.h"
+
 #include "CargoBody.h"
+#include "Frame.h"
+#include "Game.h"
+#include "GameSaveError.h"
+#include "Json.h"
+#include "Pi.h"
 #include "Planet.h"
+#include "Player.h"
 #include "Sfx.h"
 #include "Ship.h"
-#include "Pi.h"
-#include "Game.h"
-#include "LuaEvent.h"
-#include "LuaUtils.h"
+#include "Space.h"
+#include "collider/CollisionContact.h"
+#include "collider/CollisionSpace.h"
+#include "galaxy/StarSystem.h"
 #include "graphics/Graphics.h"
 #include "graphics/Material.h"
+#include "graphics/RenderState.h"
 #include "graphics/Renderer.h"
-#include "graphics/VertexArray.h"
 #include "graphics/TextureBuilder.h"
-#include "json/JsonUtils.h"
+#include "graphics/VertexArray.h"
+#include "lua/LuaEvent.h"
+#include "lua/LuaUtils.h"
 
 std::unique_ptr<Graphics::VertexArray> Projectile::s_sideVerts;
 std::unique_ptr<Graphics::VertexArray> Projectile::s_glowVerts;
@@ -37,8 +39,8 @@ void Projectile::BuildModel()
 	desc.textures = 1;
 	s_sideMat.reset(Pi::renderer->CreateMaterial(desc));
 	s_glowMat.reset(Pi::renderer->CreateMaterial(desc));
-	s_sideMat->texture0 = Graphics::TextureBuilder::Billboard("textures/projectile_l.png").GetOrCreateTexture(Pi::renderer, "billboard");
-	s_glowMat->texture0 = Graphics::TextureBuilder::Billboard("textures/projectile_w.png").GetOrCreateTexture(Pi::renderer, "billboard");
+	s_sideMat->texture0 = Graphics::TextureBuilder::Billboard("textures/projectile_l.dds").GetOrCreateTexture(Pi::renderer, "billboard");
+	s_glowMat->texture0 = Graphics::TextureBuilder::Billboard("textures/projectile_w.dds").GetOrCreateTexture(Pi::renderer, "billboard");
 
 	//zero at projectile position
 	//+x down
@@ -47,8 +49,8 @@ void Projectile::BuildModel()
 	const float w = 0.5f;
 
 	vector3f one(0.f, -w, 0.f); //top left
-	vector3f two(0.f,  w, 0.f); //top right
-	vector3f three(0.f,  w, -1.f); //bottom right
+	vector3f two(0.f, w, 0.f); //top right
+	vector3f three(0.f, w, -1.f); //bottom right
 	vector3f four(0.f, -w, -1.f); //bottom left
 
 	//uv coords
@@ -61,7 +63,7 @@ void Projectile::BuildModel()
 	s_glowVerts.reset(new Graphics::VertexArray(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_UV0));
 
 	//add four intersecting planes to create a volumetric effect
-	for (int i=0; i < 4; i++) {
+	for (int i = 0; i < 4; i++) {
 		s_sideVerts->Add(one, topLeft);
 		s_sideVerts->Add(two, topRight);
 		s_sideVerts->Add(three, botRight);
@@ -80,7 +82,7 @@ void Projectile::BuildModel()
 	float gw = 0.5f;
 	float gz = -0.1f;
 
-	for (int i=0; i < 4; i++) {
+	for (int i = 0; i < 4; i++) {
 		s_glowVerts->Add(vector3f(-gw, -gw, gz), topLeft);
 		s_glowVerts->Add(vector3f(-gw, gw, gz), topRight);
 		s_glowVerts->Add(vector3f(gw, gw, gz), botRight);
@@ -108,72 +110,76 @@ void Projectile::FreeModel()
 	s_glowVerts.reset();
 }
 
-Projectile::Projectile(): Body()
+Projectile::Projectile(Body *parent, const ProjectileData &prData, const vector3d &pos, const vector3d &baseVel, const vector3d &dirVel) :
+	Body()
 {
 	if (!s_sideMat) BuildModel();
-	SetOrient(matrix3x3d::Identity());
-	m_lifespan = 0;
-	m_baseDam = 0;
-	m_length = 0;
-	m_width = 0;
-	m_mining = false;
-	m_age = 0;
-	m_parent = 0;
 	m_flags |= FLAG_DRAW_LAST;
+
+	m_parent = parent;
+	m_lifespan = prData.lifespan;
+	m_baseDam = prData.damage;
+	m_length = prData.length;
+	m_width = prData.width;
+	m_mining = prData.mining;
+	m_color = prData.color;
+	m_age = 0;
+
+	SetFrame(parent->GetFrame());
+
+	SetOrient(parent->GetOrient());
+	SetPosition(pos);
+	m_baseVel = baseVel;
+	m_dirVel = dirVel;
+	SetClipRadius(GetRadius());
+	SetPhysRadius(GetRadius());
+}
+
+Projectile::Projectile(const Json &jsonObj, Space *space) :
+	Body(jsonObj, space)
+{
+	if (!s_sideMat) BuildModel();
+
+	try {
+		Json projectileObj = jsonObj["projectile"];
+
+		m_baseVel = projectileObj["base_vel"];
+		m_dirVel = projectileObj["dir_vel"];
+		m_age = projectileObj["age"];
+		m_lifespan = projectileObj["life_span"];
+		m_baseDam = projectileObj["base_dam"];
+		m_length = projectileObj["length"];
+		m_width = projectileObj["width"];
+		m_mining = projectileObj["mining"];
+		m_color = projectileObj["color"];
+		m_parentIndex = projectileObj["index_for_body"];
+	} catch (Json::type_error &) {
+		throw SavedGameCorruptException();
+	}
 }
 
 Projectile::~Projectile()
 {
 }
 
-void Projectile::SaveToJson(Json::Value &jsonObj, Space *space)
+void Projectile::SaveToJson(Json &jsonObj, Space *space)
 {
 	Body::SaveToJson(jsonObj, space);
 
-	Json::Value projectileObj(Json::objectValue); // Create JSON object to contain projectile data.
+	Json projectileObj({}); // Create JSON object to contain projectile data.
 
-	VectorToJson(projectileObj, m_baseVel, "base_vel");
-	VectorToJson(projectileObj, m_dirVel, "dir_vel");
-	projectileObj["age"] = FloatToStr(m_age);
-	projectileObj["life_span"] = FloatToStr(m_lifespan);
-	projectileObj["base_dam"] = FloatToStr(m_baseDam);
-	projectileObj["length"] = FloatToStr(m_length);
-	projectileObj["width"] = FloatToStr(m_width);
+	projectileObj["base_vel"] = m_baseVel;
+	projectileObj["dir_vel"] = m_dirVel;
+	projectileObj["age"] = m_age;
+	projectileObj["life_span"] = m_lifespan;
+	projectileObj["base_dam"] = m_baseDam;
+	projectileObj["length"] = m_length;
+	projectileObj["width"] = m_width;
 	projectileObj["mining"] = m_mining;
-	ColorToJson(projectileObj, m_color, "color");
+	projectileObj["color"] = m_color;
 	projectileObj["index_for_body"] = space->GetIndexForBody(m_parent);
 
 	jsonObj["projectile"] = projectileObj; // Add projectile object to supplied object.
-}
-
-void Projectile::LoadFromJson(const Json::Value &jsonObj, Space *space)
-{
-	Body::LoadFromJson(jsonObj, space);
-
-	if (!jsonObj.isMember("projectile")) throw SavedGameCorruptException();
-	Json::Value projectileObj = jsonObj["projectile"];
-
-	if (!projectileObj.isMember("base_vel")) throw SavedGameCorruptException();
-	if (!projectileObj.isMember("dir_vel")) throw SavedGameCorruptException();
-	if (!projectileObj.isMember("age")) throw SavedGameCorruptException();
-	if (!projectileObj.isMember("life_span")) throw SavedGameCorruptException();
-	if (!projectileObj.isMember("base_dam")) throw SavedGameCorruptException();
-	if (!projectileObj.isMember("length")) throw SavedGameCorruptException();
-	if (!projectileObj.isMember("width")) throw SavedGameCorruptException();
-	if (!projectileObj.isMember("mining")) throw SavedGameCorruptException();
-	if (!projectileObj.isMember("color")) throw SavedGameCorruptException();
-	if (!projectileObj.isMember("index_for_body")) throw SavedGameCorruptException();
-
-	JsonToVector(&m_baseVel, projectileObj, "base_vel");
-	JsonToVector(&m_dirVel, projectileObj, "dir_vel");
-	m_age = StrToFloat(projectileObj["age"].asString());
-	m_lifespan = StrToFloat(projectileObj["life_span"].asString());
-	m_baseDam = StrToFloat(projectileObj["base_dam"].asString());
-	m_length = StrToFloat(projectileObj["length"].asString());
-	m_width = StrToFloat(projectileObj["width"].asString());
-	m_mining = projectileObj["mining"].asBool();
-	JsonToColor(&m_color, projectileObj, "color");
-	m_parentIndex = projectileObj["index_for_body"].asInt();
 }
 
 void Projectile::PostLoadFixup(Space *space)
@@ -185,11 +191,11 @@ void Projectile::PostLoadFixup(Space *space)
 void Projectile::UpdateInterpTransform(double alpha)
 {
 	m_interpOrient = GetOrient();
-	const vector3d oldPos = GetPosition() - (m_baseVel+m_dirVel)*Pi::game->GetTimeStep();
-	m_interpPos = alpha*GetPosition() + (1.0-alpha)*oldPos;
+	const vector3d oldPos = GetPosition() - (m_baseVel + m_dirVel) * Pi::game->GetTimeStep();
+	m_interpPos = alpha * GetPosition() + (1.0 - alpha) * oldPos;
 }
 
-void Projectile::NotifyRemoved(const Body* const removedBody)
+void Projectile::NotifyRemoved(const Body *const removedBody)
 {
 	if (m_parent == removedBody) m_parent = 0;
 }
@@ -197,85 +203,94 @@ void Projectile::NotifyRemoved(const Body* const removedBody)
 void Projectile::TimeStepUpdate(const float timeStep)
 {
 	m_age += timeStep;
-	SetPosition(GetPosition() + (m_baseVel+m_dirVel) * double(timeStep));
+	SetPosition(GetPosition() + (m_baseVel + m_dirVel) * double(timeStep));
 	if (m_age > m_lifespan) Pi::game->GetSpace()->KillBody(this);
 }
 
 /* In hull kg */
 float Projectile::GetDamage() const
 {
-	return m_baseDam * sqrt((m_lifespan - m_age)/m_lifespan);
+	return m_baseDam * sqrt((m_lifespan - m_age) / m_lifespan);
 	// TEST
-//	return 0.01f;
+	//	return 0.01f;
 }
 
 double Projectile::GetRadius() const
 {
-	return sqrt(m_length*m_length + m_width*m_width);
+	return sqrt(m_length * m_length + m_width * m_width);
 }
 
-static void MiningLaserSpawnTastyStuff(Frame *f, const SystemBody *asteroid, const vector3d &pos)
+void MiningLaserSpawnTastyStuff(FrameId fId, const SystemBody *asteroid, const vector3d &pos)
 {
 	lua_State *l = Lua::manager->GetLuaState();
-	pi_lua_import(l, "Equipment");
-	LuaTable cargo_types = LuaTable(l, -1).Sub("cargo");
-	if (20*Pi::rng.Fixed() < asteroid->GetMetallicityAsFixed()) {
-		cargo_types.Sub("precious_metals");
-	} else if (8*Pi::rng.Fixed() < asteroid->GetMetallicityAsFixed()) {
-		cargo_types.Sub("metal_alloys");
-	} else if (Pi::rng.Fixed() < asteroid->GetMetallicityAsFixed()) {
-		cargo_types.Sub("metal_ore");
-	} else if (Pi::rng.Fixed() < fixed(1,2)) {
-		cargo_types.Sub("water");
-	} else {
-		cargo_types.Sub("rubbish");
-	}
+
+	// lua cant push "const SystemBody", needs to convert to non-const
+	RefCountedPtr<StarSystem> s = Pi::game->GetGalaxy()->GetStarSystem(asteroid->GetPath());
+	SystemBody *liveasteroid = s->GetBodyByPath(asteroid->GetPath());
+
+	// this is an adapted version of "CallMethod", because;
+	// 1, there is no template for LuaObject<LuaTable>::CallMethod(..., SystemBody)
+	// 2, this leaves the return value on the lua stack to be used by "new CargoBody()"
+	LUA_DEBUG_START(l);
+	LuaObject<Player>::PushToLua(Pi::player);
+	lua_pushstring(l, "SpawnMiningContainer");
+	lua_gettable(l, -2);
+	lua_pushvalue(l, -2);
+	lua_remove(l, -3);
+	LuaObject<SystemBody>::PushToLua(liveasteroid);
+	pi_lua_protected_call(l, 2, 1);
+
 	CargoBody *cargo = new CargoBody(LuaRef(l, -1));
-	lua_pop(l, 3);
-	cargo->SetFrame(f);
+	lua_pop(l, 1);
+	LUA_DEBUG_END(l, 0);
+
+	cargo->SetFrame(fId);
 	cargo->SetPosition(pos);
 	const double x = Pi::rng.Double();
 	vector3d dir = pos.Normalized();
-	dir.ArbRotate(vector3d(x, 1-x, 0), Pi::rng.Double()-.5);
-	cargo->SetVelocity(Pi::rng.Double(100.0,200.0) * dir);
+	dir.ArbRotate(vector3d(x, 1 - x, 0), Pi::rng.Double() - .5);
+	cargo->SetVelocity(Pi::rng.Double(100.0, 200.0) * dir);
 	Pi::game->GetSpace()->AddBody(cargo);
 }
 
 void Projectile::StaticUpdate(const float timeStep)
 {
+	PROFILE_SCOPED()
 	CollisionContact c;
-	vector3d vel = (m_baseVel+m_dirVel) * timeStep;
-	GetFrame()->GetCollisionSpace()->TraceRay(GetPosition(), vel.Normalized(), vel.Length(), &c, 0);
+	// Collision spaces don't store velocity, so dirvel-only is still wrong but less awful than dirvel+basevel
+	vector3d vel = m_dirVel * timeStep;
+	Frame *frame = Frame::GetFrame(GetFrame());
+	frame->GetCollisionSpace()->TraceRay(GetPosition(), vel.Normalized(), vel.Length(), &c);
 
 	if (c.userData1) {
-		Object *o = static_cast<Object*>(c.userData1);
+		Object *o = static_cast<Object *>(c.userData1);
 
 		if (o->IsType(Object::CITYONPLANET)) {
 			Pi::game->GetSpace()->KillBody(this);
-		}
-		else if (o->IsType(Object::BODY)) {
-			Body *hit = static_cast<Body*>(o);
+		} else if (o->IsType(Object::BODY)) {
+			Body *hit = static_cast<Body *>(o);
 			if (hit != m_parent) {
 				hit->OnDamage(m_parent, GetDamage(), c);
 				Pi::game->GetSpace()->KillBody(this);
 				if (hit->IsType(Object::SHIP))
-					LuaEvent::Queue("onShipHit", dynamic_cast<Ship*>(hit), dynamic_cast<Body*>(m_parent));
+					LuaEvent::Queue("onShipHit", dynamic_cast<Ship *>(hit), dynamic_cast<Body *>(m_parent));
 			}
 		}
 	}
-	if (m_mining) {
+	if (m_mining) // mining lasers can break off chunks of terrain
+	{
 		// need to test for terrain hit
-		if (GetFrame()->GetBody() && GetFrame()->GetBody()->IsType(Object::PLANET)) {
-			Planet *const planet = static_cast<Planet*>(GetFrame()->GetBody());
-			const SystemBody *b = planet->GetSystemBody();
+		Planet *const planet = static_cast<Planet *>(frame->GetBody()); // cache the value even for the if statement
+		if (planet && planet->IsType(Object::PLANET)) {
 			vector3d pos = GetPosition();
 			double terrainHeight = planet->GetTerrainHeight(pos.Normalized());
 			if (terrainHeight > pos.Length()) {
+				const SystemBody *b = planet->GetSystemBody();
 				// hit the fucker
 				if (b->GetType() == SystemBody::TYPE_PLANET_ASTEROID) {
 					vector3d n = GetPosition().Normalized();
-					MiningLaserSpawnTastyStuff(planet->GetFrame(), b, n*terrainHeight + 5.0*n);
-					Sfx::Add(this, Sfx::TYPE_EXPLOSION);
+					MiningLaserSpawnTastyStuff(planet->GetFrame(), b, n * terrainHeight + 5.0 * n);
+					SfxManager::Add(this, TYPE_EXPLOSION);
 				}
 				Pi::game->GetSpace()->KillBody(this);
 			}
@@ -285,6 +300,7 @@ void Projectile::StaticUpdate(const float timeStep)
 
 void Projectile::Render(Graphics::Renderer *renderer, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform)
 {
+	PROFILE_SCOPED()
 	vector3d _from = viewTransform * GetInterpPosition();
 	vector3d _to = viewTransform * (GetInterpPosition() + m_dirVel);
 	vector3d _dir = _to - _from;
@@ -293,12 +309,20 @@ void Projectile::Render(Graphics::Renderer *renderer, const Camera *camera, cons
 
 	vector3f v1, v2;
 	matrix4x4f m = matrix4x4f::Identity();
-	v1.x = dir.y; v1.y = dir.z; v1.z = dir.x;
+	v1.x = dir.y;
+	v1.y = dir.z;
+	v1.z = dir.x;
 	v2 = v1.Cross(dir).Normalized();
 	v1 = v2.Cross(dir);
-	m[0] = v1.x; m[4] = v2.x; m[8] = dir.x;
-	m[1] = v1.y; m[5] = v2.y; m[9] = dir.y;
-	m[2] = v1.z; m[6] = v2.z; m[10] = dir.z;
+	m[0] = v1.x;
+	m[4] = v2.x;
+	m[8] = dir.x;
+	m[1] = v1.y;
+	m[5] = v2.y;
+	m[9] = dir.y;
+	m[2] = v1.z;
+	m[6] = v2.z;
+	m[10] = dir.z;
 
 	m[12] = from.x;
 	m[13] = from.y;
@@ -315,7 +339,7 @@ void Projectile::Render(Graphics::Renderer *renderer, const Camera *camera, cons
 	Color color = m_color;
 	// fade them out as they age so they don't suddenly disappear
 	// this matches the damage fall-off calculation
-	const float base_alpha = sqrt(1.0f - m_age/m_lifespan);
+	const float base_alpha = sqrt(1.0f - m_age / m_lifespan);
 	// fade out side quads when viewing nearly edge on
 	vector3f view_dir = vector3f(viewCoords).Normalized();
 	color.a = (base_alpha * (1.f - powf(fabs(dir.Dot(view_dir)), length))) * 255;
@@ -338,21 +362,19 @@ void Projectile::Render(Graphics::Renderer *renderer, const Camera *camera, cons
 
 void Projectile::Add(Body *parent, float lifespan, float dam, float length, float width, bool mining, const Color &color, const vector3d &pos, const vector3d &baseVel, const vector3d &dirVel)
 {
-	Projectile *p = new Projectile();
-	p->m_parent = parent;
-	p->m_lifespan = lifespan;
-	p->m_baseDam = dam;
-	p->m_length = length;
-	p->m_width = width;
-	p->m_mining = mining;
-	p->m_color = color;
-	p->SetFrame(parent->GetFrame());
+	ProjectileData prData;
+	prData.lifespan = lifespan;
+	prData.damage = dam;
+	prData.length = length;
+	prData.width = width;
+	prData.mining = mining;
+	prData.color = color;
+	Projectile *p = new Projectile(parent, prData, pos, baseVel, dirVel);
+	Pi::game->GetSpace()->AddBody(p);
+}
 
-	p->SetOrient(parent->GetOrient());
-	p->SetPosition(pos);
-	p->m_baseVel = baseVel;
-	p->m_dirVel = dirVel;
-	p->SetClipRadius(p->GetRadius());
-	p->SetPhysRadius(p->GetRadius());
+void Projectile::Add(Body *parent, const ProjectileData &prData, const vector3d &pos, const vector3d &baseVel, const vector3d &dirVel)
+{
+	Projectile *p = new Projectile(parent, prData, pos, baseVel, dirVel);
 	Pi::game->GetSpace()->AddBody(p);
 }

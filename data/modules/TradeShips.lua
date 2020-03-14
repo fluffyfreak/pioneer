@@ -1,17 +1,17 @@
--- Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
-local Engine = import("Engine")
-local Game = import("Game")
-local Space = import("Space")
-local Comms = import("Comms")
-local Timer = import("Timer")
-local Event = import("Event")
-local Serializer = import("Serializer")
-local ShipDef = import("ShipDef")
-local Ship = import("Ship")
-local utils = import("utils")
-local e = import ("Equipment")
+local Engine = require 'Engine'
+local Game = require 'Game'
+local Space = require 'Space'
+local Comms = require 'Comms'
+local Timer = require 'Timer'
+local Event = require 'Event'
+local Serializer = require 'Serializer'
+local ShipDef = require 'ShipDef'
+local Ship = require 'Ship'
+local utils = require 'utils'
+local e = require 'Equipment'
 
 --[[
 	trade_ships
@@ -60,7 +60,7 @@ local e = import ("Equipment")
 		approached without atmospheric shields,	updated by spawnInitialShips
 
 	imports, exports - in the current system, indexed array of
-		Constants.EquipType strings, updated by spawnInitialShips
+		equipment objects (from the 'Equipment' module), updated by spawnInitialShips
 --]]
 local trade_ships, system_updated, from_paths, starports, vacuum_starports, imports, exports
 
@@ -98,7 +98,7 @@ local addShipEquip = function (ship)
 		-- This ship cannot safely land on a planet with an atmosphere.
 		trader.ATMOSHIELD = false
 	end
-	ship:AddEquip(e.misc.scanner)
+	ship:AddEquip(e.misc.radar)
 	ship:AddEquip(e.misc.autopilot)
 	ship:AddEquip(e.misc.cargo_life_support)
 
@@ -307,11 +307,20 @@ local jumpToSystem = function (ship, target_path)
 end
 
 local getSystemAndJump = function (ship)
-	return jumpToSystem(ship, getSystem(ship))
+	-- attention all coders: trade_ships[ship].starport may be nil
+	if trade_ships[ship].starport then
+		local body = Space.GetBody(trade_ships[ship].starport.path:GetSystemBody().parent.index)
+		local port = trade_ships[ship].starport
+		-- boost away from the starport before jumping if it is too close
+		if (ship:DistanceTo(port) < 20000) then
+			ship:AIEnterLowOrbit(body)
+		end
+		return jumpToSystem(ship, getSystem(ship))
+	end
 end
 
 local getAcceptableShips = function ()
-    -- only accept ships with enough capacity that are capable of landing in atmospheres
+	-- only accept ships with enough capacity that are capable of landing in atmospheres
 	local filter_function
 	if #vacuum_starports == 0 then
 		filter_function = function(k,def)
@@ -336,14 +345,19 @@ local getAcceptableShips = function ()
 end
 
 local spawnInitialShips = function (game_start)
+	-- quicker checks first
+	-- dont spawn tradeships in unpopulated systems
+	local population = Game.system.population
+	if population == 0 then return nil end
+
 	-- check if the current system can be traded in
 	starports = Space.GetBodies(function (body) return body.superType == 'STARPORT' end)
 	if #starports == 0 then return nil end
 	vacuum_starports = Space.GetBodies(function (body)
 		return body.superType == 'STARPORT' and (body.type == 'STARPORT_ORBITAL' or (not body.path:GetSystemBody().parent.hasAtmosphere))
 	end)
-	local population = Game.system.population
-	if population == 0 then return nil end
+	
+	-- get ships listed as tradeships, if none - give up
 	local ship_names = getAcceptableShips()
 	if #ship_names == 0 then return nil end
 
@@ -354,15 +368,14 @@ local spawnInitialShips = function (game_start)
 		local v = Game.system:GetCommodityBasePriceAlterations(equip)
 		if key ~= "rubbish" and key ~= "radioactives" and Game.system:IsCommodityLegal(equip) then
 			-- values from SystemInfoView::UpdateEconomyTab
-			if		v > 10	then
-				import_score = import_score + 2
-			elseif	v > 2	then
-				import_score = import_score + 1
+
+			if v > 2 then
+				import_score = import_score + (v > 10 and 2 or 1) -- lua is crazy
 				table.insert(imports, equip)
-			elseif	v < -10	then
-				export_score = export_score + 2
-			elseif	v < -2	then
-				export_score = export_score + 1
+			end
+
+			if v < -2 then
+				export_score = export_score + (v < -10 and 2 or 1)
 				table.insert(exports, equip)
 			end
 		end
@@ -403,30 +416,27 @@ local spawnInitialShips = function (game_start)
 	for i = 0, num_trade_ships do
 		-- get the name of a ship, for example 'imperial_courier'
 		local ship_name = ship_names[Engine.rand:Integer(1, #ship_names)]
+		local can_equip_atmo = ShipDef[ship_name].equipSlotCapacity.atmo_shield > 0
 		local ship = nil
 
 		if game_start and i < num_trade_ships / 4 then
 			-- spawn the first quarter in port if at game start
-			local starport = starports[Engine.rand:Integer(1, #starports)]
-
-			ship = Space.SpawnShipDocked(ship_name, starport)
-			if ship ~= nil then
+			local starport = nil
+			if can_equip_atmo then
+				starport = starports[Engine.rand:Integer(1, #starports)]
+			elseif #vacuum_starports then
+				starport = vacuum_starports[Engine.rand:Integer(1, #vacuum_starports)]
+			end
+			if starport then
+				local dockstatus = 'docked'
+				ship = Space.SpawnShipDocked(ship_name, starport)
+				if ship == nil then
+					-- the starport must have been full
+					ship = Space.SpawnShipNear(ship_name, starport, 10000000, 149598000) -- 10mkm - 1AU
+					dockstatus = 'inbound'
+				end
+				trade_ships[ship] = { status = dockstatus, starport	= starport, ship_name = ship_name }
 				ship:SetLabel(Ship.MakeRandomLabel())
-				trade_ships[ship] = {
-					status		= 'docked',
-					starport	= starport,
-					ship_name	= ship_name,
-				}
-				addShipEquip(ship)
-			else
-				-- the starport must have been full
-				ship = Space.SpawnShipNear(ship_name, starport, 10000000, 149598000) -- 10mkm - 1AU
-				ship:SetLabel(Ship.MakeRandomLabel())
-				trade_ships[ship] = {
-					status		= 'inbound',
-					starport	= starport,
-					ship_name	= ship_name,
-				}
 				addShipEquip(ship)
 			end
 		elseif i < num_trade_ships * 0.75 then
@@ -438,14 +448,11 @@ local spawnInitialShips = function (game_start)
 
 			ship = Space.SpawnShip(ship_name, min_dist, min_dist + range)
 			ship:SetLabel(Ship.MakeRandomLabel())
-			trade_ships[ship] = {
-				status		= 'inbound',
-				ship_name	= ship_name,
-			}
+			trade_ships[ship] = { status = 'inbound', ship_name	= ship_name }
 			-- Add ship equipment right now, because...
 			addShipEquip(ship)
 			-- ...this next call needs to see if there's an atmospheric shield.
-			trade_ships[ship].starport	= getNearestStarport(ship)
+			trade_ships[ship].starport = getNearestStarport(ship)
 		else
 			-- spawn the last quarter in hyperspace
 			local min_time = trade_ships.interval * (i - num_trade_ships * 0.75)
@@ -464,27 +471,29 @@ local spawnInitialShips = function (game_start)
 			}
 			addShipEquip(ship)
 		end
-		local trader = trade_ships[ship]
+		if ship then
+			local trader = trade_ships[ship]
 
-		-- add cargo
-		local fuel_added = addFuel(ship)
-		if trader.status == 'docked' then
-			local delay = fuel_added + addShipCargo(ship, 'export')
-			-- have ship wait 30-45 seconds per unit of cargo
-			if delay > 0 then
-				trader['delay'] = Game.time + (delay * Engine.rand:Number(30, 45))
+			-- add cargo
+			local fuel_added = addFuel(ship)
+			if trader.status == 'docked' then
+				local delay = fuel_added + addShipCargo(ship, 'export')
+				-- have ship wait 30-45 seconds per unit of cargo
+				if delay > 0 then
+					trader['delay'] = Game.time + (delay * Engine.rand:Number(30, 45))
+				else
+					trader['delay'] = Game.time + Engine.rand:Number(600, 3600)
+				end
+				Timer:CallAt(trader.delay, function () doUndock(ship) end)
 			else
-				trader['delay'] = Game.time + Engine.rand:Number(600, 3600)
-			end
-			Timer:CallAt(trader.delay, function () doUndock(ship) end)
-		else
-			addShipCargo(ship, 'import')
-			-- remove fuel used to get here
-			if fuel_added and fuel_added > 0 then
-				ship:RemoveEquip(e.cargo.hydrogen, Engine.rand:Integer(1, fuel_added))
-			end
-			if trader.status == 'inbound' then
-				ship:AIDockWith(trader.starport)
+				addShipCargo(ship, 'import')
+				-- remove fuel used to get here
+				if fuel_added and fuel_added > 0 then
+					ship:RemoveEquip(e.cargo.hydrogen, Engine.rand:Integer(1, fuel_added))
+				end
+				if trader.status == 'inbound' then
+					ship:AIDockWith(trader.starport)
+				end
 			end
 		end
 	end
@@ -558,6 +567,11 @@ local cleanTradeShipsTable = function ()
 end
 
 local onEnterSystem = function (ship)
+	-- dont crash when entering unexplored systems
+	if Game.system.explored == false then
+		return
+	end
+	
 	-- if the player is following a ship through hyperspace that ship may enter first
 	-- so update the system when the first ship enters (see Space::DoHyperspaceTo)
 	if not system_updated then
@@ -758,7 +772,7 @@ Event.Register("onShipAlertChanged", onShipAlertChanged)
 
 local onShipHit = function (ship, attacker)
 	if attacker == nil then return end-- XX
-	
+
 	-- XXX this whole thing might be better if based on amount of damage sustained
 	if trade_ships[ship] == nil then return end
 	local trader = trade_ships[ship]
@@ -786,7 +800,7 @@ local onShipHit = function (ship, attacker)
 	if trader.no_jump ~= true then
 		if #starports == 0 then
 			trader['no_jump'] = true -- it already tried in onEnterSystem
-		elseif Engine.rand:Number(1) < trader.chance then
+		elseif trader.starport and Engine.rand:Number(1) < trader.chance then
 			local distance = ship:DistanceTo(trader.starport)
 			if distance > 149598000 * (2 - trader.chance) then -- 149,598,000km = 1AU
 				if getSystemAndJump(ship) then
@@ -837,7 +851,7 @@ local onShipDestroyed = function (ship, attacker)
 	if trade_ships[ship] ~= nil then
 		local trader = trade_ships[ship]
 
-		print(ship.label..' destroyed by '..attacker.label..', status:'..trader.status..' ship:'..trader.ship_name..', starport:'..trader.starport.label)
+		print(ship.label..' destroyed by '..attacker.label..', status:'..trader.status..' ship:'..trader.ship_name..', starport:'..(trader.starport and trader.starport.label or 'N/A'))
 		trade_ships[ship] = nil
 
 		if not attacker:isa("Ship") then
@@ -897,9 +911,9 @@ local onGameStart = function ()
 				local v = Game.system:GetCommodityBasePriceAlterations(equip)
 				if key ~= 'rubbish' and key ~= 'radioactives' and Game.system:IsCommodityLegal(equip) then
 					if v > 2 then
-						table.insert(imports, k)
+						table.insert(imports, equip)
 					elseif v < -2 then
-						table.insert(exports, k)
+						table.insert(exports, equip)
 					end
 				end
 			end

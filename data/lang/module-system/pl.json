@@ -1,34 +1,38 @@
 {
-   "BASE" : {
-      "description" : "",
-      "message" : "bazę"
-   },
-   "BASES" : {
-      "description" : "",
-      "message" : "bazy(-z)"
-   },
-   "BODIES" : {
-      "description" : "",
-      "message" : "ciałami"
-   },
-   "BODY" : {
-      "description" : "",
-      "message" : "ciałem"
-   },
-   "DISCOVERED_HIDDEN_BASES" : {
-      "description" : "",
-      "message" : "Ilość odkrytych baz:  {portcount}"
-   },
-   "EXPLORING_SYSTEM" : {
-      "description" : "",
-      "message" : "Eksploracja systemu: {bodycount} glówne {bodies}."
-   },
-   "YOUR_FUEL_TANK_IS_ALMOST_EMPTY" : {
-      "description" : "",
-      "message" : "Twój zbiornik paliwa jest prawie pusty."
-   },
-   "YOUR_FUEL_TANK_IS_EMPTY" : {
-      "description" : "",
-      "message" : "Twój zbiornik paliwa jest pusty."
-   }
+  "BASE": {
+    "description": "",
+    "message": "bazę"
+  },
+  "BASES": {
+    "description": "",
+    "message": "bazy(-z)"
+  },
+  "BODIES": {
+    "description": "",
+    "message": "ciałami"
+  },
+  "BODY": {
+    "description": "",
+    "message": "ciałem"
+  },
+  "DISCOVERED_HIDDEN_BASES": {
+    "description": "",
+    "message": "Ilość odkrytych baz:  {portcount}"
+  },
+  "EXPLORED_SYSTEM": {
+    "description": "",
+    "message": "Zbadano układ z {bodycount} głównymi {bodies}."
+  },
+  "GETTING_SENSOR_DATA": {
+    "description": "Shown when entering an unexplored system",
+    "message": "Trwa gromadzenie i analiza danych systemowych ..."
+  },
+  "YOUR_FUEL_TANK_IS_ALMOST_EMPTY": {
+    "description": "",
+    "message": "Twój zbiornik paliwa jest prawie pusty."
+  },
+  "YOUR_FUEL_TANK_IS_EMPTY": {
+    "description": "",
+    "message": "Twój zbiornik paliwa jest pusty."
+  }
 }

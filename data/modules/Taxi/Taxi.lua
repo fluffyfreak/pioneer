@@ -1,23 +1,23 @@
--- Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
-local Engine = import("Engine")
-local Lang = import("Lang")
-local Game = import("Game")
-local Space = import("Space")
-local Comms = import("Comms")
-local Event = import("Event")
-local Mission = import("Mission")
-local NameGen = import("NameGen")
-local Format = import("Format")
-local Serializer = import("Serializer")
-local Character = import("Character")
-local ShipDef = import("ShipDef")
-local Ship = import("Ship")
-local eq = import("Equipment")
-local utils = import("utils")
+local Engine = require 'Engine'
+local Lang = require 'Lang'
+local Game = require 'Game'
+local Space = require 'Space'
+local Comms = require 'Comms'
+local Event = require 'Event'
+local Mission = require 'Mission'
+local Format = require 'Format'
+local Serializer = require 'Serializer'
+local Character = require 'Character'
+local ShipDef = require 'ShipDef'
+local Ship = require 'Ship'
+local eq = require 'Equipment'
+local utils = require 'utils'
 
 local InfoFace = import("ui/InfoFace")
+local NavButton = import("ui/NavButton")
 
 -- Get the language resource
 local l = Lang.GetResource("module-taxi")
@@ -152,12 +152,14 @@ local onChat = function (form, ref, option)
 		return
 	end
 
+	form:AddNavButton(ad.location)
+
 	if option == 0 then
 		local sys   = ad.location:GetStarSystem()
 
 		local introtext = string.interp(flavours[ad.flavour].introtext, {
 			name     = ad.client.name,
-			cash     = Format.Money(ad.reward),
+			cash     = Format.Money(ad.reward,false),
 			system   = sys.name,
 			sectorx  = ad.location.sectorX,
 			sectory  = ad.location.sectorY,
@@ -185,6 +187,7 @@ local onChat = function (form, ref, option)
 	elseif option == 3 then
 		if not Game.player.cabin_cap or Game.player.cabin_cap < ad.group then
 			form:SetMessage(l.YOU_DO_NOT_HAVE_ENOUGH_CABIN_SPACE_ON_YOUR_SHIP)
+			form:RemoveNavButton()
 			return
 		end
 
@@ -235,7 +238,7 @@ local onDelete = function (ref)
 end
 
 local isEnabled = function (ref)
-	return isQualifiedFor(Character.persistent.player.reputation, ads[ref])
+	return ads[ref] ~= nil and isQualifiedFor(Character.persistent.player.reputation, ads[ref])
 end
 
 local nearbysystems
@@ -257,6 +260,7 @@ local makeAdvert = function (station)
 	location = nearbysystems[Engine.rand:Integer(1,#nearbysystems)]
 	local dist = location:DistanceTo(Game.system)
 	reward = ((dist / max_taxi_dist) * typical_reward * (group / 2) * (1+risk) * (1+3*urgency) * Engine.rand:Number(0.8,1.2))
+	reward = math.ceil(reward)
 	due = Game.time + ((dist / max_taxi_dist) * typical_travel_time * (1.5-urgency) * Engine.rand:Number(0.9,1.1))
 
 	local ad = {
@@ -270,13 +274,12 @@ local makeAdvert = function (station)
 		risk		= risk,
 		urgency		= urgency,
 		reward		= reward,
-		isfemale	= isfemale,
 		faceseed	= Engine.rand:Integer(),
 	}
 
 	ad.desc = string.interp(flavours[flavour].adtext, {
 		system	= location.name,
-		cash	= Format.Money(ad.reward),
+		cash	= Format.Money(ad.reward,false),
 	})
 
 	local ref = station:AddAdvert({
@@ -312,6 +315,17 @@ local onEnterSystem = function (player)
 	local syspath = Game.system.path
 
 	for ref,mission in pairs(missions) do
+
+		-- Since system names are not unique, player might jump into
+		-- system with right name, but wrong coordinates
+		if mission.status == "ACTIVE" and not mission.location:IsSameSystem(syspath) then
+			local mission_system = mission.location:GetStarSystem()
+			local current_system = syspath:GetStarSystem()
+			if mission_system.name == current_system.name then
+				Comms.ImportantMessage(l.WRONG_SYSTEM, mission.client.name)
+			end
+		end
+
 		if mission.status == "ACTIVE" and mission.location:IsSameSystem(syspath) then
 
 			local risk = flavours[mission.flavour].risk
@@ -325,9 +339,8 @@ local onEnterSystem = function (player)
 
 			if ships < 1 and risk > 0 and Engine.rand:Integer(math.ceil(1/risk)) == 1 then ships = 1 end
 
-			-- XXX hull mass is a bad way to determine suitability for role
 			local shipdefs = utils.build_array(utils.filter(function (k,def) return def.tag == 'SHIP'
-				and def.hyperdriveClass > 0 and def.hullMass > 10 and def.hullMass <= 200 end, pairs(ShipDef)))
+				and def.hyperdriveClass > 0 and def.roles.pirate end, pairs(ShipDef)))
 			if #shipdefs == 0 then return end
 
 			local ship
@@ -435,7 +448,7 @@ local onGameStart = function ()
 	missions = {}
 	passengers = 0
 
-	if not loaded_data then return end
+	if not loaded_data or not loaded_data.ads then return end
 
 	for k,ad in pairs(loaded_data.ads) do
 		local ref = ad.station:AddAdvert({
@@ -466,7 +479,7 @@ local onClick = function (mission)
 														sectorx = mission.location.sectorX,
 														sectory = mission.location.sectorY,
 														sectorz = mission.location.sectorZ,
-														cash   = Format.Money(mission.reward),
+														cash   = Format.Money(mission.reward,false),
 														dist  = dist})
 										),
 										ui:Margin(10),
@@ -537,6 +550,8 @@ local onClick = function (mission)
 													ui:Label(dist.." "..l.LY)
 												})
 											}),
+										ui:Margin(5),
+										NavButton.New(l.SET_AS_TARGET, mission.location),
 		})})
 		:SetColumn(1, {
 			ui:VBox(10):PackEnd(InfoFace.New(mission.client))

@@ -1,17 +1,21 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "HudTrail.h"
+
+#include "Body.h"
+#include "Frame.h"
 #include "Pi.h"
 #include "graphics/RenderState.h"
+#include "graphics/Renderer.h"
 
 const float UPDATE_INTERVAL = 0.1f;
 const Uint16 MAX_POINTS = 100;
 
-HudTrail::HudTrail(Body *b, const Color& c)
-: m_body(b)
-, m_updateTime(0.f)
-, m_color(c)
+HudTrail::HudTrail(Body *b, const Color &c) :
+	m_body(b),
+	m_updateTime(0.f),
+	m_color(c)
 {
 	m_currentFrame = b->GetFrame();
 
@@ -28,14 +32,15 @@ void HudTrail::Update(float time)
 	m_updateTime += time;
 	if (m_updateTime > UPDATE_INTERVAL) {
 		m_updateTime = 0.f;
-		const Frame *bodyFrame = m_body->GetFrame();
-		
-		if( !m_currentFrame ) {
-			m_currentFrame = bodyFrame;
+		FrameId bodyFrameId = m_body->GetFrame();
+		const Frame *bodyFrame = Frame::GetFrame(bodyFrameId);
+
+		if (!m_currentFrame) {
+			m_currentFrame = bodyFrameId;
 			m_trailPoints.clear();
 		}
-		
-		if( bodyFrame==m_currentFrame )
+
+		if (bodyFrameId == m_currentFrame)
 			m_trailPoints.push_back(m_body->GetInterpPosition());
 	}
 
@@ -62,11 +67,11 @@ void HudTrail::Render(Graphics::Renderer *r)
 		tvts.reserve(MAX_POINTS);
 		colors.reserve(MAX_POINTS);
 		tvts.push_back(vector3f(0.f));
-		colors.push_back(Color(0.f));
+		colors.push_back(Color::BLANK);
 		float alpha = 1.f;
 		const float decrement = 1.f / m_trailPoints.size();
 		const Color tcolor = m_color;
-		for (Uint16 i = m_trailPoints.size()-1; i > 0; i--) {
+		for (size_t i = m_trailPoints.size() - 1; i > 0; i--) {
 			tvts.push_back(-vector3f(curpos - m_trailPoints[i]));
 			alpha -= decrement;
 			colors.push_back(tcolor);
@@ -79,7 +84,7 @@ void HudTrail::Render(Graphics::Renderer *r)
 	}
 }
 
-void HudTrail::Reset(const Frame *newFrame)
+void HudTrail::Reset(FrameId newFrame)
 {
 	m_currentFrame = newFrame;
 	m_trailPoints.clear();

@@ -4,15 +4,17 @@
 #ifndef _ASTEROID_H
 #define _ASTEROID_H
 
-#include "libs.h"
 #include "graphics/Drawables.h"
+#include "libs.h"
 
 //------------------------------------------------------------
 //#define DEBUG_RENDER_NORMALS
 
-namespace Spatial
-{
+namespace Spatial {
 	class Octree;
+};
+namespace SceneGraph {
+	class Model;
 };
 
 // Three dimensional sphere (subdivided icosahedron) with normals
@@ -43,7 +45,7 @@ public:
 	};
 
 	// subdivisions must be 0-5
-	Asteroid(Graphics::Renderer*, RefCountedPtr<Graphics::Material> material, Graphics::RenderState*, const TDeformations &deformations, const Sint32 subdivisions = 0, const float scale = 1.f);
+	Asteroid(Graphics::Renderer *, RefCountedPtr<Graphics::Material> material, Graphics::RenderState *, const TDeformations &deformations, const Sint32 subdivisions = 0, const float scale = 1.f);
 	virtual void Draw(Graphics::Renderer *r, const matrix4x4f &trans);
 
 	RefCountedPtr<Graphics::Material> GetMaterial() const { return m_material; }
@@ -52,7 +54,7 @@ private:
 	std::unique_ptr<SceneGraph::Model> m_model;
 	RefCountedPtr<Graphics::Material> m_material;
 	Graphics::RenderState *m_renderState;
-	std::vector<TLOD*> m_lods;
+	std::vector<TLOD *> m_lods;
 	float m_scale;
 
 	// high level lod builder
@@ -60,10 +62,10 @@ private:
 	// Starts the icoshedron generation
 	void GenerateInitialMesh(Graphics::VertexArray &vts, std::vector<Uint32> &indices, const matrix4x4f &trans, const Sint32 subdivsLocal);
 	// add a new vertex, return the index
-	Sint32 AddVertex(Graphics::VertexArray&, const vector3f &v, const vector3f &n);
+	Sint32 AddVertex(Graphics::VertexArray &, const vector3f &v, const vector3f &n);
 	// add three vertex indices to form a triangle
-	void AddTriangle(std::vector<Uint32>&, const Sint32 i1, const Sint32 i2, const Sint32 i3);
-	void Subdivide(Graphics::VertexArray&, std::vector<Uint32>&,
+	void AddTriangle(std::vector<Uint32> &, const Sint32 i1, const Sint32 i2, const Sint32 i3);
+	void Subdivide(Graphics::VertexArray &, std::vector<Uint32> &,
 		const matrix4x4f &trans, const vector3f &v1, const vector3f &v2, const vector3f &v3,
 		const Sint32 i1, const Sint32 i2, const Sint32 i3, const Sint32 depth);
 

@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright Â© 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef GRAPHICS_VERTEXBUFFER_H
@@ -18,123 +18,138 @@
  *
  * Expansion possibilities: range-based Map
  */
+#include "Types.h"
 #include "libs.h"
-#include "graphics/Types.h"
 
 namespace Graphics {
 
-// fwd declaration
-class VertexArray;
+	// fwd declaration
+	class VertexArray;
 
-const Uint32 MAX_ATTRIBS = 8;
+	const Uint32 MAX_ATTRIBS = 8;
 
-struct VertexAttribDesc {
-	//position, texcoord, normal etc.
-	VertexAttrib semantic;
-	//float3, float2 etc.
-	VertexAttribFormat format;
-	//byte offset of the attribute, if zero this
-	//is automatically filled for created buffers
-	Uint32 offset;
-};
+	struct VertexAttribDesc {
+		//position, texcoord, normal etc.
+		VertexAttrib semantic;
+		//float3, float2 etc.
+		VertexAttribFormat format;
+		//byte offset of the attribute, if zero this
+		//is automatically filled for created buffers
+		Uint32 offset;
+	};
 
-struct VertexBufferDesc {
-	VertexBufferDesc();
-	//byte offset of an existing attribute
-	Uint32 GetOffset(VertexAttrib) const;
+	struct VertexBufferDesc {
+		VertexBufferDesc();
+		//byte offset of an existing attribute
+		Uint32 GetOffset(VertexAttrib) const;
 
-	//used internally for calculating offsets
-	static Uint32 CalculateOffset(const VertexBufferDesc&, VertexAttrib);
-	static Uint32 GetAttribSize(VertexAttribFormat);
+		//used internally for calculating offsets
+		static Uint32 CalculateOffset(const VertexBufferDesc &, VertexAttrib);
+		static Uint32 GetAttribSize(VertexAttribFormat);
 
-	//semantic ATTRIB_NONE ends description (when not using all attribs)
-	VertexAttribDesc attrib[MAX_ATTRIBS];
-	Uint32 numVertices;
-	//byte size of one vertex, if zero this is
-	//automatically calculated for created buffers
-	Uint32 stride;
-	BufferUsage usage;
-};
+		//semantic ATTRIB_NONE ends description (when not using all attribs)
+		VertexAttribDesc attrib[MAX_ATTRIBS];
+		Uint32 numVertices;
+		//byte size of one vertex, if zero this is
+		//automatically calculated for created buffers
+		Uint32 stride;
+		BufferUsage usage;
+	};
 
-class Mappable {
-public:
-	virtual ~Mappable() { }
-	virtual void Unmap() = 0;
+	class Mappable : public RefCounted {
+	public:
+		virtual ~Mappable() {}
+		virtual void Unmap() = 0;
 
-protected:
-	Mappable() : m_mapMode(BUFFER_MAP_NONE) { }
-	BufferMapMode m_mapMode; //tracking map state
-};
+		inline Uint32 GetSize() const { return m_size; }
+		inline Uint32 GetCapacity() const { return m_capacity; }
 
-class VertexBuffer : public RefCounted, public Mappable {
-public:
-	VertexBuffer(const VertexBufferDesc &desc) : m_desc(desc), m_numVertices(0) {}
-	virtual ~VertexBuffer();
-	const VertexBufferDesc &GetDesc() const { return m_desc; }
+	protected:
+		explicit Mappable(const Uint32 size) :
+			m_mapMode(BUFFER_MAP_NONE),
+			m_size(size),
+			m_capacity(size) {}
+		BufferMapMode m_mapMode; //tracking map state
 
-	template <typename T> T *Map(BufferMapMode mode) {
-		return reinterpret_cast<T*>(MapInternal(mode));
-	}
+		// size is the current number of elements in the buffer
+		Uint32 m_size;
+		// capacity is the maximum number of elements that can be put in the buffer
+		Uint32 m_capacity;
+	};
 
-	//Vertex count used for rendering.
-	//By default the maximum set in description, but
-	//you may set a smaller count for partial rendering
-	Uint32 GetVertexCount() const;
-	void SetVertexCount(Uint32);
+	class VertexBuffer : public Mappable {
+	public:
+		VertexBuffer(const VertexBufferDesc &desc) :
+			Mappable(desc.numVertices),
+			m_desc(desc) {}
+		virtual ~VertexBuffer();
+		const VertexBufferDesc &GetDesc() const { return m_desc; }
 
-	// copies the contents of the VertexArray into the buffer
-	virtual bool Populate(const VertexArray &) = 0;
+		template <typename T>
+		T *Map(BufferMapMode mode)
+		{
+			return reinterpret_cast<T *>(MapInternal(mode));
+		}
 
-	virtual void Bind() = 0;
-	virtual void Release() = 0;
+		//Vertex count used for rendering.
+		//By default the maximum set in description, but
+		//you may set a smaller count for partial rendering
+		bool SetVertexCount(Uint32);
 
-protected:
-	virtual Uint8 *MapInternal(BufferMapMode) = 0;
-	VertexBufferDesc m_desc;
-	Uint32 m_numVertices;
-};
+		// copies the contents of the VertexArray into the buffer
+		virtual bool Populate(const VertexArray &) = 0;
 
-// Index buffer, limited to Uint16 index format for better portability
-class IndexBuffer : public RefCounted, public Mappable {
-public:
-	IndexBuffer(Uint32 size, BufferUsage);
-	virtual ~IndexBuffer();
-	virtual Uint16 *Map(BufferMapMode) = 0;
+		// change the buffer data without mapping
+		virtual void BufferData(const size_t, void *) = 0;
 
-	Uint32 GetSize() const { return m_size; }
-	Uint32 GetIndexCount() const { return m_indexCount; }
-	void SetIndexCount(Uint32);
-	BufferUsage GetUsage() const { return m_usage; }
+		virtual void Bind() = 0;
+		virtual void Release() = 0;
 
-	virtual void Bind() = 0;
-	virtual void Release() = 0;
+	protected:
+		virtual Uint8 *MapInternal(BufferMapMode) = 0;
+		VertexBufferDesc m_desc;
+	};
 
-protected:
-	Uint32 m_size;
-	Uint32 m_indexCount;
-	BufferUsage m_usage;
-};
+	// Index buffer
+	class IndexBuffer : public Mappable {
+	public:
+		IndexBuffer(Uint32 size, BufferUsage);
+		virtual ~IndexBuffer();
+		virtual Uint32 *Map(BufferMapMode) = 0;
 
-// Instance buffer
-class InstanceBuffer : public RefCounted, public Mappable {
-public:
-	InstanceBuffer(Uint32 size, BufferUsage);
-	virtual ~InstanceBuffer();
-	virtual matrix4x4f* Map(BufferMapMode) = 0;
+		// change the buffer data without mapping
+		virtual void BufferData(const size_t, void *) = 0;
 
-	Uint32 GetSize() const { return m_size; }
-	Uint32 GetInstanceCount() const { return m_instanceCount; }
-	void SetInstanceCount(const Uint32);
-	BufferUsage GetUsage() const { return m_usage; }
+		Uint32 GetIndexCount() const { return m_indexCount; }
+		void SetIndexCount(Uint32);
+		BufferUsage GetUsage() const { return m_usage; }
 
-	virtual void Bind() = 0;
-	virtual void Release() = 0;
+		virtual void Bind() = 0;
+		virtual void Release() = 0;
 
-protected:
-	Uint32 m_size;
-	Uint32 m_instanceCount;
-	BufferUsage m_usage;
-};
+	protected:
+		Uint32 m_indexCount;
+		BufferUsage m_usage;
+	};
 
-}
+	// Instance buffer
+	class InstanceBuffer : public Mappable {
+	public:
+		InstanceBuffer(Uint32 size, BufferUsage);
+		virtual ~InstanceBuffer();
+		virtual matrix4x4f *Map(BufferMapMode) = 0;
+
+		Uint32 GetInstanceCount() const { return m_instanceCount; }
+		void SetInstanceCount(const Uint32);
+		BufferUsage GetUsage() const { return m_usage; }
+
+		virtual void Bind() = 0;
+		virtual void Release() = 0;
+
+	protected:
+		Uint32 m_instanceCount;
+		BufferUsage m_usage;
+	};
+
+} // namespace Graphics
 #endif // GRAPHICS_VERTEXBUFFER_H

@@ -6,7 +6,7 @@
 
 #include "libs.h"
 #include "DynamicBody.h"
-#include "LuaRef.h"
+#include "lua/LuaRef.h"
 
 namespace Graphics { class Renderer; }
 
@@ -14,6 +14,7 @@ class AsteroidBody: public DynamicBody {
 public:
 	OBJDEF(AsteroidBody, DynamicBody, ASTEROIDBODY);
 	AsteroidBody();
+	AsteroidBody(const Json &jsonObj, Space *space);
 
 	virtual void SetLabel(const std::string &label);
 
@@ -23,8 +24,7 @@ public:
 	virtual bool OnCollision(Object *o, Uint32 flags, double relVel);
 	virtual bool OnDamage(Object *attacker, float kgDamage, const CollisionContact& contactData);
 protected:
-	virtual void SaveToJson(Json::Value &jsonObj, Space *space);
-	virtual void LoadFromJson(const Json::Value &jsonObj, Space *space);
+	virtual void SaveToJson(Json &jsonObj, Space *space);
 private:
 	void Init();
 	

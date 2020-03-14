@@ -1,18 +1,20 @@
--- Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
-local Lang = import("Lang")
-local Engine = import("Engine")
-local Game = import("Game")
-local Event = import("Event")
-local NameGen = import("NameGen")
-local Rand = import("Rand")
-local Serializer = import("Serializer")
-local Equipment = import("Equipment")
+local Lang = require 'Lang'
+local Engine = require 'Engine'
+local Game = require 'Game'
+local Event = require 'Event'
+local NameGen = require 'NameGen'
+local Rand = require 'Rand'
+local Serializer = require 'Serializer'
+local Equipment = require 'Equipment'
+local Character = require 'Character'
 
 local l = Lang.GetResource("module-goodstrader")
 
 local num_names = 6 -- number of GOODS_TRADER_N names
+local num_slogans = 7 -- number of SLOGAN_N entries
 
 local ads = {}
 
@@ -26,8 +28,8 @@ local onChat = function (form, ref, option)
 
 	form:Clear()
 	form:SetTitle(ad.flavour)
-	form:SetFace({ seed = ad.faceseed })
-	form:SetMessage(l.WELCOME_TO..ad.flavour)
+	form:SetFace(ad.trader)
+	form:SetMessage(l.WELCOME_TO..ad.flavour..".\n"..ad.slogan)
 
 	local onClick = function (ref)
 		if not ads[ref].ispolice then
@@ -43,6 +45,12 @@ local onChat = function (form, ref, option)
 	form:AddGoodsTrader({
 		-- can I trade this commodity?
 		canTrade = function (ref, commodity)
+			if ads[ref].stock[commodity] then
+				return true
+			end
+		end,
+
+		canDisplayItem = function (ref, commodity)
 			if ads[ref].stock[commodity] then
 				return true
 			end
@@ -74,13 +82,23 @@ local onChat = function (form, ref, option)
 		end,
 
 		-- do something when we buy this commodity
-		bought = function (ref, commodity)
-            ads[ref].stock[commodity] = ads[ref].stock[commodity] + 1
+		bought = function (ref, commodity, market)
+			local count = 1
+			if market.tradeAmount ~= nil then
+				count = market.tradeAmount
+			end
+
+			ads[ref].stock[commodity] = ads[ref].stock[commodity] - count
 		end,
 
 		-- do something when we sell this commodity
-		sold = function (ref, commodity)
-            ads[ref].stock[commodity] = ads[ref].stock[commodity] - 1
+		sold = function (ref, commodity, market)
+			local count = 1
+			if market.tradeAmount ~= nil then
+				count = market.tradeAmount
+			end
+
+			ads[ref].stock[commodity] = ads[ref].stock[commodity] + count
 		end,
 	})
 
@@ -99,7 +117,10 @@ local onCreateBB = function (station)
 	end
 	if not has_illegal_goods then return end
 
+	-- Real trader is persistant for each station, police is random every time
 	local rand = Rand.New(station.seed)
+	local rand_police = Rand.New()
+
 	local num = rand:Integer(1,3)
 
 	local numPolice = 0
@@ -113,15 +134,20 @@ local onCreateBB = function (station)
 
 			if ispolice then
 				numPolice = numPolice + 1
+				r = rand_police
+			else
+				r = rand
 			end
 
-			local flavour = string.interp(l["GOODS_TRADER_"..rand:Integer(1, num_names)-1], {name = NameGen.Surname(rand)})
+			local flavour = string.interp(l["GOODS_TRADER_"..r:Integer(1, num_names)-1], {name = NameGen.Surname(r)})
+			local slogan = l["SLOGAN_"..r:Integer(1, num_slogans)-1]
 
 			local ad = {
 				station  = station,
 				flavour  = flavour,
+				slogan   = slogan,
 				ispolice = ispolice,
-				faceseed = rand:Integer(),
+				trader   = Character.New({title = flavour, armour=false}, r),
 			}
 
 			ad.stock = {}
@@ -149,7 +175,7 @@ local loaded_data
 local onGameStart = function ()
 	ads = {}
 
-	if not loaded_data then return end
+	if not loaded_data or not loaded_data.ads then return end
 
 	for k,ad in pairs(loaded_data.ads) do
 		local ref = ad.station:AddAdvert({

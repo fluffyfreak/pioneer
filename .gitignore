@@ -6,6 +6,7 @@ PreRelease/
 Profile/
 Release/
 ipch/
+__pycache__/
 src/data
 debian/autoreconf*
 debian/files
@@ -41,6 +42,15 @@ modelviewer
 modelviewer.exe
 modelcompiler
 modelcompiler.exe
+modelcompiler-debug.lib
+modelcompiler-prerelease.lib
+modelcompiler-profile.lib
+modelcompiler.lib
+pioneer-debug.lib
+pioneer-prerelease.lib
+pioneer-profile.lib
+pioneer.lib
+pioneer-x64*.lib
 aclocal.m4
 config.guess
 config.log
@@ -64,3 +74,15 @@ gmon.out
 .dirstamp
 result
 *.sgm
+.vs/
+*.user
+*.exp
+*.VC.db
+/release
+# Core dumps shouldn't be tracked by git.
+.[0-9][0-9]*
+# Don't track C++ language server cache files.
+.ccls-cache
+.clangd/
+.vscode/
+*.code-workspace

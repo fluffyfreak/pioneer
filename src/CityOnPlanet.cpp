@@ -1,8 +1,8 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
-#include "libs.h"
 #include "CityOnPlanet.h"
+
 #include "FileSystem.h"
 #include "Frame.h"
 #include "Game.h"
@@ -10,127 +10,62 @@
 #include "Pi.h"
 #include "Planet.h"
 #include "SpaceStation.h"
+#include "collider/Geom.h"
 #include "graphics/Frustum.h"
-#include "graphics/Graphics.h"
-#include "graphics/Stats.h"
-#include "scenegraph/Model.h"
-#include "scenegraph/SceneGraph.h"
+#include "scenegraph/Animation.h"
 #include "scenegraph/ModelSkin.h"
-#include <set>
+#include "scenegraph/SceneGraph.h"
 
 static const unsigned int DEFAULT_NUM_BUILDINGS = 1000;
-static const double  START_SEG_SIZE = CITY_ON_PLANET_RADIUS;
-static const double  START_SEG_SIZE_NO_ATMO = CITY_ON_PLANET_RADIUS / 5.0f;
-static const double MIN_SEG_SIZE = 50.0;
+static const double START_SEG_SIZE = CITY_ON_PLANET_RADIUS;
+static const double START_SEG_SIZE_NO_ATMO = CITY_ON_PLANET_RADIUS / 5.0f;
 
 using SceneGraph::Model;
 
-bool CityOnPlanet::s_cityBuildingsInitted = false;
-
 CityOnPlanet::citybuildinglist_t CityOnPlanet::s_buildingList = {
-	"city_building", 800, 2000, 0, 0,
+	"city_building",
+	800,
+	2000,
+	0,
+	0,
 };
 
 CityOnPlanet::cityflavourdef_t CityOnPlanet::cityflavour[CITYFLAVOURS];
-
-void CityOnPlanet::PutCityBit(Random &rand, const matrix4x4d &rot, vector3d p1, vector3d p2, vector3d p3, vector3d p4)
-{
-	double rad = (p1-p2).Length()*0.5;
-	Uint32 instIndex(0);
-	double modelRadXZ(0.0);
-	const CollMesh *cmesh(0);
-	vector3d cent = (p1+p2+p3+p4)*0.25;
-
-	cityflavourdef_t *flavour(0);
-	citybuildinglist_t *buildings(0);
-
-	// pick a building flavour (city, windfarm, etc)
-	for (unsigned int flv = 0; flv < CITYFLAVOURS; flv++) {
-		flavour = &cityflavour[flv];
-		buildings = &s_buildingList;
-
-		int tries;
-		for (tries=20; tries--; ) {
-			const citybuilding_t &bt = buildings->buildings[rand.Int32(buildings->numBuildings)];
-			instIndex = bt.instIndex;
-			modelRadXZ = bt.xzradius;
-			cmesh = bt.collMesh.Get();
-			if (modelRadXZ < rad) break;
-			if (tries == 0) return;
-		}
-
-		bool tooDistant = ((flavour->center - cent).Length()*(1.0/flavour->size) > rand.Double());
-		if (!tooDistant) break;
-		else flavour = 0;
-	}
-
-	if (flavour == 0) {
-		if (rad > MIN_SEG_SIZE) goto always_divide;
-		else return;
-	}
-
-	if (rad > modelRadXZ*2.0) {
-always_divide:
-		vector3d a = (p1+p2)*0.5;
-		vector3d b = (p2+p3)*0.5;
-		vector3d c = (p3+p4)*0.5;
-		vector3d d = (p4+p1)*0.5;
-		vector3d e = (p1+p2+p3+p4)*0.25;
-		PutCityBit(rand, rot, p1, a, e, d);
-		PutCityBit(rand, rot, a, p2, b, e);
-		PutCityBit(rand, rot, e, b, p3, c);
-		PutCityBit(rand, rot, d, e, c, p4);
-	} else {
-		cent = cent.Normalized();
-		double height = m_planet->GetTerrainHeight(cent);
-		/* don't position below sealevel! */
-		if (height - m_planet->GetSystemBody()->GetRadius() <= 0.0) return;
-		cent = cent * height;
-
-		Geom *geom = new Geom(cmesh->GetGeomTree());
-		int rotTimes90 = rand.Int32(4);
-		matrix4x4d grot = rot * matrix4x4d::RotateYMatrix(M_PI*0.5*double(rotTimes90));
-		geom->MoveTo(grot, cent);
-		geom->SetUserData(this);
-//		f->AddStaticGeom(geom);
-
-		BuildingDef def = { instIndex, float(cmesh->GetRadius()), rotTimes90, cent, geom };
-		m_buildings.push_back(def);
-	}
-}
 
 void CityOnPlanet::AddStaticGeomsToCollisionSpace()
 {
 	// reset data structures
 	m_enabledBuildings.clear();
 	m_buildingCounts.resize(s_buildingList.numBuildings);
-	for(Uint32 i=0; i<s_buildingList.numBuildings; i++) {
+	for (Uint32 i = 0; i < s_buildingList.numBuildings; i++) {
 		m_buildingCounts[i] = 0;
 	}
 
 	// Generate the new building list
 	int skipMask;
 	switch (Pi::detail.cities) {
-		case 0: skipMask = 0xf; break;
-		case 1: skipMask = 0x7; break;
-		case 2: skipMask = 0x3; break;
-		case 3: skipMask = 0x1; break;
-		default:
-			skipMask = 0; break;
+	case 0: skipMask = 0xf; break;
+	case 1: skipMask = 0x7; break;
+	case 2: skipMask = 0x3; break;
+	case 3: skipMask = 0x1; break;
+	default:
+		skipMask = 0;
+		break;
 	}
 	Uint32 numVisibleBuildings = 0;
-	for (unsigned int i=0; i<m_buildings.size(); i++) {
-		if (!(i&skipMask)) {
+	for (unsigned int i = 0; i < m_buildings.size(); i++) {
+		if (!(i & skipMask)) {
 			++numVisibleBuildings;
 		}
 	}
 
 	// we know how many building we'll be adding, reserve space up front
 	m_enabledBuildings.reserve(numVisibleBuildings);
-	for (unsigned int i=0; i<m_buildings.size(); i++) {
+	for (unsigned int i = 0; i < m_buildings.size(); i++) {
 		if (i & skipMask) {
 		} else {
-			m_frame->AddStaticGeom(m_buildings[i].geom);
+			Frame *f = Frame::GetFrame(m_frame);
+			f->AddStaticGeom(m_buildings[i].geom);
 			m_enabledBuildings.push_back(m_buildings[i]);
 			// Update building types
 			++(m_buildingCounts[m_buildings[i].instIndex]);
@@ -144,38 +79,38 @@ void CityOnPlanet::AddStaticGeomsToCollisionSpace()
 void CityOnPlanet::RemoveStaticGeomsFromCollisionSpace()
 {
 	m_enabledBuildings.clear();
-	for (unsigned int i=0; i<m_buildings.size(); i++) {
-		m_frame->RemoveStaticGeom(m_buildings[i].geom);
+	for (unsigned int i = 0; i < m_buildings.size(); i++) {
+		Frame *f = Frame::GetFrame(m_frame);
+		f->RemoveStaticGeom(m_buildings[i].geom);
 	}
 }
 
 // Get all model file names under buildings/
 // This is temporary. Buildings should be defined in BuildingSet data files, or something.
-//static 
+//static
 void CityOnPlanet::EnumerateNewBuildings(std::set<std::string> &filenames)
 {
 	const std::string fullpath = FileSystem::JoinPathBelow("models", "buildings");
 	for (FileSystem::FileEnumerator files(FileSystem::gameDataFiles, fullpath, FileSystem::FileEnumerator::Recurse); !files.Finished(); files.Next()) {
 		const std::string &name = files.Current().GetName();
 		if (ends_with_ci(name, ".model")) {
-			filenames.insert(name.substr(0, name.length()-6));
+			filenames.insert(name.substr(0, name.length() - 6));
 		} else if (ends_with_ci(name, ".sgm")) {
-			filenames.insert(name.substr(0, name.length()-4));
+			filenames.insert(name.substr(0, name.length() - 4));
 		}
 	}
 }
 
-//static 
+//static
 void CityOnPlanet::LookupBuildingListModels(citybuildinglist_t *list)
 {
-	std::vector<Model*> models;
+	std::vector<Model *> models;
 
 	//get test newmodels - to be replaced with building set definitions
 	{
 		std::set<std::string> filenames; // set so we get unique names
 		EnumerateNewBuildings(filenames);
-		for(auto it = filenames.begin(), itEnd = filenames.end(); it != itEnd; ++it)
-		{
+		for (auto it = filenames.begin(), itEnd = filenames.end(); it != itEnd; ++it) {
 			// find/load the model
 			Model *model = Pi::modelCache->FindModel(*it);
 
@@ -192,11 +127,12 @@ void CityOnPlanet::LookupBuildingListModels(citybuildinglist_t *list)
 	for (auto m = models.begin(), itEnd = models.end(); m != itEnd; ++m, i++) {
 		list->buildings[i].instIndex = i;
 		list->buildings[i].resolvedModel = *m;
+		list->buildings[i].idle = (*m)->FindAnimation("idle");
 		list->buildings[i].collMesh = (*m)->CreateCollisionMesh();
 		const Aabb &aabb = list->buildings[i].collMesh->GetAabb();
 		const double maxx = std::max(fabs(aabb.max.x), fabs(aabb.min.x));
 		const double maxy = std::max(fabs(aabb.max.z), fabs(aabb.min.z));
-		list->buildings[i].xzradius = sqrt(maxx*maxx + maxy*maxy);
+		list->buildings[i].xzradius = sqrt(maxx * maxx + maxy * maxy);
 		Output(" - %s: %f\n", (*m)->GetName().c_str(), list->buildings[i].xzradius);
 	}
 	Output("End of buildings.\n");
@@ -204,11 +140,9 @@ void CityOnPlanet::LookupBuildingListModels(citybuildinglist_t *list)
 
 void CityOnPlanet::Init()
 {
+	PROFILE_SCOPED()
 	/* Resolve city model numbers since it is a bit expensive */
-	if (!s_cityBuildingsInitted) {
-		s_cityBuildingsInitted = true;
-		LookupBuildingListModels(&s_buildingList);
-	}
+	LookupBuildingListModels(&s_buildingList);
 }
 
 void CityOnPlanet::Uninit()
@@ -217,11 +151,12 @@ void CityOnPlanet::Uninit()
 }
 
 // Need a reliable way to sort the models rather than using their address in memory we use their name which should be unique.
-bool setcomp (SceneGraph::Model *mlhs, SceneGraph::Model *mrhs) {return mlhs->GetName()<mrhs->GetName();}
-bool(*fn_pt)(SceneGraph::Model *mlhs, SceneGraph::Model *mrhs) = setcomp;
+bool setcomp(SceneGraph::Model *mlhs, SceneGraph::Model *mrhs) { return mlhs->GetName() < mrhs->GetName(); }
+bool (*fn_pt)(SceneGraph::Model *mlhs, SceneGraph::Model *mrhs) = setcomp;
 
 struct ModelNameComparator {
-	bool operator()(SceneGraph::Model* lhs, SceneGraph::Model* rhs) {
+	bool operator()(const SceneGraph::Model *lhs, const SceneGraph::Model *rhs) const
+	{
 		return lhs->GetName() < rhs->GetName();
 	}
 };
@@ -232,120 +167,148 @@ void CityOnPlanet::SetCityModelPatterns(const SystemPath &path)
 	Uint32 _init[5] = { path.systemIndex, Uint32(path.sectorX), Uint32(path.sectorY), Uint32(path.sectorZ), UNIVERSE_SEED };
 	Random rand(_init, 5);
 
-	typedef std::set<SceneGraph::Model*, ModelNameComparator> ModelSet;
+	typedef std::set<SceneGraph::Model *, ModelNameComparator> ModelSet;
 	typedef ModelSet::iterator TSetIter;
 	ModelSet modelSet;
 	{
-		for (unsigned int j=0; j < s_buildingList.numBuildings; j++) {
+		for (unsigned int j = 0; j < s_buildingList.numBuildings; j++) {
 			SceneGraph::Model *m = s_buildingList.buildings[j].resolvedModel;
 			modelSet.insert(m);
 		}
 	}
 
 	SceneGraph::ModelSkin skin;
-	for (TSetIter it=modelSet.begin(), itEnd=modelSet.end(); it!=itEnd; ++it) {
+	for (TSetIter it = modelSet.begin(), itEnd = modelSet.end(); it != itEnd; ++it) {
 		SceneGraph::Model *m = (*it);
 		if (!m->SupportsPatterns()) continue;
 		skin.SetRandomColors(rand);
 		skin.Apply(m);
-		m->SetPattern(rand.Int32(0, m->GetNumPatterns()));
+		if (m->SupportsPatterns())
+			m->SetPattern(rand.Int32(0, m->GetNumPatterns() - 1));
 	}
 }
 
 CityOnPlanet::~CityOnPlanet()
 {
 	// frame may be null (already removed from
-	for (unsigned int i=0; i<m_buildings.size(); i++) {
-		m_frame->RemoveStaticGeom(m_buildings[i].geom);
+	for (unsigned int i = 0; i < m_buildings.size(); i++) {
+		Frame *f = Frame::GetFrame(m_frame);
+		f->RemoveStaticGeom(m_buildings[i].geom);
 		delete m_buildings[i].geom;
 	}
 }
 
 CityOnPlanet::CityOnPlanet(Planet *planet, SpaceStation *station, const Uint32 seed)
 {
-	m_buildings.clear();
-	m_buildings.reserve(DEFAULT_NUM_BUILDINGS);
+	// beware, these are not used in this function, but are used in subroutines!
 	m_planet = planet;
 	m_frame = planet->GetFrame();
 	m_detailLevel = Pi::detail.cities;
 
-	/* Resolve city model numbers since it is a bit expensive */
-	if (!s_cityBuildingsInitted) {
-		s_cityBuildingsInitted = true;
-		LookupBuildingListModels(&s_buildingList);
-	}
+	m_buildings.clear();
+	m_buildings.reserve(DEFAULT_NUM_BUILDINGS);
 
 	const Aabb &aabb = station->GetAabb();
 	const matrix4x4d &m = station->GetOrient();
+	const vector3d p = station->GetPosition();
 
-	vector3d mx = m*vector3d(1,0,0);
-	vector3d mz = m*vector3d(0,0,1);
+	const vector3d mx = m * vector3d(1, 0, 0);
+	const vector3d mz = m * vector3d(0, 0, 1);
 
 	Random rand;
 	rand.seed(seed);
 
-	const float pop = planet->GetSystemBody()->GetPopulation();
-	double seg = START_SEG_SIZE;
-	if (planet->GetSystemBody()->HasAtmosphere())
-		seg=Clamp(pop*1000.0, 200.0, START_SEG_SIZE);
-	else
-		seg=Clamp(pop*100.0, 250.0, START_SEG_SIZE_NO_ATMO);
+	int population = planet->GetSystemBody()->GetPopulation();
+	int cityradius;
 
-	const double sizex = seg*2.0;
-	const double sizez = seg*2.0;
-
-	const vector3d p = station->GetPosition();
-
-	// always have random shipyard buildings around the space station
-	cityflavour[0].center = p;
-	cityflavour[0].size = seg;
-
-	for (unsigned int i = 1; i < CITYFLAVOURS; i++) {
-		const citybuildinglist_t *blist = &s_buildingList;
-		const double a = rand.Int32(-1000,1000);
-		const double b = rand.Int32(-1000,1000);
-		cityflavour[i].center = p + a*mx + b*mz;
-		cityflavour[i].size = rand.Int32(int(blist->minRadius), int(blist->maxRadius));
+	if (planet->GetSystemBody()->HasAtmosphere()) {
+		population *= 1000;
+		cityradius = (population < 200) ? 200 : ((population > START_SEG_SIZE) ? START_SEG_SIZE : population);
+	} else {
+		population *= 100;
+		cityradius = (population < 250) ? 250 : ((population > START_SEG_SIZE_NO_ATMO) ? START_SEG_SIZE_NO_ATMO : population);
 	}
-	
-	vector3d p1, p2, p3, p4;
-	for (int side=0; side<4; side++) {
-		/* put buildings on all sides of spaceport */
-		switch(side) {
-			case 3:
-				p1 = p + mx*(aabb.min.x) + mz*aabb.min.z;
-				p2 = p + mx*(aabb.min.x) + mz*(aabb.min.z-sizez);
-				p3 = p + mx*(aabb.min.x+sizex) + mz*(aabb.min.z-sizez);
-				p4 = p + mx*(aabb.min.x+sizex) + mz*(aabb.min.z);
-				break;
-			case 2:
-				p1 = p + mx*(aabb.min.x-sizex) + mz*aabb.max.z;
-				p2 = p + mx*(aabb.min.x-sizex) + mz*(aabb.max.z-sizez);
-				p3 = p + mx*(aabb.min.x) + mz*(aabb.max.z-sizez);
-				p4 = p + mx*(aabb.min.x) + mz*(aabb.max.z);
-				break;
-			case 1:
-				p1 = p + mx*(aabb.max.x-sizex) + mz*aabb.max.z;
-				p2 = p + mx*(aabb.max.x) + mz*aabb.max.z;
-				p3 = p + mx*(aabb.max.x) + mz*(aabb.max.z+sizez);
-				p4 = p + mx*(aabb.max.x-sizex) + mz*(aabb.max.z+sizez);
-				break;
-			default:
-			case 0:
-				p1 = p + mx*aabb.max.x + mz*aabb.min.z;
-				p2 = p + mx*(aabb.max.x+sizex) + mz*aabb.min.z;
-				p3 = p + mx*(aabb.max.x+sizex) + mz*(aabb.min.z+sizez);
-				p4 = p + mx*aabb.max.x + mz*(aabb.min.z+sizez);
-				break;
+
+	citybuildinglist_t *buildings = &s_buildingList;
+	vector3d cent = p;
+	const int cellsize_i = 80;
+	const double cellsize = double(cellsize_i); // current widest building = 92
+	const double bodyradius = planet->GetSystemBody()->GetRadius(); // cache for bodyradius value
+
+	static const int gmid = (cityradius / cellsize_i);
+	static const int gsize = gmid * 2;
+
+	assert((START_SEG_SIZE / cellsize_i) < 100);
+	assert((START_SEG_SIZE_NO_ATMO / cellsize_i) < 100);
+	uint8_t cellgrid[200][200];
+	std::memset(cellgrid, 0, sizeof(cellgrid));
+
+	// calculate the size of the station model
+	const int x1 = floor(aabb.min.x / cellsize);
+	const int x2 = ceil(aabb.max.x / cellsize);
+	const int z1 = floor(aabb.min.z / cellsize);
+	const int z2 = ceil(aabb.max.z / cellsize);
+
+	// Clear the cells where the station is
+	for (int x = 0; x <= gsize; x++) {
+		for (int z = 0; z <= gsize; z++) {
+			const int zz = z - gmid;
+			const int xx = x - gmid;
+			if (zz > z1 && zz < z2 && xx > x1 && xx < x2)
+				cellgrid[x][z] = 1;
 		}
-
-		PutCityBit(rand, m, p1, p2, p3, p4);
 	}
+
+	// precalc orientation transforms (to rotate buildings to face north/south/east/west)
+	matrix4x4d orientcalc[4];
+	orientcalc[0] = m * matrix4x4d::RotateYMatrix(M_PI * 0.5 * 0);
+	orientcalc[1] = m * matrix4x4d::RotateYMatrix(M_PI * 0.5 * 1);
+	orientcalc[2] = m * matrix4x4d::RotateYMatrix(M_PI * 0.5 * 2);
+	orientcalc[3] = m * matrix4x4d::RotateYMatrix(M_PI * 0.5 * 3);
+
+	const double maxdist = pow(gmid + 0.333, 2);
+	for (int x = 0; x <= gsize; x++) {
+		const double distx = pow((x - gmid), 2);
+		for (int z = 0; z <= gsize; z++) {
+			if (cellgrid[x][z] > 0) {
+				// This cell has been allocated for something already
+				continue;
+			}
+			const double distz = pow((z - gmid), 2);
+			if ((distz + distx) > maxdist)
+				continue;
+
+			// fewer and fewer buildings the further from center you get
+			if ((distx + distz) * (1.0 / maxdist) > rand.Double())
+				continue;
+
+			cent = p + mz * ((z - gmid) * cellsize) + mx * ((x - gmid) * cellsize);
+			cent = cent.Normalized();
+
+			const double height = planet->GetTerrainHeight(cent);
+			if ((height - bodyradius) < 0) // don't position below sealevel
+				continue;
+
+			cent = cent * height;
+
+			// quickly get a random building
+			const citybuilding_t &bt = buildings->buildings[rand.Int32(buildings->numBuildings)];
+			const CollMesh *cmesh = bt.collMesh.Get(); // collision mesh
+
+			// rotate the building to face a random direction
+			const int32_t orient = rand.Int32(4);
+			Geom *geom = new Geom(cmesh->GetGeomTree(), orientcalc[orient], cent, this);
+
+			// add it to the list of buildings to render
+			m_buildings.push_back({ bt.instIndex, float(cmesh->GetRadius()), orient, cent, geom });
+		}
+	}
+
 	Aabb buildAABB;
-	for (std::vector<BuildingDef>::const_iterator iter=m_buildings.begin(), itEND=m_buildings.end(); iter != itEND; ++iter) {
+	for (std::vector<BuildingDef>::const_iterator iter = m_buildings.begin(), itEND = m_buildings.end(); iter != itEND; ++iter) {
 		buildAABB.Update((*iter).pos - p);
 	}
-	m_realCentre = buildAABB.min + ((buildAABB.max - buildAABB.min)*0.5);
+	m_realCentre = buildAABB.min + ((buildAABB.max - buildAABB.min) * 0.5);
 	m_clipRadius = buildAABB.GetRadius();
 	AddStaticGeomsToCollisionSpace();
 }
@@ -370,27 +333,35 @@ void CityOnPlanet::Render(Graphics::Renderer *r, const Graphics::Frustum &frustu
 	}
 
 	rot[0] = viewTransform * rot[0];
-	for (int i=1; i<4; i++) {
-		rot[i] = rot[0] * matrix4x4d::RotateYMatrix(M_PI*0.5*double(i));
+	for (int i = 1; i < 4; i++) {
+		rot[i] = rot[0] * matrix4x4d::RotateYMatrix(M_PI * 0.5 * double(i));
 	}
-	for (int i=0; i<4; i++) {
-		for (int e=0; e<16; e++) {
+	for (int i = 0; i < 4; i++) {
+		for (int e = 0; e < 16; e++) {
 			rotf[i][e] = float(rot[i][e]);
+		}
+	}
+
+	// update any idle animations
+	for (Uint32 i = 0; i < s_buildingList.numBuildings; i++) {
+		SceneGraph::Animation *pAnim = s_buildingList.buildings[i].idle;
+		if (pAnim) {
+			pAnim->SetProgress(fmod(pAnim->GetProgress() + (Pi::game->GetTimeStep() / pAnim->GetDuration()), 1.0));
+			pAnim->Interpolate();
 		}
 	}
 
 	Uint32 uCount = 0;
 	std::vector<Uint32> instCount;
-	std::vector< std::vector<matrix4x4f> > transform;
+	std::vector<std::vector<matrix4x4f>> transform;
 	instCount.resize(s_buildingList.numBuildings);
 	transform.resize(s_buildingList.numBuildings);
 	memset(&instCount[0], 0, sizeof(Uint32) * s_buildingList.numBuildings);
-	for(Uint32 i=0; i<s_buildingList.numBuildings; i++) {
+	for (Uint32 i = 0; i < s_buildingList.numBuildings; i++) {
 		transform[i].reserve(m_buildingCounts[i]);
 	}
 
-	for (std::vector<BuildingDef>::const_iterator iter=m_enabledBuildings.begin(), itEND=m_enabledBuildings.end(); iter != itEND; ++iter)
-	{
+	for (std::vector<BuildingDef>::const_iterator iter = m_enabledBuildings.begin(), itEND = m_enabledBuildings.end(); iter != itEND; ++iter) {
 		const vector3d pos = viewTransform * (*iter).pos;
 		const vector3f posf(pos);
 		if (!frustum.TestPoint(pos, (*iter).clipRadius))
@@ -401,14 +372,15 @@ void CityOnPlanet::Render(Graphics::Renderer *r, const Graphics::Frustum &frustu
 
 		// increment the instance count and store the transform
 		instCount[(*iter).instIndex]++;
-		transform[(*iter).instIndex].push_back( _rot );
+		transform[(*iter).instIndex].push_back(_rot);
 
 		++uCount;
 	}
-	
+
 	// render the building models using instancing
-	for(Uint32 i=0; i<s_buildingList.numBuildings; i++) {
-		s_buildingList.buildings[i].resolvedModel->Render(transform[i]);
+	for (Uint32 i = 0; i < s_buildingList.numBuildings; i++) {
+		if (!transform[i].empty())
+			s_buildingList.buildings[i].resolvedModel->Render(transform[i]);
 	}
 
 	r->GetStats().AddToStatCount(Graphics::Stats::STAT_BUILDINGS, uCount);

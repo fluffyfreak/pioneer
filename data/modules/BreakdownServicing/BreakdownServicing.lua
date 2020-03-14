@@ -1,18 +1,22 @@
--- Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
-local Engine = import("Engine")
-local Lang = import("Lang")
-local Game = import("Game")
-local Comms = import("Comms")
-local Event = import("Event")
-local Rand = import("Rand")
-local NameGen = import("NameGen")
-local Format = import("Format")
-local Serializer = import("Serializer")
-local Equipment = import("Equipment")
+local Engine = require 'Engine'
+local Lang = require 'Lang'
+local Game = require 'Game'
+local Comms = require 'Comms'
+local Event = require 'Event'
+local Rand = require 'Rand'
+local NameGen = require 'NameGen'
+local Format = require 'Format'
+local Serializer = require 'Serializer'
+local Equipment = require 'Equipment'
+local Character = require 'Character'
 
 local l = Lang.GetResource("module-breakdownservicing")
+local lui = Lang.GetResource("ui-core")
+
+local pigui = require 'pigui'
 
 -- Default numeric values --
 ----------------------------
@@ -52,6 +56,7 @@ for i = 1,#flavours do
 	local f = flavours[i]
 	f.title     = l["FLAVOUR_" .. i-1 .. "_TITLE"]
 	f.intro     = l["FLAVOUR_" .. i-1 .. "_INTRO"]
+	f.price     = l["FLAVOUR_" .. i-1 .. "_PRICE"]
 	f.yesplease = l["FLAVOUR_" .. i-1 .. "_YESPLEASE"]
 	f.response  = l["FLAVOUR_" .. i-1 .. "_RESPONSE"]
 end
@@ -105,10 +110,16 @@ local onChat = function (form, ref, option)
 	price = price * 10
 
 	-- Replace those tokens into ad's intro text that can change during play
-	message = string.interp(ad.intro, {
-		drive = hyperdrive and hyperdrive:GetName() or "None",
+	local pricesuggestion = string.interp(ad.price, {
+		drive = hyperdrive and hyperdrive:GetName() or lui.NONE,
 		price = Format.Money(price),
 	})
+
+	if not hyperdrive then
+		pricesuggestion = "\n"..l.YOU_DO_NOT_HAVE_A_DRIVE_TO_SERVICE
+	end
+
+	local message = ad.intro..pricesuggestion
 
 	if option == -1 then
 		-- Hang up
@@ -119,7 +130,7 @@ local onChat = function (form, ref, option)
 	if option == 0 then
 		-- Initial proposal
 		form:SetTitle(ad.title)
-		form:SetFace({ female = ad.isfemale, seed = ad.faceseed, name = ad.name })
+		form:SetFace(Character.New({ female = ad.isfemale, seed = ad.faceseed, name = ad.name }))
 		-- Replace token with details of last service (which might have
 		-- been seconds ago)
 		form:SetMessage(string.interp(message, {
@@ -139,7 +150,7 @@ local onChat = function (form, ref, option)
 		-- Yes please, service my engine
 		form:Clear()
 		form:SetTitle(ad.title)
-		form:SetFace({ female = ad.isfemale, seed = ad.faceseed, name = ad.name })
+		form:SetFace(Character.New({ female = ad.isfemale, seed = ad.faceseed, name = ad.name }))
 		if Game.player:GetMoney() >= price then -- We did check earlier, but...
 			-- Say thanks
 			form:SetMessage(ad.response)
@@ -190,6 +201,7 @@ local onCreateBB = function (station)
 			name = station.label,
 			proprietor = name,
 		}),
+		price = flavours[n].price,
 		yesplease = flavours[n].yesplease,
 		response = flavours[n].response,
 		station = station,
@@ -218,7 +230,7 @@ local onGameStart = function ()
 			service_period = oneyear, -- default
 			jumpcount = 0, -- Number of jumps made after the service_period
 		}
-	else
+	elseif loaded_data.ads then
 		for k,ad in pairs(loaded_data.ads) do
 		local ref = ad.station:AddAdvert({
 			description = ad.title,
@@ -243,31 +255,45 @@ end
 
 local onEnterSystem = function (ship)
 	if ship:IsPlayer() then
-		print(('DEBUG: Jumps since warranty: %d, chance of failure (if > 0): 1/%d\nWarranty expires: %s'):format(service_history.jumpcount,max_jumps_unserviced-service_history.jumpcount,Format.Date(service_history.lastdate + service_history.service_period)))
+		print(('DEBUG: Jumps since warranty: %d\nWarranty expires: %s'):format(service_history.jumpcount,Format.Date(service_history.lastdate + service_history.service_period)))
 	else
 		return -- Don't care about NPC ships
 	end
-	local saved_by_this_guy = savedByCrew(ship)
-	if (service_history.lastdate + service_history.service_period < Game.time) and not saved_by_this_guy then
+
+	-- Jump drive is getting worn and is running down
+	if (service_history.lastdate + service_history.service_period < Game.time) then
 		service_history.jumpcount = service_history.jumpcount + 1
-		if (service_history.jumpcount > max_jumps_unserviced) or (Engine.rand:Integer(max_jumps_unserviced - service_history.jumpcount) == 0) then
+	end
+
+	-- Test if the engine will actually break
+	if Engine.rand:Number() < service_history.jumpcount / max_jumps_unserviced then
+		print("Player hyperdrive is breaking down!")
+
+		-- The more engineers the more likely to be saved (rule doesn't apply to cooking):
+		local crew_to_the_rescue = savedByCrew(ship)
+
+		if crew_to_the_rescue then
+			-- Brag to the player
+			if crew_to_the_rescue.player then
+				Comms.Message(l.YOU_FIXED_THE_HYPERDRIVE_BEFORE_IT_BROKE_DOWN)
+			else
+				Comms.Message(l.I_FIXED_THE_HYPERDRIVE_BEFORE_IT_BROKE_DOWN,crew_to_the_rescue.name)
+			end
+			-- Rewind the servicing countdown by a random amount based on crew member's ability
+			local fixup = math.max(0, crew_to_the_rescue.engineering - crew_to_the_rescue.DiceRoll())
+			service_history.jumpcount = service_history.jumpcount - fixup
+		else
 			-- Destroy the engine
 			local engine = ship:GetEquip('engine',1)
+			if engine.fuel == Equipment.cargo.military_fuel then
+				pigui.playSfx("Hyperdrive_Breakdown_Military", 1.0, 1.0)
+			else
+				pigui.playSfx("Hyperdrive_Breakdown", 1.0, 1.0)
+			end
 			ship:RemoveEquip(engine)
 			ship:AddEquip(Equipment.cargo.rubbish, engine.capabilities.mass)
 			Comms.Message(l.THE_SHIPS_HYPERDRIVE_HAS_BEEN_DESTROYED_BY_A_MALFUNCTION)
 		end
-	end
-	if saved_by_this_guy then
-		-- Brag to the player
-		if saved_by_this_guy.player then
-			Comms.Message(l.YOU_FIXED_THE_HYPERDRIVE_BEFORE_IT_BROKE_DOWN)
-		else
-			Comms.Message(l.I_FIXED_THE_HYPERDRIVE_BEFORE_IT_BROKE_DOWN,saved_by_this_guy.name)
-		end
-		-- Rewind the servicing countdown by a random amount based on crew member's ability
-		local fixup = saved_by_this_guy.engineering - saved_by_this_guy.DiceRoll()
-		if fixup > 0 then service_history.jumpcount = service_history.jumpcount - fixup end
 	end
 end
 

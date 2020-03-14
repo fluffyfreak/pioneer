@@ -1,23 +1,24 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Button.h"
-#include "LuaObject.h"
+#include "lua/LuaObject.h"
 
 namespace UI {
 
-class LuaButton {
-public:
+	class LuaButton {
+	public:
+	};
 
-};
-
-}
+} // namespace UI
 
 using namespace UI;
 
-template <> const char *LuaObject<UI::Button>::s_type = "UI.Button";
+template <>
+const char *LuaObject<UI::Button>::s_type = "UI.Button";
 
-template <> void LuaObject<UI::Button>::RegisterClass()
+template <>
+void LuaObject<UI::Button>::RegisterClass()
 {
 	static const char *l_parent = "UI.Single";
 

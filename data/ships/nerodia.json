@@ -23,8 +23,18 @@
       "scoop" : 2,
       "laser_front" : 1,
       "laser_rear" : 1,
-      "missile" : 4
+      "missile" : 4,
+      "sensor"  : 4
+   },
+   "roles" : {
+      "merchant" : true,
+      "mercenary" : true
    },
    "thruster_fuel_use" : -1.0,
-   "up_thrust" : 50000000.0
+   "up_thrust" : 50000000.0,
+   "front_cross_section" : 210,
+   "side_cross_section" : 358,
+   "top_cross_section" : 810,
+   "lift_coeff" : 0,
+   "aero_stability" : 0.55
 }

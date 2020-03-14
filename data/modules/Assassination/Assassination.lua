@@ -1,25 +1,25 @@
--- Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
-local Engine = import("Engine")
-local Lang = import("Lang")
-local Game = import("Game")
-local Space = import("Space")
-local Comms = import("Comms")
-local Timer = import("Timer")
-local Event = import("Event")
-local Mission = import("Mission")
-local Rand = import("Rand")
-local NameGen = import("NameGen")
-local Character = import("Character")
-local Format = import("Format")
-local Serializer = import("Serializer")
-local Equipment = import("Equipment")
-local ShipDef = import("ShipDef")
-local Ship = import("Ship")
-local utils = import("utils")
+local Engine = require 'Engine'
+local Lang = require 'Lang'
+local Game = require 'Game'
+local Space = require 'Space'
+local Comms = require 'Comms'
+local Timer = require 'Timer'
+local Event = require 'Event'
+local Mission = require 'Mission'
+local NameGen = require 'NameGen'
+local Character = require 'Character'
+local Format = require 'Format'
+local Serializer = require 'Serializer'
+local Equipment = require 'Equipment'
+local ShipDef = require 'ShipDef'
+local Ship = require 'Ship'
+local utils = require 'utils'
 
 local InfoFace = import("ui/InfoFace")
+local NavButton = import("ui/NavButton")
 
 local l = Lang.GetResource("module-assassination")
 
@@ -58,7 +58,7 @@ local onDelete = function (ref)
 end
 
 local isEnabled = function (ref)
-	return isQualifiedFor(Character.persistent.player.reputation, Character.persistent.player.killcount, ads[ref])
+	return ads[ref] ~= nil and isQualifiedFor(Character.persistent.player.reputation, Character.persistent.player.killcount, ads[ref])
 end
 
 local onChat = function (form, ref, option)
@@ -81,12 +81,14 @@ local onChat = function (form, ref, option)
 		return
 	end
 
+	form:AddNavButton(ad.location)
+
 	if option == 0 then
 		local sys = ad.location:GetStarSystem()
 
 		local introtext = string.interp(flavours[ad.flavour].introtext, {
 			name	= ad.client.name,
-			cash	= Format.Money(ad.reward),
+			cash	= Format.Money(ad.reward,false),
 			target	= ad.target,
 			system	= sys.name,
 		})
@@ -116,8 +118,7 @@ local onChat = function (form, ref, option)
 		form:SetMessage(string.interp(l.IT_MUST_BE_DONE_AFTER, {
 		  target    = ad.target,
 		  spaceport = sbody.name,
-      })
-    )
+		}))
 
 	elseif option == 3 then
 		local backstation = Game.player:GetDockedWith().path
@@ -171,10 +172,11 @@ local makeAdvert = function (station)
 	local nearbystations = nearbysystem:GetStationPaths()
 	local location = nearbystations[Engine.rand:Integer(1,#nearbystations)]
 	local dist = location:DistanceTo(Game.system)
-	local time = Engine.rand:Number(0.3, 3)
-	local due = Game.time + Engine.rand:Number(7*60*60*24, time * 31*60*60*24)
+	local time = Engine.rand:Number(1, 4)
+	local due = Game.time + dist / max_ass_dist * time * 22*60*60*24 + Engine.rand:Number(7*60*60*24, 31*60*60*24)
 	local danger = Engine.rand:Integer(1,4)
 	local reward = Engine.rand:Number(2100, 7000) * danger
+	reward = math.ceil(reward)
 
 	-- XXX hull mass is a bad way to determine suitability for role
 	--local shipdefs = utils.build_array(utils.filter(function (k,def) return def.tag == 'SHIP' and def.hullMass >= (danger * 17) and def.equipSlotCapacity.ATMOSHIELD > 0 end, pairs(ShipDef)))
@@ -189,7 +191,6 @@ local makeAdvert = function (station)
 		due = due,
 		faceseed = Engine.rand:Integer(),
 		flavour = flavour,
-		isfemale = isfemale,
 		location = location,
 		dist = dist,
 		reward = reward,
@@ -332,7 +333,7 @@ local onShipDocked = function (ship, station)
 			   mission.backstation == station.path then
 				local text = string.interp(flavours[mission.flavour].successmsg, {
 					target	= mission.target,
-					cash	= Format.Money(mission.reward),
+					cash	= Format.Money(mission.reward,false),
 				})
 				Comms.ImportantMessage(text, mission.client.name)
 				ship:AddMoney(mission.reward)
@@ -358,7 +359,11 @@ local onShipDocked = function (ship, station)
 			Event.Queue("onReputationChanged", oldReputation, Character.persistent.player.killcount,
 				Character.persistent.player.reputation, Character.persistent.player.killcount)
 		else
-			if mission.ship == ship then
+			-- Fail occurs when mission ship either lands or jumps,
+			-- after taking off at said mission time point. Spawned
+			-- docked ship will trigger an onShipDocked event, thus
+			-- check mission.due
+			if mission.ship == ship and mission.due < Game.time then
 				mission.status = 'FAILED'
 			end
 		end
@@ -452,12 +457,12 @@ local onGameStart = function ()
 	ads = {}
 	missions = {}
 
-	if not loaded_data then return end
+	if not loaded_data or not loaded_data.ads then return end
 
 	for k,ad in pairs(loaded_data.ads) do
 		local ref = ad.station:AddAdvert({
 			description = ad.desc,
-		    icon        = "assassination",
+			icon        = "assassination",
 			onChat      = onChat,
 			onDelete    = onDelete,
 			isEnabled   = isEnabled})
@@ -480,7 +485,7 @@ local onClick = function (mission)
 														name   = mission.client.name,
 														target = mission.target,
 														system = mission.location:GetStarSystem().name,
-														cash   = Format.Money(mission.reward),
+														cash   = Format.Money(mission.reward,false),
 														dist  = dist})
 										),
 										ui:Margin(10),
@@ -517,6 +522,8 @@ local onClick = function (mission)
 													ui:MultiLineText(mission.location:GetStarSystem().name.." ("..mission.location.sectorX..","..mission.location.sectorY..","..mission.location.sectorZ..")")
 												})
 											}),
+										NavButton.New(l.SET_AS_TARGET, mission.location),
+										NavButton.New(l.SET_RETURN_ROUTE, mission.backstation),
 										ui:Grid(2,1)
 											:SetColumn(0, {
 												ui:VBox():PackEnd({

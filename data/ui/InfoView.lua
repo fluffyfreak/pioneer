@@ -1,4 +1,4 @@
--- Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 local Engine = import("Engine")
@@ -7,12 +7,13 @@ local Event = import("Event")
 
 local TabView = import("ui/TabView")
 
-local shipInfo        = import("InfoView/ShipInfo")
-local personalInfo    = import("InfoView/PersonalInfo")
-local econTrade       = import("InfoView/EconTrade")
-local missions        = import("InfoView/Missions")
-local crewRoster      = import("InfoView/CrewRoster")
-local orbitalAnalysis = import("InfoView/OrbitalAnalysis")
+local shipInfo        = import("ui/InfoView/ShipInfo")
+local econTrade       = import("ui/InfoView/EconTrade")
+local missions        = import("ui/InfoView/Missions")
+local crewRoster      = import("ui/InfoView/CrewRoster")
+local orbitalAnalysis = import("ui/InfoView/OrbitalAnalysis")
+
+local piInfoView = import("pigui/views/info-view")
 
 local ui = Engine.ui
 local l = Lang.GetResource("ui-core");
@@ -27,12 +28,14 @@ ui.templates.InfoView = function (args)
 	tabGroup = TabView.New()
 
 	tabGroup:AddTab({ id = "shipInfo",        title = l.SHIP_INFORMATION,     icon = "Satellite", template = shipInfo         })
-	tabGroup:AddTab({ id = "personalInfo",    title = l.PERSONAL_INFORMATION, icon = "User",      template = personalInfo     })
 	tabGroup:AddTab({ id = "econTrade",       title = l.ECONOMY_TRADE,      icon = "Cart",      template = econTrade,       })
 	tabGroup:AddTab({ id = "missions",        title = l.MISSIONS,             icon = "Star",      template = missions,        })
 	tabGroup:AddTab({ id = "crew",            title = l.CREW_ROSTER,          icon = "Agenda",    template = crewRoster,      })
 	--tabGroup:AddTab({ id = "orbitalAnalysis", title = l.ORBITAL_ANALYSIS,     icon = "Planet",    template = orbitalAnalysis, })
 
+	tabGroup.header:Hide()
+	tabGroup.outerBody:Hide()
+	piInfoView.legacyTabView = tabGroup
 	return tabGroup.widget
 end
 

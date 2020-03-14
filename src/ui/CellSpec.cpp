@@ -1,24 +1,25 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "CellSpec.h"
-#include "LuaObject.h"
+#include "lua/LuaObject.h"
 
 namespace UI {
 
-CellSpec CellSpec::FromLuaTable(lua_State *l, int idx) {
-	const int table = lua_absindex(l, idx);
-	assert(lua_istable(l, table));
+	CellSpec CellSpec::FromLuaTable(lua_State *l, int idx)
+	{
+		const int table = lua_absindex(l, idx);
+		assert(lua_istable(l, table));
 
-	const int len = lua_rawlen(l, table);
-	std::vector<float> cellPercent(len);
-	for (int i = 0; i < len; i++) {
-		lua_rawgeti(l, table, i+1);
-		cellPercent[i] = luaL_checknumber(l, -1);
-		lua_pop(l, 1);
+		const int len = lua_rawlen(l, table);
+		std::vector<float> cellPercent(len);
+		for (int i = 0; i < len; i++) {
+			lua_rawgeti(l, table, i + 1);
+			cellPercent[i] = luaL_checknumber(l, -1);
+			lua_pop(l, 1);
+		}
+
+		return CellSpec(cellPercent);
 	}
 
-	return CellSpec(cellPercent);
-}
-
-}
+} // namespace UI

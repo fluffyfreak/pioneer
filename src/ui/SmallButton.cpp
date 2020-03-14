@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "SmallButton.h"
@@ -7,26 +7,28 @@
 
 namespace UI {
 
-Point SmallButton::PreferredSize()
-{
-	return GetContext()->GetSkin().CheckboxNormal().size;
-}
+	Point SmallButton::PreferredSize()
+	{
+		return GetContext()->GetSkin().CheckboxNormal().size;
+	}
 
-void SmallButton::Layout()
-{
-	SetActiveArea(PreferredSize());
-}
+	void SmallButton::Layout()
+	{
+		SetActiveArea(PreferredSize());
+	}
 
-void SmallButton::Draw()
-{
-	if (IsDisabled())
-		GetContext()->GetSkin().DrawSmallButtonDisabled(GetActiveOffset(), GetActiveArea());
-	else if (IsMouseActive())
-		GetContext()->GetSkin().DrawSmallButtonActive(GetActiveOffset(), GetActiveArea());
-	else if (IsMouseOver())
-		GetContext()->GetSkin().DrawSmallButtonHover(GetActiveOffset(), GetActiveArea());
-	else
-		GetContext()->GetSkin().DrawSmallButtonNormal(GetActiveOffset(), GetActiveArea());
-}
+	void SmallButton::Draw()
+	{
+		if (IsDisabled())
+			GetContext()->GetSkin().DrawSmallButtonDisabled(GetActiveOffset(), GetActiveArea());
+		else if (IsHidden())
+			GetContext()->GetSkin().DrawSmallButtonHidden(GetActiveOffset(), GetActiveArea());
+		else if (IsMouseActive())
+			GetContext()->GetSkin().DrawSmallButtonActive(GetActiveOffset(), GetActiveArea());
+		else if (IsMouseOver())
+			GetContext()->GetSkin().DrawSmallButtonHover(GetActiveOffset(), GetActiveArea());
+		else
+			GetContext()->GetSkin().DrawSmallButtonNormal(GetActiveOffset(), GetActiveArea());
+	}
 
-}
+} // namespace UI

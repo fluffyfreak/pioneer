@@ -1,40 +1,62 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _PROJECTILE_H
 #define _PROJECTILE_H
 
-#include "libs.h"
 #include "Body.h"
-#include "graphics/Material.h"
-#include "graphics/RenderState.h"
+
+struct ProjectileData {
+	ProjectileData() :
+		lifespan(0.0f),
+		damage(0.0f),
+		length(0.0f),
+		width(0.0f),
+		speed(0.0f),
+		color(Color::WHITE),
+		mining(false),
+		beam(false) {}
+	float lifespan;
+	float damage;
+	float length;
+	float width;
+	float speed;
+	Color color;
+	bool mining;
+	bool beam;
+};
 
 class Frame;
-namespace Graphics {
-	class Renderer;
-	class VertexArray;
-}
 
-class Projectile: public Body {
+namespace Graphics {
+	class Material;
+	class Renderer;
+	class RenderState;
+	class VertexArray;
+} // namespace Graphics
+
+class Projectile : public Body {
 public:
 	OBJDEF(Projectile, Body, PROJECTILE);
 
-	static void Add(Body *parent, float lifespan, float dam, float length, float width, bool mining, const Color& color, const vector3d &pos, const vector3d &baseVel, const vector3d &dirVel);
+	static void Add(Body *parent, float lifespan, float dam, float length, float width, bool mining, const Color &color, const vector3d &pos, const vector3d &baseVel, const vector3d &dirVel);
+	static void Add(Body *parent, const ProjectileData &prData, const vector3d &pos, const vector3d &baseVel, const vector3d &dirVel);
 
-	Projectile();
+	Projectile() = delete;
+	Projectile(Body *parent, const ProjectileData &prData, const vector3d &pos, const vector3d &baseVel, const vector3d &dirVel);
+	Projectile(const Json &jsonObj, Space *space);
 	virtual ~Projectile();
-	virtual void Render(Graphics::Renderer *r, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform);
-	void TimeStepUpdate(const float timeStep);
-	void StaticUpdate(const float timeStep);
-	virtual void NotifyRemoved(const Body* const removedBody);
-	virtual void UpdateInterpTransform(double alpha);
-	virtual void PostLoadFixup(Space *space);
+	virtual void Render(Graphics::Renderer *r, const Camera *camera, const vector3d &viewCoords, const matrix4x4d &viewTransform) override final;
+	void TimeStepUpdate(const float timeStep) override final;
+	void StaticUpdate(const float timeStep) override final;
+	virtual void NotifyRemoved(const Body *const removedBody) override final;
+	virtual void UpdateInterpTransform(double alpha) override final;
+	virtual void PostLoadFixup(Space *space) override final;
 
 	static void FreeModel();
 
 protected:
-	virtual void SaveToJson(Json::Value &jsonObj, Space *space);
-	virtual void LoadFromJson(const Json::Value &jsonObj, Space *space);
+	virtual void SaveToJson(Json &jsonObj, Space *space) override final;
 
 private:
 	float GetDamage() const;

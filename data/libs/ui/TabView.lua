@@ -1,7 +1,7 @@
--- Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
-local Engine = import("Engine")
+local Engine = require 'Engine'
 
 local normalColor = { r=0.5, g=0.5, b=0.5, a=1.0 }
 local hoverColor  = { r=0.8, g=0.8, b=0.8, a=1.0 }
@@ -30,20 +30,21 @@ function TabView.New ()
 	self.titleArea = ui:Expand("HORIZONTAL"):SetInnerWidget(ui:Align("RIGHT"):SetInnerWidget(self.title))
 	self.body      = ui:Expand()
 	self.footer    = ui:Margin(0)
+	self.outerBody = ui:Margin(5):SetInnerWidget(
+		ui:Background():SetInnerWidget(
+			ui:VBox():PackEnd({
+				self.body,
+				self.footer
+			})
+		)
+	)
 
 	self.widget =
 		ui:VBox():PackEnd({
 			ui:Margin(5):SetInnerWidget(
 				ui:HBox():PackEnd(self.header)
 			),
-			ui:Margin(5):SetInnerWidget(
-				ui:Background():SetInnerWidget(
-					ui:VBox():PackEnd({
-						self.body,
-						self.footer
-					})
-				)
-			)
+			self.outerBody
 		})
 
 	setmetatable(self, {

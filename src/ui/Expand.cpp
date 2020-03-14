@@ -1,15 +1,15 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Expand.h"
 
 namespace UI {
 
-Point Expand::PreferredSize()
-{
-	const Point innerPreferredSize(GetInnerWidget() ? GetInnerWidget()->CalcLayoutContribution() : Point());
+	Point Expand::PreferredSize()
+	{
+		const Point innerPreferredSize(GetInnerWidget() ? GetInnerWidget()->CalcLayoutContribution() : Point());
 
-	switch (m_direction) {
+		switch (m_direction) {
 		case BOTH:
 			SetSizeControlFlags(EXPAND_WIDTH | EXPAND_HEIGHT);
 			break;
@@ -19,9 +19,9 @@ Point Expand::PreferredSize()
 		case VERTICAL:
 			SetSizeControlFlags(EXPAND_HEIGHT);
 			break;
+		}
+
+		return innerPreferredSize;
 	}
 
-	return innerPreferredSize;
-}
-
-}
+} // namespace UI

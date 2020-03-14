@@ -1,14 +1,15 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "TerrainBody.h"
+
+#include "Frame.h"
+#include "GameSaveError.h"
 #include "GasGiant.h"
 #include "GeoSphere.h"
-#include "Pi.h"
-#include "WorldView.h"
-#include "Frame.h"
-#include "Game.h"
-#include "graphics/Graphics.h"
+#include "Json.h"
+#include "Space.h"
+#include "galaxy/SystemBody.h"
 #include "graphics/Renderer.h"
 
 TerrainBody::TerrainBody(SystemBody *sbody) :
@@ -17,13 +18,6 @@ TerrainBody::TerrainBody(SystemBody *sbody) :
 	m_mass(0)
 {
 	InitTerrainBody();
-}
-
-TerrainBody::TerrainBody() :
-	Body(),
-	m_sbody(0),
-	m_mass(0)
-{
 }
 
 TerrainBody::~TerrainBody()
@@ -36,7 +30,7 @@ void TerrainBody::InitTerrainBody()
 	assert(m_sbody);
 	m_mass = m_sbody->GetMass();
 	if (!m_baseSphere) {
-		if ( SystemBody::SUPERTYPE_GAS_GIANT==m_sbody->GetSuperType() ) {
+		if (SystemBody::SUPERTYPE_GAS_GIANT == m_sbody->GetSuperType()) {
 			m_baseSphere.reset(new GasGiant(m_sbody));
 		} else {
 			m_baseSphere.reset(new GeoSphere(m_sbody));
@@ -45,27 +39,29 @@ void TerrainBody::InitTerrainBody()
 	m_maxFeatureHeight = (m_baseSphere->GetMaxFeatureHeight() + 1.0) * m_sbody->GetRadius();
 }
 
-void TerrainBody::SaveToJson(Json::Value &jsonObj, Space *space)
+void TerrainBody::SaveToJson(Json &jsonObj, Space *space)
 {
 	Body::SaveToJson(jsonObj, space);
 
-	Json::Value terrainBodyObj(Json::objectValue); // Create JSON object to contain terrain body data.
+	Json terrainBodyObj({}); // Create JSON object to contain terrain body data.
 
 	terrainBodyObj["index_for_system_body"] = space->GetIndexForSystemBody(m_sbody);
 
 	jsonObj["terrain_body"] = terrainBodyObj; // Add terrain body object to supplied object.
 }
 
-void TerrainBody::LoadFromJson(const Json::Value &jsonObj, Space *space)
+TerrainBody::TerrainBody(const Json &jsonObj, Space *space) :
+	Body(jsonObj, space)
 {
-	Body::LoadFromJson(jsonObj, space);
 
-	if (!jsonObj.isMember("terrain_body")) throw SavedGameCorruptException();
-	Json::Value terrainBodyObj = jsonObj["terrain_body"];
+	try {
+		Json terrainBodyObj = jsonObj["terrain_body"];
 
-	if (!terrainBodyObj.isMember("index_for_system_body")) throw SavedGameCorruptException();
+		m_sbody = space->GetSystemBodyByIndex(terrainBodyObj["index_for_system_body"]);
+	} catch (Json::type_error &) {
+		throw SavedGameCorruptException();
+	}
 
-	m_sbody = space->GetSystemBodyByIndex(terrainBodyObj["index_for_system_body"].asInt());
 	InitTerrainBody();
 }
 
@@ -78,36 +74,38 @@ void TerrainBody::Render(Graphics::Renderer *renderer, const Camera *camera, con
 	float znear, zfar;
 	renderer->GetNearFarRange(znear, zfar);
 
-	double len = fpos.Length();
-	//objects very far away are downscaled, because they cannot be
+	//stars very far away are downscaled, because they cannot be
 	//accurately drawn using actual distances
 	int shrink = 0;
-	double scale = 1.0f;
+	if (m_sbody->GetSuperType() == SystemBody::SUPERTYPE_STAR) {
+		double len = fpos.Length();
+		double dist_to_horizon;
+		for (;;) {
+			if (len < rad) // player inside radius case
+				break;
 
-	double dist_to_horizon;
-	for (;;) {
-		if (len < rad) break;		// player inside radius case
-		dist_to_horizon = sqrt(len*len - rad*rad);
+			dist_to_horizon = sqrt(len * len - rad * rad);
 
-		if (dist_to_horizon < zfar*0.5) break;
+			if (dist_to_horizon < zfar * 0.5)
+				break;
 
-		rad *= 0.25;
-		fpos = 0.25*fpos;
-		len *= 0.25;
-		scale *= 4.0f;
-		++shrink;
+			rad *= 0.25;
+			fpos = 0.25 * fpos;
+			len *= 0.25;
+			++shrink;
+		}
 	}
 
 	vector3d campos = fpos;
 	ftran.ClearToRotOnly();
-	campos = ftran.Inverse() * campos;
+	campos = campos * ftran;
 
-	campos = campos * (1.0/rad);		// position of camera relative to planet "model"
+	campos = campos * (1.0 / rad); // position of camera relative to planet "model"
 
 	std::vector<Camera::Shadow> shadows;
-	if( camera ) {
+	if (camera) {
 		camera->PrincipalShadows(this, 3, shadows);
-		for (std::vector<Camera::Shadow>::iterator it = shadows.begin(), itEnd=shadows.end(); it!=itEnd; ++it) {
+		for (std::vector<Camera::Shadow>::iterator it = shadows.begin(), itEnd = shadows.end(); it != itEnd; ++it) {
 			it->centre = ftran * it->centre;
 		}
 	}
@@ -115,25 +113,28 @@ void TerrainBody::Render(Graphics::Renderer *renderer, const Camera *camera, con
 	ftran.Scale(rad, rad, rad);
 
 	// translation not applied until patch render to fix jitter
-	m_baseSphere->Render(renderer, ftran, -campos, m_sbody->GetRadius(), scale, shadows);
+	m_baseSphere->Render(renderer, ftran, -campos, m_sbody->GetRadius(), shadows);
 
 	ftran.Translate(campos.x, campos.y, campos.z);
 	SubRender(renderer, ftran, campos);
 
-	//clear depth buffer, shrunk objects should not interact
-	//with foreground
+	//clear depth buffer, shrunken objects should not interact with foreground
 	if (shrink)
 		renderer->ClearDepthBuffer();
 }
 
-void TerrainBody::SetFrame(Frame *f)
+void TerrainBody::SetFrame(FrameId fId)
 {
-	if (GetFrame()) {
-		GetFrame()->SetPlanetGeom(0, 0);
-	}
-	Body::SetFrame(f);
+	Frame *f = Frame::GetFrame(GetFrame());
+
 	if (f) {
-		GetFrame()->SetPlanetGeom(0, 0);
+		f->SetPlanetGeom(0, nullptr);
+	}
+	Body::SetFrame(fId);
+
+	f = Frame::GetFrame(fId);
+	if (f) {
+		f->SetPlanetGeom(0, nullptr);
 	}
 }
 
@@ -148,14 +149,9 @@ double TerrainBody::GetTerrainHeight(const vector3d &pos_) const
 	}
 }
 
-bool TerrainBody::IsSuperType(SystemBody::BodySuperType t) const
-{
-	if (!m_sbody) return false;
-	else return m_sbody->GetSuperType() == t;
-}
-
-//static 
+//static
 void TerrainBody::OnChangeDetailLevel()
 {
 	GeoSphere::OnChangeDetailLevel();
+	GasGiant::OnChangeDetailLevel();
 }

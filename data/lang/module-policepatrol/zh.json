@@ -1,0 +1,74 @@
+{
+  "ILLEGAL_GOODS_DETECTED": {
+    "description": "",
+    "message": "检测到违法货物. "
+  },
+  "INITIATE_CARGO_SCAN_1": {
+    "description": "",
+    "message": "开始货物扫描. "
+  },
+  "INITIATE_CARGO_SCAN_2": {
+    "description": "",
+    "message": "请保持你的速度和航向以方便我们进行货物扫描. "
+  },
+  "INITIATE_CARGO_SCAN_3": {
+    "description": "",
+    "message": "开始走私物搜索. "
+  },
+  "NOTHING_DETECTED": {
+    "description": "",
+    "message": "未发现违法货物. 你可以走了. "
+  },
+  "OUTLAW_DETECTED_1": {
+    "description": "",
+    "message": "{ship_label} 是由一个已知的不法分子驾驶的。消灭他！"
+  },
+  "OUTLAW_DETECTED_2": {
+    "description": "",
+    "message": "强盗，你的死期到了！"
+  },
+  "OUTLAW_DETECTED_3": {
+    "description": "",
+    "message": "哈，被截住了！你逃不出这个系统的！"
+  },
+  "POLICE_TAUNT_1": {
+    "description": "",
+    "message": "伙计, 这是个坏主意! "
+  },
+  "POLICE_TAUNT_2": {
+    "description": "",
+    "message": "走私犯, 你会付出代价的! "
+  },
+  "POLICE_TAUNT_3": {
+    "description": "",
+    "message": "愚蠢的罪恶是不可饶恕的! "
+  },
+  "RESPECT_THE_LAW_1": {
+    "description": "",
+    "message": "请遵守法律! 在 {system} 星系, 违法行为是不可饶恕的! "
+  },
+  "RESPECT_THE_LAW_2": {
+    "description": "",
+    "message": "您已进入 {system} 星系, 请遵守当地法律! "
+  },
+  "TAKE_A_HIKE": {
+    "description": "",
+    "message": "好, 这次算你过关了, 赶快滚吧! "
+  },
+  "TARGET_DESTROYED_1": {
+    "description": "",
+    "message": "目标被摧毁！"
+  },
+  "TARGET_DESTROYED_2": {
+    "description": "",
+    "message": "好啊！"
+  },
+  "TARGET_DESTROYED_3": {
+    "description": "",
+    "message": "好好休息！哈哈。"
+  },
+  "TARGET_DESTROYED_4": {
+    "description": "",
+    "message": "又一个人完蛋了!"
+  }
+}

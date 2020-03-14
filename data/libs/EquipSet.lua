@@ -1,8 +1,8 @@
--- Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
-local utils = import("utils")
-local Serializer = import("Serializer")
+local utils = require 'utils'
+local Serializer = require 'Serializer'
 --
 -- Class: EquipSet
 --
@@ -16,8 +16,8 @@ EquipSet.default = {
 	laser_rear=0,
 	missile=0,
 	ecm=1,
-	scanner=1,
 	radar=1,
+	target_scanner=1,
 	hypercloud=1,
 	hull_autorepair=1,
 	energy_booster=1,
@@ -28,7 +28,9 @@ EquipSet.default = {
 	laser_cooler=1,
 	cargo_life_support=1,
 	autopilot=1,
-	trade_analyzer=1,
+	trade_computer=1,
+	sensor = 8,
+	thruster = 1
 }
 
 function EquipSet.New (slots)
@@ -283,7 +285,7 @@ end
 --  removed - the number of pieces actually removed.
 --
 function EquipSet:Remove(ship, item, num, slot)
-	local num = num or 1
+	num = num or 1
 	if not slot then
 		slot = item:GetDefaultSlot(ship)
 	end

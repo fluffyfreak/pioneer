@@ -1,4 +1,4 @@
--- Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 -- Create a news event on the BBS (to do: place it on
@@ -23,14 +23,14 @@ local copyTable = function(T)
 	return t2
 end
 
-local Comms = import("Comms")
-local Engine = import("Engine")
-local Lang = import("Lang")
-local Game = import("Game")
-local Event = import("Event")
-local Format = import("Format")
-local Serializer = import("Serializer")
-local Equipment = import ("Equipment")
+local Comms = require 'Comms'
+local Engine = require 'Engine'
+local Lang = require 'Lang'
+local Game = require 'Game'
+local Event = require 'Event'
+local Format = require 'Format'
+local Serializer = require 'Serializer'
+local Equipment = require 'Equipment'
 
 local l = Lang.GetResource("module-newseventcommodity")
 
@@ -144,7 +144,7 @@ local onChat = function (form, ref, option)
 	local faction = ad.n.syspath:GetStarSystem().faction.name
 
 	local newspaper
-	if faction == "Federation" then
+	if faction == "Solar Federation" then
 		newspaper = l.NEWSPAPER_FED
 	elseif faction == "Commonwealth of Independent Worlds" then
 		newspaper = l.NEWSPAPER_CIW
@@ -346,7 +346,7 @@ local onShipDocked = function (ship, station)
 		-- if this is the system of the news
 		if currentSystem:IsSameSystem(n.syspath) then
 			-- send a grateful greeting from the station if the player cargo is right
-			if ship:CountEquip(n.cargo, cargo) > 0 and n.demand > 0 then
+			if ship:CountEquip(n.cargo, "cargo") > 0 and n.demand > 0 then
 				local greeting = string.interp(l["GRATEFUL_GREETING_"..Engine.rand:Integer(0,maxIndexOfGreetings)],
 					{cargo = n.cargo:GetName()})
 				Comms.Message(greeting)
@@ -380,7 +380,7 @@ local onGameStart = function ()
 	ads = {}
 	news = {}
 
-	if not loadedData then return end
+	if not loadedData or not loadedData.ads then return end
 
 	for k,ad in pairs(loadedData.ads) do
 		local ref = ad.station:AddAdvert(

@@ -1,71 +1,89 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright Â© 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
-#ifndef GL2_VERTEXBUFFER_H
-#define GL2_VERTEXBUFFER_H
+#ifndef OGL_VERTEXBUFFER_H
+#define OGL_VERTEXBUFFER_H
+#include "OpenGLLibs.h"
 #include "graphics/VertexBuffer.h"
 
-namespace Graphics { namespace OGL {
+namespace Graphics {
+	namespace OGL {
 
-class GLBufferBase {
-public:
-	GLuint GetBuffer() const { return m_buffer; }
+		class GLBufferBase {
+		public:
+			GLBufferBase() :
+				m_written(false) {}
+			GLuint GetBuffer() const { return m_buffer; }
 
-protected:
-	GLuint m_buffer;
-};
+		protected:
+			GLuint m_buffer;
+			bool m_written; // to check for invalid data rendering
+		};
 
-class VertexBuffer : public Graphics::VertexBuffer, public GLBufferBase {
-public:
-	VertexBuffer(const VertexBufferDesc&);
-	~VertexBuffer();
+		class VertexBuffer : public Graphics::VertexBuffer, public GLBufferBase {
+		public:
+			VertexBuffer(const VertexBufferDesc &);
+			~VertexBuffer();
 
-	virtual void Unmap() override;
+			virtual void Unmap() override final;
 
-	// copies the contents of the VertexArray into the buffer
-	virtual bool Populate(const VertexArray &) override;
-	
-	virtual void Bind() override;
-	virtual void Release() override;
+			// copies the contents of the VertexArray into the buffer
+			virtual bool Populate(const VertexArray &) override final;
 
-protected:
-	virtual Uint8 *MapInternal(BufferMapMode) override;
+			// change the buffer data without mapping
+			virtual void BufferData(const size_t, void *) override final;
 
-private:
-	GLuint m_vao;
-	Uint8 *m_data;
-};
+			virtual void Bind() override final;
+			virtual void Release() override final;
 
-class IndexBuffer : public Graphics::IndexBuffer, public GLBufferBase {
-public:
-	IndexBuffer(Uint32 size, BufferUsage);
-	~IndexBuffer();
+		protected:
+			virtual Uint8 *MapInternal(BufferMapMode) override final;
 
-	virtual Uint16 *Map(BufferMapMode) override;
-	virtual void Unmap() override;
-	
-	virtual void Bind() override;
-	virtual void Release() override;
+		private:
+			GLuint m_vao;
+			Uint8 *m_data;
+		};
 
-private:
-	Uint16 *m_data;
-};
+		class IndexBuffer : public Graphics::IndexBuffer, public GLBufferBase {
+		public:
+			IndexBuffer(Uint32 size, BufferUsage);
+			~IndexBuffer();
 
-// Instance buffer
-class InstanceBuffer : public Graphics::InstanceBuffer, public GLBufferBase {
-public:
-	InstanceBuffer(Uint32 size, BufferUsage);
-	virtual ~InstanceBuffer() override;
-	virtual matrix4x4f* Map(BufferMapMode) override;
-	virtual void Unmap() override;
+			virtual Uint32 *Map(BufferMapMode) override final;
+			virtual void Unmap() override final;
 
-	virtual void Bind() override;
-	virtual void Release() override;
+			// change the buffer data without mapping
+			virtual void BufferData(const size_t, void *) override final;
 
-protected:
-	std::unique_ptr<matrix4x4f> m_data;
-};
+			virtual void Bind() override final;
+			virtual void Release() override final;
 
-} }
+		private:
+			Uint32 *m_data;
+		};
 
-#endif // GL2_VERTEXBUFFER_H
+		// Instance buffer
+		class InstanceBuffer : public Graphics::InstanceBuffer, public GLBufferBase {
+		public:
+			InstanceBuffer(Uint32 size, BufferUsage);
+			virtual ~InstanceBuffer() override final;
+			virtual matrix4x4f *Map(BufferMapMode) override final;
+			virtual void Unmap() override final;
+
+			virtual void Bind() override final;
+			virtual void Release() override final;
+
+		protected:
+			enum InstOffs {
+				INSTOFFS_MAT0 = 6, // these value must match those of a_transform within data/shaders/opengl/attributes.glsl
+				INSTOFFS_MAT1 = 7,
+				INSTOFFS_MAT2 = 8,
+				INSTOFFS_MAT3 = 9
+			};
+			std::unique_ptr<matrix4x4f[]> m_data;
+		};
+
+	} // namespace OGL
+} // namespace Graphics
+
+#endif // OGL_VERTEXBUFFER_H

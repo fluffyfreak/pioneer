@@ -1,0 +1,346 @@
+{
+  "ACCEPTED_1": {
+    "description": "",
+    "message": "Rendben. Sok szerencsét!"
+  },
+  "ACCEPTED_2": {
+    "description": "",
+    "message": "Remek!"
+  },
+  "ACCEPTED_3": {
+    "description": "",
+    "message": "Remek! Számítunk rád!"
+  },
+  "ADTEXT_1": {
+    "description": "",
+    "message": "MEGBÍZHATÓ PILÓTÁT KERESEK: Díj: {cash}."
+  },
+  "ADTEXT_2": {
+    "description": "",
+    "message": "KIHÍVÁS: Hajó és legényéség kerestetik harci bevetésre a {system} rendszerben."
+  },
+  "ADTEXT_3": {
+    "description": "",
+    "message": "HARC: Képzett, jól felszerelt zsoldost keresek."
+  },
+  "ADTEXT_4": {
+    "description": "",
+    "message": "RETTENTHETETLEN ZSOLDOST KERESÜNK: megbízás {cash} - ért a {system} rendszerben."
+  },
+  "ADTEXT_5": {
+    "description": "",
+    "message": "{mission} küldetés: Fizetés {cash}."
+  },
+  "AGENT": {
+    "description": "Secret Service Agent",
+    "message": "Ügynök"
+  },
+  "AREA": {
+    "description": "An allotted area for the mission",
+    "message": "Terület:"
+  },
+  "BONUS_1": {
+    "description": "",
+    "message": "A megbízómra jó benyomást tettél, ezért átutalt {cash} jutalmat a küldetésért."
+  },
+  "BONUS_2": {
+    "description": "",
+    "message": "Jó szolgálatot tettél. Kapsz is {cash} jutalmat."
+  },
+  "BONUS_3": {
+    "description": "",
+    "message": "Lenyűgöző! Engedélyt kaptam egy kis bónusz, {cash} kredit kifizetésére."
+  },
+  "BONUS_4": {
+    "description": "",
+    "message": "Elégedett vagyok a teljesítményeddel. Átutaltam a fizettségedet,  {cash}  kreditet."
+  },
+  "COMBAT": {
+    "description": "Name of mission type",
+    "message": "Harc"
+  },
+  "CORPORATION_1": {
+    "description": "Name of a corporation",
+    "message": "Nagyértékű Árualap"
+  },
+  "CORPORATION_2": {
+    "description": "Name of a corporation",
+    "message": "Omega Kitermelő Vállalat"
+  },
+  "CORPORATION_3": {
+    "description": "Name of a corporation",
+    "message": "Egyesült Ércbányász Szindikátus"
+  },
+  "CORPORATION_4": {
+    "description": "Name of a corporation",
+    "message": "Galaktikus Felderítő Vállalat"
+  },
+  "CORPORATION_5": {
+    "description": "Name of a corporation",
+    "message": "Haber Vállalat"
+  },
+  "CORPORATION_6": {
+    "description": "Name of a corporation",
+    "message": "Nemesfém Kutató Kft."
+  },
+  "CORPORATION_7": {
+    "description": "Name of a corporation",
+    "message": "{name} Érckutató Rt."
+  },
+  "CORPORATION_8": {
+    "description": "Name of a corporation",
+    "message": "{name} Kft."
+  },
+  "DANGER": {
+    "description": "The risk level",
+    "message": "Veszély:"
+  },
+  "DENY_1": {
+    "description": "",
+    "message": "Sajnálom, de harcedzettebb pilótát keresek."
+  },
+  "DENY_2": {
+    "description": "",
+    "message": "Bocsásson meg. Profit keresek."
+  },
+  "DETECTIVE": {
+    "description": "Police Detective",
+    "message": "Nyomozó"
+  },
+  "DISTANCE": {
+    "description": "Distance in space, between two locations",
+    "message": "Távolság:"
+  },
+  "FAILUREMSG_1": {
+    "description": "",
+    "message": "Szégyelheti magát. Tűnjön a szemem elől."
+  },
+  "FAILUREMSG_2": {
+    "description": "",
+    "message": "Késtél! Nagy veszteséget okoztál. Nem kapsz fizetséget!"
+  },
+  "FAILUREMSG_3": {
+    "description": "",
+    "message": "Pilóták szégyene! Nem fizethetlek ki!"
+  },
+  "FAILUREMSG_4": {
+    "description": "",
+    "message": "Elbuktad a küldetést! Nem fizetünk!"
+  },
+  "GREETING_1": {
+    "description": "",
+    "message": "Üdv, a nevem {name}."
+  },
+  "GREETING_2": {
+    "description": "",
+    "message": "Helló. A nevem {name}."
+  },
+  "GREETING_3": {
+    "description": "",
+    "message": "Üdv! {name} vagyok."
+  },
+  "GREETING_4": {
+    "description": "",
+    "message": "Üdv! Hívjon csak {name} néven."
+  },
+  "GREETING_5": {
+    "description": "",
+    "message": "Jó napot. A nevem {name}."
+  },
+  "HARVESTING_1": {
+    "description": "{area} is an asteroid or planet",
+    "message": "Az {org} {cash}-ben fizet egy {mission} küldetésért a {system} rendszerben ({sectorx}, {sectory}, {sectorz}). Jó okunk van feltételezni, hogy egy könyörtelen versenytárs a felelős a szállítóhajóink eltűnéséért az {area}-ban. Az úticél távolsága {dist} fényév."
+  },
+  "HARVESTING_2": {
+    "description": "{area} is an asteroid or planet",
+    "message": "Piaci versenytársunk komolyan állítja, hogy a  {system} rendszer {area} szektora ({sectorx}, {sectory}, {sectorz}) az ő fennhatóságuk alatt van. Az {org} nem ért ezzel egyet, és hajlandó {cash} összeget áldozni egy harci küldetésért a {area} szektorban. {area} távolsága innen {dist} fényév."
+  },
+  "HARVESTING_3": {
+    "description": "{area} is an asteroid or planet",
+    "message": "Segítségre van szükségünk! Kétségbeesett hívást kaptunk egy teherhajónkról, {area} körzet, {system} rendszerben, ({sectorx}, {sectory}, {sectorz}). A hívás megszakadt, úgyhogy a legrosszabbtól félünk. A {system} távolsága {dist} fényév. Fizetés: {cash}."
+  },
+  "HARVESTING_IT_MUST_BE_COMPLETED_BY": {
+    "description": "",
+    "message": "Fontos, hogy a küldetés {date}-ig sikeres legyen. Diszkréciót kérünk a küldetéssel kapcsolatban."
+  },
+  "HARVESTING_LAND_THERE": {
+    "description": "",
+    "message": "Minden közeli csillagrendszerben van kereskedőnk. Landoláskor majd kapcsolatba lép Önnel."
+  },
+  "HOW_WILL_I_BE_PAID": {
+    "description": "",
+    "message": "Hogy leszek megfizetve?"
+  },
+  "IS_THERE_A_TIME_LIMIT": {
+    "description": "",
+    "message": "Van valamilyen időkorlát?"
+  },
+  "LY": {
+    "description": "",
+    "message": "fé"
+  },
+  "MANAGER": {
+    "description": "",
+    "message": "Menedzser"
+  },
+  "MEET_ME_THERE": {
+    "description": "",
+    "message": "Találkozzunk a {rendezvous} rendszerben, és kifizetlek!"
+  },
+  "MILITARY_1": {
+    "description": "{area} is an asteroid or planet",
+    "message": "Katonai felderítésünk szerint ellenséges szervezetek titkos kémbázist helyeztek üzembe {system} rendszer {area} körzetben ({sectorx}, {sectory}, {sectorz}). A kormány nem hagyhatja ezt, ezért elfogadott egy műveletsorozatot mely kiiktatná a létesítményt. Az ellenség rejtegetni próbálja ez eredetét úgy, hogy csak civil űrhajótípusokat használ. Ezzel sem értünk egyet! Hajlandók vagyunk zsoldosokat fogadni {cash} fizetséggel. {area} távolsága innen {dist} fényév."
+  },
+  "MILITARY_2": {
+    "description": "{area} is an asteroid or planet",
+    "message": "Kalóz tevékenységre válaszként a helyi hatóságok {cash} összeget fizetnek harci küldetésért az {area} körzetben, {system} rendszerben ({sectorx}, {sectory}, {sectorz})."
+  },
+  "MILITARY_3": {
+    "description": "",
+    "message": "A kémelhárítás pilótát keres,  {mission} feladat elvégzésére, aki nem kérdezősködik. Helyszín: [system] rendszer ({sectorx}, sectory}, {sectorz}), {dist} fényévre. Fizetség: {cash}."
+  },
+  "MILITARY_IT_MUST_BE_COMPLETED_BY": {
+    "description": "",
+    "message": "Egy különítmény fogja átvenni a terület ellenőrzését. Ezért különösen fontos a küldetés sikeres végrehajtása {date}-ig."
+  },
+  "MILITARY_LAND_THERE": {
+    "description": "",
+    "message": "Meg kell látogatnia egy {org} felségterületén lévő állomást."
+  },
+  "MINING_1": {
+    "description": "{area} is an asteroid or planet",
+    "message": "{org} területi vitában áll egy konkurensével {area} területen, {system} rendszerben ({sectorx}, {sectory}, {sectorz}, {dist} fé). Érdekein érvényesítéséhez egy megbízható, harcedzett zsoldosra van szükségünk. {cash} ellentételezést ajánlunk a feladathoz."
+  },
+  "MINING_2": {
+    "description": "{area} is an asteroid or planet",
+    "message": "{org} igazgatója vagyok. Segítségre van szükségünk egy konkurens folytatott, régóta húzódó jogi vitában, {system} rendszer bányászati jogaival kapcsolatban. ( ({sectorx}, {sectory}, {sectorz}, {dist} fé). Elfogyott a türelmünk, szeretnénk peren kívül megoldani a problémát. A feladata, hogy elmenjen a rendszer {area} régiójába, {cash} fizetségért. "
+  },
+  "MINING_3": {
+    "description": "{area} is an asteroid or planet",
+    "message": "{org} alkalmazottja vagyok. Teherhajóink fognak hamarosan áthajózni {area} régiión a {system} rendszerben  ({sectorx}, {sectory}, {sectorz}, {dist} fé).  Alkalmazottjaink és felszerelésünk biztonságának szavatolása érdekében hajlandóak vagyunk {cash} ellentételezést felajánlani egy {mission} küldetés teljesítésére."
+  },
+  "MINING_IT_MUST_BE_COMPLETED_BY": {
+    "description": "",
+    "message": "A konvoj úton van {area} felé. Elengedhetetlen, hogy a küldetést sikeresen teljesítse {date}-ig."
+  },
+  "MINING_LAND_THERE": {
+    "description": "",
+    "message": "Az össze környékbeli rendszerben található irodánk. Bármelyik kikötőben fel tudja venni velünk a kapcsolatot."
+  },
+  "MISSION": {
+    "description": "",
+    "message": "Küldetés:"
+  },
+  "MISSION_COMPLETE": {
+    "description": "Message from the ship computer",
+    "message": "Elsődleges feladat végrehajtva"
+  },
+  "MISSION_TYPE_1": {
+    "description": "Name of mission type",
+    "message": "Felderítés"
+  },
+  "MISSION_TYPE_2": {
+    "description": "Name of mission type",
+    "message": "Harci felderítés"
+  },
+  "MISSION_TYPE_3": {
+    "description": "Name of mission type. Derived from Fighter Sweep. An aggressive mission to hunt down and destroy every enemy fighter in the allotted area.",
+    "message": "Terület megtisztítása"
+  },
+  "OBJECTIVE_1": {
+    "description": "",
+    "message": "Nem szükséges harcba bocsátkoznia. Az ellenfél védelmi képességeiről és válaszidejéről van szükségünk adatokra. "
+  },
+  "OBJECTIVE_2": {
+    "description": "",
+    "message": "Gyengítse meg az ellenség védelmét amennyire csak lehet, majd ugorjon ki a rendszerből."
+  },
+  "OBJECTIVE_3": {
+    "description": "{area} is an asteroid or planet",
+    "message": "Tisztítsa meg {area} környékét. Pusztítson el minden ellenállást."
+  },
+  "OK_AGREED": {
+    "description": "",
+    "message": "Rendben."
+  },
+  "PAYMENT_LOCATION": {
+    "description": "",
+    "message": "Fizetés átvehető:"
+  },
+  "PLEASE_REPEAT_THE_MISSION_DETAILS": {
+    "description": "",
+    "message": "Kérem ismételje meg a feladat részleteit!"
+  },
+  "POLICE_1": {
+    "description": "{area} is an asteroid or planet",
+    "message": "Nyomozók felfedeztek egy kalóz csoportot, akik támaszpontot próbálnak létesíteni {system} rendszer {area} régiójában. ( ({sectorx}, {sectory}, {sectorz}, {dist} fé). Meg kell akadályoznunk. A helyi hatóságok {cash} díjat fizetnek annak, aki végrehajtja a rendőrségi rajtaütést előkészítő küldetést."
+  },
+  "POLICE_2": {
+    "description": "{area} is an asteroid or planet",
+    "message": "{org} {cash} díjat ajánl egy harci feladat elvégzéséért {system} rendszerben  ({sectorx}, {sectory}, {sectorz}, {dist} fé). Hajó és pilóta hiányban szenvedünk, így a feladatot szabadúszó pilótára bízzuk. A célpont egy kisebb kalóz bázis {area} régióban. Szüksége lesz üzemanyagra a {dist} fényéves ugráshoz és a visszaúthoz."
+  },
+  "POLICE_3": {
+    "description": "{area} is an asteroid or planet",
+    "message": "Piacainkat elárasztotta a csempászárú, melynek forrása egy {area} régióban található rejtett támaszpont a {system} rendszerben  ({sectorx}, {sectory}, {sectorz}), {dist} fé távolságra. A költségvetés szűkössége miatt a  hatóságok alvállalkozót keresnek, aki {cash} díjért vállalja a művelet végrehajtását."
+  },
+  "POLICE_IT_MUST_BE_COMPLETED_BY": {
+    "description": "",
+    "message": "Fontos, hogy a feladatot {date} határidőre elvégezze, mert további ellenséges hajók megjelenése várható."
+  },
+  "POLICE_LAND_THERE": {
+    "description": "",
+    "message": "Elég, ha egy olyan helyen landolsz, ahol van {org} iroda."
+  },
+  "RISK_1": {
+    "description": "",
+    "message": "A konkurenciának korlátozott források állnak rendelkezésére. Nincs mitől tartania."
+  },
+  "RISK_2": {
+    "description": "",
+    "message": "A konkurensnek csekélyek a forrásai, de megvédi magát, ha szükséges."
+  },
+  "RISK_3": {
+    "description": "",
+    "message": "Jól felszerelt a konkurencia. Tartsd nyitva a szemed!"
+  },
+  "RISK_4": {
+    "description": "",
+    "message": "Az ellenfél jól felszerelt, a legkorszerűbb eszközökkel rendelkezik. Legyen óvatos! "
+  },
+  "SET_AS_TARGET": {
+    "description": "",
+    "message": "Navigációs célnak beállít."
+  },
+  "SUCCESSMSG_1": {
+    "description": "",
+    "message": "Tudtam, hogy ön a megfelelő ember egy ilyen feladatra. Átutalom a fizetségét."
+  },
+  "SUCCESSMSG_2": {
+    "description": "",
+    "message": "Köszönjük, hogy elvégezte a feladatot. Átutaltam a pénzt."
+  },
+  "SUCCESSMSG_3": {
+    "description": "",
+    "message": "Remélem nem adódott nagy probléma. Ki is fizettem."
+  },
+  "SUCCESSMSG_4": {
+    "description": "",
+    "message": "Remek munka. Átutaltam az összeget."
+  },
+  "SYSTEM": {
+    "description": "",
+    "message": "Rendszer:"
+  },
+  "TIME_LIMIT": {
+    "description": "",
+    "message": "Időkorlát:"
+  },
+  "WHAT_ARE_THE_MISSION_OBJECTIVES": {
+    "description": "",
+    "message": "Mi a feladat?"
+  },
+  "WILL_I_BE_IN_TROUBLE": {
+    "description": "",
+    "message": "Számíthatok veszélyre?"
+  }
+}

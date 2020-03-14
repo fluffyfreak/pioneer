@@ -1,84 +1,85 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
-#include "libs.h"
 #include "Body.h"
-#include "Frame.h"
+
 #include "AsteroidBody.h"
-#include "Star.h"
-#include "Planet.h"
 #include "CargoBody.h"
-#include "SpaceStation.h"
-#include "Ship.h"
+#include "Frame.h"
+#include "GameSaveError.h"
+#include "HyperspaceCloud.h"
+#include "Missile.h"
+#include "Planet.h"
 #include "Player.h"
 #include "Projectile.h"
-#include "Missile.h"
-#include "HyperspaceCloud.h"
-#include "Pi.h"
+#include "Ship.h"
 #include "Space.h"
-#include "Game.h"
-#include "LuaEvent.h"
-#include "json/JsonUtils.h"
+#include "SpaceStation.h"
+#include "Star.h"
+#include "lua/LuaEvent.h"
 
-Body::Body() : PropertiedObject(Lua::manager)
-	, m_flags(0)
-	, m_interpPos(0.0)
-	, m_interpOrient(matrix3x3d::Identity())
-	, m_pos(0.0)
-	, m_orient(matrix3x3d::Identity())
-	, m_frame(0)
-	, m_dead(false)
-	, m_clipRadius(0.0)
-	, m_physRadius(0.0)
+Body::Body() :
+	PropertiedObject(Lua::manager),
+	m_flags(0),
+	m_interpPos(0.0),
+	m_interpOrient(matrix3x3d::Identity()),
+	m_pos(0.0),
+	m_orient(matrix3x3d::Identity()),
+	m_frame(FrameId::Invalid),
+	m_dead(false),
+	m_clipRadius(0.0),
+	m_physRadius(0.0)
 {
 	Properties().Set("label", m_label);
+}
+
+Body::Body(const Json &jsonObj, Space *space) :
+	PropertiedObject(Lua::manager),
+	m_flags(0),
+	m_interpPos(0.0),
+	m_interpOrient(matrix3x3d::Identity()),
+	m_frame(FrameId::Invalid)
+{
+	try {
+		Json bodyObj = jsonObj["body"];
+
+		Properties().LoadFromJson(bodyObj);
+		m_frame = bodyObj["index_for_frame"];
+		m_label = bodyObj["label"];
+		Properties().Set("label", m_label);
+		m_dead = bodyObj["dead"];
+
+		m_pos = bodyObj["pos"];
+		m_orient = bodyObj["orient"];
+		m_physRadius = bodyObj["phys_radius"];
+		m_clipRadius = bodyObj["clip_radius"];
+	} catch (Json::type_error &) {
+		throw SavedGameCorruptException();
+	}
 }
 
 Body::~Body()
 {
 }
 
-void Body::SaveToJson(Json::Value &jsonObj, Space *space)
+void Body::SaveToJson(Json &jsonObj, Space *space)
 {
-	Json::Value bodyObj(Json::objectValue); // Create JSON object to contain body data.
+	Json bodyObj = Json::object(); // Create JSON object to contain body data.
 
 	Properties().SaveToJson(bodyObj);
-	bodyObj["index_for_frame"] = space->GetIndexForFrame(m_frame);
+	bodyObj["index_for_frame"] = m_frame.id();
 	bodyObj["label"] = m_label;
 	bodyObj["dead"] = m_dead;
 
-	VectorToJson(bodyObj, m_pos, "pos");
-	MatrixToJson(bodyObj, m_orient, "orient");
-	bodyObj["phys_radius"] = DoubleToStr(m_physRadius);
-	bodyObj["clip_radius"] = DoubleToStr(m_clipRadius);
+	bodyObj["pos"] = m_pos;
+	bodyObj["orient"] = m_orient;
+	bodyObj["phys_radius"] = m_physRadius;
+	bodyObj["clip_radius"] = m_clipRadius;
 
 	jsonObj["body"] = bodyObj; // Add body object to supplied object.
 }
 
-void Body::LoadFromJson(const Json::Value &jsonObj, Space *space)
-{
-	if (!jsonObj.isMember("body")) throw SavedGameCorruptException();
-	Json::Value bodyObj = jsonObj["body"];
-
-	if (!bodyObj.isMember("index_for_frame")) throw SavedGameCorruptException();
-	if (!bodyObj.isMember("label")) throw SavedGameCorruptException();
-	if (!bodyObj.isMember("dead")) throw SavedGameCorruptException();
-	if (!bodyObj.isMember("phys_radius")) throw SavedGameCorruptException();
-	if (!bodyObj.isMember("clip_radius")) throw SavedGameCorruptException();
-
-	Properties().LoadFromJson(bodyObj);
-	m_frame = space->GetFrameByIndex(bodyObj["index_for_frame"].asUInt());
-	m_label = bodyObj["label"].asString();
-	Properties().Set("label", m_label);
-	m_dead = bodyObj["dead"].asBool();
-
-	JsonToVector(&m_pos, bodyObj, "pos");
-	JsonToMatrix(&m_orient, bodyObj, "orient");
-	m_physRadius = StrToDouble(bodyObj["phys_radius"].asString());
-	m_clipRadius = StrToDouble(bodyObj["clip_radius"].asString());
-}
-
-void Body::ToJson(Json::Value &jsonObj, Space *space)
+void Body::ToJson(Json &jsonObj, Space *space)
 {
 	jsonObj["body_type"] = int(GetType());
 
@@ -100,51 +101,63 @@ void Body::ToJson(Json::Value &jsonObj, Space *space)
 	}
 }
 
-Body *Body::FromJson(const Json::Value &jsonObj, Space *space)
+Body *Body::FromJson(const Json &jsonObj, Space *space)
 {
-	if (!jsonObj.isMember("body_type")) throw SavedGameCorruptException();
+	if (!jsonObj["body_type"].is_number_integer())
+		throw SavedGameCorruptException();
 
-	Body *b = 0;
-	Object::Type type = Object::Type(jsonObj["body_type"].asInt());
+	Object::Type type = Object::Type(jsonObj["body_type"]);
 	switch (type) {
 	case Object::STAR:
-		b = new Star(); break;
+		return new Star(jsonObj, space);
 	case Object::PLANET:
-		b = new Planet(); break;
+		return new Planet(jsonObj, space);
 	case Object::SPACESTATION:
-		b = new SpaceStation(); break;
-	case Object::SHIP:
-		b = new Ship(); break;
-	case Object::PLAYER:
-		b = new Player(); break;
+		return new SpaceStation(jsonObj, space);
+	case Object::SHIP: {
+		Ship *s = new Ship(jsonObj, space);
+		// Here because of comments in Ship.cpp on following function
+		s->UpdateLuaStats();
+		return static_cast<Body *>(s);
+	}
+	case Object::PLAYER: {
+		Player *p = new Player(jsonObj, space);
+		// Read comments in Ship.cpp on following function
+		p->UpdateLuaStats();
+		return static_cast<Body *>(p);
+	}
 	case Object::MISSILE:
-		b = new Missile(); break;
+		return new Missile(jsonObj, space);
 	case Object::PROJECTILE:
-		b = new Projectile(); break;
+		return new Projectile(jsonObj, space);
 	case Object::CARGOBODY:
-		b = new CargoBody(); break;
+		return new CargoBody(jsonObj, space);
 	case Object::HYPERSPACECLOUD:
-		b = new HyperspaceCloud(); break;
+		return new HyperspaceCloud(jsonObj, space);
 	case Object::ASTEROIDBODY:
-		b = new AsteroidBody(); break;
+		return new AsteroidBody();
 	default:
 		assert(0);
 	}
-	b->LoadFromJson(jsonObj, space);
-	return b;
+
+	return nullptr;
 }
 
-vector3d Body::GetPositionRelTo(const Frame *relTo) const
+vector3d Body::GetPositionRelTo(FrameId relToId) const
 {
-	vector3d fpos = m_frame->GetPositionRelTo(relTo);
-	matrix3x3d forient = m_frame->GetOrientRelTo(relTo);
+	Frame *frame = Frame::GetFrame(m_frame);
+
+	vector3d fpos = frame->GetPositionRelTo(relToId);
+	matrix3x3d forient = frame->GetOrientRelTo(relToId);
 	return forient * GetPosition() + fpos;
 }
 
-vector3d Body::GetInterpPositionRelTo(const Frame *relTo) const
+vector3d Body::GetInterpPositionRelTo(FrameId relToId) const
 {
-	vector3d fpos = m_frame->GetInterpPositionRelTo(relTo);
-	matrix3x3d forient = m_frame->GetInterpOrientRelTo(relTo);
+	Frame *frame = Frame::GetFrame(m_frame);
+
+	vector3d fpos = frame->GetInterpPositionRelTo(relToId);
+	matrix3x3d forient = frame->GetInterpOrientRelTo(relToId);
 	return forient * GetInterpPosition() + fpos;
 }
 
@@ -158,24 +171,30 @@ vector3d Body::GetInterpPositionRelTo(const Body *relTo) const
 	return GetInterpPositionRelTo(relTo->m_frame) - relTo->GetInterpPosition();
 }
 
-matrix3x3d Body::GetOrientRelTo(const Frame *relTo) const
+matrix3x3d Body::GetOrientRelTo(FrameId relToId) const
 {
-	matrix3x3d forient = m_frame->GetOrientRelTo(relTo);
+	Frame *frame = Frame::GetFrame(m_frame);
+
+	matrix3x3d forient = frame->GetOrientRelTo(relToId);
 	return forient * GetOrient();
 }
 
-matrix3x3d Body::GetInterpOrientRelTo(const Frame *relTo) const
+matrix3x3d Body::GetInterpOrientRelTo(FrameId relToId) const
 {
-	matrix3x3d forient = m_frame->GetInterpOrientRelTo(relTo);
+	Frame *frame = Frame::GetFrame(m_frame);
+
+	matrix3x3d forient = frame->GetInterpOrientRelTo(relToId);
 	return forient * GetInterpOrient();
 }
 
-vector3d Body::GetVelocityRelTo(const Frame *relTo) const
+vector3d Body::GetVelocityRelTo(FrameId relToId) const
 {
-	matrix3x3d forient = m_frame->GetOrientRelTo(relTo);
+	Frame *frame = Frame::GetFrame(m_frame);
+
+	matrix3x3d forient = frame->GetOrientRelTo(relToId);
 	vector3d vel = GetVelocity();
-	if (m_frame != relTo) vel -= m_frame->GetStasisVelocity(GetPosition());
-	return forient * vel + m_frame->GetVelocityRelTo(relTo);
+	if (m_frame != relToId) vel -= frame->GetStasisVelocity(GetPosition());
+	return forient * vel + frame->GetVelocityRelTo(relToId);
 }
 
 vector3d Body::GetVelocityRelTo(const Body *relTo) const
@@ -185,53 +204,60 @@ vector3d Body::GetVelocityRelTo(const Body *relTo) const
 
 void Body::OrientOnSurface(double radius, double latitude, double longitude)
 {
-	vector3d up = vector3d(cos(latitude)*cos(longitude), sin(latitude)*cos(longitude), sin(longitude));
+	vector3d up = vector3d(cos(latitude) * cos(longitude), sin(latitude) * cos(longitude), sin(longitude));
 	SetPosition(radius * up);
 
-	vector3d right = up.Cross(vector3d(0,0,1)).Normalized();
+	vector3d right = up.Cross(vector3d(0, 0, 1)).Normalized();
 	SetOrient(matrix3x3d::FromVectors(right, up));
 }
 
-void Body::SwitchToFrame(Frame *newFrame)
+void Body::SwitchToFrame(FrameId newFrameId)
 {
-	vector3d vel = GetVelocityRelTo(newFrame);		// do this first because it uses position
-	vector3d fpos = m_frame->GetPositionRelTo(newFrame);
-	matrix3x3d forient = m_frame->GetOrientRelTo(newFrame);
+	const Frame *newFrame = Frame::GetFrame(newFrameId);
+	const Frame *frame = Frame::GetFrame(m_frame);
+
+	const vector3d vel = GetVelocityRelTo(newFrameId); // do this first because it uses position
+	const vector3d fpos = frame->GetPositionRelTo(newFrameId);
+	const matrix3x3d forient = frame->GetOrientRelTo(newFrameId);
 	SetPosition(forient * GetPosition() + fpos);
 	SetOrient(forient * GetOrient());
 	SetVelocity(vel + newFrame->GetStasisVelocity(GetPosition()));
-	SetFrame(newFrame);
+	SetFrame(newFrameId);
 
 	LuaEvent::Queue("onFrameChanged", this);
 }
 
 void Body::UpdateFrame()
 {
-	if (!(m_flags & FLAG_CAN_MOVE_FRAME)) return;	
+	if (!(m_flags & FLAG_CAN_MOVE_FRAME)) return;
+
+	const Frame *frame = Frame::GetFrame(m_frame);
 
 	// falling out of frames
-	if (m_frame->GetRadius() < GetPosition().Length()) {
-		Frame *newFrame = GetFrame()->GetParent();
-		if (newFrame) { 						// don't fall out of root frame
-			Output("%s leaves frame %s\n", GetLabel().c_str(), GetFrame()->GetLabel().c_str());
-			SwitchToFrame(newFrame);
+	if (frame->GetRadius() < GetPosition().Length()) {
+		FrameId parent = frame->GetParent();
+		Frame *newFrame = Frame::GetFrame(parent);
+		if (newFrame) { // don't fall out of root frame
+			Output("%s leaves frame %s\n", GetLabel().c_str(), frame->GetLabel().c_str());
+			SwitchToFrame(parent);
 			return;
 		}
 	}
 
 	// entering into frames
-	for (Frame* kid : m_frame->GetChildren()) {
-		vector3d pos = GetPositionRelTo(kid);
-		if (pos.Length() >= kid->GetRadius()) continue;
+	for (FrameId kid : frame->GetChildren()) {
+		Frame *kid_frame = Frame::GetFrame(kid);
+		const vector3d pos = GetPositionRelTo(kid);
+		if (pos.Length() >= kid_frame->GetRadius()) continue;
 		SwitchToFrame(kid);
-		Output("%s enters frame %s\n", GetLabel().c_str(), kid->GetLabel().c_str());
+		Output("%s enters frame %s\n", GetLabel().c_str(), kid_frame->GetLabel().c_str());
 		break;
 	}
 }
 
-vector3d Body::GetTargetIndicatorPosition(const Frame *relTo) const
+vector3d Body::GetTargetIndicatorPosition(FrameId relToId) const
 {
-	return GetInterpPositionRelTo(relTo);
+	return GetInterpPositionRelTo(relToId);
 }
 
 void Body::SetLabel(const std::string &label)

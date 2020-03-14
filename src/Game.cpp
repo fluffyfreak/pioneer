@@ -1,45 +1,58 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
+#include "buildopts.h"
+
 #include "Game.h"
-#include "Factions.h"
-#include "Space.h"
-#include "Player.h"
+
 #include "Body.h"
-#include "SpaceStation.h"
-#include "HyperspaceCloud.h"
-#include "Pi.h"
-#include "ShipCpanel.h"
-#include "Sfx.h"
-#include "MathUtil.h"
-#include "SectorView.h"
-#include "WorldView.h"
 #include "DeathView.h"
-#include "GalacticView.h"
-#include "SystemView.h"
-#include "SystemInfoView.h"
-#include "UIView.h"
-#include "LuaEvent.h"
-#include "LuaRef.h"
-#include "ObjectViewerView.h"
 #include "FileSystem.h"
-#include "graphics/Renderer.h"
-#include "ui/Context.h"
+#include "GZipFormat.h"
+#include "GameLog.h"
+#include "GameSaveError.h"
+#include "HyperspaceCloud.h"
+#include "MathUtil.h"
+#include "Object.h"
+#include "lua/LuaEvent.h"
+#include "lua/LuaSerializer.h"
+#if WITH_OBJECTVIEWER
+#include "ObjectViewerView.h"
+#endif
+#include "Pi.h"
+#include "Player.h"
+#include "SectorView.h"
+#include "Sfx.h"
+#include "ShipCpanel.h"
+#include "Space.h"
+#include "SpaceStation.h"
+#include "SystemInfoView.h"
+#include "SystemView.h"
+#include "UIView.h"
+#include "WorldView.h"
 #include "galaxy/GalaxyGenerator.h"
+#include "pigui/View.h"
+#include "ship/PlayerShipController.h"
 
-static const int  s_saveVersion   = 81;
-static const char s_saveStart[]   = "PIONEER";
-static const char s_saveEnd[]     = "END";
+static const int s_saveVersion = 86;
 
-Game::Game(const SystemPath &path, double time) :
+Game::Game(const SystemPath &path, const double startDateTime) :
 	m_galaxy(GalaxyGenerator::Create()),
-	m_time(time),
-	m_state(STATE_NORMAL),
+	m_time(startDateTime),
+	m_state(State::NORMAL),
 	m_wantHyperspace(false),
 	m_timeAccel(TIMEACCEL_1X),
 	m_requestedTimeAccel(TIMEACCEL_1X),
 	m_forceTimeAccel(false)
 {
+#ifdef PIONEER_PROFILER
+	std::string profilerPath;
+	FileSystem::userFiles.MakeDirectory("profiler");
+	FileSystem::userFiles.MakeDirectory("profiler/NewGame");
+	profilerPath = FileSystem::JoinPathBelow(FileSystem::userFiles.GetRoot(), "profiler/NewGame");
+	Profiler::reset();
+#endif
+
 	// Now that we have a Galaxy, check the starting location
 	if (!path.IsBodyPath())
 		throw InvalidGameStartLocation("SystemPath is not a body path");
@@ -70,17 +83,19 @@ Game::Game(const SystemPath &path, double time) :
 	m_player->SetFrame(b->GetFrame());
 
 	if (b->GetType() == Object::SPACESTATION) {
-		m_player->SetDockedWith(static_cast<SpaceStation*>(b), 0);
+		m_player->SetDockedWith(static_cast<SpaceStation *>(b), 0);
 	} else {
 		const SystemBody *sbody = b->GetSystemBody();
-		m_player->SetPosition(vector3d(0, 1.5*sbody->GetRadius(), 0));
-		m_player->SetVelocity(vector3d(0,0,0));
+		m_player->SetPosition(vector3d(0, 1.5 * sbody->GetRadius(), 0));
+		m_player->SetVelocity(vector3d(0, 0, 0));
 	}
-	Polit::Init(m_galaxy);
 
 	CreateViews();
 
 	EmitPauseState(IsPaused());
+#ifdef PIONEER_PROFILER
+	Profiler::dumphtml(profilerPath.c_str());
+#endif
 }
 
 Game::~Game()
@@ -109,27 +124,20 @@ Game::~Game()
 	m_galaxy->FlushCaches();
 }
 
-Game::Game(const Json::Value &jsonObj) :
-m_timeAccel(TIMEACCEL_PAUSED),
-m_requestedTimeAccel(TIMEACCEL_PAUSED),
-m_forceTimeAccel(false)
+Game::Game(const Json &jsonObj) :
+	m_timeAccel(TIMEACCEL_PAUSED),
+	m_requestedTimeAccel(TIMEACCEL_PAUSED),
+	m_forceTimeAccel(false)
 {
-	// signature check
-	if (!jsonObj.isMember("signature")) throw SavedGameCorruptException();
-	Json::Value signature = jsonObj["signature"];
-	if (signature.isString() && signature.asString().compare(s_saveStart) == 0) {}
-	else throw SavedGameCorruptException();
-
-	// version check
-	if (!jsonObj.isMember("version")) throw SavedGameCorruptException();
-	Json::Value version = jsonObj["version"];
-	if (!version.isInt()) throw SavedGameCorruptException();
-	Output("savefile version: %d\n", version.asInt());
-	if (version.asInt() == s_saveVersion) {}
-	else
-	{
-		Output("can't load savefile, expected version: %d\n", s_saveVersion);
-		throw SavedGameWrongVersionException();
+	try {
+		int version = jsonObj["version"];
+		Output("savefile version: %d\n", version);
+		if (version != s_saveVersion) {
+			Output("can't load savefile, expected version: %d\n", s_saveVersion);
+			throw SavedGameWrongVersionException();
+		}
+	} catch (Json::type_error &) {
+		throw SavedGameCorruptException();
 	}
 
 	// Preparing the Lua stuff
@@ -138,37 +146,32 @@ m_forceTimeAccel(false)
 	// galaxy generator
 	m_galaxy = Galaxy::LoadFromJson(jsonObj);
 
-	// game state
-	if (!jsonObj.isMember("time")) throw SavedGameCorruptException();
-	if (!jsonObj.isMember("state")) throw SavedGameCorruptException();
-	m_time = StrToDouble(jsonObj["time"].asString());
-	m_state = State(jsonObj["state"].asInt());
+	try {
+		// game state
+		m_time = jsonObj["time"];
+		m_state = jsonObj["state"].get<State>();
 
-	if (!jsonObj.isMember("want_hyperspace")) throw SavedGameCorruptException();
-	if (!jsonObj.isMember("hyperspace_progress")) throw SavedGameCorruptException();
-	if (!jsonObj.isMember("hyperspace_duration")) throw SavedGameCorruptException();
-	if (!jsonObj.isMember("hyperspace_end_time")) throw SavedGameCorruptException();
-	m_wantHyperspace = jsonObj["want_hyperspace"].asBool();
-	m_hyperspaceProgress = StrToDouble(jsonObj["hyperspace_progress"].asString());
-	m_hyperspaceDuration = StrToDouble(jsonObj["hyperspace_duration"].asString());
-	m_hyperspaceEndTime = StrToDouble(jsonObj["hyperspace_end_time"].asString());
+		m_wantHyperspace = jsonObj["want_hyperspace"];
+		m_hyperspaceProgress = jsonObj["hyperspace_progress"];
+		m_hyperspaceDuration = jsonObj["hyperspace_duration"];
+		m_hyperspaceEndTime = jsonObj["hyperspace_end_time"];
 
-	// space, all the bodies and things
-	if (!jsonObj.isMember("player")) throw SavedGameCorruptException();
-	m_space.reset(new Space(this, m_galaxy, jsonObj, m_time));
-	m_player.reset(static_cast<Player*>(m_space->GetBodyByIndex(jsonObj["player"].asUInt())));
+		// space, all the bodies and things
+		m_space.reset(new Space(this, m_galaxy, jsonObj, m_time));
 
-	assert(!m_player->IsDead()); // Pioneer does not support necromancy
+		unsigned int player = jsonObj["player"];
+		m_player.reset(static_cast<Player *>(m_space->GetBodyByIndex(player)));
 
-	// hyperspace clouds being brought over from the previous system
-	if (!jsonObj.isMember("hyperspace_clouds")) throw SavedGameCorruptException();
-	Json::Value hyperspaceCloudArray = jsonObj["hyperspace_clouds"];
-	if (!hyperspaceCloudArray.isArray()) throw SavedGameCorruptException();
-	for (Uint32 i = 0; i < hyperspaceCloudArray.size(); i++)
-		m_hyperspaceClouds.push_back(static_cast<HyperspaceCloud*>(Body::FromJson(hyperspaceCloudArray[i], 0)));
+		assert(!m_player->IsDead()); // Pioneer does not support necromancy
 
-	// system political stuff
-	Polit::FromJson(jsonObj, m_galaxy);
+		// hyperspace clouds being brought over from the previous system
+		Json hyperspaceCloudArray = jsonObj["hyperspace_clouds"].get<Json::array_t>();
+		for (Uint32 i = 0; i < hyperspaceCloudArray.size(); i++) {
+			m_hyperspaceClouds.push_back(static_cast<HyperspaceCloud *>(Body::FromJson(hyperspaceCloudArray[i], 0)));
+		}
+	} catch (Json::type_error &) {
+		throw SavedGameCorruptException();
+	}
 
 	// views
 	LoadViewsFromJson(jsonObj);
@@ -178,22 +181,14 @@ m_forceTimeAccel(false)
 
 	Pi::luaSerializer->UninitTableRefs();
 
-	// signature check (don't really need this anymore)
-	if (!jsonObj.isMember("trailing_signature")) throw SavedGameCorruptException();
-	Json::Value trailingSignature = jsonObj["trailing_signature"];
-	if (trailingSignature.isString() && trailingSignature.asString().compare(s_saveEnd) == 0) {}
-	else throw SavedGameCorruptException();
-
 	EmitPauseState(IsPaused());
 }
 
-void Game::ToJson(Json::Value &jsonObj)
+void Game::ToJson(Json &jsonObj)
 {
+	PROFILE_SCOPED()
 	// preparing the lua serializer
 	Pi::luaSerializer->InitTableRefs();
-
-	// signature
-	jsonObj["signature"] = s_saveStart;
 
 	// version
 	jsonObj["version"] = s_saveVersion;
@@ -202,30 +197,30 @@ void Game::ToJson(Json::Value &jsonObj)
 	m_galaxy->ToJson(jsonObj);
 
 	// game state
-	jsonObj["time"] = DoubleToStr(m_time);
+	jsonObj["time"] = m_time;
 	jsonObj["state"] = Uint32(m_state);
 
 	jsonObj["want_hyperspace"] = m_wantHyperspace;
-	jsonObj["hyperspace_progress"] = DoubleToStr(m_hyperspaceProgress);
-	jsonObj["hyperspace_duration"] = DoubleToStr(m_hyperspaceDuration);
-	jsonObj["hyperspace_end_time"] = DoubleToStr(m_hyperspaceEndTime);
+	jsonObj["hyperspace_progress"] = m_hyperspaceProgress;
+	jsonObj["hyperspace_duration"] = m_hyperspaceDuration;
+	jsonObj["hyperspace_end_time"] = m_hyperspaceEndTime;
+
+	// Delete camera frame from frame structure:
+	bool have_cam_frame = m_gameViews->m_worldView->GetCameraContext()->GetCamFrame().valid();
+	if (have_cam_frame) m_gameViews->m_worldView->EndCameraFrame();
 
 	// space, all the bodies and things
 	m_space->ToJson(jsonObj);
 	jsonObj["player"] = m_space->GetIndexForBody(m_player.get());
 
 	// hyperspace clouds being brought over from the previous system
-	Json::Value hyperspaceCloudArray(Json::arrayValue); // Create JSON array to contain hyperspace cloud data.
-	for (std::list<HyperspaceCloud*>::const_iterator i = m_hyperspaceClouds.begin(); i != m_hyperspaceClouds.end(); ++i)
-	{
-		Json::Value hyperspaceCloudArrayEl(Json::objectValue); // Create JSON object to contain hyperspace cloud.
+	Json hyperspaceCloudArray = Json::array(); // Create JSON array to contain hyperspace cloud data.
+	for (std::list<HyperspaceCloud *>::const_iterator i = m_hyperspaceClouds.begin(); i != m_hyperspaceClouds.end(); ++i) {
+		Json hyperspaceCloudArrayEl = Json::object(); // Create JSON object to contain hyperspace cloud.
 		(*i)->ToJson(hyperspaceCloudArrayEl, m_space.get());
-		hyperspaceCloudArray.append(hyperspaceCloudArrayEl); // Append hyperspace cloud object to array.
+		hyperspaceCloudArray.push_back(hyperspaceCloudArrayEl); // Append hyperspace cloud object to array.
 	}
 	jsonObj["hyperspace_clouds"] = hyperspaceCloudArray; // Add hyperspace cloud array to supplied object.
-
-	// system political data (crime etc)
-	Polit::ToJson(jsonObj);
 
 	// views. must be saved in init order
 	m_gameViews->m_cpan->SaveToJson(jsonObj);
@@ -235,39 +230,78 @@ void Game::ToJson(Json::Value &jsonObj)
 	// lua
 	Pi::luaSerializer->ToJson(jsonObj);
 
-	// trailing signature
-	jsonObj["trailing_signature"] = s_saveEnd; // Don't really need this anymore.
+	// Stuff to show in the preview in load game window
+	// some may be redundant, but this won't require loading up a game to get it all
+	Json gameInfo = Json::object();
+	float credits = LuaObject<Player>::CallMethod<float>(Pi::player, "GetMoney");
+
+	gameInfo["system"] = Pi::game->GetSpace()->GetStarSystem()->GetName();
+	gameInfo["credits"] = credits;
+	gameInfo["ship"] = Pi::player->GetShipType()->modelName;
+	if (Pi::player->IsDocked()) {
+		gameInfo["docked_at"] = Pi::player->GetDockedWith()->GetSystemBody()->GetName();
+	}
+
+	switch (Pi::player->GetFlightState()) {
+	case Ship::FlightState::DOCKED:
+		gameInfo["flight_state"] = "docked";
+		break;
+	case Ship::FlightState::DOCKING:
+		gameInfo["flight_state"] = "docking";
+		break;
+	case Ship::FlightState::FLYING:
+		gameInfo["flight_state"] = "flying";
+		break;
+	case Ship::FlightState::HYPERSPACE:
+		gameInfo["flight_state"] = "hyperspace";
+		break;
+	case Ship::FlightState::JUMPING:
+		gameInfo["flight_state"] = "jumping";
+		break;
+	case Ship::FlightState::LANDED:
+		gameInfo["flight_state"] = "landed";
+		break;
+	case Ship::FlightState::UNDOCKING:
+		gameInfo["flight_state"] = "undocking";
+		break;
+	default:
+		gameInfo["flight_state"] = "unknown";
+		break;
+	}
+
+	jsonObj["game_info"] = gameInfo;
 
 	Pi::luaSerializer->UninitTableRefs();
+
+	// Bring back camera frame:
+	if (have_cam_frame) m_gameViews->m_worldView->BeginCameraFrame();
 }
 
 void Game::TimeStep(float step)
 {
 	PROFILE_SCOPED()
-	m_time += step;			// otherwise planets lag time accel changes by a frame
-	if (m_state == STATE_HYPERSPACE && Pi::game->GetTime() >= m_hyperspaceEndTime)
+	m_time += step; // otherwise planets lag time accel changes by a frame
+	if (m_state == State::HYPERSPACE && Pi::game->GetTime() >= m_hyperspaceEndTime)
 		m_time = m_hyperspaceEndTime;
 
 	m_space->TimeStep(step);
 
 	// XXX ui updates, not sure if they belong here
 	m_gameViews->m_cpan->TimeStepUpdate(step);
-	Sfx::TimeStepAll(step, m_space->GetRootFrame());
-	log->Update(m_timeAccel == Game::TIMEACCEL_PAUSED);
+	SfxManager::TimeStepAll(step, m_space->GetRootFrame());
 
-	if (m_state == STATE_HYPERSPACE) {
+	if (m_state == State::HYPERSPACE) {
 		if (Pi::game->GetTime() >= m_hyperspaceEndTime) {
 			SwitchToNormalSpace();
 			m_player->EnterSystem();
 			RequestTimeAccel(TIMEACCEL_1X);
-		}
-		else
+		} else
 			m_hyperspaceProgress += step;
 		return;
 	}
 
 	if (m_wantHyperspace) {
-		assert(m_state == STATE_NORMAL);
+		assert(m_state == State::NORMAL);
 		SwitchToHyperspace();
 		return;
 	}
@@ -291,7 +325,9 @@ bool Game::UpdateTimeAccel()
 	}
 
 	// force down to timeaccel 1 during the docking sequence or when just initiating hyperspace
-	else if (m_player->GetFlightState() == Ship::DOCKING || m_player->GetFlightState() == Ship::JUMPING) {
+	else if (m_player->GetFlightState() == Ship::DOCKING ||
+		m_player->GetFlightState() == Ship::JUMPING ||
+		m_player->GetFlightState() == Ship::UNDOCKING) {
 		newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_10X);
 		RequestTimeAccel(newTimeAccel);
 	}
@@ -299,45 +335,50 @@ bool Game::UpdateTimeAccel()
 	// normal flight
 	else if (m_player->GetFlightState() == Ship::FLYING) {
 
-		// special timeaccel lock rules while in alert
-		if (m_player->GetAlertState() == Ship::ALERT_SHIP_NEARBY)
-			newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_10X);
-		else if (m_player->GetAlertState() == Ship::ALERT_SHIP_FIRING)
+		// limit timeaccel to 1x when fired on (no forced acceleration allowed)
+		if (m_player->GetAlertState() == Ship::ALERT_SHIP_FIRING)
 			newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_1X);
 
-		else if (!m_forceTimeAccel) {
-			// check we aren't too near to objects for timeaccel //
-			for (const Body* b : m_space->GetBodies()) {
-				if (b == m_player.get()) continue;
-				if (b->IsType(Object::HYPERSPACECLOUD)) continue;
+		if (!m_forceTimeAccel) {
 
-				vector3d toBody = m_player->GetPosition() - b->GetPositionRelTo(m_player->GetFrame());
-				double dist = toBody.Length();
-				double rad = b->GetPhysRadius();
+			// if not forced - limit timeaccel to 10x when other ships are close
+			if (m_player->GetAlertState() == Ship::ALERT_SHIP_NEARBY)
+				newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_10X);
 
-				if (dist < 1000.0) {
-					newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_1X);
-				} else if (dist < std::min(rad+0.0001*AU, rad*1.1)) {
-					newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_10X);
-				} else if (dist < std::min(rad+0.001*AU, rad*5.0)) {
-					newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_100X);
-				} else if (dist < std::min(rad+0.01*AU,rad*10.0)) {
-					newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_1000X);
-				} else if (dist < std::min(rad+0.1*AU, rad*1000.0)) {
-					newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_10000X);
+			// if not forced - check if we aren't too near to objects for timeaccel
+			else {
+				for (const Body *b : m_space->GetBodies()) {
+					if (b == m_player.get()) continue;
+					if (b->IsType(Object::HYPERSPACECLOUD)) continue;
+
+					vector3d toBody = m_player->GetPosition() - b->GetPositionRelTo(m_player->GetFrame());
+					double dist = toBody.Length();
+					double rad = b->GetPhysRadius();
+
+					if (dist < 1000.0) {
+						newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_1X);
+					} else if (dist < std::min(rad + 0.0001 * AU, rad * 1.1)) {
+						newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_10X);
+					} else if (dist < std::min(rad + 0.001 * AU, rad * 5.0)) {
+						newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_100X);
+					} else if (dist < std::min(rad + 0.01 * AU, rad * 10.0)) {
+						newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_1000X);
+					} else if (dist < std::min(rad + 0.1 * AU, rad * 1000.0)) {
+						newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_10000X);
+					}
 				}
 			}
 
-			if (!m_player->AIIsActive()) {		// don't do this when autopilot is active
+			if (!m_player->AIIsActive()) { // don't do this when autopilot is active
 				const double locVel = m_player->GetAngVelocity().Length();
 				const double strictness = 20.0;
-				if(locVel > strictness / Game::s_timeAccelRates[TIMEACCEL_10X]) {
+				if (locVel > strictness / Game::s_timeAccelRates[TIMEACCEL_10X]) {
 					newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_1X);
-				} else if(locVel > strictness / Game::s_timeAccelRates[TIMEACCEL_100X]) {
+				} else if (locVel > strictness / Game::s_timeAccelRates[TIMEACCEL_100X]) {
 					newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_10X);
-				} else if(locVel > strictness / Game::s_timeAccelRates[TIMEACCEL_1000X]) {
+				} else if (locVel > strictness / Game::s_timeAccelRates[TIMEACCEL_1000X]) {
 					newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_100X);
-				} else if(locVel > strictness / Game::s_timeAccelRates[TIMEACCEL_10000X]) {
+				} else if (locVel > strictness / Game::s_timeAccelRates[TIMEACCEL_10000X]) {
 					newTimeAccel = std::min(newTimeAccel, Game::TIMEACCEL_1000X);
 				}
 			}
@@ -354,7 +395,7 @@ bool Game::UpdateTimeAccel()
 
 void Game::WantHyperspace()
 {
-	assert(m_state == STATE_NORMAL);
+	assert(m_state == State::NORMAL);
 	m_wantHyperspace = true;
 }
 
@@ -366,7 +407,7 @@ double Game::GetHyperspaceArrivalProbability() const
 	return scale * (1.0 - exp(-fudge * progress));
 }
 
-void Game::RemoveHyperspaceCloud(HyperspaceCloud* cloud)
+void Game::RemoveHyperspaceCloud(HyperspaceCloud *cloud)
 {
 	m_hyperspaceClouds.remove(cloud);
 }
@@ -376,17 +417,17 @@ void Game::SwitchToHyperspace()
 	PROFILE_SCOPED()
 	// remember where we came from so we can properly place the player on exit
 	m_hyperspaceSource = m_space->GetStarSystem()->GetPath();
-	m_hyperspaceDest =  m_player->GetHyperspaceDest();
+	m_hyperspaceDest = m_player->GetHyperspaceDest();
 
 	// find all the departure clouds, convert them to arrival clouds and store
 	// them for the next system
 	m_hyperspaceClouds.clear();
-	for (Body* b : m_space->GetBodies()) {
+	for (Body *b : m_space->GetBodies()) {
 
 		if (!b->IsType(Object::HYPERSPACECLOUD)) continue;
 
 		// only want departure clouds with ships in them
-		HyperspaceCloud *cloud = static_cast<HyperspaceCloud*>(b);
+		HyperspaceCloud *cloud = static_cast<HyperspaceCloud *>(b);
 		if (cloud->IsArrival() || cloud->GetShip() == 0)
 			continue;
 
@@ -417,9 +458,14 @@ void Game::SwitchToHyperspace()
 	m_space->RemoveBody(m_player.get());
 
 	// create hyperspace :)
+	m_space.reset(); // HACK: Here because next line will create Frames *before* deleting existing ones
 	m_space.reset(new Space(this, m_galaxy, m_space.get()));
 
-	m_space->GetBackground()->SetDrawFlags( Background::Container::DRAW_STARS );
+	m_space->GetBackground()->SetDrawFlags(Background::Container::DRAW_STARS);
+
+	// Reset planner
+	Pi::planner->ResetStartTime();
+	Pi::planner->ResetDv();
 
 	// put the player in it
 	m_player->SetFrame(m_space->GetRootFrame());
@@ -427,8 +473,8 @@ void Game::SwitchToHyperspace()
 
 	// put player at the origin. kind of unnecessary since it won't be moving
 	// but at least it gives some consistency
-	m_player->SetPosition(vector3d(0,0,0));
-	m_player->SetVelocity(vector3d(0,0,0));
+	m_player->SetPosition(vector3d(0, 0, 0));
+	m_player->SetVelocity(vector3d(0, 0, 0));
 	m_player->SetOrient(matrix3x3d::Identity());
 
 	// animation and end time counters
@@ -436,7 +482,7 @@ void Game::SwitchToHyperspace()
 	m_hyperspaceDuration = m_player->GetHyperspaceDuration();
 	m_hyperspaceEndTime = Pi::game->GetTime() + m_hyperspaceDuration;
 
-	m_state = STATE_HYPERSPACE;
+	m_state = State::HYPERSPACE;
 	m_wantHyperspace = false;
 
 	Output("Started hyperspacing...\n");
@@ -449,6 +495,7 @@ void Game::SwitchToNormalSpace()
 	m_space->RemoveBody(m_player.get());
 
 	// create a new space for the system
+	m_space.reset(); // HACK: Here because next line will create Frames *before* deleting existing ones
 	m_space.reset(new Space(this, m_galaxy, m_hyperspaceDest, m_space.get()));
 
 	// put the player in it
@@ -456,9 +503,18 @@ void Game::SwitchToNormalSpace()
 	m_space->AddBody(m_player.get());
 
 	// place it
-	m_player->SetPosition(m_space->GetHyperspaceExitPoint(m_hyperspaceSource, m_hyperspaceDest));
-	m_player->SetVelocity(vector3d(0,0,-100.0));
-	m_player->SetOrient(matrix3x3d::Identity());
+	vector3d pos, vel;
+	m_space->GetHyperspaceExitParams(m_hyperspaceSource, m_hyperspaceDest, pos, vel);
+	m_player->SetPosition(pos);
+	m_player->SetVelocity(vel);
+
+	// orient ship in direction of travel
+	{
+		vector3d oz = -vel.Normalized();
+		vector3d ox = MathUtil::OrthogonalDirection(vel);
+		vector3d oy = oz.Cross(ox).Normalized();
+		m_player->SetOrient(matrix3x3d::FromVectors(ox, oy, oz));
+	}
 
 	// place the exit cloud
 	HyperspaceCloud *cloud = new HyperspaceCloud(0, Pi::game->GetTime(), true);
@@ -466,7 +522,7 @@ void Game::SwitchToNormalSpace()
 	cloud->SetPosition(m_player->GetPosition());
 	m_space->AddBody(cloud);
 
-	for (std::list<HyperspaceCloud*>::iterator i = m_hyperspaceClouds.begin(); i != m_hyperspaceClouds.end(); ++i) {
+	for (std::list<HyperspaceCloud *>::iterator i = m_hyperspaceClouds.begin(); i != m_hyperspaceClouds.end(); ++i) {
 		cloud = *i;
 
 		cloud->SetFrame(m_space->GetRootFrame());
@@ -479,7 +535,7 @@ void Game::SwitchToNormalSpace()
 			Ship *ship = cloud->EvictShip();
 
 			ship->SetFrame(m_space->GetRootFrame());
-			ship->SetVelocity(vector3d(0,0,-100.0));
+			ship->SetVelocity(vector3d(0, 0, -100.0));
 			ship->SetOrient(matrix3x3d::Identity());
 			ship->SetFlightState(Ship::FLYING);
 
@@ -498,7 +554,8 @@ void Game::SwitchToNormalSpace()
 				Body *target_body = m_space->FindBodyForPath(&sdest);
 				double dist_to_target = cloud->GetPositionRelTo(target_body).Length();
 				double half_dist_to_target = dist_to_target / 2.0;
-				double accel = -(ship->GetShipType()->linThrust[ShipType::THRUSTER_FORWARD] / ship->GetMass());
+				//double accel = -(ship->GetShipType()->linThrust[ShipType::THRUSTER_FORWARD] / ship->GetMass());
+				double accel = -ship->GetAccelFwd();
 				double travel_time = Pi::game->GetTime() - cloud->GetDueDate();
 
 				// I can't help but feel some actual math would do better here
@@ -516,7 +573,7 @@ void Game::SwitchToNormalSpace()
 				}
 
 				if (travel_time <= 0) {
-					vector3d pos =
+					pos =
 						target_body->GetPositionRelTo(m_space->GetRootFrame()) +
 						cloud->GetPositionRelTo(target_body).Normalized() * (dist_to_target - dist);
 					ship->SetPosition(pos);
@@ -531,7 +588,7 @@ void Game::SwitchToNormalSpace()
 					SystemBody *sbody = m_space->GetStarSystem()->GetBodyByPath(&sdest);
 					if (sbody->GetType() == SystemBody::TYPE_STARPORT_ORBITAL) {
 						ship->SetFrame(target_body->GetFrame());
-						ship->SetPosition(MathUtil::RandomPointOnSphere(1000.0)*1000.0); // somewhere 1000km out
+						ship->SetPosition(MathUtil::RandomPointOnSphere(1000.0) * 1000.0); // somewhere 1000km out
 					}
 
 					else {
@@ -541,7 +598,7 @@ void Game::SwitchToNormalSpace()
 							target_body = m_space->FindBodyForPath(&path);
 						}
 
-						double sdist = sbody->GetRadius()*2.0;
+						double sdist = sbody->GetRadius() * 2.0;
 
 						ship->SetFrame(target_body->GetFrame());
 						ship->SetPosition(MathUtil::RandomPointOnSphere(sdist));
@@ -556,46 +613,46 @@ void Game::SwitchToNormalSpace()
 	}
 	m_hyperspaceClouds.clear();
 
-	m_space->GetBackground()->SetDrawFlags( Background::Container::DRAW_SKYBOX | Background::Container::DRAW_STARS );
+	m_space->GetBackground()->SetDrawFlags(Background::Container::DRAW_SKYBOX | Background::Container::DRAW_STARS);
 
-	m_state = STATE_NORMAL;
+	m_state = State::NORMAL;
 }
 
 const float Game::s_timeAccelRates[] = {
-	0.0f,       // paused
-	1.0f,       // 1x
-	10.0f,      // 10x
-	100.0f,     // 100x
-	1000.0f,    // 1000x
-	10000.0f,   // 10000x
-	100000.0f   // hyperspace
+	0.0f, // paused
+	1.0f, // 1x
+	10.0f, // 10x
+	100.0f, // 100x
+	1000.0f, // 1000x
+	10000.0f, // 10000x
+	100000.0f // hyperspace
 };
 
 const float Game::s_timeInvAccelRates[] = {
-	0.0f,       // paused
-	1.0f,       // 1x
-	0.1f,      // 10x
-	0.01f,     // 100x
-	0.001f,    // 1000x
-	0.0001f,   // 10000x
-	0.00001f   // hyperspace
+	0.0f, // paused
+	1.0f, // 1x
+	0.1f, // 10x
+	0.01f, // 100x
+	0.001f, // 1000x
+	0.0001f, // 10000x
+	0.00001f // hyperspace
 };
 
 void Game::SetTimeAccel(TimeAccel t)
 {
 	// don't want player to spin like mad when hitting time accel
 	if ((t != m_timeAccel) && (t > TIMEACCEL_1X) &&
-			m_player->GetPlayerController()->GetRotationDamping()) {
-		m_player->SetAngVelocity(vector3d(0,0,0));
-		m_player->SetTorque(vector3d(0,0,0));
+		m_player->GetPlayerController()->GetRotationDamping()) {
+		m_player->SetAngVelocity(vector3d(0, 0, 0));
+		m_player->SetTorque(vector3d(0, 0, 0));
 		m_player->SetAngThrusterState(vector3d(0.0));
 	}
 
 	// Give all ships a half-step acceleration to stop autopilot overshoot
 	if (t < m_timeAccel)
-		for (Body* b : m_space->GetBodies())
+		for (Body *b : m_space->GetBodies())
 			if (b->IsType(Object::SHIP))
-				(static_cast<Ship*>(b))->TimeAccelAdjust(0.5f * GetTimeStep());
+				(static_cast<Ship *>(b))->TimeAccelAdjust(0.5f * GetTimeStep());
 
 	bool emitPaused = (t == TIMEACCEL_PAUSED && t != m_timeAccel);
 	bool emitResumed = (m_timeAccel == TIMEACCEL_PAUSED && t != TIMEACCEL_PAUSED);
@@ -622,23 +679,71 @@ void Game::RequestTimeAccel(TimeAccel t, bool force)
 	m_forceTimeAccel = force;
 }
 
-Game::Views::Views()
-	: m_sectorView(nullptr)
-	, m_galacticView(nullptr)
-	, m_settingsView(nullptr)
-	, m_systemInfoView(nullptr)
-	, m_systemView(nullptr)
-	, m_worldView(nullptr)
-	, m_deathView(nullptr)
-	, m_spaceStationView(nullptr)
-	, m_infoView(nullptr)
-	, m_cpan(nullptr)
-{ }
+void Game::RequestTimeAccelInc(bool force)
+{
+	switch (m_requestedTimeAccel) {
+	case Game::TIMEACCEL_1X:
+		m_requestedTimeAccel = Game::TIMEACCEL_10X;
+		break;
+	case Game::TIMEACCEL_10X:
+		m_requestedTimeAccel = Game::TIMEACCEL_100X;
+		break;
+	case Game::TIMEACCEL_100X:
+		m_requestedTimeAccel = Game::TIMEACCEL_1000X;
+		break;
+	case Game::TIMEACCEL_1000X:
+		m_requestedTimeAccel = Game::TIMEACCEL_10000X;
+		break;
+	default:
+		// ignore if paused, hyperspace or 10000X
+		break;
+	}
+	m_forceTimeAccel = force;
+}
+
+void Game::RequestTimeAccelDec(bool force)
+{
+	switch (m_requestedTimeAccel) {
+	case Game::TIMEACCEL_10X:
+		m_requestedTimeAccel = Game::TIMEACCEL_1X;
+		break;
+	case Game::TIMEACCEL_100X:
+		m_requestedTimeAccel = Game::TIMEACCEL_10X;
+		break;
+	case Game::TIMEACCEL_1000X:
+		m_requestedTimeAccel = Game::TIMEACCEL_100X;
+		break;
+	case Game::TIMEACCEL_10000X:
+		m_requestedTimeAccel = Game::TIMEACCEL_1000X;
+		break;
+	default:
+		// ignore if paused, hyperspace or 1X
+		break;
+	}
+	m_forceTimeAccel = force;
+}
+
+#if WITH_OBJECTVIEWER
+ObjectViewerView *Game::GetObjectViewerView() const
+{
+	return m_gameViews->m_objectViewerView;
+}
+#endif
+
+Game::Views::Views() :
+	m_sectorView(nullptr),
+	m_systemInfoView(nullptr),
+	m_systemView(nullptr),
+	m_worldView(nullptr),
+	m_deathView(nullptr),
+	m_spaceStationView(nullptr),
+	m_infoView(nullptr),
+	m_cpan(nullptr)
+{}
 
 void Game::Views::SetRenderer(Graphics::Renderer *r)
 {
 	// view manager will handle setting this probably
-	m_galacticView->SetRenderer(r);
 	m_infoView->SetRenderer(r);
 	m_sectorView->SetRenderer(r);
 	m_systemInfoView->SetRenderer(r);
@@ -651,18 +756,16 @@ void Game::Views::SetRenderer(Graphics::Renderer *r)
 #endif
 }
 
-void Game::Views::Init(Game* game)
+void Game::Views::Init(Game *game)
 {
 	m_cpan = new ShipCpanel(Pi::renderer, game);
 	m_sectorView = new SectorView(game);
 	m_worldView = new WorldView(game);
-	m_galacticView = new GalacticView(game);
 	m_systemView = new SystemView(game);
 	m_systemInfoView = new SystemInfoView(game);
-	m_spaceStationView = new UIView("StationView");
+	m_spaceStationView = new PiGuiView("StationView");
 	m_infoView = new UIView("InfoView");
 	m_deathView = new DeathView(game);
-	m_settingsView = new UIView("SettingsInGame");
 
 #if WITH_OBJECTVIEWER
 	m_objectViewerView = new ObjectViewerView();
@@ -671,19 +774,17 @@ void Game::Views::Init(Game* game)
 	SetRenderer(Pi::renderer);
 }
 
-void Game::Views::LoadFromJson(const Json::Value &jsonObj, Game* game)
+void Game::Views::LoadFromJson(const Json &jsonObj, Game *game)
 {
 	m_cpan = new ShipCpanel(jsonObj, Pi::renderer, game);
 	m_sectorView = new SectorView(jsonObj, game);
 	m_worldView = new WorldView(jsonObj, game);
 
-	m_galacticView = new GalacticView(game);
 	m_systemView = new SystemView(game);
 	m_systemInfoView = new SystemInfoView(game);
-	m_spaceStationView = new UIView("StationView");
+	m_spaceStationView = new PiGuiView("StationView");
 	m_infoView = new UIView("InfoView");
 	m_deathView = new DeathView(game);
-	m_settingsView = new UIView("SettingsInGame");
 
 #if WITH_OBJECTVIEWER
 	m_objectViewerView = new ObjectViewerView();
@@ -698,13 +799,11 @@ Game::Views::~Views()
 	delete m_objectViewerView;
 #endif
 
-	delete m_settingsView;
 	delete m_deathView;
 	delete m_infoView;
 	delete m_spaceStationView;
 	delete m_systemInfoView;
 	delete m_systemView;
-	delete m_galacticView;
 	delete m_worldView;
 	delete m_sectorView;
 	delete m_cpan;
@@ -718,7 +817,7 @@ Game::Views::~Views()
 // manage creation and destruction here to get the timing and order right
 void Game::CreateViews()
 {
-	Pi::SetView(0);
+	Pi::SetView(nullptr);
 
 	// XXX views expect Pi::game and Pi::player to exist
 	Pi::game = this;
@@ -727,16 +826,13 @@ void Game::CreateViews()
 	m_gameViews.reset(new Views);
 	m_gameViews->Init(this);
 
-	UI::Point scrSize = Pi::ui->GetContext()->GetSize();
-	log = new GameLog(
-		Pi::ui->GetContext()->GetFont(UI::Widget::FONT_NORMAL),
-		vector2f(scrSize.x, scrSize.y));
+	log = new GameLog();
 }
 
 // XXX mostly a copy of CreateViews
-void Game::LoadViewsFromJson(const Json::Value &jsonObj)
+void Game::LoadViewsFromJson(const Json &jsonObj)
 {
-	Pi::SetView(0);
+	Pi::SetView(nullptr);
 
 	// XXX views expect Pi::game and Pi::player to exist
 	Pi::game = this;
@@ -745,15 +841,12 @@ void Game::LoadViewsFromJson(const Json::Value &jsonObj)
 	m_gameViews.reset(new Views);
 	m_gameViews->LoadFromJson(jsonObj, this);
 
-	UI::Point scrSize = Pi::ui->GetContext()->GetSize();
-	log = new GameLog(
-		Pi::ui->GetContext()->GetFont(UI::Widget::FONT_NORMAL),
-		vector2f(scrSize.x, scrSize.y));
+	log = new GameLog();
 }
 
 void Game::DestroyViews()
 {
-	Pi::SetView(0);
+	Pi::SetView(nullptr);
 
 	m_gameViews.reset();
 
@@ -763,7 +856,7 @@ void Game::DestroyViews()
 
 void Game::EmitPauseState(bool paused)
 {
-	if (paused)	{
+	if (paused) {
 		// Notify UI that time is paused.
 		LuaEvent::Queue("onGamePaused");
 	} else {
@@ -773,21 +866,48 @@ void Game::EmitPauseState(bool paused)
 	LuaEvent::Emit();
 }
 
+Json Game::LoadGameToJson(const std::string &filename)
+{
+	Json rootNode = JsonUtils::LoadJsonSaveFile(FileSystem::JoinPathBelow(Pi::SAVE_DIR_NAME, filename), FileSystem::userFiles);
+	if (!rootNode.is_object()) {
+		Output("Loading saved game '%s' failed.\n", filename.c_str());
+		throw SavedGameCorruptException();
+	}
+	if (!rootNode["version"].is_number_integer() || rootNode["version"].get<int>() != s_saveVersion) {
+		Output("Loading saved game '%s' failed: wrong save file version.\n", filename.c_str());
+		throw SavedGameCorruptException();
+	}
+	return rootNode;
+}
+
 Game *Game::LoadGame(const std::string &filename)
 {
 	Output("Game::LoadGame('%s')\n", filename.c_str());
+
+	Json rootNode = LoadGameToJson(filename);
+
+	try {
+		return new Game(rootNode);
+	} catch (Json::type_error) {
+		throw SavedGameCorruptException();
+	} catch (Json::out_of_range) {
+		throw SavedGameCorruptException();
+	}
+}
+
+bool Game::CanLoadGame(const std::string &filename)
+{
 	auto file = FileSystem::userFiles.ReadFile(FileSystem::JoinPathBelow(Pi::SAVE_DIR_NAME, filename));
-	if (!file) throw CouldNotOpenFileException();
-	Json::Value rootNode; // Create the root JSON value for receiving the game data.
-	Json::Reader jsonReader; // Create reader for parsing the JSON string.
-	jsonReader.parse(file->GetData(), rootNode); // Parse the JSON string.
-	if (!rootNode.isObject()) throw SavedGameCorruptException();
-	return new Game(rootNode); // Decode the game data from JSON and create the game.
+	if (!file)
+		return false;
+
+	return true;
 	// file data is freed here
 }
 
 void Game::SaveGame(const std::string &filename, Game *game)
 {
+	PROFILE_SCOPED()
 	assert(game);
 
 	if (game->IsHyperspace())
@@ -800,16 +920,39 @@ void Game::SaveGame(const std::string &filename, Game *game)
 		throw CouldNotOpenFileException();
 	}
 
-	Json::Value rootNode; // Create the root JSON value for receiving the game data.
+#ifdef PIONEER_PROFILER
+	std::string profilerPath;
+	FileSystem::userFiles.MakeDirectory("profiler");
+	FileSystem::userFiles.MakeDirectory("profiler/saving");
+	profilerPath = FileSystem::JoinPathBelow(FileSystem::userFiles.GetRoot(), "profiler/saving");
+	Profiler::reset();
+#endif
+
+	Json rootNode; // Create the root JSON value for receiving the game data.
 	game->ToJson(rootNode); // Encode the game data as JSON and give to the root value.
-	Json::StyledWriter jsonWriter; // Create writer for writing the JSON data to string.
-	const std::string jsonDataStr = jsonWriter.write(rootNode); // Write the JSON data.
+	std::vector<uint8_t> jsonData;
+	{
+		PROFILE_SCOPED_DESC("json.to_cbor");
+		jsonData = Json::to_cbor(rootNode); // Convert the JSON data to CBOR.
+	}
 
 	FILE *f = FileSystem::userFiles.OpenWriteStream(FileSystem::JoinPathBelow(Pi::SAVE_DIR_NAME, filename));
 	if (!f) throw CouldNotOpenFileException();
 
-	size_t nwritten = fwrite(jsonDataStr.data(), jsonDataStr.length(), 1, f);
-	fclose(f);
+	try {
+		// Compress the CBOR data.
+		const std::string comressed_data = gzip::CompressGZip(
+			std::string(reinterpret_cast<const char *>(jsonData.data()), jsonData.size()),
+			filename + ".json");
+		size_t nwritten = fwrite(comressed_data.data(), comressed_data.size(), 1, f);
+		fclose(f);
+		if (nwritten != 1) throw CouldNotWriteToFileException();
+	} catch (gzip::CompressionFailedException) {
+		fclose(f);
+		throw CouldNotWriteToFileException();
+	}
 
-	if (nwritten != 1) throw CouldNotWriteToFileException();
+#ifdef PIONEER_PROFILER
+	Profiler::dumphtml(profilerPath.c_str());
+#endif
 }

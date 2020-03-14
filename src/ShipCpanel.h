@@ -1,83 +1,56 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _SHIPCPANEL_H
 #define _SHIPCPANEL_H
 
-#include "libs.h"
-#include "gui/Gui.h"
-#include "ShipCpanelMultiFuncDisplays.h"
-#include "Ship.h"
-#include "Serializer.h"
 #include "Game.h"
+#include "Ship.h"
+#include "ShipCpanelMultiFuncDisplays.h"
 #include "WorldView.h"
+#include "gui/Gui.h"
+#include "libs.h"
 
 class Body;
 class SpaceStation;
-namespace Graphics { class Renderer; }
+namespace Graphics {
+	class Renderer;
+}
 
-class ShipCpanel: public Gui::Fixed {
+class ShipCpanel : public Gui::Fixed {
 public:
-	ShipCpanel(Graphics::Renderer *r, Game* game);
-	ShipCpanel(const Json::Value &jsonObj, Graphics::Renderer *r, Game* game);
+	ShipCpanel(Graphics::Renderer *r, Game *game);
+	ShipCpanel(const Json &jsonObj, Graphics::Renderer *r, Game *game);
 	virtual ~ShipCpanel();
 	virtual void Draw();
 	void Update();
-	void SetAlertState(Ship::AlertState as);
 
 	void TimeStepUpdate(float step);
 
-	void SaveToJson(Json::Value &jsonObj);
+	void SaveToJson(Json &jsonObj);
 
-	enum OverlayTextPos {
-		OVERLAY_TOP_LEFT,
-		OVERLAY_TOP_RIGHT,
-		OVERLAY_BOTTOM_LEFT,
-		OVERLAY_BOTTOM_RIGHT
-	};
-	void SetOverlayText(OverlayTextPos pos, const std::string &text);
-	void SetOverlayToolTip(OverlayTextPos pos, const std::string &text);
-	void ClearOverlay();
+	void SetRadarVisible(bool visible)
+	{
+		if (visible)
+			m_radar->Show();
+		else
+			m_radar->Hide();
+	}
 
 private:
 	void InitObject();
-	void OnRotationDampingChanged();
 
-	enum MapView { MAP_SECTOR, MAP_SYSTEM, MAP_INFO, MAP_GALACTIC };
+	enum MapView { MAP_SECTOR,
+		MAP_SYSTEM,
+		MAP_INFO,
+		MAP_GALACTIC };
 
-	void OnChangeCamView(Gui::MultiStateImageButton *b);
-	void OnChangeToMapView(Gui::MultiStateImageButton *b);
-	void OnChangeMapView(enum MapView);
-	void OnChangeInfoView(Gui::MultiStateImageButton *b);
-	void OnClickTimeaccel(Game::TimeAccel val);
-	void OnClickComms(Gui::MultiStateImageButton *b);
-	void OnClickRotationDamping(Gui::MultiStateImageButton *b);
+	// Handler for radar view / equipment view toggle button
+	void OnClickRadarEquip(Gui::MultiStateImageButton *b);
 
-	void OnUserChangeMultiFunctionDisplay(multifuncfunc_t f);
-	void ChangeMultiFunctionDisplay(multifuncfunc_t selected);
-	void OnMultiFuncGrabFocus(multifuncfunc_t);
-	void OnMultiFuncUngrabFocus(multifuncfunc_t);
-	void HideMapviewButtons();
+	Game *m_game;
 
-	Game* m_game;
-
-	enum MapView m_currentMapView;
-	multifuncfunc_t m_userSelectedMfuncWidget;
-	Gui::Label *m_clock;
-
-	sigc::connection m_connOnRotationDampingChanged;
-
-	MultiFuncSelectorWidget *m_mfsel;
-	ScannerWidget *m_scanner;
-	UseEquipWidget *m_useEquipWidget;
-	Gui::MultiStateImageButton *m_camButton;
-	Gui::RadioGroup *m_leftButtonGroup, *m_rightButtonGroup;
-	Gui::ImageRadioButton *m_timeAccelButtons[6];
-	Gui::Widget *m_mapViewButtons[4];
-	Gui::MultiStateImageButton *m_rotationDampingButton;
-	Gui::Image *m_alertLights[3];
-
-	Gui::Label *m_overlay[4];
+	RadarWidget *m_radar;
 };
 
 #endif /* _SHIP_CPANEL_H */

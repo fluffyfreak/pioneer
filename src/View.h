@@ -1,15 +1,16 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _VIEW_H
 #define _VIEW_H
 
-#include "libs.h"
-#include "Serializer.h"
+#include "JsonFwd.h"
 #include "gui/Gui.h"
-#include "json/json.h"
+#include "libs.h"
 
-namespace Graphics { class Renderer; }
+namespace Graphics {
+	class Renderer;
+}
 
 class ShipCpanel;
 
@@ -20,7 +21,7 @@ class ShipCpanel;
  *  system map
  *  sector map
  */
-class View: public Gui::Fixed {
+class View : public Gui::Fixed {
 public:
 	View();
 	virtual ~View();
@@ -28,15 +29,16 @@ public:
 	virtual void Draw3D() = 0;
 	// for checking key states, mouse crud
 	virtual void Update() = 0;
-	virtual void SaveToJson(Json::Value &jsonObj) {}
-	virtual void LoadFromJson(const Json::Value &jsonObj) {}
+	virtual void SaveToJson(Json &jsonObj) {}
+	virtual void LoadFromJson(const Json &jsonObj) {}
+	virtual void HandleSDLEvent(SDL_Event &event) {}
 
 	void Attach();
 	void Detach();
 
 	void SetRenderer(Graphics::Renderer *r) { m_renderer = r; }
 
-	static void SetCpanel(ShipCpanel* cpan) { s_cpan = cpan; }
+	static void SetCpanel(ShipCpanel *cpan) { s_cpan = cpan; }
 
 protected:
 	virtual void OnSwitchTo() = 0;
@@ -48,7 +50,7 @@ protected:
 	Gui::Fixed *m_rightRegion2;
 	Graphics::Renderer *m_renderer;
 
-	static ShipCpanel* s_cpan;
+	static ShipCpanel *s_cpan;
 };
 
 #endif /* _VIEW_H */

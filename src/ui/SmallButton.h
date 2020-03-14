@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef UI_SMALLBUTTON_H
@@ -8,17 +8,18 @@
 
 namespace UI {
 
-class SmallButton: public Widget {
-public:
-	virtual Point PreferredSize();
-	virtual void Layout();
-	virtual void Draw();
+	class SmallButton : public Widget {
+	public:
+		virtual Point PreferredSize();
+		virtual void Layout();
+		virtual void Draw();
 
-protected:
-	friend class Context;
-	SmallButton(Context *context): Widget(context) {}
-};
+	protected:
+		friend class Context;
+		SmallButton(Context *context) :
+			Widget(context) {}
+	};
 
-}
+} // namespace UI
 
 #endif

@@ -1,23 +1,24 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Margin.h"
-#include "LuaObject.h"
+#include "lua/LuaObject.h"
 
 namespace UI {
 
-class LuaMargin {
-public:
+	class LuaMargin {
+	public:
+	};
 
-};
-
-}
+} // namespace UI
 
 using namespace UI;
 
-template <> const char *LuaObject<UI::Margin>::s_type = "UI.Margin";
+template <>
+const char *LuaObject<UI::Margin>::s_type = "UI.Margin";
 
-template <> void LuaObject<UI::Margin>::RegisterClass()
+template <>
+void LuaObject<UI::Margin>::RegisterClass()
 {
 	static const char *l_parent = "UI.Single";
 

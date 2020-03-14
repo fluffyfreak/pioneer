@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright Â© 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef DUMMY_VERTEXBUFFER_H
@@ -8,66 +8,73 @@
 
 namespace Graphics {
 
-namespace Dummy {
+	namespace Dummy {
 
-class VertexBuffer : public Graphics::VertexBuffer {
-public:
-	VertexBuffer(const VertexBufferDesc &d) : Graphics::VertexBuffer(d),
-	m_buffer(new Uint8[m_desc.numVertices * m_desc.stride])
-	{}
+		class VertexBuffer : public Graphics::VertexBuffer {
+		public:
+			VertexBuffer(const VertexBufferDesc &d) :
+				Graphics::VertexBuffer(d),
+				m_buffer(new Uint8[m_desc.numVertices * m_desc.stride])
+			{}
 
-	// copies the contents of the VertexArray into the buffer
-	virtual bool Populate(const VertexArray &) override { return true; }
+			// copies the contents of the VertexArray into the buffer
+			virtual bool Populate(const VertexArray &) override final { return true; }
 
-	virtual void Bind() {}
-	virtual void Release() {}
+			// change the buffer data without mapping
+			virtual void BufferData(const size_t, void *) override final {}
 
-	virtual void Unmap() override {}
+			virtual void Bind() override final {}
+			virtual void Release() override final {}
 
-protected:
-	virtual Uint8 *MapInternal(BufferMapMode) { return m_buffer.get(); }
+			virtual void Unmap() override final {}
 
-private:
-	std::unique_ptr<Uint8[]> m_buffer;
-};
+		protected:
+			virtual Uint8 *MapInternal(BufferMapMode) override final { return m_buffer.get(); }
 
-class IndexBuffer : public Graphics::IndexBuffer {
-public:
-	IndexBuffer(Uint32 size, BufferUsage bu) : Graphics::IndexBuffer(size, bu),
-	m_buffer(new Uint16[size])
-	{};
+		private:
+			std::unique_ptr<Uint8[]> m_buffer;
+		};
 
-	virtual Uint16 *Map(BufferMapMode) override { return m_buffer.get(); }
+		class IndexBuffer : public Graphics::IndexBuffer {
+		public:
+			IndexBuffer(Uint32 size, BufferUsage bu) :
+				Graphics::IndexBuffer(size, bu),
+				m_buffer(new Uint32[size]){};
 
-	virtual void Unmap() override {}
+			virtual Uint32 *Map(BufferMapMode) override final { return m_buffer.get(); }
+			virtual void Unmap() override final {}
 
-	virtual void Bind() {}
-	virtual void Release() {}
+			virtual void BufferData(const size_t, void *) override final {}
 
-private:
-    std::unique_ptr<Uint16[]> m_buffer;
-};
+			virtual void Bind() override final {}
+			virtual void Release() override final {}
 
-// Instance buffer
-class InstanceBuffer : public Graphics::InstanceBuffer {
-public:
-	InstanceBuffer(Uint32 size, BufferUsage hint)
-		: Graphics::InstanceBuffer(size, hint), m_data(new matrix4x4f[size])
-	{}
-	virtual ~InstanceBuffer() {};
-	virtual matrix4x4f* Map(BufferMapMode) override { return m_data.get(); }
-	virtual void Unmap() override {}
+		private:
+			std::unique_ptr<Uint32[]> m_buffer;
+		};
 
-	Uint32 GetSize() const { return m_size; }
-	BufferUsage GetUsage() const { return m_usage; }
+		// Instance buffer
+		class InstanceBuffer : public Graphics::InstanceBuffer {
+		public:
+			InstanceBuffer(Uint32 size, BufferUsage hint) :
+				Graphics::InstanceBuffer(size, hint),
+				m_data(new matrix4x4f[size])
+			{}
+			virtual ~InstanceBuffer(){};
+			virtual matrix4x4f *Map(BufferMapMode) override final { return m_data.get(); }
+			virtual void Unmap() override final {}
 
-	virtual void Bind() {}
-	virtual void Release() {}
+			Uint32 GetSize() const { return m_size; }
+			BufferUsage GetUsage() const { return m_usage; }
 
-protected:
-	std::unique_ptr<matrix4x4f> m_data;
-};
+			virtual void Bind() override final {}
+			virtual void Release() override final {}
 
-} }
+		protected:
+			std::unique_ptr<matrix4x4f> m_data;
+		};
+
+	} // namespace Dummy
+} // namespace Graphics
 
 #endif

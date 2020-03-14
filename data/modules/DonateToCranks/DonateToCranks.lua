@@ -1,14 +1,14 @@
--- Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
-local Engine = import("Engine")
-local Lang = import("Lang")
-local Game = import("Game")
-local Comms = import("Comms")
-local Character = import("Character")
-local Event = import("Event")
-local Serializer = import("Serializer")
-local Format = import("Format")
+local Engine = require 'Engine'
+local Lang = require 'Lang'
+local Game = require 'Game'
+local Comms = require 'Comms'
+local Character = require 'Character'
+local Event = require 'Event'
+local Serializer = require 'Serializer'
+local Format = require 'Format'
 
 local l = Lang.GetResource("module-donatetocranks")
 
@@ -71,7 +71,7 @@ local onChat = function (form, ref, option)
 			Comms.Message(l.THANK_YOU_ALL_DONATIONS_ARE_WELCOME)
 		end
 		Game.player:AddMoney(-option)
-		addReputation(option)
+		addReputation(option * ad.modifier)
 	end
 end
 
@@ -83,6 +83,7 @@ local onCreateBB = function (station)
 	local n = Engine.rand:Integer(1, #flavours)
 
 	local ad = {
+		modifier = n == 6 and 1.5 or 1.0, -- donating to FOSS is twice as good
 		title    = flavours[n].title,
 		message  = flavours[n].message,
 		station  = station,
@@ -102,7 +103,7 @@ local loaded_data
 local onGameStart = function ()
 	ads = {}
 
-	if not loaded_data then return end
+	if not loaded_data or not loaded_data.ads then return end
 
 	for k,ad in pairs(loaded_data.ads) do
 		local ref = ad.station:AddAdvert({

@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _GUICONTAINER_H
@@ -8,11 +8,12 @@
  */
 
 #include "GuiWidget.h"
-#include <list>
+#include "graphics/Drawables.h"
 #include <SDL_stdinc.h>
+#include <list>
 
 namespace Gui {
-	class Container: public Widget {
+	class Container : public Widget {
 	public:
 		Container();
 		virtual ~Container();
@@ -22,7 +23,7 @@ namespace Gui {
 		void RemoveAllChildren();
 		void DeleteAllChildren();
 		void GetChildPosition(const Widget *child, float outPos[2]) const;
-		int GetNumChildren() { return m_children.size(); }
+		int GetNumChildren() { return static_cast<Uint32>(m_children.size()); }
 		virtual void Draw();
 		void ShowChildren();
 		void HideChildren();
@@ -35,13 +36,16 @@ namespace Gui {
 		virtual void UpdateAllChildSizes() = 0;
 		void RemoveChild(Widget *w);
 		// only fired if child widgets do not eat event
-		sigc::signal<void, MouseButtonEvent*> onMouseButtonEvent;
+		sigc::signal<void, MouseButtonEvent *> onMouseButtonEvent;
+
 	private:
 		void _OnMouseLeave();
 		void _OnSetSize();
 		bool HandleMouseEvent(MouseButtonEvent *e);
 		Color m_bgcol;
 		bool m_transparent;
+		std::unique_ptr<Graphics::Drawables::Rect> m_rect;
+
 	protected:
 		struct widget_pos {
 			Widget *w;
@@ -58,7 +62,6 @@ namespace Gui {
 
 		WidgetList m_children;
 	};
-}
+} // namespace Gui
 
 #endif /* _GUICONTAINER_H */
-

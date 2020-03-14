@@ -1,21 +1,28 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
-#include "ObjectViewerView.h"
-#include "WorldView.h"
-#include "Pi.h"
-#include "Frame.h"
-#include "Player.h"
-#include "Space.h"
-#include "terrain/Terrain.h"
-#include "Planet.h"
-#include "graphics/Light.h"
-#include "graphics/Renderer.h"
-#include "StringF.h"
+#include "buildopts.h"
 
 #if WITH_OBJECTVIEWER
 
-ObjectViewerView::ObjectViewerView(): UIView()
+#include "Frame.h"
+#include "GameConfig.h"
+#include "ObjectViewerView.h"
+#include "Pi.h"
+#include "Planet.h"
+#include "Player.h"
+#include "Space.h"
+#include "StringF.h"
+#include "WorldView.h"
+#include "graphics/Drawables.h"
+#include "graphics/Light.h"
+#include "graphics/Renderer.h"
+#include "terrain/Terrain.h"
+
+#include <sstream>
+
+ObjectViewerView::ObjectViewerView() :
+	UIView()
 {
 	SetTransparency(true);
 	viewingDist = 1000.0f;
@@ -31,15 +38,15 @@ ObjectViewerView::ObjectViewerView(): UIView()
 	Pi::renderer->GetNearFarRange(znear, zfar);
 
 	const float fovY = Pi::config->Float("FOVVertical");
-    m_cameraContext.Reset(new CameraContext(Graphics::GetScreenWidth(), Graphics::GetScreenHeight(), fovY, znear, zfar));
-    m_camera.reset(new Camera(m_cameraContext, Pi::renderer));
+	m_cameraContext.Reset(new CameraContext(Graphics::GetScreenWidth(), Graphics::GetScreenHeight(), fovY, znear, zfar));
+	m_camera.reset(new Camera(m_cameraContext, Pi::renderer));
 
-	m_cameraContext->SetFrame(Pi::player->GetFrame());
-	m_cameraContext->SetPosition(Pi::player->GetInterpPosition() + vector3d(0, 0, viewingDist));
-	m_cameraContext->SetOrient(matrix3x3d::Identity());
+	m_cameraContext->SetCameraFrame(Pi::player->GetFrame());
+	m_cameraContext->SetCameraPosition(Pi::player->GetInterpPosition() + vector3d(0, 0, viewingDist));
+	m_cameraContext->SetCameraOrient(matrix3x3d::Identity());
 
 	m_infoLabel = new Gui::Label("");
-	Add(m_infoLabel, 2, Gui::Screen::GetHeight()-66-Gui::Screen::GetFontHeight());
+	Add(m_infoLabel, 2, Gui::Screen::GetHeight() - 66 - Gui::Screen::GetFontHeight());
 
 	m_vbox = new Gui::VBox();
 	Add(m_vbox, 580, 2);
@@ -113,13 +120,13 @@ void ObjectViewerView::Draw3D()
 	Graphics::Light light;
 	light.SetType(Graphics::Light::LIGHT_DIRECTIONAL);
 
-	const int btnState = Pi::MouseButtonState(SDL_BUTTON_RIGHT);
+	const int btnState = Pi::input.MouseButtonState(SDL_BUTTON_RIGHT);
 	if (btnState) {
 		int m[2];
-		Pi::GetMouseMotion(m);
-		m_camRot = matrix4x4d::RotateXMatrix(-0.002*m[1]) *
-				matrix4x4d::RotateYMatrix(-0.002*m[0]) * m_camRot;
-		m_cameraContext->SetPosition(Pi::player->GetInterpPosition() + vector3d(0, 0, viewingDist));
+		Pi::input.GetMouseMotion(m);
+		m_camRot = matrix4x4d::RotateXMatrix(-0.002 * m[1]) *
+			matrix4x4d::RotateYMatrix(-0.002 * m[0]) * m_camRot;
+		m_cameraContext->SetCameraPosition(Pi::player->GetInterpPosition() + vector3d(0, 0, viewingDist));
 		m_cameraContext->BeginFrame();
 		m_camera->Update();
 	}
@@ -133,7 +140,11 @@ void ObjectViewerView::Draw3D()
 		}
 		m_renderer->SetLights(1, &light);
 
-		body->Render(m_renderer, m_camera.get(), vector3d(0,0,-viewingDist), m_camRot);
+		body->Render(m_renderer, m_camera.get(), vector3d(0, 0, -viewingDist), m_camRot);
+
+		// industry-standard red/green/blue XYZ axis indiactor
+		m_renderer->SetTransform(matrix4x4d::Translation(vector3d(0, 0, -viewingDist)) * m_camRot * matrix4x4d::ScaleMatrix(body->GetClipRadius() * 2.0));
+		Graphics::Drawables::GetAxes3DDrawable(m_renderer)->Draw(m_renderer);
 	}
 
 	UIView::Draw3D();
@@ -144,25 +155,27 @@ void ObjectViewerView::Draw3D()
 
 void ObjectViewerView::OnSwitchTo()
 {
-	m_camRot = matrix4x4d::Identity();
+	// rotate X is vertical
+	// rotate Y is horizontal
+	m_camRot = matrix4x4d::RotateXMatrix(DEG2RAD(-30.0)) * matrix4x4d::RotateYMatrix(DEG2RAD(-15.0));
 	UIView::OnSwitchTo();
 }
 
 void ObjectViewerView::Update()
 {
-	if (Pi::KeyState(SDLK_EQUALS)) viewingDist *= 0.99f;
-	if (Pi::KeyState(SDLK_MINUS)) viewingDist *= 1.01f;
+	if (Pi::input.KeyState(SDLK_EQUALS)) viewingDist *= 0.99f;
+	if (Pi::input.KeyState(SDLK_MINUS)) viewingDist *= 1.01f;
 	viewingDist = Clamp(viewingDist, 10.0f, 1e12f);
 
 	char buf[128];
 	Body *body = Pi::player->GetNavTarget();
-	if(body && (body != lastTarget)) {
+	if (body && (body != lastTarget)) {
 		// Reset view distance for new target.
 		viewingDist = body->GetClipRadius() * 2.0f;
 		lastTarget = body;
 
 		if (body->IsType(Object::TERRAINBODY)) {
-			TerrainBody *tbody = static_cast<TerrainBody*>(body);
+			TerrainBody *tbody = static_cast<TerrainBody *>(body);
 			const SystemBody *sbody = tbody->GetSystemBody();
 			m_sbodyVolatileGas->SetText(stringf("%0{f.3}", sbody->GetVolatileGas()));
 			m_sbodyVolatileLiquid->SetText(stringf("%0{f.3}", sbody->GetVolatileLiquid()));
@@ -175,32 +188,50 @@ void ObjectViewerView::Update()
 			m_sbodyRadius->SetText(stringf("%0{f}", sbody->GetRadiusAsFixed().ToFloat()));
 		}
 	}
-	snprintf(buf, sizeof(buf), "View dist: %s     Object: %s", format_distance(viewingDist).c_str(), (body ? body->GetLabel().c_str() : "<none>"));
+
+	std::ostringstream pathStr;
+	if (body) {
+		// fill in pathStr from sp values and sys->GetName()
+		static const std::string comma(", ");
+		const SystemBody *psb = body->GetSystemBody();
+		if (psb) {
+			const SystemPath sp = psb->GetPath();
+			pathStr << body->GetSystemBody()->GetName() << " (" << sp.sectorX << comma << sp.sectorY << comma << sp.sectorZ << comma << sp.systemIndex << comma << sp.bodyIndex << ")";
+		} else {
+			pathStr << "<unknown>";
+		}
+	}
+
+	snprintf(buf, sizeof(buf), "View dist: %s     Object: %s\nSystemPath: %s",
+		format_distance(viewingDist).c_str(), (body ? body->GetLabel().c_str() : "<none>"),
+		pathStr.str().c_str());
 	m_infoLabel->SetText(buf);
 
-	if (body && body->IsType(Object::TERRAINBODY)) m_vbox->ShowAll();
-	else m_vbox->HideAll();
+	if (body && body->IsType(Object::TERRAINBODY))
+		m_vbox->ShowAll();
+	else
+		m_vbox->HideAll();
 
 	UIView::Update();
 }
 
 void ObjectViewerView::OnChangeTerrain()
 {
-	const fixed volatileGas = fixed(65536.0*atof(m_sbodyVolatileGas->GetText().c_str()), 65536);
-	const fixed volatileLiquid = fixed(65536.0*atof(m_sbodyVolatileLiquid->GetText().c_str()), 65536);
-	const fixed volatileIces = fixed(65536.0*atof(m_sbodyVolatileIces->GetText().c_str()), 65536);
-	const fixed life = fixed(65536.0*atof(m_sbodyLife->GetText().c_str()), 65536);
-	const fixed volcanicity = fixed(65536.0*atof(m_sbodyVolcanicity->GetText().c_str()), 65536);
-	const fixed metallicity = fixed(65536.0*atof(m_sbodyMetallicity->GetText().c_str()), 65536);
-	const fixed mass = fixed(65536.0*atof(m_sbodyMass->GetText().c_str()), 65536);
-	const fixed radius = fixed(65536.0*atof(m_sbodyRadius->GetText().c_str()), 65536);
+	const fixed volatileGas = fixed(65536.0 * atof(m_sbodyVolatileGas->GetText().c_str()), 65536);
+	const fixed volatileLiquid = fixed(65536.0 * atof(m_sbodyVolatileLiquid->GetText().c_str()), 65536);
+	const fixed volatileIces = fixed(65536.0 * atof(m_sbodyVolatileIces->GetText().c_str()), 65536);
+	const fixed life = fixed(65536.0 * atof(m_sbodyLife->GetText().c_str()), 65536);
+	const fixed volcanicity = fixed(65536.0 * atof(m_sbodyVolcanicity->GetText().c_str()), 65536);
+	const fixed metallicity = fixed(65536.0 * atof(m_sbodyMetallicity->GetText().c_str()), 65536);
+	const fixed mass = fixed(65536.0 * atof(m_sbodyMass->GetText().c_str()), 65536);
+	const fixed radius = fixed(65536.0 * atof(m_sbodyRadius->GetText().c_str()), 65536);
 
 	// XXX this is horrendous, but probably safe for the moment. all bodies,
 	// terrain, whatever else holds a const pointer to the same toplevel
 	// sbody. one day objectviewer should be far more contained and not
 	// actually modify the space
 	Body *body = Pi::player->GetNavTarget();
-	SystemBody *sbody = const_cast<SystemBody*>(body->GetSystemBody());
+	SystemBody *sbody = const_cast<SystemBody *>(body->GetSystemBody());
 
 	sbody->m_seed = atoi(m_sbodySeed->GetText().c_str());
 	sbody->m_radius = radius;

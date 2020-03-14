@@ -1,23 +1,24 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Background.h"
-#include "LuaObject.h"
+#include "lua/LuaObject.h"
 
 namespace UI {
 
-class LuaBackground {
-public:
+	class LuaBackground {
+	public:
+	};
 
-};
-
-}
+} // namespace UI
 
 using namespace UI;
 
-template <> const char *LuaObject<UI::Background>::s_type = "UI.Background";
+template <>
+const char *LuaObject<UI::Background>::s_type = "UI.Background";
 
-template <> void LuaObject<UI::Background>::RegisterClass()
+template <>
+void LuaObject<UI::Background>::RegisterClass()
 {
 	static const char *l_parent = "UI.Single";
 

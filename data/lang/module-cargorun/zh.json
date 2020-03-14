@@ -1,0 +1,638 @@
+{
+  "ACCEPTED_1": {
+    "description": "",
+    "message": "好极了，我将把货物装上你的船。"
+  },
+  "ACCEPTED_2": {
+    "description": "",
+    "message": "非常好。"
+  },
+  "ACCEPTED_3": {
+    "description": "",
+    "message": "好，很好。希望我能相信你。"
+  },
+  "ACCEPTED_4": {
+    "description": "",
+    "message": "就这么定了！"
+  },
+  "ACCEPTED_PICKUP_1": {
+    "description": "",
+    "message": "好的，我会确保货物准备好收货。"
+  },
+  "ACCEPTED_PICKUP_2": {
+    "description": "",
+    "message": "就这么定了！我会让我的同事知道你在路上。"
+  },
+  "ADTEXT_1": {
+    "description": "",
+    "message": "货物运输。将货物交付至 {system} 星系。"
+  },
+  "ADTEXT_2": {
+    "description": "",
+    "message": "需要运输。需要将货物运输到{system}星系。付{cash}。"
+  },
+  "ADTEXT_EXPENSIVE_1": {
+    "description": "",
+    "message": "交付。贵重货物到{system} 星系。{cash}给有经验的飞行员。"
+  },
+  "ADTEXT_LOCAL_1": {
+    "description": "",
+    "message": "本地交货。将货物移至{starport}。"
+  },
+  "ADTEXT_LOCAL_2": {
+    "description": "",
+    "message": "需要运输。当地货物运至{starport}。"
+  },
+  "ADTEXT_LOCAL_3": {
+    "description": "",
+    "message": "本地货运。送货到{starport}。"
+  },
+  "ADTEXT_PICKUP_1": {
+    "description": "",
+    "message": "货物提取。需要从 {system}星系取回货物。"
+  },
+  "ADTEXT_PICKUP_LOCAL_1": {
+    "description": "",
+    "message": "转移。需要从{starport}搬运货物。"
+  },
+  "ADTEXT_WHOLESALER_1": {
+    "description": "",
+    "message": "货运服务。我们需要一艘船运送货到{system}星系。"
+  },
+  "ALUMINIUM_TUBES": {
+    "description": "custom cargo",
+    "message": "铝管"
+  },
+  "AMOUNT": {
+    "description": "Shown in mission summary. The amount of cargo",
+    "message": "数量："
+  },
+  "ART_OBJECTS": {
+    "description": "custom cargo",
+    "message": "艺术品"
+  },
+  "CARGO": {
+    "description": "",
+    "message": "货物："
+  },
+  "CARGORUN": {
+    "description": "Name of mission type",
+    "message": "货物运输"
+  },
+  "CARGO_IS_LOADED": {
+    "description": "",
+    "message": "加载"
+  },
+  "CARGO_IS_NOT_LOADED": {
+    "description": "",
+    "message": "未加载"
+  },
+  "CEASE_FIRE": {
+    "description": "",
+    "message": "停火，停火！我站在你这边！"
+  },
+  "CLUS": {
+    "description": "custom cargo",
+    "message": "集装箱式居住单元"
+  },
+  "COULD_YOU_REPEAT_THE_ORIGINAL_REQUEST": {
+    "description": "",
+    "message": "你能重复一下最初的要求吗？"
+  },
+  "DANGER": {
+    "description": "the risk level",
+    "message": "危险:"
+  },
+  "DEADLINE": {
+    "description": "Must be delivered by",
+    "message": "截止日期:"
+  },
+  "DELIVER_TO": {
+    "description": "Deliver to this location",
+    "message": "交付到："
+  },
+  "DENY_1": {
+    "description": "",
+    "message": "抱歉，这批货太贵重，我不能把它交给一个没有经验的菜鸟。"
+  },
+  "DENY_2": {
+    "description": "",
+    "message": "我从没听说过你。我不认识你，也不信任你。"
+  },
+  "DENY_3": {
+    "description": "",
+    "message": "抱歉，我在找一个有经验的飞行员。"
+  },
+  "DENY_4": {
+    "description": "",
+    "message": "抱歉，我认为你没有完成这项工作的能力。"
+  },
+  "DENY_5": {
+    "description": "",
+    "message": "别浪费我的时间！你只是个菜鸟。"
+  },
+  "DENY_6": {
+    "description": "",
+    "message": "等你更有名气的时候再来。"
+  },
+  "DIAMONDS": {
+    "description": "custom cargo",
+    "message": "钻石"
+  },
+  "DIGESTERS": {
+    "description": "custom cargo",
+    "message": "蒸煮器"
+  },
+  "DISTANCE": {
+    "description": "distance in space, between two locations",
+    "message": "距离:"
+  },
+  "ELECTRICAL_APPLIANCES": {
+    "description": "custom cargo",
+    "message": "电器"
+  },
+  "ESCORT_CHATTER_1": {
+    "description": "",
+    "message": "探测到敌机。让我们一起攻击它。"
+  },
+  "ESCORT_CHATTER_2": {
+    "description": "",
+    "message": "干得漂亮。这个海盗是我第一个猎物。"
+  },
+  "ESCORT_CHATTER_3": {
+    "description": "",
+    "message": "发现敌人了，干掉他。"
+  },
+  "ESCORT_CHATTER_4": {
+    "description": "",
+    "message": "前往目的地。我来掩护你。"
+  },
+  "ESCORT_CHATTER_5": {
+    "description": "",
+    "message": "发现目标。 这将是我今天的第一次收获。"
+  },
+  "EXPLOSIVES": {
+    "description": "custom cargo",
+    "message": "炸药"
+  },
+  "FAILUREMSG_1": {
+    "description": "",
+    "message": "太令我失望了，你竟然迟到。你别想得到报酬。"
+  },
+  "FAILUREMSG_2": {
+    "description": "",
+    "message": "你太晚了！我现在该怎么办，这一次白干了！"
+  },
+  "FAILUREMSG_3": {
+    "description": "",
+    "message": "听着，我们很清楚最后期限。你可以忘掉那份工资。"
+  },
+  "FAILUREMSG_4": {
+    "description": "",
+    "message": "从现在起，我不会再给你机会。"
+  },
+  "FAILUREMSG_FLUFFY_1": {
+    "description": "",
+    "message": "你这个菜鸟！这批货让我等太久了。我所有的毛绒宠物都快饿死了！"
+  },
+  "FURNITURE": {
+    "description": "custom cargo",
+    "message": "家具"
+  },
+  "GREENHOUSES": {
+    "description": "custom cargo",
+    "message": "温室"
+  },
+  "GUNS_GUNS_GUNS": {
+    "description": "Military radio call to avoid friendly fire. It indicates that the cannon has been activated and should ensure that other friendly pilots do not maneuver into the path of harm.",
+    "message": "枪，枪，枪。"
+  },
+  "HAZARDOUS_SUBSTANCES": {
+    "description": "custom cargo",
+    "message": "有害物质"
+  },
+  "HOWMUCH_1": {
+    "description": "regarding mass, always more than 1t",
+    "message": "{amount}公吨."
+  },
+  "HOWMUCH_2": {
+    "description": "regarding mass, always more than 1t",
+    "message": "{amount}吨"
+  },
+  "HOWMUCH_3": {
+    "description": "regarding mass, always more than 1t",
+    "message": "质量是 {amount}吨."
+  },
+  "HOWMUCH_4": {
+    "description": "regarding mass, always more than 1t",
+    "message": "有 {amount}吨."
+  },
+  "HOWMUCH_SINGULAR_1": {
+    "description": "This string is only used for 1 metric tons (singular)",
+    "message": "只有 {amount}吨."
+  },
+  "HOWMUCH_WHOLESALER_1": {
+    "description": "",
+    "message": "这有 {amount}吨{cargoname}。"
+  },
+  "HOWMUCH_WHOLESALER_2": {
+    "description": "",
+    "message": "{amount}吨{cargoname}"
+  },
+  "HOW_MUCH_MASS": {
+    "description": "",
+    "message": "质量多少？"
+  },
+  "HOW_SOON_MUST_IT_BE_DELIVERED": {
+    "description": "",
+    "message": "需要什么时候送到?"
+  },
+  "INTROTEXT_1": {
+    "description": "",
+    "message": "嗨，我是{name}。 如果您要在{system}星系（{sectorx}，{sectory}，{sectorz}）中将{cargoname}发送到{starport}，我会向您支付{cash}，距离{dist}光年。"
+  },
+  "INTROTEXT_2": {
+    "description": "{name} is the full name of a person",
+    "message": "问候！ {name}传输服务需要您在{system}星系（{sectorx}，{sectory}，{sectorz}）中将{cargoname}发送到{starport}，距离{dist}光年。 我们支付{cash}以获得安全和完整的送货服务。"
+  },
+  "INTROTEXT_3": {
+    "description": "",
+    "message": "美好的一天。 我叫{name}，是{name} 有限公司的创始人。我需要有人值得信赖，在{system}星系（{sectorx}，{sectory}，{sectorz}）中将{cargoname}交给{starport}。 我会为{dist}光年的长途飞行支付{cash}。"
+  },
+  "INTROTEXT_EXPENSIVE_1": {
+    "description": "",
+    "message": "你好。 我们需要有经验的人在{system}星系（{sectorx}，{sectory}，{sectorz}）中对{starport}做点危险工作。 我们将支付{cash}。 距离是{dist} 光年。"
+  },
+  "INTROTEXT_FLUFFY_1": {
+    "description": "this is used for the delivery of Quibbles, which is a nod to Tribble (star trek ref. see wikipedia)",
+    "message": "嗨，我是{name}。 我在{system}星系（{sectorx}，{sectory}，{sectorz}）的{cargoname}要送到{starport}。 距离{dist} 光年。 对于这次送货，我会付给你{cash}。"
+  },
+  "INTROTEXT_INFRASTRUCTURE_1": {
+    "description": "",
+    "message": "问候。 我是{name}。 {system}政府希望在{system}星系（{sectorx}，{sectory}，{sectorz}）中向{starport}提供{cargoname}。 工资是{cash}。 {system}距离{dist} 光年。"
+  },
+  "INTROTEXT_LOCAL_1": {
+    "description": "",
+    "message": "很高兴见到你。 我是{name}，我在{starport}管理工作。 我们向能够将{cargoname}移至{starport}的人付{cash}。"
+  },
+  "INTROTEXT_LOCAL_2": {
+    "description": "",
+    "message": "你好。 我是{name}，我会向{starport}支付{cash}以快速交付{cargoname}。"
+  },
+  "INTROTEXT_LOCAL_3": {
+    "description": "",
+    "message": "我叫{name}，我需要送{cargoname}给{starport}的客户。 这次送货我会付给你{cash}。"
+  },
+  "INTROTEXT_MINING_1": {
+    "description": "{name} is the full name of a person",
+    "message": "你好。 {name}矿业公司希望在{system}星系（{sectorx}，{sectory}，{sectorz}）中将{cargoname}提供给{starport}，以建立一个新矿场。距离{dist}光年， 工资是{cash}。"
+  },
+  "INTROTEXT_PICKUP_1": {
+    "description": "",
+    "message": "你好吗？ 我叫{name}，现在需要一艘能够飞到{system}星系（{sectorx}，{sectory}，{sectorz}）中的{starport}的船只来取回{cargoname}并返回{dom_system}星系（{dom_sectorx}，{dom_sectory}，{dom_sectorz}）中的dom_starport}。 {system}的距离是{dist}，报酬有{cash}。"
+  },
+  "INTROTEXT_PICKUP_2": {
+    "description": "",
+    "message": "你好! 我叫 {name}. 我的一个客户希望从距离我们 {dist} 光年的 {system} ({sectorx}, {sectory}, {sectorz}) 星系进口 {cargoname} . 他愿意为这趟跑货付 {cash} . 你需要回到 {dom_system} ({dom_sectorx}, {dom_sectory}, {dom_sectorz}) 星系的 {dom_starport} 星港来交付货物. "
+  },
+  "INTROTEXT_PICKUP_LOCAL_1": {
+    "description": "",
+    "message": "您好， 我是{name}。 我会向将{carportame}从{starport}传送到{dom_starport}的人支付{cash}。"
+  },
+  "INTROTEXT_PICKUP_LOCAL_2": {
+    "description": "",
+    "message": "你好。 我叫{name}。 我的雇主愿意出{cash}雇用您来帮助我们将{carportame}从{starport}移动到我们的新住所{dom_starport}放到我们的仓库。"
+  },
+  "INTROTEXT_WEDDING_1": {
+    "description": "",
+    "message": "您好。 您是否在{system}星系（{sectorx}，{sectory}，{sectorz}）中听说过{starport}的婚礼季节？ 我们需要运输{cargoname}。 运费是{cash}。 这个怎么样？"
+  },
+  "INTROTEXT_WHOLESALER_1": {
+    "description": "",
+    "message": "你好，我的名字是{name}，我是{system}星系的批发商。 我在{system}星系（{sectorx}，{sectory}，{sectorz}）中为{starport}支付了{cash}，距离{dist} 光年。"
+  },
+  "INTROTEXT_WHOLESALER_2": {
+    "description": "",
+    "message": "您好，我的名字是{name}，为哈伯公司工作。我们在{system}星系（{sectorx}，{sectory}，{sectorz}）中为{starport}付款{cash}，距离 {dist} 光年。"
+  },
+  "I_AM_ON_MY_WAY": {
+    "description": "",
+    "message": "传感器显示您正在受到伤害。 我赶过来了。"
+  },
+  "I_HAVE_DEBITED_YOUR_ACCOUNT": {
+    "description": "",
+    "message": "我已把丢失的货物损失记入你的帐上。"
+  },
+  "I_NEED_HELP": {
+    "description": "",
+    "message": "我受伤了，我需要帮助。"
+  },
+  "LY": {
+    "description": "",
+    "message": "光年"
+  },
+  "MACHINE_TOOLS": {
+    "description": "custom cargo",
+    "message": "机床"
+  },
+  "NEPTUNIUM": {
+    "description": "custom cargo",
+    "message": "镎"
+  },
+  "OK_AGREED": {
+    "description": "",
+    "message": "好的，同意。"
+  },
+  "PICKUP_FROM": {
+    "description": "from a location",
+    "message": "取货地点："
+  },
+  "PIRATE_GRIPES_1": {
+    "description": "",
+    "message": "该死！你会为此付出代价的！"
+  },
+  "PIRATE_GRIPES_2": {
+    "description": "",
+    "message": "哦，不，我可怜的船！"
+  },
+  "PIRATE_GRIPES_3": {
+    "description": "said with vengeance",
+    "message": "等等，我带你去。"
+  },
+  "PIRATE_TAUNTS_1": {
+    "description": "",
+    "message": "这将是你的葬身之地！"
+  },
+  "PIRATE_TAUNTS_2": {
+    "description": "",
+    "message": "你为{client}干活？今天将是你的死期！"
+  },
+  "PIRATE_TAUNTS_3": {
+    "description": "",
+    "message": "嘿，伙计，马上把货交出来！"
+  },
+  "PIRATE_TAUNTS_4": {
+    "description": "",
+    "message": "伙计，你永远达不到目的地。"
+  },
+  "PIRATE_TAUNTS_5": {
+    "description": "",
+    "message": "啊，另一只肥羊正在前往{location}。"
+  },
+  "PIRATE_TAUNTS_6": {
+    "description": "",
+    "message": "看起来你带的东西太多了。我来帮你。"
+  },
+  "PIRATE_TAUNTS_7": {
+    "description": "",
+    "message": "你的运气太差！"
+  },
+  "PLUTONIUM": {
+    "description": "custom cargo",
+    "message": "钚"
+  },
+  "QUIBBLES": {
+    "description": "custom cargo, also used in the NewsEventCommodity module, a nod to Star Trek's Tribble (check wikipedia)",
+    "message": "狡辩"
+  },
+  "RISK_1": {
+    "description": "",
+    "message": "我希望没有麻烦。"
+  },
+  "RISK_2": {
+    "description": "",
+    "message": "不能再平常了."
+  },
+  "RISK_3": {
+    "description": "",
+    "message": "这是贵重货物，睁大你的眼睛。"
+  },
+  "RISK_4": {
+    "description": "",
+    "message": "可能会有危险, 你最好准备充分些."
+  },
+  "RISK_5": {
+    "description": "",
+    "message": "这可能是非常危险的，你可能会遇到一些重大的阻碍。"
+  },
+  "RISK_6": {
+    "description": "",
+    "message": "不要指望安全到达目的地。"
+  },
+  "RISK_ART_1": {
+    "description": "",
+    "message": "这些商品深受艺术爱好者的追捧。"
+  },
+  "RISK_EXPENSIVE_1": {
+    "description": "",
+    "message": "我们已尽一切努力保守运输机密。但我们永远无法确定。"
+  },
+  "RISK_EXPENSIVE_2": {
+    "description": "",
+    "message": "警方通知我们，一个不知名的海盗集团正在这个星系作案。"
+  },
+  "RISK_GEMS_1": {
+    "description": "",
+    "message": "一个无耻的珠宝商有可能会截获货物。"
+  },
+  "RISK_WHOLESALER_1": {
+    "description": "",
+    "message": "别担心。警察巡逻队已准备就绪，以备不时之需。"
+  },
+  "RISK_WHOLESALER_2": {
+    "description": "",
+    "message": "可能有风险。但是警察答应我们要在这个地区巡逻。"
+  },
+  "RISK_WHOLESALER_3": {
+    "description": "",
+    "message": "风险很高。但是护送者已经准备好保护你了。"
+  },
+  "SEMI_FINISHED_PRODUCTS": {
+    "description": "custom cargo",
+    "message": "半成品"
+  },
+  "SET_AS_TARGET": {
+    "description": "",
+    "message": "设置为导航目标"
+  },
+  "SET_RETURN_ROUTE": {
+    "description": "",
+    "message": "设置返程航线"
+  },
+  "SPACEPORT": {
+    "description": "",
+    "message": "星港:"
+  },
+  "SPACESHIP_PARTS": {
+    "description": "custom cargo",
+    "message": "飞船零件"
+  },
+  "STEM_BOLTS": {
+    "description": "custom cargo, used in Star Trek DS9 as something with unclear usefulness",
+    "message": "自密封阀杆螺栓"
+  },
+  "SUCCESSMSG_1": {
+    "description": "",
+    "message": "谢谢你的送货。你已经得到报酬了。"
+  },
+  "SUCCESSMSG_2": {
+    "description": "",
+    "message": "感谢您及时送货。钱转给你了。"
+  },
+  "SUCCESSMSG_3": {
+    "description": "",
+    "message": "很好，很高兴与您合作。我已经付账了。"
+  },
+  "SUCCESSMSG_4": {
+    "description": "",
+    "message": "谢谢！我一定会推荐你的。钱已经转账了。"
+  },
+  "SUCCESSMSG_FLUFFY_1": {
+    "description": "Said when receiving a shipment of Quibbles (see wikipedia Tribble)",
+    "message": "哦，天哪，怎么对付这么多毛茸茸的人。不管怎样，钱都已经寄出了。"
+  },
+  "SYSTEM": {
+    "description": "",
+    "message": "星系:"
+  },
+  "TARGET_DESTROYED": {
+    "description": "",
+    "message": "目标被摧毁。"
+  },
+  "TITANIUM": {
+    "description": "custom cargo",
+    "message": "钛"
+  },
+  "TUNGSTEN": {
+    "description": "custom cargo",
+    "message": "钨"
+  },
+  "URANIUM": {
+    "description": "custom cargo",
+    "message": "铀"
+  },
+  "URGENCY_1": {
+    "description": "",
+    "message": "不用着急。 只要在{date}之前送到就行。"
+  },
+  "URGENCY_2": {
+    "description": "",
+    "message": "必须在{date}之前交付。"
+  },
+  "URGENCY_3": {
+    "description": "",
+    "message": "由于时间紧迫，必须在{date}之前交付。"
+  },
+  "URGENCY_4": {
+    "description": "",
+    "message": "我们赶时间，所以必须在{date}之前交付。"
+  },
+  "URGENCY_5": {
+    "description": "",
+    "message": "货物必须在{date}之前交付。"
+  },
+  "URGENCY_FLUFFY_1": {
+    "description": "",
+    "message": "由于小动物的繁殖率和容器中的有限食物，必须在{date}前完成运输。"
+  },
+  "URGENCY_RADIOACTIVE_1": {
+    "description": "",
+    "message": "由于该同位素的半衰期较短，必须在{date}前完成交付。"
+  },
+  "WEDDING_DRESSES": {
+    "description": "custom cargo",
+    "message": "婚纱"
+  },
+  "WE_HAVE_LOADED_UP_THE_CARGO_ON_YOUR_SHIP": {
+    "description": "",
+    "message": "我们已经把货物装到你船上了。"
+  },
+  "WHAT_IS_THIS": {
+    "description": "",
+    "message": "什么？你把我的货物搞丢了吗？你疯了吗？"
+  },
+  "WHYSOMUCH_1": {
+    "description": "",
+    "message": "这是标准费用。"
+  },
+  "WHYSOMUCH_2": {
+    "description": "",
+    "message": "爱干不干。"
+  },
+  "WHYSOMUCH_3": {
+    "description": "",
+    "message": "所谓‘多’是相对的。"
+  },
+  "WHYSOMUCH_4": {
+    "description": "",
+    "message": "工资反映了我们希望你能按时交货的愿望。"
+  },
+  "WHYSOMUCH_5": {
+    "description": "",
+    "message": "把这看作是对你谨慎对待这次交货的一种奖励。"
+  },
+  "WHYSOMUCH_6": {
+    "description": "",
+    "message": "好吧，我们很乐意少付你一点钱。"
+  },
+  "WHYSOMUCH_CENTRIFUGES_1": {
+    "description": "",
+    "message": "一些{cargoname}因软件出错而损坏，急需更换。"
+  },
+  "WHYSOMUCH_CHEMICAL_1": {
+    "description": "",
+    "message": "化工厂的生产依赖于这些货物，不得中断。无论如何不能让机器停止。"
+  },
+  "WHYSOMUCH_EXPENSIVE_1": {
+    "description": "",
+    "message": "贵重物品需求量很大"
+  },
+  "WHYSOMUCH_EXPENSIVE_2": {
+    "description": "",
+    "message": "因为这些商品很贵重。"
+  },
+  "WHYSOMUCH_FLUFFY_1": {
+    "description": "",
+    "message": "{cargoname} 是本季的畅销货。如果你想赚大钱的话，你应该投资{cargoname} 股票。"
+  },
+  "WHYSOMUCH_INFRASTRUCTURE_1": {
+    "description": "",
+    "message": "这些货物对一个建筑计划极为重要. "
+  },
+  "WHYSOMUCH_MINING_1": {
+    "description": "",
+    "message": "这些货物对新矿场的建设至关重要。"
+  },
+  "WHYSOMUCH_URGENT_1": {
+    "description": "",
+    "message": "时间不多了，我倚重的飞行员却患上急病。"
+  },
+  "WHYSOMUCH_URGENT_2": {
+    "description": "",
+    "message": "如果我们不能准时送到，这个项目就会停止。"
+  },
+  "WHYSOMUCH_URGENT_3": {
+    "description": "",
+    "message": "急需这些货。"
+  },
+  "WHYSOMUCH_WEDDING_1": {
+    "description": "",
+    "message": "到目前为止我找不到任何人送这批货。等旺季结束我的商品就一文不值。"
+  },
+  "WHY_SO_MUCH_MONEY": {
+    "description": "",
+    "message": "为什么这么多钱?"
+  },
+  "WILL_I_BE_IN_ANY_DANGER": {
+    "description": "",
+    "message": "我会有危险吗?"
+  },
+  "YOU_DO_NOT_HAVE_ENOUGH_CARGO_SPACE_ON_YOUR_SHIP": {
+    "description": "",
+    "message": "你船上没有足够的货舱。"
+  },
+  "YOU_DO_NOT_HAVE_ENOUGH_EMPTY_CARGO_SPACE": {
+    "description": "",
+    "message": "当您有足够的货物空间时请回来。"
+  }
+}

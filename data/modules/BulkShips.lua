@@ -1,14 +1,14 @@
--- Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+-- Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 -- Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
-local Engine = import("Engine")
-local Game = import("Game")
-local Space = import("Space")
-local Event = import("Event")
-local Serializer = import("Serializer")
-local ShipDef = import("ShipDef")
-local Ship = import("Ship")
-local utils = import("utils")
+local Engine = require 'Engine'
+local Game = require 'Game'
+local Space = require 'Space'
+local Event = require 'Event'
+local Serializer = require 'Serializer'
+local ShipDef = require 'ShipDef'
+local Ship = require 'Ship'
+local utils = require 'utils'
 
 local loaded
 
@@ -31,7 +31,7 @@ local spawnShips = function ()
 	local num_bulk_ships = math.min(#stations*2, math.floor((math.ceil(population)+2)/3))
 
 	for i=1, num_bulk_ships do
-	local station = stations[Engine.rand:Integer(1,#stations)]
+		local station = stations[Engine.rand:Integer(1,#stations)]
 		local ship = Space.SpawnShipParked(shipdefs[Engine.rand:Integer(1,#shipdefs)].id, station)
 		ship:SetLabel(Ship.MakeRandomLabel())
 	end

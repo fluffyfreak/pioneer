@@ -1,4 +1,4 @@
-// Copyright © 2008-2015 Pioneer Developers. See AUTHORS.txt for details
+// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #ifndef _GL_UIMATERIAL_H
@@ -14,6 +14,7 @@
 namespace Graphics {
 
 	namespace OGL {
+		///////////////////////////////////////////////////////////////////////
 		class UIProgram : public Program {
 		public:
 			UIProgram(const MaterialDescriptor &);
@@ -21,11 +22,11 @@ namespace Graphics {
 
 		class UIMaterial : public Material {
 		public:
-			virtual Program *CreateProgram(const MaterialDescriptor &);
-			virtual void Apply();
-			virtual void Unapply();
+			virtual Program *CreateProgram(const MaterialDescriptor &) override final;
+			virtual void Apply() override final;
+			virtual void Unapply() override final;
 		};
-	}
-}
+	} // namespace OGL
+} // namespace Graphics
 
 #endif

@@ -2,6 +2,7 @@
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "Asteroid.h"
+#include "graphics/RenderState.h"
 #include "graphics/Texture.h"
 #include "collider/Weld.h"
 #include "gameconsts.h"
@@ -882,7 +883,7 @@ void Asteroid::CreateAndPopulateRenderBuffers(TLOD *pLOD, Graphics::Renderer *r)
 
 	// indices
 	ib.Reset(r->CreateIndexBuffer(pLOD->m_indices.size(), BUFFER_USAGE_STATIC));
-	Uint16 *idxPtr = ib->Map(Graphics::BUFFER_MAP_WRITE);
+	Uint32 *idxPtr = ib->Map(Graphics::BUFFER_MAP_WRITE);
 	for (auto it : pLOD->m_indices) {
 		*idxPtr = it;
 		idxPtr++;
