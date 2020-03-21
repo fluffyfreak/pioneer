@@ -21,21 +21,11 @@ TriplanarProgram::TriplanarProgram(const MaterialDescriptor &desc, int numLights
 
 	//build some defines
 	std::stringstream ss;
-	if (desc.textures > 0)
-		ss << "#define TEXTURE0\n";
 	//using only one light
 	if (desc.lighting && numLights > 0)
 		ss << stringf("#define NUM_LIGHTS %0{d}\n", numLights);
 	else
 		ss << "#define NUM_LIGHTS 0\n";
-	if (desc.normalMap && desc.lighting)
-		ss << "#define MAP_NORMAL\n";
-	if (desc.specularMap)
-		ss << "#define MAP_SPECULAR\n";
-	if (desc.glowMap)
-		ss << "#define MAP_EMISSIVE\n";
-	if (desc.ambientMap)
-		ss << "#define MAP_AMBIENT\n";
 
 	m_name = "triplanar";
 	m_defines = ss.str();

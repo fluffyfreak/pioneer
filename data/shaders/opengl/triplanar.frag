@@ -5,13 +5,11 @@
 #include "logz.glsl"
 #include "lib.glsl"
 
-#ifdef TEXTURE0
 uniform sampler2D texture0; //diffuse + intensity
 uniform sampler2D texture1; //normal(enc) + specular + AO
 uniform sampler2D texture2; //diffuse + intensity
 uniform sampler2D texture3; //normal(enc) + specular + AO
 in vec2 texCoord0;
-#endif
 
 #if (NUM_LIGHTS > 0)
 in vec3 eyePos;
@@ -19,10 +17,8 @@ in vec3 normal;
 in vec3 wNormal;
 in vec3 wCoords01;
 in vec3 wCoords23;
-#ifdef MAP_NORMAL
 in vec3 tangent;
 in vec3 bitangent;
-#endif
 #endif // (NUM_LIGHTS > 0)
 
 uniform Scene scene;
@@ -54,17 +50,13 @@ vec4 getTriplanarTex(in vec3 blending, in vec3 coords, in sampler2D sampler)
 #if (NUM_LIGHTS > 0)
 //ambient, diffuse, specular
 //would be a good idea to make specular optional
-void ads(in vec3 blending, in int lightNum, in vec3 pos, in vec3 n, inout vec4 light, inout vec4 specular, in float spec)
+void ads(in float spec, in int lightNum, in vec3 pos, in vec3 n, inout vec4 light, inout vec4 specular)
 {
 	vec3 s = normalize(vec3(uLight[lightNum].position)); //directional light
 	vec3 v = normalize(vec3(-pos));
 	vec3 h = normalize(v + s);
 	light += uLight[lightNum].diffuse * material.diffuse * max(dot(s, n), 0.0);
-#ifdef MAP_SPECULAR
 	specular += vec4(spec) * material.specular * uLight[lightNum].diffuse * pow(max(dot(h, n), 0.0), material.shininess);
-#else
-	specular += material.specular * uLight[lightNum].diffuse * pow(max(dot(h, n), 0.0), material.shininess);
-#endif
 	specular.a = 0.0;
 	light.a = 1.0;
 }
@@ -89,7 +81,6 @@ void main(void)
 {
 	vec4 color = material.diffuse;
 
-#ifdef TEXTURE0
 	// in wNormal is the world-space normal of the fragment
 	vec3 blending = abs( wNormal );
 	blending = normalize(max(blending, 0.00001)); // Force weights to sum to 1.0
@@ -114,44 +105,40 @@ void main(void)
 	color *= vec4(mix(tex0.xyz, tex2.xyz, texCoord0.x), 1.0);
 	float spec = mix(tex1.z, tex3.z, texCoord0.x);
 	float ambi = mix(tex1.w, tex3.w, texCoord0.x);
-	
-#endif
 
 //directional lighting
 #if (NUM_LIGHTS > 0)
-#ifdef MAP_NORMAL
 	vec3 bump0 = (decode(tex1.xy) * 2.0) - vec3(1.0);
 	vec3 bump1 = (decode(tex3.xy) * 2.0) - vec3(1.0);
 	vec3 bump = mix(bump0, bump1, texCoord0.x);
 	
 	mat3 tangentFrame = mat3(tangent, bitangent, normal);
 	vec3 v_normal = tangentFrame * bump;
-#else
-	vec3 v_normal = normal;
-#endif // MAP_NORMAL
+
 	//v_normal = normal;
 	//color = vec4(v_normal, 1.0);
 
 	//ambient only make sense with lighting
 	vec4 light = scene.ambient;
 	vec4 specular = vec4(0.0);
+	//color = uLight[0].diffuse;
+	//ads(spec, 0, eyePos, v_normal, light, specular);
 	#if (NUM_LIGHTS == 1)
-		ads(blending, 0, eyePos, v_normal, light, specular);
+		ads(spec, 0, eyePos, v_normal, light, specular);
 	#else
 		for (int i=0; i<NUM_LIGHTS; ++i) {
-			ads(blending, i, eyePos, v_normal, light, specular, spec);
+			ads(spec, i, eyePos, v_normal, light, specular);
 		}
 	#endif
 	
-#ifdef MAP_AMBIENT
 	// this is crude "baked ambient occlusion" - basically multiply everything by the ambient texture
 	// scaling whatever we've decided the lighting contribution is by 0.0 to 1.0 to account for sheltered/hidden surfaces
 	light *= vec4(ambi, ambi, ambi, 1.0);
-#endif
-#endif //NUM_LIGHTS
 
+#endif //NUM_LIGHTS
+	//light = vec4(1.0);
 #if (NUM_LIGHTS > 0)
-	frag_color = color;// * light + specular;
+	frag_color = color; //* light;// + specular;
 #else
 	frag_color = color;
 #endif

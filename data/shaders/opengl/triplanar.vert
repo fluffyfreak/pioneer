@@ -12,10 +12,8 @@ out vec3 normal;
 out vec3 wNormal;
 out vec3 wCoords01;
 out vec3 wCoords23;
-#ifdef MAP_NORMAL
 out vec3 tangent;
 out vec3 bitangent;
-#endif
 #endif // (NUM_LIGHTS > 0)
 uniform float texScale01;
 uniform float texScale23;
@@ -30,9 +28,8 @@ void main(void)
 	wNormal = a_normal;
 	wCoords01 = a_vertex.xyz * texScale01;
 	wCoords23 = a_vertex.xyz * texScale23;
-#ifdef MAP_NORMAL
+
 	tangent = normalize(uNormalMatrix * a_tangent.xyz).xyz;
 	bitangent = normalize(uNormalMatrix * cross(a_normal, a_tangent.xyz)).xyz;
-#endif
 #endif
 }
