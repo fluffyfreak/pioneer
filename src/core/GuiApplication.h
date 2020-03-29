@@ -10,6 +10,10 @@
 #include "graphics/RenderState.h"
 #include "graphics/RenderTarget.h"
 #include "graphics/Renderer.h"
+#include "graphics/Drawables.h"
+
+// FIXME: add support for offscreen rendertarget drawing and multisample RTs
+#define RTT 0
 
 class GuiApplication : public Application {
 public:
@@ -44,6 +48,10 @@ private:
 	std::string m_applicationTitle;
 
 	std::unique_ptr<Graphics::Renderer> m_renderer;
+#if RTT
+	Graphics::RenderState *m_renderState; // NB: we don't own RenderState pointers, just borrow them
 	std::unique_ptr<Graphics::RenderTarget> m_renderTarget;
-	std::unique_ptr<Graphics::RenderState> m_renderState;
+	std::unique_ptr<Graphics::Drawables::TexturedQuad> m_renderQuad;
+	RefCountedPtr<Graphics::Texture> m_renderTexture;
+#endif
 };

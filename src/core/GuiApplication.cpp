@@ -15,13 +15,10 @@
 #include "utils.h"
 #include "versioningInfo.h"
 
-// FIXME: add support for offscreen rendertarget drawing and multisample RTs
-#define RTT 0
-
 void GuiApplication::BeginFrame()
 {
 #if RTT
-	m_renderer->SetRenderTarget(m_renderTarget);
+	m_renderer->SetRenderTarget(m_renderTarget.get());
 #endif
 	// TODO: render target size
 	m_renderer->SetViewport(0, 0, Graphics::GetScreenWidth(), Graphics::GetScreenHeight());
@@ -44,7 +41,7 @@ void GuiApplication::DrawRenderTarget()
 		m_renderer->LoadIdentity();
 	}
 
-	m_renderQuad->Draw(m_renderer);
+	m_renderQuad->Draw(m_renderer.get());
 
 	{
 		m_renderer->SetMatrixMode(Graphics::MatrixMode::PROJECTION);
@@ -83,18 +80,28 @@ Graphics::RenderTarget *GuiApplication::CreateRenderTarget(const Graphics::Setti
 	rsd.depthTest = false;
 	rsd.depthWrite = false;
 	rsd.blendMode = Graphics::BLEND_SOLID;
-	m_renderState.reset(m_renderer->CreateRenderState(rsd));
+	m_renderState = m_renderer->CreateRenderState(rsd);
+
+	Graphics::TextureDescriptor texDesc(
+		Graphics::TEXTURE_RGBA_8888,
+		vector3f(settings.width, settings.height, 0.0f),
+		Graphics::LINEAR_CLAMP, false, false, false, 0, Graphics::TEXTURE_2D);
+	m_renderTexture.Reset(m_renderer->CreateTexture(texDesc));
+	m_renderQuad.reset(new Graphics::Drawables::TexturedQuad(
+		m_renderer.get(), m_renderTexture.Get(),
+		vector2f(0.0f, 0.0f), vector2f(float(Graphics::GetScreenWidth()), float(Graphics::GetScreenHeight())),
+		m_renderState));
 
 	// Complete the RT description so we can request a buffer.
 	Graphics::RenderTargetDesc rtDesc(
-		width,
-		height,
+		settings.width,
+		settings.height,
 		Graphics::TEXTURE_RGB_888, // don't create a texture
 		Graphics::TEXTURE_DEPTH,
-		false, settings.requestedSamples);
+		false);//, settings.requestedSamples);
 	m_renderTarget.reset(m_renderer->CreateRenderTarget(rtDesc));
 
-	m_renderTarget->SetColorTexture(*m_renderTexture);
+	m_renderTarget->SetColorTexture(m_renderTexture.Get());
 #endif
 
 	return nullptr;
@@ -132,15 +139,21 @@ Graphics::Renderer *GuiApplication::StartupRenderer(const GameConfig *config, bo
 	videoSettings.title = m_applicationTitle.c_str();
 
 	m_renderer.reset(Graphics::Init(videoSettings));
+#if RTT
 	m_renderTarget.reset(CreateRenderTarget(videoSettings));
+#endif
 
 	return m_renderer.get();
 }
 
 void GuiApplication::ShutdownRenderer()
 {
+#if RTT
+	m_renderQuad.reset();
+	m_renderTexture.Reset();
 	m_renderTarget.reset();
-	m_renderState.reset();
+	m_renderState = nullptr;
+#endif
 	m_renderer.reset();
 
 	SDL_QuitSubSystem(SDL_INIT_VIDEO);
