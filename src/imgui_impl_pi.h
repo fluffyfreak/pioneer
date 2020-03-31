@@ -1,0 +1,22 @@
+// ImGui SDL2 binding with OpenGL3
+// In this binding, ImTextureID is used to store an OpenGL 'GLuint' texture identifier. Read the FAQ about ImTextureID in imgui.cpp.
+
+// You can copy and use unmodified imgui_impl_* files in your project. See main.cpp for an example of using this.
+// If you use this binding you'll need to call 4 functions: ImGui_ImplXXXX_Init(), ImGui_ImplXXXX_NewFrame(), ImGui::Render() and ImGui_ImplXXXX_Shutdown().
+// If you are new to ImGui, see examples/README.txt and documentation at the top of imgui.cpp.
+// https://github.com/ocornut/imgui
+
+#include "imgui.h"
+
+struct SDL_Window;
+typedef union SDL_Event SDL_Event;
+
+IMGUI_IMPL_API bool ImGui_ImplPi_Init(SDL_Window *window);
+IMGUI_IMPL_API void ImGui_ImplPi_Shutdown();
+IMGUI_IMPL_API void ImGui_ImplPi_NewFrame(SDL_Window *window);
+IMGUI_IMPL_API bool ImGui_ImplPi_ProcessEvent(SDL_Event *event);
+IMGUI_IMPL_API void ImGui_ImplPi_RenderDrawData(ImDrawData *draw_data);
+
+// Use if you want to reset your rendering device without losing ImGui state.
+IMGUI_IMPL_API void ImGui_ImplPi_InvalidateDeviceObjects();
+IMGUI_IMPL_API bool ImGui_ImplPi_CreateDeviceObjects();

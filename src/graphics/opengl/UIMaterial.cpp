@@ -49,5 +49,44 @@ namespace Graphics {
 				static_cast<TextureGL *>(texture0)->Unbind();
 			}
 		}
+
+		///////////////////////////////////////////////////////////////////////
+		ImguiProgram::ImguiProgram(const MaterialDescriptor &desc)
+		{
+			m_name = "imgui";
+			CHECKERRORS();
+
+			LoadShaders(m_name, m_defines);
+			InitUniforms();
+		}
+
+		Program *ImguiMaterial::CreateProgram(const MaterialDescriptor &desc)
+		{
+			return new ImguiProgram(desc);
+		}
+
+		void ImguiMaterial::Apply()
+		{
+			OGL::Material::Apply();
+
+			ImguiProgram *p = static_cast<ImguiProgram *>(m_program);
+
+			p->diffuse.Set(this->diffuse);
+
+			p->texture0.Set(this->texture0, 0);
+			p->texture1.Set(this->texture1, 1);
+		}
+
+		void ImguiMaterial::Unapply()
+		{
+			// Might not be necessary to unbind textures, but let's not old graphics code (eg, old-UI)
+			if (texture1) {
+				static_cast<TextureGL *>(texture1)->Unbind();
+				glActiveTexture(GL_TEXTURE0);
+			}
+			if (texture0) {
+				static_cast<TextureGL *>(texture0)->Unbind();
+			}
+		}
 	} // namespace OGL
 } // namespace Graphics

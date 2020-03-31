@@ -8,9 +8,8 @@
 #include "graphics/opengl/TextureGL.h" // nasty, usage of GL is implementation specific
 #include "imgui/imgui.h"
 
-// Use GLEW instead of GL3W.
-#define IMGUI_IMPL_OPENGL_LOADER_GLEW 1
-#include "imgui/examples/imgui_impl_opengl3.h"
+
+#include "imgui_impl_pi.h"
 #include "imgui/examples/imgui_impl_sdl.h"
 // to get ImVec2 + ImVec2
 #define IMGUI_DEFINE_MATH_OPERATORS true
@@ -180,7 +179,7 @@ void PiGui::RefreshFontsTexture()
 	PROFILE_SCOPED()
 	// TODO: fix this, do the right thing, don't just re-create *everything* :)
 	ImGui::GetIO().Fonts->Build();
-	ImGui_ImplOpenGL3_CreateDeviceObjects();
+	ImGui_ImplPi_CreateDeviceObjects();
 }
 
 void PiDefaultStyle(ImGuiStyle &style)
@@ -212,15 +211,7 @@ void PiGui::Init(SDL_Window *window)
 	// unused, but that is slated to change very soon.
 	// We will need to fill this with a valid pointer to the OpenGL context.
 	ImGui_ImplSDL2_InitForOpenGL(window, NULL);
-	switch (Pi::renderer->GetRendererType()) {
-	default:
-	case Graphics::RENDERER_DUMMY:
-		Error("RENDERER_DUMMY is not a valid renderer, aborting.");
-		return;
-	case Graphics::RENDERER_OPENGL_3x:
-		ImGui_ImplOpenGL3_Init();
-		break;
-	}
+	ImGui_ImplPi_Init(window);
 
 	ImGuiIO &io = ImGui::GetIO();
 	// Apply the base style
@@ -386,15 +377,7 @@ void PiGui::NewFrame(SDL_Window *window)
 		ImGui::SetMouseCursor(ImGuiMouseCursor_None);
 	}
 
-	switch (Pi::renderer->GetRendererType()) {
-	default:
-	case Graphics::RENDERER_DUMMY:
-		Error("RENDERER_DUMMY is not a valid renderer, aborting.");
-		return;
-	case Graphics::RENDERER_OPENGL_3x:
-		ImGui_ImplOpenGL3_NewFrame();
-		break;
-	}
+	ImGui_ImplPi_NewFrame(window);
 	ImGui_ImplSDL2_NewFrame(window);
 	ImGui::NewFrame();
 
@@ -446,14 +429,7 @@ void PiGui::Render()
 
 	ImGui::Render();
 
-	switch (Pi::renderer->GetRendererType()) {
-	default:
-	case Graphics::RENDERER_DUMMY:
-		return;
-	case Graphics::RENDERER_OPENGL_3x:
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-		break;
-	}
+	ImGui_ImplPi_RenderDrawData(ImGui::GetDrawData());
 }
 
 void PiGui::ClearFonts()
@@ -726,14 +702,7 @@ void PiGui::Cleanup()
 		delete tex;
 	}
 
-	switch (Pi::renderer->GetRendererType()) {
-	default:
-	case Graphics::RENDERER_DUMMY:
-		return;
-	case Graphics::RENDERER_OPENGL_3x:
-		ImGui_ImplOpenGL3_Shutdown();
-		break;
-	}
+	ImGui_ImplPi_Shutdown();
 
 	ImGui_ImplSDL2_Shutdown();
 	ImGui::DestroyContext();

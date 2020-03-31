@@ -1,4 +1,4 @@
-// Copyright © 2008-2020 Pioneer Developers. See AUTHORS.txt for details
+// Copyright Â© 2008-2020 Pioneer Developers. See AUTHORS.txt for details
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "graphics/opengl/VertexBufferGL.h"
@@ -59,7 +59,10 @@ namespace Graphics {
 				m_desc.stride = m_desc.attrib[lastAttrib].offset + VertexBufferDesc::GetAttribSize(m_desc.attrib[lastAttrib].format);
 			}
 			assert(m_desc.stride > 0);
-			assert(m_desc.numVertices > 0);
+			if (m_desc.usage == BUFFER_USAGE_STATIC) {
+				// if the buffer is dynamic then we can resize it anyway
+				assert(m_desc.numVertices > 0);
+			}
 
 			//SetVertexCount(m_desc.numVertices);
 
@@ -337,6 +340,7 @@ namespace Graphics {
 				glBindVertexArray(m_vao);
 				glBindBuffer(GL_ARRAY_BUFFER, m_buffer);
 				glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(size), static_cast<GLvoid *>(data), GL_DYNAMIC_DRAW);
+				m_written = true;
 			}
 		}
 
@@ -385,7 +389,9 @@ namespace Graphics {
 		IndexBuffer::IndexBuffer(Uint32 size, BufferUsage hint) :
 			Graphics::IndexBuffer(size, hint)
 		{
-			assert(size > 0);
+			if (hint == BUFFER_USAGE_STATIC) {
+				assert(size > 0);
+			}
 
 			const GLenum usage = (hint == BUFFER_USAGE_STATIC) ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW;
 			glGenBuffers(1, &m_buffer);
@@ -408,7 +414,7 @@ namespace Graphics {
 
 		Uint32 *IndexBuffer::Map(BufferMapMode mode)
 		{
-			assert(mode != BUFFER_MAP_NONE); //makes no sense
+			assert(mode != BUFFER_MAP_NONE);	  //makes no sense
 			assert(m_mapMode == BUFFER_MAP_NONE); //must not be currently mapped
 			m_mapMode = mode;
 			if (GetUsage() == BUFFER_USAGE_STATIC) {
@@ -449,6 +455,7 @@ namespace Graphics {
 			if (GetUsage() == BUFFER_USAGE_DYNAMIC) {
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_buffer);
 				glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(size), static_cast<GLvoid *>(data), GL_DYNAMIC_DRAW);
+				m_written = true;
 			}
 		}
 

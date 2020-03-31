@@ -974,6 +974,9 @@ namespace Graphics {
 		case EFFECT_UI:
 			mat = new OGL::UIMaterial();
 			break;
+		case EFFECT_IMGUI:
+			mat = new OGL::ImguiMaterial();
+			break;
 		case EFFECT_PLANETRING:
 			mat = new OGL::RingMaterial();
 			break;

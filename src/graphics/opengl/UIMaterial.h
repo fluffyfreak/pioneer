@@ -26,6 +26,19 @@ namespace Graphics {
 			virtual void Apply() override final;
 			virtual void Unapply() override final;
 		};
+
+		///////////////////////////////////////////////////////////////////////
+		class ImguiProgram : public Program {
+		public:
+			ImguiProgram(const MaterialDescriptor &);
+		};
+
+		class ImguiMaterial : public Material {
+		public:
+			virtual Program *CreateProgram(const MaterialDescriptor &) override final;
+			virtual void Apply() override final;
+			virtual void Unapply() override final;
+		};
 	} // namespace OGL
 } // namespace Graphics
 
