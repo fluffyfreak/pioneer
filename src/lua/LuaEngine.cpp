@@ -3,6 +3,7 @@
 
 #include "LuaEngine.h"
 
+#include "LuaConsole.h"
 #include "EnumStrings.h"
 #include "FileSystem.h"
 #include "FloatComparison.h"
@@ -32,6 +33,7 @@
 #include "sound/SoundMusic.h"
 #include "ui/Context.h"
 #include "utils.h"
+#include <sstream>
 /*
  * Interface: Engine
  *
@@ -1091,6 +1093,156 @@ static int l_engine_get_sector_map_factions(lua_State *l)
 	return 1;
 }
 
+/*
+ * Method: GalaxyStats
+ *
+ * Output to stdout and lua console statictics in the given cube. Start the game before using!
+ *
+ * using:
+ * > Engine.GalaxyStats(centerX, centerY, centerZ, radius, processors)
+ *
+ * example using from console:
+ * > require 'Engine'.GalaxyStats(0,0,0,5, "CountSystemNames CountSystems CountPopulation")
+ *
+ * Parameters:
+ *   centerX, centerY, centerZ - integer, coordinates of center of the cube, 0, 0, 0 = Sol
+ *   radius - integer - distance in sectors from center to edge of the cube
+ *   processors - string - Processor names separated by spaces
+ *     available processor names:
+ *       CountSystems
+ *       CountSystemNames
+ *       CountPopulation
+ *
+ * Availability:
+ *
+ *   2020
+ *
+ * Status:
+ *
+ *   experimental
+ */
+
+static int l_engine_galaxy_stats(lua_State *l)
+{
+	// base class to process data from star system
+	class Processor {
+		public:
+			virtual void ProcessSystem(const Sector::System& system){}
+			virtual void Report(){}
+			void writeln(const std::string &str) {
+				Output("%s\n", str.c_str());
+				Pi::luaConsole->AddOutput(str);
+			}
+	};
+
+	//specific processors
+
+	class : public Processor {
+		uint32_t systems = 0;
+		public:
+		void ProcessSystem(const Sector::System &system) {
+			systems++;
+		}
+		void Report(){
+			writeln(std::to_string(systems) + " systems total.");
+		}
+	} CountSystems;
+
+	class : public Processor {
+		std::vector<std::string> names;
+		public:
+		void ProcessSystem(const Sector::System& system) {
+			names.emplace_back(system.GetName());
+		}
+		void Report() {
+			//counting repeats
+			std::map<std::string, int> repeats;
+			for(auto &name : names)
+				if(repeats[name])
+					repeats[name]++;
+				else
+					repeats[name] = 1;
+			//sorting
+			std::vector< std::pair<std::string, int> > sorted(repeats.begin(), repeats.end());
+			std::sort(sorted.begin(), sorted.end(),
+					[](std::pair<std::string, int> &n1, std::pair<std::string, int> &n2){
+					if (n1.second == n2.second) return n1.first < n2.first;
+					else return n1.second > n2.second;
+					});
+			writeln("Top 10 system names:");
+			for(int i = 0; i < 10; i++)
+				writeln(std::to_string(i+1) + ". " + sorted[i].first + " : " + std::to_string(sorted[i].second));
+		}
+	} CountSystemNames;
+
+	class : public Processor {
+		uint32_t explored = 0;
+		uint32_t inhabited = 0;
+		double population;
+		RefCountedPtr<Galaxy> galaxy = Pi::game->GetGalaxy();
+		public:
+		void ProcessSystem(const Sector::System& system) {
+			if (system.IsExplored()) explored++;
+			double current = galaxy->GetStarSystem(SystemPath(system.sx, system.sy, system.sz, system.idx))->GetTotalPop().ToDouble();
+			if (current > 0) {
+				inhabited++;
+				population += current;
+			}
+		}
+		void Report() {
+			writeln(std::to_string(explored) + " explored.");
+			writeln(std::to_string(inhabited) + " inhabited.");
+			writeln("population: " + std::to_string(population) + " billion.");
+		}
+	} CountPopulation;
+
+	std::map<const std::string, Processor *> processors =
+	{ {"CountSystemNames", &CountSystemNames},
+		{"CountPopulation", &CountPopulation},
+		{"CountSystems", &CountSystems}
+	};
+
+	// lua args
+	int centerX = LuaPull<int>(l, 1);
+	int centerY = LuaPull<int>(l, 2);
+	int centerZ = LuaPull<int>(l, 3);
+	int radius = LuaPull<int>(l, 4);
+	std::string options_string = LuaPull<std::string>(l,5);
+	// parse options to separate strings
+	std::istringstream iss(options_string);
+	std::vector<std::string> options((std::istream_iterator<std::string>(iss)),
+			std::istream_iterator<std::string>());
+	// map strings into processors
+	std::vector< Processor* > P;
+	for(auto &option : options)
+		if (processors[option])
+			P.push_back(processors[option]);
+
+	// iterating all processors on all systems in given sectors
+	RefCountedPtr<Galaxy> galaxy = Pi::game->GetGalaxy();
+	for (int sx = centerX - radius; sx <= centerX + radius; ++sx) {
+		for (int sy = centerY - radius; sy <= centerY + radius; ++sy) {
+			for (int sz = centerZ - radius; sz <= centerZ + radius; ++sz) {
+				SystemPath sp(sx, sy, sz);
+				auto sec = galaxy->GetSector(sp);
+				for (auto &system : sec->m_systems) {
+					try {
+						for (auto &p : P)
+							p->ProcessSystem(system);
+					} catch (...)
+					{
+						Output("Some error!\n");
+					}
+				}
+			}
+		}
+	}
+	// reporting from all processors
+	for (auto &p : P)
+		p->Report();
+	return 0;
+}
+
 static int l_get_can_browse_user_folders(lua_State *l)
 {
 	lua_pushboolean(l, OS::SupportsFolderBrowser());
@@ -1176,6 +1328,7 @@ void LuaEngine::Register()
 		{ "OpenBrowseUserFolder", l_browse_user_folders },
 
 		{ "GetModel", l_engine_get_model },
+		{ "GalaxyStats", l_engine_galaxy_stats },
 
 		{ "IsIntroZooming", l_engine_is_intro_zooming },
 		{ "GetIntroCurrentModelName", l_engine_get_intro_current_model_name },
