@@ -16,6 +16,7 @@
 #include "Player.h"
 #include "SpaceStation.h"
 #include "Star.h"
+#include "SystemView.h"
 #include "collider/CollisionContact.h"
 #include "collider/CollisionSpace.h"
 #include "galaxy/Galaxy.h"
@@ -39,7 +40,7 @@ void Space::BodyNearFinder::Prepare()
 
 Space::BodyNearList Space::BodyNearFinder::GetBodiesMaybeNear(const Body *b, double dist)
 {
-	return std::move(GetBodiesMaybeNear(b->GetPositionRelTo(m_space->GetRootFrame()), dist));
+	return GetBodiesMaybeNear(b->GetPositionRelTo(m_space->GetRootFrame()), dist);
 }
 
 Space::BodyNearList Space::BodyNearFinder::GetBodiesMaybeNear(const vector3d &pos, double dist)
@@ -73,7 +74,7 @@ Space::Space(Game *game, RefCountedPtr<Galaxy> galaxy, Space *oldSpace) :
 	m_processingFinalizationQueue(false)
 #endif
 {
-	m_background.reset(new Background::Container(Pi::renderer, Pi::rng));
+	m_background.reset(new Background::Container(Pi::renderer, Pi::rng, this, m_game->GetGalaxy()));
 
 	m_rootFrameId = Frame::CreateFrame(FrameId::Invalid, Lang::SYSTEM, Frame::FLAG_DEFAULT, FLT_MAX);
 
@@ -94,7 +95,7 @@ Space::Space(Game *game, RefCountedPtr<Galaxy> galaxy, const SystemPath &path, S
 {
 	Uint32 _init[5] = { path.systemIndex, Uint32(path.sectorX), Uint32(path.sectorY), Uint32(path.sectorZ), UNIVERSE_SEED };
 	Random rand(_init, 5);
-	m_background.reset(new Background::Container(Pi::renderer, rand));
+	m_background.reset(new Background::Container(Pi::renderer, rand, this, m_game->GetGalaxy()));
 
 	CityOnPlanet::SetCityModelPatterns(m_starSystem->GetPath());
 
@@ -125,7 +126,7 @@ Space::Space(Game *game, RefCountedPtr<Galaxy> galaxy, const Json &jsonObj, doub
 	const SystemPath &path = m_starSystem->GetPath();
 	Uint32 _init[5] = { path.systemIndex, Uint32(path.sectorX), Uint32(path.sectorY), Uint32(path.sectorZ), UNIVERSE_SEED };
 	Random rand(_init, 5);
-	m_background.reset(new Background::Container(Pi::renderer, rand));
+	m_background.reset(new Background::Container(Pi::renderer, rand, this, m_game->GetGalaxy()));
 
 	RebuildSystemBodyIndex();
 
@@ -167,7 +168,7 @@ void Space::RefreshBackground()
 	const SystemPath &path = m_starSystem->GetPath();
 	Uint32 _init[5] = { path.systemIndex, Uint32(path.sectorX), Uint32(path.sectorY), Uint32(path.sectorZ), UNIVERSE_SEED };
 	Random rand(_init, 5);
-	m_background.reset(new Background::Container(Pi::renderer, rand));
+	m_background.reset(new Background::Container(Pi::renderer, rand, this, m_game->GetGalaxy()));
 }
 
 void Space::ToJson(Json &jsonObj)
@@ -427,7 +428,7 @@ static void RelocateStarportIfNecessary(SystemBody *sbody, Planet *planet, vecto
 	double bestVariation = 1e10; // any high value
 	matrix3x3d rotNotUnderwaterWithLeastVariation = rot;
 	vector3d posNotUnderwaterWithLeastVariation = pos;
-	const double heightVariationCheckThreshold = 0.008; // max variation to radius radius ratio to check for local slope, ganymede is around 0.01
+	const double heightVariationCheckThreshold = 0.008;					 // max variation to radius radius ratio to check for local slope, ganymede is around 0.01
 	const double terrainHeightVariation = planet->GetMaxFeatureRadius(); //in radii
 
 	//Output("%s: terrain height variation %f\n", sbody->name.c_str(), terrainHeightVariation);
@@ -436,8 +437,8 @@ static void RelocateStarportIfNecessary(SystemBody *sbody, Planet *planet, vecto
 	// points must stay within max height variation to be accepted
 	//    1. delta should be chosen such that it a distance from the starport center that encloses landing pads for the largest starport
 	//    2. maxSlope should be set so maxHeightVariation is less than the height of the landing pads
-	const double delta = 20.0 / radius; // in radii
-	const double maxSlope = 0.2; // 0.0 to 1.0
+	const double delta = 20.0 / radius;							 // in radii
+	const double maxSlope = 0.2;								 // 0.0 to 1.0
 	const double maxHeightVariation = maxSlope * delta * radius; // in m
 
 	matrix3x3d rot_ = rot;
@@ -1006,6 +1007,7 @@ void Space::UpdateBodies()
 		rmb->SetFrame(FrameId::Invalid);
 		for (Body *b : m_bodies)
 			b->NotifyRemoved(rmb);
+		if (Pi::GetView()) Pi::game->GetSystemView()->BodyInaccessible(rmb);
 		m_bodies.remove(rmb);
 	}
 	m_removeBodies.clear();
@@ -1013,6 +1015,7 @@ void Space::UpdateBodies()
 	for (Body *killb : m_killBodies) {
 		for (Body *b : m_bodies)
 			b->NotifyRemoved(killb);
+		if (Pi::GetView()) Pi::game->GetSystemView()->BodyInaccessible(killb);
 		m_bodies.remove(killb);
 		delete killb;
 	}
@@ -1030,7 +1033,7 @@ static void DebugDumpFrame(FrameId fId, bool details, unsigned int indent)
 	Frame *f = Frame::GetFrame(fId);
 	Frame *parent = Frame::GetFrame(f->GetParent());
 
-	Output("%.*s%2i) %p (%s)%s\n", indent, space, fId, static_cast<void *>(f), f->GetLabel().c_str(), f->IsRotFrame() ? " [rotating]" : " [non rotating]");
+	Output("%.*s%2i) %p (%s)%s\n", indent, space, static_cast<int>(fId), static_cast<void *>(f), f->GetLabel().c_str(), f->IsRotFrame() ? " [rotating]" : " [non rotating]");
 	if (f->GetParent().valid())
 		Output("%.*s parent %p (%s)\n", indent + 3, space, static_cast<void *>(parent), parent->GetLabel().c_str());
 	if (f->GetBody())

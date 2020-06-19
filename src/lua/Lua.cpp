@@ -31,6 +31,7 @@
 #include "Ship.h"
 #include "SpaceStation.h"
 #include "Star.h"
+#include "SystemView.h"
 
 #include "galaxy/StarSystem.h"
 #include "gameui/Lua.h"
@@ -56,6 +57,8 @@ namespace Lua {
 	void InitModules()
 	{
 		PROFILE_SCOPED()
+		lua_State *l = Lua::manager->GetLuaState();
+
 		LuaObject<PropertiedObject>::RegisterClass();
 
 		LuaObject<Body>::RegisterClass();
@@ -71,6 +74,7 @@ namespace Lua {
 
 		LuaObject<StarSystem>::RegisterClass();
 		LuaObject<SystemPath>::RegisterClass();
+		LuaObject<SystemView>::RegisterClass();
 		LuaObject<SystemBody>::RegisterClass();
 		LuaObject<Random>::RegisterClass();
 		LuaObject<Faction>::RegisterClass();
@@ -107,11 +111,7 @@ namespace Lua {
 		GameUI::Lua::Init();
 		SceneGraph::Lua::Init();
 
-		LuaObject<PiGui>::RegisterClass();
-		PiGUI::Lua::Init();
-
 		// XXX load everything. for now, just modules
-		lua_State *l = Lua::manager->GetLuaState();
 		pi_lua_dofile(l, "libs/autoload.lua");
 		lua_pop(l, 1);
 

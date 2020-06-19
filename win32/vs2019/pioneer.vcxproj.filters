@@ -37,6 +37,9 @@
     <Filter Include="src\Lua\Core">
       <UniqueIdentifier>{8b8f8935-2d4d-49c5-8932-3c973b1fc69a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\core">
+      <UniqueIdentifier>{077edfac-2118-4205-94da-792445afd8da}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\Body.cpp">
@@ -61,9 +64,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\HyperspaceCloud.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\IniConfig.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\KeyBindings.cpp">
@@ -252,12 +252,6 @@
     <ClCompile Include="..\..\src\GeoPatchJobs.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\LuaPropertiedObject.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\PropertyMap.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\JobQueue.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -322,9 +316,6 @@
       <Filter>src\imgui</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\FixedGuns.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\GZipFormat.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\versioningInfo.cpp">
@@ -558,6 +549,33 @@
     <ClCompile Include="..\..\src\pigui\PiGuiSandbox.cpp">
       <Filter>src\pigui</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\GuiApplication.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Application.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\pigui\Widgets.cpp">
+      <Filter>src\pigui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\LuaSystemView.cpp">
+      <Filter>src\Lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\IniConfig.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\Log.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\GZipFormat.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\LuaMetaType.cpp">
+      <Filter>src\Lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\LZ4Format.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Aabb.h">
@@ -600,9 +618,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\HyperspaceCloud.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\IniConfig.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\KeyBindings.h">
@@ -812,12 +827,6 @@
     <ClInclude Include="..\..\src\GeoPatchJobs.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\PropertiedObject.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\PropertyMap.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\JobQueue.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -888,9 +897,6 @@
       <Filter>src\nanosvg</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\FixedGuns.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\GZipFormat.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\versioningInfo.h">
@@ -1102,6 +1108,33 @@
     </ClInclude>
     <ClInclude Include="..\..\src\pigui\PiGui.h">
       <Filter>src\pigui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Application.h">
+      <Filter>src\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\GuiApplication.h">
+      <Filter>src\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\pigui\View.h">
+      <Filter>src\pigui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\pigui\LuaFlags.h">
+      <Filter>src\pigui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\IniConfig.h">
+      <Filter>src\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\Log.h">
+      <Filter>src\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\GZipFormat.h">
+      <Filter>src\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lua\LuaMetaType.h">
+      <Filter>src\Lua</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\LZ4Format.h">
+      <Filter>src\core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -5,9 +5,9 @@
 #define _TEXTURE_H
 
 #include "RefCounted.h"
-#include <vector>
 #include "vector2.h"
 #include "vector3.h"
+#include <vector>
 
 namespace Graphics {
 
@@ -20,7 +20,7 @@ namespace Graphics {
 		//luminance/intensity formats are deprecated in opengl 3+
 		//so we might remove them someday
 		TEXTURE_LUMINANCE_ALPHA_88, //luminance value put into R,G,B components; separate alpha value
-		TEXTURE_INTENSITY_8, //intensity value put into RGBA components
+		TEXTURE_INTENSITY_8,		//intensity value put into RGBA components
 
 		TEXTURE_DXT1, // data is expected to be pre-compressed
 		TEXTURE_DXT5,
@@ -50,6 +50,7 @@ namespace Graphics {
 		void *negZ;
 	};
 
+	// WARNING: TextureDescriptor is intended to be immutable. Internal values should not be changed!
 	class TextureDescriptor {
 	public:
 		TextureDescriptor() :
@@ -90,29 +91,16 @@ namespace Graphics {
 
 		vector2f GetOriginalSize() const { return vector2f(dataSize.x * texSize.x, dataSize.y * texSize.y); }
 
-		const TextureFormat format;
-		const vector3f dataSize;
-		const vector2f texSize;
-		const TextureSampleMode sampleMode;
-		const bool generateMipmaps;
-		const bool allowCompression;
-		const bool useAnisotropicFiltering;
-		const unsigned int numberOfMipMaps;
-		const TextureType type;
-
-		TextureDescriptor &operator=(const TextureDescriptor &o)
-		{
-			const_cast<TextureFormat &>(format) = o.format;
-			const_cast<vector3f&>(dataSize) = o.dataSize;
-			const_cast<vector2f &>(texSize) = o.texSize;
-			const_cast<TextureSampleMode &>(sampleMode) = o.sampleMode;
-			const_cast<bool &>(generateMipmaps) = o.generateMipmaps;
-			const_cast<bool &>(allowCompression) = o.allowCompression;
-			const_cast<bool &>(useAnisotropicFiltering) = o.useAnisotropicFiltering;
-			const_cast<unsigned int &>(numberOfMipMaps) = o.numberOfMipMaps;
-			const_cast<TextureType &>(type) = o.type;
-			return *this;
-		}
+		// WARNING: these values shall not be changed
+		TextureFormat format;
+		vector3f dataSize;
+		vector2f texSize;
+		TextureSampleMode sampleMode;
+		bool generateMipmaps;
+		bool allowCompression;
+		bool useAnisotropicFiltering;
+		unsigned int numberOfMipMaps;
+		TextureType type;
 	};
 
 	class Texture : public RefCounted {
@@ -132,6 +120,7 @@ namespace Graphics {
 		// validMips is the number of mipmaps which already have valid data uploaded, and is mostly for internal use.
 		virtual void BuildMipmaps(const uint32_t validMips = 1) = 0;
 		virtual uint32_t GetTextureID() const = 0;
+		virtual uint32_t GetTextureMemSize() const = 0;
 
 		virtual void Bind() = 0;
 		virtual void Unbind() = 0;

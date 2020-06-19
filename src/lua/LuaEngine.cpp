@@ -11,19 +11,20 @@
 #include "Intro.h"
 #include "KeyBindings.h"
 #include "Lang.h"
+#include "LuaColor.h"
 #include "LuaConstants.h"
 #include "LuaObject.h"
 #include "LuaPiGui.h"
 #include "LuaUtils.h"
 #include "LuaVector.h"
 #include "LuaVector2.h"
-#include "OS.h"
 #include "Pi.h"
 #include "Player.h"
 #include "Random.h"
 #include "SectorView.h"
 #include "WorldView.h"
 #include "buildopts.h"
+#include "core/OS.h"
 #include "graphics/Graphics.h"
 #include "pigui/PiGui.h"
 #include "scenegraph/Model.h"
@@ -116,7 +117,7 @@ static int l_engine_attr_ui(lua_State *l)
  */
 static int l_engine_attr_pigui(lua_State *l)
 {
-	LuaObject<PiGui>::PushToLua(Pi::pigui.Get());
+	LuaObject<PiGui::Instance>::PushToLua(Pi::pigui);
 	return 1;
 }
 
@@ -334,6 +335,42 @@ static int l_engine_set_fullscreen(lua_State *l)
 	Pi::config->SetInt("StartFullscreen", (fullscreen ? 1 : 0));
 	Pi::config->Save();
 	return 0;
+}
+
+/*
+ * Method: SetShowDebugInfo
+ *
+ * Show, hide, or toggle the debug information window
+ *
+ * > Engine.SetShowDebugInfo(true)
+ * > // toggle
+ * > Engine.SetShowDebugInfo()
+ *
+ * Parameters:
+ *
+ *   enabled - true to show, false to hide. If not present, toggles the state instead
+ *
+ * Availability: 2020-05
+ *
+ * Status: experimental
+ */
+static int l_engine_set_show_debug_info(lua_State *l)
+{
+	if (lua_gettop(l) < 1) {
+		Pi::ToggleShowDebugInfo();
+	} else {
+		const bool enabled = lua_toboolean(l, 1);
+		Pi::SetShowDebugInfo(enabled);
+	}
+	return 0;
+}
+
+static int l_engine_get_enum_value(lua_State *l)
+{
+	auto enum_name = LuaPull<const char *>(l, 1);
+	auto enum_tag = LuaPull<const char *>(l, 2);
+	LuaPush<int>(l, EnumStrings::GetValue(enum_name, enum_tag));
+	return 1;
 }
 
 static int l_engine_get_disable_screenshot_info(lua_State *l)
@@ -785,7 +822,7 @@ static int l_engine_world_space_to_screen_space(lua_State *l)
 {
 	vector3d pos = LuaPull<vector3d>(l, 1);
 
-	TScreenSpace res = lua_world_space_to_screen_space(pos); // defined in LuaPiGui.cpp
+	PiGUI::TScreenSpace res = PiGUI::lua_world_space_to_screen_space(pos); // defined in LuaPiGui.cpp
 
 	LuaPush<bool>(l, res._onScreen);
 	LuaPush<vector2d>(l, res._screenPosition);
@@ -930,7 +967,7 @@ static int l_engine_sector_map_get_route(lua_State *l)
 
 	lua_newtable(l);
 	int i = 1;
-	for (const SystemPath j : route) {
+	for (const SystemPath &j : route) {
 		lua_pushnumber(l, i++);
 		LuaObject<SystemPath>::PushToLua(j);
 		lua_settable(l, -3);
@@ -1077,7 +1114,7 @@ static int l_engine_get_sector_map_factions(lua_State *l)
 		lua_setfield(l, -2, "faction");
 		lua_pushboolean(l, hidden.count(f) == 0);
 		lua_setfield(l, -2, "visible"); // inner table
-		lua_settable(l, -3); // outer table
+		lua_settable(l, -3);			// outer table
 	}
 	return 1;
 }
@@ -1102,6 +1139,8 @@ void LuaEngine::Register()
 
 	static const luaL_Reg l_methods[] = {
 		{ "Quit", l_engine_quit },
+
+		{ "SetShowDebugInfo", l_engine_set_show_debug_info },
 
 		{ "GetVideoModeList", l_engine_get_video_mode_list },
 		{ "GetMaximumAASamples", l_engine_get_maximum_aa_samples },
@@ -1195,16 +1234,14 @@ void LuaEngine::Register()
 		{ "SectorMapMoveRouteItemUp", l_engine_sector_map_move_route_item_up },
 		{ "SectorMapMoveRouteItemDown", l_engine_sector_map_move_route_item_down },
 		{ "SectorMapRemoveRouteItem", l_engine_sector_map_remove_route_item },
-
 		{ "SectorMapClearRoute", l_engine_sector_map_clear_route },
 		{ "SectorMapAddToRoute", l_engine_sector_map_add_to_route },
-
 		{ "SearchNearbyStarSystemsByName", l_engine_search_nearby_star_systems_by_name },
-
 		{ "ShipSpaceToScreenSpace", l_engine_ship_space_to_screen_space },
 		{ "CameraSpaceToScreenSpace", l_engine_camera_space_to_screen_space },
 		{ "WorldSpaceToScreenSpace", l_engine_world_space_to_screen_space },
 		{ "WorldSpaceToShipSpace", l_engine_world_space_to_ship_space },
+		{ "GetEnumValue", l_engine_get_enum_value },
 		{ 0, 0 }
 	};
 

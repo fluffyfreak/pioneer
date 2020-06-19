@@ -41,7 +41,13 @@ namespace Graphics {
 	// Renderer base, functions return false if
 	// failed/unsupported
 	class Renderer {
+	private:
+		typedef std::pair<std::string, std::string> TextureCacheKey;
+		typedef std::map<TextureCacheKey, RefCountedPtr<Texture> *> TextureCacheMap;
+
 	public:
+		using TextureCache = TextureCacheMap;
+
 		Renderer(SDL_Window *win, int width, int height);
 		virtual ~Renderer();
 
@@ -135,6 +141,8 @@ namespace Graphics {
 		void RemoveCachedTexture(const std::string &type, const std::string &name);
 		void RemoveAllCachedTextures();
 
+		const TextureCache &GetTextureCache() { return m_textureCache; }
+
 		virtual bool ReloadShaders() = 0;
 
 		// our own matrix stack
@@ -197,9 +205,7 @@ namespace Graphics {
 
 		Stats &GetStats() { return m_stats; }
 
-		void SetGrab(const bool grabbed);
 		void SetTime(const double time);
-
 	protected:
 		int m_width;
 		int m_height;
@@ -213,9 +219,7 @@ namespace Graphics {
 		virtual void PopState() = 0;
 
 	private:
-		typedef std::pair<std::string, std::string> TextureCacheKey;
-		typedef std::map<TextureCacheKey, RefCountedPtr<Texture> *> TextureCacheMap;
-		TextureCacheMap m_textures;
+		TextureCacheMap m_textureCache;
 	};
 
 } // namespace Graphics

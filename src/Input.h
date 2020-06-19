@@ -8,15 +8,16 @@
 #include "utils.h"
 
 #include <algorithm>
+#include <array>
+
+class IniConfig;
 
 class Input {
-	// TODO: better decouple these two classes.
-	friend class Pi;
-
 public:
-	Input(){};
-	void Init();
+	Input(IniConfig *config);
 	void InitGame();
+	void HandleSDLEvent(SDL_Event &ev);
+	void NewFrame();
 
 	// The Page->Group->Binding system serves as a thin veneer for the UI to make
 	// sane reasonings about how to structure the Options dialog.
@@ -91,7 +92,17 @@ public:
 		return axisBindings.count(id) ? &axisBindings[id] : nullptr;
 	}
 
-	bool KeyState(SDL_Keycode k) { return keyState[k]; }
+	bool KeyState(SDL_Keycode k) { return IsKeyDown(k); }
+
+	// returns true if key K is currently pressed
+	bool IsKeyDown(SDL_Keycode k) { return keyState[k] & 0x3; }
+
+	// returns true if key K was pressed this frame
+	bool IsKeyPressed(SDL_Keycode k) { return keyState[k] == 1; }
+
+	// returns true if key K was released this frame
+	bool IsKeyReleased(SDL_Keycode k) { return keyState[k] == 4; }
+
 	int KeyModState() { return keyModState; }
 
 	int JoystickButtonState(int joystick, int button);
@@ -129,8 +140,20 @@ public:
 
 	void GetMouseMotion(int motion[2])
 	{
-		memcpy(motion, mouseMotion, sizeof(int) * 2);
+		std::copy_n(mouseMotion.data(), mouseMotion.size(), motion);
 	}
+
+	int GetMouseWheel() { return mouseWheel; }
+
+	// Capturing the mouse hides the cursor, puts the mouse into relative mode,
+	// and passes all mouse inputs to the input system, regardless of whether
+	// ImGui is using them or not.
+	bool IsCapturingMouse() const { return m_capturingMouse; }
+
+	// Set whether the application would like to capture the mouse.
+	// To avoid contention between different classes, please only call this when the state
+	// has actually changed.
+	void SetCapturingMouse(bool enabled);
 
 	sigc::signal<void, SDL_Keysym *> onKeyPress;
 	sigc::signal<void, SDL_Keysym *> onKeyRelease;
@@ -139,13 +162,16 @@ public:
 	sigc::signal<void, bool> onMouseWheel;
 
 private:
-	void HandleSDLEvent(SDL_Event &ev);
 	void InitJoysticks();
 
-	std::map<SDL_Keycode, bool> keyState;
+	IniConfig *m_config;
+
+	std::map<SDL_Keycode, uint8_t> keyState;
 	int keyModState;
-	char mouseButton[6];
-	int mouseMotion[2];
+	std::array<char, 6> mouseButton;
+	std::array<int, 2> mouseMotion;
+	int mouseWheel;
+	bool m_capturingMouse;
 
 	bool joystickEnabled;
 	bool mouseYInvert;

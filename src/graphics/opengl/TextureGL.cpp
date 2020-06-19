@@ -84,6 +84,7 @@ namespace Graphics {
 
 		TextureGL::TextureGL(const TextureDescriptor &descriptor, const bool useCompressed, const bool useAnisoFiltering) :
 			Texture(descriptor),
+			m_allocSize(0),
 			m_useAnisoFiltering(useAnisoFiltering && descriptor.useAnisotropicFiltering)
 		{
 			PROFILE_SCOPED()
@@ -124,6 +125,7 @@ namespace Graphics {
 
 						Width /= 2;
 						Height /= 2;
+						m_allocSize += bufSize;
 					}
 					glTexParameteri(m_target, GL_TEXTURE_MAX_LEVEL, maxMip);
 					CHECKERRORS();
@@ -183,6 +185,7 @@ namespace Graphics {
 						glCompressedTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, i, GLInternalFormat(descriptor.format), Width, Height, 0, bufSize, 0);
 						Width /= 2;
 						Height /= 2;
+						m_allocSize += bufSize * 6;
 
 						if (!Width || !Height)
 							break;
@@ -222,6 +225,7 @@ namespace Graphics {
 
 						Width /= 2;
 						Height /= 2;
+						m_allocSize += bufSize * Layers;
 
 						if (!Width || !Height)
 							break;

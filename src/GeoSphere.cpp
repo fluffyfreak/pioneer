@@ -23,6 +23,7 @@
 #include "graphics/TextureBuilder.h"
 #include "graphics/VertexArray.h"
 #include "perlin.h"
+#include "utils.h"
 #include "vcacheopt/vcacheopt.h"
 #include <algorithm>
 #include <deque>

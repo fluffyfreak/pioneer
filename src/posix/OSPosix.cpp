@@ -2,8 +2,10 @@
 // Licensed under the terms of the GPL v3. See licenses/GPL-3.txt
 
 #include "FileSystem.h"
-#include "OS.h"
 #include "buildopts.h"
+#include "core/OS.h"
+#include "utils.h"
+
 #include <SDL.h>
 #include <fenv.h>
 #include <sys/time.h>
@@ -34,19 +36,6 @@ namespace OS {
 		return "icons/badge.png";
 	}
 
-	void RedirectStdio()
-	{
-		std::string output_path = FileSystem::JoinPath(FileSystem::GetUserDir(), "output.txt");
-
-		FILE *f;
-
-		f = freopen(output_path.c_str(), "w", stderr);
-		if (!f)
-			Output("ERROR: Couldn't redirect output to '%s': %s\n", output_path.c_str(), strerror(errno));
-		else
-			setvbuf(f, 0, _IOLBF, BUFSIZ);
-	}
-
 	void EnableFPE()
 	{
 #if HAS_FPE_OPS
@@ -64,19 +53,7 @@ namespace OS {
 #endif
 	}
 
-	Uint64 HFTimerFreq()
-	{
-		return 1000000;
-	}
-
-	Uint64 HFTimer()
-	{
-		timeval t;
-		gettimeofday(&t, 0);
-		return Uint64(t.tv_sec) * 1000000 + Uint64(t.tv_usec);
-	}
-
-	int GetNumCores()
+	uint32_t GetNumCores()
 	{
 #if defined(__APPLE__)
 		int nm[2];
@@ -96,7 +73,11 @@ namespace OS {
 		}
 		return count;
 #else
-		return sysconf(_SC_NPROCESSORS_ONLN);
+		// sysconf can return -1 if _SC_NPROCESSORS_ONLN is not supported
+		int count = sysconf(_SC_NPROCESSORS_ONLN);
+		// There's definitely at least one core.
+		// (What are you running Pioneer on otherwise, a potato battery?)
+		return count > 0 ? uint32_t(count) : 1;
 #endif
 	}
 

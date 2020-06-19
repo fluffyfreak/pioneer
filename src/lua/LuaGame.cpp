@@ -5,7 +5,6 @@
 #include "DateTime.h"
 #include "DeathView.h"
 #include "FileSystem.h"
-#include "GZipFormat.h"
 #include "Game.h"
 #include "GameSaveError.h"
 #include "Lang.h"
@@ -21,6 +20,7 @@
 #include "SystemInfoView.h"
 #include "SystemView.h"
 #include "WorldView.h"
+#include "core/GZipFormat.h"
 #include "galaxy/Galaxy.h"
 
 /*
@@ -70,7 +70,7 @@ static int l_game_start_game(lua_State *l)
 			time(&now);
 			start_time = difftime(now, 946684799); // <--- Friday, 31 December 1999 23:59:59 GMT+00:00 as UNIX epoch time in seconds
 		}
-		Pi::game = new Game(*path, start_time);
+		Pi::StartGame(new Game(*path, start_time));
 	} catch (InvalidGameStartLocation &e) {
 		luaL_error(l, "invalid starting location for game: %s", e.error.c_str());
 	}
@@ -129,10 +129,10 @@ static int l_game_savegame_stats(lua_State *l)
 		const std::string message = stringf(Lang::COULD_NOT_OPEN_FILENAME, formatarg("path", filename));
 		lua_pushlstring(l, message.c_str(), message.size());
 		return lua_error(l);
-	} catch (Json::type_error) {
+	} catch (const Json::type_error &) {
 		luaL_error(l, Lang::GAME_LOAD_CORRUPT);
 		return 0;
-	} catch (Json::out_of_range) {
+	} catch (const Json::out_of_range &) {
 		return luaL_error(l, Lang::GAME_LOAD_CORRUPT);
 	} catch (SavedGameCorruptException) {
 		luaL_error(l, Lang::GAME_LOAD_CORRUPT);
@@ -170,7 +170,7 @@ static int l_game_load_game(lua_State *l)
 	const std::string filename(luaL_checkstring(l, 1));
 
 	try {
-		Pi::game = Game::LoadGame(filename);
+		Pi::StartGame(Game::LoadGame(filename));
 	} catch (SavedGameCorruptException) {
 		luaL_error(l, Lang::GAME_LOAD_CORRUPT);
 	} catch (SavedGameWrongVersionException) {
@@ -333,6 +333,28 @@ static int l_game_attr_system(lua_State *l)
 		lua_pushnil(l);
 	else
 		LuaObject<StarSystem>::PushToLua(Pi::game->GetSpace()->GetStarSystem().Get());
+	return 1;
+}
+
+/*
+ * Attribute: systemView
+ *
+ * The <SystemView> object for the system map view class
+ *
+ * Availability:
+ *
+ *  February 2020
+ *
+ * Status:
+ *
+ *  experiment
+ */
+static int l_game_attr_systemview(lua_State *l)
+{
+	if (!Pi::game)
+		lua_pushnil(l);
+	else
+		LuaObject<SystemView>::PushToLua(Pi::game->GetSystemView());
 	return 1;
 }
 
@@ -613,7 +635,7 @@ static int l_game_get_hyperspace_travelled_percentage(lua_State *l)
 
 static int l_game_get_parts_from_date_time(lua_State *l)
 {
-	float time = LuaPull<float>(l, 1);
+	double time = LuaPull<double>(l, 1);
 	Time::DateTime t(time);
 	int year, month, day, hour, minute, second;
 	t.GetDateParts(&year, &month, &day);
@@ -662,6 +684,7 @@ void LuaGame::Register()
 	static const luaL_Reg l_attrs[] = {
 		{ "player", l_game_attr_player },
 		{ "system", l_game_attr_system },
+		{ "systemView", l_game_attr_systemview },
 		{ "time", l_game_attr_time },
 		{ "paused", l_game_attr_paused },
 		{ 0, 0 }

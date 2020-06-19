@@ -6,8 +6,9 @@
 #include "Win32Setup.h"
 
 #include "FileSystem.h"
-#include "OS.h"
 #include "TextUtils.h"
+#include "core/OS.h"
+#include "utils.h"
 #ifdef WITH_BREAKPAD
 #include "breakpad/exception_handler.h"
 #endif
@@ -21,10 +22,12 @@
 extern "C" {
 // This is the quickest and easiest way to enable using the nVidia GPU on a Windows laptop with a dedicated nVidia GPU and Optimus tech.
 // enable optimus!
+// https://docs.nvidia.com/gameworks/content/technologies/desktop/optimus.htm
 __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
 
 // AMD have one too!!!
-__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+// https://gpuopen.com/amdpowerxpressrequesthighperformance/
+__declspec(dllexport) DWORD AmdPowerXpressRequestHighPerformance = 0x00000001;
 }
 
 #ifdef RegisterClass
@@ -60,7 +63,7 @@ namespace OS {
 			{ 5, 0, "Windows 2000" },
 			{ 0, 0, nullptr }
 		};
-	}; // namespace
+	} // namespace
 
 	// Notify Windows that the window may become unresponsive
 	void NotifyLoadBegin()
@@ -83,21 +86,6 @@ namespace OS {
 		return "icons/badge32-8b.png";
 	}
 
-	void RedirectStdio()
-	{
-		std::string output_path = FileSystem::JoinPath(FileSystem::GetUserDir(), "output.txt");
-		std::wstring woutput_path = transcode_utf8_to_utf16(output_path);
-
-		FILE *f;
-
-		f = _wfreopen(woutput_path.c_str(), L"w", stderr);
-		if (!f) {
-			Output("ERROR: Couldn't redirect output to '%s': %s\n", output_path.c_str(), strerror(errno));
-		} else {
-			setvbuf(f, 0, _IOLBF, BUFSIZ);
-		}
-	}
-
 	void EnableFPE()
 	{
 		// clear any outstanding exceptions before enabling, otherwise they'll
@@ -115,21 +103,7 @@ namespace OS {
 #endif
 	}
 
-	Uint64 HFTimerFreq()
-	{
-		LARGE_INTEGER i;
-		QueryPerformanceFrequency(&i);
-		return i.QuadPart;
-	}
-
-	Uint64 HFTimer()
-	{
-		LARGE_INTEGER i;
-		QueryPerformanceCounter(&i);
-		return i.QuadPart;
-	}
-
-	int GetNumCores()
+	uint32_t GetNumCores()
 	{
 		SYSTEM_INFO sysinfo;
 		GetSystemInfo(&sysinfo);
@@ -293,13 +267,13 @@ namespace OS {
 		FileSystem::userFiles.MakeDirectory("crashdumps");
 		dumps_path.append(L"\\crashdumps");
 		exceptionHandler = new ExceptionHandler(
-			dumps_path, // Dump path
-			FilterCallback, // Filter callback
-			MinidumpCallback, // Minidumps callback
-			nullptr, // Callback context
+			dumps_path,									// Dump path
+			FilterCallback,								// Filter callback
+			MinidumpCallback,							// Minidumps callback
+			nullptr,									// Callback context
 			ExceptionHandler::HandlerType::HANDLER_ALL, // Handler types
 			MINIDUMP_TYPE::MiniDumpWithDataSegs,
-			L"", // Minidump server pipe name
+			L"",   // Minidump server pipe name
 			&cci); // Custom client information
 #endif
 	}

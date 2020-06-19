@@ -263,6 +263,10 @@
     "description": "Player combat rating",
     "message": "Mortal"
   },
+  "DECREASE": {
+    "description": "Decrease something.",
+    "message": "Reducir"
+  },
   "DELTA_V": {
     "description": "",
     "message": "Delta-V"
@@ -337,7 +341,7 @@
   },
   "DRIVE_ACTIVE": {
     "description": "Ship jump status",
-    "message": "Drive active"
+    "message": "Motor de Hipersalto activo"
   },
   "DUE": {
     "description": "mission deadline date",
@@ -963,17 +967,21 @@
     "description": "For player reputation",
     "message": "Incompetente"
   },
+  "INCREASE": {
+    "description": "Increase something.",
+    "message": "Aumentar"
+  },
   "INEXPERIENCED": {
     "description": "For player reputation",
     "message": "Novato"
   },
   "INITIATED": {
     "description": "Ship jump status",
-    "message": "Initiated"
+    "message": "Iniciado"
   },
   "INSUFFICIENT_FUEL": {
     "description": "Ship jump status",
-    "message": "Insufficient fuel"
+    "message": "Fuel insuficiente"
   },
   "INSUFFICIENT_FUNDS": {
     "description": "",
@@ -1293,7 +1301,7 @@
   },
   "NO_DRIVE": {
     "description": "Ship jump status",
-    "message": "No drive"
+    "message": "Sin motor de hipersalto"
   },
   "NO_FILTER_MATCHES": {
     "description": "No matches to this filter.",
@@ -1357,7 +1365,7 @@
   },
   "OUT_OF_RANGE": {
     "description": "Ship jump status",
-    "message": "Out of range"
+    "message": "Fuera de rango"
   },
   "OVERVIEW_NAME_FILTER": {
     "description": "Filter overview window entries by name",
@@ -1531,6 +1539,10 @@
     "description": "",
     "message": "Recompensa"
   },
+  "ROTATE_VIEW": {
+    "description": "",
+    "message": "Rotar vista"
+  },
   "ROUTE_INFO": {
     "description": "For hyperjump planner",
     "message": "Info de Ruta"
@@ -1541,7 +1553,7 @@
   },
   "SAFETY_LOCKOUT": {
     "description": "Ship jump status",
-    "message": "Safety lockout"
+    "message": "Bloqueo de seguridad"
   },
   "SAGITTARIUS_ARM": {
     "description": "Arm of the Milky Way galaxy",
@@ -1626,6 +1638,10 @@
   "SHIP_REPAIRS": {
     "description": "",
     "message": "Astillero"
+  },
+  "SHIP_TYPE": {
+    "description": "",
+    "message": "Tipo de Nave"
   },
   "SHIP_VIEWING_WAS_SOLD": {
     "description": "",

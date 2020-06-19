@@ -7,17 +7,17 @@
 #include "FileSystem.h"
 #include "Frame.h"
 #include "GameSaveError.h"
-#include "IniConfig.h"
 #include "Json.h"
 #include "JsonUtils.h"
 #include "ModelBody.h"
 #include "Pi.h"
 #include "StringF.h"
+#include "core/IniConfig.h"
 #include "graphics/Drawables.h"
 #include "graphics/Graphics.h"
 #include "graphics/Material.h"
-#include "graphics/Renderer.h"
 #include "graphics/RenderState.h"
+#include "graphics/Renderer.h"
 #include "graphics/TextureBuilder.h"
 
 using namespace Graphics;
@@ -30,7 +30,7 @@ namespace {
 		const float pixrad = Clamp(Graphics::GetScreenHeight() / trans.Length(), 0.1f, 50.0f);
 		return (size * Graphics::GetFovFactor()) * pixrad;
 	}
-}; // namespace
+} // namespace
 
 std::unique_ptr<Graphics::Material> SfxManager::damageParticle;
 std::unique_ptr<Graphics::Material> SfxManager::ecmParticle;
@@ -62,15 +62,6 @@ Sfx::Sfx(const Json &jsonObj)
 	} catch (Json::type_error &) {
 		throw SavedGameCorruptException();
 	}
-}
-
-Sfx::Sfx(const Sfx &b) :
-	m_pos(b.m_pos),
-	m_vel(b.m_vel),
-	m_age(b.m_age),
-	m_speed(b.m_speed),
-	m_type(b.m_type)
-{
 }
 
 void Sfx::SaveToJson(Json &jsonObj)

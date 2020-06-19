@@ -14,25 +14,33 @@ namespace Graphics {
 		memset(&m_frameStats[0], 0, sizeof(TFrameData) * MAX_FRAMES_STORE);
 
 		m_counterRefs = {
-			GetOrCreateCounter("STAT_DRAWCALL"),
-			GetOrCreateCounter("STAT_DRAWTRIS"),
-			GetOrCreateCounter("STAT_DRAWPOINTSPRITES"),
+			GetOrCreateCounter("DrawBuffer Calls"),
+			GetOrCreateCounter("DrawTriangles Calls"),
+			GetOrCreateCounter("DrawPointSprites Calls"),
 
-			GetOrCreateCounter("STAT_CREATE_BUFFER"),
-			GetOrCreateCounter("STAT_DESTROY_BUFFER"),
+			GetOrCreateCounter("Buffers Created"),
+			GetOrCreateCounter("Buffers Destroyed"),
+			GetOrCreateCounter("Buffers In Use", false),
 
-			GetOrCreateCounter("STAT_BUILDINGS"),
-			GetOrCreateCounter("STAT_CITIES"),
-			GetOrCreateCounter("STAT_GROUNDSTATIONS"),
-			GetOrCreateCounter("STAT_SPACESTATIONS"),
-			GetOrCreateCounter("STAT_ATMOSPHERES"),
-			GetOrCreateCounter("STAT_PATCHES"),
-			GetOrCreateCounter("STAT_PLANETS"),
-			GetOrCreateCounter("STAT_GASGIANTS"),
-			GetOrCreateCounter("STAT_STARS"),
-			GetOrCreateCounter("STAT_SHIPS"),
+			GetOrCreateCounter("Num Buildings"),
+			GetOrCreateCounter("Num Cities"),
+			GetOrCreateCounter("Num Ground Stations"),
+			GetOrCreateCounter("Num Space Stations"),
+			GetOrCreateCounter("Num Atmospheres"),
+			GetOrCreateCounter("Num GeoPatches"),
+			GetOrCreateCounter("Num Planets"),
+			GetOrCreateCounter("Num Gas Giants"),
+			GetOrCreateCounter("Num Stars"),
+			GetOrCreateCounter("Num Ships"),
 
-			GetOrCreateCounter("STAT_BILLBOARD")
+			GetOrCreateCounter("Num Billboards"),
+
+			GetOrCreateCounter("Texture2D Count", false),
+			GetOrCreateCounter("Texture2D Memory Used", false),
+			GetOrCreateCounter("TextureCube Count", false),
+			GetOrCreateCounter("TextureCube Memory Used", false),
+			GetOrCreateCounter("TextureArray2D Count", false),
+			GetOrCreateCounter("TextureArray2D Memory Used", false)
 		};
 	}
 
@@ -47,7 +55,7 @@ namespace Graphics {
 			frame.m_stats[idx] = statsFrame.at(name);
 		}
 
-		m_currentFrame = ++m_currentFrame % MAX_FRAMES_STORE;
+		m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_STORE;
 		memset(&m_frameStats[m_currentFrame], 0, sizeof(TFrameData));
 	}
 

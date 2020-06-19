@@ -167,6 +167,10 @@
     "description": "",
     "message": "Cargo scoop attempted. Not enough room in cargo hold."
   },
+  "CENTER": {
+    "description": "",
+    "message": "Center"
+  },
   "CH4_ATMOSPHERE": {
     "description": "",
     "message": "\" Metano atmosfera\""
@@ -485,7 +489,7 @@
   },
   "HAND_WEAPONS": {
     "description": "",
-    "message": "Rankiniai ginklai"
+    "message": "Small arms"
   },
   "HARD_CAPITALIST": {
     "description": "",
@@ -661,7 +665,7 @@
   },
   "LANG_NAME": {
     "description": "The name that native speakers use for this language. This will be used in the language selection screen.",
-    "message": "Angliškai"
+    "message": "Lietuviete"
   },
   "LARGE": {
     "description": "regarding terrestrial planet size (mass actually)",
@@ -1091,6 +1095,10 @@
     "description": "",
     "message": "Orbitinė kosminė stotis"
   },
+  "ORBIT_PLANNER": {
+    "description": "",
+    "message": "Orbit planner"
+  },
   "OUTDOOR_AGRICULTURAL_WORLD": {
     "description": "",
     "message": "Lauko žemės ūkio pasaulis."
@@ -1322,6 +1330,14 @@
   "SEMI_MAJOR_AXIS": {
     "description": "",
     "message": "Pusiau pagrindinė ašis"
+  },
+  "SET_AS_COMBAT_TARGET": {
+    "description": "",
+    "message": "Set as combat target"
+  },
+  "SET_AS_TARGET": {
+    "description": "",
+    "message": "Set as navigation target"
   },
   "SET_HYPERSPACE_DESTINATION_TO": {
     "description": "",

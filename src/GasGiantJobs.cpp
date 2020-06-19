@@ -457,4 +457,4 @@ namespace GasGiantJobs {
 		GasGiant::OnAddGPUGenResult(mData->SysPath(), mpResults);
 		mpResults = nullptr;
 	}
-}; // namespace GasGiantJobs
+} // namespace GasGiantJobs

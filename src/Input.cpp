@@ -4,16 +4,22 @@
 #include "Input.h"
 #include "GameConfig.h"
 #include "Pi.h"
+#include "SDL.h"
 #include "ui/Context.h"
 
 #include <array>
 
-void Input::Init()
+Input::Input(IniConfig *config) :
+	m_config(config),
+	keyModState(0),
+	mouseButton(),
+	mouseMotion(),
+	m_capturingMouse(false),
+	joystickEnabled(true),
+	mouseYInvert(false)
 {
-	GameConfig *config = Pi::config;
-
-	joystickEnabled = (config->Int("EnableJoystick")) ? true : false;
-	mouseYInvert = (config->Int("InvertMouseY")) ? true : false;
+	joystickEnabled = (m_config->Int("EnableJoystick")) ? true : false;
+	mouseYInvert = (m_config->Int("InvertMouseY")) ? true : false;
 
 	InitJoysticks();
 }
@@ -23,13 +29,32 @@ void Input::InitGame()
 	//reset input states
 	keyState.clear();
 	keyModState = 0;
-	std::fill(mouseButton, mouseButton + COUNTOF(mouseButton), 0);
-	std::fill(mouseMotion, mouseMotion + COUNTOF(mouseMotion), 0);
+	mouseButton.fill(0);
+	mouseMotion.fill(0);
 	for (std::map<SDL_JoystickID, JoystickState>::iterator stick = joysticks.begin(); stick != joysticks.end(); ++stick) {
 		JoystickState &state = stick->second;
 		std::fill(state.buttons.begin(), state.buttons.end(), false);
 		std::fill(state.hats.begin(), state.hats.end(), 0);
 		std::fill(state.axes.begin(), state.axes.end(), 0.f);
+	}
+}
+
+void Input::NewFrame()
+{
+	mouseMotion.fill(0);
+	mouseWheel = 0;
+	for (auto &k : keyState) {
+		auto &val = keyState[k.first];
+		switch (k.second) {
+		case 1: // if we were just pressed last frame, migrate to held state
+			val = 2;
+			break;
+		case 4: // if we were just released last frame, migrate to empty state
+			val = 0;
+			break;
+		default: // otherwise, no need to do anything
+			break;
+		}
 	}
 }
 
@@ -96,7 +121,7 @@ KeyBindings::ActionBinding *Input::AddActionBinding(std::string id, BindingGroup
 	group->bindings[id] = BindingGroup::ENTRY_ACTION;
 
 	// Load from the config
-	std::string config_str = Pi::config->String(id.c_str());
+	std::string config_str = m_config->String(id.c_str());
 	if (config_str.length() > 0) binding.SetFromString(config_str);
 
 	return &(actionBindings[id] = binding);
@@ -111,7 +136,7 @@ KeyBindings::AxisBinding *Input::AddAxisBinding(std::string id, BindingGroup *gr
 	group->bindings[id] = BindingGroup::ENTRY_AXIS;
 
 	// Load from the config
-	std::string config_str = Pi::config->String(id.c_str());
+	std::string config_str = m_config->String(id.c_str());
 	if (config_str.length() > 0) binding.SetFromString(config_str);
 
 	return &(axisBindings[id] = binding);
@@ -121,30 +146,33 @@ void Input::HandleSDLEvent(SDL_Event &event)
 {
 	switch (event.type) {
 	case SDL_KEYDOWN:
-		keyState[event.key.keysym.sym] = true;
+		// Set key state to "just pressed"
+		keyState[event.key.keysym.sym] = 1;
 		keyModState = event.key.keysym.mod;
 		onKeyPress.emit(&event.key.keysym);
 		break;
 	case SDL_KEYUP:
-		keyState[event.key.keysym.sym] = false;
+		// Set key state to "just released"
+		keyState[event.key.keysym.sym] = 4;
 		keyModState = event.key.keysym.mod;
 		onKeyRelease.emit(&event.key.keysym);
 		break;
 	case SDL_MOUSEBUTTONDOWN:
-		if (event.button.button < COUNTOF(mouseButton)) {
+		if (event.button.button < mouseButton.size()) {
 			mouseButton[event.button.button] = 1;
 			onMouseButtonDown.emit(event.button.button,
 				event.button.x, event.button.y);
 		}
 		break;
 	case SDL_MOUSEBUTTONUP:
-		if (event.button.button < COUNTOF(mouseButton)) {
+		if (event.button.button < mouseButton.size()) {
 			mouseButton[event.button.button] = 0;
 			onMouseButtonUp.emit(event.button.button,
 				event.button.x, event.button.y);
 		}
 		break;
 	case SDL_MOUSEWHEEL:
+		mouseWheel = event.wheel.y;
 		onMouseWheel.emit(event.wheel.y > 0); // true = up
 		break;
 	case SDL_MOUSEMOTION:
@@ -181,6 +209,8 @@ void Input::HandleSDLEvent(SDL_Event &event)
 
 void Input::InitJoysticks()
 {
+	SDL_Init(SDL_INIT_JOYSTICK);
+
 	int joy_count = SDL_NumJoysticks();
 	Output("Initializing joystick subsystem.\n");
 	for (int n = 0; n < joy_count; n++) {
@@ -286,4 +316,15 @@ float Input::JoystickAxisState(int joystick, int axis)
 		return 0;
 
 	return joysticks[joystick].axes[axis];
+}
+
+void Input::SetCapturingMouse(bool grabbed)
+{
+	// early-out to avoid changing (possibly) expensive WM state
+	if (grabbed == m_capturingMouse)
+		return;
+
+	SDL_SetWindowGrab(Pi::renderer->GetSDLWindow(), SDL_bool(grabbed));
+	SDL_SetRelativeMouseMode(SDL_bool(grabbed));
+	m_capturingMouse = grabbed;
 }
