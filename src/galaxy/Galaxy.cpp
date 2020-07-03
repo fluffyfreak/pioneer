@@ -92,7 +92,6 @@ void Galaxy::Dump(FILE *file, Sint32 centerX, Sint32 centerY, Sint32 centerZ, Si
 				RefCountedPtr<const Sector> sector = GetSector(SystemPath(sx, sy, sz));
 				sector->Dump(file);
 			}
-			m_starSystemCache.ClearCache();
 		}
 	}
 }

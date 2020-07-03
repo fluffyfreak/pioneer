@@ -1093,6 +1093,31 @@ static int l_engine_get_sector_map_factions(lua_State *l)
 	return 1;
 }
 
+static int l_engine_galaxy_dump(lua_State *l)
+{
+	// lua args
+	int centerX = LuaPull<int>(l, 1);
+	int centerY = LuaPull<int>(l, 2);
+	int centerZ = LuaPull<int>(l, 3);
+	int radius = LuaPull<int>(l, 4);
+	std::string filename = LuaPull<std::string>(l, 5);
+
+	// iterating all processors on all systems in given sectors
+	RefCountedPtr<Galaxy> galaxy = Pi::game->GetGalaxy();
+
+	FILE *file = filename == "-" ? stdout : fopen(filename.c_str(), "w");
+	if (file == nullptr) {
+		Output("pioneer: could not open \"%s\" for writing: %s\n", filename.c_str(), strerror(errno));
+		return 0;
+	}
+
+	galaxy->Dump(file, centerX, centerY, centerZ, radius);
+	fflush(file);
+	fclose(file);
+
+	return 1;
+}
+
 /*
  * Method: GalaxyStats
  *
@@ -1178,7 +1203,7 @@ static int l_engine_galaxy_stats(lua_State *l)
 	class : public Processor {
 		uint32_t explored = 0;
 		uint32_t inhabited = 0;
-		double population;
+		double population = 0.0;
 		RefCountedPtr<Galaxy> galaxy = Pi::game->GetGalaxy();
 		public:
 		void ProcessSystem(const Sector::System& system) {
@@ -1328,6 +1353,7 @@ void LuaEngine::Register()
 		{ "OpenBrowseUserFolder", l_browse_user_folders },
 
 		{ "GetModel", l_engine_get_model },
+		{ "GalaxyDump", l_engine_galaxy_dump },
 		{ "GalaxyStats", l_engine_galaxy_stats },
 
 		{ "IsIntroZooming", l_engine_is_intro_zooming },
