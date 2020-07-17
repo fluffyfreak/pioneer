@@ -220,6 +220,7 @@ protected:
 	Profiler::Clock perfTimer;
 
 	float frame_time_real; // higher resolution than SDL's 1ms, for detailed frame info
+	float game_time_accumulator;
 	float phys_time;
 
 	int frame_stat;
@@ -1001,6 +1002,7 @@ void GameLoop::Update(float deltaTime)
 			BaseSphere::UpdateAllBaseSphereDerivatives();
 
 			accumulator -= step;
+			game_time_accumulator += step;
 		}
 
 		// rendering interpolation between frames: don't use when docked
@@ -1017,6 +1019,8 @@ void GameLoop::Update(float deltaTime)
 		PROFILE_SCOPED_RAW("Physics Update [paused]")
 		BaseSphere::UpdateAllBaseSphereDerivatives();
 	}
+
+	Pi::renderer->SetTime(game_time_accumulator);
 
 	// Record physics timestep but keep information about current frame timing.
 	perfTimer.SoftStop();
