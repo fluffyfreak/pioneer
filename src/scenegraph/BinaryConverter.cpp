@@ -86,6 +86,11 @@ void BinaryConverter::RegisterLoader(const std::string &typeName, std::function<
 	m_loaders[typeName] = func;
 }
 
+Uint32 BinaryConverter::GetSGMVersion()
+{
+	return SGM_VERSION;
+}
+
 void BinaryConverter::Save(const std::string &filename, Model *m)
 {
 	PROFILE_SCOPED()

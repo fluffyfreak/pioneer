@@ -42,6 +42,8 @@ namespace SceneGraph {
 		//before calling Load.
 		void RegisterLoader(const std::string &typeName, std::function<Node *(NodeDatabase &)>);
 
+		static Uint32 GetSGMVersion();
+
 	private:
 		Model *CreateModel(const std::string &filename, Serializer::Reader &);
 		void SaveMaterials(Serializer::Writer &, Model *m);
