@@ -52,7 +52,7 @@ namespace Graphics {
 		TRIANGLE_FAN, //GL_TRIANGLE_FAN
 	};
 
-	enum BlendMode {
+	enum BlendMode : uint32_t {
 		BLEND_SOLID,
 		BLEND_ADDITIVE,
 		BLEND_ALPHA,
@@ -62,7 +62,7 @@ namespace Graphics {
 		BLEND_DEST_ALPHA // XXX maybe crappy name
 	};
 
-	enum FaceCullMode {
+	enum FaceCullMode : uint32_t {
 		CULL_BACK,
 		CULL_FRONT,
 		CULL_NONE
