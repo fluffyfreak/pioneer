@@ -15,6 +15,7 @@
 #include "graphics/Material.h"
 #include "graphics/Texture.h"
 #include "graphics/TextureBuilder.h"
+#include "graphics/Types.h"
 #include "graphics/VertexArray.h"
 
 #include "BillboardMaterial.h"
@@ -121,6 +122,14 @@ namespace Graphics {
 
 		return new RendererOGL(window, vs, glContext);
 	}
+
+	struct LightData {
+		Color4f diffuse;
+		Color4f specular;
+		vector3f position;
+		float w;
+	};
+	static_assert(sizeof(LightData) == 48);
 
 	// static method instantiations
 	void RendererOGL::RegisterRenderer()
@@ -257,10 +266,18 @@ namespace Graphics {
 		// Create a 1MiB buffer for draw uniform data
 		m_drawUniformBuffers.reserve(8);
 		GetDrawUniformBuffer(0);
+
+		m_lightUniformBuffer.Reset(new OGL::UniformBuffer(sizeof(LightData) * TOTAL_NUM_LIGHTS, BUFFER_USAGE_DYNAMIC));
 	}
 
 	RendererOGL::~RendererOGL()
 	{
+		for (auto &buffer : m_drawUniformBuffers) {
+			buffer.reset();
+		}
+
+		m_lightUniformBuffer.Reset();
+
 		// HACK ANDYC - this crashes when shutting down? They'll be released anyway right?
 		//while (!m_programs.empty()) delete m_programs.back().second, m_programs.pop_back();
 		for (auto state : m_renderStates)
@@ -694,6 +711,16 @@ namespace Graphics {
 		return true;
 	}
 
+	bool RendererOGL::SetLightIntensity(Uint32 numlights, const float *intensity)
+	{
+		numlights = std::min(numlights, m_numLights);
+		for (Uint32 i = 0; i < numlights; i++) {
+			m_lights[i].SetIntensity(intensity[i]);
+		}
+
+		return true;
+	}
+
 	bool RendererOGL::SetLights(Uint32 numlights, const Light *lights)
 	{
 		numlights = std::min(numlights, TOTAL_NUM_LIGHTS);
@@ -705,6 +732,9 @@ namespace Graphics {
 
 		m_numLights = numlights;
 		m_numDirLights = 0;
+		// ScopedMap will be released at the end of the function
+		auto lightData = m_lightUniformBuffer->Map<LightData>(BufferMapMode::BUFFER_MAP_WRITE);
+		assert(lightData.isValid());
 
 		for (Uint32 i = 0; i < numlights; i++) {
 			const Light &l = lights[i];
@@ -716,6 +746,13 @@ namespace Graphics {
 				m_numDirLights++;
 
 			assert(m_numDirLights <= TOTAL_NUM_LIGHTS);
+
+			// Update the GPU-side light data buffer
+			LightData &gpuLight = lightData.data()[i];
+			gpuLight.diffuse = l.GetDiffuse().ToColor4f();
+			gpuLight.specular = l.GetSpecular().ToColor4f();
+			gpuLight.position = l.GetPosition();
+			gpuLight.w = l.GetType() == Light::LIGHT_DIRECTIONAL ? 0.0f : 1.0f;
 		}
 
 		return true;
@@ -1210,6 +1247,11 @@ namespace Graphics {
 	{
 		m_stats.AddToStatCount(Stats::STAT_CREATE_BUFFER, 1);
 		return new OGL::InstanceBuffer(size, usage);
+	}
+
+	OGL::UniformBuffer *RendererOGL::GetLightUniformBuffer()
+	{
+		return m_lightUniformBuffer.Get();
 	}
 
 	OGL::UniformLinearBuffer *RendererOGL::GetDrawUniformBuffer(Uint32 size)
