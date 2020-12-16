@@ -957,7 +957,7 @@ namespace Graphics {
 	{
 		PROFILE_SCOPED()
 		SetRenderState(state);
-		mat->Apply(this);
+		mat->Apply();
 
 		SetMaterialShaderTransforms(mat);
 
@@ -975,7 +975,7 @@ namespace Graphics {
 	{
 		PROFILE_SCOPED()
 		SetRenderState(state);
-		mat->Apply(this);
+		mat->Apply();
 
 		SetMaterialShaderTransforms(mat);
 
@@ -995,7 +995,7 @@ namespace Graphics {
 	{
 		PROFILE_SCOPED()
 		SetRenderState(state);
-		mat->Apply(this);
+		mat->Apply();
 
 		SetMaterialShaderTransforms(mat);
 
@@ -1015,7 +1015,7 @@ namespace Graphics {
 	{
 		PROFILE_SCOPED()
 		SetRenderState(state);
-		mat->Apply(this);
+		mat->Apply();
 
 		SetMaterialShaderTransforms(mat);
 
