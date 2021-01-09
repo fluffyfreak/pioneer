@@ -274,6 +274,12 @@ namespace MathUtil {
 		return (intersect - pos).Length();
 	}
 
+	float DistanceAlongLine(const vector3f &start, const vector3f &end, const vector3f &pos)
+	{
+		const float magnitude = (end - start).Length();
+		return Dot((pos - start), (end - start)) / (magnitude * magnitude);
+	}
+
 #ifdef TEST_MATHUTIL
 	bool TestDistanceFromLine()
 	{

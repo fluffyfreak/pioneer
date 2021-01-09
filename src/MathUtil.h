@@ -63,6 +63,7 @@ namespace MathUtil {
 	// distance from a line segment:
 	float DistanceFromLineSegment(const vector3f &start, const vector3f &end, const vector3f &pos, bool &isWithinLineSegment);
 	float DistanceFromLine(const vector3f &start, const vector3f &end, const vector3f &pos);
+	float DistanceAlongLine(const vector3f &start, const vector3f &end, const vector3f &pos);
 
 	inline static matrix3x3d LookAt(const vector3d eye, const vector3d target, const vector3d up)
 	{
