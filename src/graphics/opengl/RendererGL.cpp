@@ -14,6 +14,7 @@
 #include "graphics/Graphics.h"
 #include "graphics/Light.h"
 #include "graphics/Material.h"
+#include "graphics/RenderState.h"
 #include "graphics/Texture.h"
 #include "graphics/TextureBuilder.h"
 #include "graphics/Types.h"
@@ -33,8 +34,10 @@
 #include "SphereImpostorMaterial.h"
 #include "StarfieldMaterial.h"
 #include "UIMaterial.h"
-#include "VtxColorMaterial.h"
 #include "UniformBuffer.h"
+#include "VtxColorMaterial.h"
+
+#include "core/Log.h"
 
 #include <cstddef> //for offsetof
 #include <iterator>
@@ -42,6 +45,7 @@
 #include <sstream>
 
 namespace Graphics {
+	static uint32_t HashRenderStateDesc(const RenderStateDesc &desc);
 
 	static bool CreateWindowAndContext(const char *name, const Graphics::Settings &vs, SDL_Window *&window, SDL_GLContext &context)
 	{
@@ -161,6 +165,7 @@ namespace Graphics {
 		m_useCompressedTextures(false),
 		m_activeRenderTarget(0),
 		m_activeRenderState(nullptr),
+		m_activeRenderStateHash(0),
 		m_glContext(glContext)
 	{
 		PROFILE_SCOPED()
@@ -553,9 +558,9 @@ namespace Graphics {
 			}
 			// show warning dialog or just log to output
 			if (showWarning)
-				Warning("%s", ss.str().c_str());
+				Log::Warning("{}", ss.str());
 			else
-				Output("%s", ss.str().c_str());
+				Log::Output("{}", ss.str());
 		}
 #endif
 	}
@@ -587,6 +592,71 @@ namespace Graphics {
 		}
 		CheckRenderErrors(__FUNCTION__, __LINE__);
 		return true;
+	}
+
+	void ApplyRenderState(const RenderStateDesc &rsd)
+	{
+		switch (rsd.blendMode) {
+		case BLEND_SOLID:
+			glDisable(GL_BLEND);
+			glBlendFunc(GL_ONE, GL_ZERO);
+			break;
+		case BLEND_ADDITIVE:
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_ONE, GL_ONE);
+			break;
+		case BLEND_ALPHA:
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			break;
+		case BLEND_ALPHA_ONE:
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+			break;
+		case BLEND_ALPHA_PREMULT:
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+			break;
+		case BLEND_SET_ALPHA:
+			glEnable(GL_BLEND);
+			glBlendFuncSeparate(GL_ZERO, GL_ONE, GL_SRC_COLOR, GL_ZERO);
+			break;
+		case BLEND_DEST_ALPHA:
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_DST_ALPHA, GL_ONE_MINUS_DST_ALPHA);
+		default:
+			break;
+		}
+
+		if (rsd.cullMode == CULL_BACK) {
+			glEnable(GL_CULL_FACE);
+			glCullFace(GL_BACK);
+		} else if (rsd.cullMode == CULL_FRONT) {
+			glEnable(GL_CULL_FACE);
+			glCullFace(GL_FRONT);
+		} else {
+			glDisable(GL_CULL_FACE);
+		}
+
+		if (rsd.depthTest)
+			glEnable(GL_DEPTH_TEST);
+		else
+			glDisable(GL_DEPTH_TEST);
+
+		if (rsd.depthWrite)
+			glDepthMask(GL_TRUE);
+		else
+			glDepthMask(GL_FALSE);
+	}
+
+	void RendererOGL::SetRenderState(const RenderStateDesc &rsd)
+	{
+		uint32_t hash = HashRenderStateDesc(rsd);
+		if (hash != m_activeRenderStateHash) {
+			m_activeRenderStateHash = hash;
+			ApplyRenderState(rsd); // TODO: should we track state more granularly?
+		}
+		CheckRenderErrors(__FUNCTION__, __LINE__);
 	}
 
 	bool RendererOGL::SetRenderTarget(RenderTarget *rt)
@@ -632,6 +702,7 @@ namespace Graphics {
 	bool RendererOGL::ClearScreen()
 	{
 		m_activeRenderState = nullptr;
+		m_activeRenderStateHash = 0;
 		glEnable(GL_DEPTH_TEST);
 		glDepthMask(GL_TRUE);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -643,6 +714,7 @@ namespace Graphics {
 	bool RendererOGL::ClearDepthBuffer()
 	{
 		m_activeRenderState = nullptr;
+		m_activeRenderStateHash = 0;
 		glEnable(GL_DEPTH_TEST);
 		glDepthMask(GL_TRUE);
 		glClear(GL_DEPTH_BUFFER_BIT);
@@ -1004,15 +1076,16 @@ namespace Graphics {
 		return true;
 	}
 
-	bool RendererOGL::DrawMesh(MeshObject *mesh, RenderState *state, Material *mat, PrimitiveType pt)
+	bool RendererOGL::DrawMesh(MeshObject *mesh, Material *mat)
 	{
 		PROFILE_SCOPED()
-		SetRenderState(state);
+		SetRenderState(mat->GetStateDescriptor());
 		mat->Apply();
 
 		SetMaterialShaderTransforms(mat);
 
 		int numElems = mesh->GetIndexBuffer() ? mesh->GetIndexBuffer()->GetIndexCount() : mesh->GetVertexBuffer()->GetSize();
+		PrimitiveType pt = mat->GetStateDescriptor().primitiveType;
 
 		mesh->Bind();
 		if (mesh->GetIndexBuffer())
@@ -1027,15 +1100,16 @@ namespace Graphics {
 		return true;
 	}
 
-	bool RendererOGL::DrawMeshInstanced(MeshObject *mesh, RenderState *state, Material *mat, InstanceBuffer *inst, PrimitiveType pt)
+	bool RendererOGL::DrawMeshInstanced(MeshObject *mesh, Material *mat, InstanceBuffer *inst)
 	{
 		PROFILE_SCOPED()
-		SetRenderState(state);
+		SetRenderState(mat->GetStateDescriptor());
 		mat->Apply();
 
 		SetMaterialShaderTransforms(mat);
 
 		int numElems = mesh->GetIndexBuffer() ? mesh->GetIndexBuffer()->GetIndexCount() : mesh->GetVertexBuffer()->GetSize();
+		PrimitiveType pt = mat->GetStateDescriptor().primitiveType;
 
 		mesh->Bind();
 		inst->Bind();
@@ -1052,6 +1126,12 @@ namespace Graphics {
 	}
 
 	Material *RendererOGL::CreateMaterial(const MaterialDescriptor &d)
+	{
+		Graphics::RenderStateDesc stateDesc;
+		return CreateMaterial(d, stateDesc);
+	}
+
+	Material *RendererOGL::CreateMaterial(const MaterialDescriptor &d, const RenderStateDesc &stateDescriptor)
 	{
 		PROFILE_SCOPED()
 		MaterialDescriptor desc = d;
@@ -1120,6 +1200,7 @@ namespace Graphics {
 
 		mat->m_renderer = this;
 		mat->m_descriptor = desc;
+		mat->m_stateDescriptor = stateDescriptor;
 
 		p = GetOrCreateProgram(mat); // XXX throws ShaderException on compile/link failure
 
@@ -1175,13 +1256,14 @@ namespace Graphics {
 		// it (most likely) has padding bytes, and those bytes are uninitialized,
 		// thereby arbitrarily affecting the hash output.
 		// (We used to do this and valgrind complained).
-		uint32_t words[4] = {
+		uint32_t words[5] = {
 			desc.blendMode,
 			desc.cullMode,
+			desc.primitiveType,
 			desc.depthTest,
 			desc.depthWrite,
 		};
-		return lookup3_hashword(words, 4, 0);
+		return lookup3_hashword(words, 5, 0);
 	}
 
 	RenderState *RendererOGL::CreateRenderState(const RenderStateDesc &desc)
