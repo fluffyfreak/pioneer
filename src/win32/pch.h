@@ -32,7 +32,6 @@
 #include "Space.h"
 #include "SpaceStation.h"
 #include "Star.h"
-#include "SystemInfoView.h"
 #include "SystemView.h"
 #include "View.h"
 #include "WorldView.h"

@@ -26,7 +26,6 @@
 #include "Sfx.h"
 #include "Space.h"
 #include "SpaceStation.h"
-#include "SystemInfoView.h"
 #include "SystemView.h"
 #include "WorldView.h"
 #include "galaxy/GalaxyGenerator.h"
