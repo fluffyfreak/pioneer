@@ -291,6 +291,10 @@ namespace Graphics {
 
 		// HACK ANDYC - this crashes when shutting down? They'll be released anyway right?
 		//while (!m_programs.empty()) delete m_programs.back().second, m_programs.pop_back();
+		while (!m_shaders.empty()) {
+			delete m_shaders.back().second;
+			m_shaders.pop_back();
+		}
 
 		if (m_windowRenderTarget->m_active)
 			m_windowRenderTarget->Unbind();
@@ -834,12 +838,6 @@ namespace Graphics {
 		return true;
 	}
 
-	void RendererOGL::SetMaterialShaderTransforms(Material *m)
-	{
-		m->SetCommonUniforms(m_modelViewMat, m_projectionMat);
-		CheckRenderErrors(__FUNCTION__, __LINE__);
-	}
-
 	bool RendererOGL::DrawBuffer(const VertexArray *v, Material *m)
 	{
 		PROFILE_SCOPED()
@@ -878,8 +876,7 @@ namespace Graphics {
 		PROFILE_SCOPED()
 		SetRenderState(mat->GetStateDescriptor());
 		mat->Apply();
-
-		SetMaterialShaderTransforms(mat);
+		CheckRenderErrors(__FUNCTION__, __LINE__);
 
 		int numElems = mesh->GetIndexBuffer() ? mesh->GetIndexBuffer()->GetIndexCount() : mesh->GetVertexBuffer()->GetSize();
 		PrimitiveType pt = mat->GetStateDescriptor().primitiveType;
@@ -902,8 +899,7 @@ namespace Graphics {
 		PROFILE_SCOPED()
 		SetRenderState(mat->GetStateDescriptor());
 		mat->Apply();
-
-		SetMaterialShaderTransforms(mat);
+		CheckRenderErrors(__FUNCTION__, __LINE__);
 
 		int numElems = mesh->GetIndexBuffer() ? mesh->GetIndexBuffer()->GetIndexCount() : mesh->GetVertexBuffer()->GetSize();
 		PrimitiveType pt = mat->GetStateDescriptor().primitiveType;
@@ -928,7 +924,7 @@ namespace Graphics {
 		MaterialDescriptor desc = d;
 
 		OGL::Material *mat = 0;
-		OGL::Program *p = 0;
+		OGL::Shader *s = 0;
 
 		if (desc.lighting) {
 			desc.dirLights = m_numDirLights;
@@ -936,6 +932,9 @@ namespace Graphics {
 
 		// Create the material. It will be also used to create the shader,
 		// like a tiny factory
+		// FIXME: don't have separate material / shader classes
+		// FIXME: use filepath to .shaderdef file instead of EffectType
+		// FIXME: in general, please don't hardcode anything like this again
 		switch (desc.effect) {
 		case EFFECT_VTXCOLOR:
 			mat = new OGL::VtxColorMaterial();
@@ -975,9 +974,11 @@ namespace Graphics {
 		case EFFECT_GASSPHERE_TERRAIN:
 			mat = new OGL::GasGiantSurfaceMaterial();
 			break;
+		/*
 		case EFFECT_GEN_GASGIANT_TEXTURE:
 			mat = new OGL::GenGasGiantColourMaterial();
 			break;
+		*/
 		case EFFECT_BILLBOARD_ATLAS:
 		case EFFECT_BILLBOARD:
 			mat = new OGL::BillboardMaterial();
@@ -993,46 +994,39 @@ namespace Graphics {
 		mat->m_descriptor = desc;
 		mat->m_stateDescriptor = stateDescriptor;
 
-		p = GetOrCreateProgram(mat); // XXX throws ShaderException on compile/link failure
+		s = GetCachedShader(desc.effect);
+		if (!s) {
+			s = mat->CreateShader(desc);
+			Log::Info("Created shader {} for material effect {}\n", (void *)s, uint32_t(desc.effect));
+			CheckRenderErrors(__FUNCTION__, __LINE__);
 
-		mat->SetProgram(p);
+			m_shaders.push_back({ desc.effect, s });
+		}
+
+		mat->SetShader(s);
 		CheckRenderErrors(__FUNCTION__, __LINE__);
 		return mat;
 	}
 
 	bool RendererOGL::ReloadShaders()
 	{
-		Output("Reloading " SIZET_FMT " programs...\n", m_programs.size());
-		for (ProgramIterator it = m_programs.begin(); it != m_programs.end(); ++it) {
-			it->second->Reload();
+		Log::Info("Reloading {} shaders...\n", m_shaders.size());
+		Log::Info("Note: runtime shader reloading does not reload uniform assignments. Restart the program when making major changes.\n");
+		for (auto &pair : m_shaders) {
+			pair.second->Reload();
 		}
-		Output("Done.\n");
+		Log::Info("Done.\n");
 
 		return true;
 	}
 
-	OGL::Program *RendererOGL::GetOrCreateProgram(OGL::Material *mat)
+	OGL::Shader *RendererOGL::GetCachedShader(EffectType type)
 	{
-		PROFILE_SCOPED()
-		const MaterialDescriptor &desc = mat->GetDescriptor();
-		OGL::Program *p = 0;
+		for (auto &pair : m_shaders)
+			if (pair.first == type)
+				return pair.second;
 
-		// Find an existing program...
-		for (ProgramIterator it = m_programs.begin(); it != m_programs.end(); ++it) {
-			if ((*it).first == desc) {
-				p = (*it).second;
-				break;
-			}
-		}
-
-		// ...or create a new one
-		if (!p) {
-			p = mat->CreateProgram(desc);
-			m_programs.push_back(std::make_pair(desc, p));
-		}
-		CheckRenderErrors(__FUNCTION__, __LINE__);
-
-		return p;
+		return nullptr;
 	}
 
 	Texture *RendererOGL::CreateTexture(const TextureDescriptor &descriptor)
@@ -1125,6 +1119,12 @@ namespace Graphics {
 		return new OGL::InstanceBuffer(size, usage);
 	}
 
+	OGL::UniformBuffer *RendererOGL::CreateUniformBuffer(Uint32 size, BufferUsage usage)
+	{
+		m_stats.AddToStatCount(Stats::STAT_CREATE_BUFFER, 1);
+		return new OGL::UniformBuffer(size, usage);
+	}
+
 	MeshObject *RendererOGL::CreateMeshObject(VertexBuffer *v, IndexBuffer *i)
 	{
 		m_stats.AddToStatCount(Stats::STAT_CREATE_BUFFER, 1);
@@ -1153,7 +1153,9 @@ namespace Graphics {
 	OGL::UniformLinearBuffer *RendererOGL::GetDrawUniformBuffer(Uint32 size)
 	{
 		if (m_drawUniformBuffers.empty() || m_drawUniformBuffers.back()->FreeSize() < size) {
-			m_drawUniformBuffers.emplace_back(new OGL::UniformLinearBuffer(1 << 20));
+			auto *buffer = new OGL::UniformLinearBuffer(1 << 20);
+			buffer->IncRefCount();
+			m_drawUniformBuffers.emplace_back(buffer);
 		}
 
 		return m_drawUniformBuffers.back().get();
