@@ -202,9 +202,7 @@ void ModelViewer::End()
 void ModelViewer::ReloadModel()
 {
 	AddLog(stringf("Reloading model %0", m_modelName));
-	//camera is not reset, it would be annoying when
-	//tweaking materials
-	SetModel(m_modelName);
+	m_requestedModelName = m_modelName;
 	m_resetLogScroll = true;
 }
 
@@ -460,6 +458,12 @@ void ModelViewer::DrawModel(const matrix4x4f &mv)
 
 void ModelViewer::Update(float deltaTime)
 {
+	// if we've requested a different model then switch too it
+	if (!m_requestedModelName.empty()) {
+		SetModel(m_requestedModelName);
+		m_requestedModelName.clear();
+	}
+
 	HandleInput();
 
 	UpdateLights();
@@ -535,13 +539,6 @@ void ModelViewer::Update(float deltaTime)
 	if (m_screenshotQueued) {
 		m_screenshotQueued = false;
 		Screenshot();
-	}
-
-	// if we've requested a different model then switch too it
-	if (!m_requestedModelName.empty()) {
-		SetModel(m_requestedModelName);
-		ResetCamera();
-		m_requestedModelName.clear();
 	}
 }
 
@@ -628,6 +625,7 @@ void ModelViewer::HandleInput()
 	if (m_input->IsKeyPressed(SDLK_ESCAPE)) {
 		if (m_model) {
 			ClearModel();
+			ResetCamera();
 			UpdateModelList();
 			UpdateDecalList();
 		} else {
