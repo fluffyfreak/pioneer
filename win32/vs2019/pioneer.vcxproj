@@ -509,6 +509,7 @@
     <ClCompile Include="..\..\src\pigui\PerfInfo.cpp" />
     <ClCompile Include="..\..\src\pigui\PiGui.cpp" />
     <ClCompile Include="..\..\src\pigui\LuaFace.cpp" />
+    <ClCompile Include="..\..\src\pigui\PiGuiRenderer.cpp" />
     <ClCompile Include="..\..\src\pigui\PiGuiSandbox.cpp" />
     <ClCompile Include="..\..\src\pigui\PiGuiView.cpp" />
     <ClCompile Include="..\..\src\pigui\Radar.cpp" />
@@ -709,6 +710,7 @@
     <ClInclude Include="..\..\src\pigui\ModelSpinner.h" />
     <ClInclude Include="..\..\src\pigui\PerfInfo.h" />
     <ClInclude Include="..\..\src\pigui\PiGui.h" />
+    <ClInclude Include="..\..\src\pigui\PiGuiRenderer.h" />
     <ClInclude Include="..\..\src\pigui\PiGuiView.h" />
     <ClInclude Include="..\..\src\pigui\Radar.h" />
     <ClInclude Include="..\..\src\Plane.h" />

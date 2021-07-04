@@ -125,6 +125,10 @@
       <Filter>opengl</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\graphics\ShaderParser.h" />
+    <ClInclude Include="..\..\..\src\graphics\opengl\GLBufferBase.h">
+      <Filter>opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\graphics\BufferCommon.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="win32">

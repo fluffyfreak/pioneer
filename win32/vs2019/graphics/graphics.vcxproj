@@ -275,6 +275,7 @@
     <ClCompile Include="..\..\..\src\win32\OSWin32.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\src\graphics\BufferCommon.h" />
     <ClInclude Include="..\..\..\src\graphics\Drawables.h" />
     <ClInclude Include="..\..\..\src\graphics\dummy\MaterialDummy.h" />
     <ClInclude Include="..\..\..\src\graphics\dummy\RendererDummy.h" />
@@ -284,6 +285,7 @@
     <ClInclude Include="..\..\..\src\graphics\dummy\VertexBufferDummy.h" />
     <ClInclude Include="..\..\..\src\graphics\Frustum.h" />
     <ClInclude Include="..\..\..\src\graphics\opengl\CommandBufferGL.h" />
+    <ClInclude Include="..\..\..\src\graphics\opengl\GLBufferBase.h" />
     <ClInclude Include="..\..\..\src\graphics\opengl\GLDebug.h" />
     <ClInclude Include="..\..\..\src\graphics\opengl\MaterialGL.h" />
     <ClInclude Include="..\..\..\src\graphics\opengl\OpenGLLibs.h" />
