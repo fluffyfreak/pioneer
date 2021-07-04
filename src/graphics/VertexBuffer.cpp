@@ -3,6 +3,7 @@
 
 #include "graphics/VertexBuffer.h"
 #include "graphics/Types.h"
+#include "Color.h"
 
 #include <algorithm>
 
