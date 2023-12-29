@@ -18,10 +18,20 @@ namespace Graphics {
 
 	namespace OGL {
 
-		// #version 140 for OpenGL3.1
-		// #version 150 for OpenGL3.2
-		// #version 330 for OpenGL3.3
-		static const char *s_glslVersion = "#version 140\n";
+		// 1.10.59		OpenGL 2.0		30 April 2004		#version 110
+		// 1.20.8		OpenGL 2.1		07 September 2006	#version 120
+		// 1.30.10		OpenGL 3.0		22 November 2009	#version 130
+		// 1.40.08		OpenGL 3.1		22 November 2009	#version 140
+		// 1.50.11		OpenGL 3.2		04 December 2009	#version 150
+		// 3.30.6		OpenGL 3.3		11 March 2010		#version 330
+		// 4.00.9		OpenGL 4.0		24 July 2010		#version 400
+		// 4.10.6		OpenGL 4.1		24 July 2010		#version 410
+		// 4.20.11		OpenGL 4.2		12 December 2011	#version 420
+		// 4.30.8		OpenGL 4.3		7 February 2013		#version 430
+		// 4.40.9		OpenGL 4.4		16 June 2014		#version 440
+		// 4.50.7		OpenGL 4.5		09 May 2017			#version 450
+		// 4.60.5		OpenGL 4.6		14 June 2018		#version 460
+		static const char *s_glslVersion = "#version 460\n";
 
 		// Check and warn about compile & link errors
 		static bool check_glsl_errors(const char *filename, GLuint obj)
