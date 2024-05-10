@@ -44,7 +44,6 @@ GeoPatch::GeoPatch(const RefCountedPtr<GeoPatchContext> &ctx_, GeoSphere *gs,
 	m_v1(v1_),
 	m_v2(v2_),
 	m_v3(v3_),
-	m_heights(nullptr),
 	m_normals(nullptr),
 	m_colors(nullptr),
 	m_parent(nullptr),
@@ -68,7 +67,7 @@ GeoPatch::GeoPatch(const RefCountedPtr<GeoPatchContext> &ctx_, GeoSphere *gs,
 		distMult = 5.0 / Clamp(m_depth, 1, 5);
 	}
 	m_roughLength = GEOPATCH_SUBDIVIDE_AT_CAMDIST / pow(2.0, m_depth) * distMult;
-	m_needUpdateVBOs = false;
+	m_VBODirty = false;
 }
 
 GeoPatch::~GeoPatch()
@@ -77,7 +76,7 @@ GeoPatch::~GeoPatch()
 	for (int i = 0; i < NUM_KIDS; i++) {
 		m_kids[i].reset();
 	}
-	m_heights.reset();
+	m_heights.clear();
 	m_normals.reset();
 	m_colors.reset();
 }
@@ -85,9 +84,9 @@ GeoPatch::~GeoPatch()
 void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 {
 	PROFILE_SCOPED()
-	if (m_needUpdateVBOs) {
+	if (m_VBODirty) {
 		assert(renderer);
-		m_needUpdateVBOs = false;
+		m_VBODirty = false;
 
 		//create buffer and upload data
 		auto vbd = Graphics::VertexBufferDesc::FromAttribSet(Graphics::ATTRIB_POSITION | Graphics::ATTRIB_NORMAL | Graphics::ATTRIB_DIFFUSE | Graphics::ATTRIB_UV0);
@@ -100,7 +99,7 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 
 		const Sint32 edgeLen = m_ctx->GetEdgeLen();
 		const double frac = m_ctx->GetFrac();
-		const double *pHts = m_heights.get();
+		const double *pHts = &m_heights[0];
 		const vector3f *pNorm = m_normals.get();
 		const Color3ub *pColr = m_colors.get();
 
@@ -138,6 +137,10 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 				++vtxPtr; // next vertex
 			}
 		}
+
+		// ----------------------------------------------------
+		// Generate border geometry skirts
+		// ----------------------------------------------------
 		const double minhScale = (minh + 1.0) * 0.999995;
 		// ----------------------------------------------------
 		const Sint32 innerLeft = 1;
@@ -279,7 +282,10 @@ void GeoPatch::Render(Graphics::Renderer *renderer, const vector3d &campos, cons
 	if (m_kids[0]) {
 		for (int i = 0; i < NUM_KIDS; i++)
 			m_kids[i]->Render(renderer, campos, modelView, frustum);
-	} else if (m_heights) {
+	} else if (HasHeightData()) {
+		//if (m_PatchID.GetPatchIdx(m_depth) != 0)
+		//	return;
+
 		const vector3d relpos = m_clipCentroid - campos;
 		renderer->SetTransform(matrix4x4f(modelView * matrix4x4d::Translation(relpos)));
 
@@ -290,6 +296,7 @@ void GeoPatch::Render(Graphics::Renderer *renderer, const vector3d &campos, cons
 		const float fDetailFrequency = pow(2.0f, float(m_geosphere->GetMaxDepth()) - float(m_depth));
 
 		m_geosphere->GetSurfaceMaterial()->SetPushConstant("PatchDetailFrequency"_hash, fDetailFrequency);
+		assert(m_patchMesh != nullptr);
 		renderer->DrawMesh(m_patchMesh.get(), m_geosphere->GetSurfaceMaterial().Get());
 
 #if DEBUG_CENTROIDS
@@ -344,7 +351,7 @@ void GeoPatch::LODUpdate(const vector3d &campos, const Graphics::Frustum &frustu
 
 			SQuadSplitRequest *ssrd = new SQuadSplitRequest(m_v0, m_v1, m_v2, m_v3, m_centroid.Normalized(), m_depth,
 				m_geosphere->GetSystemBody()->GetPath(), m_PatchID, m_ctx->GetEdgeLen() - 2,
-				m_ctx->GetFrac(), m_geosphere->GetTerrain());
+				m_ctx->GetFrac(), m_geosphere->GetTerrain(), this);
 
 			// add to the GeoSphere to be processed at end of all LODUpdate requests
 			m_geosphere->AddQuadSplitRequest(centroidDist, ssrd, this);
@@ -367,7 +374,7 @@ void GeoPatch::LODUpdate(const vector3d &campos, const Graphics::Frustum &frustu
 
 void GeoPatch::RequestSinglePatch()
 {
-	if (!m_heights) {
+	if (!HasHeightData()) {
 		assert(!m_HasJobRequest);
 		m_HasJobRequest = true;
 		SSingleSplitRequest *ssrd = new SSingleSplitRequest(m_v0, m_v1, m_v2, m_v3, m_centroid.Normalized(), m_depth,
@@ -422,12 +429,13 @@ void GeoPatch::ReceiveHeightmap(const SSingleSplitResult *psr)
 
 void GeoPatch::ReceiveHeightResult(const SSplitResultData &data)
 {
-	m_heights.reset(data.heights);
-	m_normals.reset(data.normals);
-	m_colors.reset(data.colors);
-
 	// skirt vertices are not present in the heights array
 	const int edgeLen = m_ctx->GetEdgeLen() - 2;
+
+	// copy the heights from array to vector
+	m_heights.insert(m_heights.end(), &data.heights[0], &data.heights[edgeLen * edgeLen]);
+	m_normals.reset(data.normals);
+	m_colors.reset(data.colors);
 
 	const double h0 = m_heights[0];
 	const double h1 = m_heights[edgeLen - 1];
@@ -437,7 +445,7 @@ void GeoPatch::ReceiveHeightResult(const SSplitResultData &data)
 	const double height = (h0 + h1 + h2 + h3) * 0.25;
 	m_centroid *= (1.0 + height);
 
-	NeedToUpdateVBOs();
+	MarkVBODirty();
 }
 
 void GeoPatch::ReceiveJobHandle(Job::Handle job)

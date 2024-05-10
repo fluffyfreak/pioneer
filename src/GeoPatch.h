@@ -45,9 +45,9 @@ public:
 
 	~GeoPatch();
 
-	inline void NeedToUpdateVBOs()
+	inline void MarkVBODirty()
 	{
-		m_needUpdateVBOs = (nullptr != m_heights);
+		m_VBODirty = HasHeightData();
 	}
 
 	void UpdateVBOs(Graphics::Renderer *renderer);
@@ -89,7 +89,8 @@ public:
 	void ReceiveHeightResult(const SSplitResultData &data);
 	void ReceiveJobHandle(Job::Handle job);
 
-	inline bool HasHeightData() const { return (m_heights.get() != nullptr); }
+	inline bool HasHeightData() const { return !m_heights.empty(); }
+	const std::vector<double>& GetHeightData() const { return m_heights; }
 
 private:
 	static const int NUM_KIDS = 4;
@@ -98,7 +99,7 @@ private:
 
 	RefCountedPtr<GeoPatchContext> m_ctx;
 	const vector3d m_v0, m_v1, m_v2, m_v3;
-	std::unique_ptr<double[]> m_heights;
+	std::vector<double> m_heights;
 	std::unique_ptr<vector3f[]> m_normals;
 	std::unique_ptr<Color3ub[]> m_colors;
 	std::unique_ptr<Graphics::MeshObject> m_patchMesh;
@@ -110,7 +111,7 @@ private:
 	vector3d m_centroid; // geometry centroid used for horizon culling, split request, camera distance test
 	double m_clipRadius;
 	Sint32 m_depth;
-	bool m_needUpdateVBOs;
+	bool m_VBODirty;
 
 	const GeoPatchID m_PatchID;
 	Job::Handle m_job;
