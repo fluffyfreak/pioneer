@@ -67,6 +67,7 @@ public:
 		}
 		const int numBorderedVerts = NUMVERTICES((edgeLen_ * 2) + (BORDER_SIZE * 2) - 1);
 		borderHeights.reset(new double[numBorderedVerts]);
+		memset(borderHeights.get(), 0xDEADBEEF, sizeof(double) * numBorderedVerts);
 		borderVertexs.reset(new vector3d[numBorderedVerts]);
 	}
 
@@ -108,6 +109,7 @@ public:
 
 		const int numBorderedVerts = NUMVERTICES(edgeLen_ + (BORDER_SIZE * 2));
 		borderHeights.reset(new double[numBorderedVerts]);
+		memset(borderHeights.get(), 0xDEADBEEF, sizeof(double) * numBorderedVerts);
 		borderVertexs.reset(new vector3d[numBorderedVerts]);
 	}
 

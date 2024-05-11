@@ -92,6 +92,8 @@ public:
 	inline bool HasHeightData() const { return !m_heights.empty(); }
 	const std::vector<double>& GetHeightData() const { return m_heights; }
 
+	Sint32 GetDepth() const { return m_depth; }
+
 private:
 	static const int NUM_KIDS = 4;
 

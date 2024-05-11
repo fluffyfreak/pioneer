@@ -8,6 +8,7 @@
 #include "MathUtil.h"
 #include "perlin.h"
 #include "profiler/Profiler.h"
+#include "Core/Log.h"
 
 inline void setColour(Color3ub &r, const vector3d &v)
 {
@@ -212,13 +213,14 @@ void SQuadSplitRequest::GenerateBorderedData() const
 #if 1
 	// copy the existing heightmap data into the borderHeights to avoid recalculating it
 	const std::vector<double> &rheights = pParentPatch->GetHeightData();
+	const bool useCopy = pParentPatch->GetDepth() > 3;
 
 	// generate heights plus a N=BORDER_SIZE unit border
 	double *bhts = borderHeights.get();
 	vector3d *vrts = borderVertexs.get();
 	for (int y = -BORDER_SIZE; y < (borderedEdgeLen - BORDER_SIZE); y++) {
 		const double yfrac = double(y) * (fracStep * 0.5);
-		if (y % 2 == 0) {
+		if (useCopy && y % 2 == 0) {
 			const int rY = (y > 0) ? y >> 1 : 0;
 			for (int x = -BORDER_SIZE; x < (borderedEdgeLen - BORDER_SIZE); x++) {
 				const double xfrac = double(x) * (fracStep * 0.5);
@@ -234,6 +236,11 @@ void SQuadSplitRequest::GenerateBorderedData() const
 					const int heightIdx = (rY * edgeLen) + rX;
 					assert(heightIdx < rheights.size());
 					height = rheights[heightIdx];
+					const double hcomp = pTerrain->GetHeight(p);
+#if 0
+					const double diff = abs(height - hcomp);
+					assert(diff < 0.00001);
+#endif
 				} else {
 					height = pTerrain->GetHeight(p);
 				}
