@@ -1,9 +1,56 @@
+August 2024
+  * Fixes
+    * Fix crash in mission list in hyper space when combat mission (#5872)
+
+July 2024
+  * New Features
+    * Add "jettison all" buttons to cargo sidebar menu (#5867)
+    * Add Easter egg. Story about time traveler  (#5864)
+
+  * Internal Changes
+    * Fix debug commodities tab (#5861)
+    * News Event: debug can also remove adverts (#5862)
+    * Improve Lua type checking for string enums (PR #5869
+
+Pioneer 2024-07-10 Release
+  * Fixes
+    * Fix bad placeholders in translated strings (#5852)
+    * Fix DLLs not being installed on Windows builds (#5850)
+    * Fix News Events not modifying commodity demand (#5859)
+    * Fix custom systems with zero stars (#5858)
+    * Fixing Coronatrix label naming (#5855)
+    * Fix Military Drive 2 not for sale & tweaks (#5856)
+
+June 2024
+  * Fixes
+    * Fix so .desktop file points to correct installed path (#5847)
+    * Sort commodity names by translated string (#5846)
+    * Improve surface scan missions on high-pressure worlds (#5841)
+    * Fix lots of missing ship labels (#5842)
+    * Fix mission list error when opened during hyperspace (#5843)
+
+May 2024
+  * Fixes
+    * Fixing misalligned little parts of the Xylophis cockpit (#5834)
+    * Removing stray triangles from Bluenose (#5835)
+
+  * Internal Changes
+    * Add missing algorithm include / copy_new complaint (#5833)
+
 April 2024
   * Internal Changes
     * Documented minimal compiler version needed updating (#5810)
+    * Include stdlib.h instead of alloca.h for alloca(3) on FreeBSD (#5827)
+    * Include <algorithm> for std::max (#5828)
+    * Do not install libfmt by default (#5808)
+    * Renderer: Support running under Wayland (#5817)
 
   * Fixes
     * Police Coronatrix texture fix (#5816)
+    * Fix loud white nosie after mouse steering (#5812)
+    * Fix location recovery in save files (#5801)
+    * Use variable "dist" (SAR mission) for the distance in the BB if specified (#5818)
+    * Fixing flipping landing gear animation of Bowfin (#5814)
 
 March 2024
   * Fixes

@@ -419,6 +419,14 @@
     "description": "",
     "message": "Scan de surface"
   },
+  "SURFACE_SCAN_DETAILS": {
+    "description": "Additional warning information about a surface scan target",
+    "message": "La cible a une pression de surface de {pressure} avec une force gravitationnelle à la surface de {gravity}."
+  },
+  "SURFACE_SCAN_WARNING": {
+    "description": "Warning reminder to player",
+    "message": "Assurez-vous s'il vous plait que votre vaisseau soit capable de fonctionner à la surface de l'objet de la misssion avant d'accepter votre contrat."
+  },
   "SUSPENDED": {
     "description": "",
     "message": "Suspendu"

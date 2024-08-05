@@ -4,7 +4,7 @@ project(pioneer LANGUAGES CXX)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_CXX_STANDARD 17)
 
-set(PROJECT_VERSION "20240314"
+set(PROJECT_VERSION "20240710"
 	CACHE STRING "Version identifier for current compiled build")
 
 set(PROJECT_VERSION_INFO ""
@@ -258,6 +258,8 @@ find_package(Threads REQUIRED)
 find_package(Freetype REQUIRED)
 find_package(OpenGL REQUIRED)
 
+set(FMT_INSTALL OFF CACHE BOOL "Enable install of libfmt" FORCE)
+
 add_subdirectory(contrib/lz4)
 add_subdirectory(contrib/fmt)
 
@@ -432,6 +434,12 @@ endif(MODELCOMPILER)
 install(TARGETS ${PROJECT_NAME} editor modelcompiler savegamedump
 	RUNTIME DESTINATION ${PIONEER_INSTALL_BINDIR}
 )
+
+if (MSVC)
+	file(GLOB win_libs ${CMAKE_SOURCE_DIR}/../pioneer-thirdparty/win32/bin/${MSVC_ARCH}/vs2019/*.dll)
+	install(FILES ${win_libs} DESTINATION ${PIONEER_INSTALL_BINDIR})
+endif (MSVC)
+
 install(DIRECTORY data/
 	DESTINATION ${PIONEER_INSTALL_DATADIR}/data
 	REGEX "/models" EXCLUDE
@@ -439,61 +447,8 @@ install(DIRECTORY data/
 	PATTERN "listdata.*" EXCLUDE
 	PATTERN "Makefile.am" EXCLUDE
 )
+
 install(DIRECTORY data/models/
 	DESTINATION ${PIONEER_INSTALL_DATADIR}/data/models
 	FILES_MATCHING PATTERN "*.sgm" PATTERN "*.dds" PATTERN "*.png"
 )
-
-list(APPEND install_txt
-	"AUTHORS.txt"
-	"Changelog.txt"
-	"editor.txt"
-	"Quickstart.txt"
-	"README.md"
-	"NEWS.md"
-	)
-
-install(FILES ${install_txt} DESTINATION ${PIONEER_INSTALL_DATADIR})
-
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/licenses
-	DESTINATION ${PIONEER_INSTALL_DATADIR})
-
-if(APPIMAGE_BUILD)
-    set(PIONEER_EXECUTABLE init_pioneer.sh)
-    set(PIONEER_SH_FILE ${CMAKE_BINARY_DIR}/init_pioneer.sh)
-    configure_file(init_pioneer.sh.cmakein ${PIONEER_SH_FILE} @ONLY)
-    install(FILES ${PIONEER_SH_FILE}
-        DESTINATION ${PIONEER_INSTALL_BINDIR}
-        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE
-    )
-else(APPIMAGE_BUILD)
-    set(PIONEER_EXECUTABLE ${PIONEER_INSTALL_BINDIR}/pioneer)
-endif(APPIMAGE_BUILD)
-
-if (WIN32)
-	configure_file(pioneer.iss.cmakein pioneer.iss @ONLY)
-	file(GLOB win_libs ../pioneer-thirdparty/win32/bin/${MSVC_ARCH}/vs2019/*.dll)
-	install(FILES ${win_libs} DESTINATION ${CMAKE_INSTALL_PREFIX})
-	if(NOT ISCC)
-		set(ISCC "C:/Program Files (x86)/Inno Setup 6/ISCC.exe")
-	endif(NOT ISCC)
-	add_custom_target(win-installer COMMAND ${ISCC} /Q pioneer.iss)
-endif (WIN32)
-
-if (UNIX AND NOT PIONEER_INSTALL_INPLACE)
-	set(PIONEER_DESKTOP_FILE ${CMAKE_BINARY_DIR}/metadata/net.pioneerspacesim.Pioneer.desktop)
-	configure_file(metadata/net.pioneerspacesim.Pioneer.desktop.cmakein ${PIONEER_DESKTOP_FILE} @ONLY)
-	install(FILES ${PIONEER_DESKTOP_FILE}
-		DESTINATION ${CMAKE_INSTALL_DATADIR}/applications
-	)
-	install(FILES metadata/net.pioneerspacesim.Pioneer.metainfo.xml
-		DESTINATION ${CMAKE_INSTALL_DATADIR}/metainfo
-	)
-
-	foreach(_i IN ITEMS 16 22 24 32 40 48 64 128 256)
-		install(FILES application-icon/pngs/pioneer-${_i}x${_i}.png
-			DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/${_i}x${_i}/apps
-			RENAME net.pioneerspacesim.Pioneer.png
-		)
-	endforeach()
-endif (UNIX AND NOT PIONEER_INSTALL_INPLACE)

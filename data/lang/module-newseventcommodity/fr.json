@@ -53,7 +53,7 @@
   },
   "FLAVOUR_13_NEWSBODY": {
     "description": "Imply that nobody wants to buy ROBOTS anymore.",
-    "message": "C'est maintenant l'homme contre la machine dans le système {systeme} ({sectorx}, {sectory}, {sectorz}), depuis que des \"malfonctions comportementales\" ont causé la perte de la confiance des consommateurs domestiques envers leur serviteur robotique."
+    "message": "C'est maintenant l'homme contre la machine dans le système {system} ({sectorx}, {sectory}, {sectorz}), depuis que des \"malfonctions comportementales\" ont causé la perte de la confiance des consommateurs domestiques envers leur serviteur robotique."
   },
   "FLAVOUR_14_HEADLINE": {
     "description": "",
@@ -217,7 +217,7 @@
   },
   "GRATEFUL_GREETING_2": {
     "description": "",
-    "message": "Bien le bonjour et bienvenue! Vous ne devriez pas avoir de mal à écouler votre cargaison de [cargo] sur notre système."
+    "message": "Bien le bonjour et bienvenue! Vous ne devriez pas avoir de mal à écouler votre cargaison de {cargo} sur notre système."
   },
   "GRATEFUL_GREETING_3": {
     "description": "",
