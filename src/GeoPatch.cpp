@@ -437,6 +437,11 @@ void GeoPatch::ReceiveHeightResult(const SSplitResultData &data)
 	m_normals.reset(data.normals);
 	m_colors.reset(data.colors);
 
+#if STORE_EXTRA
+	m_fracs.reset(data.fracs);
+	m_positions.reset(data.positions);
+#endif
+
 	const double h0 = m_heights[0];
 	const double h1 = m_heights[edgeLen - 1];
 	const double h2 = m_heights[edgeLen * (edgeLen - 1)];

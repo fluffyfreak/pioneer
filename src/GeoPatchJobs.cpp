@@ -171,9 +171,16 @@ void QuadPatchJob::OnRun() // RUNS IN ANOTHER THREAD!! MUST BE THREAD SAFE!
 			borderedEdgeLen);
 
 		// add this patches data
+#if STORE_EXTRA
+		sr->addResult(i, srd.heights[i], srd.normals[i], srd.colors[i],
+			vecs[i][0], vecs[i][1], vecs[i][2], vecs[i][3],
+			srd.patchID.NextPatchID(srd.depth + 1, i),
+			srd.fracs[i], srd.positions[i]);
+#else
 		sr->addResult(i, srd.heights[i], srd.normals[i], srd.colors[i],
 			vecs[i][0], vecs[i][1], vecs[i][2], vecs[i][3],
 			srd.patchID.NextPatchID(srd.depth + 1, i));
+#endif
 	}
 	mpResults = sr;
 }
@@ -213,11 +220,19 @@ void SQuadSplitRequest::GenerateBorderedData() const
 #if 1
 	// copy the existing heightmap data into the borderHeights to avoid recalculating it
 	const std::vector<double> &rheights = pParentPatch->GetHeightData();
-	const bool useCopy = pParentPatch->GetDepth() > 3;
+	const bool useCopy = depth > 0;
+#if STORE_EXTRA
+	const vector2d *pFracs = pParentPatch->GetFracs();
+	const vector3d *pPos = pParentPatch->GetPositions();
+#endif
 
 	// generate heights plus a N=BORDER_SIZE unit border
 	double *bhts = borderHeights.get();
 	vector3d *vrts = borderVertexs.get();
+#if STORE_EXTRA
+	vector2d *_fracs = borderFracs.get();
+	vector3d *_positions = borderPositions.get();
+#endif
 	for (int y = -BORDER_SIZE; y < (borderedEdgeLen - BORDER_SIZE); y++) {
 		const double yfrac = double(y) * (fracStep * 0.5);
 		if (useCopy && y % 2 == 0) {
@@ -237,9 +252,11 @@ void SQuadSplitRequest::GenerateBorderedData() const
 					assert(heightIdx < rheights.size());
 					height = rheights[heightIdx];
 					const double hcomp = pTerrain->GetHeight(p);
-#if 0
+#if STORE_EXTRA
 					const double diff = abs(height - hcomp);
 					assert(diff < 0.00001);
+					assert(pFracs[heightIdx] == vector2d(xfrac, yfrac));
+					assert(pPos[heightIdx] == p);
 #endif
 				} else {
 					height = pTerrain->GetHeight(p);
@@ -248,6 +265,10 @@ void SQuadSplitRequest::GenerateBorderedData() const
 				assert(height >= 0.0f && height <= 1.0f);
 				*(bhts++) = height;
 				*(vrts++) = p * (height + 1.0);
+#if STORE_EXTRA
+				*(_fracs++) = vector2d(xfrac, yfrac);
+				*(_positions++) = p;
+#endif 
 			}
 		} else {
 			// we'll never copy on this row so just generate every point
@@ -258,6 +279,10 @@ void SQuadSplitRequest::GenerateBorderedData() const
 				assert(height >= 0.0f && height <= 1.0f);
 				*(bhts++) = height;
 				*(vrts++) = p * (height + 1.0);
+#if STORE_EXTRA
+				*(_fracs++) = vector2d(xfrac, yfrac);
+				*(_positions++) = p;
+#endif 
 			}
 		}
 	}
@@ -299,6 +324,11 @@ void SQuadSplitRequest::GenerateSubPatchData(
 	vector3f *nrm = normals[quadrantIndex];
 	double *hts = heights[quadrantIndex];
 
+#if STORE_EXTRA
+	vector2d *_fracs = fracs[quadrantIndex];
+	vector3d *_positions = positions[quadrantIndex];
+#endif
+
 	// step over the small square
 	for (int y = 0; y < edgeLen; y++) {
 		const int by = (y + BORDER_SIZE) + yoff;
@@ -324,9 +354,18 @@ void SQuadSplitRequest::GenerateSubPatchData(
 			setColour(*col, pTerrain->GetColor(p, height, n));
 			assert(col != &colors[quadrantIndex][edgeLen * edgeLen]);
 			++col;
+
+#if STORE_EXTRA
+			*(_fracs++) = borderFracs[bx + (by * borderedEdgeLen)];
+			*(_positions++) = borderPositions[bx + (by * borderedEdgeLen)];
+#endif 
 		}
 	}
 	assert(hts == &heights[quadrantIndex][edgeLen * edgeLen]);
 	assert(nrm == &normals[quadrantIndex][edgeLen * edgeLen]);
 	assert(col == &colors[quadrantIndex][edgeLen * edgeLen]);
+#if STORE_EXTRA
+	assert(_fracs == &fracs[quadrantIndex][edgeLen * edgeLen]);
+	assert(_positions == &positions[quadrantIndex][edgeLen * edgeLen]);
+#endif
 }

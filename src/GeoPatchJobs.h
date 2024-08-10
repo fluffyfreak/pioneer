@@ -52,6 +52,7 @@ protected:
 	SBaseRequest(const SBaseRequest &r) = delete;
 };
 
+#define STORE_EXTRA 1
 class SQuadSplitRequest : public SBaseRequest {
 public:
 	SQuadSplitRequest(const vector3d &v0_, const vector3d &v1_, const vector3d &v2_, const vector3d &v3_, const vector3d &cn,
@@ -64,11 +65,19 @@ public:
 			heights[i] = new double[numVerts];
 			normals[i] = new vector3f[numVerts];
 			colors[i] = new Color3ub[numVerts];
+#if STORE_EXTRA
+			fracs[i] = new vector2d[numVerts];
+			positions[i] = new vector3d[numVerts];
+#endif
 		}
 		const int numBorderedVerts = NUMVERTICES((edgeLen_ * 2) + (BORDER_SIZE * 2) - 1);
 		borderHeights.reset(new double[numBorderedVerts]);
 		memset(borderHeights.get(), 0xDEADBEEF, sizeof(double) * numBorderedVerts);
 		borderVertexs.reset(new vector3d[numBorderedVerts]);
+#if STORE_EXTRA
+		borderFracs.reset(new vector2d[numBorderedVerts]);
+		borderPositions.reset(new vector3d[numBorderedVerts]);
+#endif
 	}
 
 	// Generates full-detail vertices, and also non-edge normals and colors
@@ -85,10 +94,18 @@ public:
 	vector3f *normals[4];
 	Color3ub *colors[4];
 	double *heights[4];
+#if STORE_EXTRA
+	vector2d *fracs[4];
+	vector3d *positions[4];
+#endif
 
 	// these are created with the request but are destroyed when the request is finished
 	std::unique_ptr<double[]> borderHeights;
 	std::unique_ptr<vector3d[]> borderVertexs;
+#if STORE_EXTRA
+	std::unique_ptr<vector2d[]> borderFracs;
+	std::unique_ptr<vector3d[]> borderPositions;
+#endif
 
 protected:
 	// deliberately prevent copy constructor access
@@ -142,13 +159,35 @@ struct SSplitResultData {
 		v2(v2_),
 		v3(v3_),
 		patchID(patchID_)
-	{}
+	{
+	}
+#if STORE_EXTRA
+	SSplitResultData(double *heights_, vector3f *n_, Color3ub *c_,
+		const vector3d &v0_, const vector3d &v1_, const vector3d &v2_, const vector3d &v3_,
+		const GeoPatchID &patchID_, vector2d *fracs_, vector3d *positions_) :
+		heights(heights_),
+		normals(n_),
+		colors(c_),
+		v0(v0_),
+		v1(v1_),
+		v2(v2_),
+		v3(v3_),
+		patchID(patchID_),
+		fracs(fracs_),
+		positions(positions_)
+	{
+	}
+#endif
 
 	double *heights;
 	vector3f *normals;
 	Color3ub *colors;
 	vector3d v0, v1, v2, v3;
 	GeoPatchID patchID;
+#if STORE_EXTRA
+	vector2d *fracs;
+	vector3d *positions;
+#endif
 };
 
 class SBaseSplitResult {
@@ -182,11 +221,23 @@ public:
 	{
 	}
 
-	void addResult(const int kidIdx, double *h_, vector3f *n_, Color3ub *c_, const vector3d &v0_, const vector3d &v1_, const vector3d &v2_, const vector3d &v3_, const GeoPatchID &patchID_)
+	void addResult(const int kidIdx, double *h_, vector3f *n_, Color3ub *c_,
+		const vector3d &v0_, const vector3d &v1_, const vector3d &v2_, const vector3d &v3_,
+		const GeoPatchID &patchID_)
 	{
 		assert(kidIdx >= 0 && kidIdx < NUM_RESULT_DATA);
 		mData[kidIdx] = (SSplitResultData(h_, n_, c_, v0_, v1_, v2_, v3_, patchID_));
 	}
+
+#if STORE_EXTRA
+	void addResult(const int kidIdx, double *h_, vector3f *n_, Color3ub *c_,
+		const vector3d &v0_, const vector3d &v1_, const vector3d &v2_, const vector3d &v3_,
+		const GeoPatchID &patchID_, vector2d *fracs_, vector3d *positions_)
+	{
+		assert(kidIdx >= 0 && kidIdx < NUM_RESULT_DATA);
+		mData[kidIdx] = (SSplitResultData(h_, n_, c_, v0_, v1_, v2_, v3_, patchID_, fracs_, positions_));
+	}
+#endif
 
 	inline const SSplitResultData &data(const int32_t idx) const { return mData[idx]; }
 

@@ -16,6 +16,7 @@
 #include <memory>
 
 //#define DEBUG_BOUNDING_SPHERES
+#define STORE_EXTRA 1
 
 #ifdef DEBUG_BOUNDING_SPHERES
 #include "graphics/Drawables.h"
@@ -90,9 +91,11 @@ public:
 	void ReceiveJobHandle(Job::Handle job);
 
 	inline bool HasHeightData() const { return !m_heights.empty(); }
-	const std::vector<double>& GetHeightData() const { return m_heights; }
-
-	Sint32 GetDepth() const { return m_depth; }
+	const std::vector<double> &GetHeightData() const { return m_heights; }
+#if STORE_EXTRA
+	vector2d* GetFracs() const { return m_fracs.get(); }
+	vector3d* GetPositions() const { return m_positions.get(); }
+#endif
 
 private:
 	static const int NUM_KIDS = 4;
@@ -104,6 +107,10 @@ private:
 	std::vector<double> m_heights;
 	std::unique_ptr<vector3f[]> m_normals;
 	std::unique_ptr<Color3ub[]> m_colors;
+#if STORE_EXTRA
+	std::unique_ptr<vector2d> m_fracs;
+	std::unique_ptr<vector3d> m_positions;
+#endif
 	std::unique_ptr<Graphics::MeshObject> m_patchMesh;
 	std::unique_ptr<GeoPatch> m_kids[NUM_KIDS];
 	GeoPatch *m_parent;
