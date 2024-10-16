@@ -67,7 +67,9 @@ public:
 		return (m_v0 + x * (1.0 - y) * (m_v1 - m_v0) + x * y * (m_v2 - m_v0) + (1.0 - x) * y * (m_v3 - m_v0)).Normalized();
 	}
 
-	void Render(Graphics::Renderer *r, const vector3d &campos, const matrix4x4d &modelView, const Graphics::Frustum &frustum);
+	void Render(Graphics::Renderer *renderer, const vector3d &campos, const matrix4x4d &modelView, const Graphics::Frustum &frustum);
+	void RenderImmediate(Graphics::Renderer *renderer, const vector3d &campos, const matrix4x4d &modelView) const;
+	void GatherRenderablePatches(std::vector<GeoPatch *> &visiblePatches, Graphics::Renderer *renderer, const vector3d &campos, const Graphics::Frustum &frustum);
 
 	inline bool canBeMerged() const
 	{
@@ -90,6 +92,8 @@ public:
 	void ReceiveJobHandle(Job::Handle job);
 
 	inline bool HasHeightData() const { return (m_heights.get() != nullptr); }
+
+	inline const vector3d &Centroid() const { return m_centroid; }
 
 private:
 	static const int NUM_KIDS = 4;

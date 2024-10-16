@@ -191,6 +191,8 @@ GeoSphere::GeoSphere(const SystemBody *body) :
 
 	CalculateMaxPatchDepth();
 
+	m_visiblePatches.reserve(1024);
+
 	//SetUpMaterials is not called until first Render since light count is zero :)
 }
 
@@ -425,9 +427,7 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView
 		ambient.a = 255;
 		emission = StarSystem::starRealColors[GetSystemBody()->GetType()];
 		emission.a = 255;
-	}
-
-	else {
+	} else {
 		// give planet some ambient lighting if the viewer is close to it
 		double camdist = 0.1 / campos.LengthSqr();
 		// why the fuck is this returning 0.1 when we are sat on the planet??
@@ -441,9 +441,29 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView
 
 	renderer->SetTransform(matrix4x4f(modelView));
 
+#if 0
 	for (int i = 0; i < NUM_PATCHES; i++) {
 		m_patches[i]->Render(renderer, campos, modelView, frustum);
 	}
+#else
+	// Gather the patches that could be rendered
+	for (int i = 0; i < NUM_PATCHES; i++) {
+		m_patches[i]->GatherRenderablePatches(m_visiblePatches, renderer, campos, frustum);
+	}
+
+	// distance sort the patches
+	std::sort(m_visiblePatches.begin(), m_visiblePatches.end(), [&, campos](const GeoPatch *a, const GeoPatch *b) {
+		return (a->Centroid() - campos).LengthSqr() < (b->Centroid() - campos).LengthSqr();
+	});
+
+	// render the sorted patches
+	for (GeoPatch *pPatch : m_visiblePatches) {
+		pPatch->RenderImmediate(renderer, campos, modelView);
+	}
+
+	// must clear this after each render otherwise it just accumulates every patch ever drawn!
+	m_visiblePatches.clear();
+#endif
 
 	renderer->SetAmbientColor(oldAmbient);
 
