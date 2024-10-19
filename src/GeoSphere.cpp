@@ -441,7 +441,7 @@ void GeoSphere::Render(Graphics::Renderer *renderer, const matrix4x4d &modelView
 
 	renderer->SetTransform(matrix4x4f(modelView));
 
-	if (false) {
+	if (Pi::config->Int("SortGeoPatches") == 0) {
 		for (int i = 0; i < NUM_PATCHES; i++) {
 			m_patches[i]->Render(renderer, campos, modelView, frustum);
 		}

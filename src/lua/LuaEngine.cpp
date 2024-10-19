@@ -410,6 +410,23 @@ static int l_engine_set_disable_screenshot_info(lua_State *l)
 	Pi::config->Save();
 	return 0;
 }
+
+static int l_engine_get_sort_geo_patches(lua_State *l)
+{
+	LuaPush<bool>(l, Pi::config->Int("SortGeoPatches") != 0);
+	return 1;
+}
+
+static int l_engine_set_sort_geo_patches(lua_State *l)
+{
+	if (lua_isnone(l, 1))
+		return luaL_error(l, "SetSortGeoPatches takes one boolean argument");
+	const bool enable = LuaPull<bool>(l, 1);
+	Pi::config->SetInt("SortGeoPatches", (enable ? 1 : 0));
+	Pi::config->Save();
+	return 0;
+}
+
 static int l_engine_get_vsync_enabled(lua_State *l)
 {
 	lua_pushboolean(l, Pi::config->Int("VSync") != 0);
@@ -1086,6 +1103,8 @@ void LuaEngine::Register()
 		{ "SetFullscreen", l_engine_set_fullscreen },
 		{ "GetDisableScreenshotInfo", l_engine_get_disable_screenshot_info },
 		{ "SetDisableScreenshotInfo", l_engine_set_disable_screenshot_info },
+		{ "GetEnableSortGeoPatches", l_engine_get_sort_geo_patches },
+		{ "SetEnableSortGeoPatches", l_engine_set_sort_geo_patches },
 		{ "GetVSyncEnabled", l_engine_get_vsync_enabled },
 		{ "SetVSyncEnabled", l_engine_set_vsync_enabled },
 		{ "GetTextureCompressionEnabled", l_engine_get_texture_compression_enabled },

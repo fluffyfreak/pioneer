@@ -154,6 +154,7 @@ local function showVideoOptions()
 	local textCompress = Engine.GetTextureCompressionEnabled()
 	local gpuJobs = Engine.GetGpuJobsEnabled()
 	local disableScreenshotInfo = Engine.GetDisableScreenshotInfo()
+	local enableSortGeoPatches = Engine.GetEnableSortGeoPatches()
 
 	-- Scattering is still an experimental feature
 	local experimental = "[" .. lui.EXPERIMENTAL .. "] "
@@ -220,6 +221,10 @@ local function showVideoOptions()
 	c,disableScreenshotInfo = checkbox(lui.DISABLE_SCREENSHOT_INFO, disableScreenshotInfo, lui.DISABLE_SCREENSHOT_INFO_DESC)
 	if c then
 		Engine.SetDisableScreenshotInfo(disableScreenshotInfo)
+	end
+	c,enableSortGeoPatches = checkbox("enableSortGeoPatches", enableSortGeoPatches, "enableSortGeoPatches")
+	if c then
+		Engine.SetEnableSortGeoPatches(enableSortGeoPatches)
 	end
 	ui.columns(1,"",false)
 
