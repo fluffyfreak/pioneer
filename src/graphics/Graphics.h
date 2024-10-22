@@ -18,10 +18,12 @@ namespace Graphics {
 	enum RendererType {
 		RENDERER_DUMMY,
 		RENDERER_OPENGL_3x,
+		RENDERER_VULKAN,
 		MAX_RENDERER_TYPE
 	};
 
 	const char *RendererNameFromType(const RendererType rType);
+	const RendererType RendererTypeFromName(const char *rendererName);
 
 	// requested video settings
 	struct Settings {
