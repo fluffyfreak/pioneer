@@ -16,13 +16,28 @@
 
 namespace Graphics {
 
+	static const char *s_rendererTypeNames[MAX_RENDERER_TYPE]{
+		"Dummy",
+		"Opengl 3.x",
+		"Vulkan"
+	};
 	const char *RendererNameFromType(const RendererType rType)
 	{
-		static const char *s_rendererTypeNames[MAX_RENDERER_TYPE]{
-			"Dummy",
-			"Opengl 3.x"
-		};
 		return s_rendererTypeNames[rType];
+	}
+
+	RendererType RendererTypeFromName(const char *rendererName)
+	{
+		for (size_t i = 0; i < MAX_RENDERER_TYPE; i++) {
+			if (0 == strcmp(s_rendererTypeNames[i], rendererName))
+			{
+				return (RendererType)i;
+			}
+		}
+
+		Warning("Unable to find RendererType matching the name: %s", rendererName);
+		// default to OpenGL fallback
+		return RendererType::RENDERER_OPENGL_3x;
 	}
 
 	static RendererCreateFunc rendererCreateFunc[MAX_RENDERER_TYPE] = {};
@@ -112,13 +127,13 @@ namespace Graphics {
 			std::ostringstream buf;
 			renderer->WriteRendererInfo(buf);
 
-			FILE *f = FileSystem::userFiles.OpenWriteStream("opengl.txt", FileSystem::FileSourceFS::WRITE_TEXT);
+			FILE *f = FileSystem::userFiles.OpenWriteStream("renderer.txt", FileSystem::FileSourceFS::WRITE_TEXT);
 			if (f) {
 				const std::string &s = buf.str();
 				fwrite(s.c_str(), 1, s.size(), f);
 				fclose(f);
 			} else {
-				Output("Could not open 'opengl.txt'\n");
+				Output("Could not open 'renderer.txt'\n");
 			}
 		}
 

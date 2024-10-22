@@ -163,6 +163,7 @@ list(APPEND SRC_FOLDERS
 	src/graphics
 	src/graphics/dummy
 	src/graphics/opengl
+	src/graphics/vulkan
 	src/math
 	src/pigui
 	src/scenegraph
@@ -269,6 +270,7 @@ endif (MSVC)
 find_package(Threads REQUIRED)
 find_package(Freetype REQUIRED)
 find_package(OpenGL REQUIRED COMPONENTS OpenGL)
+find_package(Vulkan REQUIRED)
 
 set(FMT_INSTALL OFF CACHE BOOL "Enable install of libfmt" FORCE)
 
@@ -294,6 +296,7 @@ include_directories(
 	${SIGCPP_INCLUDE_DIRS}
 	${VORBISFILE_INCLUDE_DIRS}
 	${GLEW_INCLUDE_DIRS}
+	${VULKAN_INCLUDE_DIRS}
 )
 
 # We don't want/need the GLU dependency
@@ -320,6 +323,7 @@ if (NOT USE_SYSTEM_LIBLUA)
 	set(LUA_LIBRARIES lua)
 	include_directories(contrib/lua)
 endif (NOT USE_SYSTEM_LIBLUA)
+add_subdirectory(contrib/VkBootstrap)
 
 add_subdirectory(src/core)
 
@@ -387,6 +391,7 @@ list(APPEND pioneerLibs
 	${ASSIMP_LIBRARIES}
 	${FREETYPE_LIBRARIES}
 	OpenGL::GL
+	Vulkan::Vulkan
 	${SDL2_LIBRARIES}
 	${SDL2_IMAGE_LIBRARIES}
 	${SIGCPP_LIBRARIES}
@@ -397,6 +402,7 @@ list(APPEND pioneerLibs
 	jenkins
 	picodds
 	profiler
+	VkBootstrap
 	Threads::Threads
 )
 
