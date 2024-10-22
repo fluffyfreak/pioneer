@@ -26,7 +26,7 @@ namespace Graphics {
 			virtual void SetProgram(Program *p) {}
 
 			virtual bool SetTexture(size_t name, Texture *tex) override { return false; }
-			virtual bool SetBuffer(size_t name, BufferBinding<UniformBuffer>) override { return false; }
+			virtual bool SetBuffer(size_t hash, BufferBinding<Graphics::UniformBuffer> uboBinding) override { return false; }
 			virtual bool SetBufferDynamic(size_t name, void *data, size_t size) override { return false; }
 
 			virtual bool SetPushConstant(size_t name, int i) override { return false; }
