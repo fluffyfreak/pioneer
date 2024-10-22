@@ -162,6 +162,7 @@ list(APPEND SRC_FOLDERS
 	src/graphics
 	src/graphics/dummy
 	src/graphics/opengl
+	src/graphics/vulkan
 	src/math
 	src/pigui
 	src/scenegraph
