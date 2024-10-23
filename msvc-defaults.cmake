@@ -21,3 +21,6 @@ set(VORBISFILE_LIBRARIES ${CMAKE_SOURCE_DIR}/../pioneer-thirdparty/win32/lib/${M
 
 set(SIGCPP_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/../pioneer-thirdparty/win32/include/sigc++-2.0)
 set(SIGCPP_LIBRARIES optimized ${CMAKE_SOURCE_DIR}/../pioneer-thirdparty/win32/lib/${MSVC_ARCH}/vs2019/sigc-vc140-2_0.lib debug ${CMAKE_SOURCE_DIR}/../pioneer-thirdparty/win32/lib/${MSVC_ARCH}/vs2019/sigc-vc140-d-2_0.lib)
+
+set(VULKAN_INCLUDE_DIRS C:/VulkanSDK/1.3.296.0/Include)
+set(VULKAN_LIBRARIES C:/VulkanSDK/1.3.296.0/Lib/vulkan-1.lib)
