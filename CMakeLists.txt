@@ -269,6 +269,7 @@ endif (MSVC)
 find_package(Threads REQUIRED)
 find_package(Freetype REQUIRED)
 find_package(OpenGL REQUIRED)
+find_package(Vulkan REQUIRED)
 
 set(FMT_INSTALL OFF CACHE BOOL "Enable install of libfmt" FORCE)
 
@@ -294,6 +295,7 @@ include_directories(
 	${SIGCPP_INCLUDE_DIRS}
 	${VORBISFILE_INCLUDE_DIRS}
 	${GLEW_INCLUDE_DIRS}
+	${VULKAN_INCLUDE_DIRS}
 )
 
 # We don't want/need the GLU dependency
@@ -387,6 +389,7 @@ list(APPEND pioneerLibs
 	${ASSIMP_LIBRARIES}
 	${FREETYPE_LIBRARIES}
 	${OPENGL_LIBRARIES}
+	${VULKAN_LIBRARIES}
 	${SDL2_LIBRARIES}
 	${SDL2_IMAGE_LIBRARIES}
 	${SIGCPP_LIBRARIES}
