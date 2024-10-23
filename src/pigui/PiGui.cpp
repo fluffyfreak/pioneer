@@ -404,6 +404,9 @@ void Instance::Init(Graphics::Renderer *renderer)
 	case Graphics::RENDERER_OPENGL_3x:
 		m_instanceRenderer->Initialize();
 		break;
+	case Graphics::RENDERER_VULKAN:
+		m_instanceRenderer->Initialize();
+		break;
 	}
 
 	ImGuiIO &io = ImGui::GetIO();
@@ -475,6 +478,9 @@ void Instance::NewFrame()
 	case Graphics::RENDERER_OPENGL_3x:
 		m_instanceRenderer->NewFrame();
 		break;
+	case Graphics::RENDERER_VULKAN:
+		m_instanceRenderer->NewFrame();
+		break;
 	}
 	ImGui_ImplSDL2_NewFrame(m_renderer->GetSDLWindow());
 	ImGui::NewFrame();
@@ -507,6 +513,9 @@ void Instance::Render()
 	case Graphics::RENDERER_DUMMY:
 		return;
 	case Graphics::RENDERER_OPENGL_3x:
+		m_instanceRenderer->RenderDrawData(ImGui::GetDrawData());
+		break;
+	case Graphics::RENDERER_VULKAN:
 		m_instanceRenderer->RenderDrawData(ImGui::GetDrawData());
 		break;
 	}
@@ -686,6 +695,9 @@ void Instance::Uninit()
 	case Graphics::RENDERER_DUMMY:
 		return;
 	case Graphics::RENDERER_OPENGL_3x:
+		m_instanceRenderer->Shutdown();
+		break;
+	case Graphics::RENDERER_VULKAN:
 		m_instanceRenderer->Shutdown();
 		break;
 	}

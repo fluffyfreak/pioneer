@@ -20,6 +20,8 @@
 #include <stack>
 #include <unordered_map>
 
+#include <vulkan/vulkan.hpp>
+
 namespace Graphics {
 
 	class Texture;
@@ -45,12 +47,10 @@ namespace Graphics {
 	public:
 		static void RegisterRenderer();
 
-		VkRenderer(SDL_Window *window, const Graphics::Settings &vs) :
-			Renderer(0, 0, 0),
-			m_identity(matrix4x4f::Identity())
-		{
-		}
-		virtual ~VkRenderer() override final{};
+		VkRenderer(SDL_Window *window, const Graphics::Settings &vs);
+		virtual ~VkRenderer() override final;
+
+		void InitVulkan();
 
 		virtual const char *GetName() const override final { return "Vulkan renderer"; }
 		virtual RendererType GetRendererType() const override final { return RENDERER_VULKAN; }
@@ -130,6 +130,11 @@ namespace Graphics {
 	private:
 		const matrix4x4f m_identity;
 		Graphics::RenderTarget *m_rt;
+
+		VkInstance m_vkInst;
+		VkDevice m_device;
+		VkQueue m_graphicsQueue;
+		VkQueue m_presentQueue;
 	};
 
 } // namespace Graphics
