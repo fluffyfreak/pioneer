@@ -176,14 +176,14 @@ namespace Graphics {
 		};
 		result = vkCreateInstance(&instInfo, nullptr, &m_vkInst);
 		if (result != VK_SUCCESS) {
-			Error("Unable to create Vulkan instance");
+			Error("Unable to create Vulkan instance : %s", VkErrorString(result).c_str());
 			return;
 		}
 
 		uint32_t physicalDeviceCount;
 		result = vkEnumeratePhysicalDevices(m_vkInst, &physicalDeviceCount, nullptr);
 		if (result != VK_SUCCESS || physicalDeviceCount == 0) {
-			Error("No device with Vulkan support found");
+			Error("No device with Vulkan support found : %s", VkErrorString(result).c_str());
 			return;
 		}
 
@@ -246,7 +246,7 @@ namespace Graphics {
 		};
 		result = vkCreateDevice(physicalDevice, &createInfo, nullptr, &m_device);
 		if (result != VK_SUCCESS) {
-			Error("vkCreateDevice failed to create logical device");
+			Error("vkCreateDevice failed to create logical device : %s", VkErrorString(result).c_str());
 			return;
 		}
 
