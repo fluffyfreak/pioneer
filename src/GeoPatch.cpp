@@ -331,19 +331,8 @@ void GeoPatch::GatherRenderablePatches(std::vector<GeoPatch *> &visiblePatches, 
 		return; // nothing below this patch is visible
 
 	// only want to horizon cull patches that can actually be over the horizon!
-	const vector3d camDir(campos - m_clipCentroid);
-	const vector3d camDirNorm(camDir.Normalized());
-	const vector3d cenDir(m_clipCentroid.Normalized());
-	const double dotProd = camDirNorm.Dot(cenDir);
-
-	if (dotProd < 0.25 && (camDir.LengthSqr() > (m_clipRadius * m_clipRadius))) {
-		SSphere obj;
-		obj.m_centre = m_clipCentroid;
-		obj.m_radius = m_clipRadius;
-
-		if (!s_sph.HorizonCulling(campos, obj)) {
-			return; // nothing below this patch is visible
-		}
+	if (IsOverHorizon(campos)) {
+		return;
 	}
 
 	if (m_kids[0]) {
