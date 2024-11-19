@@ -678,7 +678,7 @@ void CityOnPlanet::Render(Graphics::Renderer *r, const CameraContext *camera, co
 	const vector3d stationOrigin = station->GetPosition();
 	const vector3d stationPos = viewTransform * (station->GetPosition() + m_realCentre);
 
-	if (!camera->GetFrustum().TestPoint(stationPos, m_clipRadius))
+	if (!camera->GetFrustum().TestSphere(stationPos, m_clipRadius))
 		return;
 
 	// Use the station-centered frame-oriented coordinate system we generated building positions in
@@ -737,7 +737,7 @@ void CityOnPlanet::Render(Graphics::Renderer *r, const CameraContext *camera, co
 		for (size_t i = 0; i < m_enabledBuildings.size(); i++) {
 			const auto &building = m_enabledBuildings[i];
 
-			if (!frustum.TestPoint(building.pos, building.clipRadius))
+			if (!frustum.TestSphere(building.pos, building.clipRadius))
 				continue;
 
 			transform[building.instIndex].emplace_back(m_instanceTransforms[i]);
