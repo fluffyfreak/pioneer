@@ -12,6 +12,9 @@
 #include "graphics/Types.h"
 #include "graphics/VertexBuffer.h"
 #include "profiler/Profiler.h"
+#include "scenegraph/Label3D.h"
+
+#include <sstream>
 
 namespace Graphics {
 
@@ -1025,6 +1028,23 @@ namespace Graphics {
 			for (unsigned int i = 8; i < 15; i++) {
 				va.Add(verts[i], color);
 				va.Add(verts[i + 1], color);
+			}
+		}
+
+		//------------------------------------------------------------
+		Label3DWrapper::Label3DWrapper(Graphics::Renderer *r, const std::string &str)
+		{
+			Graphics::Texture *sdfTex = Graphics::TextureBuilder("fonts/label3d.dds", Graphics::LINEAR_CLAMP, true, true, true).GetOrCreateTexture(r, "model");
+			RefCountedPtr<Text::DistanceFieldFont> m_labelFont;
+			m_labelFont.Reset(new Text::DistanceFieldFont("fonts/sdf_definition.txt", sdfTex));
+			m_label3D.reset(new SceneGraph::Label3D(r, m_labelFont));
+			m_label3D->SetText(str);
+		}
+
+		void Label3DWrapper::Draw(const matrix4x4f &trans)
+		{
+			if (m_label3D) {
+				m_label3D->Render(trans, nullptr);
 			}
 		}
 

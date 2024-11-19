@@ -9,8 +9,13 @@
 #include "graphics/VertexBuffer.h"
 
 #include <memory>
+#include <string>
 
 struct Aabb;
+
+namespace SceneGraph {
+	class Label3D;
+} //namespace SceneGraph
 
 namespace Graphics {
 	class Renderer;
@@ -122,8 +127,6 @@ namespace Graphics {
 			void Draw(Renderer *, Material *);
 
 		private:
-			void CreateVertexBuffer(Graphics::Renderer *r, const Uint32 size);
-
 			bool m_refreshVertexBuffer;
 			RefCountedPtr<MeshObject> m_pointMesh;
 			std::unique_ptr<VertexArray> m_va;
@@ -288,6 +291,18 @@ namespace Graphics {
 		class AABB {
 		public:
 			static void DrawVertices(Graphics::VertexArray &va, const matrix4x4f &transform, const Aabb &aabb, Color color);
+		};
+
+		//------------------------------------------------------------
+
+		// Label3DWrapper
+		class Label3DWrapper {
+		public:
+			Label3DWrapper(Graphics::Renderer *r, const std::string &str);
+			void Draw(const matrix4x4f &trans);
+
+		private:
+			std::unique_ptr<SceneGraph::Label3D> m_label3D;
 		};
 
 	} // namespace Drawables
