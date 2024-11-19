@@ -53,9 +53,17 @@ static const vector2d sample[NUM_HORIZON_POINTS] = {
 };
 #elif NUM_HORIZON_POINTS == 5
 static const vector2d sample[NUM_HORIZON_POINTS] = {
-	{ 0.2, 0.2 }, { 0.8, 0.2 },
-	{ 0.5, 0.5 },
-	{ 0.2, 0.8 }, { 0.8, 0.8 }
+	// Naive ordering
+	// { 0.2, 0.2 }, { 0.8, 0.2 }, // top
+	//{ 0.5, 0.5 }, // middle
+	//{ 0.2, 0.8 }, { 0.8, 0.8 } // bottom
+	
+	// possibly more optimal elimination for early out
+	{ 0.5, 0.5 }, // centre
+	{ 0.2, 0.2 }, // top-left corner
+	{ 0.8, 0.8 }, // opposite corner
+	{ 0.8, 0.2 }, // other diagonal
+	{ 0.2, 0.8 }  // ^^^
 };
 #endif
 #endif // #if USE_SUB_CENTROID_CLIPPING
