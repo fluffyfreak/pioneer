@@ -273,6 +273,7 @@ set(FMT_INSTALL OFF CACHE BOOL "Enable install of libfmt" FORCE)
 
 add_subdirectory(contrib/lz4)
 add_subdirectory(contrib/fmt)
+add_subdirectory(contrib/meshoptimizer)
 
 set(NANOSOCKETS_STATIC "1")
 add_subdirectory(contrib/nanosockets)
@@ -397,6 +398,7 @@ list(APPEND pioneerLibs
 	picodds
 	profiler
 	Threads::Threads
+	meshoptimizer
 )
 
 if (WIN32)
