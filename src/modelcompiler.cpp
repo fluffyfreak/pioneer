@@ -135,7 +135,7 @@ void RunCompiler(const std::string &modelName, const std::string &filepath, cons
 	}
 
 	try {
-		const std::string DataPath = FileSystem::NormalisePath(filepath.substr(0, filepath.size() - 6));
+		const std::string DataPath = FileSystem::NormalisePath(ends_with(filepath, ".model") ? filepath.substr(0, filepath.size() - 6) : filepath);
 		SceneGraph::BinaryConverter bc(s_renderer.get());
 		bc.Save(modelName, DataPath, model.get(), bInPlace);
 	} catch (const CouldNotOpenFileException &) {
