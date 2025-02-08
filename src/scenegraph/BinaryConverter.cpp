@@ -6,6 +6,7 @@
 #include "NodeVisitor.h"
 #include "Parser.h"
 #include "StringF.h"
+#include "contrib/meshoptimizer/src/meshoptimizer.h"
 #include "core/LZ4Format.h"
 #include "scenegraph/Animation.h"
 #include "scenegraph/Label3D.h"
@@ -52,6 +53,67 @@ public:
 	NodeDatabase db;
 };
 
+class MeshOptimizerVisitor : public NodeVisitor {
+public:
+	MeshOptimizerVisitor(Model *m)
+	{
+		db.wr = nullptr;
+		db.rd = nullptr;
+		db.model = m;
+	}
+
+	// When optimizing a mesh, you should typically feed it through a set of optimizations (the order is important!):
+	// 1. Indexing
+	// 2. (optional, discussed last) Simplification
+	// 3. Vertex cache optimization
+	// 4. Overdraw optimization
+	// 5. Vertex fetch optimization
+	// 6. Vertex quantization
+	// 7. Shadow indexing
+	// 8. (optional) Vertex/index buffer compression
+	virtual void ApplyStaticGeometry(StaticGeometry &sg) final
+	{
+		const uint32_t numMeshes = sg.GetNumMeshes();
+		for (uint32_t i = 0; i < numMeshes; i++) {
+			auto & mesh = sg.GetMeshAt(i);
+			const size_t index_count = mesh.indexBuffer->GetIndexCount();
+			const size_t orig_vertex_count = mesh.vertexBuffer->GetSize();
+			if (index_count == 1 || orig_vertex_count <= 3) {
+				continue;
+			}
+
+			Uint32 *idxPtr = mesh.indexBuffer->Map(Graphics::BUFFER_MAP_READ);
+			Uint32 *vtxPtr = mesh.vertexBuffer->Map<Uint32>(Graphics::BUFFER_MAP_READ);
+
+			const Uint32 stride = mesh.vertexBuffer->GetDesc().stride;
+
+			
+			std::vector<unsigned int> remap(orig_vertex_count); // temporary remap table
+			size_t remap_vertex_count = meshopt_generateVertexRemap(&remap[0], idxPtr, index_count, vtxPtr, orig_vertex_count, stride);
+
+			meshopt_remapIndexBuffer(idxPtr, idxPtr, index_count, &remap[0]);
+			meshopt_remapVertexBuffer(vtxPtr, vtxPtr, orig_vertex_count, stride, &remap[0]);
+
+			// vertex cache optimization should go first as it provides starting order for overdraw
+			meshopt_optimizeVertexCache(idxPtr, idxPtr, index_count, orig_vertex_count);
+
+			// reorder indices for overdraw, balancing overdraw and vertex cache efficiency
+			const float kThreshold = 1.01f; // allow up to 1% worse ACMR to get more reordering opportunities for overdraw
+			meshopt_optimizeOverdraw(idxPtr, idxPtr, index_count, reinterpret_cast<float*>(vtxPtr), orig_vertex_count, stride, kThreshold);
+
+			// vertex fetch optimization should go last as it depends on the final index order
+			meshopt_optimizeVertexFetch(vtxPtr, idxPtr, index_count, vtxPtr, orig_vertex_count, stride);
+
+			// complete
+			mesh.indexBuffer->Unmap();
+			mesh.vertexBuffer->Unmap();
+		}
+		sg.Traverse(*this);
+	}
+
+	NodeDatabase db;
+};
+
 BinaryConverter::BinaryConverter(Graphics::Renderer *r) :
 	BaseLoader(r),
 	m_patternsUsed(false)
@@ -70,6 +132,13 @@ BinaryConverter::BinaryConverter(Graphics::Renderer *r) :
 void BinaryConverter::RegisterLoader(const std::string &typeName, std::function<Node *(NodeDatabase &)> func)
 {
 	m_loaders[typeName] = func;
+}
+
+bool SceneGraph::BinaryConverter::OptimizeMesh(Model *m)
+{
+	MeshOptimizerVisitor sv(m);
+	m->GetRoot()->Accept(sv);
+	return false;
 }
 
 void BinaryConverter::Save(const std::string &filename, Model *m)
@@ -107,6 +176,9 @@ void BinaryConverter::Save(const std::string &filename, const std::string &savep
 		f = newFS.OpenWriteStream(savepath + SGM_EXTENSION);
 		if (!f) throw CouldNotOpenFileException();
 	}
+
+	// Before saving anything opitmize the mesh for rendering performance
+	OptimizeMesh(m);
 
 	Serializer::Writer wr;
 

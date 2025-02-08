@@ -55,6 +55,8 @@ namespace SceneGraph {
 		//before calling Load.
 		void RegisterLoader(const std::string &typeName, std::function<Node *(NodeDatabase &)>);
 
+		bool OptimizeMesh(Model *m);
+
 	private:
 		Model *CreateModel(const std::string &filename, Serializer::Reader &);
 		void SaveMaterials(Serializer::Writer &, Model *m);
