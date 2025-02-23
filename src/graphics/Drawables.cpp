@@ -12,6 +12,7 @@
 #include "graphics/Types.h"
 #include "graphics/VertexBuffer.h"
 #include "profiler/Profiler.h"
+#include "collider/Weld.h"
 
 #include <sstream>
 
@@ -529,6 +530,27 @@ namespace Graphics {
 					vi[icosahedron_faces[i][1]],
 					vi[icosahedron_faces[i][2]],
 					subdivs);
+			}
+
+			// only do this if ATTRIB_POSITION is the only property
+			if (0 == (attribs & ~ATTRIB_POSITION)) 
+			{
+				// eliminate duplicate vertices
+				std::vector<Uint32> xrefs;
+				nv::Weld<vector3f> Welder;
+				Welder(vts.position, xrefs); //nv::Weld can handle complex vertex structures as Array-of-Structures, but not our VertexArray classes Structure-of-Arrays format
+
+				// Remap faces.
+				const Uint32 faceCount = indices.size() / 3;
+				// this only remaps the indices which have changed by being welded, there's still the same number of faces
+				// and thus indices, but some of those indices are not different because there are (probably) fewer vertices
+				// so here we visit the indices value within the xrefs vector and take that new value as the updated index
+				for (Uint32 f = 0; f < faceCount; f++) {
+					const Uint32 idx = (f * 3);
+					indices[idx + 0] = xrefs.at(indices[idx + 0]);
+					indices[idx + 1] = xrefs.at(indices[idx + 1]);
+					indices[idx + 2] = xrefs.at(indices[idx + 2]);
+				}
 			}
 
 			// Create index buffer
