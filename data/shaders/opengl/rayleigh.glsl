@@ -88,7 +88,7 @@ float predictDensityIn(const in float radius, const in float atmosphereHeight, c
 }
 
 // predict "scattering density" along the ray
-// sample: starting point of the ray
+// rayOrigin: starting point of the ray
 // dir:    direction of ray
 // center: relative position of planet center
 // radius: planet radius
@@ -97,10 +97,10 @@ float predictDensityIn(const in float radius, const in float atmosphereHeight, c
 //     k * exp(-height * b) for out-scattering density: k = density along the ray tangent to planet surface
 //                                                      b = height at which density reduces by e
 //     erf(c * t) for in-scattering density: c = density derivative per 1 km along the ray, assuming: k = 1, height = 0, t = 0 at tangent point
-float predictDensityInOut(const in vec3 sample, const in vec3 dir, const in vec3 center, const in float radius, const in float atmosphereHeight, const in vec3 coefficients)
+float predictDensityInOut(const in vec3 rayOrigin, const in vec3 dir, const in vec3 center, const in float radius, const in float atmosphereHeight, const in vec3 coefficients)
 {
     float h, t;
-    findClosestHeight(h, t, sample, dir, center);
+    findClosestHeight(h, t, rayOrigin, dir, center);
     h -= radius;
 
     float opticalDepth = 0.f;
