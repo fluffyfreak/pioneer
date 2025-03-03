@@ -725,6 +725,13 @@ void Terrain::ApplySimpleHeightRegions(double &h, const vector3d &p) const
 	}
 }
 
+void Terrain::ApplySimpleHeightRegions(std::vector<double>& heightsOut, const std::vector<vector3d>& positions) const
+{
+	for (size_t i = 0; i < positions.size(); i++) {
+		ApplySimpleHeightRegions(heightsOut.at(i) , positions[i]);
+	}
+}
+
 /**
  * Feature width means roughly one perlin noise blob or grain.
  * This will end up being one hill, mountain or continent, roughly.

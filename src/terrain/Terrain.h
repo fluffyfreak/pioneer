@@ -77,6 +77,7 @@ private:
 protected:
 	Terrain(const SystemBody *body);
 	void ApplySimpleHeightRegions(double &h, const vector3d &p) const;
+	void ApplySimpleHeightRegions(std::vector<double> &heightsOut, const std::vector<vector3d> &positions) const;
 
 	Uint32 m_seed;
 	Random m_rand;
@@ -141,7 +142,7 @@ class TerrainHeightFractal : virtual public Terrain {
 public:
 	TerrainHeightFractal() = delete;
 	double GetHeight(const vector3d &p) const final;
-	void GetHeights(const std::vector<vector3d> &positions, std::vector<double> &heightsOut) const
+	void GetHeights(const std::vector<vector3d> &positions, std::vector<double> &heightsOut) const override
 	{
 		assert(heightsOut.size() == positions.size());
 		// this is NOT the way
