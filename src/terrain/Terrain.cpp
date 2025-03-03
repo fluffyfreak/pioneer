@@ -688,6 +688,9 @@ void Terrain::InitCityRegions(const SystemBody *sb)
 
 void Terrain::ApplySimpleHeightRegions(double &h, const vector3d &p) const
 {
+	if (m_positions.empty())
+		return;
+
 	const double dynamicRangeHeight = 60.0 / m_planetRadius; //in radii
 	for (unsigned int i = 0; i < m_positions.size(); i++) {
 		const vector3d &pos = m_positions[i];
@@ -725,10 +728,54 @@ void Terrain::ApplySimpleHeightRegions(double &h, const vector3d &p) const
 	}
 }
 
-void Terrain::ApplySimpleHeightRegions(std::vector<double>& heightsOut, const std::vector<vector3d>& positions) const
+void Terrain::ApplySimpleHeightRegions(std::vector<double> &heightsOut, const std::vector<vector3d> &positions) const
 {
+	if (m_positions.empty())
+		return;
+
+	//in radii
+	const double dynamicRangeHeight = 60.0 / m_planetRadius;
+
+	// now use those select regions
 	for (size_t i = 0; i < positions.size(); i++) {
-		ApplySimpleHeightRegions(heightsOut.at(i) , positions[i]);
+		//ApplySimpleHeightRegions(heightsOut[i], positions[i]);
+		const vector3d &p = positions[i];
+		const double h = heightsOut.at(i);
+
+		for (unsigned int i = 0; i < m_positions.size(); i++) {
+			const vector3d &pos = m_positions[i];
+			const RegionType &rt = m_regionTypes[i];
+			if (pos.Dot(p) > rt.outer) {
+				// target height
+				const double th = rt.height;
+
+				// maximum variation in height with respect to target height
+				const double delta_h = fabs(h - th);
+				const double neg = (h - th > 0.0) ? 1.0 : -1.0;
+
+				// Make up an expression to compress delta_h:
+				// Compress delta_h between 0 and 1
+				//    1.1 use compression of the form c = (delta_h+a)/(a+(delta_h+a)) (eqn. 1)
+				//    1.2 this gives c in the interval [0.5, 1] for delta_h [0, +inf] with c=0.5 at delta_h=0.
+				//  2.0 Use compressed_h = dynamic range*(sign(h-th)*(c-0.5)) (eqn. 2) to get h between th-0.5*dynamic range, th+0.5*dynamic range
+
+				// Choosing a value for a
+				//    3.1 c [0.5, 0.8] occurs when delta_h [a to 3a] (3x difference) which is roughly the expressible range (above or below that the function changes slowly)
+				//    3.2 Find an expression for the expected variation and divide by around 3
+
+				// It may become necessary calculate expected variation based on intermediate quantities generated (e.g. distribution fractals)
+				// or to store a per planet estimation of variation when fracdefs are calculated.
+				const double variationEstimate = rt.heightVariation;
+				const double a = variationEstimate * (1.0 / 3.0); // point 3.2
+
+				const double c = (delta_h + a) / (2.0 * a + delta_h);					 // point 1.1
+				const double compressed_h = dynamicRangeHeight * (neg * (c - 0.5)) + th; // point 2.0
+
+				// blends from compressed height-terrain height as pos goes inner to outer
+				heightsOut[i] = MathUtil::Lerp(h, compressed_h, Clamp((pos.Dot(p) - rt.outer) / (rt.inner - rt.outer), 0.0, 1.0));
+				break;
+			}
+		}
 	}
 }
 

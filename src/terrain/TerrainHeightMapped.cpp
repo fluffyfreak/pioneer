@@ -149,5 +149,6 @@ void TerrainHeightFractal<TerrainHeightMapped>::GetHeights(const std::vector<vec
 		v *= m_invPlanetRadius;
 		heightsOut.at(i) = (v > 0.0 ? v : 0.0);
 	}
+
 	ApplySimpleHeightRegions(heightsOut, positions);
 }

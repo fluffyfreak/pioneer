@@ -38,5 +38,6 @@ void TerrainHeightFractal<TerrainHeightAsteroid>::GetHeights(const std::vector<v
 		double n = octavenoise(GetFracDef(0), 0.4, p) * dunes_octavenoise(GetFracDef(1), 0.5, p) * m_maxHeight;
 		heightsOut.at(i) = (n > 0.0 ? n : 0.0);
 	}
+
 	ApplySimpleHeightRegions(heightsOut, positions);
 }
