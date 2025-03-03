@@ -322,6 +322,7 @@ if (NOT USE_SYSTEM_LIBLUA)
 	set(LUA_LIBRARIES lua)
 	include_directories(contrib/lua)
 endif (NOT USE_SYSTEM_LIBLUA)
+add_subdirectory(contrib/vk-bootstrap)
 
 add_subdirectory(src/core)
 
@@ -400,6 +401,7 @@ list(APPEND pioneerLibs
 	jenkins
 	picodds
 	profiler
+	vk-bootstrap
 	Threads::Threads
 )
 

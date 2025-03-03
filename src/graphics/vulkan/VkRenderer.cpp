@@ -23,6 +23,8 @@
 
 #include <vulkan/vulkan.hpp>
 
+#include "vk-bootstrap/VkBootstrap.h"
+
 #include <SDL.h>
 #include <SDL_vulkan.h>
 
@@ -209,7 +211,7 @@ namespace Graphics {
 		uint32_t presentQueueIndex = UINT32_MAX;
 		VkBool32 support;
 		uint32_t i = 0;
-		for (VkQueueFamilyProperties queueFamily : queueFamilies) {
+		for (const VkQueueFamilyProperties &queueFamily : queueFamilies) {
 			if (graphicsQueueIndex == UINT32_MAX && queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
 				graphicsQueueIndex = i;
 			if (presentQueueIndex == UINT32_MAX) {
