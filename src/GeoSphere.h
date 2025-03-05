@@ -84,6 +84,7 @@ public:
 	void AddQuadSplitRequest(double, SQuadSplitRequest *, GeoPatch *);
 
 private:
+	void GenerateWorldHeightMap();
 	void BuildFirstPatches();
 	void CalculateMaxPatchDepth();
 	inline vector3d GetColor(const vector3d &p, double height, const vector3d &norm) const

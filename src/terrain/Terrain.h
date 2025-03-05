@@ -57,6 +57,8 @@ public:
 
 	void DebugDump() const;
 
+	void SetHeightMap(double *heightMap) { m_heightMap.reset(heightMap); }
+
 private:
 	template <typename HeightFractal, typename ColorFractal>
 	static Terrain *InstanceGenerator(const SystemBody *body) { return new TerrainGenerator<HeightFractal, ColorFractal>(body); }

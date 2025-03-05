@@ -25,6 +25,8 @@
 #include <algorithm>
 #include <deque>
 
+#include "PngWriter.h"
+
 RefCountedPtr<GeoPatchContext> GeoSphere::s_patchContext;
 
 // must be odd numbers
@@ -192,6 +194,76 @@ void GeoSphere::Reset()
 	m_initStage = eBuildFirstPatches;
 }
 
+void GeoSphere::GenerateWorldHeightMap()
+{
+	// map size
+	constexpr size_t heightMapSizeX = 1024; // 2048;
+	constexpr size_t heightMapSizeY = heightMapSizeX >> 1;
+	constexpr size_t heightmapPixelArea = (heightMapSizeX * heightMapSizeY);
+
+	std::unique_ptr<double[]> heightMap(new double[heightmapPixelArea]);
+	double *pHeightMap = heightMap.get();
+	double minHMapScld = 65535;
+	double maxHMapScld = 0;
+
+	std::vector<vector3d> pv;
+	pv.reserve(heightmapPixelArea);
+	for (size_t y = 0; y < heightMapSizeY; y++) {
+		for (size_t x = 0; x < heightMapSizeX; x++) {
+			double longitude = double(x) / double(heightMapSizeX);
+			double latitude = 2.0 * atan(exp(double(y) / double(heightMapSizeY))) - M_PI_2;
+			vector3d up = vector3d(cos(latitude) * cos(longitude), sin(latitude) * cos(longitude), sin(longitude));
+			pv.emplace_back(up);
+		}
+	}
+
+	std::vector<double> hv(pv.size());
+	m_terrain->GetHeights(pv, hv);
+
+	for (size_t i = 0; i < hv.size(); i++) 
+	{
+		const double val = hv[i];
+		minHMapScld = std::min(minHMapScld, val);
+		maxHMapScld = std::max(maxHMapScld, val);
+		// store then increment pointer
+		(*pHeightMap) = val;
+		++pHeightMap;
+	}
+	assert(pHeightMap == &heightMap[heightmapPixelArea]);
+
+	// calculate height scaling and min height which are doubles
+	double m_heightScaling = 0.0;
+	double m_minh = minHMapScld;
+
+	//Output("minHMapScld = (%hu), maxHMapScld = (%hu)\n", minHMapScld, maxHMapScld);
+
+	// output a png of what we've just done.
+	{
+		const int stride = (3 * heightMapSizeX);
+		std::unique_ptr<Uint8[]> pixel_data;
+		pixel_data.reset(new Uint8[heightmapPixelArea * 3]);
+		Uint8 *pPixel = pixel_data.get();
+		pHeightMap = heightMap.get();
+		for (Uint32 i = 0; i < heightmapPixelArea; i++) {
+			// adjust to 0.0 to 1.0 range, multiply to 0-255
+			const Uint8 pixel = Uint8((((*pHeightMap) - minHMapScld) / maxHMapScld) * 255.0f);
+			(*pPixel) = (pixel); ++pPixel; // r
+			(*pPixel) = (pixel); ++pPixel; // g
+			(*pPixel) = (pixel); ++pPixel; // b
+			++pHeightMap;
+		}
+		Graphics::ScreendumpState sd;
+		sd.pixels.reset(pixel_data.release());
+		sd.width = heightMapSizeX;
+		sd.height = heightMapSizeY;
+		sd.stride = stride;
+		sd.bpp = 3;
+		write_screenshot(sd, (m_sbody->GetName() + std::string(".png")).c_str());
+	}
+
+	m_terrain->SetHeightMap(heightMap.release());
+}
+
 GeoSphere::GeoSphere(const SystemBody *body) :
 	BaseSphere(body),
 	m_hasTempCampos(false),
@@ -215,6 +287,7 @@ GeoSphere::GeoSphere(const SystemBody *body) :
 	}
 
 	//SetUpMaterials is not called until first Render since light count is zero :)
+	GenerateWorldHeightMap();
 }
 
 GeoSphere::~GeoSphere()
