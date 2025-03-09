@@ -210,8 +210,9 @@ void GeoSphere::GenerateWorldHeightMap()
 	pv.reserve(heightmapPixelArea);
 	for (size_t y = 0; y < heightMapSizeY; y++) {
 		for (size_t x = 0; x < heightMapSizeX; x++) {
-			double longitude = double(x) / double(heightMapSizeX);
-			double latitude = 2.0 * atan(exp(double(y) / double(heightMapSizeY))) - M_PI_2;
+			double longitude = DEG2RAD((double(x) / double(heightMapSizeX)) * 360.0);
+			//double latitude = 2.0 * atan(exp(double(y) / double(heightMapSizeY))) - M_PI_2;
+			double latitude = DEG2RAD((double(y) / double(heightMapSizeY)) * 180.0);
 			vector3d up = vector3d(cos(latitude) * cos(longitude), sin(latitude) * cos(longitude), sin(longitude));
 			pv.emplace_back(up);
 		}
@@ -287,7 +288,7 @@ GeoSphere::GeoSphere(const SystemBody *body) :
 	}
 
 	//SetUpMaterials is not called until first Render since light count is zero :)
-	GenerateWorldHeightMap();
+	//GenerateWorldHeightMap();
 }
 
 GeoSphere::~GeoSphere()

@@ -371,6 +371,114 @@ static size_t bufread_or_die(void *ptr, size_t size, size_t nmemb, ByteRange &bu
 	return read_count;
 }
 
+#include "graphics/Graphics.h"
+#include "PngWriter.h"
+#include "StringF.h"
+#include <sstream>
+// Attempt at version history:
+// 0: prototype - export only
+// 1: loading added, switched back to Uint16 heights for export/load
+static const Uint32 HMAP_VERSION = 1;
+static const std::string HMAP_EXTENSION = ".hmap";
+static const std::string SAVE_TARGET_DIR = "heightmaps";
+static bool s_earthHack = false;
+#pragma optimize("", off)
+void Terrain::ExportHeightmap(const std::string &filename)
+{
+	const int SizeX = (m_heightMapSizeX);
+	const int SizeY = (m_heightMapSizeY);
+
+	printf("Saving file (%s)\n", filename.c_str());
+	//FILE *f = nullptr;
+	//FileSystem::FileSourceFS newFS(FileSystem::GetDataDir());
+	//if (true) {
+	//	if (!FileSystem::userFiles.MakeDirectory(SAVE_TARGET_DIR))
+	//		throw CouldNotOpenFileException();
+	//
+	//	f = FileSystem::userFiles.OpenWriteStream(
+	//		FileSystem::JoinPathBelow(SAVE_TARGET_DIR, filename + HMAP_EXTENSION));
+	//	printf("Save file (%s)\n", FileSystem::JoinPathBelow(SAVE_TARGET_DIR, filename + HMAP_EXTENSION).c_str());
+	//	if (!f) throw CouldNotOpenFileException();
+	//} else {
+	//	f = newFS.OpenWriteStream(filename + HMAP_EXTENSION);
+	//	if (!f) throw CouldNotOpenFileException();
+	//}
+	//
+	//Serializer::Writer wr;
+	//
+	//// header data
+	//wr.Byte('M');
+	//wr.Byte('A');
+	//wr.Byte('P');
+	//wr.Byte('1');
+	//
+	//wr.Int32(HMAP_VERSION);
+	//
+	//wr.Int16(SizeX);
+	//wr.Int16(SizeY);
+
+	// heightmap data
+	double minh = DBL_MAX, maxh = DBL_MIN;
+	{
+		const Uint32 heightmapPixelArea = (SizeX * SizeY);
+		double const *pHeightMap = m_heightMap.get();
+		for (Uint32 i = 0; i < heightmapPixelArea; i++) {
+			const float heightVal = (*pHeightMap);
+			Uint32 val(heightVal);
+			if (s_earthHack) {
+				val += INT16_MAX;
+			}
+			//wr.Int16(val);
+			minh = std::min(minh, double(heightVal));
+			maxh = std::max(maxh, double(heightVal));
+			++pHeightMap;
+		}
+		assert(pHeightMap == &m_heightMap[heightmapPixelArea]);
+	}
+
+	//if (s_earthHack) {
+	//	wr.Double(0.3);
+	//	wr.Double(minh);
+	//} else {
+	//	wr.Double(m_heightScaling);
+	//	wr.Double(m_minh);
+	//}
+
+	// output a png of what we've just done.
+	{
+		const int stride = (3 * SizeX);
+		std::unique_ptr<Uint8[]> pixel_data;
+		const Uint32 heightmapPixelArea = (SizeX * SizeY);
+		pixel_data.reset(new Uint8[heightmapPixelArea * 3]);
+		Uint8 *pPixel = pixel_data.get();
+		double const *pHeightMap = m_heightMap.get();
+		for (Uint32 i = 0; i < heightmapPixelArea; i++) {
+			// adjust to 0.0 to 1.0 range, multiply to 0-255
+			const Uint8 pixel = Uint8((((*pHeightMap) - minh) / maxh) * 255.0f);
+			(*pPixel) = (pixel); ++pPixel; // r
+			(*pPixel) = (pixel); ++pPixel; // g
+			(*pPixel) = (pixel); ++pPixel; // b
+			++pHeightMap;
+		}
+		//write_png(FileSystem::userFiles, filename + ".png", &pixel_data[0], SizeX, SizeY, stride, 3);
+		Graphics::ScreendumpState sd;
+		sd.pixels.reset(pixel_data.release());
+		sd.width = SizeX;
+		sd.height = SizeY;
+		sd.stride = stride;
+		sd.bpp = 3;
+		write_screenshot(sd, (filename + std::string(".png")).c_str());
+	}
+
+	// write the data to the file
+	//const std::string &data = wr.GetData();
+	//const size_t nwritten = fwrite(data.data(), data.length(), 1, f);
+	//fclose(f);
+	//
+	//if (nwritten != 1)
+	//	throw CouldNotWriteToFileException();
+}
+
 // XXX this sucks, but there isn't a reliable cross-platform way to get them
 #ifndef INT16_MIN
 #define INT16_MIN (-32767 - 1)
@@ -397,6 +505,8 @@ Terrain::Terrain(const SystemBody *body) :
 			Output("Error: could not open file '%s'\n", body->GetHeightMapFilename().c_str());
 			abort();
 		}
+		const std::string fullname = fdata->GetInfo().GetName();
+		const std::string heightmap_filename = fullname.substr(0, fullname.size() - HMAP_EXTENSION.size());
 
 		ByteRange databuf = fdata->AsByteRange();
 
@@ -427,6 +537,7 @@ Terrain::Terrain(const SystemBody *body) :
 			}
 			assert(pHeightMap == &m_heightMap[heightmapPixelArea]);
 			//Output("minHMap = (%hd), maxHMap = (%hd)\n", minHMap, maxHMap);
+			ExportHeightmap(heightmap_filename);
 			break;
 		}
 
@@ -461,6 +572,7 @@ Terrain::Terrain(const SystemBody *body) :
 			}
 			assert(pHeightMap == &m_heightMap[heightmapPixelArea]);
 			//Output("minHMapScld = (%hu), maxHMapScld = (%hu)\n", minHMapScld, maxHMapScld);
+			ExportHeightmap(heightmap_filename);
 			break;
 		}
 

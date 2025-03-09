@@ -67,6 +67,7 @@ private:
 
 protected:
 	Terrain(const SystemBody *body);
+	void ExportHeightmap(const std::string &filename);
 
 	Uint32 m_seed;
 	Random m_rand;
