@@ -214,6 +214,7 @@ void SQuadSplitRequest::GenerateBorderedData() const
 	const double* rheights = pParentPatch->GetHeightData();
 	const bool useCopy = pParentPatch->GetDepth() > 3;
 
+	// the maximum possible saving here is 25% but in practice we'll never quite get that as we've added overhead for managing the copy
 	if (rheights && useCopy) {
 		// generate heights plus a N=BORDER_SIZE unit border
 		double *bhts = borderHeights.get();
