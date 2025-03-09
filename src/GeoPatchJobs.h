@@ -13,6 +13,7 @@
 #include "terrain/Terrain.h"
 
 class GeoSphere;
+class GeoPatch;
 
 #define BORDER_SIZE 1
 
@@ -55,8 +56,8 @@ class SQuadSplitRequest : public SBaseRequest {
 public:
 	SQuadSplitRequest(const vector3d &v0_, const vector3d &v1_, const vector3d &v2_, const vector3d &v3_, const vector3d &cn,
 		const uint32_t depth_, const SystemPath &sysPath_, const GeoPatchID &patchID_, const int edgeLen_, const double fracStep_,
-		Terrain *pTerrain_) :
-		SBaseRequest(v0_, v1_, v2_, v3_, cn, depth_, sysPath_, patchID_, edgeLen_, fracStep_, pTerrain_)
+		Terrain *pTerrain_, GeoPatch *pParentPatch_) :
+		SBaseRequest(v0_, v1_, v2_, v3_, cn, depth_, sysPath_, patchID_, edgeLen_, fracStep_, pTerrain_), pParentPatch(pParentPatch_)
 	{
 		const int numVerts = NUMVERTICES(edgeLen_);
 		for (int i = 0; i < 4; ++i) {
@@ -75,6 +76,9 @@ public:
 	void GenerateSubPatchData(const int quadrantIndex,
 		const vector3d &v0, const vector3d &v1, const vector3d &v2, const vector3d &v3,
 		const int edgeLen, const int xoff, const int yoff, const int borderedEdgeLen) const;
+
+	// bad idea?
+	GeoPatch *pParentPatch;
 
 	// these are created with the request and are given to the resulting patches
 	vector3f *normals[4];

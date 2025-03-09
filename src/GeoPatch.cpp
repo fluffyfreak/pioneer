@@ -173,6 +173,10 @@ void GeoPatch::UpdateVBOs(Graphics::Renderer *renderer)
 				++vtxPtr; // next vertex
 			}
 		}
+
+		// ----------------------------------------------------
+		// Generate border geometry skirts
+		// ----------------------------------------------------
 		const double minhScale = (minh + 1.0) * 0.999995;
 		// ----------------------------------------------------
 		const Sint32 innerLeft = 1;
@@ -333,7 +337,7 @@ void GeoPatch::RenderImmediate(Graphics::Renderer *renderer, const vector3d &cam
 	RenderLabelDebug(campos, modelView);
 #endif // DEBUG_PATCHES
 
-	if (m_patchVBOData->m_heights) {
+	if (HasHeightData()) {
 		const vector3d relpos = m_clipCentroid - campos;
 		renderer->SetTransform(matrix4x4f(modelView * matrix4x4d::Translation(relpos)));
 
@@ -344,6 +348,7 @@ void GeoPatch::RenderImmediate(Graphics::Renderer *renderer, const vector3d &cam
 		const float fDetailFrequency = pow(2.0f, float(m_geosphere->GetMaxDepth()) - float(m_depth));
 
 		m_geosphere->GetSurfaceMaterial()->SetPushConstant("PatchDetailFrequency"_hash, fDetailFrequency);
+		assert(m_patchMesh != nullptr);
 		renderer->DrawMesh(m_patchVBOData->m_patchMesh.get(), m_geosphere->GetSurfaceMaterial().Get());
 
 #if DEBUG_CENTROIDS
@@ -412,7 +417,7 @@ void GeoPatch::LODUpdate(const vector3d &campos, const Graphics::Frustum &frustu
 
 			SQuadSplitRequest *ssrd = new SQuadSplitRequest(m_corners->m_v0, m_corners->m_v1, m_corners->m_v2, m_corners->m_v3, m_clipCentroid.Normalized(), m_depth,
 				m_geosphere->GetSystemBody()->GetPath(), m_PatchID, m_ctx->GetEdgeLen() - 2,
-				m_ctx->GetFrac(), m_geosphere->GetTerrain());
+				m_ctx->GetFrac(), m_geosphere->GetTerrain(), this);
 
 			// add to the GeoSphere to be processed at end of all LODUpdate requests
 			m_geosphere->AddQuadSplitRequest(centroidDist, ssrd, this);

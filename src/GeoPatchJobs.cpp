@@ -3,7 +3,9 @@
 
 #include "GeoPatchJobs.h"
 
+#include "GeoPatch.h"
 #include "GeoSphere.h"
+#include "graphics/VertexBuffer.h"
 #include "MathUtil.h"
 #include "perlin.h"
 #include "profiler/Profiler.h"
@@ -185,7 +187,21 @@ QuadPatchJob::~QuadPatchJob()
 	}
 }
 
-// Generates full-detail vertices, and also non-edge normals and colors
+// Generates heightmap for a patch of size (edgelen+border) * (edgelen+border)
+// The extra border vertices are used for normal calculations within GenerateSubPatchData then discarded
+// Only the inner quadrant heights are copied and sent to each child patch
+//
+// example of a 7*7 plus border (2) vertices
+//-1	┌─┬─┬─┬─┬─┬─┬─┬─┬─┐
+// 0	├─┼─┼─┼─┼─┼─┼─┼─┼─┤
+// 1	├─┼─┼─┼─┼─┼─┼─┼─┼─┤
+// 2	├─┼─┼─┼─┼─┼─┼─┼─┼─┤
+// 3	├─┼─┼─┼─┼─┼─┼─┼─┼─┤
+// 4	├─┼─┼─┼─┼─┼─┼─┼─┼─┤
+// 5	├─┼─┼─┼─┼─┼─┼─┼─┼─┤
+// 6	├─┼─┼─┼─┼─┼─┼─┼─┼─┤
+// 7	├─┼─┼─┼─┼─┼─┼─┼─┼─┤
+// 8	└─┴─┴─┴─┴─┴─┴─┴─┴─┘
 void SQuadSplitRequest::GenerateBorderedData() const
 {
 	PROFILE_SCOPED()
@@ -194,21 +210,72 @@ void SQuadSplitRequest::GenerateBorderedData() const
 	const int numBorderedVerts = borderedEdgeLen * borderedEdgeLen;
 #endif
 
-	// generate heights plus a N=BORDER_SIZE unit border
-	double *bhts = borderHeights.get();
-	vector3d *vrts = borderVertexs.get();
-	for (int y = -BORDER_SIZE; y < (borderedEdgeLen - BORDER_SIZE); y++) {
-		const double yfrac = double(y) * (fracStep * 0.5);
-		for (int x = -BORDER_SIZE; x < (borderedEdgeLen - BORDER_SIZE); x++) {
-			const double xfrac = double(x) * (fracStep * 0.5);
-			const vector3d p = GetSpherePoint(v0, v1, v2, v3, xfrac, yfrac);
-			const double height = pTerrain->GetHeight(p);
-			assert(height >= 0.0f && height <= 1.0f);
-			*(bhts++) = height;
-			*(vrts++) = p * (height + 1.0);
+	// copy the existing heightmap data into the borderHeights to avoid recalculating it
+	const double* rheights = pParentPatch->GetHeightData();
+	const bool useCopy = pParentPatch->GetDepth() > 3;
+
+	if (rheights && useCopy) {
+		// generate heights plus a N=BORDER_SIZE unit border
+		double *bhts = borderHeights.get();
+		vector3d *vrts = borderVertexs.get();
+		for (int y = -BORDER_SIZE; y < (borderedEdgeLen - BORDER_SIZE); y++) {
+			const double yfrac = double(y) * (fracStep * 0.5);
+			// every even row
+			if (y % 2 == 0) {
+				// y needs translating into the parents coords
+				const int rY = (y > 0) ? y >> 1 : 0; // divide by 2, but don't if 0
+				for (int x = -BORDER_SIZE; x < (borderedEdgeLen - BORDER_SIZE); x++) {
+					const double xfrac = double(x) * (fracStep * 0.5);
+					const vector3d p = GetSpherePoint(v0, v1, v2, v3, xfrac, yfrac);
+					double height;
+
+					// copy every even column, 0,2,4,etc
+					if (x % 2 == 0) {
+						// copy value from rheights
+						// x needs translating into the parents coords
+						const int rX = (x > 0) ? x >> 1 : 0; // divide by 2, but don't if 0
+						assert(rX < edgeLen && rY < edgeLen);
+						const int heightIdx = (rY * edgeLen) + rX;
+						//assert(heightIdx < rheights.size());
+						height = rheights[heightIdx];
+					} else {
+						height = pTerrain->GetHeight(p);
+					}
+
+					assert(height >= 0.0f && height <= 1.0f);
+					*(bhts++) = height;
+					*(vrts++) = p * (height + 1.0);
+				}
+			} else {
+				// we'll never copy on this row so just generate every point
+				for (int x = -BORDER_SIZE; x < (borderedEdgeLen - BORDER_SIZE); x++) {
+					const double xfrac = double(x) * (fracStep * 0.5);
+					const vector3d p = GetSpherePoint(v0, v1, v2, v3, xfrac, yfrac);
+					const double height = pTerrain->GetHeight(p);
+					assert(height >= 0.0f && height <= 1.0f);
+					*(bhts++) = height;
+					*(vrts++) = p * (height + 1.0);
+				}
+			}
 		}
+		assert(bhts == &borderHeights[numBorderedVerts]);
+	} else {
+		// generate heights plus a N=BORDER_SIZE unit border
+		double *bhts = borderHeights.get();
+		vector3d *vrts = borderVertexs.get();
+		for (int y = -BORDER_SIZE; y < (borderedEdgeLen - BORDER_SIZE); y++) {
+			const double yfrac = double(y) * (fracStep * 0.5);
+			for (int x = -BORDER_SIZE; x < (borderedEdgeLen - BORDER_SIZE); x++) {
+				const double xfrac = double(x) * (fracStep * 0.5);
+				const vector3d p = GetSpherePoint(v0, v1, v2, v3, xfrac, yfrac);
+				const double height = pTerrain->GetHeight(p);
+				assert(height >= 0.0f && height <= 1.0f);
+				*(bhts++) = height;
+				*(vrts++) = p * (height + 1.0);
+			}
+		}
+		assert(bhts == &borderHeights[numBorderedVerts]);
 	}
-	assert(bhts == &borderHeights[numBorderedVerts]);
 }
 
 void SQuadSplitRequest::GenerateSubPatchData(

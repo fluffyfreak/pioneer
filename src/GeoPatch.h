@@ -97,12 +97,15 @@ public:
 	void ReceiveJobHandle(Job::Handle job);
 
 	inline bool HasHeightData() const { return (m_patchVBOData != nullptr) && (m_patchVBOData->m_heights.get() != nullptr); }
+	const double* GetHeightData() const { return m_patchVBOData->m_heights.get(); }
 
 	// used by GeoSphere so must be public
 	inline void SetNeedToUpdateVBOs()
 	{
 		m_needUpdateVBOs = HasHeightData();
 	}
+
+	inline Sint32 GetDepth() const { return m_depth; }
 
 
 private:
