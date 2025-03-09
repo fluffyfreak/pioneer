@@ -642,16 +642,19 @@ void PiGui::PerfInfo::DrawTerrainDebug()
 	bool showSort = debugFlags & Flags::DEBUG_SORTGEOPATCHES;
 	bool showWire = debugFlags & Flags::DEBUG_WIREFRAME;
 	//bool showFace = debugFlags & Flags::DEBUG_FACELABELS;
+	bool freeze = debugFlags & Flags::DEBUG_FREEZEUPDATES;
 
 	bool changed = ImGui::Checkbox("Distance Sort GeoPatches", &showSort);
 	changed |= ImGui::Checkbox("Show Wireframe", &showWire);
 	//changed |= ImGui::Checkbox("Show Face IDs", &showFace);
+	changed |= ImGui::Checkbox("Freeze Updates", &freeze);
 
 	/* clang-format off */
 	if (changed) {
 		debugFlags = (showSort ? Flags::DEBUG_SORTGEOPATCHES : 0)
-			| (showWire ? Flags::DEBUG_WIREFRAME : 0);
+			| (showWire ? Flags::DEBUG_WIREFRAME : 0)
 			//| (showFace ? Flags::DEBUG_FACELABELS : 0);
+			| (freeze ? Flags::DEBUG_FREEZEUPDATES : 0);
 		GeoSphere::SetDebugFlags(debugFlags);
 		Pi::config->SetInt("SortGeoPatches", showSort ? 1 : 0);
 

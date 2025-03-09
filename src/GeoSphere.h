@@ -62,7 +62,8 @@ public:
 		DEBUG_NONE = 0x0,
 		DEBUG_SORTGEOPATCHES = 0x1,
 		DEBUG_WIREFRAME = 0x2,
-		DEBUG_FACELABELS = 0x4
+		DEBUG_FACELABELS = 0x4,
+		DEBUG_FREEZEUPDATES = 0x8
 	};
 	static void SetDebugFlags(Uint32 flags);
 	static Uint32 GetDebugFlags();

@@ -372,8 +372,10 @@ void GeoSphere::Update()
 	case eDefaultUpdateState:
 		if (m_hasTempCampos) {
 			ProcessSplitResults();
-			for (int i = 0; i < NUM_PATCHES; i++) {
-				m_patches[i]->LODUpdate(m_tempCampos, m_tempFrustum);
+			if (!(s_debugFlags & GeoSphere::DebugFlags::DEBUG_FREEZEUPDATES)) {
+				for (int i = 0; i < NUM_PATCHES; i++) {
+					m_patches[i]->LODUpdate(m_tempCampos, m_tempFrustum);
+				}
 			}
 			ProcessQuadSplitRequests();
 		}
