@@ -176,6 +176,34 @@ namespace Background {
 
 		m_universeBox.reset(m_renderer->CreateMeshObject(vertexBuf));
 		m_numCubemaps = GetNumSkyboxes();
+
+		{
+			IniConfig cfg;
+			// set defaults in case they're missing from the file
+			cfg.SetString("numSkyboxes", "0");
+
+			// load
+			cfg.Read(FileSystem::gameDataFiles, "configs/skyboxes.ini");
+
+			// process
+			const int numSkyboxes = cfg.Int("numSkyboxes", 0);
+			for (int i = 0; i < numSkyboxes; i++)
+			{
+				// build names of keys in the file
+				const std::string skyboxKeyFilename = stringf("skybox%0{d}", i);
+				const std::string skyboxKeyProbability = stringf("skyboxProbability%0{d}", i);
+
+				// grab data, these have sensible defaults of an empty string and 0, which we can use to reject entries
+				const std::string filename = cfg.String(skyboxKeyFilename);
+				const int probabilty = cfg.Int(skyboxKeyProbability);
+
+				if (probabilty > 0 && probabilty <= 100 && !filename.empty()) {
+					// could be valid
+
+					// what to do with it?
+				}
+			}
+		}
 	}
 
 	void UniverseBox::Draw()
