@@ -180,7 +180,7 @@ namespace Background {
 		{
 			IniConfig cfg;
 			// set defaults in case they're missing from the file
-			cfg.SetString("numSkyboxes", "0");
+			cfg.SetInt("numSkyboxes", 0);
 
 			// load
 			cfg.Read(FileSystem::gameDataFiles, "configs/skyboxes.ini");
