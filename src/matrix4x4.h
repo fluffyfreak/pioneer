@@ -16,16 +16,27 @@
 template <typename T>
 class matrix4x4 {
 private:
-	T cell[16];
+	union {
+		// matrix4x4 is column-major
+		T cell[16];
+		struct {
+			T m11, m12, m13, m14;	//  0,   1,   2,   3
+			T m21, m22, m23, m24;	//  4,   5,   6,   7
+			T m31, m32, m33, m34;	//  8,   9,  10,  11
+			T m41, m42, m43, m44;	// 12,  13,  14,  15
+		};
+		T mat[4][4];
+	};
 	using other_float_t = typename std::conditional<std::is_same<T, float>::value, double, float>::type;
 
 public:
 	matrix4x4() {}
 	explicit matrix4x4(T val)
 	{
-		cell[0] = cell[1] = cell[2] = cell[3] = cell[4] = cell[5] = cell[6] =
-			cell[7] = cell[8] = cell[9] = cell[10] = cell[11] = cell[12] = cell[13] =
-				cell[14] = cell[15] = val;
+		cell[0] = cell[1] = cell[2] = cell[3] =
+			cell[4] = cell[5] = cell[6] = cell[7] =
+			cell[8] = cell[9] = cell[10] = cell[11] =
+			cell[12] = cell[13] = cell[14] = cell[15] = val;
 	}
 	explicit matrix4x4(const T *vals)
 	{

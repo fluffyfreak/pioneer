@@ -12,15 +12,25 @@
 template <typename T>
 class matrix3x3 {
 private:
-	T cell[9];
+	union {
+		// matrix3x3 is row-major ???
+		T cell[9];
+		struct {
+			T m11, m12, m13;	// 0, 1, 2
+			T m21, m22, m23;	// 3, 4, 5
+			T m31, m32, m33;	// 6, 7, 8
+		};
+		T mat[3][3];
+	};
 	using other_float_t = typename std::conditional<std::is_same<T, float>::value, double, float>::type;
 
 public:
 	matrix3x3() {}
 	explicit matrix3x3(T val)
 	{
-		cell[0] = cell[1] = cell[2] = cell[3] = cell[4] = cell[5] = cell[6] =
-			cell[7] = cell[8] = val;
+		cell[0] = cell[1] = cell[2] =
+			cell[3] = cell[4] = cell[5] =
+			cell[6] = cell[7] = cell[8] = val;
 	}
 	explicit matrix3x3(const T *vals)
 	{
