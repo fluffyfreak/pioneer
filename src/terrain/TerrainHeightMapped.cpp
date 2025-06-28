@@ -83,6 +83,5 @@ double TerrainHeightFractal<TerrainHeightMapped>::GetHeight(const vector3d &p) c
 	}
 
 	v *= m_invPlanetRadius;
-	ApplySimpleHeightRegions(v, p);
 	return v < 0 ? 0 : v;
 }

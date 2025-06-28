@@ -95,6 +95,6 @@ double TerrainHeightFractal<TerrainHeightRuggedLava>::GetHeight(const vector3d &
 	n += rocks;
 
 	n *= m_maxHeight;
-	ApplySimpleHeightRegions(n, p);
+	
 	return n > 0.0 ? n : 0.0;
 }
