@@ -26,6 +26,6 @@ template <>
 double TerrainHeightFractal<TerrainHeightAsteroid>::GetHeight(const vector3d &p) const
 {
 	double n = octavenoise(GetFracDef(0), 0.4, p) * dunes_octavenoise(GetFracDef(1), 0.5, p) * m_maxHeight;
-	ApplySimpleHeightRegions(n, p);
+	
 	return (n > 0.0 ? n : 0.0);
 }
