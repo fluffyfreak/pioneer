@@ -41,7 +41,7 @@ public:
 	double GetHeight(const vector3d &p) const final { return 0.0; }
 
 	// in sbody radii
-	double GetMaxFeatureHeight() const override { return 0.0; }
+	double GetMaxFeatureHeight() const final { return 0.0; }
 
 	void Reset() override;
 
