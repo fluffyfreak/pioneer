@@ -37,7 +37,15 @@ public:
 
 	double GetHeight(const vector3d &p) const final
 	{
-		const double h = m_terrain->GetHeight(p);
+		// p can be any arbitrary point above the planet
+		double h = m_terrain->GetHeight(p);
+
+		// handle any region modifications to the height
+		double posDotPOut = -1.0;
+		const Region *region = FindNearestRegion(p, posDotPOut);
+		if (region) {
+			ApplyHeightRegion(h, posDotPOut, region);
+		}
 #ifndef NDEBUG
 		// XXX don't remove this. Fix your fractals instead
 		// Fractals absolutely MUST return heights >= 0.0 (one planet radius)
@@ -81,6 +89,15 @@ public:
 	void AddQuadSplitRequest(double, SQuadSplitRequest *, GeoPatch *);
 
 private:
+	// data about regions from feature to heightmap code go here
+	struct Region {
+		vector3d position;
+		double height;
+		double heightVariation;
+		double inner;
+		double outer;
+	};
+
 	void BuildFirstPatches();
 	void CalculateMaxPatchDepth();
 	inline vector3d GetColor(const vector3d &p, double height, const vector3d &norm) const
@@ -88,6 +105,14 @@ private:
 		return m_terrain->GetColor(p, height, norm);
 	}
 	void ProcessQuadSplitRequests();
+
+	void SetUpMaterials() override;
+	void CreateAtmosphereMaterial();
+
+	void InitCityRegions(const SystemBody *sb);
+	void ApplySimpleHeightRegions(double &h, const vector3d &p) const;
+	const Region* FindNearestRegion(const vector3d &p, double &posDotPOut) const;
+	void ApplyHeightRegion(double &h, const double posDotP, const Region *region) const;
 
 	std::unique_ptr<GeoPatch> m_patches[6];
 	std::vector<std::pair<double, GeoPatch *>> m_visiblePatches;
@@ -113,9 +138,6 @@ private:
 
 	static RefCountedPtr<GeoPatchContext> s_patchContext;
 
-	void SetUpMaterials() override;
-	void CreateAtmosphereMaterial();
-
 	RefCountedPtr<Graphics::Texture> m_texHi;
 	RefCountedPtr<Graphics::Texture> m_texLo;
 
@@ -128,6 +150,10 @@ private:
 	EGSInitialisationStage m_initStage;
 
 	Sint32 m_maxDepth;
+
+	// used for region based terrain e.g. cities
+	std::vector<Region> m_regions;
+	double m_dynamicRangeHeight;
 };
 
 #endif /* _GEOSPHERE_H */
