@@ -112,6 +112,7 @@ private:
 	void InitCityRegions(const SystemBody *sb);
 	void ApplySimpleHeightRegions(double &h, const vector3d &p) const;
 	const Region* FindNearestRegion(const vector3d &p, double &posDotPOut) const;
+	std::vector<const Region *> FindPatchRegions(const vector3d &p, const vector3d &v0, const vector3d &v1, const vector3d &v2, const vector3d &v3) const;
 	void ApplyHeightRegion(double &h, const double posDotP, const Region *region) const;
 
 	std::unique_ptr<GeoPatch> m_patches[6];

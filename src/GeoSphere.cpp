@@ -677,7 +677,6 @@ void GeoSphere::ApplySimpleHeightRegions(double &h, const vector3d &p) const
 	}
 }
 
-
 const GeoSphere::Region* GeoSphere::FindNearestRegion(const vector3d &p, double &posDotPOut) const
 {
 	bool bFound = false;
@@ -686,18 +685,32 @@ const GeoSphere::Region* GeoSphere::FindNearestRegion(const vector3d &p, double 
 	for (size_t i = 0; i < m_regions.size(); i++) {
 		const Region &rt = m_regions[i];
 		const double posDotp = rt.position.Dot(p);
-		if (posDotp > rt.outer) {
-			bFound = true;
-			if (posDotp > lastPosDotP) {
-				validIndex = i;
-				lastPosDotP = posDotp;
-			}
-		}
+
+		// if-less
+		bFound = (posDotp > rt.outer) ? true : bFound; 
+		const bool bestDot = (posDotp > lastPosDotP);
+		validIndex = (bFound && bestDot) ? i : validIndex;
+		lastPosDotP = (bFound && bestDot) ? posDotp : lastPosDotP;
 	}
 	posDotPOut = lastPosDotP;
 	return (bFound) ? &m_regions[validIndex] : nullptr;
 }
 
+std::vector<const GeoSphere::Region *> GeoSphere::FindPatchRegions(const vector3d &p, const vector3d &v0, const vector3d &v1, const vector3d &v2, const vector3d &v3) const
+{
+	std::vector<const GeoSphere::Region *> foundRegions;
+	for (size_t i = 0; i < m_regions.size(); i++) {
+		// check each region against the four bounding points
+
+		// build a frustum from the four points maybe?
+		// test if spheres (pos + outer) are inside frustum?
+
+		// or can i use Dot product somehow?
+
+		// or construct a plane, project region->pos onto it and test if it's inside?
+	}
+	return foundRegions;
+}
 
 void GeoSphere::ApplyHeightRegion(double &h, const double posDotP, const Region *region) const
 {
