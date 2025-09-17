@@ -143,6 +143,7 @@ namespace SceneGraph {
 		const PatternContainer &GetPatterns() const { return m_patterns; }
 		unsigned int GetNumPatterns() const { return static_cast<Uint32>(m_patterns.size()); }
 		void SetPattern(unsigned int index);
+		void CopyPatterns(const Model &model);
 		unsigned int GetPattern() const { return m_curPatternIndex; }
 		void SetColors(const std::vector<Color> &colors);
 		void SetDecalTexture(Graphics::Texture *t, unsigned int index = 0);

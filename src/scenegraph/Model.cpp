@@ -306,6 +306,18 @@ namespace SceneGraph {
 		m_curPattern = pat.texture.Get();
 	}
 
+	void Model::CopyPatterns(const Model &model)
+	{
+		m_patterns = model.GetPatterns();
+		std::vector<Color> colors;
+		colors.push_back(Color::RED);
+		colors.push_back(Color::GREEN);
+		colors.push_back(Color::BLUE);
+		SetColors(colors);
+		m_curPatternIndex = model.GetPattern();
+		m_curPattern = m_patterns.at(m_curPatternIndex).texture.Get();
+	}
+
 	void Model::SetColors(const std::vector<Color> &colors)
 	{
 		assert(colors.size() == 3); //primary, seconday, trim

@@ -30,6 +30,17 @@ ShipCockpit::ShipCockpit(const std::string &modelName, Body *ship) :
 	assert(GetModel());
 	SetColliding(false);
 	m_icc = nullptr;
+	ModelBody *shipModelBody = dynamic_cast<ModelBody *>(ship);
+	if (shipModelBody) {
+		SceneGraph::Model *shipModel = shipModelBody->GetModel();
+		if (shipModel && shipModel->GetNumPatterns() > 0) {
+			//shipModel->GetNumPatterns();
+			//shipModel->GetPattern();
+			//shipModel->GetPatterns();
+
+			GetModel()->CopyPatterns(*shipModel);
+		}
+	}
 }
 
 ShipCockpit::~ShipCockpit()

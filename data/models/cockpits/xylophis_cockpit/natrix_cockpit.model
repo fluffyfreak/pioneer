@@ -33,6 +33,7 @@ tex_diff ../../ships/natrix/natrix_diff.dds
 tex_spec ../../ships/natrix/natrix_spec.dds
 tex_norm ../../ships/natrix/natrix_norm.png
 tex_glow ../../ships/natrix/natrix_glow.dds
+use_patterns
 
 material Natrix-cockpit
 diffuse 1.0 1.0 1.0
