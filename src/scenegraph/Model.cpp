@@ -316,6 +316,7 @@ namespace SceneGraph {
 		SetColors(colors);
 		m_curPatternIndex = model.GetPattern();
 		m_curPattern = m_patterns.at(m_curPatternIndex).texture.Get();
+		m_colorMap.SetSmooth(m_patterns.at(m_curPatternIndex).smoothColor);
 	}
 
 	void Model::SetColors(const std::vector<Color> &colors)
