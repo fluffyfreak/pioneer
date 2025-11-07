@@ -37,6 +37,7 @@ namespace Graphics {
 
 class GeoPatchContext;
 class GeoSphere;
+struct Region;
 class BasePatchJob;
 class SQuadSplitResult;
 class SSingleSplitResult;
@@ -104,6 +105,9 @@ public:
 		m_needUpdateVBOs = HasHeightData();
 	}
 
+	void InitRegions(const std::vector<Region> &regions);
+	void ReceiveRegions(const std::vector<const Region*> &regions);
+	const Region *FindNearestRegion(const vector3d &p, double &posDotPOut) const;
 
 private:
 	static const int NUM_KIDS = 4;
@@ -146,6 +150,7 @@ private:
 	std::unique_ptr<Corners> m_corners;
 	std::unique_ptr<PatchVBOData> m_patchVBOData;
 	std::unique_ptr<GeoPatch> m_kids[NUM_KIDS];
+	std::vector<const Region *> m_regions;
 
 	vector3d m_clipCentroid;
 #if USE_SUB_CENTROID_CLIPPING

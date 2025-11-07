@@ -27,6 +27,15 @@ class SSingleSplitResult;
 
 #define NUM_PATCHES 6
 
+// data about regions from feature to heightmap code go here
+struct Region {
+	vector3d position;
+	double height;
+	double heightVariation;
+	double inner;
+	double outer;
+};
+
 class GeoSphere : public BaseSphere {
 public:
 	GeoSphere(const SystemBody *body);
@@ -89,14 +98,6 @@ public:
 	void AddQuadSplitRequest(double, SQuadSplitRequest *, GeoPatch *);
 
 private:
-	// data about regions from feature to heightmap code go here
-	struct Region {
-		vector3d position;
-		double height;
-		double heightVariation;
-		double inner;
-		double outer;
-	};
 
 	void BuildFirstPatches();
 	void CalculateMaxPatchDepth();
@@ -110,9 +111,9 @@ private:
 	void CreateAtmosphereMaterial();
 
 	void InitCityRegions(const SystemBody *sb);
-	void ApplySimpleHeightRegions(double &h, const vector3d &p) const;
+	//void ApplySimpleHeightRegions(double &h, const vector3d &p) const;
 	const Region* FindNearestRegion(const vector3d &p, double &posDotPOut) const;
-	std::vector<const Region *> FindPatchRegions(const vector3d &p, const vector3d &v0, const vector3d &v1, const vector3d &v2, const vector3d &v3) const;
+	void InitPatchRegions() const;
 	void ApplyHeightRegion(double &h, const double posDotP, const Region *region) const;
 
 	std::unique_ptr<GeoPatch> m_patches[6];

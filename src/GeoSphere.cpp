@@ -21,6 +21,7 @@
 #include "graphics/TextureBuilder.h"
 #include "graphics/Types.h"
 #include "graphics/VertexArray.h"
+#include "math/Plane.h"
 #include "perlin.h"
 #include "utils.h"
 #include "vcacheopt/vcacheopt.h"
@@ -337,6 +338,8 @@ void GeoSphere::BuildFirstPatches()
 	}
 
 	m_initStage = eRequestedFirstPatches;
+
+	InitPatchRegions();
 }
 
 void GeoSphere::CalculateMaxPatchDepth()
@@ -583,7 +586,7 @@ void GeoSphere::CreateAtmosphereMaterial()
 	}
 }
 
-static constexpr double TARGET_CITY_RADIUS = 600.0;
+static constexpr double TARGET_CITY_RADIUS = 6000.0;
 
 // Set up region data for each of the system body's child surface starports
 void GeoSphere::InitCityRegions(const SystemBody *sb)
@@ -639,7 +642,7 @@ void GeoSphere::InitCityRegions(const SystemBody *sb)
 	m_regions.resize(m_regions.size());
 }
 
-void GeoSphere::ApplySimpleHeightRegions(double &h, const vector3d &p) const
+/*void GeoSphere::ApplySimpleHeightRegions(double &h, const vector3d &p) const
 {
 	for (size_t i = 0; i < m_regions.size(); i++) {
 		const Region &rt = m_regions[i];
@@ -675,43 +678,37 @@ void GeoSphere::ApplySimpleHeightRegions(double &h, const vector3d &p) const
 			break;
 		}
 	}
-}
-
-const GeoSphere::Region* GeoSphere::FindNearestRegion(const vector3d &p, double &posDotPOut) const
+}*/
+#pragma optimize("", off)
+const Region* GeoSphere::FindNearestRegion(const vector3d &p, double &posDotPOut) const
 {
-	bool bFound = false;
-	size_t validIndex = 0;
+	if (m_regions.size() == 0 || m_patches[0] == nullptr)
+		return nullptr;
+
 	double lastPosDotP = -1.0; // Dot-product values closer to 1 are closer to alignment
-	for (size_t i = 0; i < m_regions.size(); i++) {
-		const Region &rt = m_regions[i];
-		const double posDotp = rt.position.Dot(p);
-
-		// if-less
-		bFound = (posDotp > rt.outer) ? true : bFound; 
-		const bool bestDot = (posDotp > lastPosDotP);
-		validIndex = (bFound && bestDot) ? i : validIndex;
-		lastPosDotP = (bFound && bestDot) ? posDotp : lastPosDotP;
+	const Region *pBestRegion = nullptr;
+	for (int i = 0; i < NUM_PATCHES; i++) {
+		const Region *pRegion = m_patches[i]->FindNearestRegion(p, posDotPOut);
+		if (pRegion != nullptr && posDotPOut > lastPosDotP)
+		{
+			pBestRegion = pRegion;
+			lastPosDotP = posDotPOut;
+		}
 	}
-	posDotPOut = lastPosDotP;
-	return (bFound) ? &m_regions[validIndex] : nullptr;
+
+	return pBestRegion; // could be nullptr
 }
 
-std::vector<const GeoSphere::Region *> GeoSphere::FindPatchRegions(const vector3d &p, const vector3d &v0, const vector3d &v1, const vector3d &v2, const vector3d &v3) const
+void GeoSphere::InitPatchRegions() const
 {
-	std::vector<const GeoSphere::Region *> foundRegions;
-	for (size_t i = 0; i < m_regions.size(); i++) {
-		// check each region against the four bounding points
+	if (m_regions.size() == 0)
+		return;
 
-		// build a frustum from the four points maybe?
-		// test if spheres (pos + outer) are inside frustum?
-
-		// or can i use Dot product somehow?
-
-		// or construct a plane, project region->pos onto it and test if it's inside?
+	for (int i = 0; i < NUM_PATCHES; i++) {
+		m_patches[i]->InitRegions(m_regions);
 	}
-	return foundRegions;
 }
-
+#pragma optimize("", on)
 void GeoSphere::ApplyHeightRegion(double &h, const double posDotP, const Region *region) const
 {
 	if (!region)

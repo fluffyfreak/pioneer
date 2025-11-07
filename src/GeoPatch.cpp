@@ -33,6 +33,7 @@
 
 #include "graphics/Drawables.h"
 #endif
+#include "graphics/Drawables.h"
 
 namespace PatchMaths{
 	// in patch surface coords, [0,1]
@@ -469,6 +470,7 @@ void GeoPatch::ReceiveHeightmaps(SQuadSplitResult *psr)
 
 		for (int i = 0; i < NUM_KIDS; i++) {
 			m_kids[i]->ReceiveHeightResult(psr->data(i));
+			m_kids[i]->ReceiveRegions(m_regions);
 		}
 		m_hasJobRequest = false;
 	}
@@ -507,7 +509,108 @@ void GeoPatch::ReceiveJobHandle(Job::Handle job)
 	assert(!m_job.HasJob());
 	m_job = static_cast<Job::Handle &&>(job);
 }
+#pragma optimize("", off)
+void GeoPatch::InitRegions(const std::vector<Region> &regions)
+{
+	if (regions.size() == 0)
+		return;
 
+	for (size_t i = 0; i < regions.size(); i++) {
+		m_regions.push_back(&regions[i]);
+	}
+	return;
+
+	//const vector3d origin(0.0);
+
+	// WARNING: highly suspicious plane generation here
+	//Plane<double> planes[4] = {
+	//	{ -(origin - m_corners->m_v0).Cross(origin - m_corners->m_v1), m_corners->m_v0.Lerp(m_corners->m_v1, 0.5) },
+	//	{ -(origin - m_corners->m_v1).Cross(origin - m_corners->m_v3), m_corners->m_v1.Lerp(m_corners->m_v3, 0.5) },
+	//	{ -(origin - m_corners->m_v3).Cross(origin - m_corners->m_v2), m_corners->m_v3.Lerp(m_corners->m_v2, 0.5) },
+	//	{ -(origin - m_corners->m_v2).Cross(origin - m_corners->m_v0), m_corners->m_v2.Lerp(m_corners->m_v0, 0.5) }
+	//};
+
+	for (size_t i = 0; i < regions.size(); i++) {
+		// check each region against the four bounding points
+
+		// build a frustum from the four points maybe?
+		// test if spheres (pos + outer) are inside frustum?
+
+		//bool inside = true;
+		//for (int j = 0; j < 4; j++) {
+		//	if (planes[j].DistanceToPoint(regions[i].position) + regions[i].outer < 0.0) {
+		//		inside = false;
+		//		break;
+		//	}
+		//}
+		//if (inside) {
+		//	m_regions.push_back(&regions[i]);
+		//}
+
+		// or can i use Dot product somehow?
+
+		const double maxDot = m_corners->m_v0.Dot(m_clipCentroid);
+
+		//DEG2RAD(90.);
+		const double clipDotPos = regions[i].position.Dot(m_clipCentroid);
+		if (clipDotPos > maxDot)
+			m_regions.push_back(&regions[i]);
+
+		// or construct a plane, project region->pos onto it and test if it's inside?
+	}
+}
+
+void GeoPatch::ReceiveRegions(const std::vector<const Region *> &regions)
+{
+	if (regions.size() == 0)
+		return;
+
+	for (size_t i = 0; i < regions.size(); i++) {
+		m_regions.push_back(regions[i]);
+	}
+	return;
+}
+
+
+const Region *GeoPatch::FindNearestRegion(const vector3d &p, double &posDotPOut) const
+{
+	if (m_regions.size() == 0)
+		return nullptr;
+
+	// recurse ???
+	//for (int i = 0; i < NUM_KIDS; i++) {
+	//	m_kids[i];
+	//}
+
+	bool bFound = false;
+	size_t validIndex = 0;
+	double lastPosDotP = -1.0; // Dot-product values closer to 1 are closer to alignment
+	for (size_t i = 0; i < m_regions.size(); i++) {
+		const Region *rt = m_regions[i];
+		const double posDotp = rt->position.Dot(p);
+
+		if (posDotp > rt->outer) {
+			bFound = true;
+			if (posDotp > lastPosDotP) {
+				validIndex = i;
+				lastPosDotP = posDotp;
+			}
+		}
+
+		// if-less
+		//bFound = (posDotp > rt->outer) ? true : bFound;
+		//const bool bestDot = (posDotp > lastPosDotP);
+		//validIndex = (bFound && bestDot) ? i : validIndex;
+		//lastPosDotP = (bFound && bestDot) ? posDotp : lastPosDotP;
+	}
+	posDotPOut = lastPosDotP;
+	//return (bFound) ? m_regions[validIndex] : nullptr;
+	if (bFound)
+		return m_regions[validIndex];
+
+	return nullptr;
+}
+#pragma optimize("", on)
 bool GeoPatch::IsPatchVisible(const Graphics::Frustum &frustum, const vector3d &camPos) const
 {
 	PROFILE_SCOPED()
