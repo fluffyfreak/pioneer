@@ -17,24 +17,39 @@ namespace Graphics {
 
 		class VertexBuffer : public Graphics::VertexBuffer {
 		public:
-			VertexBuffer(const VertexBufferDesc &d) :
-				Graphics::VertexBuffer(d),
-				m_buffer(new Uint8[m_desc.numVertices * m_desc.stride])
-			{}
+			VertexBuffer(BufferUsage usage, uint32_t numVertices, uint32_t stride) :
+				Graphics::VertexBuffer(usage, numVertices, stride),
+				m_mapStart(0),
+				m_mapLength(0)
+			{
+			}
+			~VertexBuffer()
+			{
+				delete[] m_data;
+			}
 
-			// copies the contents of the VertexArray into the buffer
-			virtual bool Populate(const VertexArray &) override final { return true; }
+			void Unmap() final {}
+
+			void UnmapRange(bool flush) final {}
+
+			void FlushRange(size_t, size_t) final {}
 
 			// change the buffer data without mapping
-			virtual void BufferData(const size_t, void *) override final {}
+			void BufferData(const size_t, void *) final {}
 
-			virtual void Bind() override final {}
-			virtual void Release() override final {}
+			// release the underlying GPU memory and recreate
+			void Reset() final {};
 
-			virtual void Unmap() override final {}
+			void Bind() final {}
+			void Release() final {}
 
 		protected:
-			virtual Uint8 *MapInternal(BufferMapMode) override final { return m_buffer.get(); }
+			Uint8 *MapInternal(BufferMapMode) final { return m_buffer.get(); }
+			uint8_t *MapRangeInternal(BufferMapMode, size_t, size_t) override { return nullptr; }
+			uint8_t *m_data;
+
+			size_t m_mapStart;
+			size_t m_mapLength;
 
 		private:
 			std::unique_ptr<Uint8[]> m_buffer;
@@ -51,58 +66,42 @@ namespace Graphics {
 					m_buffer16.reset(new Uint16[size]);
 			}
 
-			virtual Uint32 *Map(BufferMapMode) override final { return m_buffer.get(); }
-			virtual Uint16 *Map16(BufferMapMode) override final { return m_buffer16.get(); }
-			virtual void Unmap() override final {}
+			Uint32 *Map(BufferMapMode) final { return m_buffer.get(); }
+			Uint16 *Map16(BufferMapMode) final { return m_buffer16.get(); }
+			void Unmap() final {}
 
-			virtual void BufferData(const size_t, void *) override final {}
+			void BufferData(const size_t, void *) final {}
 
-			virtual void Bind() override final {}
-			virtual void Release() override final {}
+			void Bind() final {}
+			void Release() final {}
 
 		private:
 			std::unique_ptr<Uint32[]> m_buffer;
 			std::unique_ptr<Uint16[]> m_buffer16;
 		};
 
-		// Instance buffer
-		class InstanceBuffer : public Graphics::InstanceBuffer {
-		public:
-			InstanceBuffer(Uint32 size, BufferUsage hint) :
-				Graphics::InstanceBuffer(size, hint),
-				m_data(new matrix4x4f[size])
-			{}
-			virtual ~InstanceBuffer(){};
-			virtual matrix4x4f *Map(BufferMapMode) override final { return m_data.get(); }
-			virtual void Unmap() override final {}
-
-			Uint32 GetSize() const { return m_size; }
-			BufferUsage GetUsage() const { return m_usage; }
-
-			virtual void Bind() override final {}
-			virtual void Release() override final {}
-
-		protected:
-			std::unique_ptr<matrix4x4f> m_data;
-		};
-
 		class MeshObject final : public Graphics::MeshObject {
 		public:
-			MeshObject(VertexBuffer *v, IndexBuffer *i) :
-				m_vtxBuffer(v),
-				m_idxBuffer(i)
-			{}
-			virtual ~MeshObject() override final {}
+			MeshObject(const Graphics::VertexFormatDesc &fmt, Graphics::VertexBuffer *vtx, Graphics::IndexBuffer *idx) :
+				m_vtxBuffer(static_cast<Vulkan::VertexBuffer *>(vtx)),
+				m_idxBuffer(static_cast<Vulkan::IndexBuffer *>(idx)),
+				m_format(fmt)
+			{
+				assert(m_vtxBuffer.Valid());
+			}
+			~MeshObject() final {}
 
-			virtual Graphics::VertexBuffer *GetVertexBuffer() const override final { return m_vtxBuffer.Get(); }
-			virtual Graphics::IndexBuffer *GetIndexBuffer() const override final { return m_idxBuffer.Get(); }
+			Graphics::VertexBuffer *GetVertexBuffer() const final { return m_vtxBuffer.Get(); }
+			Graphics::IndexBuffer *GetIndexBuffer() const final { return m_idxBuffer.Get(); }
+			const Graphics::VertexFormatDesc &GetFormat() const override { return m_format; }
 
-			virtual void Bind() override final {}
-			virtual void Release() override final {}
+			void Bind() final {}
+			void Release() final {}
 
 		protected:
 			RefCountedPtr<VertexBuffer> m_vtxBuffer;
 			RefCountedPtr<IndexBuffer> m_idxBuffer;
+			VertexFormatDesc m_format;
 		};
 
 	} // namespace Vulkan
