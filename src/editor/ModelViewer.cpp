@@ -130,6 +130,45 @@ void ModelViewer::ToggleGuns()
 	return;
 }
 
+void Editor::ModelViewer::ToggleTurrets()
+{
+	if (!m_turretModel) {
+		CreateTestResources();
+	}
+
+	if (!m_turretModel) {
+		Log::Info("test_gun.model not available");
+		return;
+	}
+
+	m_attachTurrets = !m_attachTurrets;
+	std::vector<SceneGraph::Tag *> tags;
+
+	SceneGraph::Model *model = m_modelWindow->GetModel();
+	tags.push_back(model->FindTagByName("tag_camera_top"));
+	tags.push_back(model->FindTagByName("tag_camera_bottom"));
+	if (tags.empty()) {
+		Log::Info("Missing tags \"tag_camera_top && tag_camera_bottom\" in model");
+		return;
+	}
+
+	if (m_attachTurrets) {
+		for (auto tag : tags) {
+			// TODO : do not do all these weird transforms, this is just a HACK because I'm using the top & bottom camera tags to testing
+			matrix4x4f xRotMat(matrix4x4f::RotateXMatrix(DEG2RAD(-90.f)));
+			auto mtNode = new SceneGraph::MatrixTransform(m_renderer, xRotMat);
+			mtNode->AddChild(new SceneGraph::ModelNode(m_turretModel.get()));
+			tag->AddChild(mtNode);
+		}
+	} else { //detach
+		//we know there's nothing else
+		for (auto tag : tags) {
+			tag->RemoveChildAt(0);
+		}
+	}
+	return;
+}
+
 void ModelViewer::UpdateShield()
 {
 	if (m_shieldIsHit) {
@@ -202,9 +241,11 @@ void ModelViewer::ClearModel()
 	m_currentDecal = 0;
 
 	m_gunModel.reset();
+	m_turretModel.reset();
 
 	m_showShields = false;
 	m_attachGuns = false;
+	m_attachTurrets = false;
 
 	m_modelWindow->GetOptions().mouselookEnabled = false;
 	m_input->SetCapturingMouse(false);
@@ -220,6 +261,14 @@ void ModelViewer::CreateTestResources()
 	} catch (SceneGraph::LoadingError &) {
 		Log::Warning("Could not load test_gun model");
 	}
+
+	try {
+		SceneGraph::Model *m = loader.LoadModel("simple_turret");
+		m_turretModel.reset(m);
+	} catch (SceneGraph::LoadingError &) {
+		Log::Warning("Could not load simple_turret model");
+	}
+	
 }
 
 void ModelViewer::Update(float deltaTime)
@@ -608,7 +657,12 @@ struct NodeHierarchyVisitor : SceneGraph::NodeVisitor {
 
 	void ApplyNode(SceneGraph::Node &node) override
 	{
-		DisplayNode(node, "");
+		DisplayNode(node, "Node");
+	}
+
+	void ApplyStaticGeometry(SceneGraph::StaticGeometry &node) override
+	{
+		DisplayNode(node, "SG");
 	}
 
 	void ApplyGroup(SceneGraph::Group &node) override
@@ -763,6 +817,9 @@ void ModelViewer::DrawShipControls()
 
 		if (ImGui::Button("Attach Test Guns"))
 			ToggleGuns();
+
+		if (ImGui::Button("Attach Turrets"))
+			ToggleTurrets();
 	}
 
 	ImGui::EndMenu();

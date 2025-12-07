@@ -66,6 +66,7 @@ private:
 	void OnModelLoaded();
 
 	void ToggleGuns();
+	void ToggleTurrets();
 	void HitIt();
 
 	void CreateTestResources();
@@ -121,12 +122,14 @@ private:
 	std::unique_ptr<Shields> m_shields;
 	std::unique_ptr<SceneGraph::Model> m_gunModel;
 	std::unique_ptr<SceneGraph::Model> m_shieldModel;
+	std::unique_ptr<SceneGraph::Model> m_turretModel;
 
 	bool m_screenshotQueued = false;
 	bool m_shieldIsHit = false;
 	float m_shieldHitPan;
 
 	bool m_attachGuns = false;
+	bool m_attachTurrets = false;
 	bool m_showShields = false;
 	bool m_showUI = true;
 	bool m_metricsWindow = false;
