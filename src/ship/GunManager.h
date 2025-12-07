@@ -81,6 +81,7 @@ public:
 		ProjectileType projectileType = PROJECTILE_BALLISTIC;
 		uint8_t numBarrels = 1;		 // total number of barrels on the model
 		bool staggerBarrels = false; // should we fire one barrel after another, or both at the same time?
+		bool isTurret = false;
 
 		ProjectileData projectile; // deprecated, to replace with RefCountedPtr<ProjectileDef>
 		std::string modelPath; // model to render this weapon with

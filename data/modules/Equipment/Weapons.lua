@@ -465,3 +465,19 @@ Equipment.Register("missile_bay.bowfin_internal", EquipType.New {
 	},
 	icon_name="equip_missile_unguided"
 })
+
+--===============================================
+-- Turrets
+--===============================================
+
+Equipment.Register("laser.turret_pulsecannon_1mw", LaserType.New {
+	l10n_key="TURRET_PULSECANNON_1MW",
+	price=600, purchasable=true, tech_level=3,
+	mass=2, volume=1.5, capabilities = {},
+	slot = { type="weapon.energy.pulsecannon", size=1, hardpoint=true },
+	laser_stats = {
+		lifespan=8, speed=1000, damage=1000, rechargeTime=0.25, length=30,
+		width=5, beam=0, dual=0, mining=0, rgba_r = 255, rgba_g = 51, rgba_b = 51, rgba_a = 255, turret = 1, model = "simple_turret"
+	},
+	icon_name="equip_pulsecannon"
+})

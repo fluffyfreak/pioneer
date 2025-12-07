@@ -40,8 +40,11 @@ function LaserType:Constructor(specs)
 			heatPerShot = ls.heatrate or 0.01,
 			cooling = ls.coolrate or 0.01,
 			overheat = 1.0,
+			model = ls.model,
 			projectile = projectile,
-			numBarrels = 1 + ls.dual
+			numBarrels = 1 + ls.dual,
+			stagger = true,
+			isTurret = ls.turret == 1
 		}
 
 	end

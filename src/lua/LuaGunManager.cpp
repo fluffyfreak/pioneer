@@ -39,6 +39,7 @@ void pi_lua_generic_pull(lua_State *l, int idx, GunManager::WeaponData &out)
 	out.projectileType = out.projectile.beam ? GunManager::PROJECTILE_BEAM : GunManager::PROJECTILE_BALLISTIC;
 	out.numBarrels = tab.Get<uint32_t>("numBarrels", 1);
 	out.staggerBarrels = tab.Get<bool>("stagger", true);
+	out.isTurret = tab.Get<bool>("isTurret", false);
 }
 
 template<>

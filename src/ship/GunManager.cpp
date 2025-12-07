@@ -165,9 +165,9 @@ bool GunManager::MountWeapon(const StringName &hardpoint, const WeaponData &gunD
 	ws.data = gunData;
 
 	// TODO: render weapon models on hardpoint
-	// if (!gunData.modelPath.empty()) {
-	// 	ws.model = Pi::FindModel(gunData.modelPath);
-	// }
+	if (!gunData.modelPath.empty()) {
+	 	ws.model = Pi::FindModel(gunData.modelPath);
+	}
 
 	// assign the new weapon to group zero
 	// TODO: make a new group for this weapon?
@@ -617,6 +617,7 @@ void from_json(const Json &obj, GunManager::WeaponData &data)
 	data.projectileType = GunManager::ProjectileType(obj.value("type", 0));
 	data.numBarrels = obj.value("numBarrels", 1);
 	data.staggerBarrels = obj.value("staggerBarrels", false);
+	data.isTurret = obj.value("isTurret", false);
 
 	data.modelPath = obj.value("modelPath", std::string());
 
@@ -645,6 +646,7 @@ void to_json(Json &out, const GunManager::WeaponData &data)
 	out["type"] = int(data.projectileType);
 	out["numBarrels"] = data.numBarrels;
 	out["staggerBarrels"] = data.staggerBarrels;
+	out["isTurret"] = data.isTurret;
 
 	if (!data.modelPath.empty()) {
 		out["modelPath"] = data.modelPath;
