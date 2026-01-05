@@ -378,7 +378,7 @@ namespace SceneGraph {
 	void Model::UpdateAnimations()
 	{
 		for (size_t i = 0; i < m_animations.size(); i++) {
-			if (m_activeAnimations & (1 << i))
+			if (m_activeAnimations & (1ULL << i))
 				m_animations[i]->Interpolate();
 		}
 
@@ -403,15 +403,15 @@ namespace SceneGraph {
 	{
 		if (index >= m_animations.size()) return;
 		if (active)
-			m_activeAnimations |= (1 << index);
+			m_activeAnimations |= (1ULL << index);
 		else
-			m_activeAnimations &= ~(1 << index);
+			m_activeAnimations &= ~(1ULL << index);
 	}
 
 	bool Model::GetAnimationActive(uint32_t index) const
 	{
 		if (index >= m_animations.size()) return false;
-		return m_activeAnimations & (1 << index);
+		return m_activeAnimations & (1ULL << index);
 	}
 
 	void Model::SetThrust(const vector3f &lin, const vector3f &ang)
@@ -481,7 +481,7 @@ namespace SceneGraph {
 		Json activeArray = Json::array();	 // Create JSON array to contain animation data.
 		for (size_t i = 0; i < m_animations.size(); i++) {
 			animationArray.push_back(m_animations[i]->GetProgress());
-			activeArray.push_back(GetAnimationActive(i));
+			activeArray.push_back(GetAnimationActive(static_cast<uint32_t>(i)));
 		}
 		modelObj["animations"] = animationArray; // Add animation array to model object.
 		modelObj["activeAnimations"] = activeArray;
