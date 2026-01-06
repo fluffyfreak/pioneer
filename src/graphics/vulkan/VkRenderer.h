@@ -83,11 +83,11 @@ namespace Graphics {
 		virtual ViewportExtents GetViewport() const final { return {}; }
 
 		virtual bool SetTransform(const matrix4x4f &m) final { return true; }
-		virtual matrix4x4f GetTransform() const final { return matrix4x4f::Identity(); }
+		virtual matrix4x4f GetTransform() const final { return matrix4x4f::Identity; }
 		virtual bool SetPerspectiveProjection(float fov, float aspect, float near_, float far_) final { return true; }
 		virtual bool SetOrthographicProjection(float xmin, float xmax, float ymin, float ymax, float zmin, float zmax) final { return true; }
 		virtual bool SetProjection(const matrix4x4f &m) final { return true; }
-		virtual matrix4x4f GetProjection() const final { return matrix4x4f::Identity(); }
+		virtual matrix4x4f GetProjection() const final { return matrix4x4f::Identity; }
 
 		virtual bool SetWireFrameMode(bool enabled) final { return true; }
 
@@ -130,7 +130,6 @@ namespace Graphics {
 		virtual void PopState() final {}
 
 	private:
-		const matrix4x4f m_identity;
 		Graphics::RenderTarget *m_rt;
 
 		VkInstance m_vkInst;

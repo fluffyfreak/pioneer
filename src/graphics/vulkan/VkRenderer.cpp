@@ -138,7 +138,6 @@ namespace Graphics {
 
 	VkRenderer::VkRenderer(SDL_Window *m_window, const Graphics::Settings &vs) :
 		Renderer(m_window, vs.width, vs.height),
-		m_identity(matrix4x4f::Identity()),
 		m_rt(nullptr)
 	{
 		PROFILE_SCOPED()

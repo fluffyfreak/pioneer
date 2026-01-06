@@ -24,8 +24,7 @@ namespace Graphics {
 		static void RegisterRenderer();
 
 		RendererDummy() :
-			Renderer(0, 0, 0),
-			m_identity(matrix4x4f::Identity)
+			Renderer(0, 0, 0)
 		{}
 
 		const char *GetName() const final { return "Dummy"; }
@@ -99,7 +98,6 @@ namespace Graphics {
 		void PopState() final {}
 
 	private:
-		const matrix4x4f m_identity;
 		Graphics::RenderTarget *m_rt;
 	};
 
