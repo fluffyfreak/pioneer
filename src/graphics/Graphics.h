@@ -23,7 +23,7 @@ namespace Graphics {
 	};
 
 	const char *RendererNameFromType(const RendererType rType);
-	const RendererType RendererTypeFromName(const char *rendererName);
+	RendererType RendererTypeFromName(const char *rendererName);
 
 	// requested video settings
 	struct Settings {

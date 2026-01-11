@@ -26,7 +26,7 @@ namespace Graphics {
 		return s_rendererTypeNames[rType];
 	}
 
-	const RendererType RendererTypeFromName(const char *rendererName)
+	RendererType RendererTypeFromName(const char *rendererName)
 	{
 		for (size_t i = 0; i < MAX_RENDERER_TYPE; i++) {
 			if (0 == strcmp(s_rendererTypeNames[i], rendererName))
