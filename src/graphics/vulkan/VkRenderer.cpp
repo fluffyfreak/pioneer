@@ -23,6 +23,8 @@
 
 #include <vulkan/vulkan.hpp>
 
+#include "VkBootstrap/VkBootstrap.h"
+
 #include <SDL.h>
 #include <SDL_vulkan.h>
 
