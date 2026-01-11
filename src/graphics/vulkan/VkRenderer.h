@@ -22,6 +22,8 @@
 
 #include <vulkan/vulkan.hpp>
 
+#include <VkBootstrap/VkBootstrap.h>
+
 namespace Graphics {
 
 	class Texture;
@@ -50,7 +52,7 @@ namespace Graphics {
 		VkRenderer(SDL_Window *window, const Graphics::Settings &vs);
 		~VkRenderer() final;
 
-		void InitVulkan();
+		int InitVulkan();
 
 		const char *GetName() const final { return "Vulkan renderer"; }
 		RendererType GetRendererType() const final { return RENDERER_VULKAN; }
@@ -130,12 +132,45 @@ namespace Graphics {
 		void PopState() final {}
 
 	private:
+		int DeviceInitialization();
+    	int CreateSwapchain();
+    	int GetQueues();
+    	int CreateRenderPass();
+    	int CreateGraphicsPipeline();
+    	int CreateFramebuffers();
+    	int CreateCommandPool();
+    	int CreateCommandBuffers();
+    	int CreateSyncObjects();
+
 		Graphics::RenderTarget *m_rt;
 
-		VkInstance m_vkInst;
-		VkDevice m_device;
+		vkb::Instance m_instance;
+		VkSurfaceKHR m_surface;
+		vkb::Device m_device;
 		VkQueue m_graphicsQueue;
 		VkQueue m_presentQueue;
+
+		vkb::InstanceDispatchTable m_instDispTable;
+		vkb::DispatchTable m_dispTable;
+		vkb::Swapchain m_swapchain;
+
+		std::vector<VkImage> m_swapchainImages;
+		std::vector<VkImageView> m_swapchainImageViews;
+		std::vector<VkFramebuffer> m_framebuffers;
+
+		VkRenderPass m_renderPass;
+		VkPipelineLayout m_pipelineLayout;
+		VkPipeline m_graphicsPipeline;
+
+		VkCommandPool m_commandPool;
+		std::vector<VkCommandBuffer> m_commandBuffers;
+
+		std::vector<VkSemaphore> m_availableSemaphores;
+		std::vector<VkSemaphore> m_finishedSemaphore;
+		std::vector<VkFence> m_inFlightFences;
+		std::vector<VkFence> m_imageInFlight;
+
+		size_t m_currentFrame = 0;
 	};
 
 } // namespace Graphics
