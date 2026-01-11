@@ -48,71 +48,71 @@ namespace Graphics {
 		static void RegisterRenderer();
 
 		VkRenderer(SDL_Window *window, const Graphics::Settings &vs);
-		virtual ~VkRenderer() final;
+		~VkRenderer() final;
 
 		void InitVulkan();
 
-		virtual const char *GetName() const final { return "Vulkan renderer"; }
-		virtual RendererType GetRendererType() const final { return RENDERER_VULKAN; }
+		const char *GetName() const final { return "Vulkan renderer"; }
+		RendererType GetRendererType() const final { return RENDERER_VULKAN; }
 
-		virtual bool SupportsInstancing() final { return false; }
-		virtual int GetMaximumNumberAASamples() const final { return 0; }
-		virtual bool GetNearFarRange(float &near_, float &far_) const final { return true; }
+		bool SupportsInstancing() final { return false; }
+		int GetMaximumNumberAASamples() const final { return 0; }
+		bool GetNearFarRange(float &near_, float &far_) const final { return true; }
 
-		virtual void SetVSyncEnabled(bool) override {}
+		void SetVSyncEnabled(bool) override {}
 
-		virtual bool BeginFrame() final { return true; }
-		virtual bool EndFrame() final { return true; }
-		virtual bool SwapBuffers() final { return true; }
+		bool BeginFrame() final { return true; }
+		bool EndFrame() final { return true; }
+		bool SwapBuffers() final { return true; }
 
-		virtual RenderTarget *GetRenderTarget() final { return m_rt; }
-		virtual bool SetRenderTarget(RenderTarget *rt) final
+		RenderTarget *GetRenderTarget() final { return m_rt; }
+		bool SetRenderTarget(RenderTarget *rt) final
 		{
 			m_rt = rt;
 			return true;
 		}
-		virtual bool SetScissor(ViewportExtents ext) final { return true; }
+		bool SetScissor(ViewportExtents ext) final { return true; }
 
-		virtual void CopyRenderTarget(RenderTarget *, RenderTarget *, ViewportExtents, ViewportExtents, bool) final {}
-		virtual void ResolveRenderTarget(RenderTarget *, RenderTarget *, ViewportExtents) final {}
+		void CopyRenderTarget(RenderTarget *, RenderTarget *, ViewportExtents, ViewportExtents, bool) final {}
+		void ResolveRenderTarget(RenderTarget *, RenderTarget *, ViewportExtents) final {}
 
-		virtual bool ClearScreen(const Color &, bool) final { return true; }
-		virtual bool ClearDepthBuffer() final { return true; }
+		bool ClearScreen(const Color &, bool) final { return true; }
+		bool ClearDepthBuffer() final { return true; }
 
-		virtual bool SetViewport(ViewportExtents v) final { return true; }
-		virtual ViewportExtents GetViewport() const final { return {}; }
+		bool SetViewport(ViewportExtents v) final { return true; }
+		ViewportExtents GetViewport() const final { return {}; }
 
-		virtual bool SetTransform(const matrix4x4f &m) final { return true; }
-		virtual matrix4x4f GetTransform() const final { return matrix4x4f::Identity; }
-		virtual bool SetPerspectiveProjection(float fov, float aspect, float near_, float far_) final { return true; }
-		virtual bool SetOrthographicProjection(float xmin, float xmax, float ymin, float ymax, float zmin, float zmax) final { return true; }
-		virtual bool SetProjection(const matrix4x4f &m) final { return true; }
-		virtual matrix4x4f GetProjection() const final { return matrix4x4f::Identity; }
+		bool SetTransform(const matrix4x4f &m) final { return true; }
+		matrix4x4f GetTransform() const final { return matrix4x4f::Identity; }
+		bool SetPerspectiveProjection(float fov, float aspect, float near_, float far_) final { return true; }
+		bool SetOrthographicProjection(float xmin, float xmax, float ymin, float ymax, float zmin, float zmax) final { return true; }
+		bool SetProjection(const matrix4x4f &m) final { return true; }
+		matrix4x4f GetProjection() const final { return matrix4x4f::Identity; }
 
-		virtual bool SetWireFrameMode(bool enabled) final { return true; }
+		bool SetWireFrameMode(bool enabled) final { return true; }
 
-		virtual bool SetLightIntensity(Uint32, const float *) final { return true; }
-		virtual bool SetLights(Uint32 numlights, const Light *l) final { return true; }
-		virtual Uint32 GetNumLights() const final { return 1; }
-		virtual bool SetAmbientColor(const Color &c) final { return true; }
+		bool SetLightIntensity(Uint32, const float *) final { return true; }
+		bool SetLights(Uint32 numlights, const Light *l) final { return true; }
+		Uint32 GetNumLights() const final { return 1; }
+		bool SetAmbientColor(const Color &c) final { return true; }
 
-		virtual bool FlushCommandBuffers() final { return true; }
+		bool FlushCommandBuffers() final { return true; }
 
-		virtual bool DrawBuffer(const VertexArray *, Material *) final { return true; }
-		virtual bool DrawBufferDynamic(VertexBuffer *, uint32_t, IndexBuffer *, uint32_t, uint32_t, Material *) final { return true; }
-		virtual bool DrawMesh(MeshObject *, Material *) final { return true; }
+		bool DrawBuffer(const VertexArray *, Material *) final { return true; }
+		bool DrawBufferDynamic(VertexBuffer *, uint32_t, IndexBuffer *, uint32_t, uint32_t, Material *) final { return true; }
+		bool DrawMesh(MeshObject *, Material *) final { return true; }
 
 		void Draw(Span<VertexBuffer *const>, IndexBuffer *, Material *m, uint32_t, uint32_t) final {}
 
-		virtual Material *CreateMaterial(const std::string &s, const MaterialDescriptor &d, const RenderStateDesc &rsd, const VertexFormatDesc &vfd) final { return new Graphics::Vulkan::Material(rsd); }
-		virtual Material *CloneMaterial(const Material *m, const MaterialDescriptor &d, const RenderStateDesc &rsd, const VertexFormatDesc &vfd) final { return new Graphics::Vulkan::Material(rsd); }
-		virtual Texture *CreateTexture(const TextureDescriptor &d) final { return new Graphics::Vulkan::VkTexture(d); }
-		virtual RenderTarget *CreateRenderTarget(const RenderTargetDesc &d) final { return new Graphics::Vulkan::RenderTarget(d); }
-		virtual VertexBuffer *CreateVertexBuffer(BufferUsage usage, uint32_t numVertices, uint32_t stride) final { return new Graphics::Vulkan::VertexBuffer(usage, numVertices, stride); }
-		virtual IndexBuffer *CreateIndexBuffer(Uint32 size, BufferUsage bu, IndexBufferSize el) final { return new Graphics::Vulkan::IndexBuffer(size, bu, el); }
-		virtual UniformBuffer *CreateUniformBuffer(Uint32 size, BufferUsage bu) final { return new Graphics::Vulkan::UniformBuffer(size, bu); }
-		virtual MeshObject *CreateMeshObject(const VertexFormatDesc &desc, VertexBuffer *v, IndexBuffer *i) final { return new Graphics::Vulkan::MeshObject(desc, static_cast<Vulkan::VertexBuffer *>(v), static_cast<Vulkan::IndexBuffer *>(i)); }
-		virtual MeshObject *CreateMeshObjectFromArray(const VertexArray *v, IndexBuffer *i = nullptr, BufferUsage usage = BUFFER_USAGE_STATIC) final
+		Material *CreateMaterial(const std::string &s, const MaterialDescriptor &d, const RenderStateDesc &rsd, const VertexFormatDesc &vfd) final { return new Graphics::Vulkan::Material(rsd); }
+		Material *CloneMaterial(const Material *m, const MaterialDescriptor &d, const RenderStateDesc &rsd, const VertexFormatDesc &vfd) final { return new Graphics::Vulkan::Material(rsd); }
+		Texture *CreateTexture(const TextureDescriptor &d) final { return new Graphics::Vulkan::VkTexture(d); }
+		RenderTarget *CreateRenderTarget(const RenderTargetDesc &d) final { return new Graphics::Vulkan::RenderTarget(d); }
+		VertexBuffer *CreateVertexBuffer(BufferUsage usage, uint32_t numVertices, uint32_t stride) final { return new Graphics::Vulkan::VertexBuffer(usage, numVertices, stride); }
+		IndexBuffer *CreateIndexBuffer(Uint32 size, BufferUsage bu, IndexBufferSize el) final { return new Graphics::Vulkan::IndexBuffer(size, bu, el); }
+		UniformBuffer *CreateUniformBuffer(Uint32 size, BufferUsage bu) final { return new Graphics::Vulkan::UniformBuffer(size, bu); }
+		MeshObject *CreateMeshObject(const VertexFormatDesc &desc, VertexBuffer *v, IndexBuffer *i) final { return new Graphics::Vulkan::MeshObject(desc, static_cast<Vulkan::VertexBuffer *>(v), static_cast<Vulkan::IndexBuffer *>(i)); }
+		MeshObject *CreateMeshObjectFromArray(const VertexArray *v, IndexBuffer *i = nullptr, BufferUsage usage = BUFFER_USAGE_STATIC) final
 		{
 			VertexFormatDesc desc = VertexFormatDesc::FromAttribSet(v->GetAttributeSet());
 			Graphics::VertexBuffer *vertexBuffer = CreateVertexBuffer(usage, v->GetNumVerts(), desc.bindings[0].stride);
@@ -121,13 +121,13 @@ namespace Graphics {
 			return CreateMeshObject(desc, vertexBuffer, i);
 		}
 
-		virtual const RenderStateDesc &GetMaterialRenderState(const Graphics::Material *m) final { return static_cast<const Vulkan::Material *>(m)->rsd; }
+		const RenderStateDesc &GetMaterialRenderState(const Graphics::Material *m) final { return static_cast<const Vulkan::Material *>(m)->rsd; }
 
-		virtual bool ReloadShaders() final { return true; }
+		bool ReloadShaders() final { return true; }
 
 	protected:
-		virtual void PushState() final {}
-		virtual void PopState() final {}
+		void PushState() final {}
+		void PopState() final {}
 
 	private:
 		Graphics::RenderTarget *m_rt;

@@ -111,7 +111,6 @@ namespace Graphics {
 
 		const std::string name("Pioneer");
 		SDL_Window *m_window = nullptr;
-		SDL_GLContext glContext = nullptr;
 
 		bool ok = LoadLibraryAndCreateWindow(name.c_str(), vs, m_window);
 		if (!ok) {
