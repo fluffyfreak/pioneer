@@ -530,11 +530,7 @@ void SpaceStation::SwitchToStage(Uint32 bay, DockStage stage)
 
 	case DockStage::UNDOCK_END:
 		dt.ship->SetAngVelocity(GetAngVelocity());
-		if (m_type->IsSurfaceStation() && !dt.ship->CanTailSit()) {
-			dt.ship->SetThrusterState(1, 1.0); // up
-		} else {
-			dt.ship->SetThrusterState(2, -1.0); // forward
-		}
+		dt.ship->SetLaunchThrust(m_type->IsSurfaceStation());
 		dt.ship->SetFlightState(Ship::FLYING);
 		SwitchToStage(bay, DockStage::LEAVE);
 		break;

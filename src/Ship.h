@@ -254,6 +254,7 @@ public:
 	double GetTailLandingPosOffset() const { return m_tailLandingMinOffset; }
 
 	inline bool CanTailSit() const { return m_type->CanTailSit(); }
+	bool IsTailSitting() const { return m_type->CanTailSit(); } // FIXME: this should test CanTailSit, and then check if the user WANTS to tail sit
 
 	Propulsion *GetPropulsion() const { return m_propulsion; }
 
@@ -370,6 +371,19 @@ public:
 	void AIMatchAngVelObjSpace(const vector3d &desiredAngVel, const vector3d &powerLimit = vector3d(1.0), bool ignoreZeroValues = false)
 	{
 		m_propulsion->AIMatchAngVelObjSpace(desiredAngVel, powerLimit, ignoreZeroValues);
+	}
+
+	void SetLaunchThrust(const bool isSurfaceLaunch)
+	{
+		// NB: axes:
+		// 0 - sideways
+		// 1 - upwards
+		// 2 - backwards? (negative for forwards)
+		if (isSurfaceLaunch && IsTailSitting()) {
+			m_propulsion->SetLinThrusterState(2, -1.0); // thrust forwards
+		} else {
+			m_propulsion->SetLinThrusterState(1, 1.0); // thrust upwards
+		}
 	}
 };
 

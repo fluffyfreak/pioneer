@@ -215,14 +215,15 @@ ShipType::ShipType(const Id &_id, const std::string &path)
 	hyperdriveClass = data.value("hyperdrive_class", 1);
 
 	{
+		// default value
+		landedOrientation = LandedOrientation::LANDED_HORIZONTAL;
+
 		// determine what orientation this ship lands in
 		const std::string loStr = data.value("landed_orientation", "");
 		if (loStr.empty() || strcasecmp(loStr.c_str(), "horizontal") == 0) {
 			landedOrientation = LandedOrientation::LANDED_HORIZONTAL;
 		} else if (strcasecmp(loStr.c_str(), "vertical") == 0) {
 			landedOrientation = LandedOrientation::LANDED_VERTICAL;
-		} else if (strcasecmp(loStr.c_str(), "either") == 0) {
-			landedOrientation = LandedOrientation::LANDED_EITHER;
 		}
 	}
 }

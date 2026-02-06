@@ -23,8 +23,7 @@ struct ShipType {
 	};
 	enum LandedOrientation { // <enum scope='ShipType' name='LandedOrientation' prefix='LANDED_' public>
 		LANDED_HORIZONTAL, // Ships that only land on their belly
-		LANDED_VERTICAL, // Expanse style tail-sitters
-		LANDED_EITHER // Ships that can do either depending on situation (terrain, port, orbit, etc)
+		LANDED_VERTICAL // Expanse style tail-sitters
 	};
 	typedef std::string Id;
 
@@ -86,7 +85,7 @@ struct ShipType {
 
 	// percentage (ie, 0--100) of tank used per second at full thrust
 	float GetFuelUseRate() const;
-	bool CanTailSit() const { return ((landedOrientation == LandedOrientation::LANDED_VERTICAL) || (landedOrientation == LandedOrientation::LANDED_EITHER)); }
+	bool CanTailSit() const { return (landedOrientation == LandedOrientation::LANDED_VERTICAL); }
 
 	static const std::string POLICE;
 

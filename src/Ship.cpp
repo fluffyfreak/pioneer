@@ -512,7 +512,7 @@ bool Ship::OnDamage(Body *attacker, float kgDamage, const CollisionContact &cont
 	//Output("Ouch! %s took %.1f kilos of damage from %s! (%.1f t hull left)\n", GetLabel().c_str(), kgDamage, attacker->GetLabel().c_str(), m_stats.hull_mass_left);
 	return true;
 }
-
+#pragma optimize("",off)
 bool Ship::OnCollision(Body *b, Uint32 flags, double relVel)
 {
 	// Collision with SpaceStation docking or entrance surface is
@@ -559,7 +559,7 @@ bool Ship::OnCollision(Body *b, Uint32 flags, double relVel)
 
 	return DynamicBody::OnCollision(b, flags, relVel);
 }
-
+#pragma optimize("", on)
 //destroy ship in an explosion
 void Ship::Explode()
 {
@@ -852,7 +852,7 @@ void Ship::Blastoff()
 {
 	if (m_flightState != LANDED) return;
 
-	vector3d up = GetPosition().Normalized();
+	const vector3d up = GetPosition().Normalized();
 
 	Frame *f = Frame::GetFrame(GetFrame());
 
@@ -871,13 +871,8 @@ void Ship::Blastoff()
 		SetAngVelocity(vector3d::Zero);
 		SetFlightState(FLYING);
 
-		SetPosition(up * planetRadius - GetAabb().min.y * up);
-		if (CanTailSit()) {
-			SetThrusterState(2, -1.0); // thrust forwards
-		} else {
-			SetThrusterState(1, 1.0); // thrust upwards
-		}
-		
+		SetPosition(up * planetRadius - (CanTailSit() ? GetAabb().min.z : GetAabb().min.y) * up);
+		SetLaunchThrust(true);
 	}
 
 	OnTakeoff(f->GetBody());
@@ -900,10 +895,10 @@ void Ship::TestLanded()
 			if (GetDockingOrientation().Dot(up) > 0.99) {
 				// position at zero altitude
 				const double planetRadius = static_cast<Planet *>(f->GetBody())->GetTerrainHeight(up);
-				SetPosition(up * (planetRadius - GetAabb().min.y));
+				SetPosition(up * (planetRadius - (CanTailSit() ? GetAabb().min.z : GetAabb().min.y)));
 
-				// if we're tail sitting then stuck with however we cam in?
-				if (!CanTailSit()) {
+				// if we're tail sitting then stick with however we came in?
+				if (!IsTailSitting()) {
 					// position facing in roughly the same direction
 					const vector3d right = up.Cross(GetOrient().VectorZ()).Normalized();
 					SetOrient(matrix3x3d::FromVectors(right, up));
@@ -929,10 +924,10 @@ void Ship::SetLandedOn(Planet *p, float latitude, float longitude)
 	Frame *f_non_rot = Frame::GetFrame(p->GetFrame());
 	SetFrame(f_non_rot->GetRotFrame());
 
-	vector3d up = vector3d(cos(latitude) * sin(longitude), sin(latitude), cos(latitude) * cos(longitude));
+	const vector3d up = vector3d(cos(latitude) * sin(longitude), sin(latitude), cos(latitude) * cos(longitude));
 	const double planetRadius = p->GetTerrainHeight(up);
-	SetPosition(up * (planetRadius - GetAabb().min.y));
-	vector3d right = up.Cross(vector3d(0, 0, 1)).Normalized();
+	SetPosition(up * (planetRadius - (CanTailSit() ? GetAabb().min.z : GetAabb().min.y)));
+	const vector3d right = up.Cross(vector3d(0, 0, 1)).Normalized();
 	SetOrient(matrix3x3d::FromVectors(right, up));
 	SetVelocity(vector3d::Zero);
 	SetAngVelocity(vector3d::Zero);
