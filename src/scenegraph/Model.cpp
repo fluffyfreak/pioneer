@@ -378,7 +378,7 @@ namespace SceneGraph {
 	void Model::UpdateAnimations()
 	{
 		for (size_t i = 0; i < m_animations.size(); i++) {
-			if (m_activeAnimations & (1 << i))
+			if (m_activeAnimations & (1ULL << i))
 				m_animations[i]->Interpolate();
 		}
 
@@ -403,15 +403,15 @@ namespace SceneGraph {
 	{
 		if (index >= m_animations.size()) return;
 		if (active)
-			m_activeAnimations |= (1 << index);
+			m_activeAnimations |= (1ULL << index);
 		else
-			m_activeAnimations &= ~(1 << index);
+			m_activeAnimations &= ~(1ULL << index);
 	}
 
 	bool Model::GetAnimationActive(uint32_t index) const
 	{
 		if (index >= m_animations.size()) return false;
-		return m_activeAnimations & (1 << index);
+		return m_activeAnimations & (1ULL << index);
 	}
 
 	void Model::SetThrust(const vector3f &lin, const vector3f &ang)
