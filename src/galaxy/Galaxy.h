@@ -51,6 +51,7 @@ public:
 
 	void FlushCaches();
 	void Dump(FILE *file, Sint32 centerX, Sint32 centerY, Sint32 centerZ, Sint32 radius);
+	void DumpToJson(Json &jsonObj, Sint32 centerX, Sint32 centerY, Sint32 centerZ, Sint32 radius);
 
 	RefCountedPtr<GalaxyGenerator> GetGenerator() const;
 	const std::string &GetGeneratorName() const;

@@ -142,10 +142,10 @@ void SaveGameManager::SaveGame(const std::string &name, Game *game)
 
 	try {
 		// Compress the CBOR data.
-		const std::string comressed_data = gzip::CompressGZip(
+		const std::string compressed_data = gzip::CompressGZip(
 			std::string(reinterpret_cast<const char *>(jsonData.data()), jsonData.size()),
 			name + ".json");
-		size_t nwritten = fwrite(comressed_data.data(), comressed_data.size(), 1, f);
+		size_t nwritten = fwrite(compressed_data.data(), compressed_data.size(), 1, f);
 		fclose(f);
 		if (nwritten != 1) {
 			throw CouldNotWriteToFileException();

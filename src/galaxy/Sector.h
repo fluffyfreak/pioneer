@@ -120,6 +120,7 @@ public:
 	const int sx, sy, sz;
 
 	void Dump(FILE *file, const char *indent = "") const;
+	void DumpToJson(Json &jsonObj, const char *indent = "") const;
 
 	sigc::signal<void, Sector::System *, StarSystem::ExplorationState, double> onSetExplorationState;
 

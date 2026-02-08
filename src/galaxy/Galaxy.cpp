@@ -102,6 +102,23 @@ void Galaxy::Dump(FILE *file, Sint32 centerX, Sint32 centerY, Sint32 centerZ, Si
 	}
 }
 
+void Galaxy::DumpToJson(Json &jsonObj, Sint32 centerX, Sint32 centerY, Sint32 centerZ, Sint32 radius)
+{
+	Json galaxyJson({}); // Create JSON object to contain galaxy data.
+
+	for (Sint32 sx = centerX - radius; sx <= centerX + radius; ++sx) {
+		for (Sint32 sy = centerY - radius; sy <= centerY + radius; ++sy) {
+			for (Sint32 sz = centerZ - radius; sz <= centerZ + radius; ++sz) {
+				RefCountedPtr<const Sector> sector = GetSector(SystemPath(sx, sy, sz));
+				sector->DumpToJson(galaxyJson);
+			}
+			m_starSystemCache.ClearCache();
+		}
+	}
+
+	jsonObj["galaxy"] = galaxyJson; // add galaxy to jsonObj
+}
+
 RefCountedPtr<GalaxyGenerator> Galaxy::GetGenerator() const
 {
 	return m_galaxyGenerator;

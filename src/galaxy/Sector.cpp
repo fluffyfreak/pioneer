@@ -9,6 +9,7 @@
 #include "EnumStrings.h"
 #include "Factions.h"
 
+#include "JsonUtils.h"
 #include "core/StringUtils.h"
 #include "profiler/Profiler.h"
 
@@ -109,6 +110,22 @@ void Sector::Dump(FILE *file, const char *indent) const
 		fprintf(file, "\t}\n");
 	}
 	fprintf(file, "}\n\n");
+}
+
+void Sector::DumpToJson(Json &jsonObj, const char *indent = "") const
+{
+	Json sectorJson({}); // Create JSON object to contain sector data.
+
+	//sectorJson["dir"] = m_dir;
+	//sectorJson["base_dam"] = m_baseDam;
+	//sectorJson["length"] = m_length;
+	//sectorJson["mining"] = m_mining;
+	//sectorJson["color"] = m_color;
+	//sectorJson["age"] = m_age;
+	//sectorJson["index_for_body"] = space->GetIndexForBody(m_parent);
+	sectorJson["location"] = vector3<int32_t>();
+
+	jsonObj["sector"] = sectorJson; // Add sectorJson object to supplied object.
 }
 
 float Sector::System::DistanceBetween(const System *a, const System *b)

@@ -7,6 +7,7 @@
 #include "core/OS.h"
 #include "galaxy/Galaxy.h"
 #include "galaxy/GalaxyGenerator.h"
+#include "JsonUtils.h"
 #include "utils.h"
 #include "versioningInfo.h"
 #include "lua/Lua.h"
@@ -21,6 +22,7 @@ enum RunMode {
 	MODE_GAME,
 	MODE_GALAXYDUMP,
 	MODE_START_AT,
+	MODE_SNAPSHOTS,
 	MODE_VERSION,
 	MODE_USAGE,
 	MODE_USAGE_ERROR
@@ -36,6 +38,7 @@ extern "C" int main(int argc, char **argv)
 
 	RunMode mode = MODE_GAME;
 	std::string modeopt;
+	bool bGalaxyDumpJSON = false;
 
 	if (argc > 1) {
 		const char switchchar = argv[1][0];
@@ -56,9 +59,20 @@ extern "C" int main(int argc, char **argv)
 			goto start;
 		}
 
+		if (modeopt == "galaxydumpjson" || modeopt == "gdjson") {
+			mode = MODE_GALAXYDUMP;
+			bGalaxyDumpJSON = true;
+			goto start;
+		}
+
 		if (modeopt.find("startat", 0, 7) != std::string::npos ||
 			modeopt.find("sa", 0, 2) != std::string::npos) {
 			mode = MODE_START_AT;
+			goto start;
+		}
+
+		if (modeopt.find("snapshots", 0, 9) != std::string::npos) {
+			mode = MODE_SNAPSHOTS;
 			goto start;
 		}
 
@@ -119,8 +133,10 @@ start:
 			}
 			++pos;
 		}
-		// fallthrough
+		[[fallthrough]];
 	}
+	case MODE_SNAPSHOTS:
+		[[fallthrough]];
 	case MODE_START_AT: {
 		// fallthrough protect
 		if (mode == MODE_START_AT) {
@@ -149,7 +165,7 @@ start:
 			// set usual mode
 			mode = MODE_GAME;
 		}
-		// fallthrough
+		[[fallthrough]];
 	}
 	case MODE_GAME: {
 		std::map<std::string, std::string> options;
@@ -195,7 +211,18 @@ start:
 				break;
 			}
 			RefCountedPtr<Galaxy> galaxy = GalaxyGenerator::Create();
-			galaxy->Dump(file, sx, sy, sz, radius);
+			if (bGalaxyDumpJSON)
+			{
+				Json rootNode;
+				galaxy->DumpToJson(rootNode, sx, sy, sz, radius);
+				const std::string jsonString(rootNode.dump());
+				size_t nwritten = fwrite(jsonString.c_str(), jsonString.size(), 1, file);
+			}
+			else
+			{
+				galaxy->Dump(file, sx, sy, sz, radius);
+			}
+			
 			if (filename != "-" && fclose(file) != 0) {
 				Output("pioneer: writing to \"%s\" failed: %s\n", filename.c_str(), strerror(errno));
 			}
@@ -216,7 +243,7 @@ start:
 
 	case MODE_USAGE_ERROR:
 		Output("pioneer: unknown mode %s\n", argv[1]);
-		// fall through
+		[[fallthrough]];
 
 	case MODE_USAGE:
 		Output(
