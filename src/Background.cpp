@@ -167,6 +167,12 @@ namespace Background {
 		m_numCubemaps = GetNumSkyboxes();
 
 		SetIntensity(1.0f);
+
+		m_pointSprites.reset(new Graphics::Drawables::PointSprites);
+		m_material.Reset(m_renderer->CreateMaterial("starfield", desc, stateDesc, m_pointSprites->GetVertexFormat()));
+		Graphics::Texture *texture = Graphics::TextureBuilder::Billboard("textures/star_point.png").GetOrCreateTexture(m_renderer, "billboard");
+		m_material->SetTexture("texture0"_hash, texture);
+		m_material->emissive = Color::WHITE;
 	}
 
 	void UniverseBox::Draw()
@@ -191,6 +197,51 @@ namespace Background {
 		}
 
 		m_material->SetTexture("texture0"_hash, m_cubemap.Get());
+	}
+
+	// 1,250,000 density samples
+	namespace {
+		constexpr size_t StepSize = 200;
+		constexpr size_t OffsetX = -25000;
+		constexpr size_t OffsetY = -50000;
+		constexpr size_t OffsetZ = -500;
+		constexpr size_t SizeX = 100000 / StepSize;
+		constexpr size_t SizeY = 100000 / StepSize;
+		constexpr size_t SizeZ = 1000 / StepSize;
+		static Uint8 gDensityMap[SizeX][SizeY][SizeZ];
+		static constexpr float one_over_256(1.0f / 256.0f);
+	}
+	void UniverseBox::Fill(Random& rand, const SystemPath* const systemPath, RefCountedPtr<Galaxy> galaxy)
+	{
+		// gather all of the density samples we need
+		for (size_t sz = 0; sz < SizeZ; sz++) {
+			for (size_t sy = 0; sy < SizeY; sy++) {
+				for (size_t sx = 0; sx < SizeX; sx++) {
+					Uint8 density = galaxy->GetSectorDensity((sx * StepSize) + OffsetX, (sy * StepSize) + OffsetY, (sz * StepSize) + OffsetZ);
+					gDensityMap[sx][sy][sz] = density;
+				}
+			}
+		}
+		StarInfo stars;
+		constexpr size_t numDensitySamples = 1250000;
+		stars.pos.reserve(numDensitySamples);
+		stars.color.reserve(numDensitySamples);
+		stars.brightness.reserve(numDensitySamples);
+		for (size_t sz = 0; sz < SizeZ; sz++) {
+			for (size_t sy = 0; sy < SizeY; sy++) {
+				for (size_t sx = 0; sx < SizeX; sx++) {
+					Uint8 density = gDensityMap[sx][sy][sz];
+					if (density == 0) {
+						continue;
+					}
+					vector3f position = Sector::SIZE * vector3f((sx * StepSize) + OffsetX, (sy * StepSize) + OffsetY, (sz * StepSize) + OffsetZ);
+					stars.pos.emplace_back(position);
+					stars.color.emplace_back(Color4ub::WHITE);
+					stars.brightness.emplace_back((float)density * one_over_256);
+				}
+			}
+		}
+		m_pointSprites->SetData(numDensitySamples, std::move(stars.pos), std::move(stars.color), std::move(stars.brightness));
 	}
 
 	Starfield::Starfield(Graphics::Renderer *renderer)

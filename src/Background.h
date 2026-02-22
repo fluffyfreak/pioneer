@@ -48,6 +48,8 @@ namespace Background {
 
 		void Draw();
 		void LoadCubeMap(Random &rand);
+		//create or recreate the galaxy background
+		void Fill(Random &rand, const SystemPath *const systemPath, RefCountedPtr<Galaxy> galaxy);
 
 	private:
 		void Init();
@@ -56,6 +58,8 @@ namespace Background {
 		RefCountedPtr<Graphics::Texture> m_cubemap;
 
 		Uint32 m_numCubemaps;
+
+		std::unique_ptr<Graphics::Drawables::PointSprites> m_pointSprites;
 	};
 
 	class Starfield : public BackgroundElement {
@@ -103,6 +107,7 @@ namespace Background {
 		Uint32 GetDrawFlags() const { return m_drawFlags; }
 
 		Starfield *GetStarfield() { return &m_starField; }
+		UniverseBox *GetUniverseBox() { return &m_universeBox; }
 
 	private:
 		Graphics::Renderer *m_renderer;

@@ -89,6 +89,7 @@ void Intro::RefreshBackground(Graphics::Renderer *r)
 	RefCountedPtr<Galaxy> galaxy(GalaxyGenerator::Create());
 	m_background.reset(new Background::Container(r, Pi::rng));
 	m_background->GetStarfield()->Fill(Pi::rng, &s, galaxy);
+	m_background->GetUniverseBox()->Fill(Pi::rng, &s, galaxy);
 }
 
 void Intro::Reset()

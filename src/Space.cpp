@@ -332,9 +332,11 @@ void Space::RefreshBackground()
 		Random rand(_init, 5);
 		m_background.reset(new Background::Container(Pi::renderer, rand));
 		m_background->GetStarfield()->Fill(rand, &this->GetStarSystem()->GetPath(), m_game->GetGalaxy());
+		m_background->GetUniverseBox()->Fill(Pi::rng, &this->GetStarSystem()->GetPath(), m_game->GetGalaxy());
 	} else {
 		m_background.reset(new Background::Container(Pi::renderer, Pi::rng));
 		m_background->GetStarfield()->Fill(Pi::rng, nullptr, m_game->GetGalaxy());
+		m_background->GetUniverseBox()->Fill(Pi::rng, nullptr, m_game->GetGalaxy());
 	}
 }
 
