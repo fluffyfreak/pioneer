@@ -17,12 +17,12 @@ template <>
 TerrainHeightFractal<TerrainHeightAsteroid2>::TerrainHeightFractal(const SystemBody *body) :
 	Terrain(body)
 {
-	SetFracDef(0, m_maxHeightInMeters * 0.05, 1e6, 10000.0);
+	SetFracDef(0, m_maxHeightInMeters * 0.05, m_rand.Double(1e6, 1e7), 10000.0);
 	const double height = m_maxHeightInMeters * 0.3;
 	SetFracDef(1, height, m_rand.Double(4.0, 20.0) * height);
 	SetFracDef(2, m_maxHeightInMeters, m_rand.Double(50.0, 100.0) * m_maxHeightInMeters);
-	SetFracDef(3, m_maxHeightInMeters * 0.07, 1e6, 100.0);
-	SetFracDef(4, m_maxHeightInMeters * 0.05, 8e5, 100.0);
+	SetFracDef(3, m_maxHeightInMeters * 0.07, m_rand.Double(1e6, 1e7), 100.0);
+	SetFracDef(4, m_maxHeightInMeters * 0.05, m_rand.Double(7e5, 9e5), 100.0);
 }
 
 template <>
@@ -30,8 +30,9 @@ void TerrainHeightFractal<TerrainHeightAsteroid2>::GetHeightsRaw(const vector3d 
 {
 	for (size_t i = 0; i < count; i++) {
 		const vector3d &p = vP[i];
-		double n = voronoiscam_octavenoise(6, 0.2 * octavenoise(m_fracdef[0], 0.3, p), 15.0 * octavenoise(m_fracdef[1], 0.5, p), p) *
-			0.75 * ridged_octavenoise(16.0 * octavenoise(m_fracdef[2], 0.275, p), 0.4 * ridged_octavenoise(m_fracdef[3], 0.4, p), 4.0 * octavenoise(m_fracdef[4], 0.35, p), p);
+		double n = voronoiscam_octavenoise(6, 0.2 * octavenoise(m_fracdef[0], 0.3, p), 2.0 * octavenoise(m_fracdef[1], 0.5, p), p) * 0.05;
+		n *= 2.0 * ridged_octavenoise(16.0 * octavenoise(m_fracdef[2], 0.275, p), 0.4 * ridged_octavenoise(m_fracdef[3], 0.4, p), 4.0 * octavenoise(m_fracdef[4], 0.35, p), p);
+
 		n *= m_maxHeight;
 		heightsOut[i] = (n > 0.0 ? n : 0.0);
 	}
