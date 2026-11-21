@@ -28,6 +28,10 @@ enum RunMode {
 
 extern "C" int main(int argc, char **argv)
 {
+	argc = 2;
+	char *dummy[3] = { argv[0], "-startat=-4,0,1,1,14" };
+	argv = dummy;
+
 #ifdef PIONEER_PROFILER
 	Profiler::detect(argc, argv);
 #endif
